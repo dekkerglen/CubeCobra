@@ -190,12 +190,9 @@ export interface ArchetypeSkeleton {
   colorProfile: string; // e.g. "UR", "BGW", "C"
   poolCount: number;
   poolIndices: number[]; // indices into slimPools
-  coreCards: RankedCards; // cards most distinctive to the cluster (fraction × IDF)
+  coreCards: RankedCards; // staples: most-drafted cards in this cluster, ranked by raw fraction
+  distinctCards?: RankedCards; // distinct characterizers: cosine(card_emb, centroid) × log(1 + lift), assigned to home cluster across page (no overlap across distinct/core tabs), 10% floor; per-cluster fallback when sparse
   signatureCards?: SkeletonCard[]; // legacy: kept so older locally cached runs still type-check
-  signatureMultiplicative?: RankedCards; // fraction × log(fraction / mean_other) — TF-IDF on clusters
-  signatureWeightedBlend?: RankedCards; // 0.5 × normalized(core) + 0.5 × normalized(contrastive)
-  signatureLift?: RankedCards; // fraction / mean_other with fraction > 0.15 floor
-  signatureEmbedding?: RankedCards; // cosine of card embedding to cluster centroid (128-dim)
   occasionalCards: SkeletonCard[]; // deprecated; kept for older locally stored runs
   sideboardCards: SkeletonCard[]; // most common sideboard-only cards across decks in this cluster
   lockPairs: LockPair[]; // pairs co-occurring > 60% and well above independence baseline

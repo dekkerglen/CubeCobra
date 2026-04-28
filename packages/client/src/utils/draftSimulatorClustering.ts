@@ -1118,13 +1118,11 @@ interface SkeletonScoringContext {
   cardMeta: Record<string, CardMeta>;
   vecs: Uint8Array[];
   clusterFracsMap: Map<number, Float32Array>;
-  globalCardCounts: Float32Array;
   cardEmbeddings: (Float32Array | null)[] | null;
   embeddings: number[][] | null;
   embDim: number;
   deckBuilds: BuiltDeck[] | null | undefined;
   hasDecks: boolean;
-  n: number;
 }
 
 function buildScoringContext(
@@ -1154,9 +1152,6 @@ function buildScoringContext(
     }
     return v;
   });
-
-  const globalCardCounts = new Float32Array(dim);
-  for (const v of vecs) for (let j = 0; j < dim; j++) globalCardCounts[j] += v[j]!;
 
   const clusterFracsMap = new Map<number, Float32Array>();
   for (const { clusterId, poolIndices } of clusters) {
@@ -1199,13 +1194,11 @@ function buildScoringContext(
     cardMeta,
     vecs,
     clusterFracsMap,
-    globalCardCounts,
     cardEmbeddings,
     embeddings,
     embDim,
     deckBuilds,
     hasDecks,
-    n,
   };
 }
 
@@ -1217,26 +1210,21 @@ function scoreClusterSkeleton(
   const poolCount = poolIndices.length;
   if (poolCount === 0) return null;
 
-  const { oracleIds, oracleIndex, cardMeta, vecs, clusterFracsMap, globalCardCounts, cardEmbeddings, embeddings, embDim, deckBuilds, hasDecks, n } = ctx;
-  const dim = oracleIds.length;
+  const { oracleIds, oracleIndex, cardMeta, vecs, clusterFracsMap, deckBuilds, hasDecks } = ctx;
   const fracs = clusterFracsMap.get(clusterId);
   if (!fracs) return null;
 
-  const allCards: (SkeletonCard & { distinctiveness: number })[] = oracleIds
-    .map((oracle_id, j) => {
-      const fraction = fracs[j]!;
-      const globalCount = globalCardCounts[j]!;
-      const idf = Math.log((n + 1) / (globalCount + 1));
-      return {
-        oracle_id,
-        name: cardMeta[oracle_id]?.name ?? oracle_id,
-        imageUrl: cardMeta[oracle_id]?.imageUrl ?? '',
-        fraction,
-        distinctiveness: fraction * idf,
-      };
-    })
+  // Staples: cards drafted most often in this cluster, sorted by raw fraction.
+  // No IDF: distinctiveness/cluster-uniqueness is the Distinct tab's job.
+  const allCards: SkeletonCard[] = oracleIds
+    .map((oracle_id, j) => ({
+      oracle_id,
+      name: cardMeta[oracle_id]?.name ?? oracle_id,
+      imageUrl: cardMeta[oracle_id]?.imageUrl ?? '',
+      fraction: fracs[j]!,
+    }))
     .filter((c) => c.fraction > 0)
-    .sort((a, b) => b.distinctiveness - a.distinctiveness || b.fraction - a.fraction);
+    .sort((a, b) => b.fraction - a.fraction);
 
   // Build a default + excludingFixing pair from a fully-sorted card list. The
   // toggle in the UI swaps between these precomputed slices, so neither list
@@ -1249,104 +1237,10 @@ function scoreClusterSkeleton(
       .slice(0, TOP_N),
   });
 
-  const coreCards = buildRanked(allCards.map(({ distinctiveness: _d, ...rest }) => rest));
+  const coreCards = buildRanked(allCards);
 
-  // Per-card stats vs. the rest of the clusters: max fraction in any other
-  // cluster (for contrastive) and mean fraction across other clusters
-  // (for multiplicative / lift). One pass shared by 3 variants.
-  type SigStats = { fraction: number; maxOther: number; meanOther: number };
-  const stats: SigStats[] = oracleIds.map((_, j) => {
-    let maxOther = 0;
-    let sumOther = 0;
-    let countOther = 0;
-    for (const [cid, otherFracs] of clusterFracsMap) {
-      if (cid === clusterId) continue;
-      const f = otherFracs[j]!;
-      if (f > maxOther) maxOther = f;
-      sumOther += f;
-      countOther++;
-    }
-    return {
-      fraction: fracs[j]!,
-      maxOther,
-      meanOther: countOther > 0 ? sumOther / countOther : 0,
-    };
-  });
-
-  const skeletonCard = (j: number): SkeletonCard => ({
-    oracle_id: oracleIds[j]!,
-    name: cardMeta[oracleIds[j]!]?.name ?? oracleIds[j]!,
-    imageUrl: cardMeta[oracleIds[j]!]?.imageUrl ?? '',
-    fraction: stats[j]!.fraction,
-  });
-
-  const EPS = 1e-6;
-
-  const signatureMultiplicative: RankedCards = buildRanked(
-    oracleIds
-      .map((_, j) => ({ j, score: stats[j]!.fraction * Math.log((stats[j]!.fraction + EPS) / (stats[j]!.meanOther + EPS)) }))
-      .filter(({ j, score }) => stats[j]!.fraction > 0 && score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map(({ j }) => skeletonCard(j)),
-  );
-
-  const distinctivenessByIdx = new Map<number, number>();
-  for (const c of allCards) distinctivenessByIdx.set(oracleIndex.get(c.oracle_id)!, c.distinctiveness);
-  const maxDistinctiveness = allCards.length > 0 ? allCards[0]!.distinctiveness : 1;
-  let maxContrastive = 0;
-  for (let j = 0; j < dim; j++) {
-    const c = stats[j]!.fraction - stats[j]!.maxOther;
-    if (c > maxContrastive) maxContrastive = c;
-  }
-  const safeMaxDist = maxDistinctiveness > 0 ? maxDistinctiveness : 1;
-  const safeMaxContrast = maxContrastive > 0 ? maxContrastive : 1;
-  const signatureWeightedBlend: RankedCards = buildRanked(
-    oracleIds
-      .map((_, j) => {
-        const coreNorm = (distinctivenessByIdx.get(j) ?? 0) / safeMaxDist;
-        const contrastive = stats[j]!.fraction - stats[j]!.maxOther;
-        const sigNorm = Math.max(0, contrastive) / safeMaxContrast;
-        return { j, score: 0.5 * coreNorm + 0.5 * sigNorm };
-      })
-      .filter(({ j, score }) => stats[j]!.fraction > 0 && score > 0)
-      .sort((a, b) => b.score - a.score)
-      .map(({ j }) => skeletonCard(j)),
-  );
-
-  const signatureLift: RankedCards = buildRanked(
-    oracleIds
-      .map((_, j) => ({ j, score: stats[j]!.fraction / (stats[j]!.meanOther + EPS) }))
-      .filter(({ j }) => stats[j]!.fraction > 0.15)
-      .sort((a, b) => b.score - a.score)
-      .map(({ j }) => skeletonCard(j)),
-  );
-
-  let signatureEmbedding: RankedCards = { default: [], excludingFixing: [] };
-  if (cardEmbeddings && embeddings && embDim > 0) {
-    const centroid = new Float32Array(embDim);
-    for (const pi of poolIndices) {
-      const e = embeddings[pi]!;
-      for (let k = 0; k < embDim; k++) centroid[k] += e[k]!;
-    }
-    for (let k = 0; k < embDim; k++) centroid[k] /= poolCount;
-    let cnorm = 0;
-    for (let k = 0; k < embDim; k++) cnorm += centroid[k]! * centroid[k]!;
-    cnorm = Math.sqrt(cnorm);
-    if (cnorm > 0) for (let k = 0; k < embDim; k++) centroid[k] /= cnorm;
-    signatureEmbedding = buildRanked(
-      oracleIds
-        .map((_, j) => {
-          const ce = cardEmbeddings[j];
-          if (!ce || stats[j]!.fraction <= 0.05) return { j, score: -Infinity };
-          let dot = 0;
-          for (let k = 0; k < embDim; k++) dot += ce[k]! * centroid[k]!;
-          return { j, score: dot };
-        })
-        .filter(({ score }) => score > -Infinity)
-        .sort((a, b) => b.score - a.score)
-        .map(({ j }) => skeletonCard(j)),
-    );
-  }
+  // distinctCards is filled in a second pass (assignDistinctCards) so it can
+  // do cross-cluster highest-bidder assignment.
 
   const occasionalCards: SkeletonCard[] = [];
   const sideboardCards: SkeletonCard[] = hasDecks
@@ -1420,14 +1314,147 @@ function scoreClusterSkeleton(
     poolCount,
     poolIndices,
     coreCards,
-    signatureMultiplicative,
-    signatureWeightedBlend,
-    signatureLift,
-    signatureEmbedding,
     occasionalCards,
     sideboardCards,
     lockPairs: lockPairs.slice(0, 5),
   };
+}
+
+/**
+ * Distinct cards: a single tab per cluster whose contents are guaranteed
+ * disjoint from every Staples (coreCards) tab AND every other Distinct tab on
+ * the page.
+ *
+ * Algorithm:
+ *   1. Score every (card, cluster) pair: cosine(card_emb, cluster_centroid) ×
+ *      log(1 + lift_in_that_cluster), with a fraction > 0.10 floor.
+ *   2. Highest-bidder: each card is assigned to the cluster where it scores
+ *      highest. Within each cluster, sort assigned cards by score, drop any
+ *      that already appear in this cluster's coreCards, take top 12.
+ *   3. Fallback for sparse clusters: if a cluster ends up with < 12 cards
+ *      after step 2, fill remaining slots from this cluster's sorted candidates
+ *      (allowing cards already claimed by other clusters), still excluding own
+ *      coreCards. The fallback should rarely fire in practice.
+ *
+ * Mutates each skeleton in place to attach `distinctCards`.
+ */
+function assignDistinctCards(ctx: SkeletonScoringContext, skeletons: ArchetypeSkeleton[]): void {
+  const { oracleIds, cardMeta, cardEmbeddings, embeddings, embDim, clusterFracsMap } = ctx;
+
+  if (!cardEmbeddings || !embeddings || embDim === 0) {
+    for (const skel of skeletons) skel.distinctCards = { default: [], excludingFixing: [] };
+    return;
+  }
+
+  const FLOOR = 0.1;
+  const EPS = 1e-6;
+  const TOP_N = 12;
+  const dim = oracleIds.length;
+  const numClusters = skeletons.length;
+
+  // Per-cluster L2-normalized centroid of pool embeddings.
+  const centroidsByCluster = new Map<number, Float32Array>();
+  for (const skel of skeletons) {
+    if (skel.poolIndices.length === 0) continue;
+    const c = new Float32Array(embDim);
+    for (const pi of skel.poolIndices) {
+      const e = embeddings[pi]!;
+      for (let k = 0; k < embDim; k++) c[k] += e[k]!;
+    }
+    for (let k = 0; k < embDim; k++) c[k] /= skel.poolIndices.length;
+    let cnorm = 0;
+    for (let k = 0; k < embDim; k++) cnorm += c[k]! * c[k]!;
+    cnorm = Math.sqrt(cnorm);
+    if (cnorm > 0) for (let k = 0; k < embDim; k++) c[k] /= cnorm;
+    centroidsByCluster.set(skel.clusterId, c);
+  }
+
+  // Sum of fractions across all clusters per card; used to compute mean over
+  // OTHER clusters as (sum - this) / (numClusters - 1).
+  const sumByCard = new Float32Array(dim);
+  for (const fracs of clusterFracsMap.values()) {
+    for (let j = 0; j < dim; j++) sumByCard[j] += fracs[j]!;
+  }
+
+  type Scored = { j: number; score: number };
+
+  // Per-cluster sorted candidate list (positive scores only, fraction > floor).
+  // Used for both highest-bidder bucketing and the fallback pass.
+  const sortedByCluster = new Map<number, Scored[]>();
+  for (const skel of skeletons) {
+    const fracs = clusterFracsMap.get(skel.clusterId);
+    const centroid = centroidsByCluster.get(skel.clusterId);
+    if (!fracs || !centroid) {
+      sortedByCluster.set(skel.clusterId, []);
+      continue;
+    }
+    const candidates: Scored[] = [];
+    for (let j = 0; j < dim; j++) {
+      const fraction = fracs[j]!;
+      if (fraction <= FLOOR) continue;
+      const ce = cardEmbeddings[j];
+      if (!ce) continue;
+      const meanOther = numClusters > 1 ? (sumByCard[j]! - fraction) / (numClusters - 1) : 0;
+      const lift = fraction / (meanOther + EPS);
+      let cosine = 0;
+      for (let k = 0; k < embDim; k++) cosine += ce[k]! * centroid[k]!;
+      const score = cosine * Math.log(1 + lift);
+      if (score > 0) candidates.push({ j, score });
+    }
+    candidates.sort((a, b) => b.score - a.score);
+    sortedByCluster.set(skel.clusterId, candidates);
+  }
+
+  // Highest-bidder: each card lands in whichever cluster scored it highest.
+  const homeByCard = new Map<number, { cluster: number; score: number }>();
+  for (const skel of skeletons) {
+    for (const { j, score } of sortedByCluster.get(skel.clusterId)!) {
+      const existing = homeByCard.get(j);
+      if (!existing || score > existing.score) {
+        homeByCard.set(j, { cluster: skel.clusterId, score });
+      }
+    }
+  }
+
+  for (const skel of skeletons) {
+    const fracs = clusterFracsMap.get(skel.clusterId);
+    if (!fracs) {
+      skel.distinctCards = { default: [], excludingFixing: [] };
+      continue;
+    }
+    const sorted = sortedByCluster.get(skel.clusterId)!;
+    const home = sorted.filter(({ j }) => homeByCard.get(j)?.cluster === skel.clusterId);
+
+    const skeletonCard = (j: number): SkeletonCard => ({
+      oracle_id: oracleIds[j]!,
+      name: cardMeta[oracleIds[j]!]?.name ?? oracleIds[j]!,
+      imageUrl: cardMeta[oracleIds[j]!]?.imageUrl ?? '',
+      fraction: fracs[j]!,
+    });
+
+    const buildVariant = (excludeFixing: boolean, coreIds: Set<string>): SkeletonCard[] => {
+      const out: SkeletonCard[] = [];
+      const used = new Set<string>();
+      const tryAppend = (j: number) => {
+        if (out.length >= TOP_N) return;
+        const oid = oracleIds[j]!;
+        if (coreIds.has(oid) || used.has(oid)) return;
+        if (excludeFixing && cardMeta[oid]?.isManaFixingLand) return;
+        out.push(skeletonCard(j));
+        used.add(oid);
+      };
+      for (const { j } of home) tryAppend(j);
+      if (out.length < TOP_N) for (const { j } of sorted) tryAppend(j);
+      return out;
+    };
+
+    const coreDefaultIds = new Set(skel.coreCards.default.map((c) => c.oracle_id));
+    const coreExcludingFixingIds = new Set(skel.coreCards.excludingFixing.map((c) => c.oracle_id));
+    skel.distinctCards = {
+      default: buildVariant(false, coreDefaultIds),
+      excludingFixing: buildVariant(true, coreExcludingFixingIds),
+    };
+  }
 }
 
 export function computeSkeletons(
@@ -1496,6 +1523,7 @@ export function computeSkeletons(
     const skel = scoreClusterSkeleton(ctx, clusterId, poolIndices);
     if (skel) skeletons.push(skel);
   }
+  assignDistinctCards(ctx, skeletons);
 
   return {
     skeletons: skeletons.sort((a, b) => b.poolCount - a.poolCount),
@@ -1526,5 +1554,6 @@ export function rescoreSkeletons(
     const skel = scoreClusterSkeleton(ctx, clusterId, poolIndices);
     if (skel) out.push(skel);
   }
+  assignDistinctCards(ctx, out);
   return out.sort((a, b) => b.poolCount - a.poolCount);
 }

@@ -10,7 +10,13 @@ const LOCAL_SIM_DB_NAME = 'cubecobra-draft-simulator';
 const LOCAL_SIM_DB_VERSION = 1;
 const LOCAL_SIM_STORE_NAME = 'runs';
 
+// Bump when scoring algorithms change so caches from older code paths are
+// detected as stale and rescored on hydration. Caches missing this field are
+// implicitly version 0.
+export const SCORING_ALGORITHM_VERSION = 1;
+
 export interface ClusteringCache {
+  scoringVersion?: number; // see SCORING_ALGORITHM_VERSION
   skeletons: ArchetypeSkeleton[];
   umapCoords: { x: number; y: number }[];
   clusterMethod: string;

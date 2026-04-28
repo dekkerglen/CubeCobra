@@ -10,7 +10,7 @@ import {
   reshapeEmbeddings,
 } from '../utils/draftBot';
 import { computeSkeletons, rescoreSkeletons } from '../utils/draftSimulatorClustering';
-import { type ClusteringCache, patchClusteringCache } from '../utils/draftSimulatorLocalStorage';
+import { type ClusteringCache, patchClusteringCache, SCORING_ALGORITHM_VERSION } from '../utils/draftSimulatorLocalStorage';
 
 type EmbeddingCacheValue = number[][] | Record<string, number[]> | null;
 
@@ -110,12 +110,15 @@ export default function useClusteringPipeline({
   useEffect(() => {
     if (!displayRunData || skeletons.length === 0) return;
     if (poolEmbeddings === null && !poolEmbeddingsFailed) return;
-    const stale = skeletons.some(
-      (s) =>
-        s.signatureMultiplicative === undefined ||
-        Array.isArray(s.coreCards) ||
-        !Array.isArray(s.coreCards?.default),
-    );
+    const cacheVersion = loadedClusterCache?.scoringVersion ?? 0;
+    const stale =
+      cacheVersion < SCORING_ALGORITHM_VERSION ||
+      skeletons.some(
+        (s) =>
+          s.distinctCards === undefined ||
+          Array.isArray(s.coreCards) ||
+          !Array.isArray(s.coreCards?.default),
+      );
     if (!stale) return;
     const refreshed = rescoreSkeletons(
       displayRunData.slimPools,
@@ -126,9 +129,12 @@ export default function useClusteringPipeline({
     );
     setSkeletons(refreshed);
     if (selectedTs) {
-      void patchClusteringCache(cubeId, selectedTs, { skeletons: refreshed });
+      void patchClusteringCache(cubeId, selectedTs, {
+        skeletons: refreshed,
+        scoringVersion: SCORING_ALGORITHM_VERSION,
+      });
     }
-  }, [skeletons, displayRunData, poolEmbeddings, poolEmbeddingsFailed, activeDecks, selectedTs, cubeId]);
+  }, [skeletons, displayRunData, poolEmbeddings, poolEmbeddingsFailed, activeDecks, selectedTs, cubeId, loadedClusterCache]);
 
   useEffect(() => {
     if (!displayRunData || displayRunData.slimPools.length === 0 || !selectedTs) {
@@ -263,6 +269,7 @@ export default function useClusteringPipeline({
           clusterMethod: result.clusterMethod,
           knnK,
           resolution,
+          scoringVersion: SCORING_ALGORITHM_VERSION,
         });
       }
     }, 20);
