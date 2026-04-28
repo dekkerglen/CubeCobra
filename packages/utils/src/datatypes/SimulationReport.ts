@@ -178,7 +178,11 @@ export interface ArchetypeSkeleton {
   poolCount: number;
   poolIndices: number[]; // indices into slimPools
   coreCards: SkeletonCard[]; // cards most distinctive to the cluster (fraction × IDF)
-  signatureCards?: SkeletonCard[]; // cards unique to this cluster vs neighbors (contrastive scoring)
+  signatureCards?: SkeletonCard[]; // legacy: kept so older locally cached runs still type-check
+  signatureMultiplicative?: SkeletonCard[]; // fraction × log(fraction / mean_other) — TF-IDF on clusters
+  signatureWeightedBlend?: SkeletonCard[]; // 0.5 × normalized(core) + 0.5 × normalized(contrastive)
+  signatureLift?: SkeletonCard[]; // fraction / mean_other with fraction > 0.15 floor
+  signatureEmbedding?: SkeletonCard[]; // cosine of card embedding to cluster centroid (128-dim)
   occasionalCards: SkeletonCard[]; // deprecated; kept for older locally stored runs
   sideboardCards: SkeletonCard[]; // most common sideboard-only cards across decks in this cluster
   lockPairs: LockPair[]; // pairs co-occurring > 60% and well above independence baseline
