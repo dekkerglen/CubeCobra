@@ -279,7 +279,7 @@ describe('computeSkeletons', () => {
     expect(result.clusterMethod).toContain('leiden');
   });
 
-  it('populates signatureCards for clusters', () => {
+  it('populates signature variant lists for clusters', () => {
     const meta = {
       shared: makeMeta('shared', 'Creature', ['U']),
       uniqueA: makeMeta('uniqueA', 'Creature', ['R']),
@@ -295,7 +295,11 @@ describe('computeSkeletons', () => {
     ];
     const result = computeSkeletons(pools, meta, null);
     for (const skel of result.skeletons) {
-      expect(skel.signatureCards).toBeDefined();
+      expect(skel.signatureMultiplicative).toBeDefined();
+      expect(skel.signatureWeightedBlend).toBeDefined();
+      expect(skel.signatureLift).toBeDefined();
+      expect(skel.signatureEmbedding).toBeDefined();
+      expect(skel.signatureEmbedding).toEqual([]);
     }
   });
 });

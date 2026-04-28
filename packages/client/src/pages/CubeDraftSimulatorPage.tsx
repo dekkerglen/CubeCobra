@@ -2296,7 +2296,10 @@ const ClusterDetailPanel: React.FC<{
 
   const CARD_TABS = [
     { key: 'common', label: 'Common Cards', title: 'Cards appearing most often across decks in this cluster' },
-    { key: 'signature', label: 'Signature Cards', title: 'Cards that appear significantly more in this cluster than in others — contrastive scoring vs. neighboring clusters' },
+    { key: 'sig-mult', label: 'Multiplicative', title: 'fraction × log(fraction / mean_other) — TF-IDF on clusters' },
+    { key: 'sig-blend', label: 'Weighted Blend', title: '0.5 × normalized core score + 0.5 × normalized contrastive score' },
+    { key: 'sig-lift', label: 'Lift', title: 'fraction / mean_other, with fraction > 0.15 floor' },
+    { key: 'sig-embed', label: 'Embedding', title: 'Cosine of card embedding to cluster centroid (128-dim)' },
     { key: 'exemplary', label: 'Exemplary Deck', title: 'A real deck from this cluster chosen to best match the cluster’s representative high-priority card bucket' },
     { key: 'recommendations', label: 'Recommendations', title: 'Use the cluster as a local recommender seed and suggest cards that would strengthen it' },
   ] as const;
@@ -2417,12 +2420,27 @@ const ClusterDetailPanel: React.FC<{
       ),
     [cardMeta, commonCards, excludeClusterLands, skeleton.coreCards],
   );
-  const visibleSignatureCards = useMemo(
-    () =>
-      (skeleton.signatureCards ?? []).filter(
-        (card) => !excludeClusterLands || !cardMeta[card.oracle_id]?.type?.includes('Land'),
-      ),
-    [cardMeta, excludeClusterLands, skeleton.signatureCards],
+  const filterLands = (cards: SkeletonCard[]) =>
+    cards.filter((card) => !excludeClusterLands || !cardMeta[card.oracle_id]?.type?.includes('Land'));
+  const visibleSignatureMultiplicative = useMemo(
+    () => filterLands(skeleton.signatureMultiplicative ?? []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cardMeta, excludeClusterLands, skeleton.signatureMultiplicative],
+  );
+  const visibleSignatureWeightedBlend = useMemo(
+    () => filterLands(skeleton.signatureWeightedBlend ?? []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cardMeta, excludeClusterLands, skeleton.signatureWeightedBlend],
+  );
+  const visibleSignatureLift = useMemo(
+    () => filterLands(skeleton.signatureLift ?? []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cardMeta, excludeClusterLands, skeleton.signatureLift],
+  );
+  const visibleSignatureEmbedding = useMemo(
+    () => filterLands(skeleton.signatureEmbedding ?? []),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [cardMeta, excludeClusterLands, skeleton.signatureEmbedding],
   );
 
   const visibleClusterRecommendations = useMemo(
@@ -2593,33 +2611,49 @@ const ClusterDetailPanel: React.FC<{
             )}
           </div>
         )}
-        {cardTab === 'signature' && (
-          <div className="flex flex-col gap-3">
-            <div className="flex justify-end">
-              <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
-                <input
-                  type="checkbox"
-                  checked={excludeClusterLands}
-                  onChange={(event) => setExcludeClusterLands(event.target.checked)}
-                />
-                Exclude lands
-              </label>
-            </div>
-            {visibleSignatureCards.length > 0 ? (
-              <div className="grid grid-cols-6 gap-1.5">
-                {visibleSignatureCards.slice(0, 12).map((card) => (
-                  <SkeletonCardImage key={card.oracle_id} card={card} />
-                ))}
+        {(() => {
+          const variantTab = (
+            tabKey: CardTab,
+            visible: SkeletonCard[],
+            source: SkeletonCard[] | undefined,
+            sourceLabel: string,
+          ) =>
+            cardTab === tabKey && (
+              <div className="flex flex-col gap-3">
+                <div className="flex justify-end">
+                  <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
+                    <input
+                      type="checkbox"
+                      checked={excludeClusterLands}
+                      onChange={(event) => setExcludeClusterLands(event.target.checked)}
+                    />
+                    Exclude lands
+                  </label>
+                </div>
+                {visible.length > 0 ? (
+                  <div className="grid grid-cols-6 gap-1.5">
+                    {visible.slice(0, 12).map((card) => (
+                      <SkeletonCardImage key={card.oracle_id} card={card} />
+                    ))}
+                  </div>
+                ) : (
+                  <Text sm className="text-text-secondary">
+                    {(source ?? []).length === 0
+                      ? `No ${sourceLabel} cards found for this cluster.`
+                      : `No ${sourceLabel} cards remain after filtering.`}
+                  </Text>
+                )}
               </div>
-            ) : (
-              <Text sm className="text-text-secondary">
-                {(skeleton.signatureCards ?? []).length === 0
-                  ? 'No signature cards found for this cluster.'
-                  : 'No signature cards remain after filtering.'}
-              </Text>
-            )}
-          </div>
-        )}
+            );
+          return (
+            <>
+              {variantTab('sig-mult', visibleSignatureMultiplicative, skeleton.signatureMultiplicative, 'multiplicative')}
+              {variantTab('sig-blend', visibleSignatureWeightedBlend, skeleton.signatureWeightedBlend, 'weighted-blend')}
+              {variantTab('sig-lift', visibleSignatureLift, skeleton.signatureLift, 'lift')}
+              {variantTab('sig-embed', visibleSignatureEmbedding, skeleton.signatureEmbedding, 'embedding')}
+            </>
+          );
+        })()}
         {cardTab === 'exemplary' && (
           <div className="flex flex-col gap-3">
             {exemplaryDeck ? (
