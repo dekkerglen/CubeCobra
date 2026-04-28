@@ -184,7 +184,9 @@ describe('computeSkeletons', () => {
     const pools = [makePool(0, 0, ['spell', 'island']), makePool(0, 1, ['spell', 'island'])];
     const result = computeSkeletons(pools, meta, null);
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
-    const allCardIds = result.skeletons.flatMap((s) => [...s.coreCards, ...s.occasionalCards].map((c) => c.oracle_id));
+    const allCardIds = result.skeletons.flatMap((s) =>
+      [...s.coreCards.default, ...s.occasionalCards].map((c) => c.oracle_id),
+    );
     expect(allCardIds).not.toContain('island');
   });
 
@@ -193,7 +195,7 @@ describe('computeSkeletons', () => {
     const pools = Array.from({ length: 5 }, (_, i) => makePool(0, i, ['staple']));
     const result = computeSkeletons(pools, meta, null);
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
-    const hasStaple = result.skeletons.some((s) => s.coreCards.some((c) => c.oracle_id === 'staple'));
+    const hasStaple = result.skeletons.some((s) => s.coreCards.default.some((c) => c.oracle_id === 'staple'));
     expect(hasStaple).toBe(true);
   });
 
@@ -299,7 +301,7 @@ describe('computeSkeletons', () => {
       expect(skel.signatureWeightedBlend).toBeDefined();
       expect(skel.signatureLift).toBeDefined();
       expect(skel.signatureEmbedding).toBeDefined();
-      expect(skel.signatureEmbedding).toEqual([]);
+      expect(skel.signatureEmbedding).toEqual({ default: [], excludingFixing: [] });
     }
   });
 });

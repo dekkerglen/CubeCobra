@@ -37,7 +37,7 @@ const makeSkeleton = (clusterId: number, poolIndices: number[]): ArchetypeSkelet
   colorProfile: 'UR',
   poolCount: poolIndices.length,
   poolIndices,
-  coreCards: [],
+  coreCards: { default: [], excludingFixing: [] },
   occasionalCards: [],
   sideboardCards: [],
   lockPairs: [],

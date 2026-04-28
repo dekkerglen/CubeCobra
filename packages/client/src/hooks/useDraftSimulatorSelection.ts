@@ -76,10 +76,15 @@ function buildActiveFilterPreview({
     fraction: count / matchingPoolIndices.length,
   });
 
-  const commonCards = [...poolCounts.entries()]
+  const sortedCommon = [...poolCounts.entries()]
     .map(toSkeletonCard)
-    .sort((a, b) => b.fraction - a.fraction)
-    .slice(0, 12);
+    .sort((a, b) => b.fraction - a.fraction);
+  const commonCards = {
+    default: sortedCommon.slice(0, 12),
+    excludingFixing: sortedCommon
+      .filter((c) => !runData.cardMeta[c.oracle_id]?.isManaFixingLand)
+      .slice(0, 12),
+  };
 
   const lockCandidates = [...poolCounts.entries()]
     .map(toSkeletonCard)

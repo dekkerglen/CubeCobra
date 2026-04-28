@@ -1,6 +1,7 @@
 /* eslint-disable camelcase, no-plusplus, no-restricted-syntax */
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
+import { isManaFixingLand } from '@utils/cardutil';
 import type CardType from '@utils/datatypes/Card';
 import type { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
@@ -11,6 +12,7 @@ import {
   CardMeta,
   CardStats,
   LockPair,
+  RankedCards,
   SimulatedPickCard,
   SimulatedPool,
   SimulationReport,
@@ -3186,14 +3188,16 @@ const ClusterDetailPanel: React.FC<{
   clusterDeckBuilds: BuiltDeck[] | null;
   cubeOracleSet: Set<string>;
   cardMeta: Record<string, CardMeta>;
-  commonCards?: SkeletonCard[];
+  commonCards?: RankedCards;
   slimPools: SlimPool[];
   deckBuilds?: BuiltDeck[] | null;
   themes?: string[];
   poolArchetypeLabels?: Map<number, string> | null;
+  excludeManaFixingLands: boolean;
+  setExcludeManaFixingLands: (v: boolean) => void;
   onOpenPool: (poolIndex: number) => void;
   onClose: () => void;
-}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cubeOracleSet, cardMeta, commonCards = [], slimPools, deckBuilds, themes, poolArchetypeLabels, onOpenPool, onClose }) => {
+}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cubeOracleSet, cardMeta, commonCards, slimPools, deckBuilds, themes, poolArchetypeLabels, excludeManaFixingLands, setExcludeManaFixingLands, onOpenPool, onClose }) => {
   const { csrfFetch } = useContext(CSRFContext);
 
   // Compute actual color profile from deck color shares (≥10% threshold)
@@ -3237,7 +3241,8 @@ const ClusterDetailPanel: React.FC<{
     const representativeTopN = 12;
 
     for (const poolIndex of skeleton.poolIndices) {
-      const deck = deckBuilds![poolIndex]!;
+      const deck = deckBuilds?.[poolIndex];
+      if (!deck) continue;
       const mainboardSet = new Set(deck.mainboard);
       const ranked =
         deck.deckbuildRatings && deck.deckbuildRatings.length > 0
@@ -3261,7 +3266,8 @@ const ClusterDetailPanel: React.FC<{
       | null = null;
 
     for (const poolIndex of skeleton.poolIndices) {
-      const deck = deckBuilds![poolIndex]!;
+      const deck = deckBuilds?.[poolIndex];
+      if (!deck) continue;
       const mainboardSet = new Set(deck.mainboard);
       let score = 0;
       let overlap = 0;
@@ -3291,8 +3297,8 @@ const ClusterDetailPanel: React.FC<{
     const counts = new Map<string, number>();
     for (const poolIndex of skeleton.poolIndices) {
       const cards = hasDecks
-        ? deckBuilds![poolIndex]!.mainboard
-        : slimPools[poolIndex]!.picks.map((pick) => pick.oracle_id);
+        ? deckBuilds?.[poolIndex]?.mainboard ?? []
+        : slimPools[poolIndex]?.picks.map((pick) => pick.oracle_id) ?? [];
       for (const oracle of new Set(cards)) {
         counts.set(oracle, (counts.get(oracle) ?? 0) + 1);
       }
@@ -3330,46 +3336,31 @@ const ClusterDetailPanel: React.FC<{
   const [clusterRecommendations, setClusterRecommendations] = useState<ClusterRecommendation[]>([]);
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
-  const [excludeClusterLands, setExcludeClusterLands] = useState(true);
-  const [excludeRecommendationLands, setExcludeRecommendationLands] = useState(true);
 
-  const visibleCommonCards = useMemo(
-    () =>
-      (commonCards.length > 0 ? commonCards : skeleton.coreCards).filter(
-        (card) => !excludeClusterLands || !cardMeta[card.oracle_id]?.type?.includes('Land'),
-      ),
-    [cardMeta, commonCards, excludeClusterLands, skeleton.coreCards],
+  const pickList = useCallback(
+    (r: RankedCards | SkeletonCard[] | undefined): SkeletonCard[] => {
+      if (!r) return [];
+      // Legacy cached skeletons may still hold a flat SkeletonCard[] from before
+      // RankedCards landed. Treat those as the "default" list — rescoreSkeletons
+      // will replace them with the new shape on the next render.
+      if (Array.isArray(r)) return r;
+      return excludeManaFixingLands ? r.excludingFixing : r.default;
+    },
+    [excludeManaFixingLands],
   );
-  const filterLands = (cards: SkeletonCard[]) =>
-    cards.filter((card) => !excludeClusterLands || !cardMeta[card.oracle_id]?.type?.includes('Land'));
-  const visibleSignatureMultiplicative = useMemo(
-    () => filterLands(skeleton.signatureMultiplicative ?? []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cardMeta, excludeClusterLands, skeleton.signatureMultiplicative],
-  );
-  const visibleSignatureWeightedBlend = useMemo(
-    () => filterLands(skeleton.signatureWeightedBlend ?? []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cardMeta, excludeClusterLands, skeleton.signatureWeightedBlend],
-  );
-  const visibleSignatureLift = useMemo(
-    () => filterLands(skeleton.signatureLift ?? []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cardMeta, excludeClusterLands, skeleton.signatureLift],
-  );
-  const visibleSignatureEmbedding = useMemo(
-    () => filterLands(skeleton.signatureEmbedding ?? []),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [cardMeta, excludeClusterLands, skeleton.signatureEmbedding],
-  );
+  const commonCardsList = pickList(commonCards);
+  const visibleCommonCards = commonCardsList.length > 0 ? commonCardsList : pickList(skeleton.coreCards);
+  const visibleSignatureMultiplicative = pickList(skeleton.signatureMultiplicative);
+  const visibleSignatureWeightedBlend = pickList(skeleton.signatureWeightedBlend);
+  const visibleSignatureLift = pickList(skeleton.signatureLift);
+  const visibleSignatureEmbedding = pickList(skeleton.signatureEmbedding);
 
-  const visibleClusterRecommendations = useMemo(
-    () =>
-      excludeRecommendationLands
-        ? clusterRecommendations.filter((item) => !item.details.type?.includes('Land'))
-        : clusterRecommendations,
-    [clusterRecommendations, excludeRecommendationLands],
-  );
+  const visibleClusterRecommendations = useMemo(() => {
+    const list = excludeManaFixingLands
+      ? clusterRecommendations.filter((item) => !isManaFixingLand(item.details))
+      : clusterRecommendations;
+    return list.slice(0, 24);
+  }, [clusterRecommendations, excludeManaFixingLands]);
 
   useEffect(() => {
     let cancelled = false;
@@ -3397,7 +3388,7 @@ const ClusterDetailPanel: React.FC<{
         const { adds } = await localRecommend(recommendationInputOracles, remapping);
         if (cancelled) return;
 
-        const candidateOracles = adds.slice(0, 80).map((item) => item.oracle);
+        const candidateOracles = adds.slice(0, 120).map((item) => item.oracle);
         const response = await csrfFetch('/cube/api/getdetailsforcards', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -3421,8 +3412,7 @@ const ClusterDetailPanel: React.FC<{
               !!item.details &&
               !item.details.isToken &&
               !(item.details.type?.includes('Basic') && item.details.type?.includes('Land')),
-          )
-          .slice(0, 24);
+          );
 
         setClusterRecommendations(filtered);
       } catch (err) {
@@ -3514,10 +3504,11 @@ const ClusterDetailPanel: React.FC<{
               <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
                 <input
                   type="checkbox"
-                  checked={excludeClusterLands}
-                  onChange={(event) => setExcludeClusterLands(event.target.checked)}
+                  checked={excludeManaFixingLands}
+                  onChange={(event) => setExcludeManaFixingLands(event.target.checked)}
+                  title="Hides duals, shocks, triomes, fetches, Mana Confluence, Evolving Wilds, etc. Utility lands like Wasteland and Mutavault still appear."
                 />
-                Exclude lands
+                Hide mana-fixing lands
               </label>
             </div>
             {visibleCommonCards.length > 0 ? (
@@ -3535,7 +3526,7 @@ const ClusterDetailPanel: React.FC<{
           const variantTab = (
             tabKey: CardTab,
             visible: SkeletonCard[],
-            source: SkeletonCard[] | undefined,
+            source: RankedCards | undefined,
             sourceLabel: string,
           ) =>
             cardTab === tabKey && (
@@ -3544,10 +3535,11 @@ const ClusterDetailPanel: React.FC<{
                   <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
                     <input
                       type="checkbox"
-                      checked={excludeClusterLands}
-                      onChange={(event) => setExcludeClusterLands(event.target.checked)}
+                      checked={excludeManaFixingLands}
+                      onChange={(event) => setExcludeManaFixingLands(event.target.checked)}
+                      title="Hides duals, shocks, triomes, fetches, Mana Confluence, Evolving Wilds, etc. Utility lands like Wasteland and Mutavault still appear."
                     />
-                    Exclude lands
+                    Hide mana-fixing lands
                   </label>
                 </div>
                 {visible.length > 0 ? (
@@ -3558,7 +3550,7 @@ const ClusterDetailPanel: React.FC<{
                   </div>
                 ) : (
                   <Text sm className="text-text-secondary">
-                    {(source ?? []).length === 0
+                    {(source?.default.length ?? 0) === 0
                       ? `No ${sourceLabel} cards found for this cluster.`
                       : `No ${sourceLabel} cards remain after filtering.`}
                   </Text>
@@ -3615,10 +3607,11 @@ const ClusterDetailPanel: React.FC<{
                 <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
                   <input
                     type="checkbox"
-                    checked={excludeRecommendationLands}
-                    onChange={(event) => setExcludeRecommendationLands(event.target.checked)}
+                    checked={excludeManaFixingLands}
+                    onChange={(event) => setExcludeManaFixingLands(event.target.checked)}
+                    title="Hides duals, shocks, triomes, fetches, Mana Confluence, Evolving Wilds, etc. Utility lands like Wasteland and Mutavault still appear."
                   />
-                  Exclude lands
+                  Hide mana-fixing lands
                 </label>
               </div>
             </div>
@@ -3687,12 +3680,18 @@ const ClusterDetailPanel: React.FC<{
 const DraftMapScopePanel: React.FC<{
   title: string;
   subtitle: string;
-  commonCards: SkeletonCard[];
+  commonCards?: RankedCards;
   deckBuilds: BuiltDeck[] | null;
   cardMeta: Record<string, CardMeta>;
   selectedCardInfo?: MapSelectedCardInfo;
   matchingCount: number;
-}> = ({ title, subtitle, commonCards, deckBuilds, cardMeta, selectedCardInfo, matchingCount }) => {
+  excludeManaFixingLands: boolean;
+}> = ({ title, subtitle, commonCards, deckBuilds, cardMeta, selectedCardInfo, matchingCount, excludeManaFixingLands }) => {
+  const commonCardList = commonCards
+    ? excludeManaFixingLands
+      ? commonCards.excludingFixing
+      : commonCards.default
+    : [];
   return (
   <div className="flex flex-col gap-5">
     <div className="flex items-start justify-between gap-2">
@@ -3728,7 +3727,7 @@ const DraftMapScopePanel: React.FC<{
       <Text sm className="text-text-secondary">No pools match all active filters. Try removing a card or changing the scope.</Text>
     ) : (
       <>
-        {(selectedCardInfo?.cardImages.length || commonCards.length > 0) ? (
+        {(selectedCardInfo?.cardImages.length || commonCardList.length > 0) ? (
           <div className="flex flex-col gap-3">
             {selectedCardInfo && selectedCardInfo.cardImages.length > 0 && (
               <div className="grid grid-cols-6 gap-1.5">
@@ -3744,11 +3743,11 @@ const DraftMapScopePanel: React.FC<{
                 ))}
               </div>
             )}
-            {commonCards.length > 0 && (
+            {commonCardList.length > 0 && (
               <div>
                 <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Most common cards in matching pools</Text>
                 <div className="grid grid-cols-6 gap-1.5">
-                  {commonCards.slice(0, selectedCardInfo ? 6 : 12).map((card) => (
+                  {commonCardList.slice(0, selectedCardInfo ? 6 : 12).map((card) => (
                     <SkeletonCardImage key={card.oracle_id} card={card} />
                   ))}
                 </div>
@@ -3813,7 +3812,7 @@ const DraftMapCard: React.FC<{
   detailedViewTitle: string;
   detailedViewSubtitle: string;
   activeFilterPreview: {
-    commonCards: SkeletonCard[];
+    commonCards: RankedCards;
     supportCards: SkeletonCard[];
     sideboardCards: SkeletonCard[];
     lockPairs: LockPair[];
@@ -3828,6 +3827,8 @@ const DraftMapCard: React.FC<{
   draftMapScopeSeatCount: number;
   onClearSelectedCards: () => void;
   cubeOracleSet: Set<string>;
+  excludeManaFixingLands: boolean;
+  setExcludeManaFixingLands: (v: boolean) => void;
 }> = ({
   skeletons,
   showAdvancedClustering,
@@ -3869,6 +3870,8 @@ const DraftMapCard: React.FC<{
   draftMapScopeSeatCount,
   onClearSelectedCards,
   cubeOracleSet,
+  excludeManaFixingLands,
+  setExcludeManaFixingLands,
 }) => {
   return (
     <Card className="border-border">
@@ -4036,11 +4039,13 @@ const DraftMapCard: React.FC<{
                       clusterDeckBuilds={clusterDecks}
                       cubeOracleSet={cubeOracleSet}
                       cardMeta={displayRunData.cardMeta}
-                      commonCards={activeFilterPreview?.commonCards ?? []}
+                      commonCards={activeFilterPreview?.commonCards}
                       slimPools={displayRunData.slimPools}
                       deckBuilds={activeDecks}
                       themes={clusterThemesByClusterId.get(sk.clusterId)}
                       poolArchetypeLabels={poolArchetypeLabels}
+                      excludeManaFixingLands={excludeManaFixingLands}
+                      setExcludeManaFixingLands={setExcludeManaFixingLands}
                       onOpenPool={(poolIndex) => {
                         setSelectedSkeletonId(null);
                         setFocusedPoolIndex(poolIndex);
@@ -4056,11 +4061,12 @@ const DraftMapCard: React.FC<{
                   <DraftMapScopePanel
                     title={cardInfo ? (scopeOnlySummary ?? '') : (activeFilterSummary ?? 'All draft pools')}
                     subtitle={draftMapScopeSubtitle}
-                    commonCards={activeFilterPreview?.commonCards ?? []}
+                    commonCards={activeFilterPreview?.commonCards}
                     deckBuilds={filteredDecks}
                     cardMeta={displayRunData.cardMeta}
                     selectedCardInfo={cardInfo}
                     matchingCount={draftMapScopeSeatCount}
+                    excludeManaFixingLands={excludeManaFixingLands}
                   />
                 )}
               </div>
@@ -4153,6 +4159,7 @@ const DraftSimulatorBottomSection: React.FC<{
   topCardPairings: ReturnType<typeof useDraftSimulatorSelection>['topCardPairings'];
   pairingsExcludeLands: boolean;
   setPairingsExcludeLands: React.Dispatch<React.SetStateAction<boolean>>;
+  excludeManaFixingLands: boolean;
   status: 'idle' | 'running' | 'completed' | 'failed';
 }> = ({
   bottomTab,
@@ -4204,6 +4211,7 @@ const DraftSimulatorBottomSection: React.FC<{
   topCardPairings,
   pairingsExcludeLands,
   setPairingsExcludeLands,
+  excludeManaFixingLands,
   status,
 }) => (
   <div className="simSection simSectionBottomTabs flex flex-col gap-0 pt-3 border-t border-border">
@@ -4268,6 +4276,7 @@ const DraftSimulatorBottomSection: React.FC<{
             poolArchetypeLabels={poolArchetypeLabels}
             poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
             skeletonColorProfiles={skeletonColorProfiles}
+            excludeManaFixingLands={excludeManaFixingLands}
           />
         ) : (
           <Text sm className="text-text-secondary">
@@ -4585,7 +4594,8 @@ const ArchetypeSkeletonSection: React.FC<{
   poolArchetypeLabels?: Map<number, string> | null;
   poolArchetypeLabelsLoading?: boolean;
   skeletonColorProfiles?: Map<number, string>;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles }) => (
+  excludeManaFixingLands: boolean;
+}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles, excludeManaFixingLands }) => (
   <ArchetypeSkeletonSectionInner
     skeletons={skeletons}
     totalPools={totalPools}
@@ -4595,6 +4605,7 @@ const ArchetypeSkeletonSection: React.FC<{
     poolArchetypeLabels={poolArchetypeLabels}
     poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
     skeletonColorProfiles={skeletonColorProfiles}
+    excludeManaFixingLands={excludeManaFixingLands}
   />
 );
 
@@ -4607,7 +4618,8 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   poolArchetypeLabels?: Map<number, string> | null;
   poolArchetypeLabelsLoading?: boolean;
   skeletonColorProfiles?: Map<number, string>;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles = new Map() }) => {
+  excludeManaFixingLands: boolean;
+}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles = new Map(), excludeManaFixingLands }) => {
 
   const renderSkeleton = (skeleton: ArchetypeSkeleton, skIdx: number) => {
     // Compute dominant Gwen archetype label for this cluster
@@ -4664,19 +4676,29 @@ const ArchetypeSkeletonSectionInner: React.FC<{
           )}
         </div>
       </button>
-      {skeleton.coreCards.length > 0 ? (
-        <div className="min-w-0 flex flex-row flex-wrap gap-1">
-          {skeleton.coreCards.slice(0, 8).map((card) => (
-            <SkeletonCardImage key={card.oracle_id} card={card} size={128} />
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-md border border-border/70 bg-bg-accent/30 px-3 py-2">
-          <Text sm className="text-text-secondary">
-            No shared cards were found for this cluster.
-          </Text>
-        </div>
-      )}
+      {(() => {
+        // Legacy cached skeletons may hold a flat SkeletonCard[] for coreCards
+        // before the RankedCards shape landed. Tolerate it until rescore fires.
+        const ranked = skeleton.coreCards as unknown as RankedCards | SkeletonCard[];
+        const archetypeCards = Array.isArray(ranked)
+          ? ranked
+          : excludeManaFixingLands
+            ? ranked.excludingFixing
+            : ranked.default;
+        return archetypeCards.length > 0 ? (
+          <div className="min-w-0 flex flex-row flex-wrap gap-1">
+            {archetypeCards.slice(0, 8).map((card) => (
+              <SkeletonCardImage key={card.oracle_id} card={card} size={128} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-md border border-border/70 bg-bg-accent/30 px-3 py-2">
+            <Text sm className="text-text-secondary">
+              No shared cards were found for this cluster.
+            </Text>
+          </div>
+        );
+      })()}
     </div>
     );
   };
@@ -4877,6 +4899,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [cardStatsOpen, setCardStatsOpen] = useState(true);
   const [bottomTab, setBottomTab] = useState<DraftSimulatorBottomTab>('archetypes');
   const [pairingsExcludeLands, setPairingsExcludeLands] = useState(true);
+  const [excludeManaFixingLands, setExcludeManaFixingLands] = useState(true);
   const [draftMapColorMode, setDraftMapColorMode] = useState<DraftMapColorMode>('cluster');
 
   const resetViewSelection = useCallback(() => {
@@ -6430,6 +6453,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         draftMapScopeSeatCount={draftMapScopeSeatCount}
                         onClearSelectedCards={() => setSelectedCardOracles([])}
                         cubeOracleSet={cubeOracleSet}
+                        excludeManaFixingLands={excludeManaFixingLands}
+                        setExcludeManaFixingLands={setExcludeManaFixingLands}
                       />
                     </div>
                   </Flexbox>
@@ -6517,6 +6542,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   topCardPairings={topCardPairings}
                   pairingsExcludeLands={pairingsExcludeLands}
                   setPairingsExcludeLands={setPairingsExcludeLands}
+                  excludeManaFixingLands={excludeManaFixingLands}
                   status={status}
                 />
               </Flexbox>
