@@ -47,10 +47,16 @@ function buildActiveFilterPreview({
   for (const poolIndex of matchingPoolIndices) {
     const pool = scopedDisplayedPools[poolIndex];
     if (!pool) continue;
+    // Use mainboard counts when deck builds are available so this matches the
+    // algorithm used for skeleton.coreCards (`scoreClusterSkeleton`). Falling
+    // back to raw picks only when builds are absent.
+    const sourceOracles = hasDeckData
+      ? scopedDecks![poolIndex]?.mainboard ?? []
+      : pool.picks.map((pick) => pick.oracle_id);
     const poolOracleSet = new Set(
-      pool.picks
-        .map((pick) => pick.oracle_id)
-        .filter((oracleId) => oracleId && !isBasicLand(oracleId) && !selectedFilterOracleIds.has(oracleId)),
+      sourceOracles.filter(
+        (oracleId) => oracleId && !isBasicLand(oracleId) && !selectedFilterOracleIds.has(oracleId),
+      ),
     );
     poolOracleSets.set(poolIndex, poolOracleSet);
     for (const oracleId of poolOracleSet) {

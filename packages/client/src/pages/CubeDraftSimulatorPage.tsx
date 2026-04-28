@@ -2268,7 +2268,6 @@ const ClusterDetailPanel: React.FC<{
   clusterDeckBuilds: BuiltDeck[] | null;
   cubeOracleSet: Set<string>;
   cardMeta: Record<string, CardMeta>;
-  commonCards?: RankedCards;
   slimPools: SlimPool[];
   deckBuilds?: BuiltDeck[] | null;
   themes?: string[];
@@ -2277,7 +2276,7 @@ const ClusterDetailPanel: React.FC<{
   setExcludeManaFixingLands: (v: boolean) => void;
   onOpenPool: (poolIndex: number) => void;
   onClose: () => void;
-}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cubeOracleSet, cardMeta, commonCards, slimPools, deckBuilds, themes, poolArchetypeLabels, excludeManaFixingLands, setExcludeManaFixingLands, onOpenPool, onClose }) => {
+}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cubeOracleSet, cardMeta, slimPools, deckBuilds, themes, poolArchetypeLabels, excludeManaFixingLands, setExcludeManaFixingLands, onOpenPool, onClose }) => {
   const { csrfFetch } = useContext(CSRFContext);
 
   // Compute actual color profile from deck color shares (≥10% threshold)
@@ -2299,16 +2298,13 @@ const ClusterDetailPanel: React.FC<{
   }, [clusterDeckBuilds, cardMeta, skeleton.colorProfile]);
 
   const CARD_TABS = [
-    { key: 'common', label: 'Common Cards', title: 'Cards appearing most often across decks in this cluster' },
-    { key: 'sig-mult', label: 'Multiplicative', title: 'fraction × log(fraction / mean_other) — TF-IDF on clusters' },
-    { key: 'sig-blend', label: 'Weighted Blend', title: '0.5 × normalized core score + 0.5 × normalized contrastive score' },
-    { key: 'sig-lift', label: 'Lift', title: 'fraction / mean_other, with fraction > 0.15 floor' },
-    { key: 'sig-embed', label: 'Embedding', title: 'Cosine of card embedding to cluster centroid (128-dim)' },
+    { key: 'staples', label: 'Staples', title: 'Cards drafted most often across decks in this cluster' },
+    { key: 'distinct', label: 'Distinct', title: 'Cards characteristic of this cluster — embedding × lift, assigned to their best-fit cluster across the page so no card appears in more than one tab here' },
     { key: 'exemplary', label: 'Exemplary Deck', title: 'A real deck from this cluster chosen to best match the cluster’s representative high-priority card bucket' },
     { key: 'recommendations', label: 'Recommendations', title: 'Use the cluster as a local recommender seed and suggest cards that would strengthen it' },
   ] as const;
   type CardTab = typeof CARD_TABS[number]['key'];
-  const [cardTab, setCardTab] = useState<CardTab>('common');
+  const [cardTab, setCardTab] = useState<CardTab>('staples');
 
   // Greedy co-occurrence chain: each card is chosen because it appears alongside
   // ALL previously selected cards as often as possible.
@@ -2428,12 +2424,8 @@ const ClusterDetailPanel: React.FC<{
     },
     [excludeManaFixingLands],
   );
-  const commonCardsList = pickList(commonCards);
-  const visibleCommonCards = commonCardsList.length > 0 ? commonCardsList : pickList(skeleton.coreCards);
-  const visibleSignatureMultiplicative = pickList(skeleton.signatureMultiplicative);
-  const visibleSignatureWeightedBlend = pickList(skeleton.signatureWeightedBlend);
-  const visibleSignatureLift = pickList(skeleton.signatureLift);
-  const visibleSignatureEmbedding = pickList(skeleton.signatureEmbedding);
+  const visibleCommonCards = pickList(skeleton.coreCards);
+  const visibleDistinctCards = pickList(skeleton.distinctCards);
 
   const visibleClusterRecommendations = useMemo(() => {
     const list = excludeManaFixingLands
@@ -2578,7 +2570,7 @@ const ClusterDetailPanel: React.FC<{
             </button>
           ))}
         </div>
-        {cardTab === 'common' && (
+        {cardTab === 'staples' && (
           <div className="flex flex-col gap-3">
             <div className="flex justify-end">
               <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
@@ -2602,50 +2594,34 @@ const ClusterDetailPanel: React.FC<{
             )}
           </div>
         )}
-        {(() => {
-          const variantTab = (
-            tabKey: CardTab,
-            visible: SkeletonCard[],
-            source: RankedCards | undefined,
-            sourceLabel: string,
-          ) =>
-            cardTab === tabKey && (
-              <div className="flex flex-col gap-3">
-                <div className="flex justify-end">
-                  <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
-                    <input
-                      type="checkbox"
-                      checked={excludeManaFixingLands}
-                      onChange={(event) => setExcludeManaFixingLands(event.target.checked)}
-                      title="Hides duals, shocks, triomes, fetches, Mana Confluence, Evolving Wilds, etc. Utility lands like Wasteland and Mutavault still appear."
-                    />
-                    Hide mana-fixing lands
-                  </label>
-                </div>
-                {visible.length > 0 ? (
-                  <div className="grid grid-cols-6 gap-1.5">
-                    {visible.slice(0, 12).map((card) => (
-                      <SkeletonCardImage key={card.oracle_id} card={card} />
-                    ))}
-                  </div>
-                ) : (
-                  <Text sm className="text-text-secondary">
-                    {(source?.default.length ?? 0) === 0
-                      ? `No ${sourceLabel} cards found for this cluster.`
-                      : `No ${sourceLabel} cards remain after filtering.`}
-                  </Text>
-                )}
+        {cardTab === 'distinct' && (
+          <div className="flex flex-col gap-3">
+            <div className="flex justify-end">
+              <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
+                <input
+                  type="checkbox"
+                  checked={excludeManaFixingLands}
+                  onChange={(event) => setExcludeManaFixingLands(event.target.checked)}
+                  title="Hides duals, shocks, triomes, fetches, Mana Confluence, Evolving Wilds, etc. Utility lands like Wasteland and Mutavault still appear."
+                />
+                Hide mana-fixing lands
+              </label>
+            </div>
+            {visibleDistinctCards.length > 0 ? (
+              <div className="grid grid-cols-6 gap-1.5">
+                {visibleDistinctCards.slice(0, 12).map((card) => (
+                  <SkeletonCardImage key={card.oracle_id} card={card} />
+                ))}
               </div>
-            );
-          return (
-            <>
-              {variantTab('sig-mult', visibleSignatureMultiplicative, skeleton.signatureMultiplicative, 'multiplicative')}
-              {variantTab('sig-blend', visibleSignatureWeightedBlend, skeleton.signatureWeightedBlend, 'weighted-blend')}
-              {variantTab('sig-lift', visibleSignatureLift, skeleton.signatureLift, 'lift')}
-              {variantTab('sig-embed', visibleSignatureEmbedding, skeleton.signatureEmbedding, 'embedding')}
-            </>
-          );
-        })()}
+            ) : (
+              <Text sm className="text-text-secondary">
+                {(skeleton.distinctCards?.default.length ?? 0) === 0
+                  ? 'No distinct cards found for this cluster.'
+                  : 'No distinct cards remain after filtering.'}
+              </Text>
+            )}
+          </div>
+        )}
         {cardTab === 'exemplary' && (
           <div className="flex flex-col gap-3">
             {exemplaryDeck ? (
@@ -3119,7 +3095,6 @@ const DraftMapCard: React.FC<{
                       clusterDeckBuilds={clusterDecks}
                       cubeOracleSet={cubeOracleSet}
                       cardMeta={displayRunData.cardMeta}
-                      commonCards={activeFilterPreview?.commonCards}
                       slimPools={displayRunData.slimPools}
                       deckBuilds={activeDecks}
                       themes={clusterThemesByClusterId.get(sk.clusterId)}
