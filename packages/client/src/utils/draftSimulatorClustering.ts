@@ -5,6 +5,7 @@ import {
   BuiltDeck,
   CardMeta,
   LockPair,
+  RankedCards,
   SkeletonCard,
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
@@ -1237,7 +1238,18 @@ function scoreClusterSkeleton(
     .filter((c) => c.fraction > 0)
     .sort((a, b) => b.distinctiveness - a.distinctiveness || b.fraction - a.fraction);
 
-  const coreCards = allCards.slice(0, 12);
+  // Build a default + excludingFixing pair from a fully-sorted card list. The
+  // toggle in the UI swaps between these precomputed slices, so neither list
+  // ever falls short of the display count due to filtering.
+  const TOP_N = 12;
+  const buildRanked = (sortedCards: SkeletonCard[]): RankedCards => ({
+    default: sortedCards.slice(0, TOP_N),
+    excludingFixing: sortedCards
+      .filter((c) => !cardMeta[c.oracle_id]?.isManaFixingLand)
+      .slice(0, TOP_N),
+  });
+
+  const coreCards = buildRanked(allCards.map(({ distinctiveness: _d, ...rest }) => rest));
 
   // Per-card stats vs. the rest of the clusters: max fraction in any other
   // cluster (for contrastive) and mean fraction across other clusters
@@ -1269,14 +1281,14 @@ function scoreClusterSkeleton(
   });
 
   const EPS = 1e-6;
-  const TOP_N = 12;
 
-  const signatureMultiplicative: SkeletonCard[] = oracleIds
-    .map((_, j) => ({ j, score: stats[j]!.fraction * Math.log((stats[j]!.fraction + EPS) / (stats[j]!.meanOther + EPS)) }))
-    .filter(({ j, score }) => stats[j]!.fraction > 0 && score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, TOP_N)
-    .map(({ j }) => skeletonCard(j));
+  const signatureMultiplicative: RankedCards = buildRanked(
+    oracleIds
+      .map((_, j) => ({ j, score: stats[j]!.fraction * Math.log((stats[j]!.fraction + EPS) / (stats[j]!.meanOther + EPS)) }))
+      .filter(({ j, score }) => stats[j]!.fraction > 0 && score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(({ j }) => skeletonCard(j)),
+  );
 
   const distinctivenessByIdx = new Map<number, number>();
   for (const c of allCards) distinctivenessByIdx.set(oracleIndex.get(c.oracle_id)!, c.distinctiveness);
@@ -1288,26 +1300,28 @@ function scoreClusterSkeleton(
   }
   const safeMaxDist = maxDistinctiveness > 0 ? maxDistinctiveness : 1;
   const safeMaxContrast = maxContrastive > 0 ? maxContrastive : 1;
-  const signatureWeightedBlend: SkeletonCard[] = oracleIds
-    .map((_, j) => {
-      const coreNorm = (distinctivenessByIdx.get(j) ?? 0) / safeMaxDist;
-      const contrastive = stats[j]!.fraction - stats[j]!.maxOther;
-      const sigNorm = Math.max(0, contrastive) / safeMaxContrast;
-      return { j, score: 0.5 * coreNorm + 0.5 * sigNorm };
-    })
-    .filter(({ j, score }) => stats[j]!.fraction > 0 && score > 0)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, TOP_N)
-    .map(({ j }) => skeletonCard(j));
+  const signatureWeightedBlend: RankedCards = buildRanked(
+    oracleIds
+      .map((_, j) => {
+        const coreNorm = (distinctivenessByIdx.get(j) ?? 0) / safeMaxDist;
+        const contrastive = stats[j]!.fraction - stats[j]!.maxOther;
+        const sigNorm = Math.max(0, contrastive) / safeMaxContrast;
+        return { j, score: 0.5 * coreNorm + 0.5 * sigNorm };
+      })
+      .filter(({ j, score }) => stats[j]!.fraction > 0 && score > 0)
+      .sort((a, b) => b.score - a.score)
+      .map(({ j }) => skeletonCard(j)),
+  );
 
-  const signatureLift: SkeletonCard[] = oracleIds
-    .map((_, j) => ({ j, score: stats[j]!.fraction / (stats[j]!.meanOther + EPS) }))
-    .filter(({ j }) => stats[j]!.fraction > 0.15)
-    .sort((a, b) => b.score - a.score)
-    .slice(0, TOP_N)
-    .map(({ j }) => skeletonCard(j));
+  const signatureLift: RankedCards = buildRanked(
+    oracleIds
+      .map((_, j) => ({ j, score: stats[j]!.fraction / (stats[j]!.meanOther + EPS) }))
+      .filter(({ j }) => stats[j]!.fraction > 0.15)
+      .sort((a, b) => b.score - a.score)
+      .map(({ j }) => skeletonCard(j)),
+  );
 
-  let signatureEmbedding: SkeletonCard[] = [];
+  let signatureEmbedding: RankedCards = { default: [], excludingFixing: [] };
   if (cardEmbeddings && embeddings && embDim > 0) {
     const centroid = new Float32Array(embDim);
     for (const pi of poolIndices) {
@@ -1319,18 +1333,19 @@ function scoreClusterSkeleton(
     for (let k = 0; k < embDim; k++) cnorm += centroid[k]! * centroid[k]!;
     cnorm = Math.sqrt(cnorm);
     if (cnorm > 0) for (let k = 0; k < embDim; k++) centroid[k] /= cnorm;
-    signatureEmbedding = oracleIds
-      .map((_, j) => {
-        const ce = cardEmbeddings[j];
-        if (!ce || stats[j]!.fraction <= 0.05) return { j, score: -Infinity };
-        let dot = 0;
-        for (let k = 0; k < embDim; k++) dot += ce[k]! * centroid[k]!;
-        return { j, score: dot };
-      })
-      .filter(({ score }) => score > -Infinity)
-      .sort((a, b) => b.score - a.score)
-      .slice(0, TOP_N)
-      .map(({ j }) => skeletonCard(j));
+    signatureEmbedding = buildRanked(
+      oracleIds
+        .map((_, j) => {
+          const ce = cardEmbeddings[j];
+          if (!ce || stats[j]!.fraction <= 0.05) return { j, score: -Infinity };
+          let dot = 0;
+          for (let k = 0; k < embDim; k++) dot += ce[k]! * centroid[k]!;
+          return { j, score: dot };
+        })
+        .filter(({ score }) => score > -Infinity)
+        .sort((a, b) => b.score - a.score)
+        .map(({ j }) => skeletonCard(j)),
+    );
   }
 
   const occasionalCards: SkeletonCard[] = [];

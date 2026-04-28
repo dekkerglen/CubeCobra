@@ -1,3 +1,4 @@
+import { isManaFixingLand } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import { BasicLandInfo, CardMeta, SimulationSetupResponse } from '@utils/datatypes/SimulationReport';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
@@ -130,6 +131,7 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
             mlOracleId: mlOracleId !== oracleId ? mlOracleId : undefined,
             tags: card.tags && card.tags.length > 0 ? [...card.tags] : undefined,
             oracleTags,
+            isManaFixingLand: isManaFixingLand(details) || undefined,
           };
         } else if (card.tags && card.tags.length > 0) {
           // Union tags from additional instances of the same oracle_id

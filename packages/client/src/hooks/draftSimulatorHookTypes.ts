@@ -3,6 +3,7 @@ import type {
   BuiltDeck,
   CardStats,
   LockPair,
+  RankedCards,
   SimulatedPool,
   SimulationRunData,
   SimulationSetupResponse,
@@ -45,7 +46,7 @@ export interface DraftSimulatorSelectionSetters {
 }
 
 export interface DraftSimulatorFilterPreview {
-  commonCards: SkeletonCard[];
+  commonCards: RankedCards;
   supportCards: SkeletonCard[];
   sideboardCards: SkeletonCard[];
   lockPairs: LockPair[];

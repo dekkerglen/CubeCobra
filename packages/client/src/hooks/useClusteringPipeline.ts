@@ -104,12 +104,18 @@ export default function useClusteringPipeline({
   }, [loadedClusterCache, runSourceKey]);
 
   // After hydrating from cache, refresh per-cluster card scoring if any skeleton
-  // lacks the latest variant fields. Reuses cached cluster assignments, so this
-  // is cheap — no k-NN/UMAP/Leiden rerun.
+  // lacks the latest variant fields or still uses the legacy flat-array shape
+  // (pre-RankedCards). Reuses cached cluster assignments, so this is cheap — no
+  // k-NN/UMAP/Leiden rerun.
   useEffect(() => {
     if (!displayRunData || skeletons.length === 0) return;
     if (poolEmbeddings === null && !poolEmbeddingsFailed) return;
-    const stale = skeletons.some((s) => s.signatureMultiplicative === undefined);
+    const stale = skeletons.some(
+      (s) =>
+        s.signatureMultiplicative === undefined ||
+        Array.isArray(s.coreCards) ||
+        !Array.isArray(s.coreCards?.default),
+    );
     if (!stale) return;
     const refreshed = rescoreSkeletons(
       displayRunData.slimPools,
