@@ -184,7 +184,9 @@ describe('computeSkeletons', () => {
     const pools = [makePool(0, 0, ['spell', 'island']), makePool(0, 1, ['spell', 'island'])];
     const result = computeSkeletons(pools, meta, null);
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
-    const allCardIds = result.skeletons.flatMap((s) => [...s.coreCards, ...s.occasionalCards].map((c) => c.oracle_id));
+    const allCardIds = result.skeletons.flatMap((s) =>
+      [...s.coreCards.default, ...s.occasionalCards].map((c) => c.oracle_id),
+    );
     expect(allCardIds).not.toContain('island');
   });
 
@@ -193,7 +195,7 @@ describe('computeSkeletons', () => {
     const pools = Array.from({ length: 5 }, (_, i) => makePool(0, i, ['staple']));
     const result = computeSkeletons(pools, meta, null);
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
-    const hasStaple = result.skeletons.some((s) => s.coreCards.some((c) => c.oracle_id === 'staple'));
+    const hasStaple = result.skeletons.some((s) => s.coreCards.default.some((c) => c.oracle_id === 'staple'));
     expect(hasStaple).toBe(true);
   });
 
@@ -279,23 +281,49 @@ describe('computeSkeletons', () => {
     expect(result.clusterMethod).toContain('leiden');
   });
 
-  it('populates signatureCards for clusters', () => {
+  it('populates distinctCards disjoint from coreCards and from other clusters distinctCards', () => {
     const meta = {
-      shared: makeMeta('shared', 'Creature', ['U']),
-      uniqueA: makeMeta('uniqueA', 'Creature', ['R']),
-      uniqueB: makeMeta('uniqueB', 'Creature', ['G']),
+      sharedA: makeMeta('sharedA', 'Creature', ['U']),
+      sharedB: makeMeta('sharedB', 'Creature', ['U']),
+      onlyA1: makeMeta('onlyA1', 'Creature', ['R']),
+      onlyA2: makeMeta('onlyA2', 'Creature', ['R']),
+      onlyB1: makeMeta('onlyB1', 'Creature', ['G']),
+      onlyB2: makeMeta('onlyB2', 'Creature', ['G']),
     };
     const pools = [
-      makePool(0, 0, ['shared', 'uniqueA']),
-      makePool(0, 1, ['shared', 'uniqueA']),
-      makePool(0, 2, ['shared', 'uniqueA']),
-      makePool(1, 0, ['shared', 'uniqueB']),
-      makePool(1, 1, ['shared', 'uniqueB']),
-      makePool(1, 2, ['shared', 'uniqueB']),
+      makePool(0, 0, ['sharedA', 'sharedB', 'onlyA1', 'onlyA2']),
+      makePool(0, 1, ['sharedA', 'sharedB', 'onlyA1', 'onlyA2']),
+      makePool(0, 2, ['sharedA', 'sharedB', 'onlyA1', 'onlyA2']),
+      makePool(1, 0, ['sharedA', 'sharedB', 'onlyB1', 'onlyB2']),
+      makePool(1, 1, ['sharedA', 'sharedB', 'onlyB1', 'onlyB2']),
+      makePool(1, 2, ['sharedA', 'sharedB', 'onlyB1', 'onlyB2']),
     ];
+    const embeddings = [
+      [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0],
+      [0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0],
+    ];
+    const result = computeSkeletons(pools, meta, embeddings);
+    expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
+
+    const allDistinctIds: string[] = [];
+    for (const skel of result.skeletons) {
+      expect(skel.distinctCards).toBeDefined();
+      const coreDefaultIds = new Set(skel.coreCards.default.map((c) => c.oracle_id));
+      const coreFixingIds = new Set(skel.coreCards.excludingFixing.map((c) => c.oracle_id));
+      for (const c of skel.distinctCards!.default) expect(coreDefaultIds.has(c.oracle_id)).toBe(false);
+      for (const c of skel.distinctCards!.excludingFixing) expect(coreFixingIds.has(c.oracle_id)).toBe(false);
+      for (const c of skel.distinctCards!.default) allDistinctIds.push(c.oracle_id);
+    }
+    // No card should appear in more than one cluster's distinct (default) tab.
+    expect(allDistinctIds.length).toBe(new Set(allDistinctIds).size);
+  });
+
+  it('returns empty distinctCards when no embeddings are supplied', () => {
+    const meta = { a: makeMeta('a'), b: makeMeta('b') };
+    const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b'])];
     const result = computeSkeletons(pools, meta, null);
     for (const skel of result.skeletons) {
-      expect(skel.signatureCards).toBeDefined();
+      expect(skel.distinctCards).toEqual({ default: [], excludingFixing: [] });
     }
   });
 });

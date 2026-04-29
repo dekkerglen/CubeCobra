@@ -76,6 +76,8 @@ export interface CardMeta {
   tags?: string[];
   /** Scryfall oracle tags for this card. */
   oracleTags?: string[];
+  /** True for non-basic lands that produce 2+ colors or have fetch-style search-library oracle text. */
+  isManaFixingLand?: boolean;
 }
 
 /** Basic land entry included in SimulationSetupResponse for client-side deckbuilding. */
@@ -172,13 +174,25 @@ export interface LockPair {
   coOccurrenceRate: number; // 0–1
 }
 
+/**
+ * A pair of top-N ranked lists for a single scoring algorithm. The toggle in the UI
+ * picks `excludingFixing` (with mana-fixing lands removed before slicing) vs `default`
+ * (raw ranking). Both lists are precomputed at scoring time so toggling never falls
+ * short of the display count.
+ */
+export interface RankedCards {
+  default: SkeletonCard[];
+  excludingFixing: SkeletonCard[];
+}
+
 export interface ArchetypeSkeleton {
   clusterId: number;
   colorProfile: string; // e.g. "UR", "BGW", "C"
   poolCount: number;
   poolIndices: number[]; // indices into slimPools
-  coreCards: SkeletonCard[]; // cards most distinctive to the cluster (fraction × IDF)
-  signatureCards?: SkeletonCard[]; // cards unique to this cluster vs neighbors (contrastive scoring)
+  coreCards: RankedCards; // staples: most-drafted cards in this cluster, ranked by raw fraction
+  distinctCards?: RankedCards; // distinct characterizers: cosine(card_emb, centroid) × log(1 + lift), assigned to home cluster across page (no overlap across distinct/core tabs), 10% floor; per-cluster fallback when sparse
+  signatureCards?: SkeletonCard[]; // legacy: kept so older locally cached runs still type-check
   occasionalCards: SkeletonCard[]; // deprecated; kept for older locally stored runs
   sideboardCards: SkeletonCard[]; // most common sideboard-only cards across decks in this cluster
   lockPairs: LockPair[]; // pairs co-occurring > 60% and well above independence baseline

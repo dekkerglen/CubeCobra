@@ -47,10 +47,16 @@ function buildActiveFilterPreview({
   for (const poolIndex of matchingPoolIndices) {
     const pool = scopedDisplayedPools[poolIndex];
     if (!pool) continue;
+    // Use mainboard counts when deck builds are available so this matches the
+    // algorithm used for skeleton.coreCards (`scoreClusterSkeleton`). Falling
+    // back to raw picks only when builds are absent.
+    const sourceOracles = hasDeckData
+      ? scopedDecks![poolIndex]?.mainboard ?? []
+      : pool.picks.map((pick) => pick.oracle_id);
     const poolOracleSet = new Set(
-      pool.picks
-        .map((pick) => pick.oracle_id)
-        .filter((oracleId) => oracleId && !isBasicLand(oracleId) && !selectedFilterOracleIds.has(oracleId)),
+      sourceOracles.filter(
+        (oracleId) => oracleId && !isBasicLand(oracleId) && !selectedFilterOracleIds.has(oracleId),
+      ),
     );
     poolOracleSets.set(poolIndex, poolOracleSet);
     for (const oracleId of poolOracleSet) {
@@ -76,10 +82,15 @@ function buildActiveFilterPreview({
     fraction: count / matchingPoolIndices.length,
   });
 
-  const commonCards = [...poolCounts.entries()]
+  const sortedCommon = [...poolCounts.entries()]
     .map(toSkeletonCard)
-    .sort((a, b) => b.fraction - a.fraction)
-    .slice(0, 12);
+    .sort((a, b) => b.fraction - a.fraction);
+  const commonCards = {
+    default: sortedCommon.slice(0, 12),
+    excludingFixing: sortedCommon
+      .filter((c) => !runData.cardMeta[c.oracle_id]?.isManaFixingLand)
+      .slice(0, 12),
+  };
 
   const lockCandidates = [...poolCounts.entries()]
     .map(toSkeletonCard)

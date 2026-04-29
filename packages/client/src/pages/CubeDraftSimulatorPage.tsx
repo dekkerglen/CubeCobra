@@ -1,6 +1,7 @@
 /* eslint-disable camelcase, no-plusplus, no-restricted-syntax */
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
+import { isManaFixingLand } from '@utils/cardutil';
 import type CardType from '@utils/datatypes/Card';
 import type { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
@@ -11,6 +12,7 @@ import {
   CardMeta,
   CardStats,
   LockPair,
+  RankedCards,
   SimulatedPickCard,
   SimulatedPool,
   SimulationReport,
@@ -42,12 +44,13 @@ import { Col, Flexbox, Row } from '../components/base/Layout';
 import Link from '../components/base/Link';
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
-import { DeckStacksStatic } from '../components/DeckCard';
+import { Modal, ModalBody, ModalHeader } from '../components/base/Modal';
 import ArchetypeChart from '../components/draftSimulator/ArchetypeChart';
 import CardStatsTable from '../components/draftSimulator/CardStatsTable';
 import DraftSimulatorFilterBar, { type FilterChipItem } from '../components/draftSimulator/DraftSimulatorFilterBar';
 import DraftMapScatter, { type DraftMapColorMode, type DraftMapPoint } from '../components/draftSimulator/DraftMapScatter';
 import DraftVsEloTable from '../components/draftSimulator/DraftVsEloTable';
+import SimDeckView, { CMC_COLS } from '../components/draftSimulator/SimDeckView';
 import {
   ClearSimulationHistoryModal,
   LeaveSimulationModal,
@@ -1377,69 +1380,6 @@ const ViewToggle: React.FC<{
   </Flexbox>
 );
 
-const CMC_COLS = 8;
-
-/** Build piles + a minimal cards array compatible with DeckStacksStatic from oracle ID lists.
- *  Rows: 0 = Creatures, 1 = Non-Creatures, 2 = Lands. Columns: CMC 0–7+. */
-function buildPilesFromOracles(
-  oracleIds: string[],
-  cardMeta: Record<string, CardMeta>,
-): { piles: number[][][]; cards: { cardID: string; details: { oracle_id: string; name: string; image_normal: string } }[] } {
-  const cards: { cardID: string; details: { oracle_id: string; name: string; image_normal: string } }[] = [];
-  const oracleToIndex: Record<string, number> = {};
-  for (const id of oracleIds) {
-    if (oracleToIndex[id] !== undefined) continue;
-    const meta = cardMeta[id];
-    oracleToIndex[id] = cards.length;
-    cards.push({ cardID: id, details: { oracle_id: id, name: meta?.name ?? id, image_normal: meta?.imageUrl ?? '' } });
-  }
-
-  const piles: number[][][] = Array.from({ length: 3 }, () =>
-    Array.from({ length: CMC_COLS }, () => [] as number[]),
-  );
-
-  for (const id of oracleIds) {
-    const meta = cardMeta[id];
-    const typeLower = (meta?.type ?? '').toLowerCase();
-    const row = typeLower.includes('land') ? 2 : typeLower.includes('creature') ? 0 : 1;
-    const col = Math.min(CMC_COLS - 1, Math.max(0, Math.floor(meta?.cmc ?? 0)));
-    piles[row]![col]!.push(oracleToIndex[id]!);
-  }
-
-  const nonEmptyPiles = piles.filter((row) => row.some((col) => col.length > 0));
-  return { piles: nonEmptyPiles, cards };
-}
-
-const SimDeckView: React.FC<{
-  deck: BuiltDeck;
-  cardMeta: Record<string, CardMeta>;
-}> = ({ deck, cardMeta }) => {
-  const { piles: mainPiles, cards } = useMemo(
-    () => buildPilesFromOracles(deck.mainboard, cardMeta),
-    [deck.mainboard, cardMeta],
-  );
-  const { piles: sbPiles, cards: sbCards } = useMemo(
-    () => buildPilesFromOracles(deck.sideboard, cardMeta),
-    [deck.sideboard, cardMeta],
-  );
-
-  return (
-    <div className="overflow-x-auto">
-      <DeckStacksStatic piles={mainPiles} cards={cards} />
-      {deck.sideboard.length > 0 && (
-        <>
-          <div className="px-3 py-2 border-t border-border">
-            <Text semibold lg>
-              Sideboard ({deck.sideboard.length})
-            </Text>
-          </div>
-          <DeckStacksStatic piles={sbPiles} cards={sbCards} />
-        </>
-      )}
-    </div>
-  );
-};
-
 const PoolExpansionContent: React.FC<{
   pool: SimulatedPool;
   mode: PoolViewMode;
@@ -1480,6 +1420,138 @@ const PoolExpansionContent: React.FC<{
         })}
       </Flexbox>
     </div>
+  );
+};
+
+const PoolInspectionModal: React.FC<{
+  isOpen: boolean;
+  setOpen: (open: boolean) => void;
+  pool: SimulatedPool | null;
+  deck: BuiltDeck | null;
+  cardMeta: Record<string, CardMeta>;
+  runData: SimulationRunData;
+  themes: string[];
+  archetypeLabel?: string | null;
+  highlightOracle?: string;
+  deckLoading?: boolean;
+  themeBreakdown?: { bucket: string; cards: { name: string; rawTags: string[] }[] }[];
+}> = ({
+  isOpen,
+  setOpen,
+  pool,
+  deck,
+  cardMeta,
+  runData,
+  themes,
+  archetypeLabel,
+  highlightOracle,
+  deckLoading,
+  themeBreakdown,
+}) => {
+  // Keep last opened pool around so the leave transition has data to render against.
+  const lastPoolRef = useRef<{
+    pool: SimulatedPool;
+    deck: BuiltDeck | null;
+    themes: string[];
+    archetypeLabel: string | null | undefined;
+    themeBreakdown: typeof themeBreakdown;
+  } | null>(null);
+  if (pool) {
+    lastPoolRef.current = { pool, deck, themes, archetypeLabel, themeBreakdown };
+  }
+  const snapshot = pool
+    ? { pool, deck, themes, archetypeLabel, themeBreakdown }
+    : lastPoolRef.current;
+
+  const renderPool = snapshot?.pool ?? null;
+  const renderDeck = snapshot?.deck ?? null;
+  const renderThemes = snapshot?.themes ?? [];
+  const renderArchetypeLabel = snapshot?.archetypeLabel ?? null;
+  const renderThemeBreakdown = snapshot?.themeBreakdown;
+
+  const hasDeck = !!renderDeck && (renderDeck.mainboard.length > 0 || renderDeck.sideboard.length > 0);
+  const hasFullPickOrder = !!runData.setupData;
+
+  const [viewMode, setViewMode] = useState<PoolViewMode>('deck');
+  const [breakdownOpen, setBreakdownOpen] = useState(false);
+
+  // Reset internal state each time the modal opens for a new pool.
+  useEffect(() => {
+    if (!isOpen) return;
+    setViewMode(hasDeck ? 'deck' : hasFullPickOrder ? 'fullPickOrder' : 'pool');
+    setBreakdownOpen(false);
+  }, [isOpen, renderPool?.poolIndex, hasDeck, hasFullPickOrder]);
+
+  if (!renderPool) return null;
+
+  return (
+    <Modal xxl scrollable isOpen={isOpen} setOpen={setOpen}>
+      <ModalHeader setOpen={setOpen}>
+        <Flexbox direction="col" gap="1" className="min-w-0 flex-1">
+          <Text semibold lg>
+            Draft {renderPool.draftIndex + 1} · Seat {renderPool.seatIndex + 1}
+          </Text>
+          {(renderArchetypeLabel || renderPool.archetype) && (
+            <span className="text-sm font-medium">
+              {renderPool.archetype && renderPool.archetype !== 'C' && (
+                <span className="text-text-secondary mr-1">{renderPool.archetype}</span>
+              )}
+              {renderArchetypeLabel && <span className="text-link">{renderArchetypeLabel}</span>}
+            </span>
+          )}
+          {renderThemes.length > 0 && (
+            <Text xs className="text-text-secondary">{renderThemes.join(', ')}</Text>
+          )}
+          {renderThemeBreakdown && renderThemeBreakdown.length > 0 && (
+            <>
+              <button
+                type="button"
+                onClick={() => setBreakdownOpen((o) => !o)}
+                className="self-start text-[11px] text-text-secondary hover:text-text transition-colors whitespace-nowrap"
+              >
+                {breakdownOpen ? '▾ Hide' : '▸ Show'} breakdown
+              </button>
+              {breakdownOpen && (
+                <div className="mt-1 text-[10px] font-mono leading-tight max-h-40 overflow-y-auto">
+                  {renderThemeBreakdown.map(({ bucket, cards }) => (
+                    <div key={bucket} className="mb-1.5">
+                      <span className="font-bold text-link">{bucket} ({cards.length})</span>
+                      <div className="ml-2">
+                        {cards.map(({ name, rawTags }) => (
+                          <div key={name} className="text-text-secondary">
+                            {name}{' '}
+                            <span className="opacity-50">[{rawTags.join(', ')}]</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+        </Flexbox>
+      </ModalHeader>
+      <ModalBody scrollable className="!p-0">
+        <div className="flex items-center justify-end gap-2 px-3 py-2 border-b border-border bg-bg-accent/40 sticky top-0 z-10">
+          <ViewToggle
+            mode={viewMode}
+            onChange={setViewMode}
+            hasDeck={hasDeck}
+            hasFullPickOrder={hasFullPickOrder}
+            deckLoading={deckLoading}
+          />
+        </div>
+        <PoolExpansionContent
+          pool={renderPool}
+          mode={viewMode}
+          deck={renderDeck}
+          cardMeta={cardMeta}
+          runData={runData}
+          highlightOracle={highlightOracle}
+        />
+      </ModalBody>
+    </Modal>
   );
 };
 
@@ -1670,17 +1742,14 @@ const TinyCurve: React.FC<{ creatureCounts: number[]; nonCreatureCounts: number[
 const DraftBreakdownTable: React.FC<{
   pools: SimulatedPool[];
   deckBuilds: BuiltDeck[] | null;
-  deckLoading: boolean;
   cardMeta: Record<string, CardMeta>;
   runData: SimulationRunData;
   skeletons?: ArchetypeSkeleton[];
-  viewMode: PoolViewMode;
-  setViewMode: (mode: PoolViewMode) => void;
   highlightOracle?: string;
   showLocationFilter?: boolean;
-  selectedCardName?: string;
   focusedPoolIndex?: number | null;
   onSelectPool?: (poolIndex: number | null) => void;
+  onInspectPool?: (poolIndex: number) => void;
   poolArchetypeLabels?: Map<number, string> | null;
   poolArchetypeLabelsLoading?: boolean;
   clusterThemes?: Map<number, { tag: string; lift: number }[]>;
@@ -1688,24 +1757,20 @@ const DraftBreakdownTable: React.FC<{
 }> = ({
   pools,
   deckBuilds,
-  deckLoading,
   cardMeta,
   runData,
   skeletons,
-  viewMode,
-  setViewMode,
   highlightOracle,
   showLocationFilter = false,
-  selectedCardName,
   focusedPoolIndex = null,
   onSelectPool,
+  onInspectPool,
   poolArchetypeLabels,
   poolArchetypeLabelsLoading = false,
   clusterThemes: clusterThemesProp,
   clusterTagAllowlist: clusterTagAllowlistProp,
 }) => {
   const hasDeck = !!deckBuilds && deckBuilds.length > 0;
-  const hasFullPickOrder = !!runData.setupData;
   const [selectedPool, setSelectedPool] = useState<number | null>(pools[0]?.poolIndex ?? null);
   const [sortKey, setSortKey] = useState<DraftBreakdownSortKey>('draft');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
@@ -1715,7 +1780,6 @@ const DraftBreakdownTable: React.FC<{
   const [draftFilter, setDraftFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState<DeckLocationFilter>('all');
   const [poolPage, setPoolPage] = useState(1);
-  const [themeBreakdownOpen, setThemeBreakdownOpen] = useState(false);
 
   // Use parent-provided themes (computed over all pools) when available; avoids filtered-view degradation.
   const clusterThemes = clusterThemesProp;
@@ -1774,7 +1838,6 @@ const DraftBreakdownTable: React.FC<{
   const totalPoolPages = Math.max(1, Math.ceil(sorted.length / POOL_PAGE_SIZE));
   const currentPage = Math.min(poolPage, totalPoolPages);
   const pagedPools = sorted.slice((currentPage - 1) * POOL_PAGE_SIZE, currentPage * POOL_PAGE_SIZE);
-  const selectedSummary = sorted.find((summary) => summary.pool.poolIndex === selectedPool) ?? pagedPools[0] ?? null;
 
   useEffect(() => {
     setSelectedPool(pools[0]?.poolIndex ?? null);
@@ -1893,7 +1956,7 @@ const DraftBreakdownTable: React.FC<{
                 'block w-full px-3 py-3 text-left hover:bg-bg-active border-l-2',
                 isSelected ? 'bg-link/5 border-link' : 'border-transparent',
               ].join(' ')}
-              onClick={() => { setSelectedPool(summary.pool.poolIndex); onSelectPool?.(summary.pool.poolIndex); }}
+              onClick={() => { setSelectedPool(summary.pool.poolIndex); onSelectPool?.(summary.pool.poolIndex); onInspectPool?.(summary.pool.poolIndex); }}
             >
               <Flexbox direction="row" justify="between" alignItems="start" className="gap-2">
                 <div className="min-w-0 flex-1">
@@ -1987,7 +2050,7 @@ const DraftBreakdownTable: React.FC<{
                       : 'border-l-[3px] border-l-transparent hover:bg-bg-active',
                   ].join(' ')}
                   style={isSelected ? { background: 'rgb(var(--link) / 0.07)', boxShadow: 'inset 3px 0 0 rgb(var(--link))' } : undefined}
-                  onClick={() => { setSelectedPool(summary.pool.poolIndex); onSelectPool?.(summary.pool.poolIndex); }}
+                  onClick={() => { setSelectedPool(summary.pool.poolIndex); onSelectPool?.(summary.pool.poolIndex); onInspectPool?.(summary.pool.poolIndex); }}
                 >
                   <td className="px-3 py-4 tabular-nums">
                     <span className={isSelected ? 'font-bold text-text' : 'font-semibold text-text'}>
@@ -2102,100 +2165,6 @@ const DraftBreakdownTable: React.FC<{
         </div>
       </div>
 
-      {selectedSummary && (
-        <div className="rounded-lg border border-link/30 bg-link/5 overflow-hidden">
-          <Flexbox
-            direction="row"
-            justify="between"
-            alignItems="center"
-            className="flex-wrap gap-2 border-b border-link/20 bg-link/10 px-3 py-2"
-          >
-            <div>
-              <Text sm semibold className="block">
-                Draft {selectedSummary.pool.draftIndex + 1} · Seat {selectedSummary.pool.seatIndex + 1}
-              </Text>
-              {poolArchetypeLabels && (
-                <span className="block text-xs font-medium">
-                  {selectedSummary.colors && selectedSummary.colors !== 'C' && (
-                    <span className="text-text-secondary mr-1">{selectedSummary.colors}</span>
-                  )}
-                  <span className="text-link">{poolArchetypeLabels.get(selectedSummary.pool.poolIndex) ?? '—'}</span>
-                </span>
-              )}
-              <Text xs className="block text-text-secondary">
-                {selectedSummary.themes.join(', ')}
-                {selectedCardName ? ` · ${selectedCardName}` : ''}
-              </Text>
-              {/* OTAG bucket → cards breakdown (collapsed by default) */}
-              {themeBreakdownOpen && (() => {
-                const deck = deckBuilds?.[selectedSummary.pool.poolIndex] ?? null;
-                const mainCards = getPoolMainCards(selectedSummary.pool, deck, cardMeta);
-                const bucketMap = new Map<string, { name: string; rawTags: string[] }[]>();
-                for (const oracleId of mainCards) {
-                  const meta = cardMeta[oracleId];
-                  if (!meta?.oracleTags) continue;
-                  const byBucket = new Map<string, string[]>();
-                  for (const tag of meta.oracleTags) {
-                    const bucket = OTAG_BUCKET_MAP[tag];
-                    if (!bucket) continue;
-                    if (!byBucket.has(bucket)) byBucket.set(bucket, []);
-                    byBucket.get(bucket)!.push(tag);
-                  }
-                  for (const [bucket, rawTags] of byBucket) {
-                    if (!bucketMap.has(bucket)) bucketMap.set(bucket, []);
-                    bucketMap.get(bucket)!.push({ name: meta.name, rawTags });
-                  }
-                }
-                const buckets = [...bucketMap.entries()]
-                  .filter(([, cards]) => cards.length > 1)
-                  .sort((a, b) => b[1].length - a[1].length);
-                if (buckets.length === 0) return null;
-                return (
-                  <div className="mt-1.5 text-[10px] font-mono leading-tight">
-                    {buckets.map(([bucket, cards]) => (
-                      <div key={bucket} className="mb-1.5">
-                        <span className="font-bold text-link">{bucket} ({cards.length})</span>
-                        <div className="ml-2">
-                          {cards.map(({ name, rawTags }) => (
-                            <div key={name} className="text-text-secondary">
-                              {name}{' '}
-                              <span className="opacity-50">[{rawTags.join(', ')}]</span>
-                            </div>
-                          ))}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                );
-              })()}
-            </div>
-            <div className="flex flex-col items-end gap-2 flex-shrink-0">
-              <button
-                type="button"
-                onClick={() => setThemeBreakdownOpen((o) => !o)}
-                className="text-[11px] text-text-secondary hover:text-text transition-colors whitespace-nowrap"
-              >
-                {themeBreakdownOpen ? '▾ Hide' : '▸ Show'} breakdown
-              </button>
-              <ViewToggle
-                mode={viewMode}
-                onChange={setViewMode}
-                hasDeck={hasDeck}
-                hasFullPickOrder={hasFullPickOrder}
-                deckLoading={deckLoading}
-              />
-            </div>
-          </Flexbox>
-          <PoolExpansionContent
-            pool={selectedSummary.pool}
-            mode={viewMode}
-            deck={deckBuilds?.[selectedSummary.pool.poolIndex] ?? null}
-            cardMeta={cardMeta}
-            runData={runData}
-            highlightOracle={highlightOracle}
-          />
-        </div>
-      )}
     </Flexbox>
   );
 };
@@ -2266,14 +2235,15 @@ const ClusterDetailPanel: React.FC<{
   clusterDeckBuilds: BuiltDeck[] | null;
   cubeOracleSet: Set<string>;
   cardMeta: Record<string, CardMeta>;
-  commonCards?: SkeletonCard[];
   slimPools: SlimPool[];
   deckBuilds?: BuiltDeck[] | null;
   themes?: string[];
   poolArchetypeLabels?: Map<number, string> | null;
+  excludeManaFixingLands: boolean;
+  setExcludeManaFixingLands: (v: boolean) => void;
   onOpenPool: (poolIndex: number) => void;
   onClose: () => void;
-}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cubeOracleSet, cardMeta, commonCards = [], slimPools, deckBuilds, themes, poolArchetypeLabels, onOpenPool, onClose }) => {
+}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cubeOracleSet, cardMeta, slimPools, deckBuilds, themes, poolArchetypeLabels, excludeManaFixingLands, setExcludeManaFixingLands, onOpenPool, onClose }) => {
   const { csrfFetch } = useContext(CSRFContext);
 
   // Compute actual color profile from deck color shares (≥10% threshold)
@@ -2295,13 +2265,13 @@ const ClusterDetailPanel: React.FC<{
   }, [clusterDeckBuilds, cardMeta, skeleton.colorProfile]);
 
   const CARD_TABS = [
-    { key: 'common', label: 'Common Cards', title: 'Cards appearing most often across decks in this cluster' },
-    { key: 'signature', label: 'Signature Cards', title: 'Cards that appear significantly more in this cluster than in others — contrastive scoring vs. neighboring clusters' },
+    { key: 'staples', label: 'Staples', title: 'Cards drafted most often across decks in this cluster' },
+    { key: 'distinct', label: 'Distinct', title: 'Cards characteristic of this cluster — embedding × lift, assigned to their best-fit cluster across the page so no card appears in more than one tab here' },
     { key: 'exemplary', label: 'Exemplary Deck', title: 'A real deck from this cluster chosen to best match the cluster’s representative high-priority card bucket' },
     { key: 'recommendations', label: 'Recommendations', title: 'Use the cluster as a local recommender seed and suggest cards that would strengthen it' },
   ] as const;
   type CardTab = typeof CARD_TABS[number]['key'];
-  const [cardTab, setCardTab] = useState<CardTab>('common');
+  const [cardTab, setCardTab] = useState<CardTab>('staples');
 
   // Greedy co-occurrence chain: each card is chosen because it appears alongside
   // ALL previously selected cards as often as possible.
@@ -2314,7 +2284,8 @@ const ClusterDetailPanel: React.FC<{
     const representativeTopN = 12;
 
     for (const poolIndex of skeleton.poolIndices) {
-      const deck = deckBuilds![poolIndex]!;
+      const deck = deckBuilds?.[poolIndex];
+      if (!deck) continue;
       const mainboardSet = new Set(deck.mainboard);
       const ranked =
         deck.deckbuildRatings && deck.deckbuildRatings.length > 0
@@ -2338,7 +2309,8 @@ const ClusterDetailPanel: React.FC<{
       | null = null;
 
     for (const poolIndex of skeleton.poolIndices) {
-      const deck = deckBuilds![poolIndex]!;
+      const deck = deckBuilds?.[poolIndex];
+      if (!deck) continue;
       const mainboardSet = new Set(deck.mainboard);
       let score = 0;
       let overlap = 0;
@@ -2368,8 +2340,8 @@ const ClusterDetailPanel: React.FC<{
     const counts = new Map<string, number>();
     for (const poolIndex of skeleton.poolIndices) {
       const cards = hasDecks
-        ? deckBuilds![poolIndex]!.mainboard
-        : slimPools[poolIndex]!.picks.map((pick) => pick.oracle_id);
+        ? deckBuilds?.[poolIndex]?.mainboard ?? []
+        : slimPools[poolIndex]?.picks.map((pick) => pick.oracle_id) ?? [];
       for (const oracle of new Set(cards)) {
         counts.set(oracle, (counts.get(oracle) ?? 0) + 1);
       }
@@ -2407,31 +2379,27 @@ const ClusterDetailPanel: React.FC<{
   const [clusterRecommendations, setClusterRecommendations] = useState<ClusterRecommendation[]>([]);
   const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
-  const [excludeClusterLands, setExcludeClusterLands] = useState(true);
-  const [excludeRecommendationLands, setExcludeRecommendationLands] = useState(true);
 
-  const visibleCommonCards = useMemo(
-    () =>
-      (commonCards.length > 0 ? commonCards : skeleton.coreCards).filter(
-        (card) => !excludeClusterLands || !cardMeta[card.oracle_id]?.type?.includes('Land'),
-      ),
-    [cardMeta, commonCards, excludeClusterLands, skeleton.coreCards],
+  const pickList = useCallback(
+    (r: RankedCards | SkeletonCard[] | undefined): SkeletonCard[] => {
+      if (!r) return [];
+      // Legacy cached skeletons may still hold a flat SkeletonCard[] from before
+      // RankedCards landed. Treat those as the "default" list — rescoreSkeletons
+      // will replace them with the new shape on the next render.
+      if (Array.isArray(r)) return r;
+      return excludeManaFixingLands ? r.excludingFixing : r.default;
+    },
+    [excludeManaFixingLands],
   );
-  const visibleSignatureCards = useMemo(
-    () =>
-      (skeleton.signatureCards ?? []).filter(
-        (card) => !excludeClusterLands || !cardMeta[card.oracle_id]?.type?.includes('Land'),
-      ),
-    [cardMeta, excludeClusterLands, skeleton.signatureCards],
-  );
+  const visibleCommonCards = pickList(skeleton.coreCards);
+  const visibleDistinctCards = pickList(skeleton.distinctCards);
 
-  const visibleClusterRecommendations = useMemo(
-    () =>
-      excludeRecommendationLands
-        ? clusterRecommendations.filter((item) => !item.details.type?.includes('Land'))
-        : clusterRecommendations,
-    [clusterRecommendations, excludeRecommendationLands],
-  );
+  const visibleClusterRecommendations = useMemo(() => {
+    const list = excludeManaFixingLands
+      ? clusterRecommendations.filter((item) => !isManaFixingLand(item.details))
+      : clusterRecommendations;
+    return list.slice(0, 24);
+  }, [clusterRecommendations, excludeManaFixingLands]);
 
   useEffect(() => {
     let cancelled = false;
@@ -2459,7 +2427,7 @@ const ClusterDetailPanel: React.FC<{
         const { adds } = await localRecommend(recommendationInputOracles, remapping);
         if (cancelled) return;
 
-        const candidateOracles = adds.slice(0, 80).map((item) => item.oracle);
+        const candidateOracles = adds.slice(0, 120).map((item) => item.oracle);
         const response = await csrfFetch('/cube/api/getdetailsforcards', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2483,8 +2451,7 @@ const ClusterDetailPanel: React.FC<{
               !!item.details &&
               !item.details.isToken &&
               !(item.details.type?.includes('Basic') && item.details.type?.includes('Land')),
-          )
-          .slice(0, 24);
+          );
 
         setClusterRecommendations(filtered);
       } catch (err) {
@@ -2570,16 +2537,17 @@ const ClusterDetailPanel: React.FC<{
             </button>
           ))}
         </div>
-        {cardTab === 'common' && (
+        {cardTab === 'staples' && (
           <div className="flex flex-col gap-3">
             <div className="flex justify-end">
               <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
                 <input
                   type="checkbox"
-                  checked={excludeClusterLands}
-                  onChange={(event) => setExcludeClusterLands(event.target.checked)}
+                  checked={excludeManaFixingLands}
+                  onChange={(event) => setExcludeManaFixingLands(event.target.checked)}
+                  title="Hides duals, shocks, triomes, fetches, Mana Confluence, Evolving Wilds, etc. Utility lands like Wasteland and Mutavault still appear."
                 />
-                Exclude lands
+                Hide mana-fixing lands
               </label>
             </div>
             {visibleCommonCards.length > 0 ? (
@@ -2593,29 +2561,30 @@ const ClusterDetailPanel: React.FC<{
             )}
           </div>
         )}
-        {cardTab === 'signature' && (
+        {cardTab === 'distinct' && (
           <div className="flex flex-col gap-3">
             <div className="flex justify-end">
               <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
                 <input
                   type="checkbox"
-                  checked={excludeClusterLands}
-                  onChange={(event) => setExcludeClusterLands(event.target.checked)}
+                  checked={excludeManaFixingLands}
+                  onChange={(event) => setExcludeManaFixingLands(event.target.checked)}
+                  title="Hides duals, shocks, triomes, fetches, Mana Confluence, Evolving Wilds, etc. Utility lands like Wasteland and Mutavault still appear."
                 />
-                Exclude lands
+                Hide mana-fixing lands
               </label>
             </div>
-            {visibleSignatureCards.length > 0 ? (
+            {visibleDistinctCards.length > 0 ? (
               <div className="grid grid-cols-6 gap-1.5">
-                {visibleSignatureCards.slice(0, 12).map((card) => (
+                {visibleDistinctCards.slice(0, 12).map((card) => (
                   <SkeletonCardImage key={card.oracle_id} card={card} />
                 ))}
               </div>
             ) : (
               <Text sm className="text-text-secondary">
-                {(skeleton.signatureCards ?? []).length === 0
-                  ? 'No signature cards found for this cluster.'
-                  : 'No signature cards remain after filtering.'}
+                {(skeleton.distinctCards?.default.length ?? 0) === 0
+                  ? 'No distinct cards found for this cluster.'
+                  : 'No distinct cards remain after filtering.'}
               </Text>
             )}
           </div>
@@ -2623,26 +2592,21 @@ const ClusterDetailPanel: React.FC<{
         {cardTab === 'exemplary' && (
           <div className="flex flex-col gap-3">
             {exemplaryDeck ? (
-              <>
-                <div className="flex items-center justify-between gap-3 flex-wrap rounded border border-border/60 bg-bg-accent/30 px-3 py-2">
-                  <div>
-                    <Text sm semibold>
-                      Draft {slimPools[exemplaryDeck.poolIndex]!.draftIndex + 1} · Seat {slimPools[exemplaryDeck.poolIndex]!.seatIndex + 1}
-                    </Text>
-                    <Text xs className="text-text-secondary">
-                      Matches {exemplaryDeck.overlap} representative cards from the cluster bucket.
-                    </Text>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => onOpenPool(exemplaryDeck.poolIndex)}
-                    className="px-3 py-1.5 rounded text-xs font-semibold border bg-bg text-text-secondary border-border hover:bg-bg-active"
-                  >
-                    Open in detailed view
-                  </button>
-                </div>
-                <SimDeckView deck={exemplaryDeck.deck} cardMeta={cardMeta} />
-              </>
+              <div className="rounded-lg border border-link/30 bg-link/5 px-4 py-4 flex flex-col items-center gap-2 text-center">
+                <Text semibold lg className="text-text">
+                  Draft {slimPools[exemplaryDeck.poolIndex]!.draftIndex + 1} · Seat {slimPools[exemplaryDeck.poolIndex]!.seatIndex + 1}
+                </Text>
+                <Text xs className="text-text-secondary">
+                  Matches {exemplaryDeck.overlap} representative cards from the cluster bucket.
+                </Text>
+                <button
+                  type="button"
+                  onClick={() => onOpenPool(exemplaryDeck.poolIndex)}
+                  className="mt-1 px-4 py-2 rounded-md text-sm font-semibold bg-link text-white border border-link hover:bg-link-active"
+                >
+                  View Exemplary Deck
+                </button>
+              </div>
             ) : (
               <Text sm className="text-text-secondary">Deck builds are required to show an exemplary deck.</Text>
             )}
@@ -2661,10 +2625,11 @@ const ClusterDetailPanel: React.FC<{
                 <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
                   <input
                     type="checkbox"
-                    checked={excludeRecommendationLands}
-                    onChange={(event) => setExcludeRecommendationLands(event.target.checked)}
+                    checked={excludeManaFixingLands}
+                    onChange={(event) => setExcludeManaFixingLands(event.target.checked)}
+                    title="Hides duals, shocks, triomes, fetches, Mana Confluence, Evolving Wilds, etc. Utility lands like Wasteland and Mutavault still appear."
                   />
-                  Exclude lands
+                  Hide mana-fixing lands
                 </label>
               </div>
             </div>
@@ -2733,12 +2698,18 @@ const ClusterDetailPanel: React.FC<{
 const DraftMapScopePanel: React.FC<{
   title: string;
   subtitle: string;
-  commonCards: SkeletonCard[];
+  commonCards?: RankedCards;
   deckBuilds: BuiltDeck[] | null;
   cardMeta: Record<string, CardMeta>;
   selectedCardInfo?: MapSelectedCardInfo;
   matchingCount: number;
-}> = ({ title, subtitle, commonCards, deckBuilds, cardMeta, selectedCardInfo, matchingCount }) => {
+  excludeManaFixingLands: boolean;
+}> = ({ title, subtitle, commonCards, deckBuilds, cardMeta, selectedCardInfo, matchingCount, excludeManaFixingLands }) => {
+  const commonCardList = commonCards
+    ? excludeManaFixingLands
+      ? commonCards.excludingFixing
+      : commonCards.default
+    : [];
   return (
   <div className="flex flex-col gap-5">
     <div className="flex items-start justify-between gap-2">
@@ -2774,7 +2745,7 @@ const DraftMapScopePanel: React.FC<{
       <Text sm className="text-text-secondary">No pools match all active filters. Try removing a card or changing the scope.</Text>
     ) : (
       <>
-        {(selectedCardInfo?.cardImages.length || commonCards.length > 0) ? (
+        {(selectedCardInfo?.cardImages.length || commonCardList.length > 0) ? (
           <div className="flex flex-col gap-3">
             {selectedCardInfo && selectedCardInfo.cardImages.length > 0 && (
               <div className="grid grid-cols-6 gap-1.5">
@@ -2790,11 +2761,11 @@ const DraftMapScopePanel: React.FC<{
                 ))}
               </div>
             )}
-            {commonCards.length > 0 && (
+            {commonCardList.length > 0 && (
               <div>
                 <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Most common cards in matching pools</Text>
                 <div className="grid grid-cols-6 gap-1.5">
-                  {commonCards.slice(0, selectedCardInfo ? 6 : 12).map((card) => (
+                  {commonCardList.slice(0, selectedCardInfo ? 6 : 12).map((card) => (
                     <SkeletonCardImage key={card.oracle_id} card={card} />
                   ))}
                 </div>
@@ -2859,7 +2830,7 @@ const DraftMapCard: React.FC<{
   detailedViewTitle: string;
   detailedViewSubtitle: string;
   activeFilterPreview: {
-    commonCards: SkeletonCard[];
+    commonCards: RankedCards;
     supportCards: SkeletonCard[];
     sideboardCards: SkeletonCard[];
     lockPairs: LockPair[];
@@ -2874,6 +2845,9 @@ const DraftMapCard: React.FC<{
   draftMapScopeSeatCount: number;
   onClearSelectedCards: () => void;
   cubeOracleSet: Set<string>;
+  excludeManaFixingLands: boolean;
+  setExcludeManaFixingLands: (v: boolean) => void;
+  onInspectPool: (poolIndex: number) => void;
 }> = ({
   skeletons,
   showAdvancedClustering,
@@ -2915,6 +2889,9 @@ const DraftMapCard: React.FC<{
   draftMapScopeSeatCount,
   onClearSelectedCards,
   cubeOracleSet,
+  excludeManaFixingLands,
+  setExcludeManaFixingLands,
+  onInspectPool,
 }) => {
   return (
     <Card className="border-border">
@@ -3010,6 +2987,7 @@ const DraftMapCard: React.FC<{
                   setSelectedSkeletonId(point.clusterId);
                   setSelectedArchetype(null);
                   setDraftBreakdownOpen(true);
+                  onInspectPool(point.poolIndex);
                 }}
               />
             )}
@@ -3082,15 +3060,14 @@ const DraftMapCard: React.FC<{
                       clusterDeckBuilds={clusterDecks}
                       cubeOracleSet={cubeOracleSet}
                       cardMeta={displayRunData.cardMeta}
-                      commonCards={activeFilterPreview?.commonCards ?? []}
                       slimPools={displayRunData.slimPools}
                       deckBuilds={activeDecks}
                       themes={clusterThemesByClusterId.get(sk.clusterId)}
                       poolArchetypeLabels={poolArchetypeLabels}
+                      excludeManaFixingLands={excludeManaFixingLands}
+                      setExcludeManaFixingLands={setExcludeManaFixingLands}
                       onOpenPool={(poolIndex) => {
-                        setSelectedSkeletonId(null);
-                        setFocusedPoolIndex(poolIndex);
-                        setDraftBreakdownOpen(true);
+                        onInspectPool(poolIndex);
                       }}
                       onClose={() => {
                         setSelectedSkeletonId(null);
@@ -3102,11 +3079,12 @@ const DraftMapCard: React.FC<{
                   <DraftMapScopePanel
                     title={cardInfo ? (scopeOnlySummary ?? '') : (activeFilterSummary ?? 'All draft pools')}
                     subtitle={draftMapScopeSubtitle}
-                    commonCards={activeFilterPreview?.commonCards ?? []}
+                    commonCards={activeFilterPreview?.commonCards}
                     deckBuilds={filteredDecks}
                     cardMeta={displayRunData.cardMeta}
                     selectedCardInfo={cardInfo}
                     matchingCount={draftMapScopeSeatCount}
+                    excludeManaFixingLands={excludeManaFixingLands}
                   />
                 )}
               </div>
@@ -3188,17 +3166,17 @@ const DraftSimulatorBottomSection: React.FC<{
   displayedPools: SimulatedPool[];
   activeDecks: BuiltDeck[] | null;
   simPhase: 'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'save' | null;
-  focusedPoolViewMode: PoolViewMode;
-  setFocusedPoolViewMode: React.Dispatch<React.SetStateAction<PoolViewMode>>;
   selectedCard: CardStats | null;
   focusedPoolIndex: number | null;
   setFocusedPoolIndex: React.Dispatch<React.SetStateAction<number | null>>;
+  onInspectPool: (poolIndex: number) => void;
   allPoolClusterThemes?: Map<number, { tag: string; lift: number }[]>;
   allPoolTagAllowlist?: Set<string>;
   topSideboardCards: ReturnType<typeof useDraftSimulatorSelection>['topSideboardCards'];
   topCardPairings: ReturnType<typeof useDraftSimulatorSelection>['topCardPairings'];
   pairingsExcludeLands: boolean;
   setPairingsExcludeLands: React.Dispatch<React.SetStateAction<boolean>>;
+  excludeManaFixingLands: boolean;
   status: 'idle' | 'running' | 'completed' | 'failed';
 }> = ({
   bottomTab,
@@ -3239,17 +3217,17 @@ const DraftSimulatorBottomSection: React.FC<{
   displayedPools,
   activeDecks,
   simPhase,
-  focusedPoolViewMode,
-  setFocusedPoolViewMode,
   selectedCard,
   focusedPoolIndex,
   setFocusedPoolIndex,
+  onInspectPool,
   allPoolClusterThemes,
   allPoolTagAllowlist,
   topSideboardCards,
   topCardPairings,
   pairingsExcludeLands,
   setPairingsExcludeLands,
+  excludeManaFixingLands,
   status,
 }) => (
   <div className="simSection simSectionBottomTabs flex flex-col gap-0 pt-3 border-t border-border">
@@ -3314,6 +3292,7 @@ const DraftSimulatorBottomSection: React.FC<{
             poolArchetypeLabels={poolArchetypeLabels}
             poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
             skeletonColorProfiles={skeletonColorProfiles}
+            excludeManaFixingLands={excludeManaFixingLands}
           />
         ) : (
           <Text sm className="text-text-secondary">
@@ -3448,17 +3427,14 @@ const DraftSimulatorBottomSection: React.FC<{
         <DraftBreakdownTable
           pools={activeFilterPoolIndexSet !== null ? displayedPools.filter((p) => activeFilterPoolIndexSet.has(p.poolIndex)) : displayedPools}
           deckBuilds={activeDecks}
-          deckLoading={simPhase === 'deckbuild'}
           cardMeta={displayRunData.cardMeta}
           runData={displayRunData}
           skeletons={skeletons}
-          viewMode={focusedPoolViewMode}
-          setViewMode={setFocusedPoolViewMode}
           highlightOracle={selectedCard?.oracle_id}
           showLocationFilter={!!selectedCard}
-          selectedCardName={selectedCard?.name}
           focusedPoolIndex={focusedPoolIndex}
           onSelectPool={setFocusedPoolIndex}
+          onInspectPool={onInspectPool}
           poolArchetypeLabels={poolArchetypeLabels}
           poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
           clusterThemes={allPoolClusterThemes}
@@ -3631,7 +3607,8 @@ const ArchetypeSkeletonSection: React.FC<{
   poolArchetypeLabels?: Map<number, string> | null;
   poolArchetypeLabelsLoading?: boolean;
   skeletonColorProfiles?: Map<number, string>;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles }) => (
+  excludeManaFixingLands: boolean;
+}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles, excludeManaFixingLands }) => (
   <ArchetypeSkeletonSectionInner
     skeletons={skeletons}
     totalPools={totalPools}
@@ -3641,6 +3618,7 @@ const ArchetypeSkeletonSection: React.FC<{
     poolArchetypeLabels={poolArchetypeLabels}
     poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
     skeletonColorProfiles={skeletonColorProfiles}
+    excludeManaFixingLands={excludeManaFixingLands}
   />
 );
 
@@ -3653,7 +3631,8 @@ const ArchetypeSkeletonSectionInner: React.FC<{
   poolArchetypeLabels?: Map<number, string> | null;
   poolArchetypeLabelsLoading?: boolean;
   skeletonColorProfiles?: Map<number, string>;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles = new Map() }) => {
+  excludeManaFixingLands: boolean;
+}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles = new Map(), excludeManaFixingLands }) => {
 
   const renderSkeleton = (skeleton: ArchetypeSkeleton, skIdx: number) => {
     // Compute dominant Gwen archetype label for this cluster
@@ -3710,19 +3689,29 @@ const ArchetypeSkeletonSectionInner: React.FC<{
           )}
         </div>
       </button>
-      {skeleton.coreCards.length > 0 ? (
-        <div className="min-w-0 flex flex-row flex-wrap gap-1">
-          {skeleton.coreCards.slice(0, 8).map((card) => (
-            <SkeletonCardImage key={card.oracle_id} card={card} size={128} />
-          ))}
-        </div>
-      ) : (
-        <div className="rounded-md border border-border/70 bg-bg-accent/30 px-3 py-2">
-          <Text sm className="text-text-secondary">
-            No shared cards were found for this cluster.
-          </Text>
-        </div>
-      )}
+      {(() => {
+        // Legacy cached skeletons may hold a flat SkeletonCard[] for coreCards
+        // before the RankedCards shape landed. Tolerate it until rescore fires.
+        const ranked = skeleton.coreCards as unknown as RankedCards | SkeletonCard[];
+        const archetypeCards = Array.isArray(ranked)
+          ? ranked
+          : excludeManaFixingLands
+            ? ranked.excludingFixing
+            : ranked.default;
+        return archetypeCards.length > 0 ? (
+          <div className="min-w-0 flex flex-row flex-wrap gap-1">
+            {archetypeCards.slice(0, 8).map((card) => (
+              <SkeletonCardImage key={card.oracle_id} card={card} size={128} />
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-md border border-border/70 bg-bg-accent/30 px-3 py-2">
+            <Text sm className="text-text-secondary">
+              No shared cards were found for this cluster.
+            </Text>
+          </div>
+        );
+      })()}
     </div>
     );
   };
@@ -3783,6 +3772,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [selectedSkeletonId, setSelectedSkeletonId] = useState<number | null>(null);
   const [focusedPoolIndex, setFocusedPoolIndex] = useState<number | null>(null);
   const [focusedPoolViewMode, setFocusedPoolViewMode] = useState<PoolViewMode>('deck');
+  const [inspectingPoolIndex, setInspectingPoolIndex] = useState<number | null>(null);
   const detailedViewRef = useRef<HTMLDivElement>(null);
   const cardStatsRef = useRef<HTMLDivElement>(null);
 
@@ -3796,6 +3786,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [cardStatsOpen, setCardStatsOpen] = useState(true);
   const [bottomTab, setBottomTab] = useState<DraftSimulatorBottomTab>('archetypes');
   const [pairingsExcludeLands, setPairingsExcludeLands] = useState(true);
+  const [excludeManaFixingLands, setExcludeManaFixingLands] = useState(true);
   const [draftMapColorMode, setDraftMapColorMode] = useState<DraftMapColorMode>('cluster');
 
   const resetViewSelection = useCallback(() => {
@@ -4146,6 +4137,45 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     });
   }, []);
 
+  const inspectingPool = useMemo(
+    () => (inspectingPoolIndex === null ? null : displayedPools.find((p) => p.poolIndex === inspectingPoolIndex) ?? null),
+    [inspectingPoolIndex, displayedPools],
+  );
+  const inspectingDeck = useMemo(
+    () => (inspectingPool ? activeDecks?.[inspectingPool.poolIndex] ?? null : null),
+    [inspectingPool, activeDecks],
+  );
+  const inspectingThemes = useMemo(
+    () =>
+      inspectingPool && displayRunData
+        ? inferDraftThemes(inspectingPool, inspectingDeck, displayRunData.cardMeta, allPoolClusterThemes, allPoolTagAllowlist)
+        : [],
+    [inspectingPool, inspectingDeck, displayRunData, allPoolClusterThemes, allPoolTagAllowlist],
+  );
+  const inspectingThemeBreakdown = useMemo(() => {
+    if (!inspectingPool || !displayRunData) return undefined;
+    const mainCards = getPoolMainCards(inspectingPool, inspectingDeck, displayRunData.cardMeta);
+    const bucketMap = new Map<string, { name: string; rawTags: string[] }[]>();
+    for (const oracleId of mainCards) {
+      const meta = displayRunData.cardMeta[oracleId];
+      if (!meta?.oracleTags) continue;
+      const byBucket = new Map<string, string[]>();
+      for (const tag of meta.oracleTags) {
+        const bucket = OTAG_BUCKET_MAP[tag];
+        if (!bucket) continue;
+        if (!byBucket.has(bucket)) byBucket.set(bucket, []);
+        byBucket.get(bucket)!.push(tag);
+      }
+      for (const [bucket, rawTags] of byBucket) {
+        if (!bucketMap.has(bucket)) bucketMap.set(bucket, []);
+        bucketMap.get(bucket)!.push({ name: meta.name, rawTags });
+      }
+    }
+    return [...bucketMap.entries()]
+      .filter(([, cards]) => cards.length > 1)
+      .sort((a, b) => b[1].length - a[1].length)
+      .map(([bucket, cards]) => ({ bucket, cards }));
+  }, [inspectingPool, inspectingDeck, displayRunData]);
 
   return (
     <MainLayout useContainer={false}>
@@ -4508,6 +4538,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         draftMapScopeSeatCount={draftMapScopeSeatCount}
                         onClearSelectedCards={() => setSelectedCardOracles([])}
                         cubeOracleSet={cubeOracleSet}
+                        excludeManaFixingLands={excludeManaFixingLands}
+                        setExcludeManaFixingLands={setExcludeManaFixingLands}
+                        onInspectPool={setInspectingPoolIndex}
                       />
                     </div>
                   </Flexbox>
@@ -4584,17 +4617,17 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   displayedPools={displayedPools}
                   activeDecks={activeDecks}
                   simPhase={simPhase}
-                  focusedPoolViewMode={focusedPoolViewMode}
-                  setFocusedPoolViewMode={setFocusedPoolViewMode}
                   selectedCard={selectedCard}
                   focusedPoolIndex={focusedPoolIndex}
                   setFocusedPoolIndex={setFocusedPoolIndex}
+                  onInspectPool={setInspectingPoolIndex}
                   allPoolClusterThemes={allPoolClusterThemes}
                   allPoolTagAllowlist={allPoolTagAllowlist}
                   topSideboardCards={topSideboardCards}
                   topCardPairings={topCardPairings}
                   pairingsExcludeLands={pairingsExcludeLands}
                   setPairingsExcludeLands={setPairingsExcludeLands}
+                  excludeManaFixingLands={excludeManaFixingLands}
                   status={status}
                 />
               </Flexbox>
@@ -4643,6 +4676,21 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
             </Card>
 
             <SimulatorExplainer />
+            {displayRunData && (
+              <PoolInspectionModal
+                isOpen={inspectingPoolIndex !== null}
+                setOpen={(open) => { if (!open) setInspectingPoolIndex(null); }}
+                pool={inspectingPool}
+                deck={inspectingDeck}
+                cardMeta={displayRunData.cardMeta}
+                runData={displayRunData}
+                themes={inspectingThemes}
+                archetypeLabel={inspectingPool ? poolArchetypeLabels?.get(inspectingPool.poolIndex) ?? null : null}
+                highlightOracle={selectedCard?.oracle_id}
+                deckLoading={simPhase === 'deckbuild'}
+                themeBreakdown={inspectingThemeBreakdown}
+              />
+            )}
             <PriorRunDeleteModal
               isOpen={deleteRunModalOpen}
               setOpen={setDeleteRunModalOpen}
