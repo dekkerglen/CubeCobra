@@ -295,6 +295,7 @@ export default function useDraftSimulatorPresentation({
     () => `Common Card Pairings${filteredPoolScopeSuffix ? ` ${filteredPoolScopeSuffix}` : ''}`,
     [filteredPoolScopeSuffix],
   );
+  const overperformersTitleSuffix = useMemo(() => filteredPoolScopeSuffix, [filteredPoolScopeSuffix]);
 
   return {
     activeFilterSummary,
@@ -311,5 +312,6 @@ export default function useDraftSimulatorPresentation({
     draftBreakdownTitle,
     sideboardTitle,
     pairingsTitle,
+    overperformersTitleSuffix,
   };
 }

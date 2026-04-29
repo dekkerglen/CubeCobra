@@ -3173,6 +3173,7 @@ const DraftSimulatorBottomSection: React.FC<{
   draftBreakdownTitle: string;
   sideboardTitle: string;
   pairingsTitle: string;
+  overperformersTitleSuffix: string | null;
   downloadCardStatsCsv: (stats: CardStats[], label: string) => void;
   visibleCardStats: CardStats[];
   handleToggleSelectedCard: (oracleId: string) => void;
@@ -3223,6 +3224,7 @@ const DraftSimulatorBottomSection: React.FC<{
   draftBreakdownTitle,
   sideboardTitle,
   pairingsTitle,
+  overperformersTitleSuffix,
   downloadCardStatsCsv,
   visibleCardStats,
   handleToggleSelectedCard,
@@ -3467,7 +3469,9 @@ const DraftSimulatorBottomSection: React.FC<{
                   {bottomTab === 'overperformers' && (
                     <div className="flex flex-col gap-4">
                       <DraftVsEloTable
-                        cardStats={displayRunData.cardStats}
+                        cardStats={visibleCardStats}
+                        inDeckOracles={inDeckOracles}
+                        titleSuffix={overperformersTitleSuffix}
                         renderCardLink={(oracleId, name) => renderAutocardNameLink(oracleId, name)}
                       />
                     </div>
@@ -4121,6 +4125,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     draftBreakdownTitle,
     sideboardTitle,
     pairingsTitle,
+    overperformersTitleSuffix,
   } = useDraftSimulatorPresentation({
     data: derivedData,
     state: selectionState,
@@ -4564,6 +4569,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   draftBreakdownTitle={draftBreakdownTitle}
                   sideboardTitle={sideboardTitle}
                   pairingsTitle={pairingsTitle}
+                  overperformersTitleSuffix={overperformersTitleSuffix}
                   downloadCardStatsCsv={downloadCardStatsCsv}
                   visibleCardStats={visibleCardStats}
                   handleToggleSelectedCard={handleToggleSelectedCard}
