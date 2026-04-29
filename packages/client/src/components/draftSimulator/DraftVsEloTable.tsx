@@ -7,9 +7,13 @@ import Text from '../base/Text';
 
 const DraftVsEloTable: React.FC<{
   cardStats: CardStats[];
+  inDeckOracles?: Set<string> | null;
+  titleSuffix?: string | null;
   renderCardLink: (oracleId: string, name: string) => React.ReactNode;
-}> = ({ cardStats, renderCardLink }) => {
-  const picked = cardStats.filter((c) => c.timesPicked > 0 && c.avgPickPosition > 0);
+}> = ({ cardStats, inDeckOracles, titleSuffix, renderCardLink }) => {
+  const picked = cardStats.filter(
+    (c) => c.timesPicked > 0 && c.avgPickPosition > 0 && (!inDeckOracles || inDeckOracles.has(c.oracle_id)),
+  );
   const eloRankMap = new Map([...picked].sort((a, b) => b.elo - a.elo).map((c, i) => [c.oracle_id, i + 1]));
   const draftRankMap = new Map(
     [...picked].sort((a, b) => a.avgPickPosition - b.avgPickPosition).map((c, i) => [c.oracle_id, i + 1]),
@@ -70,12 +74,12 @@ const DraftVsEloTable: React.FC<{
     <Row className="gap-4">
       {[
         {
-          title: 'Overperformers',
+          title: `Overperformers${titleSuffix ? ` ${titleSuffix}` : ''}`,
           sub: 'Drafted earlier than their Elo suggests — picked more highly than expected.',
           data: gainers,
         },
         {
-          title: 'Underperformers',
+          title: `Underperformers${titleSuffix ? ` ${titleSuffix}` : ''}`,
           sub: 'Drafted later than their Elo suggests — picked lower than expected.',
           data: losers,
         },
