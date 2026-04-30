@@ -1117,6 +1117,7 @@ interface SkeletonScoringContext {
   oracleIndex: Map<string, number>;
   cardMeta: Record<string, CardMeta>;
   vecs: Uint8Array[];
+  sourceIndicesByPool: Uint16Array[];
   clusterFracsMap: Map<number, Float32Array>;
   cardEmbeddings: (Float32Array | null)[] | null;
   embeddings: number[][] | null;
@@ -1143,13 +1144,19 @@ function buildScoringContext(
   const dim = oracleIds.length;
 
   const hasDecks = !!(deckBuilds && deckBuilds.length === n);
+  const sourceIndicesByPool: Uint16Array[] = new Array(n);
   const vecs: Uint8Array[] = slimPools.map((pool, i) => {
     const v = new Uint8Array(dim);
     const cards = hasDecks ? deckBuilds![i]!.mainboard : pool.picks.map((p) => p.oracle_id);
+    const indices: number[] = [];
     for (const oracle_id of cards) {
       const idx = oracleIndex.get(oracle_id);
-      if (idx !== undefined) v[idx] = 1;
+      if (idx !== undefined && !v[idx]) {
+        v[idx] = 1;
+        indices.push(idx);
+      }
     }
+    sourceIndicesByPool[i] = Uint16Array.from(indices);
     return v;
   });
 
@@ -1157,8 +1164,11 @@ function buildScoringContext(
   for (const { clusterId, poolIndices } of clusters) {
     const f = new Float32Array(dim);
     for (const pi of poolIndices) {
-      const v = vecs[pi]!;
-      for (let j = 0; j < dim; j++) f[j] += v[j]!;
+      const indices = sourceIndicesByPool[pi];
+      if (!indices) continue;
+      for (let k = 0; k < indices.length; k++) {
+        f[indices[k]!] += 1;
+      }
     }
     const cnt = poolIndices.length;
     if (cnt > 0) for (let j = 0; j < dim; j++) f[j] /= cnt;
@@ -1169,22 +1179,30 @@ function buildScoringContext(
   const embDim = hasEmbeddings ? embeddings![0]!.length : 0;
   const cardEmbeddings: (Float32Array | null)[] | null = hasEmbeddings ? new Array(dim).fill(null) : null;
   if (hasEmbeddings && cardEmbeddings) {
-    for (let j = 0; j < dim; j++) {
-      const sum = new Float32Array(embDim);
-      let count = 0;
-      for (let i = 0; i < n; i++) {
-        if (!vecs[i]![j]) continue;
-        const e = embeddings![i]!;
+    const cardCounts = new Uint16Array(dim);
+    for (let i = 0; i < n; i++) {
+      const e = embeddings![i]!;
+      const indices = sourceIndicesByPool[i]!;
+      for (let j = 0; j < indices.length; j++) {
+        const idx = indices[j]!;
+        let sum = cardEmbeddings[idx];
+        if (!sum) {
+          sum = new Float32Array(embDim);
+          cardEmbeddings[idx] = sum;
+        }
         for (let k = 0; k < embDim; k++) sum[k] += e[k]!;
-        count++;
+        cardCounts[idx] += 1;
       }
-      if (count === 0) continue;
+    }
+    for (let j = 0; j < dim; j++) {
+      const sum = cardEmbeddings[j];
+      const count = cardCounts[j]!;
+      if (!sum || count === 0) continue;
       for (let k = 0; k < embDim; k++) sum[k] /= count;
       let norm = 0;
       for (let k = 0; k < embDim; k++) norm += sum[k]! * sum[k]!;
       norm = Math.sqrt(norm);
       if (norm > 0) for (let k = 0; k < embDim; k++) sum[k] /= norm;
-      cardEmbeddings[j] = sum;
     }
   }
 
@@ -1193,6 +1211,7 @@ function buildScoringContext(
     oracleIndex,
     cardMeta,
     vecs,
+    sourceIndicesByPool,
     clusterFracsMap,
     cardEmbeddings,
     embeddings,
@@ -1532,6 +1551,47 @@ export function computeSkeletons(
   };
 }
 
+export function buildClusterRecommendationInput(
+  skeleton: ArchetypeSkeleton,
+  slimPools: SlimPool[],
+  cardMeta: Record<string, CardMeta>,
+  deckBuilds?: BuiltDeck[] | null,
+): { seedOracles: string[]; minSeedCount: number } {
+  const hasDecks = !!(deckBuilds && deckBuilds.length === slimPools.length);
+  const totalClusterPools = skeleton.poolIndices.length;
+  if (totalClusterPools === 0) {
+    return { seedOracles: [], minSeedCount: 0 };
+  }
+
+  const counts = new Map<string, number>();
+  for (const poolIndex of skeleton.poolIndices) {
+    const cards = hasDecks
+      ? deckBuilds?.[poolIndex]?.mainboard ?? []
+      : slimPools[poolIndex]?.picks.map((pick) => pick.oracle_id) ?? [];
+    for (const oracle of new Set(cards)) {
+      const type = cardMeta[oracle]?.type ?? '';
+      if (type.includes('Basic') && type.includes('Land')) continue;
+      counts.set(oracle, (counts.get(oracle) ?? 0) + 1);
+    }
+  }
+
+  const ranked = [...counts.entries()]
+    .map(([oracle, count]) => ({
+      oracle,
+      count,
+      fraction: count / totalClusterPools,
+    }))
+    .sort((a, b) => b.fraction - a.fraction || a.oracle.localeCompare(b.oracle));
+
+  const minSeedCount = Math.max(2, Math.ceil(skeleton.poolCount * 0.1));
+  const frequentCards = ranked.filter((card) => card.count >= minSeedCount);
+  const seedCards = frequentCards.length >= 20 ? frequentCards : ranked.slice(0, 40);
+  return {
+    seedOracles: seedCards.slice(0, 120).map((card) => card.oracle),
+    minSeedCount,
+  };
+}
+
 /**
  * Recompute per-cluster card scoring on top of an existing set of skeletons.
  * Reuses the cluster assignments stored in `existingSkeletons[i].poolIndices`,
@@ -1547,12 +1607,20 @@ export function rescoreSkeletons(
   existingSkeletons: ArchetypeSkeleton[],
 ): ArchetypeSkeleton[] {
   if (slimPools.length === 0 || existingSkeletons.length === 0) return existingSkeletons;
-  const clusters = existingSkeletons.map((s) => ({ clusterId: s.clusterId, poolIndices: s.poolIndices }));
+  const clusters = existingSkeletons.map((s) => ({
+    clusterId: s.clusterId,
+    poolIndices: s.poolIndices.filter((poolIndex) => Number.isInteger(poolIndex) && poolIndex >= 0 && poolIndex < slimPools.length),
+  }));
+  const existingByClusterId = new Map(existingSkeletons.map((s) => [s.clusterId, s]));
   const ctx = buildScoringContext(slimPools, cardMeta, embeddings, deckBuilds, clusters);
   const out: ArchetypeSkeleton[] = [];
   for (const { clusterId, poolIndices } of clusters) {
     const skel = scoreClusterSkeleton(ctx, clusterId, poolIndices);
-    if (skel) out.push(skel);
+    if (skel) {
+      const existing = existingByClusterId.get(clusterId);
+      if (existing?.recommendedAdds) skel.recommendedAdds = existing.recommendedAdds;
+      out.push(skel);
+    }
   }
   assignDistinctCards(ctx, out);
   return out.sort((a, b) => b.poolCount - a.poolCount);

@@ -31,43 +31,57 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
   const autocardPopup = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    document.onmousemove = (e) => {
-      const leftPixelSpace = e.clientX;
-      const rightPixelSpace = window.innerWidth - leftPixelSpace;
-      const topPixelSpace = e.clientY;
-      const bottomPixelSpace = window.innerHeight - topPixelSpace;
+    if (hidden) return undefined;
 
-      const xOffset = e.clientX + window.pageXOffset;
-      const yOffset = e.clientY + window.pageYOffset;
-
-      const newPosition: Position = {};
-
-      if (rightPixelSpace > leftPixelSpace) {
-        // display on right
-        newPosition.left = `${Math.max(window.pageXOffset, 5 + xOffset)}px`;
-        setTagsOnRight(true);
-        // newPosition.right = null;
-      } else {
-        // display on left
-        newPosition.right = `${Math.max(window.innerWidth + 5 - xOffset, 0)}px`;
-        setTagsOnRight(false);
-        // newPosition.left = null;
+    let frameId: number | null = null;
+    const handleMouseMove = (e: MouseEvent) => {
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
       }
-      if (autocardPopup.current!.offsetHeight > window.innerHeight) {
-        newPosition.top = `${window.pageYOffset}px`;
-        // newPosition.bottom = null;
-      } else if (bottomPixelSpace > topPixelSpace) {
-        // display on bottom
-        newPosition.top = `${5 + yOffset}px`;
-        // newPosition.bottom = null;
-      } else {
-        // display on top
-        newPosition.bottom = `${window.innerHeight + 5 - yOffset}px`;
-        // newPosition.top = null;
-      }
-      setPosition(newPosition);
+      frameId = requestAnimationFrame(() => {
+        frameId = null;
+        if (!autocardPopup.current) return;
+
+        const leftPixelSpace = e.clientX;
+        const rightPixelSpace = window.innerWidth - leftPixelSpace;
+        const topPixelSpace = e.clientY;
+        const bottomPixelSpace = window.innerHeight - topPixelSpace;
+
+        const xOffset = e.clientX + window.pageXOffset;
+        const yOffset = e.clientY + window.pageYOffset;
+
+        const newPosition: Position = {};
+
+        if (rightPixelSpace > leftPixelSpace) {
+          // display on right
+          newPosition.left = `${Math.max(window.pageXOffset, 5 + xOffset)}px`;
+          setTagsOnRight(true);
+        } else {
+          // display on left
+          newPosition.right = `${Math.max(window.innerWidth + 5 - xOffset, 0)}px`;
+          setTagsOnRight(false);
+        }
+        if (autocardPopup.current.offsetHeight > window.innerHeight) {
+          newPosition.top = `${window.pageYOffset}px`;
+        } else if (bottomPixelSpace > topPixelSpace) {
+          // display on bottom
+          newPosition.top = `${5 + yOffset}px`;
+        } else {
+          // display on top
+          newPosition.bottom = `${window.innerHeight + 5 - yOffset}px`;
+        }
+        setPosition(newPosition);
+      });
     };
-  }, []);
+
+    document.addEventListener('mousemove', handleMouseMove);
+    return () => {
+      document.removeEventListener('mousemove', handleMouseMove);
+      if (frameId !== null) {
+        cancelAnimationFrame(frameId);
+      }
+    };
+  }, [hidden]);
 
   const cardWidth = back ? 30 : 15; // rem
 

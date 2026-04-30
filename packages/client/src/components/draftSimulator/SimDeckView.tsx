@@ -52,17 +52,19 @@ const SimDeckView: React.FC<{
   );
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto px-4 py-4 md:px-5">
       <DeckStacksStatic piles={mainPiles} cards={cards} />
       {deck.sideboard.length > 0 && (
-        <>
-          <div className="px-3 py-2 border-t border-border">
+        <div className="mt-5 rounded-lg border border-border/70 bg-bg-accent/30 overflow-hidden">
+          <div className="px-4 py-3 border-b border-border/70 bg-bg-accent/50">
             <Text semibold lg>
               Sideboard ({deck.sideboard.length})
             </Text>
           </div>
-          <DeckStacksStatic piles={sbPiles} cards={sbCards} />
-        </>
+          <div className="px-4 py-4">
+            <DeckStacksStatic piles={sbPiles} cards={sbCards} />
+          </div>
+        </div>
       )}
     </div>
   );

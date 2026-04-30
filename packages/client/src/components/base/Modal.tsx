@@ -17,6 +17,8 @@ interface ModalProps {
   //If you set scrollable on the modal also set it on the ModalBody
   scrollable?: boolean;
   offsetClassName?: string;
+  panelClassName?: string;
+  backdropClassName?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -31,6 +33,8 @@ export const Modal: React.FC<ModalProps> = ({
   xxl,
   scrollable = false,
   offsetClassName = '',
+  panelClassName = '',
+  backdropClassName = '',
 }) => {
   return (
     <Transition show={isOpen}>
@@ -43,7 +47,7 @@ export const Modal: React.FC<ModalProps> = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-bg bg-opacity-75 transition-opacity" />
+          <div className={classNames('fixed inset-0 bg-bg bg-opacity-75 transition-opacity', backdropClassName)} />
         </TransitionChild>
         <div className="fixed inset-0 z-[60]">
           <div
@@ -77,6 +81,7 @@ export const Modal: React.FC<ModalProps> = ({
                          */
                         'overflow-hidden max-h-95/100': scrollable,
                       },
+                      panelClassName,
                     )}
                   >
                     {children}

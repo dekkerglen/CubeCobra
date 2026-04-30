@@ -23,6 +23,7 @@ interface UseClusteringPipelineArgs {
   activeDecks: BuiltDeck[] | null;
   selectedTs: number | null;
   loadedClusterCache: ClusteringCache | null;
+  clusterCachePending: boolean;
   embeddingsCache: { current: Map<string, EmbeddingCacheValue> };
 }
 
@@ -32,6 +33,7 @@ export default function useClusteringPipeline({
   activeDecks,
   selectedTs,
   loadedClusterCache,
+  clusterCachePending,
   embeddingsCache,
 }: UseClusteringPipelineArgs) {
   const [knnK, setKnnK] = useState(50);
@@ -53,6 +55,7 @@ export default function useClusteringPipeline({
 
   const poolArchetypeLabelsLoading = displayRunData !== null && poolArchetypeLabels === null && !poolEmbeddingsFailed;
   const hasDecksForSource = !!(displayRunData && activeDecks && activeDecks.length === displayRunData.slimPools.length);
+  const waitingForBackgroundClusterCache = clusterCachePending && !loadedClusterCache;
 
   const clusteringPhase: string | null = clusteringInProgress
     ? poolEmbeddings === null && !poolEmbeddingsFailed
@@ -120,24 +123,28 @@ export default function useClusteringPipeline({
           !Array.isArray(s.coreCards?.default),
       );
     if (!stale) return;
-    const refreshed = rescoreSkeletons(
-      displayRunData.slimPools,
-      displayRunData.cardMeta,
-      poolEmbeddings,
-      activeDecks,
-      skeletons,
-    );
-    setSkeletons(refreshed);
-    if (selectedTs) {
-      void patchClusteringCache(cubeId, selectedTs, {
-        skeletons: refreshed,
-        scoringVersion: SCORING_ALGORITHM_VERSION,
-      });
+    try {
+      const refreshed = rescoreSkeletons(
+        displayRunData.slimPools,
+        displayRunData.cardMeta,
+        poolEmbeddings,
+        activeDecks,
+        skeletons,
+      );
+      setSkeletons(refreshed);
+      if (selectedTs) {
+        void patchClusteringCache(cubeId, selectedTs, {
+          skeletons: refreshed,
+          scoringVersion: SCORING_ALGORITHM_VERSION,
+        });
+      }
+    } catch (error) {
+      console.error('Failed to refresh cached cluster scoring:', error);
     }
   }, [skeletons, displayRunData, poolEmbeddings, poolEmbeddingsFailed, activeDecks, selectedTs, cubeId, loadedClusterCache]);
 
   useEffect(() => {
-    if (!displayRunData || displayRunData.slimPools.length === 0 || !selectedTs) {
+    if (!displayRunData || displayRunData.slimPools.length === 0 || !selectedTs || waitingForBackgroundClusterCache) {
       setPoolEmbeddings(null);
       setPoolEmbeddingsFailed(false);
       return;
@@ -178,7 +185,7 @@ export default function useClusteringPipeline({
     return () => {
       cancelled = true;
     };
-  }, [displayRunData, activeDecks, selectedTs, embeddingsCache]);
+  }, [displayRunData, activeDecks, selectedTs, embeddingsCache, waitingForBackgroundClusterCache]);
 
   useEffect(() => {
     if (!poolEmbeddings || poolEmbeddings.length === 0) {
@@ -243,6 +250,11 @@ export default function useClusteringPipeline({
       return;
     }
 
+    if (waitingForBackgroundClusterCache) {
+      setClusteringInProgress(true);
+      return;
+    }
+
     if (poolEmbeddings === null && !poolEmbeddingsFailed) {
       setClusteringInProgress(true);
       return;
@@ -285,6 +297,7 @@ export default function useClusteringPipeline({
     resolution,
     selectedTs,
     cubeId,
+    waitingForBackgroundClusterCache,
   ]);
 
   const applyPendingClusteringSettings = useCallback(() => {

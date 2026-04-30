@@ -91,7 +91,7 @@ export async function readLocalSimulationStore(cubeId: string): Promise<LocalSim
 
 export async function writeLocalSimulationStore(
   cubeId: string,
-  runs: { entry: SimulationRunEntry; runData: SimulationRunData }[],
+  runs: { entry: SimulationRunEntry; runData: SimulationRunData; clusterCache?: ClusteringCache }[],
 ): Promise<void> {
   const nextRuns = [...runs].sort((a, b) => b.entry.ts - a.entry.ts);
   const desiredKeys = new Set(
@@ -113,6 +113,7 @@ export async function writeLocalSimulationStore(
             ts: run.entry.ts,
             entry: run.entry,
             runData: run.runData,
+            clusterCache: run.clusterCache,
           } satisfies IndexedDbSimulationRunRecord);
         }
         for (const record of existing) {
@@ -133,16 +134,17 @@ export async function persistSimulationRun(
   cubeId: string,
   entry: SimulationRunEntry,
   runData: SimulationRunData,
+  clusterCache?: ClusteringCache,
 ): Promise<{ runs: SimulationRunEntry[]; persisted: boolean }> {
   const store = await readLocalSimulationStore(cubeId);
-  const nextStoredRuns = [{ entry, runData }, ...store.runs.filter((run) => run.entry.ts !== entry.ts)];
+  const nextStoredRuns = [{ entry, runData, clusterCache }, ...store.runs.filter((run) => run.entry.ts !== entry.ts)];
   try {
     await writeLocalSimulationStore(cubeId, nextStoredRuns);
     const nextStore = await readLocalSimulationStore(cubeId);
     return { runs: nextStore.runs.map((run) => run.entry), persisted: true };
   } catch {
     try {
-      await writeLocalSimulationStore(cubeId, [{ entry, runData }]);
+      await writeLocalSimulationStore(cubeId, [{ entry, runData, clusterCache }]);
       const nextStore = await readLocalSimulationStore(cubeId);
       return { runs: nextStore.runs.map((run) => run.entry), persisted: true };
     } catch {
