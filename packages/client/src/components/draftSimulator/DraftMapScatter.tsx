@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
-import { Chart as ChartJS, LinearScale, PointElement, ScatterController, Tooltip, Legend } from 'chart.js';
+import { Chart as ChartJS, LinearScale, PointElement, ScatterController, Tooltip, Legend, type ChartOptions, type TooltipItem } from 'chart.js';
 import { Scatter } from 'react-chartjs-2';
 
 import Text from '../base/Text';
@@ -98,64 +98,77 @@ const DraftMapScatter: React.FC<{
     if (colorMode === 'deckColor') return archetypeToColor(point.archetype);
     return point.clusterIndex === null ? MTG_COLORS.C!.bg : CLUSTER_COLORS[point.clusterIndex % CLUSTER_COLORS.length]!;
   };
-  const selectedPoint = selectedPoolIndex === null ? null : (points.find((point) => point.poolIndex === selectedPoolIndex) ?? null);
+  const selectedPoint = useMemo(
+    () => (selectedPoolIndex === null ? null : (points.find((point) => point.poolIndex === selectedPoolIndex) ?? null)),
+    [points, selectedPoolIndex],
+  );
 
-  return (
-    <Scatter
-      data={{
-        datasets: [
-          {
-            label: 'Draft decks',
-            data: points,
-            backgroundColor: points.map((point) => hexToRgba(pointBaseColor(point), isInActiveFilter(point) ? 0.9 : 0.15)),
-            borderColor: 'transparent',
-            borderWidth: 0,
-            pointRadius: points.map((point) => (isInActiveFilter(point) ? 4 : 3)),
-            pointHoverRadius: 7,
-          },
-          ...(selectedPoint
-            ? [
-                {
-                  label: 'Focused deck',
-                  data: [selectedPoint],
-                  backgroundColor: '#facc15',
-                  borderColor: '#111827',
-                  borderWidth: 2,
-                  pointRadius: 8,
-                  pointHoverRadius: 9,
-                },
-              ]
-            : []),
-        ],
-      }}
-      options={{
-        responsive: true,
-        maintainAspectRatio: true,
-        aspectRatio: 1,
-        onClick: (_event, elements) => {
-          const element = elements[0];
-          if (!element) return;
-          const point = element.datasetIndex === 1 ? selectedPoint : points[element.index];
-          if (point) onSelectPoint(point);
+  const data = useMemo(
+    () => ({
+      datasets: [
+        {
+          label: 'Draft decks',
+          data: points,
+          backgroundColor: points.map((point) => hexToRgba(pointBaseColor(point), isInActiveFilter(point) ? 0.9 : 0.15)),
+          borderColor: 'transparent',
+          borderWidth: 0,
+          pointRadius: points.map((point) => (isInActiveFilter(point) ? 4 : 3)),
+          pointHoverRadius: 7,
         },
-        plugins: {
-          legend: { display: false },
-          tooltip: {
-            callbacks: {
-              label: (ctx) => {
-                const point = ctx.raw as DraftMapPoint;
-                return `${point.clusterLabel} · Draft ${point.draftIndex + 1} Seat ${point.seatIndex + 1}`;
+        ...(selectedPoint
+          ? [
+              {
+                label: 'Focused deck',
+                data: [selectedPoint],
+                backgroundColor: '#facc15',
+                borderColor: '#111827',
+                borderWidth: 2,
+                pointRadius: 8,
+                pointHoverRadius: 9,
               },
+            ]
+          : []),
+      ],
+    }),
+    [points, selectedPoint, colorMode, activePoolIndexSet],
+  );
+
+  const options = useMemo<ChartOptions<'scatter'>>(
+    () => ({
+      responsive: true,
+      maintainAspectRatio: true,
+      aspectRatio: 1,
+      onClick: (_event: unknown, elements: { datasetIndex: number; index: number }[]) => {
+        const element = elements[0];
+        if (!element) return;
+        const point = element.datasetIndex === 1 ? selectedPoint : points[element.index];
+        if (point) onSelectPoint(point);
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: (ctx: TooltipItem<'scatter'>) => {
+              const point = ctx.raw as DraftMapPoint;
+              return `${point.clusterLabel} · Draft ${point.draftIndex + 1} Seat ${point.seatIndex + 1}`;
             },
           },
         },
-        scales: {
-          x: { display: false },
-          y: { display: false },
-        },
-      }}
+      },
+      scales: {
+        x: { display: false },
+        y: { display: false },
+      },
+    }),
+    [selectedPoint, points, onSelectPoint],
+  );
+
+  return (
+    <Scatter
+      data={data}
+      options={options}
     />
   );
 };
 
-export default DraftMapScatter;
+export default React.memo(DraftMapScatter);

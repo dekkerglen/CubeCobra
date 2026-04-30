@@ -9,6 +9,7 @@ import type {
 import {
   type ClusteringCache,
   clearLocalSimulationStore,
+  patchClusteringCache,
   persistSimulationRun,
   readLocalSimulationStore,
   writeLocalSimulationStore,
@@ -47,8 +48,14 @@ export default function useLocalSimulationHistory({
   const [loadRunError, setLoadRunError] = useState<string | null>(null);
   const [storageNotice, setStorageNotice] = useState<string | null>(null);
   const [loadedClusterCache, setLoadedClusterCache] = useState<ClusteringCache | null>(null);
+  const [clusterCachePending, setClusterCachePending] = useState(false);
 
   const loadRunInFlight = useRef(false);
+  const selectedTsRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    selectedTsRef.current = selectedTs;
+  }, [selectedTs]);
 
   useEffect(() => {
     let cancelled = false;
@@ -62,12 +69,16 @@ export default function useLocalSimulationHistory({
           setDisplayRunData(store.runs[0].runData);
           setCurrentRunSetup(setupFromRunData(store.runs[0].runData));
           setSelectedTs(store.runs[0].entry.ts);
+          selectedTsRef.current = store.runs[0].entry.ts;
           setLoadedClusterCache(store.runs[0].clusterCache ?? null);
+          setClusterCachePending(false);
         } else {
           setDisplayRunData(null);
           setCurrentRunSetup(null);
           setSelectedTs(null);
+          selectedTsRef.current = null;
           setLoadedClusterCache(null);
+          setClusterCachePending(false);
         }
         setHistoryLoadError(null);
       } catch (err) {
@@ -98,7 +109,9 @@ export default function useLocalSimulationHistory({
           setDisplayRunData(run.runData);
           setCurrentRunSetup(setupFromRunData(run.runData));
           setSelectedTs(ts);
+          selectedTsRef.current = ts;
           setLoadedClusterCache(run.clusterCache ?? null);
+          setClusterCachePending(false);
         }
       } catch (err) {
         setLoadRunError(err instanceof Error ? err.message : 'Failed to load run');
@@ -128,7 +141,9 @@ export default function useLocalSimulationHistory({
         setDisplayRunData(nextStoredRuns[0]?.runData ?? null);
         setCurrentRunSetup(nextStoredRuns[0] ? setupFromRunData(nextStoredRuns[0].runData) : null);
         setSelectedTs(nextRuns[0]?.entry.ts ?? null);
+        selectedTsRef.current = nextRuns[0]?.entry.ts ?? null;
         setLoadedClusterCache(nextStoredRuns[0]?.clusterCache ?? null);
+        setClusterCachePending(false);
       }
     },
     [cubeId, selectedTs, onResetViewSelection],
@@ -140,26 +155,44 @@ export default function useLocalSimulationHistory({
     setDisplayRunData(null);
     setCurrentRunSetup(null);
     setSelectedTs(null);
+    selectedTsRef.current = null;
     setStorageNotice(null);
     setLoadedClusterCache(null);
+    setClusterCachePending(false);
     onResetViewSelection();
   }, [cubeId, onResetViewSelection]);
 
   const handlePersistCompletedRun = useCallback(
-    async (entry: SimulationRunEntry, runData: SimulationRunData) => {
-      const persistResult = await persistSimulationRun(cubeId, entry, runData);
+    async (entry: SimulationRunEntry, runData: SimulationRunData, clusterCache?: ClusteringCache) => {
+      const nextRun = historyEntryFromRun(entry, runData);
+      setRuns((currentRuns) => [nextRun, ...currentRuns.filter((runEntry) => runEntry.entry.ts !== entry.ts)].slice(0, 5));
+      setDisplayRunData(runData);
+      setCurrentRunSetup(setupFromRunData(runData));
+      setSelectedTs(entry.ts);
+      selectedTsRef.current = entry.ts;
+      setLoadedClusterCache(clusterCache ?? null);
+      setClusterCachePending(!clusterCache);
+
+      const persistResult = await persistSimulationRun(cubeId, entry, runData, clusterCache);
       setRuns((currentRuns) => {
-        const nextRun = historyEntryFromRun(entry, runData);
         const persistedTimestamps = new Set(persistResult.runs.map((runEntry) => runEntry.ts));
         const retainedRuns = currentRuns.filter(
           (runEntry) => runEntry.entry.ts !== entry.ts && persistedTimestamps.has(runEntry.entry.ts),
         );
         return [nextRun, ...retainedRuns];
       });
-      setDisplayRunData(runData);
-      setCurrentRunSetup(setupFromRunData(runData));
-      setSelectedTs(entry.ts);
       return persistResult;
+    },
+    [cubeId],
+  );
+
+  const handlePersistClusterCache = useCallback(
+    async (ts: number, clusterCache: ClusteringCache) => {
+      await patchClusteringCache(cubeId, ts, clusterCache);
+      if (selectedTsRef.current === ts) {
+        setLoadedClusterCache(clusterCache);
+        setClusterCachePending(false);
+      }
     },
     [cubeId],
   );
@@ -170,6 +203,7 @@ export default function useLocalSimulationHistory({
     currentRunSetup,
     selectedTs,
     loadedClusterCache,
+    clusterCachePending,
     loadingRun,
     historyLoadError,
     loadRunError,
@@ -180,5 +214,7 @@ export default function useLocalSimulationHistory({
     handleDeleteRun,
     handleClearHistory,
     handlePersistCompletedRun,
+    handlePersistClusterCache,
+    setClusterCachePending,
   };
 }

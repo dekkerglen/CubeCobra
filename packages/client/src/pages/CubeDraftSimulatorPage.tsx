@@ -88,6 +88,7 @@ import {
   localRecommend,
   WebGLInferenceError,
 } from '../utils/draftBot';
+import { buildClusterRecommendationInput } from '../utils/draftSimulatorClustering';
 import {
   archetypeFullName,
   computeClusterThemes,
@@ -1359,7 +1360,7 @@ const ViewToggle: React.FC<{
   hasFullPickOrder: boolean;
   deckLoading?: boolean;
 }> = ({ mode, onChange, hasDeck, hasFullPickOrder, deckLoading }) => (
-  <Flexbox direction="row" gap="1">
+  <Flexbox direction="row" gap="1" className="rounded-lg border border-border/70 bg-bg-accent/50 p-1">
     {(['deck', 'pool', 'fullPickOrder'] as const).map((m) => (
       <button
         key={m}
@@ -1367,10 +1368,12 @@ const ViewToggle: React.FC<{
         disabled={(m === 'deck' && !hasDeck) || (m === 'fullPickOrder' && !hasFullPickOrder)}
         onClick={() => onChange(m)}
         className={[
-          'px-2 py-0.5 rounded text-xs font-medium border',
-          mode === m ? 'bg-link text-white border-link' : 'bg-bg text-text-secondary border-border hover:bg-bg-active',
+          'px-3 py-1.5 rounded-md text-sm font-medium transition-colors',
+          mode === m
+            ? 'bg-link text-white shadow-sm'
+            : 'bg-transparent text-text-secondary hover:bg-bg-active hover:text-text',
           (m === 'deck' && !hasDeck) || (m === 'fullPickOrder' && !hasFullPickOrder)
-            ? 'opacity-40 cursor-not-allowed'
+            ? 'opacity-40 cursor-not-allowed hover:bg-transparent hover:text-text-secondary'
             : '',
         ].join(' ')}
       >
@@ -1485,8 +1488,16 @@ const PoolInspectionModal: React.FC<{
   if (!renderPool) return null;
 
   return (
-    <Modal xxl scrollable isOpen={isOpen} setOpen={setOpen}>
-      <ModalHeader setOpen={setOpen}>
+    <Modal
+      xxl
+      scrollable
+      isOpen={isOpen}
+      setOpen={setOpen}
+      offsetClassName="pt-4 md:pt-8"
+      backdropClassName="bg-opacity-60 backdrop-blur-[2px]"
+      panelClassName="rounded-xl border-border/70 bg-bg shadow-2xl"
+    >
+      <ModalHeader setOpen={setOpen} className="!bg-transparent !px-5 !py-4 border-b border-border/70">
         <Flexbox direction="col" gap="1" className="min-w-0 flex-1">
           <Text semibold lg>
             Draft {renderPool.draftIndex + 1} · Seat {renderPool.seatIndex + 1}
@@ -1507,12 +1518,12 @@ const PoolInspectionModal: React.FC<{
               <button
                 type="button"
                 onClick={() => setBreakdownOpen((o) => !o)}
-                className="self-start text-[11px] text-text-secondary hover:text-text transition-colors whitespace-nowrap"
+                className="self-start mt-1 inline-flex items-center rounded-md border border-border/70 bg-bg-accent/50 px-2 py-1 text-[11px] text-text-secondary hover:bg-bg-active hover:text-text transition-colors whitespace-nowrap"
               >
                 {breakdownOpen ? '▾ Hide' : '▸ Show'} breakdown
               </button>
               {breakdownOpen && (
-                <div className="mt-1 text-[10px] font-mono leading-tight max-h-40 overflow-y-auto">
+                <div className="mt-2 rounded-lg border border-border/70 bg-bg-accent/35 px-3 py-2 text-[10px] font-mono leading-tight max-h-40 overflow-y-auto">
                   {renderThemeBreakdown.map(({ bucket, cards }) => (
                     <div key={bucket} className="mb-1.5">
                       <span className="font-bold text-link">{bucket} ({cards.length})</span>
@@ -1532,8 +1543,8 @@ const PoolInspectionModal: React.FC<{
           )}
         </Flexbox>
       </ModalHeader>
-      <ModalBody scrollable className="!p-0">
-        <div className="flex items-center justify-end gap-2 px-3 py-2 border-b border-border bg-bg-accent/40 sticky top-0 z-10">
+      <ModalBody scrollable className="!p-0 !border-y-0 bg-bg">
+        <div className="flex items-center justify-end gap-2 px-4 py-3 border-b border-border/70 bg-bg/95 backdrop-blur sticky top-0 z-10">
           <ViewToggle
             mode={viewMode}
             onChange={setViewMode}
@@ -2278,7 +2289,7 @@ const ClusterDetailPanel: React.FC<{
   const hasDecks = deckBuilds && deckBuilds.length === slimPools.length;
 
   const exemplaryDeck = useMemo(() => {
-    if (!hasDecks) return null;
+    if (cardTab !== 'exemplary' || !hasDecks) return null;
 
     const representativeWeights = new Map<string, number>();
     const representativeTopN = 12;
@@ -2331,48 +2342,16 @@ const ClusterDetailPanel: React.FC<{
     }
 
     return best;
-  }, [cardMeta, deckBuilds, hasDecks, skeleton.poolIndices]);
+  }, [cardTab, cardMeta, deckBuilds, hasDecks, skeleton.poolIndices]);
 
-  const recommendationSeedCards = useMemo(() => {
-    const totalClusterPools = skeleton.poolIndices.length;
-    if (totalClusterPools === 0) return [] as Array<SkeletonCard & { count: number }>;
-
-    const counts = new Map<string, number>();
-    for (const poolIndex of skeleton.poolIndices) {
-      const cards = hasDecks
-        ? deckBuilds?.[poolIndex]?.mainboard ?? []
-        : slimPools[poolIndex]?.picks.map((pick) => pick.oracle_id) ?? [];
-      for (const oracle of new Set(cards)) {
-        counts.set(oracle, (counts.get(oracle) ?? 0) + 1);
-      }
-    }
-
-    return [...counts.entries()]
-      .filter(([oracle]) => !(cardMeta[oracle]?.type?.includes('Basic') && cardMeta[oracle]?.type?.includes('Land')))
-      .map(([oracle, count]) => ({
-        oracle_id: oracle,
-        name: cardMeta[oracle]?.name ?? oracle,
-        imageUrl: cardMeta[oracle]?.imageUrl ?? '',
-        fraction: count / totalClusterPools,
-        count,
-      }))
-      .sort((a, b) => b.fraction - a.fraction || a.name.localeCompare(b.name));
-  }, [cardMeta, deckBuilds, hasDecks, skeleton.poolIndices, slimPools]);
-
-  const recommendationInputCards = useMemo(() => {
-    const minSeedCount = Math.max(2, Math.ceil(skeleton.poolCount * 0.1));
-    const frequentCards = recommendationSeedCards.filter((card) => card.count >= minSeedCount);
-    const seedCards = frequentCards.length >= 20 ? frequentCards : recommendationSeedCards.slice(0, 40);
-    return seedCards.slice(0, 120);
-  }, [recommendationSeedCards, skeleton.poolCount]);
-
-  const recommendationInputOracles = useMemo(
-    () => recommendationInputCards.map((card) => card.oracle_id),
-    [recommendationInputCards],
+  const recommendationInput = useMemo(
+    () => buildClusterRecommendationInput(skeleton, slimPools, cardMeta, deckBuilds),
+    [skeleton, slimPools, cardMeta, deckBuilds],
   );
+  const recommendationInputOracles = useMemo(() => recommendationInput.seedOracles, [recommendationInput]);
   const recommendationInputThreshold = useMemo(
-    () => (skeleton.poolCount > 0 ? Math.max(2, Math.ceil(skeleton.poolCount * 0.1)) : 0),
-    [skeleton.poolCount],
+    () => (cardTab === 'recommendations' ? recommendationInput.minSeedCount : 0),
+    [cardTab, recommendationInput],
   );
 
   type ClusterRecommendation = { oracle: string; rating: number; details: CardDetails };
@@ -2422,12 +2401,14 @@ const ClusterDetailPanel: React.FC<{
       setRecommendationsLoading(true);
       setRecommendationsError(null);
       try {
-        await loadDraftRecommender();
-        const remapping = buildOracleRemapping(cardMeta);
-        const { adds } = await localRecommend(recommendationInputOracles, remapping);
+        const resolvedAdds = skeleton.recommendedAdds
+          ? skeleton.recommendedAdds
+          : (() => {
+              throw new Error('missing-precomputed-recommendations');
+            })();
         if (cancelled) return;
 
-        const candidateOracles = adds.slice(0, 120).map((item) => item.oracle);
+        const candidateOracles = resolvedAdds.slice(0, 120).map((item) => item.oracle);
         const response = await csrfFetch('/cube/api/getdetailsforcards', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2443,7 +2424,7 @@ const ClusterDetailPanel: React.FC<{
           if (details?.oracle_id) detailsByOracle.set(details.oracle_id, details);
         }
 
-        const filtered = adds
+        const filtered = resolvedAdds
           .filter((item) => !cubeOracleSet.has(item.oracle))
           .map((item) => ({ ...item, details: detailsByOracle.get(item.oracle) }))
           .filter(
@@ -2456,18 +2437,60 @@ const ClusterDetailPanel: React.FC<{
         setClusterRecommendations(filtered);
       } catch (err) {
         if (cancelled) return;
-        console.error('Failed to load cluster recommendations:', err);
-        setClusterRecommendations([]);
-        setRecommendationsError('Unable to generate recommendations for this cluster.');
+        if (!(err instanceof Error) || err.message !== 'missing-precomputed-recommendations') {
+          console.error('Failed to load cluster recommendations:', err);
+          setClusterRecommendations([]);
+          setRecommendationsError('Unable to generate recommendations for this cluster.');
+          return;
+        }
+
+        try {
+          await loadDraftRecommender();
+          const remapping = buildOracleRemapping(cardMeta);
+          const { adds } = await localRecommend(recommendationInputOracles, remapping);
+          if (cancelled) return;
+
+          const candidateOracles = adds.slice(0, 120).map((item) => item.oracle);
+          const response = await csrfFetch('/cube/api/getdetailsforcards', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ cards: candidateOracles }),
+          });
+          if (!response.ok) throw new Error(`Failed to load recommendation details: ${response.status}`);
+          const data = await response.json();
+          if (cancelled) return;
+
+          const detailsByOracle = new Map<string, CardDetails>();
+          const detailsList: CardDetails[] = Array.isArray(data?.details) ? data.details : [];
+          for (const details of detailsList) {
+            if (details?.oracle_id) detailsByOracle.set(details.oracle_id, details);
+          }
+
+          const filtered = adds
+            .filter((item) => !cubeOracleSet.has(item.oracle))
+            .map((item) => ({ ...item, details: detailsByOracle.get(item.oracle) }))
+            .filter(
+              (item): item is ClusterRecommendation =>
+                !!item.details &&
+                !item.details.isToken &&
+                !(item.details.type?.includes('Basic') && item.details.type?.includes('Land')),
+            );
+
+          setClusterRecommendations(filtered);
+        } catch (fallbackErr) {
+          if (cancelled) return;
+          console.error('Failed to load cluster recommendations:', fallbackErr);
+          setClusterRecommendations([]);
+          setRecommendationsError('Unable to generate recommendations for this cluster.');
+        }
       } finally {
         if (!cancelled) setRecommendationsLoading(false);
       }
     })();
-
     return () => {
       cancelled = true;
     };
-  }, [cardMeta, cardTab, csrfFetch, cubeOracleSet, recommendationInputOracles]);
+  }, [cardMeta, cardTab, csrfFetch, cubeOracleSet, recommendationInputOracles, skeleton.recommendedAdds]);
 
   const colorCodes = getColorProfileCodes(colorProfile);
   const pct = totalPools > 0 ? ((skeleton.poolCount / totalPools) * 100).toFixed(1) : '0';
@@ -2617,7 +2640,7 @@ const ClusterDetailPanel: React.FC<{
             <div className="rounded border border-border/60 bg-bg-accent/30 p-3">
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <Text xs className="text-text-secondary">
-                  Using {recommendationInputCards.length} cluster cards as the seed set.
+                  Using {recommendationInputOracles.length} cluster cards as the seed set.
                   {recommendationInputThreshold > 0
                     ? ` Seed cards appear in at least ${recommendationInputThreshold} decks when possible.`
                     : ''}
@@ -2893,6 +2916,26 @@ const DraftMapCard: React.FC<{
   setExcludeManaFixingLands,
   onInspectPool,
 }) => {
+  const focusedPoolSummary = useMemo(() => {
+    if (focusedPoolIndex === null) return null;
+    const focusedPool = displayRunData.slimPools[focusedPoolIndex];
+    if (!focusedPool) return null;
+    return {
+      draftIndex: focusedPool.draftIndex + 1,
+      seatIndex: focusedPool.seatIndex + 1,
+    };
+  }, [displayRunData.slimPools, focusedPoolIndex]);
+
+  const handleSelectMapPoint = useCallback(
+    (point: DraftMapPoint) => {
+      setFocusedPoolIndex(point.poolIndex);
+      setSelectedSkeletonId(point.clusterId);
+      setSelectedArchetype(null);
+      setDraftBreakdownOpen(true);
+    },
+    [setFocusedPoolIndex, setSelectedSkeletonId, setSelectedArchetype, setDraftBreakdownOpen],
+  );
+
   return (
     <Card className="border-border">
       <CardHeader>
@@ -2902,6 +2945,15 @@ const DraftMapCard: React.FC<{
               <Text semibold>Draft Map{skeletons.length > 0 ? ` · ${skeletons.length} clusters` : ''}</Text>
             </div>
             <div className="flex flex-row items-center gap-2">
+              {focusedPoolSummary && (
+                <button
+                  type="button"
+                  onClick={() => onInspectPool(focusedPoolIndex!)}
+                  className="px-2 py-1 text-xs font-medium rounded border border-border bg-bg-accent hover:bg-bg-active text-text-secondary"
+                >
+                  View focused deck: Draft {focusedPoolSummary.draftIndex} Seat {focusedPoolSummary.seatIndex}
+                </button>
+              )}
               <div className="inline-flex rounded border border-border overflow-hidden">
                 <button type="button" onClick={() => setDraftMapColorMode('cluster')}
                   className={['px-2 py-1 text-xs font-medium transition-colors border-r border-border', draftMapColorMode === 'cluster' ? 'bg-link text-white' : 'bg-bg-accent hover:bg-bg-active text-text-secondary'].join(' ')}>
@@ -2982,13 +3034,7 @@ const DraftMapCard: React.FC<{
                 selectedPoolIndex={focusedPoolIndex}
                 activePoolIndexSet={activeFilterPoolIndexSet}
                 colorMode={draftMapColorMode}
-                onSelectPoint={(point) => {
-                  setFocusedPoolIndex(point.poolIndex);
-                  setSelectedSkeletonId(point.clusterId);
-                  setSelectedArchetype(null);
-                  setDraftBreakdownOpen(true);
-                  onInspectPool(point.poolIndex);
-                }}
+                onSelectPoint={handleSelectMapPoint}
               />
             )}
           </div>
@@ -3165,7 +3211,7 @@ const DraftSimulatorBottomSection: React.FC<{
   downloadDraftBreakdownCsv: (pools: SimulatedPool[], label: string) => void;
   displayedPools: SimulatedPool[];
   activeDecks: BuiltDeck[] | null;
-  simPhase: 'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'save' | null;
+  simPhase: 'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'cluster' | 'save' | null;
   selectedCard: CardStats | null;
   focusedPoolIndex: number | null;
   setFocusedPoolIndex: React.Dispatch<React.SetStateAction<number | null>>;
@@ -3810,16 +3856,19 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     currentRunSetup,
     selectedTs,
     loadedClusterCache,
+    clusterCachePending,
     loadingRun,
     historyLoadError,
     loadRunError,
     storageNotice,
     setCurrentRunSetup,
     setStorageNotice,
+    setClusterCachePending,
     handleLoadRun,
     handleDeleteRun,
     handleClearHistory,
     handlePersistCompletedRun,
+    handlePersistClusterCache,
   } = useLocalSimulationHistory({
     cubeId,
     onResetViewSelection: resetViewSelection,
@@ -3916,7 +3965,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     onSimulationStart: () => {},
     onSetCurrentRunSetup: setCurrentRunSetup,
     onSetStorageNotice: setStorageNotice,
+    onSetClusterCachePending: setClusterCachePending,
     onPersistCompletedRun: handlePersistCompletedRun,
+    onPersistClusterCache: handlePersistClusterCache,
   });
 
   const activeDecks = displayRunData?.deckBuilds ?? null;
@@ -3958,6 +4009,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     activeDecks,
     selectedTs,
     loadedClusterCache,
+    clusterCachePending,
     embeddingsCache,
   });
 
@@ -4325,6 +4377,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                               ? 'Running draft simulation…'
                               : simPhase === 'deckbuild'
                                 ? 'Building decks…'
+                                : simPhase === 'cluster'
+                                  ? 'Clustering decks…'
                                 : 'Storing results locally…'}
                       </Text>
                       <Text sm className="text-text-secondary">

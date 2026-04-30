@@ -11,14 +11,46 @@ import type {
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
 
-import { loadDraftBot, WebGLInferenceError } from '../utils/draftBot';
-import { getStoragePressureNotice } from '../utils/draftSimulatorLocalStorage';
+import {
+  buildOracleRemapping,
+  countOutOfVocabOracles,
+  encodePools,
+  loadDraftRecommender,
+  loadDraftBot,
+  localRecommend,
+  reshapeEmbeddings,
+  WebGLInferenceError,
+} from '../utils/draftBot';
+import { buildClusterRecommendationInput, computeSkeletons } from '../utils/draftSimulatorClustering';
+import { type ClusteringCache, getStoragePressureNotice, SCORING_ALGORITHM_VERSION } from '../utils/draftSimulatorLocalStorage';
 
 type ExtendedRequestInit = RequestInit & { timeout?: number };
 
 interface PersistResult {
   runs: SimulationRunEntry[];
   persisted: boolean;
+}
+
+const KNN_K_DIVISOR = 16;
+const LEIDEN_RES_DIVISOR = 400;
+const CLUSTER_NEG_SAMPLES = 20;
+
+let archetypeDataPromise: Promise<{ centers: { clusterId: number; center: number[] }[]; annotations: Record<string, string> } | null> | null =
+  null;
+
+async function loadArchetypeData(): Promise<{ centers: { clusterId: number; center: number[] }[]; annotations: Record<string, string> } | null> {
+  if (!archetypeDataPromise) {
+    archetypeDataPromise = (async () => {
+      try {
+        const resp = await fetch('/api/archetypes');
+        if (!resp.ok) return null;
+        return await resp.json();
+      } catch {
+        return null;
+      }
+    })();
+  }
+  return archetypeDataPromise;
 }
 
 interface UseSimulationRunArgs {
@@ -46,11 +78,19 @@ interface UseSimulationRunArgs {
   onSimulationStart: () => void;
   onSetCurrentRunSetup: (setup: SimulationSetupResponse | null) => void;
   onSetStorageNotice: (notice: string | null) => void;
-  onPersistCompletedRun: (entry: SimulationRunEntry, runData: SimulationRunData) => Promise<PersistResult>;
+  onSetClusterCachePending: (pending: boolean) => void;
+  onPersistCompletedRun: (
+    entry: SimulationRunEntry,
+    runData: SimulationRunData,
+    clusterCache?: ClusteringCache,
+  ) => Promise<PersistResult>;
+  onPersistClusterCache: (ts: number, clusterCache: ClusteringCache) => Promise<void> | void;
 }
 
+const CLUSTERING_SAVE_BUDGET_MS = 5000;
+
 function getOverallSimProgress(
-  simPhase: 'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'save' | null,
+  simPhase: 'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'cluster' | 'save' | null,
   modelLoadProgress: number,
   simProgress: number,
 ): number {
@@ -63,6 +103,8 @@ function getOverallSimProgress(
       return 20 + Math.round((simProgress / 100) * 70);
     case 'deckbuild':
       return 92;
+    case 'cluster':
+      return 96;
     case 'save':
       return 98;
     default:
@@ -84,10 +126,12 @@ export default function useSimulationRun({
   onSimulationStart,
   onSetCurrentRunSetup,
   onSetStorageNotice,
+  onSetClusterCachePending,
   onPersistCompletedRun,
+  onPersistClusterCache,
 }: UseSimulationRunArgs) {
   const [status, setStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
-  const [simPhase, setSimPhase] = useState<'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'save' | null>(null);
+  const [simPhase, setSimPhase] = useState<'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'cluster' | 'save' | null>(null);
   const [modelLoadProgress, setModelLoadProgress] = useState(0);
   const [simProgress, setSimProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -263,8 +307,6 @@ export default function useSimulationRun({
         return;
       }
 
-      setSimPhase('save');
-      const saveStart = performance.now();
       const { simulatedPools: _derived, ...runDataBase } = report;
       const mergedCardMeta = { ...runDataBase.cardMeta, ...deckResult.basicCardMeta };
       const timings: SimulationTimingBreakdown = {
@@ -290,6 +332,113 @@ export default function useSimulationRun({
         numSeats: runData.numSeats,
         convergenceScore: runData.convergenceScore ?? 0,
       };
+      let clusterCache: ClusteringCache | undefined;
+      let clusteringNotice: string | null = null;
+      let clusteringTimedOut = false;
+      const precomputeClusterRecommendations = async (skeletons: ClusteringCache['skeletons']) => {
+        await loadDraftRecommender();
+        const remapping = buildOracleRemapping(runData.cardMeta);
+        return Promise.all(
+          skeletons.map(async (skeleton) => {
+            const { seedOracles } = buildClusterRecommendationInput(
+              skeleton,
+              runData.slimPools,
+              runData.cardMeta,
+              deckResult.decks,
+            );
+            if (seedOracles.length === 0) return { ...skeleton, recommendedAdds: [] };
+            const { adds } = await localRecommend(seedOracles, remapping);
+            return {
+              ...skeleton,
+              recommendedAdds: adds.filter((item) => !runData.cardMeta[item.oracle]).slice(0, 120),
+            };
+          }),
+        );
+      };
+      const buildClusterCache = async (): Promise<{ clusterCache?: ClusteringCache; clusteringNotice: string | null }> => {
+        setSimPhase('cluster');
+        const remapping = buildOracleRemapping(runData.cardMeta);
+        const oovCount = countOutOfVocabOracles(runData.cardMeta);
+        const oovPct = oovCount / Math.max(1, Object.keys(runData.cardMeta).length);
+        const pools = runData.slimPools.map((_, i) => deckResult.decks[i]!.mainboard);
+        const flat = await encodePools(pools, remapping);
+        const poolEmbeddings = reshapeEmbeddings(flat, pools.length);
+        const n = runData.slimPools.length;
+        const knnK = Math.min(50, Math.max(5, Math.round(n / KNN_K_DIVISOR)));
+        const resolution = parseFloat(Math.min(2.0, Math.max(0.5, n / LEIDEN_RES_DIVISOR)).toFixed(2));
+        const clusteringResult = computeSkeletons(
+          runData.slimPools,
+          runData.cardMeta,
+          poolEmbeddings,
+          deckResult.decks,
+          knnK,
+          CLUSTER_NEG_SAMPLES,
+          resolution,
+        );
+
+        let poolArchetypeLabels: [number, string][] | undefined;
+        const archetypeData = await loadArchetypeData();
+        if (archetypeData) {
+          const labels = new Map<number, string>();
+          for (let pi = 0; pi < poolEmbeddings.length; pi++) {
+            const emb = poolEmbeddings[pi]!;
+            const embNorm = Math.sqrt(emb.reduce((s, v) => s + v * v, 0)) || 1;
+            let bestSim = -Infinity;
+            let bestClusterId = -1;
+            for (const { clusterId, center } of archetypeData.centers) {
+              let dot = 0;
+              const cNorm = Math.sqrt(center.reduce((s, v) => s + v * v, 0)) || 1;
+              for (let d = 0; d < emb.length; d++) dot += emb[d]! * (center[d] ?? 0);
+              const sim = dot / (embNorm * cNorm);
+              if (sim > bestSim) {
+                bestSim = sim;
+                bestClusterId = clusterId;
+              }
+            }
+            const label = archetypeData.annotations[String(bestClusterId)];
+            if (label) labels.set(pi, label);
+          }
+          poolArchetypeLabels = [...labels.entries()];
+        }
+
+        const nextClusterCache: ClusteringCache = {
+          skeletons: clusteringResult.skeletons,
+          umapCoords: clusteringResult.umapCoords,
+          clusterMethod: clusteringResult.clusterMethod,
+          knnK,
+          resolution,
+          poolArchetypeLabels,
+          scoringVersion: SCORING_ALGORITHM_VERSION,
+        };
+        return {
+          clusterCache: nextClusterCache,
+          clusteringNotice:
+            oovPct > 0.1
+              ? `${Math.round(oovPct * 100)}% of cards in this cube aren't in the ML model's training vocabulary. Clustering quality may be reduced for those cards.`
+              : null,
+        };
+      };
+
+      const clusteringPromise = buildClusterCache();
+      try {
+        const timedResult = await Promise.race([
+          clusteringPromise,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), CLUSTERING_SAVE_BUDGET_MS)),
+        ]);
+        if (timedResult) {
+          clusterCache = timedResult.clusterCache;
+          clusteringNotice = timedResult.clusteringNotice;
+        } else {
+          clusteringTimedOut = true;
+        }
+      } catch (err) {
+        console.error('Failed to precompute clustering cache during run:', err);
+        clusteringNotice = 'Draft simulation completed, but cluster data will still need to be computed when the run is opened.';
+        onSetClusterCachePending(false);
+      }
+
+      setSimPhase('save');
+      const saveStart = performance.now();
       runData.timings = {
         setupMs,
         modelLoadMs,
@@ -299,7 +448,6 @@ export default function useSimulationRun({
         totalMs: performance.now() - runStart,
       };
       const storagePressureNotice = await getStoragePressureNotice();
-      const persistResult = await onPersistCompletedRun(entry, runData);
       saveMs = performance.now() - saveStart;
       runData.timings = {
         setupMs,
@@ -309,10 +457,52 @@ export default function useSimulationRun({
         saveMs,
         totalMs: performance.now() - runStart,
       };
-      if (!persistResult.persisted) {
-        onSetStorageNotice('Results are shown below, but this browser did not have enough local storage to save them.');
-      } else if (retryNotices.length > 0 || storagePressureNotice) {
-        onSetStorageNotice([...retryNotices, storagePressureNotice].filter(Boolean).join(' '));
+      if (retryNotices.length > 0 || storagePressureNotice || clusteringNotice) {
+        onSetStorageNotice([...retryNotices, storagePressureNotice, clusteringNotice].filter(Boolean).join(' '));
+      } else {
+        onSetStorageNotice(null);
+      }
+      void onPersistCompletedRun(entry, runData, clusterCache)
+        .then((persistResult) => {
+          if (!persistResult.persisted) {
+            onSetStorageNotice('Results are shown below, but this browser did not have enough local storage to save them.');
+          } else if (retryNotices.length > 0 || storagePressureNotice || clusteringNotice) {
+            onSetStorageNotice([...retryNotices, storagePressureNotice, clusteringNotice].filter(Boolean).join(' '));
+          } else {
+            onSetStorageNotice(null);
+          }
+        })
+        .catch(() => {
+          onSetStorageNotice('Results are shown below, but local saving hit an error and may not have completed.');
+        });
+
+      if (clusteringTimedOut) {
+        void clusteringPromise
+          .then(async (result) => {
+            if (!result.clusterCache || controller.signal.aborted) return;
+            await onPersistClusterCache(entry.ts, result.clusterCache);
+            void precomputeClusterRecommendations(result.clusterCache.skeletons)
+              .then(async (recommendedSkeletons) => {
+                if (controller.signal.aborted) return;
+                await onPersistClusterCache(entry.ts, { ...result.clusterCache!, skeletons: recommendedSkeletons });
+              })
+              .catch((err) => {
+                console.error('Failed to finish cluster recommendations in background:', err);
+              });
+          })
+          .catch((err) => {
+            console.error('Failed to finish clustering cache in background:', err);
+            onSetClusterCachePending(false);
+          });
+      } else if (clusterCache) {
+        void precomputeClusterRecommendations(clusterCache.skeletons)
+          .then(async (recommendedSkeletons) => {
+            if (controller.signal.aborted) return;
+            await onPersistClusterCache(entry.ts, { ...clusterCache!, skeletons: recommendedSkeletons });
+          })
+          .catch((err) => {
+            console.error('Failed to precompute cluster recommendations in background:', err);
+          });
       }
 
       setStatus('completed');
@@ -345,9 +535,11 @@ export default function useSimulationRun({
     buildAllDecks,
     onSimulationStart,
     onSetStorageNotice,
+    onSetClusterCachePending,
     onResetViewSelection,
     onSetCurrentRunSetup,
     onPersistCompletedRun,
+    onPersistClusterCache,
   ]);
 
   return {

@@ -185,6 +185,11 @@ export interface RankedCards {
   excludingFixing: SkeletonCard[];
 }
 
+export interface ClusterRecommendation {
+  oracle: string;
+  rating: number;
+}
+
 export interface ArchetypeSkeleton {
   clusterId: number;
   colorProfile: string; // e.g. "UR", "BGW", "C"
@@ -196,6 +201,7 @@ export interface ArchetypeSkeleton {
   occasionalCards: SkeletonCard[]; // deprecated; kept for older locally stored runs
   sideboardCards: SkeletonCard[]; // most common sideboard-only cards across decks in this cluster
   lockPairs: LockPair[]; // pairs co-occurring > 60% and well above independence baseline
+  recommendedAdds?: ClusterRecommendation[]; // precomputed local recommender outputs for this cluster
 }
 
 /**
