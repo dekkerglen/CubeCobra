@@ -58,6 +58,12 @@ import {
   LeaveSimulationModal,
   PriorRunDeleteModal,
 } from '../components/draftSimulator/DraftSimulatorModals';
+import SimulatorPickBreakdown from '../components/draftSimulator/SimulatorPickBreakdown';
+import { PoolInspectionModal } from '../components/draftSimulator/PoolExpansionContent';
+import DraftBreakdownTable, { buildDraftBreakdownRowSummary } from '../components/draftSimulator/DraftBreakdownTable';
+import DraftMapCard, { computeDraftMapPoints } from '../components/draftSimulator/DraftMapCard';
+import DraftSimulatorBottomSection, { FilterChipButtons } from '../components/draftSimulator/DraftSimulatorBottomSection';
+import ArchetypeSkeletonSection from '../components/draftSimulator/ArchetypeSkeletonSection';
 import DraftBreakdownDisplay from '../components/draft/DraftBreakdownDisplay';
 import DynamicFlash from '../components/DynamicFlash';
 import DraftBreakdownDisplay from '../components/draft/DraftBreakdownDisplay';
@@ -1090,7 +1096,7 @@ const EloDistributionChart: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta:
   return <Bar data={chartData} options={makeEloHistogramOptions(textColor)} />;
 };
 
-function computeDraftMapPoints(
+function legacyComputeDraftMapPoints(
   slimPools: SlimPool[],
   displayedPools: SimulatedPool[],
   skeletons: ArchetypeSkeleton[],
@@ -4976,7 +4982,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const availableFormats = useMemo(
     () => [
       { value: '-1', label: 'Standard Draft' },
-      ...(cube.formats ?? []).map((format, index) => ({
+      ...(cube.formats ?? []).map((format: any, index: number) => ({
         value: `${index}`,
         label: format.title || `Format ${index + 1}`,
       })),
@@ -5437,7 +5443,15 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const draftMapPoints = useMemo(
     () =>
       displayRunData
-        ? computeDraftMapPoints(displayRunData.slimPools, displayedPools, skeletons, umapCoords, poolArchetypeLabels, skeletonColorProfiles)
+        ? computeDraftMapPoints(
+            displayRunData.slimPools,
+            displayedPools,
+            skeletons,
+            umapCoords,
+            poolArchetypeLabels,
+            skeletonColorProfiles,
+            getSkeletonDisplayName,
+          )
         : [],
     [displayRunData, displayedPools, skeletons, umapCoords, poolArchetypeLabels, skeletonColorProfiles],
   );
@@ -6571,6 +6585,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                   setPairingsExcludeLands={setPairingsExcludeLands}
                   excludeManaFixingLands={excludeManaFixingLands}
                   status={status}
+                  renderAutocardNameLink={renderAutocardNameLink}
                 />
               </Flexbox>
             )}

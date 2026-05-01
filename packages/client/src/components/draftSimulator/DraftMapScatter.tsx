@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 
-import { Chart as ChartJS, LinearScale, PointElement, ScatterController, Tooltip, Legend, type ChartOptions, type TooltipItem } from 'chart.js';
+import { Chart as ChartJS, LinearScale, PointElement, ScatterController, Tooltip, Legend, type ChartOptions } from 'chart.js';
 import { Scatter } from 'react-chartjs-2';
 
 import Text from '../base/Text';
@@ -138,6 +138,7 @@ const DraftMapScatter: React.FC<{
       responsive: true,
       maintainAspectRatio: true,
       aspectRatio: 1,
+      events: ['click'],
       onClick: (_event: unknown, elements: { datasetIndex: number; index: number }[]) => {
         const element = elements[0];
         if (!element) return;
@@ -146,14 +147,7 @@ const DraftMapScatter: React.FC<{
       },
       plugins: {
         legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: (ctx: TooltipItem<'scatter'>) => {
-              const point = ctx.raw as DraftMapPoint;
-              return `${point.clusterLabel} · Draft ${point.draftIndex + 1} Seat ${point.seatIndex + 1}`;
-            },
-          },
-        },
+        tooltip: { enabled: false },
       },
       scales: {
         x: { display: false },
