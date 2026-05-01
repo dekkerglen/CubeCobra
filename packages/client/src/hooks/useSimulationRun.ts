@@ -21,7 +21,20 @@ import {
   reshapeEmbeddings,
   WebGLInferenceError,
 } from '../utils/draftBot';
-import { buildClusterRecommendationInput, computeSkeletons } from '../utils/draftSimulatorClustering';
+import {
+  buildClientSimulationSetup,
+  ClientSimulationSetupError,
+  fetchCubeForClientSimulation,
+} from '../utils/draftSimulatorSetup';
+import {
+  assignArchetypeLabels,
+  buildClusterRecommendationInput,
+  CLUSTER_NEG_SAMPLES,
+  computeSkeletons,
+  KNN_K_DIVISOR,
+  LEIDEN_RES_DIVISOR,
+  loadArchetypeData,
+} from '../utils/draftSimulatorClustering';
 import { type ClusteringCache, getStoragePressureNotice, SCORING_ALGORITHM_VERSION } from '../utils/draftSimulatorLocalStorage';
 
 type ExtendedRequestInit = RequestInit & { timeout?: number };
@@ -29,28 +42,6 @@ type ExtendedRequestInit = RequestInit & { timeout?: number };
 interface PersistResult {
   runs: SimulationRunEntry[];
   persisted: boolean;
-}
-
-const KNN_K_DIVISOR = 16;
-const LEIDEN_RES_DIVISOR = 400;
-const CLUSTER_NEG_SAMPLES = 20;
-
-let archetypeDataPromise: Promise<{ centers: { clusterId: number; center: number[] }[]; annotations: Record<string, string> } | null> | null =
-  null;
-
-async function loadArchetypeData(): Promise<{ centers: { clusterId: number; center: number[] }[]; annotations: Record<string, string> } | null> {
-  if (!archetypeDataPromise) {
-    archetypeDataPromise = (async () => {
-      try {
-        const resp = await fetch('/api/archetypes');
-        if (!resp.ok) return null;
-        return await resp.json();
-      } catch {
-        return null;
-      }
-    })();
-  }
-  return archetypeDataPromise;
 }
 
 interface UseSimulationRunArgs {
@@ -88,6 +79,13 @@ interface UseSimulationRunArgs {
 }
 
 const CLUSTERING_SAVE_BUDGET_MS = 5000;
+const RECOMMENDATION_CONCURRENCY = 2;
+
+function throwIfAborted(signal: AbortSignal): void {
+  if (signal.aborted) {
+    throw new DOMException('Aborted', 'AbortError');
+  }
+}
 
 function getOverallSimProgress(
   simPhase: 'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'cluster' | 'save' | null,
@@ -110,6 +108,95 @@ function getOverallSimProgress(
     default:
       return 0;
   }
+}
+
+async function precomputeClusterRecommendations(
+  skeletons: ClusteringCache['skeletons'],
+  runData: SimulationRunData,
+  decks: BuiltDeck[],
+  signal: AbortSignal,
+): Promise<ClusteringCache['skeletons']> {
+  throwIfAborted(signal);
+  await loadDraftRecommender();
+  throwIfAborted(signal);
+  const remapping = buildOracleRemapping(runData.cardMeta);
+  const recommendedSkeletons: ClusteringCache['skeletons'] = [];
+  for (let start = 0; start < skeletons.length; start += RECOMMENDATION_CONCURRENCY) {
+    throwIfAborted(signal);
+    const batch = skeletons.slice(start, start + RECOMMENDATION_CONCURRENCY);
+    const batchResults = await Promise.all(
+      batch.map(async (skeleton) => {
+        throwIfAborted(signal);
+        const { seedOracles } = buildClusterRecommendationInput(
+          skeleton,
+          runData.slimPools,
+          runData.cardMeta,
+          decks,
+        );
+        if (seedOracles.length === 0) return { ...skeleton, recommendedAdds: [] };
+        const { adds } = await localRecommend(seedOracles, remapping);
+        throwIfAborted(signal);
+        return {
+          ...skeleton,
+          recommendedAdds: adds.filter((item) => !runData.cardMeta[item.oracle]).slice(0, 120),
+        };
+      }),
+    );
+    recommendedSkeletons.push(...batchResults);
+  }
+  return recommendedSkeletons;
+}
+
+async function buildClusterCacheForRun(
+  runData: SimulationRunData,
+  decks: BuiltDeck[],
+  signal: AbortSignal,
+  onSetClusterPhase: () => void,
+): Promise<{ clusterCache?: ClusteringCache; clusteringNotice: string | null }> {
+  onSetClusterPhase();
+  throwIfAborted(signal);
+  const remapping = buildOracleRemapping(runData.cardMeta);
+  const oovCount = countOutOfVocabOracles(runData.cardMeta);
+  const oovPct = oovCount / Math.max(1, Object.keys(runData.cardMeta).length);
+  const pools = runData.slimPools.map((_, i) => decks[i]!.mainboard);
+  const flat = await encodePools(pools, remapping);
+  throwIfAborted(signal);
+  const poolEmbeddings = reshapeEmbeddings(flat, pools.length);
+  const n = runData.slimPools.length;
+  const knnK = Math.min(50, Math.max(5, Math.round(n / KNN_K_DIVISOR)));
+  const resolution = parseFloat(Math.min(2.0, Math.max(0.5, n / LEIDEN_RES_DIVISOR)).toFixed(2));
+  const clusteringResult = computeSkeletons(
+    runData.slimPools,
+    runData.cardMeta,
+    poolEmbeddings,
+    decks,
+    knnK,
+    CLUSTER_NEG_SAMPLES,
+    resolution,
+  );
+  let poolArchetypeLabels: [number, string][] | undefined;
+  const archetypeData = await loadArchetypeData();
+  throwIfAborted(signal);
+  if (archetypeData) {
+    const labels = assignArchetypeLabels(poolEmbeddings, archetypeData);
+    poolArchetypeLabels = [...labels.entries()];
+  }
+  const nextClusterCache: ClusteringCache = {
+    skeletons: clusteringResult.skeletons,
+    umapCoords: clusteringResult.umapCoords,
+    clusterMethod: clusteringResult.clusterMethod,
+    knnK,
+    resolution,
+    poolArchetypeLabels,
+    scoringVersion: SCORING_ALGORITHM_VERSION,
+  };
+  return {
+    clusterCache: nextClusterCache,
+    clusteringNotice:
+      oovPct > 0.1
+        ? `${Math.round(oovPct * 100)}% of cards in this cube aren't in the ML model's training vocabulary. Clustering quality may be reduced for those cards.`
+        : null,
+  };
 }
 
 export default function useSimulationRun({
@@ -225,15 +312,36 @@ export default function useSimulationRun({
       const setupTimeout = new AbortController();
       const setupTimeoutId = setTimeout(() => setupTimeout.abort(), 120_000);
       const setupSignal = AbortSignal.any ? AbortSignal.any([controller.signal, setupTimeout.signal]) : setupTimeout.signal;
-      let setupRes: Response;
+      let setupData: SimulationSetupResponse;
       try {
         const setupStart = performance.now();
-        setupRes = await csrfFetch(`/cube/api/simulatesetup/${encodeURIComponent(cubeId)}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ numDrafts, numSeats, formatId: selectedFormatId }),
-          signal: setupSignal,
-        });
+        try {
+          const fullCube = await fetchCubeForClientSimulation(csrfFetch, cubeId);
+          throwIfAborted(controller.signal);
+          setupData = await buildClientSimulationSetup(
+            csrfFetch,
+            fullCube,
+            fullCube.cards,
+            numDrafts,
+            numSeats,
+            selectedFormatId,
+          );
+        } catch (clientErr) {
+          if (clientErr instanceof ClientSimulationSetupError && clientErr.fatal) {
+            throw clientErr;
+          }
+          const setupRes = await csrfFetch(`/cube/api/simulatesetup/${encodeURIComponent(cubeId)}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ numDrafts, numSeats, formatId: selectedFormatId }),
+            signal: setupSignal,
+          });
+          const setupJson = await setupRes.json();
+          if (!setupJson.success) {
+            throw new ClientSimulationSetupError(setupJson.message ?? 'Failed to set up simulation', true);
+          }
+          setupData = setupJson;
+        }
         setupMs = performance.now() - setupStart;
       } catch (fetchErr) {
         clearTimeout(setupTimeoutId);
@@ -248,11 +356,11 @@ export default function useSimulationRun({
         throw fetchErr;
       }
       clearTimeout(setupTimeoutId);
-      const setupData = await setupRes.json();
-      if (!setupData.success) {
+      throwIfAborted(controller.signal);
+      if (!setupData) {
         setStatus('failed');
         setSimPhase(null);
-        setErrorMsg(setupData.message ?? 'Failed to set up simulation');
+        setErrorMsg('Failed to set up simulation');
         return;
       }
 
@@ -260,6 +368,7 @@ export default function useSimulationRun({
       setModelLoadProgress(0);
       const modelLoadStart = performance.now();
       await loadDraftBot((pct) => setModelLoadProgress(pct));
+      throwIfAborted(controller.signal);
       modelLoadMs = performance.now() - modelLoadStart;
 
       let effectiveGpuBatchSize = gpuBatchSize;
@@ -290,6 +399,7 @@ export default function useSimulationRun({
         (bs) => runClientSimulation(setupData as SimulationSetupResponse, numDrafts, setSimProgress, controller.signal, bs),
         () => setSimProgress(0),
       );
+      throwIfAborted(controller.signal);
       simulationMs = performance.now() - simulationStart;
       onSetCurrentRunSetup(setupData as SimulationSetupResponse);
 
@@ -299,6 +409,7 @@ export default function useSimulationRun({
         'Deckbuilding',
         (bs) => buildAllDecks(report.slimPools, setupData as SimulationSetupResponse, controller.signal, bs),
       );
+      throwIfAborted(controller.signal);
       deckbuildMs = performance.now() - deckbuildStart;
       if (!deckResult) {
         setStatus('failed');
@@ -335,96 +446,19 @@ export default function useSimulationRun({
       let clusterCache: ClusteringCache | undefined;
       let clusteringNotice: string | null = null;
       let clusteringTimedOut = false;
-      const precomputeClusterRecommendations = async (skeletons: ClusteringCache['skeletons']) => {
-        await loadDraftRecommender();
-        const remapping = buildOracleRemapping(runData.cardMeta);
-        return Promise.all(
-          skeletons.map(async (skeleton) => {
-            const { seedOracles } = buildClusterRecommendationInput(
-              skeleton,
-              runData.slimPools,
-              runData.cardMeta,
-              deckResult.decks,
-            );
-            if (seedOracles.length === 0) return { ...skeleton, recommendedAdds: [] };
-            const { adds } = await localRecommend(seedOracles, remapping);
-            return {
-              ...skeleton,
-              recommendedAdds: adds.filter((item) => !runData.cardMeta[item.oracle]).slice(0, 120),
-            };
-          }),
-        );
-      };
-      const buildClusterCache = async (): Promise<{ clusterCache?: ClusteringCache; clusteringNotice: string | null }> => {
-        setSimPhase('cluster');
-        const remapping = buildOracleRemapping(runData.cardMeta);
-        const oovCount = countOutOfVocabOracles(runData.cardMeta);
-        const oovPct = oovCount / Math.max(1, Object.keys(runData.cardMeta).length);
-        const pools = runData.slimPools.map((_, i) => deckResult.decks[i]!.mainboard);
-        const flat = await encodePools(pools, remapping);
-        const poolEmbeddings = reshapeEmbeddings(flat, pools.length);
-        const n = runData.slimPools.length;
-        const knnK = Math.min(50, Math.max(5, Math.round(n / KNN_K_DIVISOR)));
-        const resolution = parseFloat(Math.min(2.0, Math.max(0.5, n / LEIDEN_RES_DIVISOR)).toFixed(2));
-        const clusteringResult = computeSkeletons(
-          runData.slimPools,
-          runData.cardMeta,
-          poolEmbeddings,
-          deckResult.decks,
-          knnK,
-          CLUSTER_NEG_SAMPLES,
-          resolution,
-        );
 
-        let poolArchetypeLabels: [number, string][] | undefined;
-        const archetypeData = await loadArchetypeData();
-        if (archetypeData) {
-          const labels = new Map<number, string>();
-          for (let pi = 0; pi < poolEmbeddings.length; pi++) {
-            const emb = poolEmbeddings[pi]!;
-            const embNorm = Math.sqrt(emb.reduce((s, v) => s + v * v, 0)) || 1;
-            let bestSim = -Infinity;
-            let bestClusterId = -1;
-            for (const { clusterId, center } of archetypeData.centers) {
-              let dot = 0;
-              const cNorm = Math.sqrt(center.reduce((s, v) => s + v * v, 0)) || 1;
-              for (let d = 0; d < emb.length; d++) dot += emb[d]! * (center[d] ?? 0);
-              const sim = dot / (embNorm * cNorm);
-              if (sim > bestSim) {
-                bestSim = sim;
-                bestClusterId = clusterId;
-              }
-            }
-            const label = archetypeData.annotations[String(bestClusterId)];
-            if (label) labels.set(pi, label);
-          }
-          poolArchetypeLabels = [...labels.entries()];
-        }
-
-        const nextClusterCache: ClusteringCache = {
-          skeletons: clusteringResult.skeletons,
-          umapCoords: clusteringResult.umapCoords,
-          clusterMethod: clusteringResult.clusterMethod,
-          knnK,
-          resolution,
-          poolArchetypeLabels,
-          scoringVersion: SCORING_ALGORITHM_VERSION,
-        };
-        return {
-          clusterCache: nextClusterCache,
-          clusteringNotice:
-            oovPct > 0.1
-              ? `${Math.round(oovPct * 100)}% of cards in this cube aren't in the ML model's training vocabulary. Clustering quality may be reduced for those cards.`
-              : null,
-        };
-      };
-
-      const clusteringPromise = buildClusterCache();
+      const clusteringPromise = buildClusterCacheForRun(
+        runData,
+        deckResult.decks,
+        controller.signal,
+        () => setSimPhase('cluster'),
+      );
       try {
         const timedResult = await Promise.race([
           clusteringPromise,
           new Promise<null>((resolve) => setTimeout(() => resolve(null), CLUSTERING_SAVE_BUDGET_MS)),
         ]);
+        throwIfAborted(controller.signal);
         if (timedResult) {
           clusterCache = timedResult.clusterCache;
           clusteringNotice = timedResult.clusteringNotice;
@@ -448,6 +482,7 @@ export default function useSimulationRun({
         totalMs: performance.now() - runStart,
       };
       const storagePressureNotice = await getStoragePressureNotice();
+      throwIfAborted(controller.signal);
       saveMs = performance.now() - saveStart;
       runData.timings = {
         setupMs,
@@ -481,7 +516,7 @@ export default function useSimulationRun({
           .then(async (result) => {
             if (!result.clusterCache || controller.signal.aborted) return;
             await onPersistClusterCache(entry.ts, result.clusterCache);
-            void precomputeClusterRecommendations(result.clusterCache.skeletons)
+            void precomputeClusterRecommendations(result.clusterCache.skeletons, runData, deckResult.decks, controller.signal)
               .then(async (recommendedSkeletons) => {
                 if (controller.signal.aborted) return;
                 await onPersistClusterCache(entry.ts, { ...result.clusterCache!, skeletons: recommendedSkeletons });
@@ -495,7 +530,7 @@ export default function useSimulationRun({
             onSetClusterCachePending(false);
           });
       } else if (clusterCache) {
-        void precomputeClusterRecommendations(clusterCache.skeletons)
+        void precomputeClusterRecommendations(clusterCache.skeletons, runData, deckResult.decks, controller.signal)
           .then(async (recommendedSkeletons) => {
             if (controller.signal.aborted) return;
             await onPersistClusterCache(entry.ts, { ...clusterCache!, skeletons: recommendedSkeletons });
