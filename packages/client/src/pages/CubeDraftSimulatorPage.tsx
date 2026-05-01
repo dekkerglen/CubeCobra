@@ -2,7 +2,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { isManaFixingLand } from '@utils/cardutil';
-import type CardType from '@utils/datatypes/Card';
 import type { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import {
@@ -11,15 +10,11 @@ import {
   BuiltDeck,
   CardMeta,
   CardStats,
-  LockPair,
-  RankedCards,
-  SimulatedPickCard,
   SimulatedPool,
   SimulationReport,
   SimulationRunData,
   SimulationRunEntry,
   SimulationSetupResponse,
-  SkeletonCard,
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
 import { getCubeId } from '@utils/Util';
@@ -44,25 +39,17 @@ import { Col, Flexbox, Row } from '../components/base/Layout';
 import Link from '../components/base/Link';
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
-import { Modal, ModalBody, ModalHeader } from '../components/base/Modal';
-import ArchetypeChart from '../components/draftSimulator/ArchetypeChart';
-import CardStatsTable from '../components/draftSimulator/CardStatsTable';
 import DraftSimulatorFilterBar, { type FilterChipItem } from '../components/draftSimulator/DraftSimulatorFilterBar';
-import DraftMapScatter, { type DraftMapColorMode, type DraftMapPoint } from '../components/draftSimulator/DraftMapScatter';
-import DraftVsEloTable from '../components/draftSimulator/DraftVsEloTable';
-import SimDeckView, { CMC_COLS } from '../components/draftSimulator/SimDeckView';
+import { type DraftMapColorMode, type DraftMapPoint } from '../components/draftSimulator/DraftMapScatter';
 import {
   ClearSimulationHistoryModal,
   LeaveSimulationModal,
   PriorRunDeleteModal,
 } from '../components/draftSimulator/DraftSimulatorModals';
-import SimulatorPickBreakdown from '../components/draftSimulator/SimulatorPickBreakdown';
 import { PoolInspectionModal } from '../components/draftSimulator/PoolExpansionContent';
 import DraftBreakdownTable, { buildDraftBreakdownRowSummary } from '../components/draftSimulator/DraftBreakdownTable';
 import DraftMapCard, { computeDraftMapPoints } from '../components/draftSimulator/DraftMapCard';
-import DraftSimulatorBottomSection, { FilterChipButtons } from '../components/draftSimulator/DraftSimulatorBottomSection';
-import ArchetypeSkeletonSection from '../components/draftSimulator/ArchetypeSkeletonSection';
-import DraftBreakdownDisplay from '../components/draft/DraftBreakdownDisplay';
+import DraftSimulatorBottomSection from '../components/draftSimulator/DraftSimulatorBottomSection';
 import DynamicFlash from '../components/DynamicFlash';
 import RenderToRoot from '../components/RenderToRoot';
 import withAutocard from '../components/WithAutocard';
@@ -82,14 +69,11 @@ import useLocalSimulationHistory from '../hooks/useLocalSimulationHistory';
 import useSimulationRun from '../hooks/useSimulationRun';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
-import { modelScoresToProbabilities } from '../utils/botRatings';
 import {
   buildOracleRemapping,
   DeckbuildEntry,
-  loadDraftBot,
   loadDraftRecommender,
   localBatchDeckbuild,
-  localBatchDraftRanked,
   localPickBatch,
   localRecommend,
   WebGLInferenceError,
@@ -98,9 +82,7 @@ import { buildClusterRecommendationInput } from '../utils/draftSimulatorClusteri
 import {
   archetypeFullName,
   computeClusterThemes,
-  extractThemeFeatures,
   formatClusterThemeLabels,
-  formatFeatureKey,
   getPoolMainCards,
   inferDraftThemes,
 } from '../utils/draftSimulatorThemes';
