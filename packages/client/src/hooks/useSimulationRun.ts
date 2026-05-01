@@ -78,7 +78,6 @@ interface UseSimulationRunArgs {
   onPersistClusterCache: (ts: number, clusterCache: ClusteringCache) => Promise<void> | void;
 }
 
-const CLUSTERING_SAVE_BUDGET_MS = 5000;
 const RECOMMENDATION_CONCURRENCY = 2;
 
 function throwIfAborted(signal: AbortSignal): void {
@@ -369,6 +368,9 @@ export default function useSimulationRun({
       const modelLoadStart = performance.now();
       await loadDraftBot((pct) => setModelLoadProgress(pct));
       throwIfAborted(controller.signal);
+      const recommenderWarmupPromise = loadDraftRecommender().catch((err) => {
+        console.error('Failed to warm draft recommender during run:', err);
+      });
       modelLoadMs = performance.now() - modelLoadStart;
 
       let effectiveGpuBatchSize = gpuBatchSize;
@@ -445,30 +447,34 @@ export default function useSimulationRun({
       };
       let clusterCache: ClusteringCache | undefined;
       let clusteringNotice: string | null = null;
-      let clusteringTimedOut = false;
-
-      const clusteringPromise = buildClusterCacheForRun(
-        runData,
-        deckResult.decks,
-        controller.signal,
-        () => setSimPhase('cluster'),
-      );
       try {
-        const timedResult = await Promise.race([
-          clusteringPromise,
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), CLUSTERING_SAVE_BUDGET_MS)),
-        ]);
+        const timedResult = await buildClusterCacheForRun(runData, deckResult.decks, controller.signal, () =>
+          setSimPhase('cluster'),
+        );
         throwIfAborted(controller.signal);
         if (timedResult) {
           clusterCache = timedResult.clusterCache;
           clusteringNotice = timedResult.clusteringNotice;
         } else {
-          clusteringTimedOut = true;
+          onSetClusterCachePending(false);
         }
       } catch (err) {
         console.error('Failed to precompute clustering cache during run:', err);
         clusteringNotice = 'Draft simulation completed, but cluster data will still need to be computed when the run is opened.';
         onSetClusterCachePending(false);
+      }
+
+      if (clusterCache) {
+        try {
+          await recommenderWarmupPromise;
+          throwIfAborted(controller.signal);
+          clusterCache = {
+            ...clusterCache,
+            skeletons: await precomputeClusterRecommendations(clusterCache.skeletons, runData, deckResult.decks, controller.signal),
+          };
+        } catch (err) {
+          console.error('Failed to precompute cluster recommendations during run:', err);
+        }
       }
 
       setSimPhase('save');
@@ -510,35 +516,6 @@ export default function useSimulationRun({
         .catch(() => {
           onSetStorageNotice('Results are shown below, but local saving hit an error and may not have completed.');
         });
-
-      if (clusteringTimedOut) {
-        void clusteringPromise
-          .then(async (result) => {
-            if (!result.clusterCache || controller.signal.aborted) return;
-            await onPersistClusterCache(entry.ts, result.clusterCache);
-            void precomputeClusterRecommendations(result.clusterCache.skeletons, runData, deckResult.decks, controller.signal)
-              .then(async (recommendedSkeletons) => {
-                if (controller.signal.aborted) return;
-                await onPersistClusterCache(entry.ts, { ...result.clusterCache!, skeletons: recommendedSkeletons });
-              })
-              .catch((err) => {
-                console.error('Failed to finish cluster recommendations in background:', err);
-              });
-          })
-          .catch((err) => {
-            console.error('Failed to finish clustering cache in background:', err);
-            onSetClusterCachePending(false);
-          });
-      } else if (clusterCache) {
-        void precomputeClusterRecommendations(clusterCache.skeletons, runData, deckResult.decks, controller.signal)
-          .then(async (recommendedSkeletons) => {
-            if (controller.signal.aborted) return;
-            await onPersistClusterCache(entry.ts, { ...clusterCache!, skeletons: recommendedSkeletons });
-          })
-          .catch((err) => {
-            console.error('Failed to precompute cluster recommendations in background:', err);
-          });
-      }
 
       setStatus('completed');
       setSimPhase(null);
