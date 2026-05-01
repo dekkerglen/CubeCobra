@@ -79,6 +79,7 @@ import {
   WebGLInferenceError,
 } from '../utils/draftBot';
 import { buildClusterRecommendationInput } from '../utils/draftSimulatorClustering';
+import { prefetchClientSimulationResources } from '../utils/draftSimulatorSetup';
 import {
   archetypeFullName,
   computeClusterThemes,
@@ -1144,6 +1145,10 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     ],
     [cube.formats],
   );
+
+  useEffect(() => {
+    void prefetchClientSimulationResources(csrfFetch, cubeId);
+  }, [csrfFetch, cubeId]);
 
   const {
     status,
