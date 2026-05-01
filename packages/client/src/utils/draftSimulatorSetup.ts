@@ -30,6 +30,10 @@ interface MlSubstitutionResponse {
   success?: boolean;
 }
 
+let tagDataPromise: Promise<void> | null = null;
+let mlOracleRemappingPromise: Promise<Record<string, string>> | null = null;
+const cubeFetchPromises = new Map<string, Promise<CubeWithCards>>();
+
 export class ClientSimulationSetupError extends Error {
   fatal: boolean;
 
@@ -114,51 +118,86 @@ function buildCardMeta(cards: Card[]): Record<string, CardMeta> {
 
 async function fetchMlOracleRemapping(
   request: (input: RequestInfo, init?: ExtendedRequestInit) => Promise<Response>,
-  oracleIds: string[],
 ): Promise<Record<string, string>> {
-  if (oracleIds.length === 0) return {};
-
-  const response = await request('/tool/api/mlsubstitutions', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ oracles: oracleIds }),
-  });
-  if (!response.ok) {
-    throw new ClientSimulationSetupError(`Failed to load ML substitutions: ${response.status}`);
+  if (!mlOracleRemappingPromise) {
+    mlOracleRemappingPromise = (async () => {
+      const response = await request('/tool/api/mlsubstitutions');
+      if (!response.ok) {
+        throw new ClientSimulationSetupError(`Failed to load ML substitutions: ${response.status}`);
+      }
+      const data = (await response.json()) as MlSubstitutionResponse;
+      return data.remapping ?? {};
+    })().catch((err) => {
+      mlOracleRemappingPromise = null;
+      throw err;
+    });
   }
-  const data = (await response.json()) as MlSubstitutionResponse;
-  return data.remapping ?? {};
+
+  return mlOracleRemappingPromise;
 }
 
 export async function ensureClientTagData(
   request: (input: RequestInfo, init?: ExtendedRequestInit) => Promise<Response>,
 ): Promise<void> {
   if (getTagData()) return;
-
-  const response = await request('/tool/api/tags');
-  if (!response.ok) {
-    throw new ClientSimulationSetupError(`Failed to load tag data: ${response.status}`);
+  if (!tagDataPromise) {
+    tagDataPromise = (async () => {
+      const response = await request('/tool/api/tags');
+      if (!response.ok) {
+        throw new ClientSimulationSetupError(`Failed to load tag data: ${response.status}`);
+      }
+      const data = (await response.json()) as TagApiResponse;
+      configureTagData({
+        oracleTagDict: data.oracleTagDict,
+        oracleTagNames: data.oracleTagNames,
+        illustrationTagDict: data.illustrationTagDict,
+        illustrationTagNames: data.illustrationTagNames,
+        oracleToIndex: data.oracleToIndex,
+        scryfallIdToIndex: data.scryfallIdToIndex,
+      });
+    })().catch((err) => {
+      tagDataPromise = null;
+      throw err;
+    });
   }
-  const data = (await response.json()) as TagApiResponse;
-  configureTagData({
-    oracleTagDict: data.oracleTagDict,
-    oracleTagNames: data.oracleTagNames,
-    illustrationTagDict: data.illustrationTagDict,
-    illustrationTagNames: data.illustrationTagNames,
-    oracleToIndex: data.oracleToIndex,
-    scryfallIdToIndex: data.scryfallIdToIndex,
-  });
+  await tagDataPromise;
 }
 
 export async function fetchCubeForClientSimulation(
   request: (input: RequestInfo, init?: ExtendedRequestInit) => Promise<Response>,
   cubeId: string,
 ): Promise<CubeWithCards> {
-  const response = await request(`/cube/api/cubeJSON/${encodeURIComponent(cubeId)}`);
-  if (!response.ok) {
-    throw new ClientSimulationSetupError(`Failed to load cube data: ${response.status}`);
+  const existing = cubeFetchPromises.get(cubeId);
+  if (existing) return existing;
+
+  const fetchPromise = (async () => {
+    const response = await request(`/cube/api/cubeJSON/${encodeURIComponent(cubeId)}`);
+    if (!response.ok) {
+      throw new ClientSimulationSetupError(`Failed to load cube data: ${response.status}`);
+    }
+    return (await response.json()) as CubeWithCards;
+  })().catch((err) => {
+    cubeFetchPromises.delete(cubeId);
+    throw err;
+  });
+
+  cubeFetchPromises.set(cubeId, fetchPromise);
+  return fetchPromise;
+}
+
+export async function prefetchClientSimulationResources(
+  request: (input: RequestInfo, init?: ExtendedRequestInit) => Promise<Response>,
+  cubeId: string,
+): Promise<void> {
+  try {
+    await Promise.all([
+      fetchCubeForClientSimulation(request, cubeId),
+      ensureClientTagData(request),
+      fetchMlOracleRemapping(request),
+    ]);
+  } catch (err) {
+    console.warn('Draft simulator setup prefetch failed:', err);
   }
-  return (await response.json()) as CubeWithCards;
 }
 
 export async function buildClientSimulationSetup(
@@ -215,9 +254,10 @@ export async function buildClientSimulationSetup(
     Object.assign(cardMeta, buildCardMeta(cards));
   }
 
-  const mlRemapping = await fetchMlOracleRemapping(request, Object.keys(cardMeta));
-  for (const [oracleId, mlOracleId] of Object.entries(mlRemapping)) {
-    if (cardMeta[oracleId] && mlOracleId !== oracleId) {
+  const mlRemapping = await fetchMlOracleRemapping(request);
+  for (const oracleId of Object.keys(cardMeta)) {
+    const mlOracleId = mlRemapping[oracleId];
+    if (mlOracleId && mlOracleId !== oracleId) {
       cardMeta[oracleId].mlOracleId = mlOracleId;
     }
   }
