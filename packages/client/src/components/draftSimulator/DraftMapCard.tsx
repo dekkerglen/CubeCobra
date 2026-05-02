@@ -21,6 +21,7 @@ import Text from '../base/Text';
 import withAutocard from '../WithAutocard';
 import DraftMapScatter, { type DraftMapColorMode, type DraftMapPoint } from './DraftMapScatter';
 import ClusterDetailPanel, { LinkedCardImage, SkeletonCardImage } from './ClusterDetailPanel';
+import ColorProfileDetailPanel from './ColorProfileDetailPanel';
 import {
   CardTypeShareLegend,
   DeckColorShareChart,
@@ -311,6 +312,7 @@ const DraftMapCard: React.FC<{
   activeDecks: BuiltDeck[] | null;
   clusterThemesByClusterId: Map<number, string[]>;
   poolArchetypeLabels: Map<number, string> | null;
+  colorPairTopArchetypes: Map<string, string[]>;
   activeFilterSummary: string | null;
   scopeOnlySummary: string | null;
   filteredDecks: BuiltDeck[] | null;
@@ -321,6 +323,10 @@ const DraftMapCard: React.FC<{
   excludeManaFixingLands: boolean;
   setExcludeManaFixingLands: (v: boolean) => void;
   onInspectPool: (poolIndex: number) => void;
+  selectedArchetype: string | null;
+  selectedColorPoolIndices: number[];
+  selectedColorDeckBuilds: BuiltDeck[] | null;
+  onToggleSelectedCard: (oracleId: string) => void;
 }> = ({
   skeletons,
   showAdvancedClustering,
@@ -355,6 +361,7 @@ const DraftMapCard: React.FC<{
   activeDecks,
   clusterThemesByClusterId,
   poolArchetypeLabels,
+  colorPairTopArchetypes,
   activeFilterSummary,
   scopeOnlySummary,
   filteredDecks,
@@ -365,6 +372,10 @@ const DraftMapCard: React.FC<{
   excludeManaFixingLands,
   setExcludeManaFixingLands,
   onInspectPool,
+  selectedArchetype,
+  selectedColorPoolIndices,
+  selectedColorDeckBuilds,
+  onToggleSelectedCard,
 }) => {
   const focusedPoolSummary = useMemo(() => {
     if (focusedPoolIndex === null) return null;
@@ -401,7 +412,7 @@ const DraftMapCard: React.FC<{
                   onClick={() => onInspectPool(focusedPoolIndex!)}
                   className="px-2 py-1 text-xs font-medium rounded border border-border bg-bg-accent hover:bg-bg-active text-text-secondary"
                 >
-                  View focused deck: Draft {focusedPoolSummary.draftIndex} Seat {focusedPoolSummary.seatIndex}
+                  View selected deck: Draft {focusedPoolSummary.draftIndex} Seat {focusedPoolSummary.seatIndex}
                 </button>
               )}
               <div className="inline-flex rounded border border-border overflow-hidden">
@@ -571,7 +582,29 @@ const DraftMapCard: React.FC<{
                       }}
                     />
                   ) : null;
-                })() : activeFilterPoolIndexSet !== null && (
+                })() : selectedArchetype && selectedColorPoolIndices.length > 0 ? (
+                  <ColorProfileDetailPanel
+                    colorPair={selectedArchetype}
+                    poolIndices={selectedColorPoolIndices}
+                    totalPools={displayRunData.slimPools.length}
+                    subsetDeckBuilds={selectedColorDeckBuilds}
+                    cubeOracleSet={cubeOracleSet}
+                    cardMeta={displayRunData.cardMeta}
+                    slimPools={displayRunData.slimPools}
+                    deckBuilds={activeDecks}
+                    topArchetypeLabels={colorPairTopArchetypes.get(selectedArchetype)}
+                    excludeManaFixingLands={excludeManaFixingLands}
+                    setExcludeManaFixingLands={setExcludeManaFixingLands}
+                    onOpenPool={(poolIndex) => {
+                      onInspectPool(poolIndex);
+                    }}
+                    onCardClick={onToggleSelectedCard}
+                    onClose={() => {
+                      setSelectedArchetype(null);
+                      setFocusedPoolIndex(null);
+                    }}
+                  />
+                ) : activeFilterPoolIndexSet !== null && (
                   <DraftMapScopePanel
                     title={cardInfo ? (scopeOnlySummary ?? '') : (activeFilterSummary ?? 'All draft pools')}
                     subtitle={draftMapScopeSubtitle}

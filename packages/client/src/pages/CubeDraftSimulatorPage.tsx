@@ -52,6 +52,7 @@ import { PoolInspectionModal } from '../components/draftSimulator/PoolExpansionC
 import DraftBreakdownTable, { buildDraftBreakdownRowSummary } from '../components/draftSimulator/DraftBreakdownTable';
 import ArchetypeSkeletonSection from '../components/draftSimulator/ArchetypeSkeletonSection';
 import ClusterDetailPanel from '../components/draftSimulator/ClusterDetailPanel';
+import ColorProfileDetailPanel from '../components/draftSimulator/ColorProfileDetailPanel';
 import DraftMapCard, { computeDraftMapPoints, DraftMapScopePanel } from '../components/draftSimulator/DraftMapCard';
 import DraftSimulatorBottomSection from '../components/draftSimulator/DraftSimulatorBottomSection';
 import {
@@ -4771,7 +4772,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   // Controls
   const [numDrafts, setNumDrafts] = useState(100);
   const [numSeats, setNumSeats] = useState(8);
-  const [gpuBatchSize, setGpuBatchSize] = useState(32);
+  const [gpuBatchSize, setGpuBatchSize] = useState(() => (isMobileLayout ? 4 : 32));
   const [selectedFormatId, setSelectedFormatId] = useState(cube.defaultFormat ?? -1);
 
   // Simulation state
