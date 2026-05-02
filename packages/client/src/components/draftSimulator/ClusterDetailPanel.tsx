@@ -27,7 +27,9 @@ import { buildClusterRecommendationInput } from '../../utils/draftSimulatorClust
 import { archetypeFullName } from '../../utils/draftSimulatorThemes';
 import {
   COLOR_KEYS,
+  CardTypeShareLegend,
   DeckColorShareChart,
+  DeckColorShareLegend,
   ManaCurveShareChart,
   CardTypeShareChart,
   EloDistributionChart,
@@ -53,13 +55,19 @@ function normalizeColorOrder(profile: string): string {
   return sorted.length > 0 ? sorted.join('') : 'C';
 }
 
-export const SkeletonCardImage: React.FC<{ card: SkeletonCard; size?: number }> = React.memo(({ card, size }) => (
+export const SkeletonCardImage: React.FC<{ card: SkeletonCard; size?: number; onCardClick?: (oracleId: string) => void }> = React.memo(({ card, size, onCardClick }) => (
   <AutocardLink
     href={`/tool/card/${encodeURIComponent(card.oracle_id)}`}
     className="relative block hover:opacity-95"
     style={size ? { width: size } : undefined}
     title={`${card.name} — ${(card.fraction * 100).toFixed(0)}% of pools`}
     card={{ details: autocardDetails(card.oracle_id, card.name, card.imageUrl) } as any}
+    onClick={onCardClick ? (e: React.MouseEvent) => {
+      if (window.matchMedia('(pointer: coarse)').matches) {
+        e.preventDefault();
+        onCardClick(card.oracle_id);
+      }
+    } : undefined}
   >
     {card.imageUrl ? (
       <img
@@ -85,17 +93,24 @@ export const SkeletonCardImage: React.FC<{ card: SkeletonCard; size?: number }> 
   </AutocardLink>
 ));
 
-export const LinkedCardImage: React.FC<{ oracleId: string; name: string; imageUrl: string; size: number }> = ({
+export const LinkedCardImage: React.FC<{ oracleId: string; name: string; imageUrl: string; size: number; onCardClick?: (oracleId: string) => void }> = ({
   oracleId,
   name,
   imageUrl,
   size,
+  onCardClick,
 }) => (
   <AutocardLink
     href={`/tool/card/${encodeURIComponent(oracleId)}`}
     className="relative flex-shrink-0 block hover:opacity-95"
     style={{ width: size }}
     card={{ details: autocardDetails(oracleId, name, imageUrl) } as any}
+    onClick={onCardClick ? (e: React.MouseEvent) => {
+      if (window.matchMedia('(pointer: coarse)').matches) {
+        e.preventDefault();
+        onCardClick(oracleId);
+      }
+    } : undefined}
   >
     <img src={imageUrl} alt={name} className="w-full rounded border border-border shadow-sm" />
   </AutocardLink>
@@ -116,8 +131,9 @@ const ClusterDetailPanel: React.FC<{
   excludeManaFixingLands: boolean;
   setExcludeManaFixingLands: (v: boolean) => void;
   onOpenPool: (poolIndex: number) => void;
+  onCardClick?: (oracleId: string) => void;
   onClose: () => void;
-}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cubeOracleSet, cardMeta, slimPools, deckBuilds, themes, poolArchetypeLabels, excludeManaFixingLands, setExcludeManaFixingLands, onOpenPool, onClose }) => {
+}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cubeOracleSet, cardMeta, slimPools, deckBuilds, themes, poolArchetypeLabels, excludeManaFixingLands, setExcludeManaFixingLands, onOpenPool, onCardClick, onClose }) => {
   const { csrfFetch } = useContext(CSRFContext);
 
   // Compute actual color profile from deck color shares (≥10% threshold)
@@ -445,7 +461,7 @@ const ClusterDetailPanel: React.FC<{
             {visibleCommonCards.length > 0 ? (
               <div className="grid grid-cols-6 gap-1.5">
                 {visibleCommonCards.slice(0, 12).map((card) => (
-                  <SkeletonCardImage key={card.oracle_id} card={card} />
+                  <SkeletonCardImage key={card.oracle_id} card={card} onCardClick={onCardClick} />
                 ))}
               </div>
             ) : (
@@ -469,7 +485,7 @@ const ClusterDetailPanel: React.FC<{
             {visibleDistinctCards.length > 0 ? (
               <div className="grid grid-cols-6 gap-1.5">
                 {visibleDistinctCards.slice(0, 12).map((card) => (
-                  <SkeletonCardImage key={card.oracle_id} card={card} />
+                  <SkeletonCardImage key={card.oracle_id} card={card} onCardClick={onCardClick} />
                 ))}
               </div>
             ) : (
@@ -563,14 +579,24 @@ const ClusterDetailPanel: React.FC<{
           </div>
         )}
       </div>
-      <div className="flex flex-row gap-4 flex-wrap">
+      <div className="flex flex-col gap-4 md:flex-row md:flex-wrap">
         <div className="flex-1 min-w-0">
           <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Deck Color Share</Text>
-          <DeckColorShareChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
+          <div className="hidden md:block">
+            <DeckColorShareChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
+          </div>
+          <div className="md:hidden">
+            <DeckColorShareLegend deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
+          </div>
         </div>
         <div className="flex-1 min-w-0">
           <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Card Types</Text>
-          <CardTypeShareChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
+          <div className="hidden md:block">
+            <CardTypeShareChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
+          </div>
+          <div className="md:hidden">
+            <CardTypeShareLegend deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
+          </div>
         </div>
         <div className="flex-1 min-w-0 flex flex-col gap-4">
           <div>

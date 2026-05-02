@@ -65,6 +65,7 @@ type PairingEntry = {
 };
 
 const DraftSimulatorBottomSection: React.FC<{
+  mobileLayout?: boolean;
   bottomTab: DraftSimulatorBottomTab;
   setBottomTab: React.Dispatch<React.SetStateAction<DraftSimulatorBottomTab>>;
   displayRunData: SimulationRunData;
@@ -117,6 +118,7 @@ const DraftSimulatorBottomSection: React.FC<{
   status: 'idle' | 'running' | 'completed' | 'failed';
   renderAutocardNameLink: (oracleId: string, name: string, imageUrl?: string) => React.ReactNode;
 }> = ({
+  mobileLayout = false,
   bottomTab,
   setBottomTab,
   displayRunData,
@@ -168,7 +170,10 @@ const DraftSimulatorBottomSection: React.FC<{
   excludeManaFixingLands,
   status,
   renderAutocardNameLink,
-}) => (
+}) => {
+  const visibleTabs = mobileLayout ? BOTTOM_TABS.filter((tab) => tab.key !== 'archetypes' && tab.key !== 'deckColor') : BOTTOM_TABS;
+
+  return (
   <div className="simSection simSectionBottomTabs flex flex-col gap-0 pt-3 border-t border-border">
     {activeFilterPoolIndexSet !== null && activeFilterPoolIndexSet.size === 0 && (
       <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3 mb-3 flex items-center justify-between gap-3">
@@ -184,14 +189,15 @@ const DraftSimulatorBottomSection: React.FC<{
         </button>
       </div>
     )}
-    <div className="flex flex-row items-stretch gap-0 border-b border-border mb-4">
-      {BOTTOM_TABS.map((tab) => (
+    <div className="mb-4 overflow-x-auto border-b border-border">
+      <div className="flex min-w-max flex-row items-stretch gap-0">
+      {visibleTabs.map((tab) => (
         <button
           key={tab.key}
           type="button"
           onClick={() => setBottomTab(tab.key)}
           className={[
-            'px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+            'flex-shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
             bottomTab === tab.key
               ? 'border-link text-link'
               : 'border-transparent text-text-secondary hover:text-text hover:border-border',
@@ -200,6 +206,7 @@ const DraftSimulatorBottomSection: React.FC<{
           {tab.label}
         </button>
       ))}
+      </div>
     </div>
     {bottomTab === 'archetypes' && (
       <div className="flex flex-col gap-4">
@@ -531,10 +538,11 @@ const DraftSimulatorBottomSection: React.FC<{
         </Col>
       </Row>
     )}
-    <Text xs className="text-text-secondary text-right mt-4">
+  <Text xs className="text-text-secondary text-right mt-4">
       Generated {new Date(displayRunData.generatedAt).toLocaleString()}
     </Text>
   </div>
-);
+  );
+};
 
 export default DraftSimulatorBottomSection;

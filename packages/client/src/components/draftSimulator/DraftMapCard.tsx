@@ -22,7 +22,9 @@ import withAutocard from '../WithAutocard';
 import DraftMapScatter, { type DraftMapColorMode, type DraftMapPoint } from './DraftMapScatter';
 import ClusterDetailPanel, { LinkedCardImage, SkeletonCardImage } from './ClusterDetailPanel';
 import {
+  CardTypeShareLegend,
   DeckColorShareChart,
+  DeckColorShareLegend,
   ManaCurveShareChart,
   CardTypeShareChart,
   EloDistributionChart,
@@ -168,37 +170,40 @@ export const DraftMapScopePanel: React.FC<{
       ? commonCards.excludingFixing
       : commonCards.default
     : [];
+  const showHeader = !!selectedCardInfo || !!title || !!subtitle;
   return (
   <div className="flex flex-col gap-5">
-    <div className="flex items-start justify-between gap-2">
-      <div className="min-w-0 flex-1 pt-2">
-        <div><Text semibold className="text-lg leading-snug">
-          {selectedCardInfo
-            ? (title ? `${selectedCardInfo.name} in ${title}` : selectedCardInfo.name)
-            : title}
-        </Text></div>
-        <div className="mt-1"><Text xs className="text-text-secondary">{subtitle}</Text></div>
-        {selectedCardInfo && (selectedCardInfo.pickRate !== undefined || (selectedCardInfo.avgPickPosition ?? 0) > 0) && (
-          <div className="flex items-center gap-3 mt-1.5 flex-wrap">
-            {selectedCardInfo.pickRate !== undefined && (
-              <span className="text-sm text-text-secondary/50">Pick rate <span className="text-text-secondary/80">{(selectedCardInfo.pickRate * 100).toFixed(1)}%</span></span>
-            )}
-            {(selectedCardInfo.avgPickPosition ?? 0) > 0 && (
-              <span className="text-sm text-text-secondary/50">Avg pos <span className="text-text-secondary/80">{selectedCardInfo.avgPickPosition!.toFixed(1)}</span></span>
-            )}
-          </div>
+    {showHeader && (
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0 flex-1 pt-2">
+          <div><Text semibold className="text-lg leading-snug">
+            {selectedCardInfo
+              ? (title ? `${selectedCardInfo.name} in ${title}` : selectedCardInfo.name)
+              : title}
+          </Text></div>
+          {subtitle ? <div className="mt-1"><Text xs className="text-text-secondary">{subtitle}</Text></div> : null}
+          {selectedCardInfo && (selectedCardInfo.pickRate !== undefined || (selectedCardInfo.avgPickPosition ?? 0) > 0) && (
+            <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+              {selectedCardInfo.pickRate !== undefined && (
+                <span className="text-sm text-text-secondary/50">Pick rate <span className="text-text-secondary/80">{(selectedCardInfo.pickRate * 100).toFixed(1)}%</span></span>
+              )}
+              {(selectedCardInfo.avgPickPosition ?? 0) > 0 && (
+                <span className="text-sm text-text-secondary/50">Avg pos <span className="text-text-secondary/80">{selectedCardInfo.avgPickPosition!.toFixed(1)}</span></span>
+              )}
+            </div>
+          )}
+        </div>
+        {selectedCardInfo && (
+          <button
+            type="button"
+            onClick={selectedCardInfo.onClear}
+            className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active flex-shrink-0"
+          >
+            ✕
+          </button>
         )}
       </div>
-      {selectedCardInfo && (
-        <button
-          type="button"
-          onClick={selectedCardInfo.onClear}
-          className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active flex-shrink-0"
-        >
-          ✕
-        </button>
-      )}
-    </div>
+    )}
     {matchingCount === 0 ? (
       <Text sm className="text-text-secondary">No pools match all active filters. Try removing a card or changing the scope.</Text>
     ) : (
@@ -231,14 +236,24 @@ export const DraftMapScopePanel: React.FC<{
             )}
           </div>
         ) : null}
-        <div className="flex flex-row gap-4 flex-wrap">
+        <div className="flex flex-col gap-4 md:flex-row md:flex-wrap">
           <div className="flex-1 min-w-0">
             <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Deck Color Share</Text>
-            <DeckColorShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
+            <div className="hidden md:block">
+              <DeckColorShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
+            </div>
+            <div className="md:hidden">
+              <DeckColorShareLegend deckBuilds={deckBuilds} cardMeta={cardMeta} />
+            </div>
           </div>
           <div className="flex-1 min-w-0">
             <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Card Types</Text>
-            <CardTypeShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
+            <div className="hidden md:block">
+              <CardTypeShareChart deckBuilds={deckBuilds} cardMeta={cardMeta} />
+            </div>
+            <div className="md:hidden">
+              <CardTypeShareLegend deckBuilds={deckBuilds} cardMeta={cardMeta} />
+            </div>
           </div>
           <div className="flex-1 min-w-0 flex flex-col gap-4">
             <div>
