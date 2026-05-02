@@ -392,10 +392,12 @@ const DraftSimulatorBottomSection: React.FC<{
                 )}
     {bottomTab === 'draftReplay' && (
       <DraftTableView
+        runData={displayRunData}
         slimPools={displayRunData.slimPools}
         cardMeta={displayRunData.cardMeta}
         numDrafts={displayRunData.numDrafts}
         numSeats={displayRunData.numSeats}
+        poolArchetypeLabels={poolArchetypeLabels}
       />
     )}
                 {bottomTab === 'overperformers' && (
