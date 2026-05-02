@@ -354,22 +354,24 @@ const ColorProfileDetailPanel: React.FC<{
       </div>
 
       <div>
-        <div className="flex flex-row border-b border-border mb-3">
-          {CARD_TABS.map((tab) => (
-            <button
-              key={tab.key}
-              type="button"
-              onClick={() => setCardTab(tab.key)}
-              className={[
-                'px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors',
-                cardTab === tab.key
-                  ? 'border-link text-link'
-                  : 'border-transparent text-text-secondary hover:text-text hover:border-border',
-              ].join(' ')}
-            >
-              {tab.label}
-            </button>
-          ))}
+        <div className="mb-3 overflow-x-auto border-b border-border">
+          <div className="flex min-w-max flex-row">
+            {CARD_TABS.map((tab) => (
+              <button
+                key={tab.key}
+                type="button"
+                onClick={() => setCardTab(tab.key)}
+                className={[
+                  'flex-shrink-0 whitespace-nowrap px-3 py-1.5 text-xs font-medium border-b-2 -mb-px transition-colors',
+                  cardTab === tab.key
+                    ? 'border-link text-link'
+                    : 'border-transparent text-text-secondary hover:text-text hover:border-border',
+                ].join(' ')}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {(cardTab === 'staples' || cardTab === 'distinct' || cardTab === 'recommendations') && (
@@ -388,7 +390,7 @@ const ColorProfileDetailPanel: React.FC<{
 
         {cardTab === 'staples' && (
           visibleCommonCards.length > 0 ? (
-            <div className="grid grid-cols-6 gap-1.5">
+            <div className="grid grid-cols-4 md:grid-cols-6 gap-1.5">
               {visibleCommonCards.slice(0, 12).map((card) => (
                 <SkeletonCardImage key={card.oracle_id} card={card} onCardClick={onCardClick} />
               ))}
@@ -400,7 +402,7 @@ const ColorProfileDetailPanel: React.FC<{
 
         {cardTab === 'distinct' && (
           visibleDistinctCards.length > 0 ? (
-            <div className="grid grid-cols-6 gap-1.5">
+            <div className="grid grid-cols-4 md:grid-cols-6 gap-1.5">
               {visibleDistinctCards.slice(0, 12).map((card) => (
                 <SkeletonCardImage key={card.oracle_id} card={card} onCardClick={onCardClick} />
               ))}
@@ -451,7 +453,7 @@ const ColorProfileDetailPanel: React.FC<{
               ) : recommendationsError ? (
                 <Text sm className="text-text-secondary">{recommendationsError}</Text>
               ) : visibleRecommendations.length > 0 ? (
-                <div className="grid grid-cols-6 gap-1.5">
+                <div className="grid grid-cols-4 md:grid-cols-6 gap-1.5">
                   {visibleRecommendations.map((item) => (
                     <AutocardLink
                       key={item.oracle}
