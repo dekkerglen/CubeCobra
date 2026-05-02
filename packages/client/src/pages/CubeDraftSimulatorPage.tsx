@@ -18,19 +18,6 @@ import {
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
 import { getCubeId } from '@utils/Util';
-import {
-  ArcElement,
-  BarElement,
-  CategoryScale,
-  Chart as ChartJS,
-  Legend,
-  LinearScale,
-  PointElement,
-  ScatterController,
-  Tooltip,
-} from 'chart.js';
-import { Bar, Doughnut } from 'react-chartjs-2';
-
 import Button from '../components/base/Button';
 import { Card, CardBody, CardHeader } from '../components/base/Card';
 import Button from '../components/base/Button';
@@ -102,8 +89,8 @@ import {
 } from '../utils/draftSimulatorThemes';
 import { computeFilteredCardStats } from '../utils/draftSimulatorStats';
 import { OTAG_BUCKET_MAP } from '../utils/otagBucketMap';
+import { COLOR_KEYS, getDeckShareColors, MTG_COLORS, normalizeColorOrder } from '../components/draftSimulator/SimulatorCharts';
 
-ChartJS.register(ArcElement, CategoryScale, LinearScale, BarElement, PointElement, ScatterController, Tooltip, Legend);
 
 interface RawStats {
   name: string;
@@ -334,13 +321,6 @@ const MTG_COLORS: Record<string, { bg: string; label: string }> = {
 function getColorProfileCodes(colorPair: string): string[] {
   const letters = colorPair.split('').filter((c) => c in MTG_COLORS && c !== 'C' && c !== 'M');
   return letters.length === 0 ? ['C'] : letters;
-}
-
-/** Sorts a color profile string into canonical WUBRG order (e.g. "BGU" → "UBG"). */
-function normalizeColorOrder(profile: string): string {
-  if (!profile || profile === 'C') return 'C';
-  const sorted = profile.split('').filter((c) => COLOR_KEYS.includes(c as any)).sort((a, b) => COLOR_KEYS.indexOf(a as any) - COLOR_KEYS.indexOf(b as any));
-  return sorted.length > 0 ? sorted.join('') : 'C';
 }
 
 /** Recomputes a skeleton's color profile from actual mainboard deck builds (WUBRG order).
@@ -4961,9 +4941,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     onSimulationStart: () => {},
     onSetCurrentRunSetup: setCurrentRunSetup,
     onSetStorageNotice: setStorageNotice,
-    onSetClusterCachePending: setClusterCachePending,
     onPersistCompletedRun: handlePersistCompletedRun,
-    onPersistClusterCache: handlePersistClusterCache,
   });
 
   useEffect(() => {

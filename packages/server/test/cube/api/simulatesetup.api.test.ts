@@ -143,6 +143,23 @@ describe('POST /cube/api/simulatesetup/:id', () => {
     expect(res.body.message).toMatch(/numDrafts/i);
   });
 
+  it('returns 400 when numDrafts exceeds the supported cap', async () => {
+    const owner = createUser({ id: 'owner-1' });
+    const cube = createCube({ id: 'cube-1', owner, lastDraftSimulation: undefined });
+
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+    (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
+
+    const res = await call(simulatesetupHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ numDrafts: 1001, numSeats: 2 })
+      .send();
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/numDrafts/i);
+  });
+
   it('includes basics and omits simToken from the setup response', async () => {
     const owner = createUser({ id: 'owner-1' });
     const cube = createCube({ id: 'cube-1', owner, basics: ['plains-id'], basicsBoard: 'Basics' });

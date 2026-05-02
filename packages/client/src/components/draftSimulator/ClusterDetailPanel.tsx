@@ -34,6 +34,7 @@ import {
   CardTypeShareChart,
   EloDistributionChart,
   getDeckShareColors,
+  normalizeColorOrder,
 } from './SimulatorCharts';
 
 const AutocardLink = withAutocard(Link);
@@ -49,11 +50,6 @@ function autocardDetails(oracleId: string, name: string, imageUrl?: string): Par
   };
 }
 
-function normalizeColorOrder(profile: string): string {
-  if (!profile || profile === 'C') return 'C';
-  const sorted = profile.split('').filter((c) => COLOR_KEYS.includes(c as any)).sort((a, b) => COLOR_KEYS.indexOf(a as any) - COLOR_KEYS.indexOf(b as any));
-  return sorted.length > 0 ? sorted.join('') : 'C';
-}
 
 export const SkeletonCardImage: React.FC<{ card: SkeletonCard; size?: number; onCardClick?: (oracleId: string) => void }> = React.memo(({ card, size, onCardClick }) => (
   <AutocardLink

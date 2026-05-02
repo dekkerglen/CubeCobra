@@ -10,7 +10,7 @@ import { cardFromId, getOracleForMl } from 'serverutils/carddb';
 import { getBasicsFromCube } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { userOrIpKey } from 'serverutils/rateLimitKeys';
-import { MAX_SEATS, MAX_SETUP_DRAFTS } from 'serverutils/simulatorConstants';
+import { MAX_SEATS } from 'serverutils/simulatorConstants';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
 
@@ -31,13 +31,16 @@ const setupLimiter = rateLimit({
 });
 
 const SetupSchema = Joi.object({
-  numDrafts: Joi.number().integer().min(1).max(MAX_SETUP_DRAFTS).default(100),
+  numDrafts: Joi.number().integer().min(1).max(1000).default(100),
   numSeats: Joi.number().integer().min(2).max(MAX_SEATS).default(8),
   formatId: Joi.number().integer().min(-1).default(-1),
 });
 
 export const simulatesetupHandler = async (req: Request, res: Response) => {
   try {
+    if (typeof req.setTimeout === 'function') req.setTimeout(5 * 60 * 1000);
+    if (typeof res.setTimeout === 'function') res.setTimeout(5 * 60 * 1000);
+
     const cubeId = req.params.id;
     if (!cubeId) {
       return res.status(400).json({ success: false, message: 'Cube ID required' });
