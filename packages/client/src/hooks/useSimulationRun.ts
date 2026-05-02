@@ -76,7 +76,6 @@ interface UseSimulationRunArgs {
   ) => Promise<PersistResult>;
 }
 
-const CLUSTERING_SAVE_BUDGET_MS = 5000;
 const RECOMMENDATION_CONCURRENCY = 2;
 
 function throwIfAborted(signal: AbortSignal): void {
@@ -445,23 +444,15 @@ export default function useSimulationRun({
       let clusterCache: ClusteringCache | undefined;
       let clusteringNotice: string | null = null;
       try {
-        const clusteringPromise = buildClusterCacheForRun(runData, deckResult.decks, controller.signal, () =>
+        const result = await buildClusterCacheForRun(runData, deckResult.decks, controller.signal, () =>
           setSimPhase('cluster'),
         );
-        const timedResult = await Promise.race([
-          clusteringPromise,
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), CLUSTERING_SAVE_BUDGET_MS)),
-        ]);
         throwIfAborted(controller.signal);
-        if (timedResult) {
-          clusterCache = timedResult.clusterCache;
-          clusteringNotice = timedResult.clusteringNotice;
-        } else {
-          clusteringNotice = 'Clustering will finish computing when you open this run.';
-        }
+        clusterCache = result.clusterCache;
+        clusteringNotice = result.clusteringNotice;
       } catch (err) {
         console.error('Failed to precompute clustering cache during run:', err);
-        clusteringNotice = 'Draft simulation completed, but clustering will be computed when the run is opened.';
+        clusteringNotice = 'Draft simulation completed, but clustering could not be computed.';
       }
 
       setSimPhase('save');
