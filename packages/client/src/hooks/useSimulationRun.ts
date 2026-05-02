@@ -481,7 +481,7 @@ export default function useSimulationRun({
       } else {
         onSetStorageNotice(null);
       }
-      void onPersistCompletedRun(entry, runData, clusterCache)
+      const persistPromise = onPersistCompletedRun(entry, runData, clusterCache)
         .then((persistResult) => {
           if (!persistResult.persisted) {
             onSetStorageNotice('Results are shown below, but this browser did not have enough local storage to save them.');
@@ -502,7 +502,7 @@ export default function useSimulationRun({
       if (clusterCache) {
         const capturedClusterCache = clusterCache;
         const capturedSignal = controller.signal;
-        void recommenderWarmupPromise
+        void Promise.all([recommenderWarmupPromise, persistPromise])
           .then(() => precomputeClusterRecommendations(capturedClusterCache.skeletons, runData, deckResult.decks, capturedSignal))
           .then((recommendedSkeletons) => {
             if (capturedSignal.aborted) return;
