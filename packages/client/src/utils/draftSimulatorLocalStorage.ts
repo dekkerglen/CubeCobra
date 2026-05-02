@@ -27,7 +27,7 @@ export interface ClusteringCache {
 
 export interface LocalSimulationStore {
   version: number;
-  runs: { entry: SimulationRunEntry; runData: SimulationRunData; clusterCache?: ClusteringCache }[];
+  runs: { entry: SimulationRunEntry; runData: SimulationRunData; clusterCache?: ClusteringCache; clusterCachePending?: boolean }[];
 }
 
 interface IndexedDbSimulationRunRecord {
@@ -37,6 +37,7 @@ interface IndexedDbSimulationRunRecord {
   entry: SimulationRunEntry;
   runData: SimulationRunData;
   clusterCache?: ClusteringCache;
+  clusterCachePending?: boolean;
 }
 
 const localSimulationStorageKey = (cubeId: string, ts: number): string => `${cubeId}:${ts}`;
@@ -80,7 +81,12 @@ export async function readLocalSimulationStore(cubeId: string): Promise<LocalSim
           )
           .sort((a, b) => b.ts - a.ts)
           .slice(0, LOCAL_SIM_HISTORY_LIMIT)
-          .map((run) => ({ entry: run.entry, runData: run.runData, clusterCache: run.clusterCache }));
+          .map((run) => ({
+            entry: run.entry,
+            runData: run.runData,
+            clusterCache: run.clusterCache,
+            clusterCachePending: !!run.clusterCachePending,
+          }));
         resolve({ version: LOCAL_SIM_STORAGE_VERSION, runs });
       };
     });
@@ -91,7 +97,7 @@ export async function readLocalSimulationStore(cubeId: string): Promise<LocalSim
 
 export async function writeLocalSimulationStore(
   cubeId: string,
-  runs: { entry: SimulationRunEntry; runData: SimulationRunData; clusterCache?: ClusteringCache }[],
+  runs: { entry: SimulationRunEntry; runData: SimulationRunData; clusterCache?: ClusteringCache; clusterCachePending?: boolean }[],
 ): Promise<void> {
   const nextRuns = [...runs].sort((a, b) => b.entry.ts - a.entry.ts);
   const desiredKeys = new Set(
@@ -114,6 +120,7 @@ export async function writeLocalSimulationStore(
             entry: run.entry,
             runData: run.runData,
             clusterCache: run.clusterCache,
+            clusterCachePending: !!run.clusterCachePending,
           } satisfies IndexedDbSimulationRunRecord);
         }
         for (const record of existing) {
@@ -137,16 +144,21 @@ export async function persistSimulationRun(
   clusterCache?: ClusteringCache,
 ): Promise<{ runs: SimulationRunEntry[]; persisted: boolean }> {
   const store = await readLocalSimulationStore(cubeId);
-  const nextStoredRuns = [{ entry, runData, clusterCache }, ...store.runs.filter((run) => run.entry.ts !== entry.ts)];
+  const nextStoredRuns = [
+    { entry, runData, clusterCache, clusterCachePending: false },
+    ...store.runs.filter((run) => run.entry.ts !== entry.ts),
+  ];
+  const nextEntries = nextStoredRuns
+    .sort((a, b) => b.entry.ts - a.entry.ts)
+    .slice(0, LOCAL_SIM_HISTORY_LIMIT)
+    .map((run) => run.entry);
   try {
     await writeLocalSimulationStore(cubeId, nextStoredRuns);
-    const nextStore = await readLocalSimulationStore(cubeId);
-    return { runs: nextStore.runs.map((run) => run.entry), persisted: true };
+    return { runs: nextEntries, persisted: true };
   } catch {
     try {
-      await writeLocalSimulationStore(cubeId, [{ entry, runData, clusterCache }]);
-      const nextStore = await readLocalSimulationStore(cubeId);
-      return { runs: nextStore.runs.map((run) => run.entry), persisted: true };
+      await writeLocalSimulationStore(cubeId, [{ entry, runData, clusterCache, clusterCachePending: !clusterCache }]);
+      return { runs: [entry], persisted: true };
     } catch {
       return { runs: store.runs.map((run) => run.entry), persisted: false };
     }
@@ -157,10 +169,10 @@ export async function clearLocalSimulationStore(cubeId: string): Promise<void> {
   await writeLocalSimulationStore(cubeId, []);
 }
 
-export async function patchClusteringCache(cubeId: string, ts: number, patch: Partial<ClusteringCache>): Promise<void> {
+export async function patchClusteringCache(cubeId: string, ts: number, patch: Partial<ClusteringCache>): Promise<boolean> {
   const db = await openLocalSimulationDb();
   try {
-    await new Promise<void>((resolve, reject) => {
+    return await new Promise<boolean>((resolve, reject) => {
       const tx = db.transaction(LOCAL_SIM_STORE_NAME, 'readwrite');
       const store = tx.objectStore(LOCAL_SIM_STORE_NAME);
       const req = store.get(localSimulationStorageKey(cubeId, ts));
@@ -168,13 +180,16 @@ export async function patchClusteringCache(cubeId: string, ts: number, patch: Pa
         const record = req.result as IndexedDbSimulationRunRecord | undefined;
         const base = record?.clusterCache;
         const merged = { ...base, ...patch } as ClusteringCache;
-        if (record && merged.skeletons && merged.umapCoords) store.put({ ...record, clusterCache: merged });
+        if (record && merged.skeletons && merged.umapCoords) {
+          store.put({ ...record, clusterCache: merged, clusterCachePending: false });
+        }
       };
-      tx.oncomplete = () => resolve();
+      tx.oncomplete = () => resolve(true);
       tx.onerror = () => reject(tx.error ?? new Error('Failed to patch clustering cache'));
     });
-  } catch {
-    // cache write failure is non-fatal
+  } catch (error) {
+    console.warn('Failed to patch clustering cache', { cubeId, ts, patchKeys: Object.keys(patch), error });
+    return false;
   } finally {
     db.close();
   }

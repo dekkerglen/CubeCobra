@@ -2,8 +2,11 @@ import React from 'react';
 
 import type { BuiltDeck, CardMeta } from '@utils/datatypes/SimulationReport';
 
+import { ArcElement, BarElement, CategoryScale, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 import Text from '../base/Text';
+
+ChartJS.register(ArcElement, BarElement, CategoryScale, Tooltip, Legend);
 
 export const COLOR_KEYS = ['W', 'U', 'B', 'R', 'G'] as const;
 export const COLOR_KEYS_WITH_C = [...COLOR_KEYS, 'C'] as const;
@@ -44,6 +47,12 @@ export const CARD_TYPE_COLORS: Record<string, string> = {
 };
 
 export const CARD_TYPE_ORDER = ['Creature', 'Instant', 'Sorcery', 'Enchantment', 'Artifact', 'Planeswalker', 'Land', 'Battle', 'Other'];
+
+export function normalizeColorOrder(profile: string): string {
+  if (!profile || profile === 'C') return 'C';
+  const sorted = profile.split('').filter((c) => COLOR_KEYS.includes(c as any)).sort((a, b) => COLOR_KEYS.indexOf(a as any) - COLOR_KEYS.indexOf(b as any));
+  return sorted.length > 0 ? sorted.join('') : 'C';
+}
 
 export function getDeckShareColors(oracle: string, cardMeta: Record<string, CardMeta>): string[] {
   const meta = cardMeta[oracle];

@@ -69,15 +69,14 @@ interface UseSimulationRunArgs {
   onSimulationStart: () => void;
   onSetCurrentRunSetup: (setup: SimulationSetupResponse | null) => void;
   onSetStorageNotice: (notice: string | null) => void;
-  onSetClusterCachePending: (pending: boolean) => void;
   onPersistCompletedRun: (
     entry: SimulationRunEntry,
     runData: SimulationRunData,
     clusterCache?: ClusteringCache,
   ) => Promise<PersistResult>;
-  onPersistClusterCache: (ts: number, clusterCache: ClusteringCache) => Promise<void> | void;
 }
 
+const CLUSTERING_SAVE_BUDGET_MS = 5000;
 const RECOMMENDATION_CONCURRENCY = 2;
 
 function throwIfAborted(signal: AbortSignal): void {
@@ -212,9 +211,7 @@ export default function useSimulationRun({
   onSimulationStart,
   onSetCurrentRunSetup,
   onSetStorageNotice,
-  onSetClusterCachePending,
   onPersistCompletedRun,
-  onPersistClusterCache,
 }: UseSimulationRunArgs) {
   const [status, setStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
   const [simPhase, setSimPhase] = useState<'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'cluster' | 'save' | null>(null);
@@ -448,20 +445,23 @@ export default function useSimulationRun({
       let clusterCache: ClusteringCache | undefined;
       let clusteringNotice: string | null = null;
       try {
-        const timedResult = await buildClusterCacheForRun(runData, deckResult.decks, controller.signal, () =>
+        const clusteringPromise = buildClusterCacheForRun(runData, deckResult.decks, controller.signal, () =>
           setSimPhase('cluster'),
         );
+        const timedResult = await Promise.race([
+          clusteringPromise,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), CLUSTERING_SAVE_BUDGET_MS)),
+        ]);
         throwIfAborted(controller.signal);
         if (timedResult) {
           clusterCache = timedResult.clusterCache;
           clusteringNotice = timedResult.clusteringNotice;
         } else {
-          onSetClusterCachePending(false);
+          clusteringNotice = 'Clustering will finish computing when you open this run.';
         }
       } catch (err) {
         console.error('Failed to precompute clustering cache during run:', err);
-        clusteringNotice = 'Draft simulation completed, but cluster data will still need to be computed when the run is opened.';
-        onSetClusterCachePending(false);
+        clusteringNotice = 'Draft simulation completed, but clustering will be computed when the run is opened.';
       }
 
       if (clusterCache) {
@@ -547,11 +547,9 @@ export default function useSimulationRun({
     buildAllDecks,
     onSimulationStart,
     onSetStorageNotice,
-    onSetClusterCachePending,
     onResetViewSelection,
     onSetCurrentRunSetup,
     onPersistCompletedRun,
-    onPersistClusterCache,
   ]);
 
   return {

@@ -9,13 +9,19 @@ import {
   loadDraftBot,
   reshapeEmbeddings,
 } from '../utils/draftBot';
-import { computeSkeletons, rescoreSkeletons } from '../utils/draftSimulatorClustering';
+import {
+  assignArchetypeLabels,
+  CLUSTER_NEG_SAMPLES,
+  computeSkeletons,
+  KNN_K_DIVISOR,
+  LEIDEN_RES_DIVISOR,
+  loadArchetypeData,
+  rescoreSkeletons,
+} from '../utils/draftSimulatorClustering';
 import { type ClusteringCache, patchClusteringCache, SCORING_ALGORITHM_VERSION } from '../utils/draftSimulatorLocalStorage';
 
 type EmbeddingCacheValue = number[][] | Record<string, number[]> | null;
 
-const KNN_K_DIVISOR = 16;
-const LEIDEN_RES_DIVISOR = 400;
 
 interface UseClusteringPipelineArgs {
   cubeId: string;
@@ -51,7 +57,6 @@ export default function useClusteringPipeline({
   const [oovWarningPct, setOovWarningPct] = useState<number | null>(null);
 
   const hydratedClusterSourceKey = useRef<string | null>(null);
-  const archetypeDataRef = useRef<{ centers: { clusterId: number; center: number[] }[]; annotations: Record<string, string> } | null>(null);
 
   const poolArchetypeLabelsLoading = displayRunData !== null && poolArchetypeLabels === null && !poolEmbeddingsFailed;
   const hasDecksForSource = !!(displayRunData && activeDecks && activeDecks.length === displayRunData.slimPools.length);
@@ -194,37 +199,9 @@ export default function useClusteringPipeline({
     }
     let cancelled = false;
     (async () => {
-      if (!archetypeDataRef.current) {
-        try {
-          const resp = await fetch('/api/archetypes');
-          if (!resp.ok) return;
-          archetypeDataRef.current = await resp.json();
-        } catch {
-          return;
-        }
-      }
-      if (cancelled || !archetypeDataRef.current) return;
-      const { centers, annotations } = archetypeDataRef.current;
-
-      const labels = new Map<number, string>();
-      for (let pi = 0; pi < poolEmbeddings.length; pi++) {
-        const emb = poolEmbeddings[pi]!;
-        const embNorm = Math.sqrt(emb.reduce((s, v) => s + v * v, 0)) || 1;
-        let bestSim = -Infinity;
-        let bestClusterId = -1;
-        for (const { clusterId, center } of centers) {
-          let dot = 0;
-          const cNorm = Math.sqrt(center.reduce((s, v) => s + v * v, 0)) || 1;
-          for (let d = 0; d < emb.length; d++) dot += emb[d]! * (center[d] ?? 0);
-          const sim = dot / (embNorm * cNorm);
-          if (sim > bestSim) {
-            bestSim = sim;
-            bestClusterId = clusterId;
-          }
-        }
-        const label = annotations[String(bestClusterId)];
-        if (label) labels.set(pi, label);
-      }
+      const archetypeData = await loadArchetypeData();
+      if (cancelled || !archetypeData) return;
+      const labels = assignArchetypeLabels(poolEmbeddings, archetypeData);
       if (!cancelled) {
         setPoolArchetypeLabels(labels);
         if (selectedTs) {
@@ -261,13 +238,16 @@ export default function useClusteringPipeline({
     }
 
     setClusteringInProgress(true);
-    const timer = setTimeout(() => {
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+    let idleId: number | null = null;
+    const runClustering = () => {
       const result = computeSkeletons(
         displayRunData.slimPools,
         displayRunData.cardMeta,
         poolEmbeddings,
         activeDecks,
         knnK,
+        CLUSTER_NEG_SAMPLES,
         resolution,
       );
       setSkeletons(result.skeletons);
@@ -284,9 +264,20 @@ export default function useClusteringPipeline({
           scoringVersion: SCORING_ALGORITHM_VERSION,
         });
       }
-    }, 20);
+    };
 
-    return () => clearTimeout(timer);
+    if (typeof window !== 'undefined' && 'requestIdleCallback' in window) {
+      idleId = window.requestIdleCallback(runClustering, { timeout: 500 });
+    } else {
+      timeoutId = setTimeout(runClustering, 20);
+    }
+
+    return () => {
+      if (timeoutId) clearTimeout(timeoutId);
+      if (idleId !== null && typeof window !== 'undefined' && 'cancelIdleCallback' in window) {
+        window.cancelIdleCallback(idleId);
+      }
+    };
   }, [
     displayRunData,
     knnK,

@@ -71,7 +71,7 @@ export default function useLocalSimulationHistory({
           setSelectedTs(store.runs[0].entry.ts);
           selectedTsRef.current = store.runs[0].entry.ts;
           setLoadedClusterCache(store.runs[0].clusterCache ?? null);
-          setClusterCachePending(false);
+          setClusterCachePending(!!store.runs[0].clusterCachePending);
         } else {
           setDisplayRunData(null);
           setCurrentRunSetup(null);
@@ -111,7 +111,7 @@ export default function useLocalSimulationHistory({
           setSelectedTs(ts);
           selectedTsRef.current = ts;
           setLoadedClusterCache(run.clusterCache ?? null);
-          setClusterCachePending(false);
+          setClusterCachePending(!!run.clusterCachePending);
         }
       } catch (err) {
         setLoadRunError(err instanceof Error ? err.message : 'Failed to load run');
@@ -143,7 +143,7 @@ export default function useLocalSimulationHistory({
         setSelectedTs(nextRuns[0]?.entry.ts ?? null);
         selectedTsRef.current = nextRuns[0]?.entry.ts ?? null;
         setLoadedClusterCache(nextStoredRuns[0]?.clusterCache ?? null);
-        setClusterCachePending(false);
+        setClusterCachePending(!!nextStoredRuns[0]?.clusterCachePending);
       }
     },
     [cubeId, selectedTs, onResetViewSelection],

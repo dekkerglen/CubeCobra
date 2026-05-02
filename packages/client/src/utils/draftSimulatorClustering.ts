@@ -1,5 +1,65 @@
 /* eslint-disable camelcase, no-plusplus, no-restricted-syntax */
 
+// ---------------------------------------------------------------------------
+// Shared clustering configuration — imported by both useSimulationRun and
+// useClusteringPipeline so parameters stay in sync across fresh runs and
+// cached-hydration reclusters.
+// ---------------------------------------------------------------------------
+export const KNN_K_DIVISOR = 16;
+export const LEIDEN_RES_DIVISOR = 400;
+export const CLUSTER_NEG_SAMPLES = 20;
+
+// ---------------------------------------------------------------------------
+// Archetype labeling — module-level singleton fetch + pure cosine classifier
+// ---------------------------------------------------------------------------
+type ArchetypeData = {
+  centers: { clusterId: number; center: number[] }[];
+  annotations: Record<string, string>;
+};
+
+let archetypeDataPromise: Promise<ArchetypeData | null> | null = null;
+
+export async function loadArchetypeData(): Promise<ArchetypeData | null> {
+  if (!archetypeDataPromise) {
+    archetypeDataPromise = (async () => {
+      try {
+        const resp = await fetch('/api/archetypes');
+        if (!resp.ok) return null;
+        return (await resp.json()) as ArchetypeData;
+      } catch {
+        return null;
+      }
+    })();
+  }
+  return archetypeDataPromise;
+}
+
+export function assignArchetypeLabels(
+  poolEmbeddings: number[][],
+  archetypeData: ArchetypeData,
+): Map<number, string> {
+  const labels = new Map<number, string>();
+  for (let pi = 0; pi < poolEmbeddings.length; pi++) {
+    const emb = poolEmbeddings[pi]!;
+    const embNorm = Math.sqrt(emb.reduce((s, v) => s + v * v, 0)) || 1;
+    let bestSim = -Infinity;
+    let bestClusterId = -1;
+    for (const { clusterId, center } of archetypeData.centers) {
+      let dot = 0;
+      const cNorm = Math.sqrt(center.reduce((s, v) => s + v * v, 0)) || 1;
+      for (let d = 0; d < emb.length; d++) dot += emb[d]! * (center[d] ?? 0);
+      const sim = dot / (embNorm * cNorm);
+      if (sim > bestSim) {
+        bestSim = sim;
+        bestClusterId = clusterId;
+      }
+    }
+    const label = archetypeData.annotations[String(bestClusterId)];
+    if (label) labels.set(pi, label);
+  }
+  return labels;
+}
+
 import {
   ArchetypeSkeleton,
   BuiltDeck,
