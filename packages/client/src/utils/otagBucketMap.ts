@@ -44,6 +44,8 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'doom-blade': 'removal',
   bite: 'removal',
   'one-sided-fight': 'removal',
+  arrest: 'removal',
+  pacifism: 'removal',
 
   // ── burn ─────────────────────────────────────────────────────────────────
   burn: 'burn',
@@ -234,7 +236,6 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'self-mill': 'mill',
   'deck-destruction': 'mill',
   'synergy-mill': 'mill',
-  'graveyard-seal': 'mill',
 
   // ── counterspells ────────────────────────────────────────────────────────
   counterspell: 'counterspells',
@@ -342,8 +343,6 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'bottom-deck-manipulation': 'library-manipulation',
   scry: 'library-manipulation',
   surveil: 'library-manipulation',
-  peek: 'library-manipulation',
-  'peek-hand': 'library-manipulation',
   'peek-library': 'library-manipulation',
   'spy-library': 'library-manipulation',
   'impulse-to-zone': 'library-manipulation',
@@ -392,8 +391,6 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'stun-creature': 'protection',
   lockdown: 'protection',
   'lockdown-creature': 'protection',
-  arrest: 'protection',
-  pacifism: 'protection',
 
   // ── theft ────────────────────────────────────────────────────────────────
   theft: 'theft',
@@ -455,8 +452,6 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   // ── hate ─────────────────────────────────────────────────────────────────
   hate: 'hate',
   'hate-artifact': 'hate',
-  'graveyard-hate': 'hate',
-  'hate-graveyard': 'hate',
   'hate-blocker': 'hate',
   'hate-attacker': 'hate',
   'hate-discard': 'hate',
@@ -551,9 +546,9 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'castable-from-exile': 'cast-from-exile',
 
   // ── graveyard hate ───────────────────────────────────────────────────────
-  'exile-self': 'graveyard-hate',
-  'exiles-self': 'graveyard-hate',
   'graveyard-to-library': 'graveyard-hate',
+  'graveyard-hate': 'graveyard-hate',
+  'hate-graveyard': 'graveyard-hate',
 
   // ── cycling ──────────────────────────────────────────────────────────────
   'cycling-non-mana': 'cycling',
@@ -596,12 +591,12 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   punisher: 'stax',
 
   // ── madness ──────────────────────────────────────────────────────────────
-  madness: 'madness',
-  'gives-madness': 'madness',
-  'synergy-madness': 'madness',
-  'discard-matters': 'madness',
-  'self-discard-matters': 'madness',
-  'opponent-discard-matters': 'madness',
+  madness: 'discard-matters',
+  'gives-madness': 'discard-matters',
+  'synergy-madness': 'discard-matters',
+  'discard-matters': 'discard-matters',
+  'self-discard-matters': 'discard-matters',
+  'opponent-discard-matters': 'discard-matters',
 
   // ── storm ────────────────────────────────────────────────────────────────
   'storm-count-matters': 'storm',
@@ -695,8 +690,8 @@ export const OTAG_BUCKET_MAP: Record<string, string> = {
   'poison-counter': 'infect',
   'synergy-poison': 'infect',
   'synergy-infect': 'infect',
-  'synergy-minus-counter': '-1/+1-counters',
-  wither: '-1/+1-counters',
-  'minus-counter': '-1/+1-counters',
-  'minus-1-minus-1-counter': '-1/+1-counters',
+  'synergy-minus-counter': '-1/-1-counters',
+  wither: '-1/-1-counters',
+  'minus-counter': '-1/-1-counters',
+  'minus-1-minus-1-counter': '-1/-1-counters',
 };
