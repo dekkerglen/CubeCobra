@@ -19,6 +19,7 @@ import DraftVsEloTable from './DraftVsEloTable';
 import type { FilterChipItem } from './DraftSimulatorFilterBar';
 import DraftBreakdownTable from './DraftBreakdownTable';
 import ArchetypeSkeletonSection from './ArchetypeSkeletonSection';
+import DraftTableView from './DraftTableView';
 import type {
   DraftSimulatorBottomTab,
 } from '../../hooks/draftSimulatorHookTypes';
@@ -29,6 +30,7 @@ const BOTTOM_TABS: { key: DraftSimulatorBottomTab; label: string }[] = [
   { key: 'deckColor', label: 'Deck Color Distribution' },
   { key: 'cardStats', label: 'Card Stats' },
   { key: 'draftBreakdown', label: 'Draft Breakdown' },
+  { key: 'draftReplay', label: 'Draft Replay' },
   { key: 'sideboardAndPairings', label: 'Sideboard & Pairings' },
   { key: 'overperformers', label: 'Over/Underperformers' },
 ];
@@ -388,6 +390,14 @@ const DraftSimulatorBottomSection: React.FC<{
         />
       </div>
                 )}
+    {bottomTab === 'draftReplay' && (
+      <DraftTableView
+        slimPools={displayRunData.slimPools}
+        cardMeta={displayRunData.cardMeta}
+        numDrafts={displayRunData.numDrafts}
+        numSeats={displayRunData.numSeats}
+      />
+    )}
                 {bottomTab === 'overperformers' && (
                   <div className="flex flex-col gap-4">
                     <DraftVsEloTable
