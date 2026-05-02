@@ -426,44 +426,48 @@ const DraftBreakdownTable: React.FC<{
               ].join(' ')}
               onClick={() => { setSelectedPool(summary.pool.poolIndex); onSelectPool?.(summary.pool.poolIndex); onInspectPool?.(summary.pool.poolIndex); }}
             >
-              <Flexbox direction="row" justify="between" alignItems="start" className="gap-2">
-                <div className="min-w-0 flex-1">
-                  <Text sm semibold className="block">
-                    Draft {summary.pool.draftIndex + 1} · Seat {summary.pool.seatIndex + 1}
-                  </Text>
-                  <div className="mt-0.5">
-                    {poolArchetypeLabels ? (
-                      <span className="text-[11px] font-medium">
-                        {summary.colors && summary.colors !== 'C' && (
-                          <span className="text-text-secondary mr-1">{summary.colors}</span>
-                        )}
-                        <span className="text-link">{poolArchetypeLabels.get(summary.pool.poolIndex) ?? '—'}</span>
-                      </span>
-                    ) : poolArchetypeLabelsLoading ? (
-                      <span className="inline-block h-3 w-24 animate-pulse rounded bg-bg-accent" />
-                    ) : null}
+              <div className="flex flex-col gap-2">
+                <Flexbox direction="row" justify="between" alignItems="start" className="gap-2">
+                  <div className="min-w-0 flex-1">
+                    <Text sm semibold className="block">
+                      Draft {summary.pool.draftIndex + 1} · Seat {summary.pool.seatIndex + 1}
+                    </Text>
+                    <div className="mt-0.5">
+                      {poolArchetypeLabels ? (
+                        <span className="text-[11px] font-medium">
+                          {summary.colors && summary.colors !== 'C' && (
+                            <span className="text-text-secondary mr-1">{summary.colors}</span>
+                          )}
+                          <span className="text-link">{poolArchetypeLabels.get(summary.pool.poolIndex) ?? '—'}</span>
+                        </span>
+                      ) : poolArchetypeLabelsLoading ? (
+                        <span className="inline-block h-3 w-24 animate-pulse rounded bg-bg-accent" />
+                      ) : null}
+                    </div>
                   </div>
-                  <div className="mt-1 flex flex-wrap gap-1">
+                  <div className="flex items-center gap-1 flex-shrink-0">
+                    {poolArchetypeLabelsLoading && <span className="inline-block h-3 w-16 animate-pulse rounded bg-bg-accent" />}
+                    {artImages.length > 0 && (
+                      <div className="flex gap-0.5 ml-1">
+                        {artImages.map((c) => (
+                          <div key={c.oracle_id} className="flex-shrink-0 overflow-hidden rounded" style={{ width: 48, height: 48 }} title={c.name}>
+                            <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover object-center" />
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </Flexbox>
+                {summary.themes.length > 0 && (
+                  <div className="flex flex-wrap gap-1">
                     {summary.themes.map((theme) => (
                       <span key={theme} className="rounded bg-bg-accent px-1.5 py-0.5 text-[11px] text-text-secondary">
                         {theme}
                       </span>
                     ))}
                   </div>
-                </div>
-                <div className="flex items-center gap-1 flex-shrink-0">
-                  {poolArchetypeLabelsLoading && <span className="inline-block h-3 w-16 animate-pulse rounded bg-bg-accent" />}
-                  {artImages.length > 0 && (
-                    <div className="flex gap-0.5 ml-1">
-                      {artImages.map((c) => (
-                        <div key={c.oracle_id} className="flex-shrink-0 overflow-hidden rounded" style={{ width: 48, height: 48 }} title={c.name}>
-                          <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover object-center" />
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </Flexbox>
+                )}
+              </div>
             </button>
           );
         })}

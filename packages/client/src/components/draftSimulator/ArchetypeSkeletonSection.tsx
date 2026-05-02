@@ -98,7 +98,6 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
       >
         <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] text-text-secondary uppercase tracking-wider">Cluster {skIdx + 1}</div>
             <div className="mt-0.5 font-semibold tracking-tight text-sm sm:text-base">
               {dominantArchetype ? (
                 `${skeletonColorProfiles.get(skeleton.clusterId) && skeletonColorProfiles.get(skeleton.clusterId) !== 'C' ? `${skeletonColorProfiles.get(skeleton.clusterId)} ` : ''}${dominantArchetype}`
@@ -107,10 +106,9 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
               ) : (
                 getSkeletonDisplayName(skeleton, poolArchetypeLabels, skeletonColorProfiles)
               )}
-            </div>
-            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-secondary">
-              <span>{skeleton.poolCount} seats</span>
-              <span>{((skeleton.poolCount / totalPools) * 100).toFixed(1)}%</span>
+              <span className="ml-2 text-[11px] font-normal text-text-secondary">
+                {skeleton.poolCount} seats · {((skeleton.poolCount / totalPools) * 100).toFixed(1)}%
+              </span>
             </div>
           </div>
           <div className="flex items-center gap-2 text-xs text-text-secondary">

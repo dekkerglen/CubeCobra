@@ -1669,7 +1669,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                 onClose={() => setSelectedArchetype(null)}
               />
             )}
-            {showDraftMapScopePanel && (
+            {!selectedSkeleton && !selectedArchetype && showDraftMapScopePanel && (
               <DraftMapScopePanel
                 title={selectedSkeleton ? '' : activeFilterSummary ?? scopeOnlySummary ?? ''}
                 subtitle={selectedSkeleton ? '' : draftMapScopeSubtitle}
@@ -1719,7 +1719,10 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                     Draft Simulator
                   </Text>
                   <Text sm className="text-text-secondary">
-                    Simulate bot-only drafts to estimate pick rates, color trends, and archetype outcomes. Results are stored locally on this device.
+                    Simulate bot-only drafts to estimate pick rates, color trends, and archetype outcomes. The draft
+                    simulation and deckbuilding run locally in your browser and results are stored on this device.
+                    Machines with lower GPU or memory headroom may need to use Advanced Options to reduce batch size or
+                    clustering work on larger runs.
                   </Text>
                 </div>
               </CardHeader>
@@ -2097,14 +2100,14 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
       <div className="space-y-3 text-sm text-text-secondary leading-relaxed">
         <p>
           After deckbuilding, each built deck is grouped with similar decks to surface recurring deck families. The
-          process runs in four stages:
+          current flow has four stages:
         </p>
         <ol className="list-decimal list-inside space-y-1.5 ml-2">
           <li>
             <span className="font-medium text-text">ML embeddings</span> — each main deck is encoded into a
             128-dimensional vector by the same neural-network draft model that powers bot picks. These vectors capture
-            card synergies and strategic signals learned from real drafts. If the model isn't loaded, the system falls
-            back to TF-IDF vectors (binary card presence weighted by rarity across pools).
+            card synergies and strategic signals learned from real drafts. If the model cannot be used, the system
+            falls back to simpler card-presence vectors.
           </li>
           <li>
             <span className="font-medium text-text">k-NN graph</span> — a k-nearest-neighbor graph connects each deck
@@ -2112,51 +2115,50 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
             Map layout.
           </li>
           <li>
-            <span className="font-medium text-text">Clustering</span> — the default method is{' '}
-            <span className="font-medium text-text">Leiden</span>, which treats the k-NN graph as a social network and
-            finds communities. Other methods are available in Advanced Options: HDBSCAN on the k-NN graph or a UMAP
-            projection, and NMF (non-negative matrix factorization) which decomposes drafts into shared card themes.
+            <span className="font-medium text-text">Leiden clustering</span> — the simulator treats the k-NN graph as
+            a network and finds communities of decks that are denser internally than they are to the rest of the run.
+            The two exposed controls are <span className="font-medium text-text">Neighbors (k)</span>, which changes
+            graph connectivity, and <span className="font-medium text-text">Resolution</span>, which changes how coarse
+            or fine the resulting clusters are.
           </li>
           <li>
             <span className="font-medium text-text">UMAP layout</span> — the k-NN graph is projected to 2D for the
-            Draft Map scatter plot. Nearby points share similar deck structure; clusters appear as visible clumps.
+            Draft Map scatter plot. Nearby points share similar deck structure, so clusters appear as visible groups of
+            points even though the map itself is only a visualization layer.
           </li>
         </ol>
         <p>
-          Each cluster is labeled with a human-readable archetype name derived from a pre-trained model of 496 known
-          Magic archetypes. Each deck's embedding is compared to all archetype centroids via cosine similarity, and the
-          nearest match becomes the label (e.g. "Izzet Spells", "Mono-Green Stompy").
+          Each cluster is labeled from the actual decks inside it. CubeCobra compares those decks to a library of known
+          archetype embeddings, then combines that archetype signal with the cluster&apos;s real color profile to produce
+          names like <span className="font-medium text-text">UR Artifact Midrange</span>.
         </p>
-        <p>Each cluster panel shows:</p>
+        <p>The current cluster detail panel shows:</p>
         <ul className="list-disc list-inside space-y-1 ml-2">
           <li>
-            <span className="font-medium text-text">Common cards</span> — cards appearing most often across decks in
-            the cluster
+            <span className="font-medium text-text">Staples</span> — the cards that appear most often across decks in
+            that cluster
           </li>
           <li>
-            <span className="font-medium text-text">Signature cards</span> — cards that appear significantly more in
-            this cluster than in others (contrastive scoring vs. neighboring clusters)
+            <span className="font-medium text-text">Distinct</span> — cards that are unusually concentrated in that
+            cluster relative to the rest of the run
           </li>
           <li>
-            <span className="font-medium text-text">Core package</span> — the tightest co-drafted chain of cards
-            linked by highest pairwise co-occurrence; the cards most likely to show up together in the same deck
+            <span className="font-medium text-text">Exemplary Deck</span> — a real simulated deck chosen as the best
+            representative of that cluster
           </li>
           <li>
-            <span className="font-medium text-text">Card pockets</span> — sub-groups within the cluster: cards
-            partitioned by co-occurrence into distinct packages (e.g. a removal suite vs. a synergy engine)
+            <span className="font-medium text-text">Recommendations</span> — cards suggested by the local recommender
+            model using the cluster as the seed set
           </li>
           <li>
-            <span className="font-medium text-text">Themes</span> — oracle-tag based theme labels (e.g. "Removal",
-            "Spells Matter") computed by lift analysis: tags over-represented in this cluster vs. the global baseline
-          </li>
-          <li>
-            <span className="font-medium text-text">Color share and mana curve</span> — color identity breakdown and
-            CMC distribution of mainboard cards across the cluster
+            <span className="font-medium text-text">Deck-color share, card types, mana curve, and Elo distribution</span>{' '}
+            — summary views over the main decks in that cluster
           </li>
         </ul>
         <p>
-          The color label (e.g. "UR") is derived from actual deck color share — a color must represent at least 10% of
-          mainboard card identity to appear in the label.
+          The related <span className="font-medium text-text">Deck Color Distribution</span> view uses the same
+          pattern for broader color buckets. Those views are usually noisier than clusters, because a color pair like
+          <span className="font-medium text-text"> UG</span> can still contain several different strategies.
         </p>
       </div>
     ),
