@@ -11,13 +11,10 @@ const log = async (level: string, message: string, meta?: string) => {
   const timestamp = new Date().getTime();
   const logMessage = meta ? `[${level}] ${message}\n${meta}` : `[${level}] ${message}`;
 
-  // Always log to console for local development
-  if (process.env.NODE_ENV === 'development') {
+  // Log to console locally
+  if (process.env.NODE_ENV !== 'production') {
     console.log(logMessage);
   }
-
-  // Always log to console
-  console.log(logMessage);
 
   // Also send to CloudWatch in production
   if (process.env.NODE_ENV === 'production') {

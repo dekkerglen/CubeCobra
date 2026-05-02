@@ -317,6 +317,7 @@ interface Cube {
   basics: string[]; // Deprecated - kept for backwards compatibility
   views?: ViewDefinition[]; // View configurations for displaying cube content
   customSorts?: CustomSort[]; // User-defined custom sort configurations
+  lastDraftSimulation?: number; // Legacy timestamp from server-persisted simulator runs
   disableDraft?: boolean; // Disable standard draft format
   disableSealed?: boolean; // Disable sealed format
   disableGrid?: boolean; // Disable grid draft format

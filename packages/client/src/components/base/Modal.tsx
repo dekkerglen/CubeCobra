@@ -16,6 +16,9 @@ interface ModalProps {
   xxl?: boolean;
   //If you set scrollable on the modal also set it on the ModalBody
   scrollable?: boolean;
+  offsetClassName?: string;
+  panelClassName?: string;
+  backdropClassName?: string;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -29,6 +32,9 @@ export const Modal: React.FC<ModalProps> = ({
   xl,
   xxl,
   scrollable = false,
+  offsetClassName = '',
+  panelClassName = '',
+  backdropClassName = '',
 }) => {
   return (
     <Transition show={isOpen}>
@@ -41,7 +47,7 @@ export const Modal: React.FC<ModalProps> = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="fixed inset-0 bg-bg bg-opacity-75 transition-opacity" />
+          <div className={classNames('fixed inset-0 bg-bg bg-opacity-75 transition-opacity', backdropClassName)} />
         </TransitionChild>
         <div className="fixed inset-0 z-[60]">
           <div
@@ -65,7 +71,7 @@ export const Modal: React.FC<ModalProps> = ({
                 leaveFrom="opacity-100 translate-y-0 sm:scale-100"
                 leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
               >
-                <div className="p-4 pb-20">
+                <div className={classNames('p-4 pb-20', offsetClassName)}>
                   <DialogPanel
                     className={classNames(
                       'relative transform rounded-md border border-border bg-bg-accent text-left text-text shadow-xl transition-all w-full flex flex-col',
@@ -75,6 +81,7 @@ export const Modal: React.FC<ModalProps> = ({
                          */
                         'overflow-hidden max-h-95/100': scrollable,
                       },
+                      panelClassName,
                     )}
                   >
                     {children}

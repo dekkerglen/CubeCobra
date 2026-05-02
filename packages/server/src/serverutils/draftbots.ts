@@ -12,46 +12,41 @@ import { batchBuild, batchDraft, build, draft as draftbotPick } from './ml';
   };
   */
 
-const pipsPerSource = (cards: any[]): Record<string, number> => {
-  const pips: Record<string, number> = {
-    W: 0.0,
-    U: 0.0,
-    B: 0.0,
-    R: 0.0,
-    G: 0.0,
-  };
-
-  const sources: Record<string, number> = {
-    W: 1.0,
-    U: 1.0,
-    B: 1.0,
-    R: 1.0,
-    G: 1.0,
-  };
+/**
+ * Returns color_demand / sources for each color.
+ * color_demand = number of non-land cards whose color_identity includes that color.
+ * sources = 1 (baseline) + number of lands already in the deck that can produce that color.
+ *
+ * Using color_identity instead of parsed_cost because color_identity is reliably populated
+ * on every card, whereas parsed_cost may be empty and would cause all pips to be 0,
+ * making every basic land tie and only the first one ever being selected.
+ *
+ * produced_mana is used for lands (with color_identity fallback) so that fetchlands
+ * and other lands without color_identity are counted correctly as mana sources.
+ */
+const colorDemandPerSource = (cards: any[]): Record<string, number> => {
+  const demand: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
+  const sources: Record<string, number> = { W: 1, U: 1, B: 1, R: 1, G: 1 };
 
   for (const card of cards) {
-    if (card.type.includes('Land')) {
-      for (const color of card.color_identity) {
-        if (sources[color] !== undefined) {
-          sources[color] += 1;
-        }
+    if ((card.type ?? '').includes('Land')) {
+      const produced: string[] = card.produced_mana?.length > 0 ? card.produced_mana : (card.color_identity ?? []);
+      for (const color of produced) {
+        if (sources[color] !== undefined) sources[color] += 1;
       }
     } else {
-      for (const color of card.parsed_cost) {
-        const upperColor = color.toUpperCase();
-        if (pips[upperColor] !== undefined) {
-          pips[upperColor] += 1;
-        }
+      for (const color of card.color_identity ?? []) {
+        if (demand[color] !== undefined) demand[color] += 1;
       }
     }
   }
 
   return {
-    W: (pips.W ?? 0) / (sources.W ?? 1),
-    U: (pips.U ?? 0) / (sources.U ?? 1),
-    B: (pips.B ?? 0) / (sources.B ?? 1),
-    R: (pips.R ?? 0) / (sources.R ?? 1),
-    G: (pips.G ?? 0) / (sources.G ?? 1),
+    W: (demand.W ?? 0) / (sources.W ?? 1),
+    U: (demand.U ?? 0) / (sources.U ?? 1),
+    B: (demand.B ?? 0) / (sources.B ?? 1),
+    R: (demand.R ?? 0) / (sources.R ?? 1),
+    G: (demand.G ?? 0) / (sources.G ?? 1),
   };
 };
 
@@ -72,15 +67,18 @@ const calculateBasics = (mainboard: any[], basics: any[], deckSize: number = 40)
   }
 
   for (let i = 0; i < basicsNeeded; i++) {
-    const pips = pipsPerSource([...mainboard, ...result]);
+    const pips = colorDemandPerSource([...mainboard, ...result]);
+
+    const basicColors = (card: any): string[] =>
+      card.produced_mana?.length > 0 ? card.produced_mana : card.color_identity;
 
     let bestBasic = 0;
-    let score = basicLands[0].color_identity
+    let score = basicColors(basicLands[0])
       .map((color: string) => pips[color] ?? 0)
       .reduce((a: number, b: number) => a + b, 0);
     //Cube's are not restricted to having 1 of each basic land. Could have multiple of a basic land type or none of a type
     for (let j = 1; j < basicLands.length; j++) {
-      const newScore = basicLands[j].color_identity
+      const newScore = basicColors(basicLands[j])
         .map((color: string) => pips[color] ?? 0)
         .reduce((a: number, b: number) => a + b, 0);
       if (newScore > score) {
@@ -294,7 +292,12 @@ export const batchDeckbuild = async (
   });
 
   // Phase 1: Batch deckbuild model to seed first 10 cards per seat
-  const allBuildResults = await batchBuild(allPoolMlOracles);
+  let allBuildResults: Awaited<ReturnType<typeof batchBuild>>;
+  try {
+    allBuildResults = await batchBuild(allPoolMlOracles);
+  } catch (err) {
+    throw new Error(`Batch deckbuild (phase 1) failed: ${err instanceof Error ? err.message : err}`);
+  }
 
   for (let s = 0; s < seats.length; s++) {
     const seat = seats[s]!;
@@ -364,7 +367,12 @@ export const batchDeckbuild = async (
 
     if (batchInputs.length === 0) break;
 
-    const batchResults = await batchDraft(batchInputs);
+    let batchResults: Awaited<ReturnType<typeof batchDraft>>;
+    try {
+      batchResults = await batchDraft(batchInputs);
+    } catch (err) {
+      throw new Error(`Batch deckbuild (phase 2) failed: ${err instanceof Error ? err.message : err}`);
+    }
 
     for (let i = 0; i < activeIndices.length; i++) {
       const s = activeIndices[i]!;

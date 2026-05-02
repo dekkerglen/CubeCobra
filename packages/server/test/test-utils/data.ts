@@ -68,54 +68,66 @@ export const createCardFromDetails = (overrides?: Partial<CardDetails>): Card =>
  * Create a CardDetails for testing by providing sane defaults but allow for overriding
  * @param overrides
  */
-export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails => ({
-  error: false,
-  language: generateRandomString(LETTERS, 2).toLowerCase(),
-  layout: '',
-  isToken: false,
-  name: generateRandomString(ALPHANUMERIC, 10, 25),
-  scryfall_id: uuidv4(),
-  oracle_id: uuidv4(),
-  set: generateRandomString(ALPHANUMERIC, 3).toLowerCase(),
-  setIndex: 0,
-  collector_number: '123',
-  released_at: '',
-  promo: false,
-  promo_types: undefined,
-  reprint: false,
-  digital: false,
-  full_name: generateRandomString(LETTERS, 10, 25),
-  name_lower: generateRandomString(LETTERS, 10, 25).toLowerCase(),
-  artist: `${generateRandomString(LETTERS, 3, 10)} ${generateRandomString(LETTERS, 5, 15)}`,
-  scryfall_uri: `https://scryfall.com/${uuidv4()}`,
-  rarity: 'rare',
-  legalities: Object.fromEntries(SUPPORTED_FORMATS.map((format) => [format, 'not_legal' as const])),
-  oracle_text: 'oracle text goes here',
-  cmc: 5,
-  type: 'Instant',
-  colors: ['w', 'b'],
-  color_identity: ['w', 'b', 'r'],
-  keywords: [],
-  colorcategory: 'Lands',
-  parsed_cost: ['1', 'w', 'b'],
-  finishes: ['nonfoil', 'etched'],
-  border_color: 'black',
-  mtgo_id: 12345,
-  full_art: true,
-  prices: {
-    usd: 10.1,
-    eur: 9.0,
-    tix: 3,
-    usd_etched: 12.5,
-    usd_foil: 15.25,
-  },
-  tokens: [],
-  set_name: 'cool set',
-  games: ['paper'],
-  gamesEverAvailable: ['paper'],
-  reserved: false,
-  ...overrides,
-});
+export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails => {
+  const hasGamesOverride = !!overrides && Object.prototype.hasOwnProperty.call(overrides, 'games');
+  const hasGamesEverAvailableOverride =
+    !!overrides && Object.prototype.hasOwnProperty.call(overrides, 'gamesEverAvailable');
+  const details: CardDetails = {
+    error: false,
+    language: generateRandomString(LETTERS, 2).toLowerCase(),
+    layout: '',
+    isToken: false,
+    name: generateRandomString(ALPHANUMERIC, 10, 25),
+    scryfall_id: uuidv4(),
+    oracle_id: uuidv4(),
+    set: generateRandomString(ALPHANUMERIC, 3).toLowerCase(),
+    setIndex: 0,
+    collector_number: '123',
+    released_at: '',
+    promo: false,
+    promo_types: undefined,
+    reprint: false,
+    digital: false,
+    full_name: generateRandomString(LETTERS, 10, 25),
+    name_lower: generateRandomString(LETTERS, 10, 25).toLowerCase(),
+    artist: `${generateRandomString(LETTERS, 3, 10)} ${generateRandomString(LETTERS, 5, 15)}`,
+    scryfall_uri: `https://scryfall.com/${uuidv4()}`,
+    rarity: 'rare',
+    legalities: Object.fromEntries(SUPPORTED_FORMATS.map((format) => [format, 'not_legal' as const])),
+    oracle_text: 'oracle text goes here',
+    cmc: 5,
+    type: 'Instant',
+    colors: ['w', 'b'],
+    color_identity: ['w', 'b', 'r'],
+    keywords: [],
+    colorcategory: 'Lands',
+    parsed_cost: ['1', 'w', 'b'],
+    finishes: ['nonfoil', 'etched'],
+    border_color: 'black',
+    mtgo_id: 12345,
+    full_art: true,
+    prices: {
+      usd: 10.1,
+      eur: 9.0,
+      tix: 3,
+      usd_etched: 12.5,
+      usd_foil: 15.25,
+    },
+    tokens: [],
+    set_name: 'cool set',
+    games: ['paper'],
+    gamesEverAvailable: ['paper'],
+    reserved: false,
+    ...overrides,
+  };
+
+  details.games = hasGamesOverride ? (overrides?.games ?? ['paper']) : (details.games ?? ['paper']);
+  details.gamesEverAvailable = hasGamesEverAvailableOverride
+    ? (overrides?.gamesEverAvailable ?? ['paper'])
+    : (details.games ?? ['paper']);
+
+  return details;
+};
 
 export const createCustomCard = (customName: string, overrides?: Partial<Card>): Card => ({
   index: generateRandomNumber(1, 3),

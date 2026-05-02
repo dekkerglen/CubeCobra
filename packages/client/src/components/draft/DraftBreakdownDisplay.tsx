@@ -26,6 +26,8 @@ interface DraftBreakdownDisplayProps {
   cardUrlPrefix?: string;
   predictedWeight?: number;
   userSelection?: string;
+  hideRatingsToggle?: boolean;
+  hideHelpText?: boolean;
 }
 
 const DraftBreakdownDisplay: React.FC<DraftBreakdownDisplayProps> = ({
@@ -40,32 +42,38 @@ const DraftBreakdownDisplay: React.FC<DraftBreakdownDisplayProps> = ({
   cards,
   onPickClick,
   cardUrlPrefix = '/tool/card',
+  hideRatingsToggle = false,
+  hideHelpText = false,
 }) => {
   return (
     <div className="draft-breakdown-display" role="region" aria-label="Draft picks and recommendations">
-      <p className="text-xs lg:text-sm italic text-text-secondary text-center mb-2">
-        (Use arrow keys ← → to navigate picks)
-      </p>
-      {showRatings && (
+      {!hideHelpText && (
+        <p className="text-xs lg:text-sm italic text-text-secondary text-center mb-2">
+          (Use arrow keys ← → to navigate picks)
+        </p>
+      )}
+      {showRatings && !hideHelpText && (
         <p className="text-xs lg:text-sm italic text-text-secondary text-center mb-4">
           These values are generated using the CubeCobra machine learning engine; the highest value indicates what a
           bot's pick would have been in that position in the draft.
         </p>
       )}
       <div>
-        <Card className="mb-3">
-          <CardBody className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="showRatings"
-              checked={showRatings}
-              onChange={(e) => setShowRatings(e.target.checked)}
-            />
-            <label htmlFor="showRatings">
-              <Text>Show CubeCobra Pick Recommendation</Text>
-            </label>
-          </CardBody>
-        </Card>
+        {!hideRatingsToggle && (
+          <Card className="mb-3">
+            <CardBody className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="showRatings"
+                checked={showRatings}
+                onChange={(e) => setShowRatings(e.target.checked)}
+              />
+              <label htmlFor="showRatings">
+                <Text>Show CubeCobra Pick Recommendation</Text>
+              </label>
+            </CardBody>
+          </Card>
+        )}
         <Row>
           <Col xs={6} sm={4} lg={3} xl={2}>
             <Text semibold lg>

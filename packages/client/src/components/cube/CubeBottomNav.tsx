@@ -74,7 +74,7 @@ const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
       return ['about', 'primer', 'blog', 'changelog'].includes(activeLink);
     }
     if (key === 'playtest') {
-      return ['playtest', 'sample-pack', 'practice-draft', 'decks'].includes(activeLink);
+      return ['playtest', 'sample-pack', 'practice-draft', 'decks', 'draft-simulator'].includes(activeLink);
     }
     if (key === 'records') {
       return ['records', 'draft-reports', 'trophy-archive', 'winrate-analytics'].includes(activeLink);

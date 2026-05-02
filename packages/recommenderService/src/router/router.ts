@@ -7,8 +7,11 @@ import cloudwatch from '../mlutils/cloudwatch';
 
 const router: Router = express.Router();
 
-// Response time tracking middleware
+// Response time tracking middleware — only logs in production to avoid flooding
+// the console during local development with one entry per ML call
 const responseTimer = responseTime((req: express.Request, res: express.Response, time: number) => {
+  if (process.env.NODE_ENV !== 'production') return;
+
   const responseHeaders = res.getHeaders();
   const contentLength = responseHeaders['content-length']
     ? parseInt(String(responseHeaders['content-length']), 10)

@@ -79,6 +79,7 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean):
         { label: 'Practice Draft', key: 'practice-draft' },
         { label: 'Sample Pack', key: 'sample-pack' },
         { label: 'Decks', key: 'decks' },
+        { label: 'Draft Simulator', key: 'draft-simulator', href: '/cube/draftsimulator' },
       ],
     },
     {
@@ -723,7 +724,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                             aboutViewContext.setView(subItem.key);
                           }
                         };
-                      } else if (item.key === 'playtest') {
+                      } else if (item.key === 'playtest' && !subItem.href) {
                         subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
 
                         handleClick = (e: React.MouseEvent) => {
