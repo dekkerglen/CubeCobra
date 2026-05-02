@@ -4,27 +4,18 @@ import type { CardMeta, SlimPool } from '@utils/datatypes/SimulationReport';
 
 import { MTG_COLORS } from './SimulatorCharts';
 
-// ─── Layout constants ────────────────────────────────────────────────────────
-
-const CW = 1120;
-const CH = 680;
-const TCX = CW / 2;
-const TCY = CH / 2;
-const TRX = 230;
-const TRY = 130;
-const SRX = 420;
-const SRY = 245;
-const SEAT_W = 152;
-const CARD_W = 74;
-const CARD_H = Math.round(CARD_W * (88 / 63)); // ≈ 103px
-const THUMB_W = 32;
-const THUMB_H = Math.round(THUMB_W * (88 / 63)); // ≈ 45px
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const SPEEDS = [
   { label: 'Slow', ms: 2400 },
   { label: 'Medium', ms: 1100 },
   { label: 'Fast', ms: 450 },
 ];
+
+const CARD_W = 80;
+const CARD_H = Math.round(CARD_W * (88 / 63)); // ≈ 112px
+const THUMB_W = 34;
+const THUMB_H = Math.round(THUMB_W * (88 / 63)); // ≈ 48px
 
 const ANIM_CSS = `
 @keyframes draftPickIn {
@@ -39,13 +30,6 @@ const ANIM_CSS = `
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
-function getSeatPositions(n: number): { x: number; y: number }[] {
-  return Array.from({ length: n }, (_, i) => {
-    const angle = (2 * Math.PI * i) / n - Math.PI / 2;
-    return { x: TCX + SRX * Math.cos(angle), y: TCY + SRY * Math.sin(angle) };
-  });
-}
-
 function archetypeColorCodes(archetype: string | undefined): string[] {
   if (!archetype) return ['C'];
   const colors = archetype.split('').filter((c) => c in MTG_COLORS && c !== 'C' && c !== 'M');
@@ -53,11 +37,9 @@ function archetypeColorCodes(archetype: string | undefined): string[] {
 }
 
 function seatBorderColor(codes: string[]): string {
-  return MTG_COLORS[codes[0]]?.bg ?? '#666';
+  return MTG_COLORS[codes[0]]?.bg ?? '#555';
 }
 
-// Reconstruct the full pack that seat `viewSeat` saw at the given (pack, pick).
-// Standard booster draft passing: odd packs pass left (seat index decreases), even pass right.
 function buildPackContents(
   draftSeatPicks: Map<number, SlimPool['picks']>,
   viewSeat: number,
@@ -67,22 +49,17 @@ function buildPackContents(
   packSize: number,
 ): { oracle_id: string; pickedBy: number; pickedAtPick: number; isThisPick: boolean }[] {
   const passLeft = pack % 2 === 1;
-  // Original pack opener: the seat whose pack flowed to viewSeat by pick K
   const originalOwner = passLeft
     ? (viewSeat + pick - 1 + numSeats) % numSeats
     : (viewSeat - pick + 1 + numSeats) % numSeats;
 
   const result: { oracle_id: string; pickedBy: number; pickedAtPick: number; isThisPick: boolean }[] = [];
   for (let k = 1; k <= packSize; k++) {
-    // Which seat holds that pack at pick k?
     const holder = passLeft
       ? (originalOwner - (k - 1) + numSeats) % numSeats
       : (originalOwner + (k - 1)) % numSeats;
-    const seatPicks = draftSeatPicks.get(holder) ?? [];
-    const p = seatPicks.find((x) => x.packNumber === pack && x.pickNumber === k);
-    if (p) {
-      result.push({ oracle_id: p.oracle_id, pickedBy: holder, pickedAtPick: k, isThisPick: holder === viewSeat && k === pick });
-    }
+    const p = (draftSeatPicks.get(holder) ?? []).find((x) => x.packNumber === pack && x.pickNumber === k);
+    if (p) result.push({ oracle_id: p.oracle_id, pickedBy: holder, pickedAtPick: k, isThisPick: holder === viewSeat && k === pick });
   }
   return result;
 }
@@ -116,105 +93,130 @@ const PackOverlay: React.FC<{
 
   return (
     <div
-      style={{
-        position: 'fixed', inset: 0, zIndex: 1200,
-        background: 'rgba(0,0,0,0.82)',
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        padding: 24,
-      }}
+      style={{ position: 'fixed', inset: 0, zIndex: 1200, background: 'rgba(0,0,0,0.82)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}
       onClick={onClose}
     >
       <div
-        style={{
-          background: '#141619',
-          borderRadius: 12,
-          border: '1px solid rgba(255,255,255,0.12)',
-          boxShadow: '0 24px 60px rgba(0,0,0,0.8)',
-          maxWidth: 780,
-          width: '100%',
-          maxHeight: '85vh',
-          overflow: 'hidden',
-          display: 'flex',
-          flexDirection: 'column',
-          animation: 'packFadeIn 0.22s ease-out',
-        }}
+        style={{ background: '#141619', borderRadius: 12, border: '1px solid rgba(255,255,255,0.12)', boxShadow: '0 24px 60px rgba(0,0,0,0.8)', maxWidth: 780, width: '100%', maxHeight: '85vh', overflow: 'hidden', display: 'flex', flexDirection: 'column', animation: 'packFadeIn 0.22s ease-out' }}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
-        <div style={{
-          padding: '14px 18px',
-          borderBottom: '1px solid rgba(255,255,255,0.08)',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
+        <div style={{ padding: '14px 18px', borderBottom: '1px solid rgba(255,255,255,0.08)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
             <div style={{ fontSize: 15, fontWeight: 700, color: 'rgba(255,255,255,0.9)' }}>
               Pack {packView.pack}, Pick {packView.pick} — Seat {packView.seatIndex + 1}
             </div>
             <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.4)', marginTop: 2 }}>
-              {packSize} cards · gold border = picked · faded = already taken
+              gold = picked · faded = already taken · normal = passed on
             </div>
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            style={{
-              background: 'rgba(255,255,255,0.07)',
-              border: '1px solid rgba(255,255,255,0.12)',
-              borderRadius: 6,
-              color: 'rgba(255,255,255,0.6)',
-              cursor: 'pointer',
-              fontSize: 16,
-              lineHeight: 1,
-              padding: '4px 10px',
-            }}
-          >✕</button>
+          <button type="button" onClick={onClose}
+            style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: 6, color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: 16, lineHeight: 1, padding: '4px 10px' }}>
+            ✕
+          </button>
         </div>
-
-        {/* Card grid */}
         <div style={{ overflowY: 'auto', padding: '16px 18px' }}>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
             {cards.map((card) => {
               const alreadyTaken = card.pickedAtPick < packView.pick;
-              const isThisPick = card.isThisPick;
               return (
                 <div key={`${card.oracle_id}-${card.pickedAtPick}`} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, width: PACK_CARD_W }}>
                   <div style={{ position: 'relative' }}>
                     <img
-                      src={cardImg(card.oracle_id)}
-                      alt={cardName(card.oracle_id)}
-                      title={cardName(card.oracle_id)}
-                      style={{
-                        width: PACK_CARD_W,
-                        height: PACK_CARD_H,
-                        borderRadius: 5,
-                        objectFit: 'cover',
-                        opacity: alreadyTaken ? 0.38 : 1,
-                        border: isThisPick
-                          ? '3px solid #f5c842'
-                          : alreadyTaken
-                          ? '2px solid rgba(255,255,255,0.08)'
-                          : '2px solid transparent',
-                        boxShadow: isThisPick ? '0 0 14px #f5c84288' : undefined,
-                        transition: 'opacity 0.15s',
-                      }}
+                      src={cardImg(card.oracle_id)} alt={cardName(card.oracle_id)} title={cardName(card.oracle_id)}
+                      style={{ width: PACK_CARD_W, height: PACK_CARD_H, borderRadius: 5, objectFit: 'cover', opacity: alreadyTaken ? 0.38 : 1, border: card.isThisPick ? '3px solid #f5c842' : alreadyTaken ? '2px solid rgba(255,255,255,0.08)' : '2px solid transparent', boxShadow: card.isThisPick ? '0 0 14px #f5c84288' : undefined }}
                     />
-                    {isThisPick && (
-                      <div style={{
-                        position: 'absolute', top: -6, right: -6,
-                        background: '#f5c842', borderRadius: '50%',
-                        width: 18, height: 18,
-                        display: 'flex', alignItems: 'center', justifyContent: 'center',
-                        fontSize: 10, fontWeight: 800, color: '#000',
-                      }}>★</div>
+                    {card.isThisPick && (
+                      <div style={{ position: 'absolute', top: -6, right: -6, background: '#f5c842', borderRadius: '50%', width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10, fontWeight: 800, color: '#000' }}>★</div>
                     )}
                   </div>
-                  <div style={{ fontSize: 9, color: isThisPick ? '#f5c842' : alreadyTaken ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 1.3, maxWidth: PACK_CARD_W, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {isThisPick ? '★ Picked' : alreadyTaken ? `Taken — S${card.pickedBy + 1} P${card.pickedAtPick}` : `→ S${card.pickedBy + 1} P${card.pickedAtPick}`}
+                  <div style={{ fontSize: 9, color: card.isThisPick ? '#f5c842' : alreadyTaken ? 'rgba(255,255,255,0.3)' : 'rgba(255,255,255,0.55)', textAlign: 'center', lineHeight: 1.3, maxWidth: PACK_CARD_W, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {card.isThisPick ? '★ Picked' : alreadyTaken ? `Taken — S${card.pickedBy + 1} P${card.pickedAtPick}` : `→ S${card.pickedBy + 1} P${card.pickedAtPick}`}
                   </div>
                 </div>
               );
             })}
           </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ─── Seat panel ───────────────────────────────────────────────────────────────
+
+const SeatPanel: React.FC<{
+  seatIndex: number;
+  state: SeatState;
+  stepIndex: number;
+  currentStep: Step;
+  cardMeta: Record<string, CardMeta>;
+  onClickPick: (packView: PackView) => void;
+}> = ({ seatIndex, state, stepIndex, currentStep, cardMeta, onClickPick }) => {
+  const colorCodes = archetypeColorCodes(state.archetype);
+  const borderCol = seatBorderColor(colorCodes);
+  const currentOracle = state.currentPick;
+  const recentPrev = state.prevPicks.slice(-12).reverse();
+  const pickCount = state.prevPicks.length + (currentOracle ? 1 : 0);
+
+  const cardImg = (oracle: string) => cardMeta[oracle]?.imageUrl ?? `/tool/cardimage/${encodeURIComponent(oracle)}`;
+  const cardName = (oracle: string) => cardMeta[oracle]?.name ?? oracle;
+
+  return (
+    <div style={{
+      borderRadius: 8,
+      border: `2px solid ${borderCol}`,
+      background: 'rgba(12, 14, 18, 0.94)',
+      boxShadow: `0 0 0 1px rgba(255,255,255,0.04), 0 4px 16px rgba(0,0,0,0.45), 0 0 12px ${borderCol}33`,
+      overflow: 'hidden',
+      display: 'flex',
+      flexDirection: 'row',
+    }}>
+      {/* Current pick — click to view pack */}
+      <div
+        style={{ flexShrink: 0, padding: '8px 8px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, cursor: currentOracle ? 'pointer' : 'default', background: 'rgba(0,0,0,0.2)' }}
+        onClick={() => currentOracle && onClickPick({ seatIndex, pack: currentStep.pack, pick: currentStep.pick })}
+        title={currentOracle ? 'Click to view full pack' : undefined}
+      >
+        {currentOracle ? (
+          <>
+            <div style={{ position: 'relative' }}>
+              <img
+                key={`pick-${seatIndex}-${stepIndex}`}
+                src={cardImg(currentOracle)}
+                alt={cardName(currentOracle)}
+                style={{ width: CARD_W, height: CARD_H, borderRadius: 4, objectFit: 'cover', display: 'block', animation: 'draftPickIn 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275)', boxShadow: `0 0 14px ${borderCol}55, 0 3px 8px rgba(0,0,0,0.6)` }}
+              />
+              <div style={{ position: 'absolute', bottom: 3, right: 3, background: 'rgba(0,0,0,0.65)', borderRadius: 3, padding: '1px 3px', fontSize: 9, color: 'rgba(255,255,255,0.7)', lineHeight: 1.4, pointerEvents: 'none' }}>🔍</div>
+            </div>
+            <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.6)', textAlign: 'center', lineHeight: 1.3, width: CARD_W, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {cardName(currentOracle)}
+            </div>
+          </>
+        ) : (
+          <div style={{ width: CARD_W, height: CARD_H, borderRadius: 4, background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.1)' }} />
+        )}
+      </div>
+
+      {/* Right side: header + previous picks */}
+      <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        {/* Header */}
+        <div style={{ padding: '5px 8px', background: 'rgba(255,255,255,0.045)', borderBottom: '1px solid rgba(255,255,255,0.06)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4, flexShrink: 0 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.65)' }}>Seat {seatIndex + 1}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
+            {pickCount > 0 && <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>{pickCount}</span>}
+            {colorCodes.map((c) => (
+              <span key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: MTG_COLORS[c]?.bg ?? '#888', display: 'inline-block', boxShadow: `0 0 4px ${MTG_COLORS[c]?.bg ?? '#888'}66` }} />
+            ))}
+          </div>
+        </div>
+
+        {/* Previous picks */}
+        <div style={{ flex: 1, padding: '5px 6px 6px', display: 'flex', flexWrap: 'wrap', gap: 2, alignContent: 'flex-start' }}>
+          {recentPrev.map((oracle, idx) => (
+            <img key={`${oracle}-${idx}`} src={cardImg(oracle)} alt={cardName(oracle)} title={cardName(oracle)}
+              loading="lazy"
+              style={{ width: THUMB_W, height: THUMB_H, borderRadius: 2, objectFit: 'cover', opacity: 0.75 }} />
+          ))}
         </div>
       </div>
     </div>
@@ -291,8 +293,6 @@ const DraftTableView: React.FC<DraftTableViewProps> = ({ slimPools, cardMeta, nu
     return result;
   }, [draftSeatPicks, stepIndex, steps, seatArchetypes, numSeats]);
 
-  const seatPositions = useMemo(() => getSeatPositions(numSeats), [numSeats]);
-
   useEffect(() => {
     if (intervalRef.current) clearInterval(intervalRef.current);
     if (!isPlaying) return;
@@ -313,19 +313,19 @@ const DraftTableView: React.FC<DraftTableViewProps> = ({ slimPools, cardMeta, nu
 
   useEffect(() => { setStepIndex(0); setIsPlaying(false); setPackView(null); }, [draftIndex]);
 
-  const cardImg = (oracle: string) => cardMeta[oracle]?.imageUrl ?? `/tool/cardimage/${encodeURIComponent(oracle)}`;
-  const cardName = (oracle: string) => cardMeta[oracle]?.name ?? oracle;
-
   const draftOptions = useMemo(
     () => Array.from({ length: numDrafts }, (_, i) => ({ value: String(i), label: `Draft ${i + 1}` })),
     [numDrafts],
   );
 
+  const leftCount = Math.ceil(numSeats / 2);
+  const leftSeats = Array.from({ length: leftCount }, (_, i) => i);
+  const rightSeats = Array.from({ length: numSeats - leftCount }, (_, i) => leftCount + i);
+
   return (
     <div className="flex flex-col gap-3 select-none">
       <style>{ANIM_CSS}</style>
 
-      {/* Pack overlay */}
       {packView && (
         <PackOverlay
           packView={packView}
@@ -344,9 +344,7 @@ const DraftTableView: React.FC<DraftTableViewProps> = ({ slimPools, cardMeta, nu
           onChange={(e) => setDraftIndex(Number(e.target.value))}
           className="rounded border border-border bg-bg text-sm px-2 py-1 text-text"
         >
-          {draftOptions.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
-          ))}
+          {draftOptions.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
 
         <div className="flex items-center gap-1">
@@ -380,118 +378,70 @@ const DraftTableView: React.FC<DraftTableViewProps> = ({ slimPools, cardMeta, nu
         </div>
       </div>
 
-      {/* ── Table ── */}
-      <div style={{ overflowX: 'auto', overflowY: 'visible' }}>
-        <div style={{ position: 'relative', width: CW, height: CH, overflow: 'visible' }}>
+      {/* ── Table layout ── */}
+      <div className="flex flex-col md:flex-row gap-3 items-stretch">
 
-          {/* Felt oval */}
+        {/* Left column */}
+        <div className="flex flex-col gap-2 flex-1 min-w-0">
+          {leftSeats.map((seat) => {
+            const state = seatStates.get(seat);
+            if (!state) return null;
+            return (
+              <SeatPanel
+                key={seat}
+                seatIndex={seat}
+                state={state}
+                stepIndex={stepIndex}
+                currentStep={currentStep}
+                cardMeta={cardMeta}
+                onClickPick={setPackView}
+              />
+            );
+          })}
+        </div>
+
+        {/* Center: table info */}
+        <div className="flex-shrink-0 flex flex-col items-center justify-center"
+          style={{ minWidth: 130 }}>
           <div style={{
-            position: 'absolute',
-            left: TCX - TRX, top: TCY - TRY,
-            width: TRX * 2, height: TRY * 2,
-            borderRadius: '50%',
             background: 'radial-gradient(ellipse at 38% 32%, #2e9142 0%, #1d6a2e 50%, #124820 100%)',
-            border: '6px solid #7a6040',
-            boxShadow: '0 0 0 2px #5a4428, 0 12px 40px rgba(0,0,0,0.7), inset 0 0 50px rgba(0,0,0,0.35)',
+            border: '5px solid #7a6040',
+            boxShadow: '0 0 0 2px #5a4428, 0 8px 32px rgba(0,0,0,0.6), inset 0 0 40px rgba(0,0,0,0.3)',
+            borderRadius: 16,
+            padding: '24px 16px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: 6,
+            width: '100%',
           }}>
-            <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 2 }}>
-              <div style={{ fontSize: 30, fontWeight: 800, color: 'rgba(255,255,255,0.88)', letterSpacing: 1, lineHeight: 1 }}>
-                Pack {currentStep.pack}
-              </div>
-              <div style={{ fontSize: 16, color: 'rgba(255,255,255,0.6)', lineHeight: 1 }}>
-                Pick {currentStep.pick}{packSize > 0 ? ` of ${packSize}` : ''}
-              </div>
-              <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.35)', letterSpacing: 0.5 }}>
-                {passesLeft ? '← passing left' : 'passing right →'}
-              </div>
+            <div style={{ fontSize: 22, fontWeight: 800, color: 'rgba(255,255,255,0.9)', letterSpacing: 0.5, lineHeight: 1, textAlign: 'center' }}>
+              Pack {currentStep.pack}
+            </div>
+            <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', lineHeight: 1 }}>
+              Pick {currentStep.pick}{packSize > 0 ? ` / ${packSize}` : ''}
+            </div>
+            <div style={{ marginTop: 8, fontSize: 11, color: 'rgba(255,255,255,0.38)', letterSpacing: 0.3, textAlign: 'center' }}>
+              {passesLeft ? '← left' : 'right →'}
             </div>
           </div>
+        </div>
 
-          {/* Seats */}
-          {Array.from({ length: numSeats }, (_, seatIndex) => {
-            const pos = seatPositions[seatIndex]!;
-            const state = seatStates.get(seatIndex);
-            const colorCodes = archetypeColorCodes(state?.archetype);
-            const borderCol = seatBorderColor(colorCodes);
-            const currentOracle = state?.currentPick ?? null;
-            const recentPrev = (state?.prevPicks ?? []).slice(-8).reverse();
-            const pickCount = (state?.prevPicks.length ?? 0) + (currentOracle ? 1 : 0);
-
+        {/* Right column */}
+        <div className="flex flex-col gap-2 flex-1 min-w-0">
+          {rightSeats.map((seat) => {
+            const state = seatStates.get(seat);
+            if (!state) return null;
             return (
-              <div key={seatIndex} style={{
-                position: 'absolute',
-                left: pos.x, top: pos.y,
-                transform: 'translate(-50%, -50%)',
-                width: SEAT_W,
-                borderRadius: 8,
-                border: `2px solid ${borderCol}`,
-                background: 'rgba(12, 14, 18, 0.94)',
-                boxShadow: `0 0 0 1px rgba(255,255,255,0.04), 0 6px 20px rgba(0,0,0,0.55), 0 0 14px ${borderCol}44`,
-                overflow: 'hidden',
-                display: 'flex',
-                flexDirection: 'column',
-              }}>
-                {/* Header */}
-                <div style={{ padding: '4px 7px', background: 'rgba(255,255,255,0.055)', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 4 }}>
-                  <span style={{ fontSize: 11, fontWeight: 700, color: 'rgba(255,255,255,0.65)', letterSpacing: 0.3 }}>
-                    Seat {seatIndex + 1}
-                  </span>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                    {pickCount > 0 && <span style={{ fontSize: 9, color: 'rgba(255,255,255,0.35)' }}>{pickCount}</span>}
-                    {colorCodes.map((c) => (
-                      <span key={c} style={{ width: 9, height: 9, borderRadius: '50%', background: MTG_COLORS[c]?.bg ?? '#888', display: 'inline-block', boxShadow: `0 0 4px ${MTG_COLORS[c]?.bg ?? '#888'}88` }} />
-                    ))}
-                  </div>
-                </div>
-
-                {/* Current pick — clickable to view full pack */}
-                <div style={{ padding: '7px 7px 3px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3 }}>
-                  {currentOracle ? (
-                    <>
-                      <div
-                        style={{ position: 'relative', cursor: 'pointer' }}
-                        title="Click to view full pack"
-                        onClick={() => setPackView({ seatIndex, pack: currentStep.pack, pick: currentStep.pick })}
-                      >
-                        <img
-                          key={`pick-${seatIndex}-${stepIndex}`}
-                          src={cardImg(currentOracle)}
-                          alt={cardName(currentOracle)}
-                          style={{
-                            width: CARD_W, height: CARD_H,
-                            borderRadius: 4, objectFit: 'cover',
-                            animation: 'draftPickIn 0.38s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                            boxShadow: `0 0 16px ${borderCol}66, 0 4px 10px rgba(0,0,0,0.65)`,
-                            display: 'block',
-                          }}
-                        />
-                        {/* Magnifier hint */}
-                        <div style={{
-                          position: 'absolute', bottom: 3, right: 3,
-                          background: 'rgba(0,0,0,0.65)',
-                          borderRadius: 3, padding: '1px 3px',
-                          fontSize: 9, color: 'rgba(255,255,255,0.7)',
-                          lineHeight: 1.4, pointerEvents: 'none',
-                        }}>🔍</div>
-                      </div>
-                      <div style={{ fontSize: 9, color: 'rgba(255,255,255,0.65)', textAlign: 'center', lineHeight: 1.3, maxWidth: SEAT_W - 14, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                        {cardName(currentOracle)}
-                      </div>
-                    </>
-                  ) : (
-                    <div style={{ width: CARD_W, height: CARD_H, borderRadius: 4, background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.12)' }} />
-                  )}
-                </div>
-
-                {/* Previous picks mini-grid */}
-                <div style={{ padding: '2px 5px 6px', display: 'flex', flexWrap: 'wrap', gap: 2, minHeight: recentPrev.length > 0 ? THUMB_H + 6 : 0 }}>
-                  {recentPrev.map((oracle, idx) => (
-                    <img key={`${oracle}-${idx}`} src={cardImg(oracle)} alt={cardName(oracle)} title={cardName(oracle)}
-                      loading="lazy"
-                      style={{ width: THUMB_W, height: THUMB_H, borderRadius: 2, objectFit: 'cover', opacity: 0.78 }} />
-                  ))}
-                </div>
-              </div>
+              <SeatPanel
+                key={seat}
+                seatIndex={seat}
+                state={state}
+                stepIndex={stepIndex}
+                currentStep={currentStep}
+                cardMeta={cardMeta}
+                onClickPick={setPackView}
+              />
             );
           })}
         </div>
@@ -499,20 +449,7 @@ const DraftTableView: React.FC<DraftTableViewProps> = ({ slimPools, cardMeta, nu
 
       {/* Footer */}
       <div className="flex items-center gap-3 text-xs text-text-secondary flex-wrap">
-        <span>Draft {draftIndex + 1} of {numDrafts} · {numSeats} seats · {steps.length} picks total · click any card to see full pack</span>
-        <span className="flex items-center gap-2 flex-wrap">
-          {Array.from(seatStates.entries()).map(([seat, state]) => {
-            const codes = archetypeColorCodes(state.archetype);
-            return (
-              <span key={seat} className="flex items-center gap-1">
-                <span className="opacity-50">S{seat + 1}</span>
-                {codes.map((c) => (
-                  <span key={c} style={{ width: 7, height: 7, borderRadius: '50%', background: MTG_COLORS[c]?.bg ?? '#888', display: 'inline-block' }} />
-                ))}
-              </span>
-            );
-          })}
-        </span>
+        <span>Draft {draftIndex + 1} of {numDrafts} · {numSeats} seats · {steps.length} picks · click any card to see full pack</span>
       </div>
     </div>
   );
