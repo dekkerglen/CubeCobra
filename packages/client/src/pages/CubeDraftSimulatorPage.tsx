@@ -48,8 +48,15 @@ import {
 } from '../components/draftSimulator/DraftSimulatorModals';
 import { PoolInspectionModal } from '../components/draftSimulator/PoolExpansionContent';
 import DraftBreakdownTable, { buildDraftBreakdownRowSummary } from '../components/draftSimulator/DraftBreakdownTable';
-import DraftMapCard, { computeDraftMapPoints } from '../components/draftSimulator/DraftMapCard';
+import ArchetypeSkeletonSection from '../components/draftSimulator/ArchetypeSkeletonSection';
+import ClusterDetailPanel from '../components/draftSimulator/ClusterDetailPanel';
+import DraftMapCard, { computeDraftMapPoints, DraftMapScopePanel } from '../components/draftSimulator/DraftMapCard';
 import DraftSimulatorBottomSection from '../components/draftSimulator/DraftSimulatorBottomSection';
+import {
+  DraftSimulatorDesktopView,
+  DraftSimulatorMobileView,
+  DraftSimulatorOverviewSection,
+} from '../components/draftSimulator/DraftSimulatorResultsViews';
 import DynamicFlash from '../components/DynamicFlash';
 import RenderToRoot from '../components/RenderToRoot';
 import withAutocard from '../components/WithAutocard';
@@ -137,6 +144,21 @@ const SIM_PREVIEW_CARD_W = 140;
 function formatDuration(ms: number): string {
   if (ms < 1000) return `${Math.round(ms)} ms`;
   return `${(ms / 1000).toFixed(ms >= 10_000 ? 0 : 1)} s`;
+}
+
+function useIsMobileLayout(breakpoint = 768): boolean {
+  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < breakpoint : false));
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const mediaQuery = window.matchMedia(`(max-width: ${breakpoint - 1}px)`);
+    const update = () => setIsMobile(mediaQuery.matches);
+    update();
+    mediaQuery.addEventListener('change', update);
+    return () => mediaQuery.removeEventListener('change', update);
+  }, [breakpoint]);
+
+  return isMobile;
 }
 
 /** Number input that lets the user type freely; commits/clamps only on blur or Enter. */
@@ -560,74 +582,6 @@ async function runClientSimulation(
   };
 }
 
-// ---------------------------------------------------------------------------
-// Sub-components
-// ---------------------------------------------------------------------------
-
-const OverviewChartSpinner: React.FC = () => (
-  <div className="flex items-center justify-center" style={{ minHeight: 120 }}>
-    <svg className="animate-spin h-6 w-6 text-text-secondary/40" viewBox="0 0 24 24" fill="none">
-      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-    </svg>
-  </div>
-);
-
-const SummaryCard: React.FC<{
-  label: string;
-  value: string | number;
-  sub?: string;
-  onClick?: () => void;
-  badge?: React.ReactNode;
-}> = ({ label, value, sub, onClick, badge }) => (
-  <div className="flex-1 min-w-[180px]">
-    <Card className={onClick ? 'h-full transition-colors hover:bg-bg-active' : 'h-full'}>
-      {onClick ? (
-        <button
-          type="button"
-          onClick={onClick}
-          className="block h-full w-full text-inherit text-left focus:outline-none focus:ring-2 focus:ring-link focus:ring-inset rounded"
-          aria-label={`${label}: ${value}. ${sub ?? 'Open details.'}`}
-        >
-          <CardBody className="text-center py-5">
-            <div className="text-4xl font-bold mb-2">{value}</div>
-            <div>
-              <Text md semibold>
-                {label}
-              </Text>
-            </div>
-            {sub && (
-              <div className="mt-1">
-                <Text xs className="text-text-secondary">
-                  {sub}
-                </Text>
-              </div>
-            )}
-            {badge && <div className="mt-2">{badge}</div>}
-          </CardBody>
-        </button>
-      ) : (
-        <CardBody className="text-center py-5">
-          <div className="text-4xl font-bold mb-2">{value}</div>
-          <div>
-            <Text md semibold>
-              {label}
-            </Text>
-          </div>
-          {sub && (
-            <div className="mt-1">
-              <Text xs className="text-text-secondary">
-                {sub}
-              </Text>
-            </div>
-          )}
-          {badge && <div className="mt-2">{badge}</div>}
-        </CardBody>
-      )}
-    </Card>
-  </div>
-);
-
 const COLOR_KEYS = ['W', 'U', 'B', 'R', 'G'] as const;
 const COLOR_KEYS_WITH_C = [...COLOR_KEYS, 'C'] as const;
 
@@ -1005,6 +959,7 @@ interface CubeDraftSimulatorPageProps {
 const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const cubeId = getCubeId(cube);
+  const isMobileLayout = useIsMobileLayout();
 
   // Controls
   const [numDrafts, setNumDrafts] = useState(100);
@@ -1450,6 +1405,267 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       .map(([bucket, cards]) => ({ bucket, cards }));
   }, [inspectingPool, inspectingDeck, displayRunData]);
 
+  const selectedSkeleton = useMemo(
+    () => skeletons.find((skeleton) => skeleton.clusterId === selectedSkeletonId) ?? null,
+    [skeletons, selectedSkeletonId],
+  );
+  const selectedClusterDeckBuilds = useMemo(
+    () =>
+      selectedSkeleton && activeDecks
+        ? selectedSkeleton.poolIndices.map((poolIndex) => activeDecks[poolIndex]).filter((deck): deck is BuiltDeck => !!deck)
+        : null,
+    [selectedSkeleton, activeDecks],
+  );
+  const mobileSelectedCardInfo = useMemo(() => {
+    if (!(mapPanelHasBoth && selectedCards.length > 0 && displayRunData)) return undefined;
+    return {
+      cardImages: selectedCards
+        .map((c) => ({ oracleId: c.oracle_id, name: c.name, imageUrl: displayRunData.cardMeta[c.oracle_id]?.imageUrl ?? '' }))
+        .filter((img) => img.imageUrl),
+      name: selectedCards.map((c) => c.name).join(' + '),
+      pickRate: selectedCards.length === 1 ? (statsForScope?.pickRate ?? selectedCard?.pickRate) : undefined,
+      avgPickPosition: selectedCards.length === 1 ? (statsForScope?.avgPickPosition ?? selectedCard?.avgPickPosition) : undefined,
+      onClear: () => setSelectedCardOracles([]),
+    };
+  }, [mapPanelHasBoth, selectedCards, displayRunData, statsForScope, selectedCard]);
+
+  useEffect(() => {
+    if (!isMobileLayout) return;
+    if (bottomTab === 'archetypes' || bottomTab === 'deckColor') {
+      setBottomTab('draftBreakdown');
+    }
+  }, [isMobileLayout, bottomTab]);
+
+  const resultsOverviewNode = displayRunData ? (
+    <DraftSimulatorOverviewSection
+      displayRunData={displayRunData}
+      activeDecks={activeDecks}
+      overviewOpen={overviewOpen}
+      setOverviewOpen={setOverviewOpen}
+      mobileLayout={isMobileLayout}
+    />
+  ) : null;
+
+  const resultsFilterNode = displayRunData ? (
+    <DraftSimulatorFilterBar
+      chips={filterChipItems}
+      matchingPools={activeFilterPoolIndexSet?.size ?? displayRunData.slimPools.length}
+      totalPools={displayRunData.slimPools.length}
+      cardStats={displayRunData.cardStats}
+      selectedCardOracles={selectedCardOracles}
+      archetypeDistribution={displayedArchetypeDistribution}
+      selectedArchetype={selectedArchetype}
+      skeletons={skeletons}
+      selectedSkeletonId={selectedSkeletonId}
+      onAddCard={handleToggleSelectedCard}
+      onSelectArchetype={(archetype) => {
+        setSelectedArchetype(archetype);
+        if (archetype !== null) setSelectedSkeletonId(null);
+      }}
+      onSelectSkeleton={(clusterId) => {
+        setSelectedSkeletonId(clusterId);
+        if (clusterId !== null) setSelectedArchetype(null);
+      }}
+      onClearAll={clearActiveFilter}
+      renderArchetypeLabel={archetypeFullName}
+      renderSkeletonLabel={(skeleton) => getSkeletonDisplayName(skeleton, poolArchetypeLabels, skeletonColorProfiles)}
+    />
+  ) : null;
+
+  const resultsOovWarningNode =
+    oovWarningPct !== null ? (
+      <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3 mb-2">
+        <Text sm className="text-text">
+          {Math.round(oovWarningPct * 100)}% of cards in this cube aren't in the ML model's training vocabulary. Pick
+          simulation and deckbuilding quality may be reduced for those cards.
+        </Text>
+      </div>
+    ) : null;
+
+  const resultsBottomNode = displayRunData ? (
+    <DraftSimulatorBottomSection
+      mobileLayout={isMobileLayout}
+      bottomTab={bottomTab}
+      setBottomTab={setBottomTab}
+      displayRunData={displayRunData}
+      clusteringInProgress={clusteringInProgress}
+      clusteringPhase={clusteringPhase}
+      skeletons={skeletons}
+      selectedSkeletonId={selectedSkeletonId}
+      setSelectedSkeletonId={setSelectedSkeletonId}
+      clusterThemesByClusterId={clusterThemesByClusterId}
+      poolArchetypeLabels={poolArchetypeLabels}
+      poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
+      skeletonColorProfiles={skeletonColorProfiles}
+      selectedArchetype={selectedArchetype}
+      setSelectedArchetype={setSelectedArchetype}
+      displayedArchetypeDistribution={displayedArchetypeDistribution}
+      colorPairTopArchetypes={colorPairTopArchetypes}
+      clearActiveFilter={clearActiveFilter}
+      activeFilterPoolIndexSet={activeFilterPoolIndexSet}
+      hasApproximateFilteredStats={hasApproximateFilteredStats}
+      scopedCardStatsTitle={scopedCardStatsTitle}
+      draftBreakdownTitle={draftBreakdownTitle}
+      sideboardTitle={sideboardTitle}
+      pairingsTitle={pairingsTitle}
+      overperformersTitleSuffix={overperformersTitleSuffix}
+      downloadCardStatsCsv={downloadCardStatsCsv}
+      visibleCardStats={visibleCardStats}
+      handleToggleSelectedCard={handleToggleSelectedCard}
+      selectedCardOracles={selectedCardOracles}
+      inDeckOracles={inDeckOracles}
+      inSideboardOracles={inSideboardOracles}
+      deckInclusionPct={deckInclusionPct}
+      visiblePoolCounts={visiblePoolCounts}
+      cardStatsRef={cardStatsRef}
+      detailedViewRef={detailedViewRef}
+      downloadDraftBreakdownCsv={downloadDraftBreakdownCsv}
+      displayedPools={displayedPools}
+      activeDecks={activeDecks}
+      simPhase={simPhase}
+      selectedCard={selectedCard}
+      focusedPoolIndex={focusedPoolIndex}
+      setFocusedPoolIndex={setFocusedPoolIndex}
+      onInspectPool={setInspectingPoolIndex}
+      allPoolClusterThemes={allPoolClusterThemes}
+      allPoolTagAllowlist={allPoolTagAllowlist}
+      topSideboardCards={topSideboardCards}
+      topCardPairings={topCardPairings}
+      pairingsExcludeLands={pairingsExcludeLands}
+      setPairingsExcludeLands={setPairingsExcludeLands}
+      excludeManaFixingLands={excludeManaFixingLands}
+      status={status}
+      renderAutocardNameLink={renderAutocardNameLink}
+    />
+  ) : null;
+
+  const resultsMapNode = displayRunData && !isMobileLayout ? (
+    <div className="simSection simSectionCards flex flex-col gap-5 pt-2">
+      <Flexbox direction="col" gap="4">
+        <div className="simCardDiagBlock simCardDiagSummary flex flex-col gap-4">
+          <DraftMapCard
+            skeletons={skeletons}
+            showAdvancedClustering={showAdvancedClustering}
+            pendingKnnK={pendingKnnK}
+            setPendingKnnK={setPendingKnnK}
+            pendingResolution={pendingResolution}
+            setPendingResolution={setPendingResolution}
+            clusteringInProgress={clusteringInProgress}
+            clusteringPhase={clusteringPhase}
+            applyPendingClusteringSettings={applyPendingClusteringSettings}
+            draftMapPoints={draftMapPoints}
+            showDraftMapScopePanel={showDraftMapScopePanel}
+            activeFilterPoolIndexSet={activeFilterPoolIndexSet}
+            draftMapColorMode={draftMapColorMode}
+            setDraftMapColorMode={setDraftMapColorMode}
+            focusedPoolIndex={focusedPoolIndex}
+            setFocusedPoolIndex={setFocusedPoolIndex}
+            setSelectedSkeletonId={setSelectedSkeletonId}
+            selectedSkeletonId={selectedSkeletonId}
+            setSelectedArchetype={setSelectedArchetype}
+            setDraftBreakdownOpen={setDraftBreakdownOpen}
+            mapPanelHasBoth={mapPanelHasBoth}
+            selectedCards={selectedCards}
+            displayRunData={displayRunData}
+            selectedCard={selectedCard}
+            selectedCardStats={selectedCardStats}
+            statsForScope={statsForScope}
+            selectedCardScopeLabel={selectedCardScopeLabel}
+            detailedViewTitle={detailedViewTitle}
+            detailedViewSubtitle={detailedViewSubtitle}
+            activeFilterPreview={activeFilterPreview}
+            activeDecks={activeDecks}
+            clusterThemesByClusterId={clusterThemesByClusterId}
+            poolArchetypeLabels={poolArchetypeLabels}
+            activeFilterSummary={activeFilterSummary}
+            scopeOnlySummary={scopeOnlySummary}
+            filteredDecks={filteredDecks}
+            draftMapScopeSubtitle={draftMapScopeSubtitle}
+            draftMapScopeSeatCount={draftMapScopeSeatCount}
+            onClearSelectedCards={() => setSelectedCardOracles([])}
+            cubeOracleSet={cubeOracleSet}
+            excludeManaFixingLands={excludeManaFixingLands}
+            setExcludeManaFixingLands={setExcludeManaFixingLands}
+            onInspectPool={setInspectingPoolIndex}
+          />
+        </div>
+      </Flexbox>
+    </div>
+  ) : null;
+
+  const resultsMobileDetailNode = displayRunData && isMobileLayout && (showDraftMapScopePanel || selectedSkeleton) ? (
+    <Card>
+      <CardHeader>
+        <div className="flex items-center justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <Text semibold>Detailed View</Text>
+          </div>
+          <button
+            type="button"
+            onClick={() => setDetailedViewOpen((open) => !open)}
+            className="text-xs text-text-secondary hover:text-text flex-shrink-0"
+          >
+            {detailedViewOpen ? 'Hide' : 'Show'}
+          </button>
+        </div>
+      </CardHeader>
+      <CardBody>
+        <Collapse isOpen={detailedViewOpen}>
+          <div className="flex flex-col gap-4">
+            {selectedSkeleton && (
+              <ClusterDetailPanel
+                skeleton={selectedSkeleton}
+                clusterIndex={skeletons.findIndex((s) => s.clusterId === selectedSkeleton.clusterId)}
+                totalPools={displayRunData.slimPools.length}
+                clusterDeckBuilds={selectedClusterDeckBuilds}
+                cubeOracleSet={cubeOracleSet}
+                cardMeta={displayRunData.cardMeta}
+                slimPools={displayRunData.slimPools}
+                deckBuilds={activeDecks}
+                themes={clusterThemesByClusterId.get(selectedSkeleton.clusterId)}
+                poolArchetypeLabels={poolArchetypeLabels}
+                excludeManaFixingLands={excludeManaFixingLands}
+                setExcludeManaFixingLands={setExcludeManaFixingLands}
+                onOpenPool={setInspectingPoolIndex}
+                onCardClick={handleToggleSelectedCard}
+                onClose={() => setSelectedSkeletonId(null)}
+              />
+            )}
+            {showDraftMapScopePanel && (
+              <DraftMapScopePanel
+                title={selectedSkeleton ? '' : activeFilterSummary ?? scopeOnlySummary ?? ''}
+                subtitle={selectedSkeleton ? '' : draftMapScopeSubtitle}
+                commonCards={activeFilterPreview?.commonCards}
+                deckBuilds={filteredDecks ?? activeDecks}
+                cardMeta={displayRunData.cardMeta}
+                selectedCardInfo={mobileSelectedCardInfo}
+                matchingCount={draftMapScopeSeatCount}
+                excludeManaFixingLands={excludeManaFixingLands}
+              />
+            )}
+          </div>
+        </Collapse>
+      </CardBody>
+    </Card>
+  ) : null;
+
+  const resultsMobileArchetypesNode = displayRunData && isMobileLayout ? (
+    <ArchetypeSkeletonSection
+      skeletons={skeletons}
+      totalPools={displayRunData.slimPools.length}
+      selectedSkeletonId={selectedSkeletonId}
+      onSelectSkeleton={(id) => {
+        setSelectedSkeletonId(id);
+        setSelectedArchetype(null);
+      }}
+      clusterThemesByClusterId={clusterThemesByClusterId}
+      poolArchetypeLabels={poolArchetypeLabels}
+      poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
+      skeletonColorProfiles={skeletonColorProfiles}
+      excludeManaFixingLands={excludeManaFixingLands}
+    />
+  ) : null;
+
   return (
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cubeId}>
@@ -1473,7 +1689,11 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                 {/* Controls grid — 5 fields + CTA as sixth column */}
                 <div
                   className="grid gap-3 items-end"
-                  style={{ gridTemplateColumns: 'repeat(5, minmax(0, 1fr)) auto' }}
+                  style={
+                    isMobileLayout
+                      ? { gridTemplateColumns: 'repeat(1, minmax(0, 1fr))' }
+                      : { gridTemplateColumns: 'repeat(5, minmax(0, 1fr)) auto' }
+                  }
                 >
                   <div className="flex flex-col gap-0.5">
                     <div className="flex items-baseline gap-1.5">
@@ -1684,228 +1904,24 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                     </CardBody>
                   </Card>
                 )}
-                <div className="simSection simSectionOverview flex flex-col gap-4">
-                  <div className="simSectionHeading flex items-center justify-between gap-3">
-                    <Text semibold className="tracking-wide">
-                      Simulation Overview
-                    </Text>
-                    <button
-                      type="button"
-                      onClick={() => setOverviewOpen((open) => !open)}
-                      className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active"
-                    >
-                      {overviewOpen ? '▲ Hide' : '▼ Show'}
-                    </button>
-                  </div>
-                  <Collapse isOpen={overviewOpen}>
-                    <Flexbox direction="row" gap="4" className="flex-wrap items-stretch">
-                      <div className="flex flex-col gap-4 flex-shrink-0" style={{ width: 200 }}>
-                        <SummaryCard
-                          label="Drafts Simulated"
-                          value={displayRunData.numDrafts}
-                          sub={`${displayRunData.numSeats} seats each`}
-                        />
-                        <SummaryCard
-                          label="Cards Tracked"
-                          value={displayRunData.cardStats.length}
-                          sub="unique cards seen across all packs"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-[180px]">
-                        <Card className="h-full">
-                          <CardBody className="py-3">
-                            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
-                              Deck Color Share
-                            </Text>
-                            {!activeDecks ? (
-                              <OverviewChartSpinner />
-                            ) : (
-                              <DeckColorShareChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
-                            )}
-                          </CardBody>
-                        </Card>
-                      </div>
-                      <div className="flex-1 min-w-[180px]">
-                        <Card className="h-full">
-                          <CardBody className="py-3">
-                            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
-                              Card Types
-                            </Text>
-                            {!activeDecks ? (
-                              <OverviewChartSpinner />
-                            ) : (
-                              <CardTypeShareChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
-                            )}
-                          </CardBody>
-                        </Card>
-                      </div>
-                      <div className="flex-1 min-w-[180px] flex flex-col gap-3">
-                        <Card className="h-full">
-                          <CardBody className="py-3">
-                            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
-                              Mana Curve Share
-                            </Text>
-                            {!activeDecks ? (
-                              <OverviewChartSpinner />
-                            ) : (
-                              <ManaCurveShareChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
-                            )}
-                          </CardBody>
-                        </Card>
-                        <Card className="h-full">
-                          <CardBody className="py-3">
-                            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-2">
-                              Elo Distribution
-                            </Text>
-                            {!activeDecks ? (
-                              <OverviewChartSpinner />
-                            ) : (
-                              <EloDistributionChart deckBuilds={activeDecks} cardMeta={displayRunData.cardMeta} />
-                            )}
-                          </CardBody>
-                        </Card>
-                      </div>
-                    </Flexbox>
-                  </Collapse>
-                </div>
-                <div className="simSection simSectionCards flex flex-col gap-5 pt-2">
-                  <Flexbox direction="col" gap="4">
-                    <div className="simCardDiagBlock simCardDiagSummary flex flex-col gap-4">
-                      {/* Draft Map — full width, with cluster detail panel on the right when selected */}
-                      <DraftMapCard
-                        skeletons={skeletons}
-                        showAdvancedClustering={showAdvancedClustering}
-                        pendingKnnK={pendingKnnK}
-                        setPendingKnnK={setPendingKnnK}
-                        pendingResolution={pendingResolution}
-                        setPendingResolution={setPendingResolution}
-                        clusteringInProgress={clusteringInProgress}
-                        clusteringPhase={clusteringPhase}
-                        applyPendingClusteringSettings={applyPendingClusteringSettings}
-                        draftMapPoints={draftMapPoints}
-                        showDraftMapScopePanel={showDraftMapScopePanel}
-                        activeFilterPoolIndexSet={activeFilterPoolIndexSet}
-                        draftMapColorMode={draftMapColorMode}
-                        setDraftMapColorMode={setDraftMapColorMode}
-                        focusedPoolIndex={focusedPoolIndex}
-                        setFocusedPoolIndex={setFocusedPoolIndex}
-                        setSelectedSkeletonId={setSelectedSkeletonId}
-                        selectedSkeletonId={selectedSkeletonId}
-                        setSelectedArchetype={setSelectedArchetype}
-                        setDraftBreakdownOpen={setDraftBreakdownOpen}
-                        mapPanelHasBoth={mapPanelHasBoth}
-                        selectedCards={selectedCards}
-                        displayRunData={displayRunData}
-                        selectedCard={selectedCard}
-                        selectedCardStats={selectedCardStats}
-                        statsForScope={statsForScope}
-                        selectedCardScopeLabel={selectedCardScopeLabel}
-                        detailedViewTitle={detailedViewTitle}
-                        detailedViewSubtitle={detailedViewSubtitle}
-                        activeFilterPreview={activeFilterPreview}
-                        activeDecks={activeDecks}
-                        clusterThemesByClusterId={clusterThemesByClusterId}
-                        poolArchetypeLabels={poolArchetypeLabels}
-                        activeFilterSummary={activeFilterSummary}
-                        scopeOnlySummary={scopeOnlySummary}
-                        filteredDecks={filteredDecks}
-                        draftMapScopeSubtitle={draftMapScopeSubtitle}
-                        draftMapScopeSeatCount={draftMapScopeSeatCount}
-                        onClearSelectedCards={() => setSelectedCardOracles([])}
-                        cubeOracleSet={cubeOracleSet}
-                        excludeManaFixingLands={excludeManaFixingLands}
-                        setExcludeManaFixingLands={setExcludeManaFixingLands}
-                        onInspectPool={setInspectingPoolIndex}
-                      />
-                    </div>
-                  </Flexbox>
-                </div>
-                <DraftSimulatorFilterBar
-                  chips={filterChipItems}
-                  matchingPools={activeFilterPoolIndexSet?.size ?? displayRunData.slimPools.length}
-                  totalPools={displayRunData.slimPools.length}
-                  cardStats={displayRunData.cardStats}
-                  selectedCardOracles={selectedCardOracles}
-                  archetypeDistribution={displayedArchetypeDistribution}
-                  selectedArchetype={selectedArchetype}
-                  skeletons={skeletons}
-                  selectedSkeletonId={selectedSkeletonId}
-                  onAddCard={handleToggleSelectedCard}
-                  onSelectArchetype={(archetype) => {
-                    setSelectedArchetype(archetype);
-                    if (archetype !== null) setSelectedSkeletonId(null);
-                  }}
-                  onSelectSkeleton={(clusterId) => {
-                    setSelectedSkeletonId(clusterId);
-                    if (clusterId !== null) setSelectedArchetype(null);
-                  }}
-                  onClearAll={clearActiveFilter}
-                  renderArchetypeLabel={archetypeFullName}
-                  renderSkeletonLabel={(skeleton) =>
-                    getSkeletonDisplayName(skeleton, poolArchetypeLabels, skeletonColorProfiles)
-                  }
-                />
-                {oovWarningPct !== null && (
-                  <div className="rounded-lg border border-yellow-500 bg-yellow-500/10 px-4 py-3 mb-2">
-                    <Text sm className="text-text">
-                      {Math.round(oovWarningPct * 100)}% of cards in this cube aren't in the ML model's training
-                      vocabulary. Pick simulation and deckbuilding quality may be reduced for those cards.
-                    </Text>
-                  </div>
+                {isMobileLayout ? (
+                  <DraftSimulatorMobileView
+                    overview={resultsOverviewNode}
+                    filters={resultsFilterNode}
+                    detail={resultsMobileDetailNode}
+                    archetypes={resultsMobileArchetypesNode}
+                    oovWarning={resultsOovWarningNode}
+                    bottom={resultsBottomNode}
+                  />
+                ) : (
+                  <DraftSimulatorDesktopView
+                    overview={resultsOverviewNode}
+                    map={resultsMapNode}
+                    filters={resultsFilterNode}
+                    oovWarning={resultsOovWarningNode}
+                    bottom={resultsBottomNode}
+                  />
                 )}
-                <DraftSimulatorBottomSection
-                  bottomTab={bottomTab}
-                  setBottomTab={setBottomTab}
-                  displayRunData={displayRunData}
-                  clusteringInProgress={clusteringInProgress}
-                  clusteringPhase={clusteringPhase}
-                  skeletons={skeletons}
-                  selectedSkeletonId={selectedSkeletonId}
-                  setSelectedSkeletonId={setSelectedSkeletonId}
-                  clusterThemesByClusterId={clusterThemesByClusterId}
-                  poolArchetypeLabels={poolArchetypeLabels}
-                  poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
-                  skeletonColorProfiles={skeletonColorProfiles}
-                  selectedArchetype={selectedArchetype}
-                  setSelectedArchetype={setSelectedArchetype}
-                  displayedArchetypeDistribution={displayedArchetypeDistribution}
-                  colorPairTopArchetypes={colorPairTopArchetypes}
-                  clearActiveFilter={clearActiveFilter}
-                  activeFilterPoolIndexSet={activeFilterPoolIndexSet}
-                  hasApproximateFilteredStats={hasApproximateFilteredStats}
-                  scopedCardStatsTitle={scopedCardStatsTitle}
-                  draftBreakdownTitle={draftBreakdownTitle}
-                  sideboardTitle={sideboardTitle}
-                  pairingsTitle={pairingsTitle}
-                  overperformersTitleSuffix={overperformersTitleSuffix}
-                  downloadCardStatsCsv={downloadCardStatsCsv}
-                  visibleCardStats={visibleCardStats}
-                  handleToggleSelectedCard={handleToggleSelectedCard}
-                  selectedCardOracles={selectedCardOracles}
-                  inDeckOracles={inDeckOracles}
-                  inSideboardOracles={inSideboardOracles}
-                  deckInclusionPct={deckInclusionPct}
-                  visiblePoolCounts={visiblePoolCounts}
-                  cardStatsRef={cardStatsRef}
-                  detailedViewRef={detailedViewRef}
-                  downloadDraftBreakdownCsv={downloadDraftBreakdownCsv}
-                  displayedPools={displayedPools}
-                  activeDecks={activeDecks}
-                  simPhase={simPhase}
-                  selectedCard={selectedCard}
-                  focusedPoolIndex={focusedPoolIndex}
-                  setFocusedPoolIndex={setFocusedPoolIndex}
-                  onInspectPool={setInspectingPoolIndex}
-                  allPoolClusterThemes={allPoolClusterThemes}
-                  allPoolTagAllowlist={allPoolTagAllowlist}
-                  topSideboardCards={topSideboardCards}
-                  topCardPairings={topCardPairings}
-                  pairingsExcludeLands={pairingsExcludeLands}
-                  setPairingsExcludeLands={setPairingsExcludeLands}
-                  excludeManaFixingLands={excludeManaFixingLands}
-                  status={status}
-                  renderAutocardNameLink={renderAutocardNameLink}
-                />
               </Flexbox>
             )}
 

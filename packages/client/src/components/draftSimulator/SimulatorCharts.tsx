@@ -156,26 +156,10 @@ export const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; car
   cardMeta,
 }) => {
   const textColor = useChartTextColor();
-  if (!deckBuilds || deckBuilds.length === 0) {
+  const segments = getDeckColorShareSegments(deckBuilds, cardMeta);
+  if (!segments) {
     return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
   }
-
-  const shares: Record<string, number> = Object.fromEntries(COLOR_KEYS_WITH_C.map((key) => [key, 0]));
-  for (const deck of deckBuilds) {
-    for (const oracle of deck.mainboard) {
-      const cardColors = getDeckShareColors(oracle, cardMeta);
-      if (cardColors.length === 0) continue;
-      const share = 1 / cardColors.length;
-      for (const color of cardColors) shares[color] = (shares[color] ?? 0) + share;
-    }
-  }
-  const totalShare = Object.values(shares).reduce((sum, v) => sum + v, 0);
-  const segments = COLOR_KEYS_WITH_C.map((key) => ({
-    key,
-    label: MTG_COLORS[key]!.label,
-    bg: MTG_COLORS[key]!.bg,
-    pct: totalShare > 0 ? (shares[key] ?? 0) / totalShare : 0,
-  })).filter((s) => s.pct > 0.005);
 
   const chartData = {
     labels: segments.map((s) => s.label),
@@ -192,6 +176,53 @@ export const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; car
   return (
     <div className="w-full">
       <Doughnut data={chartData} options={makeDoughnutOptions(textColor)} />
+    </div>
+  );
+};
+
+export function getDeckColorShareSegments(deckBuilds: BuiltDeck[] | null, cardMeta: Record<string, CardMeta>) {
+  if (!deckBuilds || deckBuilds.length === 0) return null;
+
+  const shares: Record<string, number> = Object.fromEntries(COLOR_KEYS_WITH_C.map((key) => [key, 0]));
+  for (const deck of deckBuilds) {
+    for (const oracle of deck.mainboard) {
+      const cardColors = getDeckShareColors(oracle, cardMeta);
+      if (cardColors.length === 0) continue;
+      const share = 1 / cardColors.length;
+      for (const color of cardColors) shares[color] = (shares[color] ?? 0) + share;
+    }
+  }
+  const totalShare = Object.values(shares).reduce((sum, v) => sum + v, 0);
+  return COLOR_KEYS_WITH_C.map((key) => ({
+    key,
+    label: MTG_COLORS[key]!.label,
+    bg: MTG_COLORS[key]!.bg,
+    pct: totalShare > 0 ? (shares[key] ?? 0) / totalShare : 0,
+  })).filter((s) => s.pct > 0.005);
+}
+
+export const DeckColorShareLegend: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: Record<string, CardMeta> }> = ({
+  deckBuilds,
+  cardMeta,
+}) => {
+  const segments = getDeckColorShareSegments(deckBuilds, cardMeta);
+  if (!segments) {
+    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
+  }
+  return (
+    <div className="flex flex-col gap-1.5">
+      {segments.map((segment) => (
+        <div key={segment.key} className="flex items-center justify-between gap-3 text-sm">
+          <div className="flex items-center gap-2 min-w-0">
+            <span
+              className="inline-block h-2.5 w-2.5 rounded-full border border-black/10"
+              style={{ background: segment.bg }}
+            />
+            <span className="text-text-secondary">{segment.label}</span>
+          </div>
+          <span className="font-medium text-text tabular-nums">{(segment.pct * 100).toFixed(0)}%</span>
+        </div>
+      ))}
     </div>
   );
 };
@@ -271,9 +302,32 @@ export const CardTypeShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; card
   cardMeta,
 }) => {
   const textColor = useChartTextColor();
-  if (!deckBuilds || deckBuilds.length === 0) {
+  const entries = getCardTypeShareEntries(deckBuilds, cardMeta);
+  if (!entries) {
     return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
   }
+
+  const chartData = {
+    labels: entries.map((e) => e.label),
+    datasets: [
+      {
+        data: entries.map((e) => e.pct * 100),
+        backgroundColor: entries.map((e) => e.bg),
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.15)',
+      },
+    ],
+  };
+
+  return (
+    <div className="w-full">
+      <Doughnut data={chartData} options={makeDoughnutOptions(textColor)} />
+    </div>
+  );
+};
+
+export function getCardTypeShareEntries(deckBuilds: BuiltDeck[] | null, cardMeta: Record<string, CardMeta>) {
+  if (!deckBuilds || deckBuilds.length === 0) return null;
 
   const counts: Record<string, number> = Object.fromEntries(CARD_TYPE_ORDER.map((t) => [t, 0]));
   for (const deck of deckBuilds) {
@@ -289,22 +343,25 @@ export const CardTypeShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; card
     (e) => e.count > 0,
   );
   const total = entries.reduce((s, e) => s + e.count, 0);
+  return entries.map((entry) => ({ ...entry, pct: total > 0 ? entry.count / total : 0 }));
+}
 
-  const chartData = {
-    labels: entries.map((e) => e.label),
-    datasets: [
-      {
-        data: entries.map((e) => (total > 0 ? (e.count / total) * 100 : 0)),
-        backgroundColor: entries.map((e) => e.bg),
-        borderWidth: 1,
-        borderColor: 'rgba(255,255,255,0.15)',
-      },
-    ],
-  };
-
+export const CardTypeShareLegend: React.FC<{ deckBuilds: BuiltDeck[] | null; cardMeta: Record<string, CardMeta> }> = ({
+  deckBuilds,
+  cardMeta,
+}) => {
+  const entries = getCardTypeShareEntries(deckBuilds, cardMeta);
+  if (!entries) {
+    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
+  }
   return (
-    <div className="w-full">
-      <Doughnut data={chartData} options={makeDoughnutOptions(textColor)} />
+    <div className="flex flex-col gap-1.5">
+      {entries.map((entry) => (
+        <div key={entry.label} className="flex items-center justify-between gap-3 text-sm">
+          <span className="text-text-secondary">{entry.label}</span>
+          <span className="font-medium text-text tabular-nums">{(entry.pct * 100).toFixed(0)}%</span>
+        </div>
+      ))}
     </div>
   );
 };

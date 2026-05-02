@@ -87,67 +87,74 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
     <div
       key={skeleton.clusterId}
       className={[
-        'grid grid-cols-[8.5rem_minmax(0,1fr)] gap-2 bg-bg px-2 py-1.5 items-center sm:grid-cols-[12rem_minmax(0,1fr)] md:grid-cols-[15rem_minmax(0,1fr)]',
+        'bg-bg px-3 py-3',
         selectedSkeletonId === skeleton.clusterId ? 'bg-link/5' : '',
       ].join(' ')}
     >
       <button
         type="button"
-        className="flex h-full flex-col justify-center rounded-md px-2 py-1 text-left hover:bg-bg-active"
+        className="flex w-full flex-col gap-2 rounded-md px-2 py-2 text-left hover:bg-bg-active"
         onClick={() => onSelectSkeleton(selectedSkeletonId === skeleton.clusterId ? null : skeleton.clusterId)}
       >
-        <div className="flex flex-col gap-0.5 text-sm">
-          <span className="text-[10px] text-text-secondary uppercase tracking-wider">Cluster {skIdx + 1}</span>
-          <span className="font-semibold tracking-tight">
-            {dominantArchetype ? (
-              `${skeletonColorProfiles.get(skeleton.clusterId) && skeletonColorProfiles.get(skeleton.clusterId) !== 'C' ? `${skeletonColorProfiles.get(skeleton.clusterId)} ` : ''}${dominantArchetype}`
-            ) : poolArchetypeLabelsLoading ? (
-              <span className="inline-block h-4 w-28 animate-pulse rounded bg-bg-accent align-middle" />
-            ) : (
-              getSkeletonDisplayName(skeleton, poolArchetypeLabels, skeletonColorProfiles)
+        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] text-text-secondary uppercase tracking-wider">Cluster {skIdx + 1}</div>
+            <div className="mt-0.5 font-semibold tracking-tight text-sm sm:text-base">
+              {dominantArchetype ? (
+                `${skeletonColorProfiles.get(skeleton.clusterId) && skeletonColorProfiles.get(skeleton.clusterId) !== 'C' ? `${skeletonColorProfiles.get(skeleton.clusterId)} ` : ''}${dominantArchetype}`
+              ) : poolArchetypeLabelsLoading ? (
+                <span className="inline-block h-4 w-28 animate-pulse rounded bg-bg-accent align-middle" />
+              ) : (
+                getSkeletonDisplayName(skeleton, poolArchetypeLabels, skeletonColorProfiles)
+              )}
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
+            <span>{skeleton.poolCount} seats</span>
+            <span>{((skeleton.poolCount / totalPools) * 100).toFixed(1)}%</span>
+            {selectedSkeletonId === skeleton.clusterId && (
+              <span className="inline-flex w-fit bg-link/20 text-link border border-link/30 rounded px-2 py-0.5">
+                Filtering
+              </span>
             )}
-          </span>
-          <span className="text-xs text-text-secondary">
-            {skeleton.poolCount} seats · {((skeleton.poolCount / totalPools) * 100).toFixed(1)}%
-          </span>
-          {clusterThemesByClusterId?.get(skeleton.clusterId)?.map((theme) => (
-            <span
-              key={theme}
-              className="inline-flex w-fit text-[10px] bg-bg-accent border border-border/60 rounded px-1.5 py-0.5 text-text-secondary"
-            >
-              {theme}
-            </span>
-          ))}
-          {selectedSkeletonId === skeleton.clusterId && (
-            <span className="inline-flex w-fit text-xs bg-link/20 text-link border border-link/30 rounded px-2 py-0.5">
-              Filtering
-            </span>
-          )}
+          </div>
         </div>
-      </button>
-      {(() => {
-        // Legacy cached skeletons may hold a flat SkeletonCard[] for coreCards
-        // before the RankedCards shape landed. Tolerate it until rescore fires.
-        const ranked = skeleton.coreCards as unknown as RankedCards | SkeletonCard[];
-        const archetypeCards = Array.isArray(ranked)
-          ? ranked
-          : excludeManaFixingLands
-            ? ranked.excludingFixing
-            : ranked.default;
-        return archetypeCards.length > 0 ? (
-          <div className="min-w-0 flex flex-row flex-wrap gap-1">
-            {archetypeCards.slice(0, 8).map((card) => (
-              <SkeletonCardImage key={card.oracle_id} card={card} size={128} />
+        {clusterThemesByClusterId?.get(skeleton.clusterId)?.length ? (
+          <div className="flex flex-wrap gap-1.5">
+            {clusterThemesByClusterId.get(skeleton.clusterId)!.map((theme) => (
+              <span
+                key={theme}
+                className="inline-flex w-fit text-[10px] bg-bg-accent border border-border/60 rounded px-1.5 py-0.5 text-text-secondary"
+              >
+                {theme}
+              </span>
             ))}
           </div>
-        ) : (
-          <div className="rounded-md border border-border/70 bg-bg-accent/30 px-3 py-2">
-            <Text sm className="text-text-secondary">
-              No shared cards were found for this cluster.
-            </Text>
-          </div>
-        );
-      })()}
+        ) : null}
+        {(() => {
+          // Legacy cached skeletons may hold a flat SkeletonCard[] for coreCards
+          // before the RankedCards shape landed. Tolerate it until rescore fires.
+          const ranked = skeleton.coreCards as unknown as RankedCards | SkeletonCard[];
+          const archetypeCards = Array.isArray(ranked)
+            ? ranked
+            : excludeManaFixingLands
+              ? ranked.excludingFixing
+              : ranked.default;
+          return archetypeCards.length > 0 ? (
+            <div className="min-w-0 flex flex-row flex-wrap gap-1.5 pt-1">
+              {archetypeCards.slice(0, 8).map((card) => (
+                <SkeletonCardImage key={card.oracle_id} card={card} size={120} onCardClick={() => {}} />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-md border border-border/70 bg-bg-accent/30 px-3 py-2">
+              <Text sm className="text-text-secondary">
+                No shared cards were found for this cluster.
+              </Text>
+            </div>
+          );
+        })()}
+      </button>
     </div>
     );
   };
