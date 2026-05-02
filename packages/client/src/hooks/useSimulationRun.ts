@@ -35,7 +35,7 @@ import {
   LEIDEN_RES_DIVISOR,
   loadArchetypeData,
 } from '../utils/draftSimulatorClustering';
-import { type ClusteringCache, getStoragePressureNotice, SCORING_ALGORITHM_VERSION } from '../utils/draftSimulatorLocalStorage';
+import { type ClusteringCache, getStoragePressureNotice, patchClusteringCache, SCORING_ALGORITHM_VERSION } from '../utils/draftSimulatorLocalStorage';
 
 type ExtendedRequestInit = RequestInit & { timeout?: number };
 
@@ -464,19 +464,6 @@ export default function useSimulationRun({
         clusteringNotice = 'Draft simulation completed, but clustering will be computed when the run is opened.';
       }
 
-      if (clusterCache) {
-        try {
-          await recommenderWarmupPromise;
-          throwIfAborted(controller.signal);
-          clusterCache = {
-            ...clusterCache,
-            skeletons: await precomputeClusterRecommendations(clusterCache.skeletons, runData, deckResult.decks, controller.signal),
-          };
-        } catch (err) {
-          console.error('Failed to precompute cluster recommendations during run:', err);
-        }
-      }
-
       setSimPhase('save');
       const saveStart = performance.now();
       runData.timings = {
@@ -520,6 +507,20 @@ export default function useSimulationRun({
       setStatus('completed');
       setSimPhase(null);
       simAbortRef.current = null;
+
+      if (clusterCache) {
+        const capturedClusterCache = clusterCache;
+        const capturedSignal = controller.signal;
+        void recommenderWarmupPromise
+          .then(() => precomputeClusterRecommendations(capturedClusterCache.skeletons, runData, deckResult.decks, capturedSignal))
+          .then((recommendedSkeletons) => {
+            if (capturedSignal.aborted) return;
+            void patchClusteringCache(cubeId, entry.ts, { skeletons: recommendedSkeletons });
+          })
+          .catch((err) => {
+            console.error('Failed to precompute cluster recommendations in background:', err);
+          });
+      }
     } catch (err) {
       if (err instanceof Error && err.name === 'AbortError') return;
       setStatus('failed');
