@@ -118,7 +118,7 @@ const DraftMapScatter: React.FC<{
         ...(selectedPoint
           ? [
               {
-                label: 'Focused deck',
+                label: 'Selected deck',
                 data: [selectedPoint],
                 backgroundColor: '#facc15',
                 borderColor: '#111827',

@@ -108,10 +108,12 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
                 getSkeletonDisplayName(skeleton, poolArchetypeLabels, skeletonColorProfiles)
               )}
             </div>
+            <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-text-secondary">
+              <span>{skeleton.poolCount} seats</span>
+              <span>{((skeleton.poolCount / totalPools) * 100).toFixed(1)}%</span>
+            </div>
           </div>
-          <div className="flex flex-wrap items-center gap-2 text-xs text-text-secondary">
-            <span>{skeleton.poolCount} seats</span>
-            <span>{((skeleton.poolCount / totalPools) * 100).toFixed(1)}%</span>
+          <div className="flex items-center gap-2 text-xs text-text-secondary">
             {selectedSkeletonId === skeleton.clusterId && (
               <span className="inline-flex w-fit bg-link/20 text-link border border-link/30 rounded px-2 py-0.5">
                 Filtering

@@ -50,6 +50,7 @@ import { PoolInspectionModal } from '../components/draftSimulator/PoolExpansionC
 import DraftBreakdownTable, { buildDraftBreakdownRowSummary } from '../components/draftSimulator/DraftBreakdownTable';
 import ArchetypeSkeletonSection from '../components/draftSimulator/ArchetypeSkeletonSection';
 import ClusterDetailPanel from '../components/draftSimulator/ClusterDetailPanel';
+import ColorProfileDetailPanel from '../components/draftSimulator/ColorProfileDetailPanel';
 import DraftMapCard, { computeDraftMapPoints, DraftMapScopePanel } from '../components/draftSimulator/DraftMapCard';
 import DraftSimulatorBottomSection from '../components/draftSimulator/DraftSimulatorBottomSection';
 import {
@@ -964,7 +965,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   // Controls
   const [numDrafts, setNumDrafts] = useState(100);
   const [numSeats, setNumSeats] = useState(8);
-  const [gpuBatchSize, setGpuBatchSize] = useState(32);
+  const [gpuBatchSize, setGpuBatchSize] = useState(() => (isMobileLayout ? 4 : 32));
   const [selectedFormatId, setSelectedFormatId] = useState(cube.defaultFormat ?? -1);
 
   // Session-level cache — avoids recomputing embeddings when switching between runs
@@ -1416,6 +1417,20 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
         : null,
     [selectedSkeleton, activeDecks],
   );
+  const selectedColorPoolIndices = useMemo(
+    () =>
+      selectedArchetype
+        ? displayedPools.filter((pool) => pool.archetype === selectedArchetype).map((pool) => pool.poolIndex)
+        : [],
+    [displayedPools, selectedArchetype],
+  );
+  const selectedColorDeckBuilds = useMemo(
+    () =>
+      activeDecks && selectedColorPoolIndices.length > 0
+        ? selectedColorPoolIndices.map((poolIndex) => activeDecks[poolIndex]).filter((deck): deck is BuiltDeck => !!deck)
+        : null,
+    [activeDecks, selectedColorPoolIndices],
+  );
   const mobileSelectedCardInfo = useMemo(() => {
     if (!(mapPanelHasBoth && selectedCards.length > 0 && displayRunData)) return undefined;
     return {
@@ -1577,6 +1592,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
             activeDecks={activeDecks}
             clusterThemesByClusterId={clusterThemesByClusterId}
             poolArchetypeLabels={poolArchetypeLabels}
+            colorPairTopArchetypes={colorPairTopArchetypes}
             activeFilterSummary={activeFilterSummary}
             scopeOnlySummary={scopeOnlySummary}
             filteredDecks={filteredDecks}
@@ -1587,6 +1603,10 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
             excludeManaFixingLands={excludeManaFixingLands}
             setExcludeManaFixingLands={setExcludeManaFixingLands}
             onInspectPool={setInspectingPoolIndex}
+            selectedArchetype={selectedArchetype}
+            selectedColorPoolIndices={selectedColorPoolIndices}
+            selectedColorDeckBuilds={selectedColorDeckBuilds}
+            onToggleSelectedCard={handleToggleSelectedCard}
           />
         </div>
       </Flexbox>
@@ -1629,6 +1649,24 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                 onOpenPool={setInspectingPoolIndex}
                 onCardClick={handleToggleSelectedCard}
                 onClose={() => setSelectedSkeletonId(null)}
+              />
+            )}
+            {!selectedSkeleton && selectedArchetype && selectedColorPoolIndices.length > 0 && (
+              <ColorProfileDetailPanel
+                colorPair={selectedArchetype}
+                poolIndices={selectedColorPoolIndices}
+                totalPools={displayRunData.slimPools.length}
+                subsetDeckBuilds={selectedColorDeckBuilds}
+                cubeOracleSet={cubeOracleSet}
+                cardMeta={displayRunData.cardMeta}
+                slimPools={displayRunData.slimPools}
+                deckBuilds={activeDecks}
+                topArchetypeLabels={colorPairTopArchetypes.get(selectedArchetype)}
+                excludeManaFixingLands={excludeManaFixingLands}
+                setExcludeManaFixingLands={setExcludeManaFixingLands}
+                onOpenPool={setInspectingPoolIndex}
+                onCardClick={handleToggleSelectedCard}
+                onClose={() => setSelectedArchetype(null)}
               />
             )}
             {showDraftMapScopePanel && (
