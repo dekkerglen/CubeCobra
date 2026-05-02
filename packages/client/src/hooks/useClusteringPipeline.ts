@@ -29,7 +29,6 @@ interface UseClusteringPipelineArgs {
   activeDecks: BuiltDeck[] | null;
   selectedTs: number | null;
   loadedClusterCache: ClusteringCache | null;
-  clusterCachePending: boolean;
   embeddingsCache: { current: Map<string, EmbeddingCacheValue> };
 }
 
@@ -39,7 +38,6 @@ export default function useClusteringPipeline({
   activeDecks,
   selectedTs,
   loadedClusterCache,
-  clusterCachePending,
   embeddingsCache,
 }: UseClusteringPipelineArgs) {
   const [knnK, setKnnK] = useState(50);
@@ -60,7 +58,6 @@ export default function useClusteringPipeline({
 
   const poolArchetypeLabelsLoading = displayRunData !== null && poolArchetypeLabels === null && !poolEmbeddingsFailed;
   const hasDecksForSource = !!(displayRunData && activeDecks && activeDecks.length === displayRunData.slimPools.length);
-  const waitingForBackgroundClusterCache = clusterCachePending && !loadedClusterCache;
 
   const clusteringPhase: string | null = clusteringInProgress
     ? poolEmbeddings === null && !poolEmbeddingsFailed
@@ -149,7 +146,7 @@ export default function useClusteringPipeline({
   }, [skeletons, displayRunData, poolEmbeddings, poolEmbeddingsFailed, activeDecks, selectedTs, cubeId, loadedClusterCache]);
 
   useEffect(() => {
-    if (!displayRunData || displayRunData.slimPools.length === 0 || !selectedTs || waitingForBackgroundClusterCache) {
+    if (!displayRunData || displayRunData.slimPools.length === 0 || !selectedTs) {
       setPoolEmbeddings(null);
       setPoolEmbeddingsFailed(false);
       return;
@@ -190,7 +187,7 @@ export default function useClusteringPipeline({
     return () => {
       cancelled = true;
     };
-  }, [displayRunData, activeDecks, selectedTs, embeddingsCache, waitingForBackgroundClusterCache]);
+  }, [displayRunData, activeDecks, selectedTs, embeddingsCache]);
 
   useEffect(() => {
     if (!poolEmbeddings || poolEmbeddings.length === 0) {
@@ -224,11 +221,6 @@ export default function useClusteringPipeline({
 
     if (hydratedClusterSourceKey.current === clusteringSourceKey) {
       setClusteringInProgress(false);
-      return;
-    }
-
-    if (waitingForBackgroundClusterCache) {
-      setClusteringInProgress(true);
       return;
     }
 
@@ -288,7 +280,6 @@ export default function useClusteringPipeline({
     resolution,
     selectedTs,
     cubeId,
-    waitingForBackgroundClusterCache,
   ]);
 
   const applyPendingClusteringSettings = useCallback(() => {

@@ -624,19 +624,16 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     currentRunSetup,
     selectedTs,
     loadedClusterCache,
-    clusterCachePending,
     loadingRun,
     historyLoadError,
     loadRunError,
     storageNotice,
     setCurrentRunSetup,
     setStorageNotice,
-    setClusterCachePending,
     handleLoadRun,
     handleDeleteRun,
     handleClearHistory,
     handlePersistCompletedRun,
-    handlePersistClusterCache,
   } = useLocalSimulationHistory({
     cubeId,
     onResetViewSelection: resetViewSelection,
@@ -779,7 +776,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     activeDecks,
     selectedTs,
     loadedClusterCache,
-    clusterCachePending,
     embeddingsCache,
   });
 
