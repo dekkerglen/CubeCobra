@@ -161,62 +161,76 @@ export const PoolInspectionModal: React.FC<{
       backdropClassName="bg-opacity-60 backdrop-blur-[2px]"
       panelClassName="rounded-xl border-border/70 bg-bg shadow-2xl"
     >
-      <ModalHeader setOpen={setOpen} className="!bg-transparent !px-5 !py-4 border-b border-border/70">
-        <Flexbox direction="col" gap="1" className="min-w-0 flex-1">
-          <Text semibold lg>
-            Draft {renderPool.draftIndex + 1} · Seat {renderPool.seatIndex + 1}
-          </Text>
-          {(renderArchetypeLabel || renderPool.archetype) && (
-            <span className="text-sm font-medium">
-              {renderPool.archetype && renderPool.archetype !== 'C' && (
-                <span className="text-text-secondary mr-1">{renderPool.archetype}</span>
+      <ModalHeader setOpen={setOpen} className="!bg-transparent !px-5 !py-3 border-b border-border/70">
+        {/* Single header row: identity left, view toggle right */}
+        <div className="flex items-center gap-4 min-w-0 flex-1">
+          {/* Identity */}
+          <div className="flex flex-col gap-1 min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-semibold text-base leading-tight">
+                Draft {renderPool.draftIndex + 1} · Seat {renderPool.seatIndex + 1}
+              </span>
+              {(renderArchetypeLabel || (renderPool.archetype && renderPool.archetype !== 'C')) && (
+                <span className="text-sm text-text-secondary">
+                  {renderPool.archetype && renderPool.archetype !== 'C' && renderPool.archetype}
+                  {renderArchetypeLabel && (
+                    <span className="text-link ml-1">{renderArchetypeLabel}</span>
+                  )}
+                </span>
               )}
-              {renderArchetypeLabel && <span className="text-link">{renderArchetypeLabel}</span>}
-            </span>
-          )}
-          {renderThemes.length > 0 && (
-            <Text xs className="text-text-secondary">{renderThemes.join(', ')}</Text>
-          )}
-          {renderThemeBreakdown && renderThemeBreakdown.length > 0 && (
-            <>
-              <button
-                type="button"
-                onClick={() => setBreakdownOpen((o) => !o)}
-                className="self-start mt-1 inline-flex items-center rounded-md border border-border/70 bg-bg-accent/50 px-2 py-1 text-[11px] text-text-secondary hover:bg-bg-active hover:text-text transition-colors whitespace-nowrap"
-              >
-                {breakdownOpen ? '▾ Hide' : '▸ Show'} breakdown
-              </button>
-              {breakdownOpen && (
-                <div className="mt-2 rounded-lg border border-border/70 bg-bg-accent/35 px-3 py-2 text-[10px] font-mono leading-tight max-h-40 overflow-y-auto">
-                  {renderThemeBreakdown.map(({ bucket, cards }) => (
-                    <div key={bucket} className="mb-1.5">
-                      <span className="font-bold text-link">{bucket} ({cards.length})</span>
-                      <div className="ml-2">
-                        {cards.map(({ name, rawTags }) => (
-                          <div key={name} className="text-text-secondary">
-                            {name}{' '}
-                            <span className="opacity-50">[{rawTags.join(', ')}]</span>
-                          </div>
-                        ))}
-                      </div>
+            </div>
+            {renderThemes.length > 0 && (
+              <div className="flex flex-wrap gap-1">
+                {renderThemes.slice(0, 5).map((t) => (
+                  <span key={t} className="inline-flex text-[10px] bg-bg-accent border border-border/60 rounded px-1.5 py-0.5 text-text-secondary">
+                    {t}
+                  </span>
+                ))}
+                {renderThemes.length > 5 && (
+                  <span className="text-[10px] text-text-secondary self-center">+{renderThemes.length - 5} more</span>
+                )}
+                {renderThemeBreakdown && renderThemeBreakdown.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setBreakdownOpen((o) => !o)}
+                    className="text-[10px] text-text-secondary hover:text-text transition-colors underline underline-offset-2"
+                  >
+                    {breakdownOpen ? 'hide details' : 'details'}
+                  </button>
+                )}
+              </div>
+            )}
+            {breakdownOpen && renderThemeBreakdown && renderThemeBreakdown.length > 0 && (
+              <div className="rounded-lg border border-border/70 bg-bg-accent/35 px-3 py-2 text-[10px] font-mono leading-tight max-h-40 overflow-y-auto">
+                {renderThemeBreakdown.map(({ bucket, cards }) => (
+                  <div key={bucket} className="mb-1.5">
+                    <span className="font-bold text-link">{bucket} ({cards.length})</span>
+                    <div className="ml-2">
+                      {cards.map(({ name, rawTags }) => (
+                        <div key={name} className="text-text-secondary">
+                          {name} <span className="opacity-50">[{rawTags.join(', ')}]</span>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-              )}
-            </>
-          )}
-        </Flexbox>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* View toggle — right side of header */}
+          <div className="shrink-0">
+            <ViewToggle
+              mode={viewMode}
+              onChange={setViewMode}
+              hasDeck={hasDeck}
+              hasFullPickOrder={hasFullPickOrder}
+              deckLoading={deckLoading}
+            />
+          </div>
+        </div>
       </ModalHeader>
       <ModalBody scrollable className="!p-0 !border-y-0 bg-bg">
-        <div className="flex items-center justify-end gap-2 px-4 py-3 border-b border-border/70 bg-bg/95 backdrop-blur sticky top-0 z-10">
-          <ViewToggle
-            mode={viewMode}
-            onChange={setViewMode}
-            hasDeck={hasDeck}
-            hasFullPickOrder={hasFullPickOrder}
-            deckLoading={deckLoading}
-          />
-        </div>
         <PoolExpansionContent
           pool={renderPool}
           mode={viewMode}

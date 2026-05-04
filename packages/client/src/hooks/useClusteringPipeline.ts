@@ -55,6 +55,9 @@ export default function useClusteringPipeline({
   const [oovWarningPct, setOovWarningPct] = useState<number | null>(null);
 
   const hydratedClusterSourceKey = useRef<string | null>(null);
+  // Tracks which runSourceKey produced the current poolArchetypeLabels so we
+  // skip recomputation when they were already loaded from cache for that run.
+  const archetypeLabelsSourceKey = useRef<string | null>(null);
 
   const poolArchetypeLabelsLoading = displayRunData !== null && poolArchetypeLabels === null && !poolEmbeddingsFailed;
   const hasDecksForSource = !!(displayRunData && activeDecks && activeDecks.length === displayRunData.slimPools.length);
@@ -97,15 +100,18 @@ export default function useClusteringPipeline({
       setPendingKnnK(loadedClusterCache.knnK);
       setResolution(loadedClusterCache.resolution);
       setPendingResolution(loadedClusterCache.resolution);
-      setPoolArchetypeLabels(
-        loadedClusterCache.poolArchetypeLabels ? new Map(loadedClusterCache.poolArchetypeLabels) : null,
-      );
+      const cachedLabels = loadedClusterCache.poolArchetypeLabels
+        ? new Map(loadedClusterCache.poolArchetypeLabels)
+        : null;
+      setPoolArchetypeLabels(cachedLabels);
+      archetypeLabelsSourceKey.current = cachedLabels ? runSourceKey : null;
       return;
     }
     hydratedClusterSourceKey.current = null;
     setSkeletons([]);
     setUmapCoords([]);
     setPoolArchetypeLabels(null);
+    archetypeLabelsSourceKey.current = null;
   }, [loadedClusterCache, runSourceKey]);
 
   // After hydrating from cache, refresh per-cluster card scoring if any skeleton
@@ -159,6 +165,24 @@ export default function useClusteringPipeline({
       return;
     }
 
+    // If we have a complete, current cluster cache (skeletons + UMAP + labels,
+    // with up-to-date scoring), embeddings aren't needed for anything — skip the
+    // 69 MB ML model load entirely.
+    const cachedScoringVersion = loadedClusterCache?.scoringVersion ?? 0;
+    const cachedSkeletonsValid =
+      loadedClusterCache?.skeletons?.every(
+        (s) => s.distinctCards !== undefined && !Array.isArray(s.coreCards) && Array.isArray(s.coreCards?.default),
+      ) ?? false;
+    if (
+      loadedClusterCache?.skeletons?.length &&
+      loadedClusterCache?.umapCoords?.length &&
+      loadedClusterCache?.poolArchetypeLabels?.length &&
+      cachedScoringVersion >= SCORING_ALGORITHM_VERSION &&
+      cachedSkeletonsValid
+    ) {
+      return;
+    }
+
     let cancelled = false;
     (async () => {
       try {
@@ -187,13 +211,20 @@ export default function useClusteringPipeline({
     return () => {
       cancelled = true;
     };
-  }, [displayRunData, activeDecks, selectedTs, embeddingsCache]);
+  }, [displayRunData, activeDecks, selectedTs, embeddingsCache, loadedClusterCache]);
 
   useEffect(() => {
     if (!poolEmbeddings || poolEmbeddings.length === 0) {
-      setPoolArchetypeLabels(null);
+      // Don't clear labels that are already valid for this run (e.g. restored from cache
+      // while embeddings were skipped because everything was cached).
+      if (archetypeLabelsSourceKey.current !== runSourceKey) {
+        setPoolArchetypeLabels(null);
+        archetypeLabelsSourceKey.current = null;
+      }
       return;
     }
+    // Skip if labels were already loaded from cache (or computed) for this exact run.
+    if (archetypeLabelsSourceKey.current === runSourceKey) return;
     let cancelled = false;
     (async () => {
       const archetypeData = await loadArchetypeData();
@@ -201,6 +232,7 @@ export default function useClusteringPipeline({
       const labels = assignArchetypeLabels(poolEmbeddings, archetypeData);
       if (!cancelled) {
         setPoolArchetypeLabels(labels);
+        archetypeLabelsSourceKey.current = runSourceKey;
         if (selectedTs) {
           void patchClusteringCache(cubeId, selectedTs, { poolArchetypeLabels: [...labels.entries()] });
         }
@@ -209,7 +241,7 @@ export default function useClusteringPipeline({
     return () => {
       cancelled = true;
     };
-  }, [poolEmbeddings, selectedTs, cubeId]);
+  }, [poolEmbeddings, runSourceKey, selectedTs, cubeId]);
 
   useEffect(() => {
     if (!displayRunData || displayRunData.slimPools.length === 0) {

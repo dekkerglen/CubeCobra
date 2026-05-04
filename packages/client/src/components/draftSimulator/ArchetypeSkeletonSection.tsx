@@ -83,79 +83,71 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
       return [...counts.entries()].sort((a, b) => b[1] - a[1])[0]![0];
     })();
 
+    const ranked = skeleton.coreCards as unknown as RankedCards | SkeletonCard[];
+    const archetypeCards = Array.isArray(ranked)
+      ? ranked
+      : excludeManaFixingLands
+        ? ranked.excludingFixing
+        : ranked.default;
+    const displayName = dominantArchetype
+      ? `${skeletonColorProfiles.get(skeleton.clusterId) && skeletonColorProfiles.get(skeleton.clusterId) !== 'C' ? `${skeletonColorProfiles.get(skeleton.clusterId)} ` : ''}${dominantArchetype}`
+      : getSkeletonDisplayName(skeleton, poolArchetypeLabels, skeletonColorProfiles);
+    const themes = clusterThemesByClusterId?.get(skeleton.clusterId) ?? [];
+    const isSelected = selectedSkeletonId === skeleton.clusterId;
+
     return (
-    <div
-      key={skeleton.clusterId}
-      className={[
-        'bg-bg px-3 py-3',
-        selectedSkeletonId === skeleton.clusterId ? 'bg-link/5' : '',
-      ].join(' ')}
-    >
-      <button
-        type="button"
-        className="flex w-full flex-col gap-2 rounded-md px-2 py-2 text-left hover:bg-bg-active"
-        onClick={() => onSelectSkeleton(selectedSkeletonId === skeleton.clusterId ? null : skeleton.clusterId)}
+      <div
+        key={skeleton.clusterId}
+        className={isSelected ? 'bg-link/5' : 'bg-bg'}
       >
-        <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-          <div className="min-w-0 flex-1">
-            <div className="mt-0.5 font-semibold tracking-tight text-sm sm:text-base">
-              {dominantArchetype ? (
-                `${skeletonColorProfiles.get(skeleton.clusterId) && skeletonColorProfiles.get(skeleton.clusterId) !== 'C' ? `${skeletonColorProfiles.get(skeleton.clusterId)} ` : ''}${dominantArchetype}`
-              ) : poolArchetypeLabelsLoading ? (
-                <span className="inline-block h-4 w-28 animate-pulse rounded bg-bg-accent align-middle" />
-              ) : (
-                getSkeletonDisplayName(skeleton, poolArchetypeLabels, skeletonColorProfiles)
-              )}
-              <span className="ml-2 text-[11px] font-normal text-text-secondary">
-                {skeleton.poolCount} seats · {((skeleton.poolCount / totalPools) * 100).toFixed(1)}%
-              </span>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-text-secondary">
-            {selectedSkeletonId === skeleton.clusterId && (
-              <span className="inline-flex w-fit bg-link/20 text-link border border-link/30 rounded px-2 py-0.5">
+        <button
+          type="button"
+          className="flex w-full flex-col gap-1.5 px-4 py-2.5 text-left hover:bg-bg-active transition-colors"
+          onClick={() => onSelectSkeleton(isSelected ? null : skeleton.clusterId)}
+        >
+          {/* Title row: name + seats + filtering badge */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-semibold tracking-tight text-sm">
+              {poolArchetypeLabelsLoading && !dominantArchetype
+                ? <span className="inline-block h-4 w-28 animate-pulse rounded bg-bg-accent align-middle" />
+                : displayName}
+            </span>
+            <span className="text-[11px] text-text-secondary">
+              {skeleton.poolCount} seats · {((skeleton.poolCount / totalPools) * 100).toFixed(1)}%
+            </span>
+            {isSelected && (
+              <span className="inline-flex items-center bg-link/20 text-link border border-link/30 rounded px-1.5 py-0.5 text-[10px] font-medium">
                 Filtering
               </span>
             )}
           </div>
-        </div>
-        {clusterThemesByClusterId?.get(skeleton.clusterId)?.length ? (
-          <div className="flex flex-wrap gap-1.5">
-            {clusterThemesByClusterId.get(skeleton.clusterId)!.map((theme) => (
-              <span
-                key={theme}
-                className="inline-flex w-fit text-[10px] bg-bg-accent border border-border/60 rounded px-1.5 py-0.5 text-text-secondary"
-              >
-                {theme}
-              </span>
-            ))}
-          </div>
-        ) : null}
-        {(() => {
-          // Legacy cached skeletons may hold a flat SkeletonCard[] for coreCards
-          // before the RankedCards shape landed. Tolerate it until rescore fires.
-          const ranked = skeleton.coreCards as unknown as RankedCards | SkeletonCard[];
-          const archetypeCards = Array.isArray(ranked)
-            ? ranked
-            : excludeManaFixingLands
-              ? ranked.excludingFixing
-              : ranked.default;
-          return archetypeCards.length > 0 ? (
-            <div className="min-w-0 flex flex-row flex-wrap gap-1.5 pt-1">
-              {archetypeCards.slice(0, 8).map((card) => (
-                <SkeletonCardImage key={card.oracle_id} card={card} size={120} onCardClick={() => {}} />
+
+          {/* Tags */}
+          {themes.length > 0 && (
+            <div className="flex flex-wrap gap-1">
+              {themes.map((theme) => (
+                <span
+                  key={theme}
+                  className="inline-flex text-[10px] bg-bg-accent border border-border/60 rounded px-1.5 py-0.5 text-text-secondary"
+                >
+                  {theme}
+                </span>
+              ))}
+            </div>
+          )}
+
+          {/* Card strip */}
+          {archetypeCards.length > 0 ? (
+            <div className="flex flex-row gap-1.5 pt-0.5">
+              {archetypeCards.slice(0, 10).map((card) => (
+                <SkeletonCardImage key={card.oracle_id} card={card} size={130} onCardClick={() => {}} />
               ))}
             </div>
           ) : (
-            <div className="rounded-md border border-border/70 bg-bg-accent/30 px-3 py-2">
-              <Text sm className="text-text-secondary">
-                No shared cards were found for this cluster.
-              </Text>
-            </div>
-          );
-        })()}
-      </button>
-    </div>
+            <span className="text-xs text-text-secondary">No shared cards found.</span>
+          )}
+        </button>
+      </div>
     );
   };
 

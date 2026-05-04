@@ -17,7 +17,7 @@ export type DraftSimulatorBottomTab =
   | 'draftBreakdown'
   | 'overperformers'
   | 'sideboardAndPairings'
-  | 'draftReplay';
+  ;
 
 export type DraftSimulatorPoolViewMode = 'pool' | 'deck' | 'fullPickOrder';
 

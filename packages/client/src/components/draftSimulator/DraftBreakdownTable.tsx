@@ -585,7 +585,7 @@ const DraftBreakdownTable: React.FC<{
                       {artImages.slice(0, 6).map((c) => (
                         <div
                           key={c.oracle_id}
-                          className="flex-shrink-0 overflow-hidden transition-transform duration-100 hover:-translate-y-0.5"
+                          className="flex-shrink-0 overflow-hidden"
                           style={{
                             width: 52,
                             height: 52,
