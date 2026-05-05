@@ -165,24 +165,6 @@ export default function useClusteringPipeline({
       return;
     }
 
-    // If we have a complete, current cluster cache (skeletons + UMAP + labels,
-    // with up-to-date scoring), embeddings aren't needed for anything — skip the
-    // 69 MB ML model load entirely.
-    const cachedScoringVersion = loadedClusterCache?.scoringVersion ?? 0;
-    const cachedSkeletonsValid =
-      loadedClusterCache?.skeletons?.every(
-        (s) => s.distinctCards !== undefined && !Array.isArray(s.coreCards) && Array.isArray(s.coreCards?.default),
-      ) ?? false;
-    if (
-      loadedClusterCache?.skeletons?.length &&
-      loadedClusterCache?.umapCoords?.length &&
-      loadedClusterCache?.poolArchetypeLabels?.length &&
-      cachedScoringVersion >= SCORING_ALGORITHM_VERSION &&
-      cachedSkeletonsValid
-    ) {
-      return;
-    }
-
     let cancelled = false;
     (async () => {
       try {
@@ -211,7 +193,7 @@ export default function useClusteringPipeline({
     return () => {
       cancelled = true;
     };
-  }, [displayRunData, activeDecks, selectedTs, embeddingsCache, loadedClusterCache]);
+  }, [displayRunData, activeDecks, selectedTs, embeddingsCache]);
 
   useEffect(() => {
     if (!poolEmbeddings || poolEmbeddings.length === 0) {
