@@ -4,6 +4,8 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "download-data-files": "NODE_OPTIONS=--max-old-space-size=8192 ts-node -r tsconfig-paths/register --project tsconfig.json src/download-data-files.ts",
+    "upload-assets": "ts-node -r tsconfig-paths/register --project tsconfig.json src/uploadAssets.ts",
+    "invalidate-cdn": "ts-node -r tsconfig-paths/register --project tsconfig.json src/invalidateCdn.ts",
     "update-hashes": "ts-node -r tsconfig-paths/register --project tsconfig.json src/jobs/repair_hashes.js",
     "export-cubes": "NODE_OPTIONS=--max-old-space-size=18192 ts-node src/jobs/export_cubes.ts",
     "export-decks": "NODE_OPTIONS=--max-old-space-size=18192 ts-node src/jobs/export_decks.ts",
@@ -31,6 +33,7 @@
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
     "@aws-sdk/client-cloudformation": "^3.927.0",
+    "@aws-sdk/client-cloudfront": "^3.927.0",
     "@aws-sdk/client-dynamodb": "^3.948.0",
     "@aws-sdk/client-ecs": "^3.927.0",
     "@aws-sdk/client-s3": "^3.927.0",

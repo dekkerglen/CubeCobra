@@ -20,6 +20,7 @@ import {
   isCustomCard,
   normalizeName,
 } from '@utils/cardutil';
+import { cdnUrl } from '@utils/cdnUrl';
 import Card, { BoardType } from '@utils/datatypes/Card';
 import { getBoardDefinitions, TagColor } from '@utils/datatypes/Cube';
 import TagData from '@utils/datatypes/TagData';
@@ -235,7 +236,7 @@ const CardModal: React.FC<CardModalProps> = ({
                   card={card}
                   className="w-full"
                   src={imageUsed}
-                  fallbackSrc="/content/default_card.png"
+                  fallbackSrc={cdnUrl('/content/default_card.png')}
                   alt={cardName(card)}
                 />
                 {getCardBackImage(card) && (

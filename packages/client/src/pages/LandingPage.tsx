@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { cdnUrl } from '@utils/cdnUrl';
 import Article from '@utils/datatypes/Article';
 import { ContentType } from '@utils/datatypes/Content';
 import Cube from '@utils/datatypes/Cube';
@@ -59,7 +60,7 @@ const LandingPage: React.FC<LandingPageProps> = ({ featured, recentDecks, conten
                 </Text>
               </CardHeader>
               <a href="https://luckypaper.co/resources/cube-map/" target="_blank" rel="noopener noreferrer">
-                <img className="w-full" src="/content/cubemap.png" alt="Cube Map" />
+                <img className="w-full" src={cdnUrl('/content/cubemap.png')} alt="Cube Map" />
               </a>
               <CardBody>
                 <Text>

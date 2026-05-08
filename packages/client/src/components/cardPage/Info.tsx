@@ -1,6 +1,7 @@
 import React from 'react';
 
 import { detailsToCard } from '@utils/cardutil';
+import { cdnUrl } from '@utils/cdnUrl';
 import { CardDetails } from '@utils/datatypes/Card';
 import HistoryType from '@utils/datatypes/History';
 
@@ -33,7 +34,7 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
                   key={`mana-symbol-${index}`}
                   alt={symbol}
                   className="mana-symbol"
-                  src={`/content/symbols/${symbol}.png`}
+                  src={cdnUrl(`/content/symbols/${symbol}.png`)}
                 />
               ))}
           </Flexbox>

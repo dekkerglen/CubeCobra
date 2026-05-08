@@ -12,6 +12,7 @@ import {
   cardTix,
   detailsToCard,
 } from '@utils/cardutil';
+import { cdnUrl } from '@utils/cdnUrl';
 import { CardDetails } from '@utils/datatypes/Card';
 import HistoryType from '@utils/datatypes/History';
 
@@ -44,7 +45,7 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card }) => {
 
   return (
     <Flexbox direction="col" className="my-2 ml-2" gap="2">
-      <ImageFallback className="w-full" src={imageUsed} fallbackSrc="/content/default_card.png" alt={card.name} />
+      <ImageFallback className="w-full" src={imageUsed} fallbackSrc={cdnUrl('/content/default_card.png')} alt={card.name} />
       {card.image_flip && (
         <Button
           className="mt-1"

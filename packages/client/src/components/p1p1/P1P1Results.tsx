@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 
+import { cdnUrl } from '@utils/cdnUrl';
 import { P1P1Pack, P1P1VoteSummary } from '@utils/datatypes/P1P1Pack';
 
 import { detailsToCard } from '../../../../utils/src/cardutil';
@@ -83,7 +84,7 @@ const P1P1Results: React.FC<P1P1ResultsProps> = ({ pack, votes }) => {
           {isUserVote && <span className="text-primary ms-1">(Your pick)</span>}
           {isBotPick && (
             <span className="ms-1" title="CubeCobra's pick">
-              <img src="/content/logo.png" alt="CubeCobra" className="w-4 h-4 inline-block" />
+              <img src={cdnUrl('/content/logo.png')} alt="CubeCobra" className="w-4 h-4 inline-block" />
             </span>
           )}
         </span>

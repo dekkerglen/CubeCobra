@@ -46,12 +46,19 @@ export const sendEmail = async (
   });
 
   if (process.env.NODE_ENV === 'production' || process.env.LOCALSTACK_SES === 'true') {
+    // Emails are read offline by clients (Gmail image proxy, etc.) so all
+    // asset URLs must be absolute. assetsBaseUrl resolves to the CDN when
+    // configured, otherwise to the apex (which Express still serves).
+    const baseUrl = utils.getBaseUrl();
+    const cdnBaseUrl = process.env.CDN_BASE_URL || '';
+    const assetsBaseUrl = cdnBaseUrl || baseUrl;
     await message.send({
       template: templateName,
       locals: {
         ...templateLocals,
         //Ensure the common ones cannot be overridden by adding second
-        baseUrl: utils.getBaseUrl(),
+        baseUrl,
+        assetsBaseUrl,
       },
     });
   } else {

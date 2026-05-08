@@ -1,3 +1,4 @@
+import { cdnUrl } from '@utils/cdnUrl';
 import CubeType from '@utils/datatypes/Cube';
 import Image from '@utils/datatypes/Image';
 import { NotificationStatus } from '@utils/datatypes/Notification';
@@ -74,10 +75,12 @@ const redirect = (req: Request, res: Response, to: string): void => {
 const getBundlesForPage = (page: string): string[] => {
   const manifest = loadManifest();
 
-  // Try to get hashed filenames from manifest, fall back to non-hashed
-  const vendors = manifest['vendors'] || `/js/vendors.bundle.js`;
-  const commons = manifest['commons'] || `/js/commons.bundle.js`;
-  const pageBundleName = manifest[page] || `/js/${page}.bundle.js`;
+  // Try to get hashed filenames from manifest, fall back to non-hashed.
+  // cdnUrl prepends CDN_BASE_URL when set (prod with CloudFront), otherwise
+  // returns the same-origin path that Express serves from public/.
+  const vendors = cdnUrl(manifest['vendors'] || `/js/vendors.bundle.js`);
+  const commons = cdnUrl(manifest['commons'] || `/js/commons.bundle.js`);
+  const pageBundleName = cdnUrl(manifest[page] || `/js/${page}.bundle.js`);
 
   return [vendors, commons, pageBundleName];
 };
@@ -172,6 +175,7 @@ const render = (
 
     reactProps.nitroPayEnabled = process.env.NITROPAY_ENABLED === 'true';
     reactProps.baseUrl = getBaseUrl();
+    reactProps.cdnBaseUrl = process.env.CDN_BASE_URL || '';
     reactProps.captchaSiteKey = process.env.CAPTCHA_SITE_KEY;
     if (res.locals.csrfToken) {
       reactProps.csrfToken = res.locals.csrfToken;
@@ -181,9 +185,13 @@ const render = (
       options.metadata = [];
     }
     if (!options.metadata.some((data) => data.property === 'og:image')) {
+      // og:image must be an absolute URL for crawlers; baseUrl + cdnUrl handles
+      // both cases (CloudFront when CDN_BASE_URL is set, otherwise same-origin).
+      const stickerPath = cdnUrl('/content/sticker.png');
+      const ogImage = stickerPath.startsWith('http') ? stickerPath : `${getBaseUrl()}${stickerPath}`;
       options.metadata.push({
         property: 'og:image',
-        content: '/content/sticker.png',
+        content: ogImage,
       });
     }
 

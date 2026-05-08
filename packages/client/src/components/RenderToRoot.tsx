@@ -19,6 +19,7 @@ declare global {
 export interface UniversalReactProps {
   nitroPayEnabled: boolean;
   baseUrl: BaseUrlContextValue;
+  cdnBaseUrl: string;
   user: UserContextValue;
   theme: string;
   captchaSiteKey: string;

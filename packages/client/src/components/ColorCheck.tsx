@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
 
+import { cdnUrl } from '@utils/cdnUrl';
 import { COLORS } from '@utils/Util';
 
 import Button from './base/Button';
@@ -32,7 +33,7 @@ export const ColorCheckButton: React.FC<ColorCheckButtonProps> = ({
       color="secondary"
       disabled={disabled}
     >
-      <img src={`/content/symbols/${short.toLowerCase()}.png`} alt={color} title={color} className={symbolClassName} />
+      <img src={cdnUrl(`/content/symbols/${short.toLowerCase()}.png`)} alt={color} title={color} className={symbolClassName} />
     </Button>
   );
 };

@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import { cardTags, isCardFoil } from '@utils/cardutil';
+import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 import { TagColor } from '@utils/datatypes/Cube';
 
@@ -106,13 +107,13 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
           <Flexbox direction="row">
             {front && (
               <div className="col position-relative card-border">
-                {foilOverlay && <img className="foilOverlay" src="/content/foilOverlay.png" alt="foil overlay" />}
+                {foilOverlay && <img className="foilOverlay" src={cdnUrl('/content/foilOverlay.png')} alt="foil overlay" />}
                 <img className="rounded-b-md" id="autocardImageFront" src={front} alt={front} key={front} />
               </div>
             )}
             {back && (
               <div className="col position-relative card-border">
-                {foilOverlay && <img className="foilOverlay" src="/content/foilOverlay.png" alt="foil overlay" />}
+                {foilOverlay && <img className="foilOverlay" src={cdnUrl('/content/foilOverlay.png')} alt="foil overlay" />}
                 <img className="rounded-b-md" id="autocardImageBack" src={back} alt={back} key={back} />
               </div>
             )}

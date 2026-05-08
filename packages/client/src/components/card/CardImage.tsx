@@ -1,6 +1,7 @@
 import React, { useContext, useMemo } from 'react';
 
 import { cardImageUrl, cardName } from '@utils/cardutil';
+import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
 
@@ -51,7 +52,7 @@ const CardImage: React.FC<CardImageProps> = ({
       <ImageAutocard
         card={current}
         src={imageSrc}
-        fallbackSrc="/content/default_card.png"
+        fallbackSrc={cdnUrl('/content/default_card.png')}
         alt={cardName(current)}
         width={width ?? '100%'}
         height={height ?? 'auto'}
@@ -64,7 +65,7 @@ const CardImage: React.FC<CardImageProps> = ({
   return (
     <ImageFallback
       src={imageSrc}
-      fallbackSrc="/content/default_card.png"
+      fallbackSrc={cdnUrl('/content/default_card.png')}
       alt={cardName(current)}
       width={width ?? '100%'}
       height={height ?? 'auto'}

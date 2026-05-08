@@ -1,6 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { cardId, detailsToCard } from '@utils/cardutil';
+import { cdnUrl } from '@utils/cdnUrl';
 import { Combo } from '@utils/datatypes/CardCatalog';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
@@ -42,7 +43,7 @@ const createPlaceholderCard = (use: any) => ({
   rarity: '',
   legalities: {},
   oracle_text: '',
-  image_normal: '/content/default_card.png',
+  image_normal: cdnUrl('/content/default_card.png'),
   cmc: 0,
   colors: [],
   color_identity: [],

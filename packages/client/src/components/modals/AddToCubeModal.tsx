@@ -1,6 +1,7 @@
 import React, { useContext, useMemo, useState } from 'react';
 
 import { cardId, cardImageUrl, cardName } from '@utils/cardutil';
+import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 import Cube, { boardNameToKey, getBoardDefinitions } from '@utils/datatypes/Cube';
 import User from '@utils/datatypes/User';
@@ -145,7 +146,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
             <ImageFallback
               className="w-full mb-3"
               src={cardImageUrl(card)}
-              fallbackSrc="/content/default_card.png"
+              fallbackSrc={cdnUrl('/content/default_card.png')}
               alt={cardName(card)}
             />
             <p>You don't appear to have any cubes to add this card to. Are you logged in?</p>
@@ -177,7 +178,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
           <ImageFallback
             className="w-full"
             src={cardImageUrl(card)}
-            fallbackSrc="/content/default_card.png"
+            fallbackSrc={cdnUrl('/content/default_card.png')}
             alt={cardName(card)}
           />
           <Select

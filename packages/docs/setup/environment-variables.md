@@ -14,6 +14,9 @@ Environment variables are populated from the `.env` file. There is no `.env` fil
 | AWS_SECRET_ACCESS_KEY | The AWS secret access key for your account                                                   | Yes       | -         |
 | CAPTCHA_SITE_KEY      | The reCAPTCHA site key                                                                       | Yes       | -         |
 | CAPTCHA_SECRET_KEY    | The reCAPTCHA secret key                                                                     | Yes       | -         |
+| CDN_BASE_URL          | Base URL for static assets (e.g. `https://assets.cubecobra.com`). Unset → same-origin.       | No        | -         |
+| CDN_DISTRIBUTION_ID   | CloudFront distribution ID; only required for `npm run invalidate-cdn` after deploy.         | No        | -         |
+| CUBECOBRA_ASSETS_BUCKET | S3 bucket the deploy uploads static assets to. Only required for `npm run upload-assets`.  | No        | -         |
 | CUBECOBRA_VERSION     | The version of Cube Cobra                                                                    | No        | -         |
 | DATA_BUCKET           | The name of the AWS S3 bucket to use. You will need to create this bucket in your account    | Yes       | -         |
 | DOMAIN                | The domain name of the server. Used for external redirects such as emails                    | Yes       | -         |

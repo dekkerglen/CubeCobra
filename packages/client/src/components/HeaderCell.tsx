@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { cdnUrl } from '@utils/cdnUrl';
 import { SortConfig } from '@utils/sorting/sortContext';
 
 import { Flexbox } from './base/Layout';
@@ -16,7 +17,7 @@ interface HeaderCellProps {
 const HeaderCell: React.FC<HeaderCellProps> = ({ label, fieldName, sortConfig, requestSort, ...props }) => {
   const active = sortConfig && sortConfig.key === fieldName;
   const direction = active ? sortConfig.direction : 'nosort';
-  const icon = `/content/${direction}.png`;
+  const icon = cdnUrl(`/content/${direction}.png`);
 
   return (
     <th scope="col" className="min-w-fit align-middle" {...props}>

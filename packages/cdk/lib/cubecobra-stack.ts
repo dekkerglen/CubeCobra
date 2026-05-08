@@ -7,6 +7,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { ParameterValueType } from 'aws-cdk-lib/aws-ssm';
 
+import { AssetsDistribution } from './assets-distribution';
 import { CardUpdateMonitorLambda } from './card-update-monitor-lambda';
 import { Certificates } from './certificates';
 import { DailyJobsLambdaConstruct } from './daily-jobs-lambda';
@@ -69,6 +70,25 @@ export class CubeCobraStack extends cdk.Stack {
       dataBucketName: params.dataBucket,
       appBucketName: params.appBucket,
     });
+
+    // Static asset distribution (CloudFront + private S3 with OAC).
+    // The certificate must live in us-east-1 — provision it once out-of-band
+    // and store the ARN in SSM at /cubecobra/<env>/assets-certificate-arn.
+    const assetsCertificateArn = ssm.StringParameter.valueForTypedStringParameterV2(
+      this,
+      `/cubecobra/${params.environmentName}/assets-certificate-arn`,
+      ParameterValueType.STRING,
+    );
+    const assetsDistribution = new AssetsDistribution(this, 'AssetsDistribution', {
+      environmentName: params.environmentName,
+      domain: params.domain,
+      certificateArn: assetsCertificateArn,
+    });
+
+    // Allow the EB instance role to read from the assets bucket — not strictly
+    // needed at runtime (CloudFront fronts it via OAC) but useful for any
+    // server-side fallback or maintenance scripts running on the instance.
+    assetsDistribution.bucket.grantRead(role);
 
     // Grant the instance role read/write access to the data bucket
     // Since we're importing the bucket, we need to explicitly add IAM permissions
@@ -192,6 +212,7 @@ export class CubeCobraStack extends cdk.Stack {
     serverEnvVars.ECS_TASK_DEFINITION_ARN = jobsTask.taskDefinition.taskDefinitionArn;
     serverEnvVars.ECS_SUBNET_IDS = cdk.Fn.join(',', subnetIds);
     serverEnvVars.ECS_ASSIGN_PUBLIC_IP = usePublicSubnets ? 'ENABLED' : 'DISABLED';
+    serverEnvVars.CDN_BASE_URL = `https://${assetsDistribution.assetDomain}`;
 
     const elasticBeanstalk = new ElasticBeanstalk(this, 'ElasticBeanstalk', {
       certificate: cert.consoleCertificate,

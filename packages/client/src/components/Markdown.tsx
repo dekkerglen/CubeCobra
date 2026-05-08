@@ -1,6 +1,7 @@
 import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
 
 import { LinkIcon } from '@primer/octicons-react';
+import { cdnUrl } from '@utils/cdnUrl';
 import { CardDetails } from '@utils/datatypes/Card';
 import { isInternalURL, isSamePageURL } from '@utils/Util';
 import { slug } from 'github-slugger';
@@ -121,7 +122,7 @@ interface RenderSymbolProps {
 const renderSymbol: React.FC<RenderSymbolProps> = ({ value }) => {
   if (!value) return null;
   const symbol = value.split('/').join('-').toLowerCase();
-  return <img src={`/content/symbols/${symbol}.png`} alt={symbol} className="w-6 h-6 inline" />;
+  return <img src={cdnUrl(`/content/symbols/${symbol}.png`)} alt={symbol} className="w-6 h-6 inline" />;
 };
 
 interface RenderCardlinkProps {

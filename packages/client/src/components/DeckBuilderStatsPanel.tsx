@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 
+import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 import { BarElement, CategoryScale, Chart as ChartJS, Legend, LinearScale, Title } from 'chart.js';
 import { Bar } from 'react-chartjs-2';
@@ -122,7 +123,7 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {manaData.map(({ color, symbol, cardCount, symbolCount, curve, landProduction }) => (
             <div key={color} className="bg-white rounded-lg p-4 shadow-sm flex flex-col items-center text-center">
-              <img alt={symbol} className="w-16 h-16 mb-1" src={`/content/symbols/${symbol}.png`} />
+              <img alt={symbol} className="w-16 h-16 mb-1" src={cdnUrl(`/content/symbols/${symbol}.png`)} />
 
               {/* Percentage with Tooltip */}
               <Tooltip text={`${cardCount ?? 0} of ${cards.length} cards are ${color}`}>

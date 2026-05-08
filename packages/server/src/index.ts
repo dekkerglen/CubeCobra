@@ -19,6 +19,8 @@ import { v4 as uuid } from 'uuid';
 
 import './types/express'; // Import the express type extensions
 
+import { cdnUrl } from '@utils/cdnUrl';
+
 import configurePassport from './config/passport';
 import dynamoService from './dynamo/client';
 import documentClient from './dynamo/documentClient';
@@ -116,9 +118,16 @@ app.use(
 // Load view engine
 app.set('views', path.join(__dirname, '../src/views'));
 app.set('view engine', 'pug');
+// Expose cdnUrl to all Pug templates so view code can wrap static asset paths.
+// When CDN_BASE_URL is set, hrefs resolve to CloudFront; otherwise same-origin.
+app.locals.cdnUrl = cdnUrl;
 
-// Set Public Folder with cache control
-// Hashed assets (with contenthash in filename) can be cached forever
+// Static asset serving from the Express server.
+// In production this is a fallback only — assets are served from CloudFront
+// (s3 sync runs in the publish flow, EB env sets CDN_BASE_URL). The handlers
+// stay registered so that any reference still resolved same-origin (legacy
+// hot-links, internal tooling) keeps working until we remove them in a later
+// phase. In dev (CDN_BASE_URL unset) these are the actual serve path.
 app.use(
   '/js',
   express.static(path.join(__dirname, '../public/js'), {

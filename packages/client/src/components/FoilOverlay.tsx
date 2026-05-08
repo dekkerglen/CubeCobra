@@ -1,5 +1,6 @@
 import React, { ComponentProps, ElementType } from 'react';
 
+import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 
 import { isFoilFinish } from '../../../utils/src/cardutil';
@@ -29,7 +30,7 @@ const FoilOverlay = <T extends ElementType>(Tag: T) => {
         <Tag ref={innerRef} {...(props as any)} />
         {isFoilFinish(finish) && (
           <img
-            src="/content/foilOverlay.png"
+            src={cdnUrl('/content/foilOverlay.png')}
             className="absolute inset-0 w-full h-full foilOverlay card-border"
             width="100%"
             alt="Foil overlay"

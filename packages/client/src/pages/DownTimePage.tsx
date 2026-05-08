@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { cdnUrl } from '@utils/cdnUrl';
+
 import { Card, CardBody, CardHeader } from '../components/base/Card';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Link from '../components/base/Link';
@@ -9,7 +11,7 @@ import RenderToRoot from '../components/RenderToRoot';
 const DownTimePage: React.FC = () => (
   <Col xs={12} md={8} xl={5} className="mx-auto">
     <Row className="mb-5 mt-4">
-      <img src="/content/logo.png" alt="Cube Cobra logo" className="mx-auto" style={{ width: '50%' }} />
+      <img src={cdnUrl('/content/logo.png')} alt="Cube Cobra logo" className="mx-auto" style={{ width: '50%' }} />
     </Row>
     <Card>
       <CardHeader>

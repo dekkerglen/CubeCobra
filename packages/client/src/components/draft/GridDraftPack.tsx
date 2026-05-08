@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { cdnUrl } from '@utils/cdnUrl';
 import CardType from '@utils/datatypes/Card';
 
 import Button from 'components/base/Button';
@@ -83,7 +84,7 @@ const Pack: React.FC<PackProps> = ({ pack, packNumber, pickNumber, makePick, sea
                 <FoilCardImage card={pack[row * 3 + col]} autocard />
               ) : (
                 <img
-                  src="/content/default_card.png"
+                  src={cdnUrl('/content/default_card.png')}
                   alt="Empty card slot"
                   width="100%"
                   height="auto"
