@@ -8,6 +8,7 @@ import * as cdk from 'aws-cdk-lib';
 import 'source-map-support/register';
 
 import { environments } from '../config';
+import { AssetsStack } from '../lib/assets-stack';
 import { BootstrapStack } from '../lib/bootstrap-stack';
 import { CubeCobraStack } from '../lib/cubecobra-stack';
 import { CubeCobraStackLocal } from '../lib/cubecobra-stack-local';
@@ -35,6 +36,18 @@ if (bootstrap && bootstrap === 'true') {
   }
 
   console.log(`Deploying CubeCobra stack to '${environment}'`);
+
+  // Static assets stack lives in us-east-1 (CloudFront cert region). Deploy
+  // this BEFORE the main stack so the bucket exists for upload-assets and
+  // the CDN hostname resolves before EB rolls. Skipped for local.
+  if (!isLocal) {
+    new AssetsStack(app, config.assetsStackName, {
+      environmentName: environment,
+      domain: config.domain,
+      env: { account: config.account, region: 'us-east-1' },
+    });
+  }
+
   const StackClass = isLocal ? CubeCobraStackLocal : CubeCobraStack;
 
   new StackClass(

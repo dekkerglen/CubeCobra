@@ -104,22 +104,31 @@ Recommend **A**. It's already working, and option B doesn't buy us anything that
 
 ### CDK changes
 
-New construct `packages/cdk/lib/assets-distribution.ts`:
+`AssetsStack` lives in **us-east-1** (CloudFront's required region for ACM certs on custom domains). It contains the cert, bucket, distribution, and Route53 alias for `assets.<domain>`. The main `CubeCobraStack` continues to live in `us-east-2`; it just sets `CDN_BASE_URL = https://assets.<domain>` on the EB env by convention. No cross-region references are needed because the hostname is conventionally derived from `domain`.
 
-- `s3.Bucket` (private, blockPublicAccess all, encryption SSE-S3, lifecycle 90d on noncurrent).
-- `cloudfront.Distribution` with `S3BucketOrigin.withOriginAccessControl(bucket)`, custom domain via the existing `Certificates` construct (extend it to include `assets.<domain>`), default cache policy = `CACHING_OPTIMIZED`, response headers policy adding `Strict-Transport-Security` + CORS.
-- Two cache behaviors:
-  - `js/*`, `css/*.[a-f0-9]*.css` → long-lived policy.
-  - `*` → standard policy with shorter TTL.
-- Output the distribution domain so the GitHub Actions deploy job can pass `CDN_BASE_URL` into the Beanstalk env.
-- Wire into `cubecobra-stack.ts` next to the existing `S3Buckets` construct; add an env var to the EB app:
-  ```ts
-  serverEnvVars.CDN_BASE_URL = `https://assets.${params.domain}`;
-  ```
+`packages/cdk/lib/assets-distribution.ts` (construct):
 
-Route53 entry for `assets.<domain>` pointing alias → CloudFront (`packages/cdk/lib/route53.ts` is already there to extend).
+- `s3.Bucket` (private, blockPublicAccess all, encryption SSE-S3, retain on stack delete, lifecycle 90d on `js/` keys).
+- ACM `Certificate` for `assets.<domain>` validated via DNS against the apex hosted zone.
+- `cloudfront.Distribution` with `S3BucketOrigin.withOriginAccessControl(bucket)`, custom cache behaviors for `js/*` and `css/*`, response headers policy for HSTS + CORS.
+- Route53 A and AAAA aliases pointing at the distribution (`Z2FDTNDATAQYW2` is the canonical CloudFront zone ID).
+- CloudFormation outputs (`CubeCobra-<env>-AssetsBucketName`, `CubeCobra-<env>-AssetsDistributionId`, `CubeCobra-<env>-AssetsBaseUrl`) for the pipeline to read.
 
-IAM: GitHub Actions deploy role gains `s3:PutObject`/`s3:GetObject` on the assets bucket and `cloudfront:CreateInvalidation` on the distribution (for unhashed-path invalidation when we update images).
+`packages/cdk/lib/assets-stack.ts` (new): thin Stack wrapper around the construct, deployed independently in `us-east-1`.
+
+`packages/cdk/lib/cubecobra-stack.ts`: just sets `serverEnvVars.CDN_BASE_URL = https://assets.${params.domain}`. No cross-region machinery.
+
+`packages/cdk/app/infra.ts`: instantiates `AssetsStack` (us-east-1) before `CubeCobraStack` (us-east-2) for non-local environments.
+
+`packages/cdk/lib/deployment-pipeline.ts`: each CodeBuild buildSpec orchestrates:
+
+1. `cdk deploy CubeCobraAssets<Env>Stack` (creates/updates assets infra in us-east-1).
+2. `aws cloudformation describe-stacks` to read the bucket name and distribution ID exports into env vars.
+3. `npm run upload-assets` (now the bucket is guaranteed to exist).
+4. `cdk deploy CubeCobra<Env>Stack` (rolls EB; new instances find their hashed bundles already on CloudFront).
+5. `npm run invalidate-cdn` (busts the unhashed paths — manifest, /content/*, css/stylesheet.css).
+
+The CodeBuild role gets `acm:*`, `cloudfront:*`, `route53:*` on top of the existing CDK deploy permissions.
 
 ## 4. Dev (local) flow
 

@@ -1,5 +1,5 @@
 import { CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
-import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
+import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
 import {
   AllowedMethods,
   CachePolicy,
@@ -20,14 +20,6 @@ export interface AssetsDistributionProps {
   environmentName: string;
   /** Apex domain for the environment (e.g. cubecobra.com). The asset hostname is `assets.<domain>`. */
   domain: string;
-  /**
-   * ARN of an ACM certificate in us-east-1 covering `assets.<domain>`.
-   * CloudFront requires the certificate to live in us-east-1 — provision it
-   * once (manually or via a us-east-1-only stack) and pass the ARN through
-   * SSM/context. This avoids forcing the whole stack to use cross-region
-   * references for a single edge-managed cert.
-   */
-  certificateArn: string;
 }
 
 /**
@@ -78,7 +70,16 @@ export class AssetsDistribution extends Construct {
       ],
     });
 
-    const certificate = Certificate.fromCertificateArn(this, 'AssetsCertificate', props.certificateArn);
+    // Cert is provisioned in this same construct because the AssetsStack runs
+    // in us-east-1 (CloudFront's required region for ACM certs on custom
+    // domains). DNS validation against the public hosted zone for the apex.
+    const hostedZoneDomain = props.domain.split('.').slice(-2).join('.');
+    const hostedZone = HostedZone.fromLookup(this, 'AssetsHostedZone', { domainName: hostedZoneDomain });
+
+    const certificate = new Certificate(this, 'AssetsCertificate', {
+      domainName: this.assetDomain,
+      validation: CertificateValidation.fromDns(hostedZone),
+    });
 
     const origin = S3BucketOrigin.withOriginAccessControl(this.bucket);
 
@@ -149,8 +150,6 @@ export class AssetsDistribution extends Construct {
 
     // Route53 alias for assets.<domain> → CloudFront. Z2FDTNDATAQYW2 is the
     // canonical zone ID for all CloudFront distributions.
-    const hostedZoneDomain = props.domain.split('.').slice(-2).join('.');
-    const hostedZone = HostedZone.fromLookup(this, 'AssetsHostedZone', { domainName: hostedZoneDomain });
     new CfnRecordSet(this, 'AssetsAliasRecord', {
       hostedZoneId: hostedZone.hostedZoneId,
       name: this.assetDomain,

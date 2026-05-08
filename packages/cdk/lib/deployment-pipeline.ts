@@ -113,10 +113,32 @@ export class DeploymentPipeline extends Construct {
           },
           build: {
             commands: [
+              // Deploy the assets stack first (us-east-1). Idempotent — only
+              // creates resources on first deploy; subsequent runs are
+              // typically no-ops for cert/bucket/distribution.
+              'echo Deploying assets stack to us-east-1...',
+              'cd packages/cdk',
+              'npx cdk deploy CubeCobraAssetsBetaStack --require-approval never --context environment=beta --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              'cd ../..',
+              // Pull the bucket name + distribution ID surfaced by the stack
+              // so the upload + invalidate scripts can run unattended.
+              'export CUBECOBRA_ASSETS_BUCKET=$(aws cloudformation describe-stacks --region us-east-1 --stack-name CubeCobraAssetsBetaStack --query "Stacks[0].Outputs[?ExportName==\\`CubeCobra-beta-AssetsBucketName\\`].OutputValue | [0]" --output text)',
+              'export CDN_DISTRIBUTION_ID=$(aws cloudformation describe-stacks --region us-east-1 --stack-name CubeCobraAssetsBetaStack --query "Stacks[0].Outputs[?ExportName==\\`CubeCobra-beta-AssetsDistributionId\\`].OutputValue | [0]" --output text)',
+              'echo Assets bucket: $CUBECOBRA_ASSETS_BUCKET',
+              'echo CDN distribution: $CDN_DISTRIBUTION_ID',
+              // Upload static assets BEFORE the main stack rolls EB so new
+              // instances can resolve their hashed bundle URLs immediately.
+              'echo Uploading static assets to S3...',
+              'npm run upload-assets --workspace=packages/scripts',
               'echo Deploying to Beta environment...',
               'cd packages/cdk',
-              'npx cdk deploy --require-approval never --context environment=beta --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              'npx cdk deploy CubeCobraBetaStack --require-approval never --context environment=beta --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION',
               'cd ../..',
+              // Invalidate unhashed paths once the new EB version is live —
+              // hashed bundles never need invalidation; only manifest.json,
+              // /content/*, and the legacy stylesheet path do.
+              'echo Invalidating CloudFront cache...',
+              'npm run invalidate-cdn --workspace=packages/scripts',
               'echo Building and pushing jobs Docker image...',
               'export JOBS_ECR_REPO=$(aws cloudformation describe-stacks --stack-name CubeCobraBetaStack --query "Stacks[0].Outputs[?contains(OutputKey, \\`JobsEcr\\`) && contains(OutputKey, \\`RepositoryUri\\`)].OutputValue | [0]" --output text)',
               'echo Jobs ECR Repository: $JOBS_ECR_REPO',
@@ -191,7 +213,18 @@ export class DeploymentPipeline extends Construct {
     // Grant permissions to deploy
     betaDeployProject.addToRolePolicy(
       new iam.PolicyStatement({
-        actions: ['sts:AssumeRole', 'iam:PassRole', 'cloudformation:*', 'ec2:*', 'elasticbeanstalk:*', 's3:*'],
+        actions: [
+          'sts:AssumeRole',
+          'iam:PassRole',
+          'cloudformation:*',
+          'ec2:*',
+          'elasticbeanstalk:*',
+          's3:*',
+          // Assets stack provisions these in us-east-1; CodeBuild deploys it.
+          'acm:*',
+          'cloudfront:*',
+          'route53:*',
+        ],
         resources: ['*'],
       }),
     );
@@ -330,10 +363,22 @@ export class DeploymentPipeline extends Construct {
           },
           build: {
             commands: [
+              'echo Deploying assets stack to us-east-1...',
+              'cd packages/cdk',
+              'npx cdk deploy CubeCobraAssetsProdStack --require-approval never --context environment=production --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              'cd ../..',
+              'export CUBECOBRA_ASSETS_BUCKET=$(aws cloudformation describe-stacks --region us-east-1 --stack-name CubeCobraAssetsProdStack --query "Stacks[0].Outputs[?ExportName==\\`CubeCobra-production-AssetsBucketName\\`].OutputValue | [0]" --output text)',
+              'export CDN_DISTRIBUTION_ID=$(aws cloudformation describe-stacks --region us-east-1 --stack-name CubeCobraAssetsProdStack --query "Stacks[0].Outputs[?ExportName==\\`CubeCobra-production-AssetsDistributionId\\`].OutputValue | [0]" --output text)',
+              'echo Assets bucket: $CUBECOBRA_ASSETS_BUCKET',
+              'echo CDN distribution: $CDN_DISTRIBUTION_ID',
+              'echo Uploading static assets to S3...',
+              'npm run upload-assets --workspace=packages/scripts',
               'echo Deploying to Production environment...',
               'cd packages/cdk',
-              'npx cdk deploy --require-approval never --context environment=production --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              'npx cdk deploy CubeCobraProdStack --require-approval never --context environment=production --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION',
               'cd ../..',
+              'echo Invalidating CloudFront cache...',
+              'npm run invalidate-cdn --workspace=packages/scripts',
               'echo Building and pushing jobs Docker image...',
               'export JOBS_ECR_REPO=$(aws cloudformation describe-stacks --stack-name CubeCobraProdStack --query "Stacks[0].Outputs[?contains(OutputKey, \\`JobsEcr\\`) && contains(OutputKey, \\`RepositoryUri\\`)].OutputValue | [0]" --output text)',
               'echo Jobs ECR Repository: $JOBS_ECR_REPO',
@@ -405,7 +450,18 @@ export class DeploymentPipeline extends Construct {
     // Grant permissions to deploy
     prodDeployProject.addToRolePolicy(
       new iam.PolicyStatement({
-        actions: ['sts:AssumeRole', 'iam:PassRole', 'cloudformation:*', 'ec2:*', 'elasticbeanstalk:*', 's3:*'],
+        actions: [
+          'sts:AssumeRole',
+          'iam:PassRole',
+          'cloudformation:*',
+          'ec2:*',
+          'elasticbeanstalk:*',
+          's3:*',
+          // Assets stack provisions these in us-east-1; CodeBuild deploys it.
+          'acm:*',
+          'cloudfront:*',
+          'route53:*',
+        ],
         resources: ['*'],
       }),
     );
