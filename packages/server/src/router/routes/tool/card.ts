@@ -1,5 +1,5 @@
 import cardutil from '@utils/cardutil';
-import { PrintingPreference } from '@utils/datatypes/Card';
+import { CardDetails, PrintingPreference } from '@utils/datatypes/Card';
 import { Period } from '@utils/datatypes/History';
 import { cardHistoryDao } from 'dynamo/daos';
 import carddb, {
@@ -17,6 +17,25 @@ import { getBaseUrl } from 'serverutils/util';
 import { validate as uuidValidate } from 'uuid';
 
 import { Request, Response } from '../../../types/express';
+
+// Strip unnecssary Card fields that are not used by this view.
+const trimRelatedCards = (related: Record<string, CardDetails[]>): Record<string, Partial<CardDetails>[]> => {
+  const trimCard = (card: CardDetails): Partial<CardDetails> => ({
+    scryfall_id: card.scryfall_id,
+    name: card.name,
+    image_normal: card.image_normal,
+    image_flip: card.image_flip,
+    image_small: card.image_small,
+    type: card.type,
+    cmc: card.cmc,
+    colorcategory: card.colorcategory,
+    rarity: card.rarity,
+  });
+
+  return Object.fromEntries(
+    Object.entries(related).map(([key, cards]) => [key, cards.map(trimCard)]),
+  );
+};
 
 const chooseIdFromInput = (req: Request): string => {
   //ID is scryfall id or a card name (eg. via Autocomplete hover)
@@ -100,9 +119,9 @@ export const getCardHandler = async (req: Request, res: Response) => {
         history: history.items ? history.items.reverse() : [],
         lastKey: history.lastKey,
         versions,
-        draftedWith: related.draftedWith,
-        cubedWith: related.cubedWith,
-        synergistic: related.synergistic,
+        draftedWith: related.draftedWith ? trimRelatedCards(related.draftedWith) : {},
+        cubedWith: related.cubedWith ? trimRelatedCards(related.cubedWith) : {},
+        synergistic: related.synergistic ? trimRelatedCards(related.synergistic) : {},
       },
       {
         title: `${card.name}`,

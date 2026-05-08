@@ -83,6 +83,7 @@ export const getCardJsonHandler = async (req: Request, res: Response) => {
       ? oracleVersions.filter((cid) => cid !== card.scryfall_id).map((cardid) => cardFromId(cardid))
       : [];
 
+    // TODO: Consider adding a query param to allow consumers to opt in to a full vs trimmed response.
     return res.json({
       card,
       history: history.items ? history.items.reverse() : [],
