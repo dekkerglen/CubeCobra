@@ -4,7 +4,7 @@ import { collaboratorIndexDao, cubeDao, feedDao } from 'dynamo/daos';
 import { articleDao, draftDao, episodeDao, videoDao } from 'dynamo/daos';
 import { getDailyP1P1 } from 'serverutils/dailyP1P1';
 import { getFeaturedCubes } from 'serverutils/featuredQueue';
-import { handleRouteError, redirect, render } from 'serverutils/render';
+import { getCubesSortValues, handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../types/express';
 import { csrfProtection, ensureAuth } from '../middleware';
@@ -61,6 +61,9 @@ const dashboardHandler = async (req: Request, res: Response) => {
     const collaboratingCubeIds = await collaboratorIndexDao.getCubeIdsForUser(req.user.id);
     const collaboratingCubes = collaboratingCubeIds.length > 0 ? await cubeDao.batchGet(collaboratingCubeIds) : [];
 
+    const { sort, ascending } = getCubesSortValues(req.user);
+    const userCubes = await cubeDao.queryByOwner(req.user.id, sort, ascending, undefined, 36);
+
     return render(req, res, 'DashboardPage', {
       posts: filteredPosts.map((item: any) => item.document),
       lastKey: posts.lastKey,
@@ -70,6 +73,7 @@ const dashboardHandler = async (req: Request, res: Response) => {
       featured,
       dailyP1P1,
       collaboratingCubes,
+      cubes: userCubes.items,
     });
   } catch (err) {
     return handleRouteError(req, res, err, '/landing');

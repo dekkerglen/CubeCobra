@@ -33,6 +33,7 @@ interface DashboardPageProps {
   content: any[];
   featured?: Cube[];
   collaboratingCubes?: Cube[];
+  cubes?: Cube[];
   dailyP1P1?: {
     pack: P1P1Pack;
     cube: Cube;
@@ -52,10 +53,10 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   content,
   featured = [],
   collaboratingCubes = [],
+  cubes = [],
   dailyP1P1,
 }) => {
   const user = useContext(UserContext);
-  const cubes = user?.cubes || [];
 
   // where featured cubes are positioned on the screen
   let featuredPosition;

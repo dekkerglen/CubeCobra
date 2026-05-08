@@ -45,6 +45,12 @@ export const getCubesSortValues = (user: User): { sort: SortOrder; ascending: bo
   }
 };
 
+const trimCube = (cube: CubeType): Pick<CubeType, 'id' | 'shortId' | 'name'> => ({
+  id: cube.id,
+  shortId: cube.shortId,
+  name: cube.name,
+});
+
 const getCubes = async (req: Request, callback: (cubes: CubeType[]) => void): Promise<void> => {
   if (!req.user) {
     callback([]);
@@ -106,8 +112,8 @@ interface ReactProps {
     theme?: string;
     hideFeatured?: boolean;
     hideTagColors?: boolean;
-    cubes: CubeType[];
-    collaboratingCubes?: CubeType[];
+    cubes: Pick<CubeType, 'id' | 'shortId' | 'name'>[];
+    collaboratingCubes?: Pick<CubeType, 'id' | 'shortId' | 'name'>[];
     notifications?: any[];
     defaultPrinting?: string;
     gridTightness?: string;
@@ -150,8 +156,8 @@ const render = (
         theme: req.user.theme,
         hideFeatured: req.user.hideFeatured,
         hideTagColors: req.user.hideTagColors,
-        cubes,
-        collaboratingCubes,
+        cubes: cubes.map(trimCube),
+        collaboratingCubes: collaboratingCubes.map(trimCube),
         notifications: notifications.items,
         defaultPrinting: req.user.defaultPrinting,
         gridTightness: req.user.gridTightness,
