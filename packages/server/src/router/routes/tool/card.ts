@@ -32,9 +32,7 @@ const trimRelatedCards = (related: Record<string, CardDetails[]>): Record<string
     rarity: card.rarity,
   });
 
-  return Object.fromEntries(
-    Object.entries(related).map(([key, cards]) => [key, cards.map(trimCard)]),
-  );
+  return Object.fromEntries(Object.entries(related).map(([key, cards]) => [key, cards.map(trimCard)]));
 };
 
 const chooseIdFromInput = (req: Request): string => {
