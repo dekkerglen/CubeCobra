@@ -252,7 +252,11 @@ const Navbar: React.FC<NavbarProps> = () => {
       <ResponsiveDiv baseVisible sm className="w-full max-w-full">
         <Flexbox justify="between" alignItems="center" direction="row">
           <a href="/">
-            <img className="h-10" src={cdnUrl('/content/sticker.png')} alt="Cube Cobra: a site for Magic: the Gathering Cubing" />
+            <img
+              className="h-10"
+              src={cdnUrl('/content/sticker.png')}
+              alt="Cube Cobra: a site for Magic: the Gathering Cubing"
+            />
           </a>
           {mobileNavIcons}
         </Flexbox>

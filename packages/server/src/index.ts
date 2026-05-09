@@ -3,6 +3,7 @@ import dotenv from 'dotenv';
 import 'module-alias/register';
 dotenv.config();
 
+import { cdnUrl } from '@utils/cdnUrl';
 import { UserRoles } from '@utils/datatypes/User';
 import bodyParser from 'body-parser';
 import compression from 'compression';
@@ -18,8 +19,6 @@ import path from 'path';
 import { v4 as uuid } from 'uuid';
 
 import './types/express'; // Import the express type extensions
-
-import { cdnUrl } from '@utils/cdnUrl';
 
 import configurePassport from './config/passport';
 import dynamoService from './dynamo/client';

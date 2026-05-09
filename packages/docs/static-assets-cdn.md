@@ -36,14 +36,14 @@ Critical gotcha — **the `/content/` prefix is overloaded**. It's both static i
 
 ### Components
 
-| Piece | Choice | Why |
-| --- | --- | --- |
-| Bucket | One per stage: `cubecobra-assets-{dev,beta,prod}`, private, OAC-only access from CloudFront. | Per-stage isolation matches existing `dataBucket`/`appBucket` pattern in `packages/cdk/config.ts`. |
-| Distribution | One per stage, custom domain `assets.cubecobra.com` (and `assets.cubecobradev.com`), ACM cert in us-east-1, HTTP/2+HTTP/3, Brotli + gzip. | Distinct hostname avoids the `/content/*` namespace collision and lets us set permissive caching without touching app routes. |
-| Origin | S3 with Origin Access Control. | Bucket stays private; only CloudFront can read. |
-| Cache policy | Hashed paths (`*.[hash].bundle.js`, `*.[hash].css`) → `Cache-Control: public, max-age=31536000, immutable`. Unhashed paths (`/content/*`, manifest, ico) → `max-age=86400, stale-while-revalidate=604800`. | Hashed = safe forever; unhashed = day-level staleness is fine, SWR keeps it warm. |
-| CORS | Allow `cubecobra.com`/`cubecobradev.com` for fonts/JS modules. | Otherwise font + module loading may fail under strict CORS. |
-| Layout | Flat content-addressed: never overwrite a hashed filename, just put new ones alongside. Old replicas keep working during a rolling deploy. Lifecycle rule: expire objects untouched for 90 days. | No coordination needed between deploy and EB rollover. |
+| Piece        | Choice                                                                                                                                                                                                     | Why                                                                                                                           |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| Bucket       | One per stage: `cubecobra-assets-{dev,beta,prod}`, private, OAC-only access from CloudFront.                                                                                                               | Per-stage isolation matches existing `dataBucket`/`appBucket` pattern in `packages/cdk/config.ts`.                            |
+| Distribution | One per stage, custom domain `assets.cubecobra.com` (and `assets.cubecobradev.com`), ACM cert in us-east-1, HTTP/2+HTTP/3, Brotli + gzip.                                                                  | Distinct hostname avoids the `/content/*` namespace collision and lets us set permissive caching without touching app routes. |
+| Origin       | S3 with Origin Access Control.                                                                                                                                                                             | Bucket stays private; only CloudFront can read.                                                                               |
+| Cache policy | Hashed paths (`*.[hash].bundle.js`, `*.[hash].css`) → `Cache-Control: public, max-age=31536000, immutable`. Unhashed paths (`/content/*`, manifest, ico) → `max-age=86400, stale-while-revalidate=604800`. | Hashed = safe forever; unhashed = day-level staleness is fine, SWR keeps it warm.                                             |
+| CORS         | Allow `cubecobra.com`/`cubecobradev.com` for fonts/JS modules.                                                                                                                                             | Otherwise font + module loading may fail under strict CORS.                                                                   |
+| Layout       | Flat content-addressed: never overwrite a hashed filename, just put new ones alongside. Old replicas keep working during a rolling deploy. Lifecycle rule: expire objects untouched for 90 days.           | No coordination needed between deploy and EB rollover.                                                                        |
 
 ### Server-side URL helper
 
@@ -80,7 +80,7 @@ link(rel='stylesheet' href=cdnUrl(`/css/stylesheet.css?v=${cssVersion}`))
 
 ## 3. Deploy flow
 
-The current `npm run publish` just zips the server and uploads it to the app bucket as `builds/<version>.zip`. We add a sibling step that uploads static assets to the assets bucket *before* the EB application version is activated. The sequence has to be: **assets first, then server** — so when the new server tries to reference a new hashed bundle, it's already on CloudFront.
+The current `npm run publish` just zips the server and uploads it to the app bucket as `builds/<version>.zip`. We add a sibling step that uploads static assets to the assets bucket _before_ the EB application version is activated. The sequence has to be: **assets first, then server** — so when the new server tries to reference a new hashed bundle, it's already on CloudFront.
 
 ### `npm run publish` becomes
 
@@ -126,7 +126,7 @@ Recommend **A**. It's already working, and option B doesn't buy us anything that
 2. `aws cloudformation describe-stacks` to read the bucket name and distribution ID exports into env vars.
 3. `npm run upload-assets` (now the bucket is guaranteed to exist).
 4. `cdk deploy CubeCobra<Env>Stack` (rolls EB; new instances find their hashed bundles already on CloudFront).
-5. `npm run invalidate-cdn` (busts the unhashed paths — manifest, /content/*, css/stylesheet.css).
+5. `npm run invalidate-cdn` (busts the unhashed paths — manifest, /content/\*, css/stylesheet.css).
 
 The CodeBuild role gets `acm:*`, `cloudfront:*`, `route53:*` on top of the existing CDK deploy permissions.
 
@@ -188,7 +188,7 @@ Concrete files to change:
 
 - **Hot-link breakage**: third parties that hot-link `https://cubecobra.com/content/banner.png` (the patron banner string in `main.pug` already does this) will keep working as long as the Express `/content` fallback stays. After we remove it, set up a CloudFront behavior on the apex domain that 301s `/content/*.{png,jpg,ico,svg}` to `assets.cubecobra.com` so old links don't 404.
 - **Email images**: emails are read days/weeks after they're sent. Use absolute URLs (`https://assets.cubecobra.com/content/banner.png`) — never relative — or you'll break in clients like Gmail's image proxy.
-- **Hashed-CSS problem**: today `stylesheet.css` is *not* hashed; it's invalidated via `?v=${GIT_COMMIT}` query string. CloudFront default caches by path only — make sure the cache policy includes the query string in the cache key, or move stylesheet.css to be content-hashed by Tailwind/PostCSS like the JS bundles. The latter is cleaner.
+- **Hashed-CSS problem**: today `stylesheet.css` is _not_ hashed; it's invalidated via `?v=${GIT_COMMIT}` query string. CloudFront default caches by path only — make sure the cache policy includes the query string in the cache key, or move stylesheet.css to be content-hashed by Tailwind/PostCSS like the JS bundles. The latter is cleaner.
 - **NitroPay banner**: the inlined ad-block detector in `main.pug` references `https://cubecobradev.com/content/banner.png` literally. That string survives the CDN move (it's an absolute URL on the apex), and we cover it via the redirect mentioned above. Worth searching for other absolute hardcoded asset URLs.
 - **Deploy ordering**: assets must reach S3 before the EB version is promoted. If we ever do an emergency rollback by re-promoting an old EB version, the old hashed filenames must still be in S3 — that's why we never delete on sync, only via the 90d lifecycle.
 - **Bundle externals**: webpack `externals` already pulls React/ReactDOM from `cdn.jsdelivr.net`. No change needed; just noting that we're already CDN-dependent and CloudFront just adds our own origin.

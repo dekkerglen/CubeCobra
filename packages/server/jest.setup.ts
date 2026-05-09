@@ -52,9 +52,9 @@ const mockCreateClient = jest.fn(() => mockClient);
 
 // Define to make typescript happy
 declare global {
-  // eslint-disable-next-line no-var
+   
   var mockDynamoClient: MockDynamoClient;
-  // eslint-disable-next-line no-var
+   
   var mockDynamoCreateClient: () => MockDynamoClient;
 }
 
