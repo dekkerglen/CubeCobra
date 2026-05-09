@@ -21,11 +21,16 @@ const IMMUTABLE = 'public, max-age=31536000, immutable';
 const SHORT = 'public, max-age=86400, stale-while-revalidate=604800';
 const NO_CACHE = 'public, max-age=60, must-revalidate';
 
+// The assets bucket lives in the AssetsStack, which is pinned to us-east-1
+// (CloudFront's required region for ACM certs on custom domains — see
+// packages/cdk/app/infra.ts). CodeBuild sets AWS_DEFAULT_REGION to us-east-2
+// for the main stack, so we can't fall back to that here or S3 returns a
+// PermanentRedirect.
 const s3 = new S3Client({
   endpoint: process.env.AWS_ENDPOINT || undefined,
   forcePathStyle: !!process.env.AWS_ENDPOINT,
   credentials: fromNodeProviderChain(),
-  region: process.env.AWS_REGION || 'us-east-2',
+  region: process.env.CUBECOBRA_ASSETS_REGION || 'us-east-1',
 });
 
 const bucket = process.env.CUBECOBRA_ASSETS_BUCKET;
