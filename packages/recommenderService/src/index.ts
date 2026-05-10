@@ -113,8 +113,14 @@ async function startServer() {
       modelDirExists && requiredModels.every((model) => fs.existsSync(path.join(modelDir, model, 'model.json')));
 
     if (!modelsExist) {
+      const dataBucket = process.env.DATA_BUCKET || 'cubecobra-public';
       console.log('Models not found locally. Downloading ML models from S3...');
-      await downloadModelsFromS3('', process.env.DATA_BUCKET || 'cubecobra-data');
+      if (dataBucket !== 'cubecobra-public') {
+        console.log(
+          `Using private bucket "${dataBucket}" — make sure AWS credentials are configured, or set DATA_BUCKET=cubecobra-public in .env for local dev.`,
+        );
+      }
+      await downloadModelsFromS3('', dataBucket);
     } else {
       console.log('Using existing local ML models.');
     }
@@ -126,7 +132,7 @@ async function startServer() {
 
     if (!cardFilesExist) {
       console.log('Card data files not found locally. Downloading from S3...');
-      await updateCardbase('private', process.env.DATA_BUCKET || 'cubecobra-data');
+      await updateCardbase('private', process.env.DATA_BUCKET || 'cubecobra-public');
     } else {
       console.log('Using existing local card data files.');
     }
