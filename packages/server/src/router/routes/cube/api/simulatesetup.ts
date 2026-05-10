@@ -1,3 +1,8 @@
+// TODO(otags): when otag/atag support is restored, re-add `import catalog from 'serverutils/cardCatalog'`
+// and restore the oracle tag lookup in buildCardMeta:
+//   const oracleIndex = catalog.oracleToIndex[oracleId];
+//   const tagIndices = oracleIndex !== undefined ? catalog.oracleTagDict[oracleIndex] : undefined;
+//   oracleTags: tagIndices?.length ? tagIndices.map(i => catalog.oracleTagNames[i]).filter(Boolean) : undefined,
 import { isManaFixingLand } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import { BasicLandInfo, CardMeta, SimulationSetupResponse } from '@utils/datatypes/SimulationReport';

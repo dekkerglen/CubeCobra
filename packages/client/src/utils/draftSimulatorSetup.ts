@@ -1,3 +1,8 @@
+// TODO(otags): when otag/atag support is restored in @utils/cardutil, re-add:
+//   import { cardOracleTags, configureTagData, getTagData, isManaFixingLand } from '@utils/cardutil';
+// and restore ensureClientTagData() + the TagApiResponse interface + the tagDataPromise cache +
+// the oracleTags: cardOracleTags(card) line in buildCardMeta() +
+// calls to ensureClientTagData(request) in prefetchClientSimulationResources and buildClientSimulationSetup.
 import { isManaFixingLand } from '@utils/cardutil';
 import type Card from '@utils/datatypes/Card';
 import type Cube from '@utils/datatypes/Cube';
