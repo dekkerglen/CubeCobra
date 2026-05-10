@@ -14,14 +14,15 @@
  * draft simulator path does not pay its download cost unless recommendations
  * are actually requested.
  *
- * Models are fetched through /api/mlmodel/* (a thin S3 proxy) and cached by
+ * Models are fetched directly from the CDN (/model/xyz/*) and cached by
  * the browser via normal HTTP caching. TF.js itself is dynamically imported
  * to keep it out of the main bundle.
  */
 
 import { BasicLandInfo } from '@utils/datatypes/SimulationReport';
+import { cdnUrl } from '@utils/cdnUrl';
 
-const MODEL_BASE = '/api/mlmodel';
+const MODEL_BASE = cdnUrl('/model/xyz');
 
 let tf: typeof import('@tensorflow/tfjs') | null = null;
 
@@ -217,14 +218,6 @@ function isWebGLError(err: unknown): boolean {
 const WEBGL_CHUNK_SIZE = 32;
 
 /**
- * Resolve the ML oracle ID for a given oracle ID, applying the remapping for
- * cards not in the training vocabulary (e.g. Black Lotus → most similar known card).
- */
-function mlOracle(oracle: string, remapping?: Record<string, string>): string {
-  return remapping?.[oracle] ?? oracle;
-}
-
-/**
  * One-hot encode pools, forward pass through encoder + decoder, return raw logits.
  * pools[i] = oracle IDs whose bits are set to 1 in the input row.
  * remapping maps original oracle IDs to their ML-vocab equivalents for unknown cards.
@@ -289,16 +282,6 @@ async function forwardPass(
       }
       throw err;
     }
-
-    const inputTensor = tf!.tensor2d(chunkData, [chunkSize, numOracles]);
-    const encoded = encoder.predict(inputTensor) as import('@tensorflow/tfjs').Tensor;
-    inputTensor.dispose();
-    const logitsTensor = decoder.predict(encoded) as import('@tensorflow/tfjs').Tensor;
-    encoded.dispose();
-    const chunkLogits = (await logitsTensor.data()) as Float32Array;
-    logitsTensor.dispose();
-
-    out.set(chunkLogits, start * numOracles);
   }
 
   return out;
@@ -405,33 +388,6 @@ export function reshapeEmbeddings(flat: Float32Array, n: number): number[][] {
     result.push(row);
   }
   return result;
-}
-
-/**
- * Build an oracle remapping from CardMeta: maps original oracle ID → ML oracle ID
- * for cards whose mlOracleId differs (i.e. not in training vocab).
- */
-export function buildOracleRemapping(cardMeta: Record<string, { mlOracleId?: string }>): Record<string, string> {
-  const remapping: Record<string, string> = {};
-  for (const [oracle, meta] of Object.entries(cardMeta)) {
-    if (meta.mlOracleId) remapping[oracle] = meta.mlOracleId;
-  }
-  return remapping;
-}
-
-export function buildSeatMlMaps(poolOracles: string[], remapping?: Record<string, string>): MlSeatMaps {
-  const toMl: Record<string, string> = {};
-  const fromMl: Record<string, string[]> = {};
-
-  for (const oracle of poolOracles) {
-    if (toMl[oracle] !== undefined) continue;
-    const mapped = mlOracle(oracle, remapping);
-    toMl[oracle] = mapped;
-    if (!fromMl[mapped]) fromMl[mapped] = [];
-    if (!fromMl[mapped]!.includes(oracle)) fromMl[mapped]!.push(oracle);
-  }
-
-  return { toMl, fromMl };
 }
 
 // ---------------------------------------------------------------------------
