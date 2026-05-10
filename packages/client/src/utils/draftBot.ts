@@ -14,15 +14,14 @@
  * draft simulator path does not pay its download cost unless recommendations
  * are actually requested.
  *
- * Models are fetched directly from the CDN (/model/xyz/*) and cached by
+ * Models are fetched through /api/mlmodel/* (a thin S3 proxy) and cached by
  * the browser via normal HTTP caching. TF.js itself is dynamically imported
  * to keep it out of the main bundle.
  */
 
 import { BasicLandInfo } from '@utils/datatypes/SimulationReport';
-import { cdnUrl } from '@utils/cdnUrl';
 
-const MODEL_BASE = cdnUrl('/model/xyz');
+const MODEL_BASE = '/api/mlmodel';
 
 let tf: typeof import('@tensorflow/tfjs') | null = null;
 
