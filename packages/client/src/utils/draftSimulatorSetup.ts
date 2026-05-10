@@ -1,4 +1,4 @@
-import { cardOracleTags, configureTagData, getTagData, isManaFixingLand } from '@utils/cardutil';
+import { isManaFixingLand } from '@utils/cardutil';
 import type Card from '@utils/datatypes/Card';
 import type Cube from '@utils/datatypes/Cube';
 import type { CubeCards } from '@utils/datatypes/Cube';
@@ -16,21 +16,11 @@ interface CubeWithCards extends Cube {
   cards: CubeCards;
 }
 
-interface TagApiResponse {
-  oracleTagDict: Record<number, number[]>;
-  oracleTagNames: string[];
-  illustrationTagDict: Record<number, number[]>;
-  illustrationTagNames: string[];
-  oracleToIndex: Record<string, number>;
-  scryfallIdToIndex: Record<string, number>;
-}
-
 interface MlSubstitutionResponse {
   remapping?: Record<string, string>;
   success?: boolean;
 }
 
-let tagDataPromise: Promise<void> | null = null;
 let mlOracleRemappingPromise: Promise<Record<string, string>> | null = null;
 const cubeFetchPromises = new Map<string, Promise<CubeWithCards>>();
 
@@ -103,7 +93,7 @@ function buildCardMeta(cards: Card[]): Record<string, CardMeta> {
         producedMana: details.produced_mana ?? [],
         parsedCost: details.parsed_cost ?? [],
         tags: card.tags && card.tags.length > 0 ? [...card.tags] : undefined,
-        oracleTags: cardOracleTags(card),
+
         isManaFixingLand: isManaFixingLand(details) || undefined,
       };
     } else if (card.tags && card.tags.length > 0) {
@@ -136,33 +126,6 @@ async function fetchMlOracleRemapping(
   return mlOracleRemappingPromise;
 }
 
-export async function ensureClientTagData(
-  request: (input: RequestInfo, init?: ExtendedRequestInit) => Promise<Response>,
-): Promise<void> {
-  if (getTagData()) return;
-  if (!tagDataPromise) {
-    tagDataPromise = (async () => {
-      const response = await request('/tool/api/tags');
-      if (!response.ok) {
-        throw new ClientSimulationSetupError(`Failed to load tag data: ${response.status}`);
-      }
-      const data = (await response.json()) as TagApiResponse;
-      configureTagData({
-        oracleTagDict: data.oracleTagDict,
-        oracleTagNames: data.oracleTagNames,
-        illustrationTagDict: data.illustrationTagDict,
-        illustrationTagNames: data.illustrationTagNames,
-        oracleToIndex: data.oracleToIndex,
-        scryfallIdToIndex: data.scryfallIdToIndex,
-      });
-    })().catch((err) => {
-      tagDataPromise = null;
-      throw err;
-    });
-  }
-  await tagDataPromise;
-}
-
 export async function fetchCubeForClientSimulation(
   request: (input: RequestInfo, init?: ExtendedRequestInit) => Promise<Response>,
   cubeId: string,
@@ -190,11 +153,7 @@ export async function prefetchClientSimulationResources(
   cubeId: string,
 ): Promise<void> {
   try {
-    await Promise.all([
-      fetchCubeForClientSimulation(request, cubeId),
-      ensureClientTagData(request),
-      fetchMlOracleRemapping(request),
-    ]);
+    await Promise.all([fetchCubeForClientSimulation(request, cubeId), fetchMlOracleRemapping(request)]);
   } catch (err) {
     console.warn('Draft simulator setup prefetch failed:', err);
   }
@@ -208,8 +167,6 @@ export async function buildClientSimulationSetup(
   numSeats: number,
   formatId: number,
 ): Promise<SimulationSetupResponse> {
-  await ensureClientTagData(request);
-
   const boardCards = normalizeBoardCards(cubeCards);
   const resolvedFormatId = formatId ?? (cube.defaultFormat === undefined ? -1 : cube.defaultFormat);
   const format = getDraftFormat({ id: resolvedFormatId, packs: 3, players: numSeats, cards: 15 }, cube);
