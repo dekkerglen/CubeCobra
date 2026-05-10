@@ -522,6 +522,7 @@ export async function localBatchDraftRanked(
   inputs: { pack: string[]; pool: string[] }[],
   remapping?: Record<string, string>,
   chunkSize?: number,
+  cubeCtx?: Float32Array,
 ): Promise<RatedCard[][]> {
   if (!draftBotLoaded || !tf || !encoder || !draftDecoder || inputs.length === 0) {
     return inputs.map(() => []);
@@ -531,6 +532,7 @@ export async function localBatchDraftRanked(
     draftDecoder,
     remapping,
     chunkSize,
+    cubeCtx,
   );
   return inputs.map(({ pack }, i) => {
     const rowBase = i * numOracles;
@@ -783,6 +785,9 @@ export async function localBatchDeckbuild(
     };
   });
 
+  // Cube context for draft_decoder in Phase 2 (pool[128] ⊕ cube_ctx[32] = 160)
+  const cubeCtx = await computeCubeContext(Object.keys(entries[0]!.cardMeta), sharedRemapping);
+
   // Phase 1: seed first 10 cards via deck_build_decoder
   const buildResults = await localBatchBuild(allPoolMlOracles, sharedRemapping, chunkSize);
   throwIfAborted(signal);
@@ -855,7 +860,7 @@ export async function localBatchDeckbuild(
 
     if (batchInputs.length === 0) break;
 
-    const batchResults = await localBatchDraftRanked(batchInputs, sharedRemapping, chunkSize);
+    const batchResults = await localBatchDraftRanked(batchInputs, sharedRemapping, chunkSize, cubeCtx);
     throwIfAborted(signal);
 
     for (let i = 0; i < activeIndices.length; i++) {
