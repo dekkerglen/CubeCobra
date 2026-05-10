@@ -1381,15 +1381,216 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       .map(([bucket, cards]) => ({ bucket, cards }));
   }, [inspectingPool, inspectingDeck, displayRunData]);
 
-  // TODO: these node variables are computed from the view data and passed to the layout components.
-  // They were lost in a merge and need to be reconstructed from the actual JSX sections below.
-  const resultsOverviewNode: React.ReactNode = null;
-  const resultsFilterNode: React.ReactNode = null;
-  const resultsMapNode: React.ReactNode = null;
-  const resultsMobileDetailNode: React.ReactNode = null;
-  const resultsMobileArchetypesNode: React.ReactNode = null;
-  const resultsOovWarningNode: React.ReactNode = null;
-  const resultsBottomNode: React.ReactNode = null;
+  // Derived values needed by DraftMapCard for the color-profile panel
+  const selectedColorPoolIndices = useMemo<number[]>(
+    () =>
+      selectedArchetype
+        ? displayedPools.filter((p) => p.archetype === selectedArchetype).map((p) => p.poolIndex)
+        : [],
+    [selectedArchetype, displayedPools],
+  );
+  const selectedColorDeckBuilds = useMemo<BuiltDeck[] | null>(
+    () =>
+      activeDecks && selectedColorPoolIndices.length > 0
+        ? selectedColorPoolIndices.map((i) => activeDecks[i]).filter((d): d is BuiltDeck => !!d)
+        : null,
+    [activeDecks, selectedColorPoolIndices],
+  );
+
+  // Node variables passed as slot props to layout components
+  const resultsOverviewNode: React.ReactNode = displayRunData ? (
+    <DraftSimulatorOverviewSection
+      displayRunData={displayRunData}
+      activeDecks={activeDecks}
+      overviewOpen={overviewOpen}
+      setOverviewOpen={setOverviewOpen}
+      mobileLayout={isMobileLayout}
+    />
+  ) : null;
+
+  const resultsFilterNode: React.ReactNode = displayRunData ? (
+    <DraftSimulatorFilterBar
+      chips={filterChipItems}
+      matchingPools={activeFilterPoolIndexSet?.size ?? displayedPools.length}
+      totalPools={displayedPools.length}
+      cardStats={displayRunData.cardStats}
+      selectedCardOracles={selectedCardOracles}
+      archetypeDistribution={displayedArchetypeDistribution}
+      selectedArchetype={selectedArchetype}
+      skeletons={skeletons}
+      selectedSkeletonId={selectedSkeletonId}
+      onAddCard={handleToggleSelectedCard}
+      onSelectArchetype={setSelectedArchetype}
+      onSelectSkeleton={setSelectedSkeletonId}
+      onClearAll={clearActiveFilter}
+      renderArchetypeLabel={(colorPair) => archetypeFullName(colorPair)}
+      renderSkeletonLabel={(skeleton) => getSkeletonDisplayName(skeleton, poolArchetypeLabels, skeletonColorProfiles)}
+    />
+  ) : null;
+
+  const resultsMapNode: React.ReactNode = displayRunData ? (
+    <DraftMapCard
+      skeletons={skeletons}
+      showAdvancedClustering={showAdvancedClustering}
+      pendingKnnK={pendingKnnK}
+      setPendingKnnK={setPendingKnnK}
+      pendingResolution={pendingResolution}
+      setPendingResolution={setPendingResolution}
+      clusteringInProgress={clusteringInProgress}
+      clusteringPhase={clusteringPhase}
+      applyPendingClusteringSettings={applyPendingClusteringSettings}
+      draftMapPoints={draftMapPoints}
+      showDraftMapScopePanel={showDraftMapScopePanel}
+      activeFilterPoolIndexSet={activeFilterPoolIndexSet}
+      draftMapColorMode={draftMapColorMode}
+      setDraftMapColorMode={setDraftMapColorMode}
+      focusedPoolIndex={focusedPoolIndex}
+      setFocusedPoolIndex={setFocusedPoolIndex}
+      setSelectedSkeletonId={setSelectedSkeletonId}
+      selectedSkeletonId={selectedSkeletonId}
+      setSelectedArchetype={setSelectedArchetype}
+      setDraftBreakdownOpen={setDraftBreakdownOpen}
+      mapPanelHasBoth={mapPanelHasBoth}
+      selectedCards={selectedCards}
+      displayRunData={displayRunData}
+      selectedCard={selectedCard}
+      selectedCardStats={selectedCardStats}
+      statsForScope={statsForScope}
+      selectedCardScopeLabel={selectedCardScopeLabel}
+      detailedViewTitle={detailedViewTitle}
+      detailedViewSubtitle={detailedViewSubtitle}
+      activeFilterPreview={activeFilterPreview}
+      activeDecks={activeDecks}
+      clusterThemesByClusterId={clusterThemesByClusterId}
+      poolArchetypeLabels={poolArchetypeLabels}
+      colorPairTopArchetypes={colorPairTopArchetypes}
+      activeFilterSummary={activeFilterSummary}
+      scopeOnlySummary={scopeOnlySummary}
+      filteredDecks={filteredDecks}
+      draftMapScopeSubtitle={draftMapScopeSubtitle}
+      draftMapScopeSeatCount={draftMapScopeSeatCount}
+      onClearSelectedCards={() => setSelectedCardOracles([])}
+      cubeOracleSet={cubeOracleSet}
+      excludeManaFixingLands={excludeManaFixingLands}
+      setExcludeManaFixingLands={setExcludeManaFixingLands}
+      onInspectPool={setInspectingPoolIndex}
+      selectedArchetype={selectedArchetype}
+      selectedColorPoolIndices={selectedColorPoolIndices}
+      selectedColorDeckBuilds={selectedColorDeckBuilds}
+      onToggleSelectedCard={handleToggleSelectedCard}
+    />
+  ) : null;
+
+  const resultsMobileDetailNode: React.ReactNode = (() => {
+    if (!displayRunData || selectedSkeletonId === null) return null;
+    const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
+    if (!sk) return null;
+    const skIdx = skeletons.indexOf(sk);
+    const clusterDecks = activeDecks ? sk.poolIndices.map((i) => activeDecks[i]).filter((d): d is BuiltDeck => !!d) : null;
+    return (
+      <ClusterDetailPanel
+        skeleton={sk}
+        clusterIndex={skIdx}
+        totalPools={displayRunData.slimPools.length}
+        clusterDeckBuilds={clusterDecks}
+        cubeOracleSet={cubeOracleSet}
+        cardMeta={displayRunData.cardMeta}
+        slimPools={displayRunData.slimPools}
+        deckBuilds={activeDecks}
+        themes={clusterThemesByClusterId.get(sk.clusterId)}
+        poolArchetypeLabels={poolArchetypeLabels}
+        excludeManaFixingLands={excludeManaFixingLands}
+        setExcludeManaFixingLands={setExcludeManaFixingLands}
+        onOpenPool={setInspectingPoolIndex}
+        onClose={() => {
+          setSelectedSkeletonId(null);
+          setFocusedPoolIndex(null);
+        }}
+      />
+    );
+  })();
+
+  const resultsMobileArchetypesNode: React.ReactNode = displayRunData ? (
+    <ArchetypeSkeletonSection
+      skeletons={skeletons}
+      totalPools={displayRunData.slimPools.length}
+      selectedSkeletonId={selectedSkeletonId}
+      onSelectSkeleton={setSelectedSkeletonId}
+      clusterThemesByClusterId={clusterThemesByClusterId}
+      poolArchetypeLabels={poolArchetypeLabels}
+      poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
+      skeletonColorProfiles={skeletonColorProfiles}
+      excludeManaFixingLands={excludeManaFixingLands}
+    />
+  ) : null;
+
+  const resultsOovWarningNode: React.ReactNode =
+    oovWarningPct != null && oovWarningPct > 0.05 ? (
+      <Card className="border-yellow-700">
+        <CardBody>
+          <Text sm className="text-yellow-300">
+            {`${(oovWarningPct * 100).toFixed(0)}% of drafts had cards outside the embedding vocabulary. Clustering and archetype labels may be less accurate for those pools.`}
+          </Text>
+        </CardBody>
+      </Card>
+    ) : null;
+
+  const resultsBottomNode: React.ReactNode = displayRunData ? (
+    <DraftSimulatorBottomSection
+      mobileLayout={isMobileLayout}
+      bottomTab={bottomTab}
+      setBottomTab={setBottomTab}
+      displayRunData={displayRunData}
+      clusteringInProgress={clusteringInProgress}
+      clusteringPhase={clusteringPhase}
+      skeletons={skeletons}
+      selectedSkeletonId={selectedSkeletonId}
+      setSelectedSkeletonId={setSelectedSkeletonId}
+      clusterThemesByClusterId={clusterThemesByClusterId}
+      poolArchetypeLabels={poolArchetypeLabels}
+      poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
+      skeletonColorProfiles={skeletonColorProfiles}
+      selectedArchetype={selectedArchetype}
+      setSelectedArchetype={setSelectedArchetype}
+      displayedArchetypeDistribution={displayedArchetypeDistribution}
+      colorPairTopArchetypes={colorPairTopArchetypes}
+      clearActiveFilter={clearActiveFilter}
+      activeFilterPoolIndexSet={activeFilterPoolIndexSet}
+      hasApproximateFilteredStats={hasApproximateFilteredStats}
+      scopedCardStatsTitle={scopedCardStatsTitle}
+      draftBreakdownTitle={draftBreakdownTitle}
+      sideboardTitle={sideboardTitle}
+      pairingsTitle={pairingsTitle}
+      overperformersTitleSuffix={overperformersTitleSuffix}
+      downloadCardStatsCsv={downloadCardStatsCsv}
+      visibleCardStats={visibleCardStats}
+      handleToggleSelectedCard={handleToggleSelectedCard}
+      selectedCardOracles={selectedCardOracles}
+      inDeckOracles={inDeckOracles}
+      inSideboardOracles={inSideboardOracles}
+      deckInclusionPct={deckInclusionPct}
+      visiblePoolCounts={visiblePoolCounts}
+      cardStatsRef={cardStatsRef}
+      detailedViewRef={detailedViewRef}
+      downloadDraftBreakdownCsv={downloadDraftBreakdownCsv}
+      displayedPools={displayedPools}
+      activeDecks={activeDecks}
+      simPhase={simPhase}
+      selectedCard={selectedCard}
+      focusedPoolIndex={focusedPoolIndex}
+      setFocusedPoolIndex={setFocusedPoolIndex}
+      onInspectPool={setInspectingPoolIndex}
+      allPoolClusterThemes={allPoolClusterThemes}
+      allPoolTagAllowlist={allPoolTagAllowlist}
+      topSideboardCards={topSideboardCards}
+      topCardPairings={topCardPairings}
+      pairingsExcludeLands={pairingsExcludeLands}
+      setPairingsExcludeLands={setPairingsExcludeLands}
+      excludeManaFixingLands={excludeManaFixingLands}
+      status={status}
+      renderAutocardNameLink={renderAutocardNameLink}
+    />
+  ) : null;
 
   return (
     <MainLayout useContainer={false}>
@@ -1574,28 +1775,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                 <CardBody>
                   <Text sm className="text-text">
                     {storageNotice?.startsWith('Results are shown below')
-                      ? 'Simulation complete — results are displayed below.'
-                      : 'Simulation complete — results are stored locally in this browser and displayed below.'}
-                  </Text>
-                </CardBody>
-              </Card>
-            )}
-            {storageNotice && (
-              <Card className="border-yellow-700">
-                <CardBody>
-                  <Text sm className="text-yellow-300">
-                    {storageNotice}
-                  </Text>
-                </CardBody>
-              </Card>
-            )}
-
-            {/* Save success */}
-            {status === 'completed' && !isRunning && (
-              <Card className="border-green-700">
-                <CardBody>
-                  <Text sm className="text-green-400">
-                    {storageNotice
                       ? 'Simulation complete — results are displayed below.'
                       : 'Simulation complete — results are stored locally in this browser and displayed below.'}
                   </Text>
