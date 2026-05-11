@@ -79,4 +79,3 @@ export async function navigateToCubeFromNav(page: Page, cubeName: string): Promi
     await page.waitForLoadState('domcontentloaded');
   }
 }
-
