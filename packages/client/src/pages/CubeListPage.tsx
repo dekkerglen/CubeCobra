@@ -269,7 +269,7 @@ const CubeListPage: React.FC<CubeListPageProps> = ({ cube, cards }) => {
 
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cube.id} defaultView={defaultView} defaultEditSidebarOpen={isOwner}>
+      <DisplayContextProvider cubeID={cube.id} defaultView={defaultView}>
         <RotoDraftContextProvider>
           <CubeLayout
             cube={cube}

@@ -73,18 +73,12 @@ const DisplayContext = React.createContext<DisplayContextValue>({
 interface DisplayContextProviderProps {
   cubeID: string;
   defaultView?: string;
-  /**
-   * When true, the right sidebar defaults to 'edit' on desktop. Used by the
-   * cube list page so owners always see the edit panel expanded on desktop.
-   */
-  defaultEditSidebarOpen?: boolean;
   children: ReactNode;
 }
 
 export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
   cubeID,
   defaultView,
-  defaultEditSidebarOpen = false,
   ...props
 }) => {
   const [showCustomImages, setShowCustomImages] = useLocalStorage<boolean>('showcustomimages', true);
@@ -207,10 +201,6 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
       }
     }
 
-    // For owned cube list views on desktop, always default the edit sidebar to expanded
-    if (defaultEditSidebarOpen && isDesktop) {
-      return 'edit';
-    }
     return 'none';
   });
 
