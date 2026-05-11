@@ -76,11 +76,7 @@ interface DisplayContextProviderProps {
   children: ReactNode;
 }
 
-export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
-  cubeID,
-  defaultView,
-  ...props
-}) => {
+export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({ cubeID, defaultView, ...props }) => {
   const [showCustomImages, setShowCustomImages] = useLocalStorage<boolean>('showcustomimages', true);
   const [openCollapse, setOpenCollapse] = useState<string | null>(() => {
     return Query.get('f') ? 'filter' : null;
