@@ -264,8 +264,6 @@ const CubeListPageRaw: React.FC = () => {
 
 const CubeListPage: React.FC<CubeListPageProps> = ({ cube, cards }) => {
   const defaultView = getViewDefinitions(cube)[0]?.name || 'Mainboard';
-  const user = useContext(UserContext);
-  const isOwner = !!user && cube.owner?.id === user.id;
 
   return (
     <MainLayout useContainer={false}>
