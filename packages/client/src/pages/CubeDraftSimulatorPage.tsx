@@ -1691,17 +1691,17 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         Clear all
                       </button>
                     </div>
-                    <div className="flex gap-2 overflow-x-auto pb-0.5">
+                    <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
                       {runs.map((run) => (
                         <div
                           key={run.entry.ts}
                           className={[
-                            'group relative flex flex-col flex-shrink-0 cursor-pointer transition-colors select-none rounded-md border overflow-hidden',
+                            'group relative flex flex-col cursor-pointer transition-colors select-none rounded-md border overflow-hidden',
                             run.entry.ts === selectedTs
                               ? 'border-blue-200 bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-800 shadow-[inset_3px_0_0_rgb(59_130_246)]'
                               : 'border-border bg-bg-accent hover:bg-bg-active',
                           ].join(' ')}
-                          style={{ minWidth: 160, padding: '8px 28px 8px 13px' }}
+                          style={{ minWidth: isMobileLayout ? undefined : 160, padding: '8px 28px 8px 13px' }}
                           onClick={() => handleLoadRun(run.entry.ts)}
                         >
                           <span className="text-sm font-semibold whitespace-nowrap leading-tight text-text">
