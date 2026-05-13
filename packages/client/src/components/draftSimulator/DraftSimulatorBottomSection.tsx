@@ -197,25 +197,45 @@ const DraftSimulatorBottomSection: React.FC<{
         </button>
       </div>
     )}
-    <div className="mb-4 overflow-x-auto border-b border-border">
-      <div className="flex min-w-max flex-row items-stretch gap-0">
-      {visibleTabs.map((tab) => (
-        <button
-          key={tab.key}
-          type="button"
-          onClick={() => setBottomTab(tab.key)}
-          className={[
-            'flex-shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
-            bottomTab === tab.key
-              ? 'border-link text-link'
-              : 'border-transparent text-text-secondary hover:text-text hover:border-border',
-          ].join(' ')}
-        >
-          {tab.label}
-        </button>
-      ))}
+    {mobileLayout ? (
+      <div className="mb-4 grid grid-cols-2 gap-1.5 border-b border-border pb-4">
+        {visibleTabs.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            onClick={() => setBottomTab(tab.key)}
+            className={[
+              'rounded px-3 py-2 text-sm font-medium text-center transition-colors border',
+              bottomTab === tab.key
+                ? 'bg-link/10 border-link/40 text-link'
+                : 'border-border bg-bg text-text-secondary hover:bg-bg-active hover:text-text',
+            ].join(' ')}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
-    </div>
+    ) : (
+      <div className="mb-4 overflow-x-auto border-b border-border">
+        <div className="flex min-w-max flex-row items-stretch gap-0">
+          {visibleTabs.map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => setBottomTab(tab.key)}
+              className={[
+                'flex-shrink-0 whitespace-nowrap px-4 py-2 text-sm font-medium border-b-2 -mb-px transition-colors',
+                bottomTab === tab.key
+                  ? 'border-link text-link'
+                  : 'border-transparent text-text-secondary hover:text-text hover:border-border',
+              ].join(' ')}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+      </div>
+    )}
     {bottomTab === 'archetypes' && (
       <div className="flex flex-col gap-4">
         {clusteringInProgress ? (
