@@ -23,6 +23,7 @@ interface UseDraftSimulatorPresentationArgs {
   state: Pick<DraftSimulatorSelectionState, 'selectedSkeletonId' | 'selectedArchetype' | 'focusedPoolIndex'>;
   setters: DraftSimulatorSelectionSetters;
   selectedCards: CardStats[];
+  selectedDeckCards: CardStats[];
   selectedCard: CardStats | null;
   activeFilterPoolIndexSet: Set<number> | null;
   selectedPools: DraftSimulatorDerivedData['displayedPools'];
@@ -43,8 +44,9 @@ interface UseDraftSimulatorPresentationArgs {
 export default function useDraftSimulatorPresentation({
   data: { displayRunData, activeDecks, displayedPools, skeletons, poolArchetypeLabels, skeletonColorProfiles },
   state: { selectedSkeletonId, selectedArchetype, focusedPoolIndex },
-  setters: { setSelectedCardOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex },
+  setters: { setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex },
   selectedCards,
+  selectedDeckCards,
   selectedCard,
   activeFilterPoolIndexSet,
   selectedPools,
@@ -61,9 +63,10 @@ export default function useDraftSimulatorPresentation({
       }
     }
     if (selectedArchetype) chips.push(`Deck Color: ${archetypeFullName(selectedArchetype)}`);
-    for (const selectedCardEntry of selectedCards) chips.push(`Pools Containing: ${selectedCardEntry.name}`);
+    for (const c of selectedCards) chips.push(`In Pool: ${c.name}`);
+    for (const c of selectedDeckCards) chips.push(`In Deck: ${c.name}`);
     return chips;
-  }, [selectedSkeletonId, selectedArchetype, selectedCards, skeletons]);
+  }, [selectedSkeletonId, selectedArchetype, selectedCards, selectedDeckCards, skeletons]);
 
   const activeFilterSummary = useMemo(
     () => (activeFilterChips.length > 0 ? activeFilterChips.join(' · ') : null),
@@ -71,7 +74,7 @@ export default function useDraftSimulatorPresentation({
   );
 
   const scopeOnlySummary = useMemo(() => {
-    const nonCard = activeFilterChips.filter((c) => !c.startsWith('Pools Containing:'));
+    const nonCard = activeFilterChips.filter((c) => !c.startsWith('In Pool:') && !c.startsWith('In Deck:'));
     return nonCard.length > 0 ? nonCard.join(' · ') : null;
   }, [activeFilterChips]);
 
@@ -79,11 +82,20 @@ export default function useDraftSimulatorPresentation({
     const chips: FilterChipItem[] = [];
     for (const selectedCardEntry of selectedCards) {
       chips.push({
-        key: `card-${selectedCardEntry.oracle_id}`,
+        key: `pool-${selectedCardEntry.oracle_id}`,
         label: selectedCardEntry.name,
-        detail: 'Card',
+        detail: 'In Pool',
         onClear: () =>
           setSelectedCardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
+      });
+    }
+    for (const selectedCardEntry of selectedDeckCards) {
+      chips.push({
+        key: `deck-${selectedCardEntry.oracle_id}`,
+        label: selectedCardEntry.name,
+        detail: 'In Deck',
+        onClear: () =>
+          setSelectedDeckCardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
       });
     }
     if (selectedSkeletonId !== null) {
@@ -119,6 +131,7 @@ export default function useDraftSimulatorPresentation({
     return chips;
   }, [
     selectedCards,
+    selectedDeckCards,
     selectedSkeletonId,
     selectedArchetype,
     focusedPoolIndex,
@@ -178,10 +191,11 @@ export default function useDraftSimulatorPresentation({
 
   const clearActiveFilter = useCallback(() => {
     setSelectedCardOracles([]);
+    setSelectedDeckCardOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
     setFocusedPoolIndex(null);
-  }, [setFocusedPoolIndex, setSelectedArchetype, setSelectedCardOracles, setSelectedSkeletonId]);
+  }, [setFocusedPoolIndex, setSelectedArchetype, setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedSkeletonId]);
 
   const downloadDraftBreakdownCsv = useCallback((pools: DraftSimulatorDerivedData['displayedPools'], label: string) => {
     if (!displayRunData) return;

@@ -159,6 +159,16 @@ export default function useDraftSimulatorSelection({
     [displayRunData, selectedCardOracles],
   );
 
+  const selectedDeckCards = useMemo(
+    () =>
+      displayRunData
+        ? selectedDeckCardOracles
+            .map((oracle) => displayRunData.cardStats.find((c) => c.oracle_id === oracle) ?? null)
+            .filter((c): c is CardStats => !!c)
+        : [],
+    [displayRunData, selectedDeckCardOracles],
+  );
+
   // oracle_id → pool indices where that card is in the mainboard
   const deckCardPoolIndices = useMemo<Map<string, number[]>>(() => {
     if (!activeDecks) return new Map();
@@ -342,6 +352,7 @@ export default function useDraftSimulatorSelection({
 
   return {
     selectedCards,
+    selectedDeckCards,
     selectedCard,
     activeFilterPoolIndexSet,
     filteredDecks,

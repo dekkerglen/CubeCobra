@@ -1268,6 +1268,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
   const {
     selectedCards,
+    selectedDeckCards,
     selectedCard,
     activeFilterPoolIndexSet,
     filteredDecks,
@@ -1331,6 +1332,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     state: selectionState,
     setters: selectionSetters,
     selectedCards,
+    selectedDeckCards,
     selectedCard,
     activeFilterPoolIndexSet,
     selectedPools,
