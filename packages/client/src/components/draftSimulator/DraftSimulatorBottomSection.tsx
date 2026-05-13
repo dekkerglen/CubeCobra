@@ -342,7 +342,6 @@ const DraftSimulatorBottomSection: React.FC<{
               selectedCardOracles={selectedCardOracles}
               onSelectDeckCard={handleToggleSelectedDeckCard}
               selectedDeckCardOracles={selectedDeckCardOracles}
-              deckCardPoolIndices={deckCardPoolIndices}
               visibleDeckCounts={visibleDeckCounts}
               inDeckOracles={inDeckOracles}
 

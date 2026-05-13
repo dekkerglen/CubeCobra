@@ -15,7 +15,6 @@ const CardStatsTable: React.FC<{
   selectedCardOracles: string[];
   onSelectDeckCard: (id: string) => void;
   selectedDeckCardOracles: string[];
-  deckCardPoolIndices: Map<string, number[]>;
   visibleDeckCounts: Map<string, number>;
   inDeckOracles: Set<string> | null;
   deckInclusionPct: Map<string, number>;
@@ -30,7 +29,6 @@ const CardStatsTable: React.FC<{
   selectedCardOracles,
   onSelectDeckCard,
   selectedDeckCardOracles,
-  deckCardPoolIndices,
   visibleDeckCounts,
   inDeckOracles,
   deckInclusionPct,
