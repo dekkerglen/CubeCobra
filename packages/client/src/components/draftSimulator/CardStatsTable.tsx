@@ -14,6 +14,9 @@ const CardStatsTable: React.FC<{
   cardMeta?: Record<string, CardMeta>;
   onSelectCard: (id: string) => void;
   selectedCardOracles: string[];
+  onSelectDeckCard: (id: string) => void;
+  selectedDeckCardOracles: string[];
+  deckCardPoolIndices: Map<string, number[]>;
   inDeckOracles: Set<string> | null;
   inSideboardOracles: Set<string> | null;
   deckInclusionPct: Map<string, number>;
@@ -26,6 +29,9 @@ const CardStatsTable: React.FC<{
   cardMeta,
   onSelectCard,
   selectedCardOracles,
+  onSelectDeckCard,
+  selectedDeckCardOracles,
+  deckCardPoolIndices,
   inDeckOracles,
   inSideboardOracles,
   deckInclusionPct,
@@ -210,14 +216,17 @@ const CardStatsTable: React.FC<{
                 'deckInclusion',
                 'Of pools that drafted this card, how often it made the main deck vs. sideboard',
               )}
-              <th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">Filter</th>
+              <th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">Pool</th>
+              <th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">Deck</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
             {pagedRows.map((cardStatsEntry) => {
               const inclPct = deckInclusionPct.get(cardStatsEntry.oracle_id);
               const isFilteredCard = selectedCardOracles.includes(cardStatsEntry.oracle_id);
+              const isFilteredDeckCard = selectedDeckCardOracles.includes(cardStatsEntry.oracle_id);
               const visiblePoolCount = visiblePoolCounts.get(cardStatsEntry.oracle_id) ?? cardStatsEntry.poolIndices.length;
+              const deckPoolCount = deckCardPoolIndices.get(cardStatsEntry.oracle_id)?.length ?? 0;
               const poolPct = totalScopedPools > 0 ? visiblePoolCount / totalScopedPools : null;
               const openerTakeRate = cardStatsEntry.p1p1Seen > 0 ? cardStatsEntry.p1p1Count / cardStatsEntry.p1p1Seen : 0;
               return (
@@ -252,13 +261,21 @@ const CardStatsTable: React.FC<{
                       ].join(' ')}
                       onClick={() => onSelectCard(cardStatsEntry.oracle_id)}
                     >
-                      {isFilteredCard ? (
-                        <>
-                          ✕ <span className="tabular-nums">{visiblePoolCount}</span>
-                        </>
-                      ) : (
-                        <span className="tabular-nums">{visiblePoolCount}</span>
-                      )}
+                      {isFilteredCard ? <>✕ <span className="tabular-nums">{visiblePoolCount}</span></> : <span className="tabular-nums">{visiblePoolCount}</span>}
+                    </button>
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    <button
+                      type="button"
+                      className={[
+                        'px-2 py-0.5 rounded text-xs font-medium border',
+                        isFilteredDeckCard ? 'bg-link text-white border-link' : 'bg-link/10 text-link border-link/30 hover:bg-link/20',
+                        !inDeckOracles ? 'opacity-40 cursor-not-allowed' : '',
+                      ].join(' ')}
+                      disabled={!inDeckOracles}
+                      onClick={() => onSelectDeckCard(cardStatsEntry.oracle_id)}
+                    >
+                      {isFilteredDeckCard ? <>✕ <span className="tabular-nums">{deckPoolCount}</span></> : <span className="tabular-nums">{deckPoolCount}</span>}
                     </button>
                   </td>
                 </tr>
