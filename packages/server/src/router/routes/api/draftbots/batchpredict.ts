@@ -21,7 +21,6 @@ export interface PredictResponse {
 
 const OracleIDSchema = Joi.string().uuid();
 const CustomCard = Joi.string().valid('custom-card');
-const VoucherCard = Joi.string().valid('voucher');
 
 const CUBE_CONTEXT_DIM = 32;
 
@@ -29,8 +28,8 @@ const PredictBodySchema = Joi.object({
   inputs: Joi.array()
     .items(
       Joi.object({
-        pack: Joi.array().items(OracleIDSchema, CustomCard, VoucherCard).required(),
-        picks: Joi.array().items(OracleIDSchema, CustomCard, VoucherCard).required(),
+        pack: Joi.array().items(OracleIDSchema, CustomCard).required(),
+        picks: Joi.array().items(OracleIDSchema, CustomCard).required(),
       }),
     )
     .required()

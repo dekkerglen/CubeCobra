@@ -237,7 +237,7 @@ describe('buildBotDeck', () => {
 
     const result = await buildBotDeck(pickorder, basics, cards);
 
-    expect(deckbuild).toHaveBeenCalledWith([cards[0], cards[1], cards[3]], [cards[2], cards[4]], 23, 17);
+    expect(deckbuild).toHaveBeenCalledWith([cards[0], cards[1], cards[3]], [cards[2], cards[4]]);
 
     // Verify mainboard formatting
     expect(result.mainboard[0]![2]!).toContain(0); // creature in row 0

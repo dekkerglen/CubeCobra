@@ -59,12 +59,7 @@ const CubeChangelogPage: React.FC<CubeChangelogPageProps> = ({ cube, changelog }
                   <Button color="primary" outline type="button" onClick={handleDownload} disabled={downloading}>
                     {downloading ? 'Downloading...' : 'Download Point in Time Cube'}
                   </Button>
-                  <Button
-                    color="secondary"
-                    outline
-                    type="link"
-                    href={`/cube/changelog/${cube.id}/${changelog.id}/compare`}
-                  >
+                  <Button color="secondary" outline type="link" href={`/cube/changelog/${cube.id}/${changelog.id}/compare`}>
                     Compare Point in Time Cube with Present
                   </Button>
                 </Flexbox>

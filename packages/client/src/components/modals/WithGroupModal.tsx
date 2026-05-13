@@ -22,10 +22,8 @@ const withGroupModal = <P,>(Tag: React.ComponentType<P>) => {
           props.altClick();
         } else {
           event.preventDefault();
-          const validCards = props.modalprops.cards.filter((c) => c.board !== undefined && c.index !== undefined);
-          if (validCards.length === 0) return;
           setModalSelection(
-            validCards as {
+            props.modalprops.cards.filter((c) => c.board !== undefined && c.index !== undefined) as {
               index: number;
               board: BoardType;
             }[],

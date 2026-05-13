@@ -27,7 +27,6 @@ const NEW_CUBE_ART_SCRYFALL_IDS = [
   '31b0f9ef-7404-4e05-b759-aaf1ebcfcb31',
   'cdaa22df-e071-4b2a-aa42-0334ff7bd662',
   'c477fb1a-5aac-4722-80d8-7570a8b09e44',
-  '6384d135-7780-4d75-9e95-71bce506948e',
 ];
 
 /**

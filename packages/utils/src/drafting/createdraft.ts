@@ -49,31 +49,17 @@ const matchingCards = (cards: Card[], filter: Filter): Card[] => {
   return cards.filter(filter.fn);
 };
 
-const createNextCardFn = (
-  boardCards: Record<string, Card[]>,
-  duplicates: boolean = false,
-  rng: RNGFunction,
-): NextCardFn => {
-  // Track original board sizes to give better error messages
-  const originalSizes: Record<string, number> = {};
+const createNextCardFn = (boardCards: Record<string, Card[]>, duplicates: boolean = false, rng: RNGFunction): NextCardFn => {
   // Create mutable copies of each board's cards
   const pools: Record<string, Card[]> = {};
   for (const [board, cards] of Object.entries(boardCards)) {
-    originalSizes[board] = cards.length;
     pools[board] = [...cards];
   }
 
   return (cardFilters: string[], board: string = 'mainboard'): DraftResult => {
     const cards = pools[board];
     if (!cards || cards.length === 0) {
-      const originalSize = originalSizes[board] ?? 0;
-      if (originalSize === 0) {
-        throw new Error(`Unable to create draft: board "${board}" has no cards.`);
-      }
-      throw new Error(
-        `Unable to create draft: ran out of cards in board "${board}" (started with ${originalSize}). ` +
-          `Try adding more cards or reducing the number of players/packs.`,
-      );
+      throw new Error(`Unable to create draft: no cards in board "${board}".`);
     }
 
     // each filter is an array of parsed filter tokens, we choose one randomly
@@ -100,10 +86,7 @@ const createNextCardFn = (
     }
 
     if (validCards.length === 0) {
-      const originalSize = originalSizes[board] ?? 0;
-      throw new Error(
-        `Unable to create draft: no remaining cards in board "${board}" (${cards.length} of ${originalSize} left) match the slot filter.\n${messages.join('\n')}`,
-      );
+      throw new Error(`Unable to create draft: not enough cards matching filter.\n${messages.join('\n')}`);
     }
 
     index = Math.floor(rng() * validCards.length);
@@ -138,12 +121,11 @@ const createAsfanFn = (boardCards: Record<string, Card[]>, duplicates: boolean =
   return (cardFilters: string[], board: string = 'mainboard'): AsfanResult => {
     const cards = boardCards[board];
     if (!cards || cards.length === 0) {
-      throw new Error(`Unable to calculate asfan: board "${board}" has no cards.`);
+      throw new Error(`Unable to create draft asfan: no cards in board "${board}".`);
     }
 
     // each filter is an array of parsed filter tokens, we choose one randomly
     const validCardGroups: Card[][] = [];
-    const failedFilters: string[] = [];
     for (let i = 0; i < cardFilters.length; i++) {
       const filterString = cardFilters[i];
       if (!filterString) {
@@ -156,17 +138,11 @@ const createAsfanFn = (boardCards: Record<string, Card[]>, duplicates: boolean =
       }
       if (validCards.length > 0) {
         validCardGroups.push(validCards);
-      } else {
-        failedFilters.push(filter.filterText);
       }
     }
 
     if (validCardGroups.length === 0) {
-      const filterInfo =
-        failedFilters.length > 0
-          ? `No cards in board "${board}" (${cards.length} cards) match the slot filter: ${failedFilters.join(', ')}`
-          : `No cards in board "${board}" match the slot filter.`;
-      throw new Error(`Unable to calculate asfan: ${filterInfo}`);
+      throw new Error('Unable to create draft asfan: not enough cards matching filter.');
     }
     for (const validCards of validCardGroups) {
       if (duplicates) {
@@ -253,7 +229,7 @@ export const createPacks = (format: DraftFormat, seats: number, nextCardFn: Next
           continue;
         }
         const filterStr = typeof slotValue === 'string' ? slotValue : (slotValue as CardSlot).filter || '';
-        const slotBoard = typeof slotValue === 'string' ? 'mainboard' : (slotValue as CardSlot).board || 'mainboard';
+        const slotBoard = typeof slotValue === 'string' ? 'mainboard' : ((slotValue as CardSlot).board || 'mainboard');
         const slotFilter = filterStr.split(',');
 
         const slot: PackCreationCardSlot = {
@@ -369,7 +345,9 @@ export const createDraft = (
 
   // Normalize cubeCards to Record<string, Card[]> for multi-board support
   // If passed as Card[] (backwards compat), treat as mainboard
-  const boardCards: Record<string, Card[]> = Array.isArray(cubeCards) ? { mainboard: cubeCards } : cubeCards;
+  const boardCards: Record<string, Card[]> = Array.isArray(cubeCards)
+    ? { mainboard: cubeCards }
+    : cubeCards;
 
   // Check that at least one board has cards
   const totalCards = Object.values(boardCards).reduce((sum, cards) => sum + cards.length, 0);
@@ -439,7 +417,7 @@ const checkPacks = (format: DraftFormat, seats: number, checkFn: CheckFn): Check
           continue;
         }
         const filterStr = typeof slotValue === 'string' ? slotValue : (slotValue as CardSlot).filter || '';
-        const slotBoard = typeof slotValue === 'string' ? 'mainboard' : (slotValue as CardSlot).board || 'mainboard';
+        const slotBoard = typeof slotValue === 'string' ? 'mainboard' : ((slotValue as CardSlot).board || 'mainboard');
         const result = checkFn(filterStr.split(','), slotBoard);
         if (result.messages && result.messages.length > 0) {
           messages = messages.concat(result.messages);
@@ -503,7 +481,7 @@ const asfanPacks = (format: DraftFormat, seats: number, asfanFn: AsfanFn) => {
           continue;
         }
         const filterStr = typeof slotValue === 'string' ? slotValue : (slotValue as CardSlot).filter || '';
-        const slotBoard = typeof slotValue === 'string' ? 'mainboard' : (slotValue as CardSlot).board || 'mainboard';
+        const slotBoard = typeof slotValue === 'string' ? 'mainboard' : ((slotValue as CardSlot).board || 'mainboard');
         asfanFn(filterStr.split(','), slotBoard);
       }
     }

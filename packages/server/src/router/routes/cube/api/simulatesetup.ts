@@ -5,6 +5,8 @@ import { cubeDao } from 'dynamo/daos';
 import rateLimit from 'express-rate-limit';
 import Joi from 'joi';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { userOrIpKey } from 'serverutils/rateLimitKeys';
+import { MAX_DRAFTS, MAX_SEATS } from 'serverutils/simulatorConstants';
 import { createSimToken } from 'serverutils/simToken';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
@@ -14,7 +16,7 @@ import { NextFunction, Request, Response } from '../../../../types/express';
 const setupLimiter = rateLimit({
   windowMs: 30 * 60 * 1000,
   max: 8,
-  keyGenerator: (req: Request) => (req as any).user?.id?.toString() ?? req.ip ?? 'anon',
+  keyGenerator: userOrIpKey,
   standardHeaders: true,
   legacyHeaders: false,
   handler: (_req: Request, res: Response, _next: NextFunction) => {
@@ -22,13 +24,11 @@ const setupLimiter = rateLimit({
   },
 });
 
-
-const MAX_DRAFTS = 50;
 const COOLDOWN_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 const SetupSchema = Joi.object({
-  numDrafts: Joi.number().integer().min(1).max(MAX_DRAFTS).default(50),
-  numSeats: Joi.number().integer().min(2).max(16).default(8),
+  numDrafts: Joi.number().integer().min(1).max(MAX_DRAFTS).default(MAX_DRAFTS),
+  numSeats: Joi.number().integer().min(2).max(MAX_SEATS).default(8),
 });
 
 export const simulatesetupHandler = async (req: Request, res: Response) => {

@@ -4,7 +4,7 @@ import path from 'path';
 import 'module-alias/register';
 dotenv.config({ path: path.join(__dirname, '..', '..', '.env') });
 
-import { cubeDao, draftDao, exportTaskDao } from '@server/dynamo/daos';
+import { draftDao, exportTaskDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import type DraftType from '@utils/datatypes/Draft';
@@ -73,8 +73,6 @@ const processPicks = (
     cube: any;
   },
   oracleToIndex: any,
-  landCapacity: number = 17,
-  nonlandCapacity: number = 23,
 ) => {
   const picks: {
     cube: any;
@@ -83,8 +81,6 @@ const processPicks = (
     pack: any[];
     picked: any;
     pool: any[];
-    landCount: number;
-    nonlandCount: number;
   }[] = [];
 
   if (!draft.seats) {
@@ -118,11 +114,6 @@ const processPicks = (
           .map((pick: any) => draftCardIndexToOracleIndex(pick, draft.cards, oracleToIndex))
           .filter((index: number) => index !== -1);
 
-        const poolLands = drafterState.picked.filter((i: any) => {
-          const c = draft.cards[i];
-          return c && (c.type_line ?? c.details?.type ?? '').includes('Land');
-        }).length;
-
         picks.push({
           cube: draft.cube,
           cubeCards: 0,
@@ -130,8 +121,6 @@ const processPicks = (
           pack,
           picked,
           pool,
-          landCount: Math.min(1, poolLands / landCapacity),
-          nonlandCount: Math.min(1, (pool.length - poolLands) / nonlandCapacity),
         });
       }
     }
@@ -203,7 +192,6 @@ const taskId = process.env.EXPORT_TASK_ID;
       console.log(`Uploaded and cleaned up batches ${startBatch} to ${endBatch - 1}`);
     };
 
-    const cubeCache: Record<string, any> = {};
     let lastUploadedBatch = 0;
 
     for (const draftType of draftTypes) {

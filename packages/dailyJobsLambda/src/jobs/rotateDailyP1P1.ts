@@ -92,16 +92,7 @@ async function generatePackForLambda(
     const seed = `${seedPrefix}-${baseSeed}-${i}`;
     const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
     const format = getDraftFormat({ id: formatId, packs: 1, players: 1 }, cube);
-
-    // Build board cards map for multi-board support (custom draft formats may reference non-mainboard boards)
-    const boardCards: Record<string, any[]> = {};
-    for (const [boardKey, boardList] of Object.entries(cards)) {
-      if (boardKey !== 'id' && Array.isArray(boardList)) {
-        boardCards[boardKey] = [...boardList];
-      }
-    }
-
-    const draft = createDraft(cube, format, boardCards, 1, { username: 'Anonymous' } as any, seed);
+    const draft = createDraft(cube, format, [...cards.mainboard], 1, { username: 'Anonymous' } as any, seed);
     const packResult = {
       seed: seedPrefix,
       pack:
