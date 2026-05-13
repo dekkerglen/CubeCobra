@@ -279,14 +279,16 @@ export default function useDraftSimulatorPresentation({
     const poolNames = joinNames(selectedCards.map((c) => c.name));
     const deckNames = joinNames(selectedDeckCards.map((c) => c.name));
 
-    const base = scopeLabel ? `${scopeLabel} Draft Pools` : 'Draft Pools';
-
     if (!scopeLabel && !poolNames && !deckNames) return null;
-    if (!poolNames && !deckNames) return `for ${base}`;
+    if (!poolNames && !deckNames) return `for ${scopeLabel ? `${scopeLabel} Draft Pools` : 'Draft Pools'}`;
+
+    // When only deck filters are active use "Draft Decks", otherwise "Draft Pools"
+    const poolsWord = poolNames ? 'Pools' : 'Decks';
+    const base = scopeLabel ? `${scopeLabel} Draft ${poolsWord}` : `Draft ${poolsWord}`;
 
     const parts: string[] = [];
     if (poolNames) parts.push(`that include ${poolNames}`);
-    if (deckNames) parts.push(`Decks that include ${deckNames}`);
+    if (deckNames) parts.push(`${poolNames ? 'Decks ' : ''}that include ${deckNames}`);
     return `for ${base} ${parts.join(' and ')}`;
   }, [
     selectedSkeletonId,
