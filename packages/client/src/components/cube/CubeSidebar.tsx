@@ -80,6 +80,7 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean):
         { label: 'Practice Draft', key: 'practice-draft' },
         { label: 'Sample Pack', key: 'sample-pack' },
         { label: 'Drafts', key: 'decks' },
+        { label: 'Draft Simulator', key: 'draft-simulator', href: '/cube/draftsimulator' },
       ],
     },
     {

@@ -56,12 +56,13 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
       { key: 'blog', label: 'Blog' },
       { key: 'changelog', label: 'Changelog' },
     ];
-  } else if (['playtest', 'sample-pack', 'practice-draft', 'decks'].includes(activeLink)) {
+  } else if (['playtest', 'sample-pack', 'practice-draft', 'decks', 'draft-simulator'].includes(activeLink)) {
     parentKey = 'playtest';
     subItems = [
       { key: 'practice-draft', label: 'Practice Draft' },
       { key: 'sample-pack', label: 'Sample Pack' },
       { key: 'decks', label: 'Drafts' },
+      { key: 'draft-simulator', label: 'Draft Simulator' },
     ];
   } else if (['records', 'draft-reports', 'trophy-archive', 'winrate-analytics'].includes(activeLink)) {
     parentKey = 'records';
@@ -221,7 +222,9 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
       case 'about':
         return `/cube/about/${cubeId}?view=${subItem.key}`;
       case 'playtest':
-        return `/cube/playtest/${cubeId}?view=${subItem.key}`;
+        return subItem.key === 'draft-simulator'
+          ? `/cube/draftsimulator/${cubeId}`
+          : `/cube/playtest/${cubeId}?view=${subItem.key}`;
       case 'records':
         return `/cube/records/${cubeId}?view=${subItem.key}`;
       case 'analysis':
