@@ -131,7 +131,7 @@ const CardStatsTable: React.FC<{
         onClick={() => handleSort(col)}
       >
         {label}
-        {tooltip ? ' ?' : ''}
+
         {sortKey === col ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
       </button>
     </th>
