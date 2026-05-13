@@ -6,7 +6,7 @@ import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
 
-type SortKey = keyof CardStats | 'deckInclusion' | 'poolPct' | 'openerTakeRate';
+type SortKey = keyof CardStats | 'deckInclusion' | 'poolPct' | 'deckFilterCount' | 'openerTakeRate';
 
 const CardStatsTable: React.FC<{
   cardStats: CardStats[];
@@ -65,6 +65,9 @@ const CardStatsTable: React.FC<{
     } else if (sortKey === 'poolPct') {
       av = totalScopedPools > 0 ? (visiblePoolCounts.get(a.oracle_id) ?? 0) / totalScopedPools : 0;
       bv = totalScopedPools > 0 ? (visiblePoolCounts.get(b.oracle_id) ?? 0) / totalScopedPools : 0;
+    } else if (sortKey === 'deckFilterCount') {
+      av = deckCardPoolIndices.get(a.oracle_id)?.length ?? 0;
+      bv = deckCardPoolIndices.get(b.oracle_id)?.length ?? 0;
     } else if (sortKey === 'openerTakeRate') {
       av = a.p1p1Seen > 0 ? a.p1p1Count / a.p1p1Seen : 0;
       bv = b.p1p1Seen > 0 ? b.p1p1Count / b.p1p1Seen : 0;
@@ -102,6 +105,7 @@ const CardStatsTable: React.FC<{
     'p1p1Seen',
     'deckInclusion',
     'poolPct',
+    'deckFilterCount',
     'openerTakeRate',
   ]);
 
@@ -185,8 +189,8 @@ const CardStatsTable: React.FC<{
                 'deckInclusion',
                 'Of pools that drafted this card, how often it made the main deck vs. sideboard',
               )}
-              <th className="px-3 py-2 text-right text-xs font-medium tracking-wider">Pool</th>
-              <th className="px-3 py-2 text-right text-xs font-medium tracking-wider">Deck</th>
+              {renderSortHeader('Pool', 'poolPct', 'How often this card appeared in a drafted pool within the current scope')}
+              {renderSortHeader('Deck', 'deckFilterCount', 'How many pools put this card in the mainboard within the current scope')}
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
