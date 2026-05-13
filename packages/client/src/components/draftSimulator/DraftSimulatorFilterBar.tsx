@@ -150,7 +150,7 @@ const DraftSimulatorFilterBar: React.FC<{
   const topSkeletons = skeletons.slice(0, 8);
 
   return (
-    <div className="sticky top-2 z-20 rounded-lg border border-border bg-bg shadow-md">
+    <div className="md:sticky md:top-2 md:z-20 rounded-lg border border-border bg-bg shadow-md">
       <div className="flex flex-col gap-4 px-5 py-4 md:flex-row md:items-center md:justify-between">
         <div className="min-w-0">
           <div className="flex items-center gap-2">
