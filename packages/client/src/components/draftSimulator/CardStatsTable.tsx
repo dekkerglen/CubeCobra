@@ -7,7 +7,6 @@ import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
 
 type SortKey = keyof CardStats | 'deckInclusion' | 'poolPct' | 'openerTakeRate';
-type DeckLocationFilter = 'all' | 'pool' | 'deck' | 'sideboard';
 
 const CardStatsTable: React.FC<{
   cardStats: CardStats[];
@@ -18,7 +17,6 @@ const CardStatsTable: React.FC<{
   selectedDeckCardOracles: string[];
   deckCardPoolIndices: Map<string, number[]>;
   inDeckOracles: Set<string> | null;
-  inSideboardOracles: Set<string> | null;
   deckInclusionPct: Map<string, number>;
   visiblePoolCounts: Map<string, number>;
   totalScopedPools: number;
@@ -33,7 +31,6 @@ const CardStatsTable: React.FC<{
   selectedDeckCardOracles,
   deckCardPoolIndices,
   inDeckOracles,
-  inSideboardOracles,
   deckInclusionPct,
   visiblePoolCounts,
   totalScopedPools,
@@ -45,7 +42,6 @@ const CardStatsTable: React.FC<{
   const [sortKey, setSortKey] = useState<SortKey>('avgPickPosition');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [filter, setFilter] = useState('');
-  const [locationFilter, setLocationFilter] = useState<DeckLocationFilter>('all');
   const [page, setPage] = useState(1);
 
   const handleSort = (key: SortKey) => {
@@ -56,13 +52,9 @@ const CardStatsTable: React.FC<{
     }
   };
 
-  const filtered = cardStats.filter((cardStatsEntry) => {
-    if (!cardStatsEntry.name.toLowerCase().includes(filter.toLowerCase())) return false;
-    if (locationFilter === 'pool' && (visiblePoolCounts.get(cardStatsEntry.oracle_id) ?? 0) === 0) return false;
-    if (locationFilter === 'deck' && inDeckOracles && !inDeckOracles.has(cardStatsEntry.oracle_id)) return false;
-    if (locationFilter === 'sideboard' && inSideboardOracles && !inSideboardOracles.has(cardStatsEntry.oracle_id)) return false;
-    return true;
-  });
+  const filtered = cardStats.filter((cardStatsEntry) =>
+    cardStatsEntry.name.toLowerCase().includes(filter.toLowerCase()),
+  );
 
   const sorted = [...filtered].sort((a, b) => {
     let av: number | string;
@@ -93,7 +85,7 @@ const CardStatsTable: React.FC<{
 
   useEffect(() => {
     setPage(1);
-  }, [filter, locationFilter, sortKey, sortDir, cardStats]);
+  }, [filter, sortKey, sortDir, cardStats]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -161,29 +153,6 @@ const CardStatsTable: React.FC<{
             </button>
           )}
         </div>
-        <Flexbox direction="row" gap="3" alignItems="center" className="flex-wrap">
-          {(['all', 'pool', 'deck', 'sideboard'] as const).map((value) => {
-            const label = value === 'all' ? 'All' : value === 'pool' ? 'In pool' : value === 'deck' ? 'In deck' : 'In sideboard';
-            const disabled = (value === 'deck' || value === 'sideboard') && !inDeckOracles;
-            return (
-              <label
-                key={value}
-                className={['flex items-center gap-1.5 text-xs cursor-pointer select-none', disabled ? 'opacity-40 cursor-not-allowed' : ''].join(' ')}
-              >
-                <input
-                  type="radio"
-                  name="locationFilter"
-                  value={value}
-                  checked={locationFilter === value}
-                  disabled={disabled}
-                  onChange={() => setLocationFilter(value)}
-                  className="accent-link"
-                />
-                {label}
-              </label>
-            );
-          })}
-        </Flexbox>
       </Flexbox>
       <div className="overflow-x-auto rounded border border-border bg-bg">
         <table className="min-w-full divide-y divide-border text-sm">

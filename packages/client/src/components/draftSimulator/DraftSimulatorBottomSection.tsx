@@ -342,7 +342,7 @@ const DraftSimulatorBottomSection: React.FC<{
               selectedDeckCardOracles={selectedDeckCardOracles}
               deckCardPoolIndices={deckCardPoolIndices}
               inDeckOracles={inDeckOracles}
-              inSideboardOracles={inSideboardOracles}
+
               deckInclusionPct={deckInclusionPct}
               visiblePoolCounts={visiblePoolCounts}
               totalScopedPools={activeFilterPoolIndexSet?.size ?? displayRunData.slimPools.length}
