@@ -85,13 +85,5 @@
   "UserPackagesPage": "/js/UserPackagesPage.e9690e59.bundle.js",
   "VersionPage": "/js/VersionPage.84b873f1.bundle.js",
   "VideoPage": "/js/VideoPage.83c345b2.bundle.js",
-  "VideosPage": "/js/VideosPage.f8c87358.bundle.js",
-  "commons": "/js/commons.8aae0544.bundle.js",
-  "vendors": "/js/vendors.be44d62d.bundle.js",
-  "css": {
-    "autocomplete": "/css/autocomplete.5c556a41.css",
-    "editcube": "/css/editcube.ad8a9cfe.css",
-    "stylesheet": "/css/stylesheet.c8f73728.css",
-    "tags": "/css/tags.c9b1a24b.css"
-  }
+  "VideosPage": "/js/VideosPage.f8c87358.bundle.js"
 }
