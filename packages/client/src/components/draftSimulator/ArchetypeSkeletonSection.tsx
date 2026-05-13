@@ -138,8 +138,8 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
 
           {/* Card strip */}
           {archetypeCards.length > 0 ? (
-            <div className="flex flex-row gap-1.5 pt-0.5">
-              {archetypeCards.slice(0, 10).map((card) => (
+            <div className="grid grid-cols-3 sm:grid-cols-5 md:grid-cols-8 gap-1.5 pt-0.5">
+              {archetypeCards.slice(0, 8).map((card) => (
                 <SkeletonCardImage key={card.oracle_id} card={card} size={130} onCardClick={() => {}} />
               ))}
             </div>

@@ -216,7 +216,7 @@ const DraftSimulatorBottomSection: React.FC<{
       ))}
       </div>
     </div>
-    {bottomTab === 'archetypes' && (
+    {bottomTab === 'archetypes' && !mobileLayout && (
       <div className="flex flex-col gap-4">
         {clusteringInProgress ? (
           <div className="flex flex-col gap-3 py-2">
