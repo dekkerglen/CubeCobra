@@ -85,5 +85,7 @@
   "UserPackagesPage": "/js/UserPackagesPage.e9690e59.bundle.js",
   "VersionPage": "/js/VersionPage.84b873f1.bundle.js",
   "VideoPage": "/js/VideoPage.83c345b2.bundle.js",
-  "VideosPage": "/js/VideosPage.f8c87358.bundle.js"
+  "VideosPage": "/js/VideosPage.f8c87358.bundle.js",
+  "CubeDraftSimulatorPage": "/js/CubeDraftSimulatorPage.bundle.js",
+  "CubeFollowersPage": "/js/CubeFollowersPage.bundle.js"
 }
