@@ -269,24 +269,30 @@ export default function useDraftSimulatorPresentation({
       return null;
     })();
 
-    const selectedCardNames = selectedCards.map((card) => card.name);
-    const cardClause =
-      selectedCardNames.length === 0
-        ? null
-        : selectedCardNames.length === 1
-          ? `that include ${selectedCardNames[0]}`
-          : selectedCardNames.length === 2
-            ? `that include ${selectedCardNames[0]} and ${selectedCardNames[1]}`
-            : `that include ${selectedCardNames.slice(0, -1).join(', ')}, and ${selectedCardNames[selectedCardNames.length - 1]}`;
+    const joinNames = (names: string[]) => {
+      if (names.length === 0) return null;
+      if (names.length === 1) return names[0]!;
+      if (names.length === 2) return `${names[0]} and ${names[1]}`;
+      return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
+    };
 
-    if (!scopeLabel && !cardClause) return null;
+    const poolNames = joinNames(selectedCards.map((c) => c.name));
+    const deckNames = joinNames(selectedDeckCards.map((c) => c.name));
 
     const base = scopeLabel ? `${scopeLabel} Draft Pools` : 'Draft Pools';
-    return cardClause ? `for ${base} ${cardClause}` : `for ${base}`;
+
+    if (!scopeLabel && !poolNames && !deckNames) return null;
+    if (!poolNames && !deckNames) return `for ${base}`;
+
+    const parts: string[] = [];
+    if (poolNames) parts.push(`that include ${poolNames}`);
+    if (deckNames) parts.push(`Decks that include ${deckNames}`);
+    return `for ${base} ${parts.join(' and ')}`;
   }, [
     selectedSkeletonId,
     selectedArchetype,
     selectedCards,
+    selectedDeckCards,
     skeletons,
     poolArchetypeLabels,
     skeletonColorProfiles,
