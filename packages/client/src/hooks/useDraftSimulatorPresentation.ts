@@ -123,7 +123,7 @@ export default function useDraftSimulatorPresentation({
         chips.push({
           key: `focus-${focusedPoolIndex}`,
           label: `Draft ${focusedPool.draftIndex + 1} · Seat ${focusedPool.seatIndex + 1}`,
-          detail: 'Focus',
+          detail: 'Selected Deck',
           onClear: () => setFocusedPoolIndex(null),
         });
       }
