@@ -10,7 +10,7 @@ import serialize from 'serialize-javascript';
 import 'dotenv/config';
 
 import { SortOrder } from '../dynamo/dao/CubeDynamoDao';
-import { collaboratorIndexDao, cubeDao, notificationDao } from '../dynamo/daos';
+import { cubeDao, notificationDao } from '../dynamo/daos';
 import { Request, Response } from '../types/express';
 import { GIT_COMMIT } from './git';
 import { getBaseUrl } from './util';
@@ -159,11 +159,7 @@ const render = (
 ): void => {
   getCubes(req, async (cubes) => {
     if (req.user) {
-      const [notifications, collaboratingCubeIds] = await Promise.all([
-        notificationDao.getByToAndStatus(req.user.id, NotificationStatus.UNREAD),
-        collaboratorIndexDao.getCubeIdsForUser(req.user.id),
-      ]);
-      const collaboratingCubes = collaboratingCubeIds.length > 0 ? await cubeDao.batchGet(collaboratingCubeIds) : [];
+      const notifications = await notificationDao.getByToAndStatus(req.user.id, NotificationStatus.UNREAD);
 
       reactProps.user = {
         id: req.user.id,

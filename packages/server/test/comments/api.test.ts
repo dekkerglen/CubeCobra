@@ -25,7 +25,6 @@ jest.mock('../../src/dynamo/daos', () => ({
   noticeDao: {
     put: jest.fn(),
     createNotice: jest.fn(),
-    getByStatus: jest.fn().mockResolvedValue({ items: [] }),
   },
   userDao: {
     getByUsername: jest.fn(),
@@ -125,14 +124,12 @@ describe('Report Comment', () => {
     const reporter = createUser({ username: 'reporter' });
     (noticeDao.put as jest.Mock).mockResolvedValue(undefined);
 
-    const validCommentId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
-
     await call(reportHandler)
       .as(reporter)
       .withFlash(flashMock)
       .withRequest({
         body: {
-          commentid: validCommentId,
+          commentid: '12345',
           info: 'Report info',
           reason: 'Report reason',
         },
@@ -141,7 +138,7 @@ describe('Report Comment', () => {
 
     expect(noticeDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
-        subject: validCommentId,
+        subject: '12345',
         body: 'Report reason\n\nReport info',
         user: reporter.id,
         type: NoticeType.COMMENT_REPORT,
@@ -155,13 +152,11 @@ describe('Report Comment', () => {
     const error = new Error('Something went wrong');
     (noticeDao.put as jest.Mock).mockRejectedValue(error);
 
-    const validCommentId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
-
     await call(reportHandler)
       .withFlash(flashMock)
       .withRequest({
         body: {
-          commentid: validCommentId,
+          commentid: '12345',
           info: 'Report info',
           reason: 'Report reason',
         },

@@ -101,9 +101,6 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
         if (cardInput.colorCategory) {
           customProperties.colorCategory = cardInput.colorCategory;
         }
-        if (cardInput.voucher_cards && Array.isArray(cardInput.voucher_cards)) {
-          customProperties.voucher_cards = cardInput.voucher_cards;
-        }
       }
 
       // Merge custom tags with base card tags and package tag

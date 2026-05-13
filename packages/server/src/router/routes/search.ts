@@ -256,6 +256,14 @@ const buildHashesForQuery = (
 ): string[] => {
   const hashes: string[] = [];
 
+  console.log('[buildHashesForQuery] Input queries:', {
+    cardQueriesCount: cardQueries.length,
+    cardQueries: cardQueries.map((q) => ({ type: q.type, value: q.value, originalToken: q.originalToken })),
+    keywordQueriesCount: keywordQueries.length,
+    tagQueriesCount: tagQueries.length,
+    categoryQueriesCount: categoryQueries.length,
+  });
+
   // Add oracle hashes for card queries
   for (const query of cardQueries) {
     if (query.value && query.value !== '') {
@@ -292,6 +300,9 @@ const buildHashesForQuery = (
   if (hashes.length === 0) {
     hashes.push('cube:all');
   }
+
+  console.log('[buildHashesForQuery] Built hashes:', hashes);
+
   return hashes;
 };
 
@@ -306,6 +317,16 @@ const performSearch = async (
   user: any,
   lastKey?: any,
 ): Promise<SearchResult> => {
+  console.log('[performSearch] Starting search with queries:', {
+    cardQueriesCount: cardQueries.length,
+    keywordQueriesCount: keywordQueries.length,
+    tagQueriesCount: tagQueries.length,
+    categoryQueriesCount: categoryQueries.length,
+    sizeQueriesCount: sizeQueries.length,
+    order,
+    ascending,
+  });
+
   // Check for unsupported combinations
   if (cardQueries.length > 10) {
     return {
@@ -355,12 +376,14 @@ const performSearch = async (
     let resultLastKey: any = null;
 
     if (hashes.length === 1) {
+      console.log('[Search] Querying by single hash', { hash: hashes[0], cardCountFilter, lastKey });
       // Determine which query method to use based on hash prefix
       const hash = hashes[0] || '';
       let result;
 
       if (hash.startsWith('oracle:')) {
         const oracleId = hash.substring('oracle:'.length);
+        console.log('[Search] Using queryByOracleId', { oracleId });
         result = await cubeDao.queryByOracleId(
           oracleId,
           mapSortOrder(order),
@@ -369,8 +392,10 @@ const performSearch = async (
           36,
           cardCountFilter,
         );
+        console.log(`[Search] queryByOracleId returned ${result.items.length} cubes`);
       } else if (hash.startsWith('tag:')) {
         const tag = hash.substring('tag:'.length);
+        console.log('[Search] Using queryByTag', { tag });
         result = await cubeDao.queryByTag(
           tag,
           mapSortOrder(order),
@@ -379,8 +404,10 @@ const performSearch = async (
           36,
           cardCountFilter,
         );
+        console.log(`[Search] queryByTag returned ${result.items.length} cubes`);
       } else if (hash.startsWith('keywords:')) {
         const keywords = hash.substring('keywords:'.length);
+        console.log('[Search] Using queryByKeyword', { keywords });
         result = await cubeDao.queryByKeyword(
           keywords,
           mapSortOrder(order),
@@ -389,8 +416,10 @@ const performSearch = async (
           36,
           cardCountFilter,
         );
+        console.log(`[Search] queryByKeyword returned ${result.items.length} cubes`);
       } else if (hash.startsWith('category:')) {
         const category = hash.substring('category:'.length);
+        console.log('[Search] Using queryByCategory', { category });
         result = await cubeDao.queryByCategory(
           category,
           mapSortOrder(order),
@@ -399,7 +428,9 @@ const performSearch = async (
           36,
           cardCountFilter,
         );
+        console.log(`[Search] queryByCategory returned ${result.items.length} cubes`);
       } else if (hash === 'featured:true') {
+        console.log('[Search] Using queryByFeatured');
         result = await cubeDao.queryByFeatured(
           mapSortOrder(order),
           ascending,
@@ -407,9 +438,13 @@ const performSearch = async (
           36,
           cardCountFilter,
         );
+        console.log(`[Search] queryByFeatured returned ${result.items.length} cubes`);
       } else if (hash === 'cube:all') {
+        console.log('[Search] Using queryAllCubes to query all cubes');
         result = await cubeDao.queryAllCubes(mapSortOrder(order), ascending, lastKey || undefined, 36, cardCountFilter);
+        console.log(`[Search] queryAllCubes returned ${result.items.length} cubes`);
       } else {
+        console.log('[Search] Unknown hash type, skipping', { hash });
         // Unknown hash type - return empty results
         result = { items: [], lastKey: undefined };
       }
@@ -417,6 +452,14 @@ const performSearch = async (
       cubes = result.items;
       resultLastKey = result.lastKey;
     } else {
+      console.log('[Search] Querying by multiple hashes', {
+        hashCount: hashes.length,
+        hashes,
+        cardCountFilter,
+        order,
+        ascending,
+        hasLastKey: !!lastKey,
+      });
       // Use queryByMultipleHashes from cubeDao (which efficiently handles cardCountFilter natively)
       const multiHashResult = await cubeDao.queryByMultipleHashes(
         hashes,
@@ -425,12 +468,17 @@ const performSearch = async (
         lastKey || undefined,
         cardCountFilter,
       );
+      console.log('[Search] queryByMultipleHashes returned', {
+        resultCount: multiHashResult.items.length,
+        hasLastKey: !!multiHashResult.lastKey,
+      });
       cubes = multiHashResult.items;
       resultLastKey = multiHashResult.lastKey;
     }
 
     // Filter by listing visibility
     const visibleCubes = cubes.filter((cube: any) => isCubeListed(cube, user));
+    console.log(`[Search] After visibility filter: ${visibleCubes.length} cubes`);
 
     return {
       cubes: visibleCubes,
@@ -461,6 +509,7 @@ const searchCubes = async (
 ): Promise<SearchCubesResult> => {
   // separate query into tokens, respecting quotes
   const tokens = tokenize(query);
+  console.log('[Search] Query:', query, 'Tokens:', tokens);
 
   const cardQueries = getCardQueries(tokens, user?.defaultPrinting);
   const keywordQueries = getKeywordQueries(tokens);
@@ -479,6 +528,15 @@ const searchCubes = async (
   // Find tokens that weren't used in any query
   const ignoredTokens = tokens.filter((token) => !usedTokens.has(token.toLowerCase()));
 
+  console.log('[Search] Parsed queries:', {
+    cardQueries,
+    keywordQueries,
+    tagQueries,
+    categoryQueries,
+    sizeQueries,
+    ignoredTokens,
+  });
+
   const searchResult = await performSearch(
     cardQueries,
     keywordQueries,
@@ -490,6 +548,8 @@ const searchCubes = async (
     user,
     lastKey,
   );
+
+  console.log('[Search] Result:', { cubesCount: searchResult.cubes.length, error: searchResult.error });
 
   return {
     cubes: searchResult.cubes,

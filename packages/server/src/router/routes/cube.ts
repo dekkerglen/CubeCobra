@@ -42,16 +42,10 @@ export const reportHandler = async (req: Request, res: Response) => {
     // Prevent duplicate active reports for this cube by this user
     const existing = await noticeDao.getByStatus(NoticeStatus.ACTIVE);
     const alreadyReported = (existing.items || []).some(
-      (n) =>
-        n.type === NoticeType.CUBE_REPORT &&
-        n.subject === cube.owner.id &&
-        String(n.user?.id || n.user) === String(req.user?.id || null),
+      (n) => n.type === NoticeType.CUBE_REPORT && n.subject === cube.owner.id && String(n.user?.id || n.user) === String(req.user?.id || null)
     );
     if (alreadyReported) {
-      req.flash(
-        'success',
-        'Thank you for the report! Our moderators will review the report can decide whether to take action.',
-      );
+      req.flash('success', 'Thank you for the report! Our moderators will review the report can decide whether to take action.');
       return redirect(req, res, `/cube/list/${req.params.id}`);
     }
 

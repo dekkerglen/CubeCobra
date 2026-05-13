@@ -285,7 +285,11 @@ export class DeploymentPipeline extends Construct {
             'runtime-versions': {
               nodejs: 22,
             },
-            commands: ['node --version', 'echo Installing Node.js dependencies...', 'npm install'],
+            commands: [
+              'node --version',
+              'echo Installing Node.js dependencies...',
+              'npm install',
+            ],
           },
           build: {
             commands: [

@@ -9,11 +9,11 @@
  *     src/delete_invalid_comment_reports.ts [--dry-run]
  */
 
-import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
+import 'dotenv/config';
+
 import { NoticeStatus, NoticeType } from '@utils/datatypes/Notice';
 import { noticeDao } from 'dynamo/daos';
-
-import 'dotenv/config';
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MONGO_ID_RE = /^[0-9a-f]{24}$/i;
@@ -53,7 +53,7 @@ async function main() {
       );
 
       for (const notice of invalid) {
-        totalFound += 1;
+        totalFound++;
         const subject = (notice as any).subject ?? '(none)';
         const truncated = subject.length > 80 ? subject.slice(0, 80) + '...' : subject;
         console.log(`  ${notice.id}  subject: ${truncated}`);
@@ -61,10 +61,10 @@ async function main() {
         if (!dryRun) {
           try {
             await noticeDao.delete(notice);
-            totalDeleted += 1;
+            totalDeleted++;
           } catch (err: any) {
             console.error(`  ERROR deleting ${notice.id}: ${err.message}`);
-            totalErrors += 1;
+            totalErrors++;
           }
         }
       }
