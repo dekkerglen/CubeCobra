@@ -260,7 +260,7 @@ export function inferDraftThemes(
   if (instantsSorceries >= 8) themes.push('Spells');
   if (enchantments >= 5) themes.push('Enchantments');
   if (topCreatureType && topCreatureType[1] >= 4 && topCreatureType[1] / Math.max(1, creatures) >= 0.3) {
-    themes.push(`${topCreatureType[0]}s`);
+    themes.push(pluralizeCreatureType(topCreatureType[0]));
   }
   if (creatures >= 16 && themes.length < 20) themes.push('Creatures');
   if (themes.length === 0) themes.push(archetypeFullName(pool.archetype));
