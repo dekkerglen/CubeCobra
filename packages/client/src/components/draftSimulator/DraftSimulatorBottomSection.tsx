@@ -336,6 +336,7 @@ const DraftSimulatorBottomSection: React.FC<{
               inSideboardOracles={inSideboardOracles}
               deckInclusionPct={deckInclusionPct}
               visiblePoolCounts={visiblePoolCounts}
+              totalScopedPools={activeFilterPoolIndexSet?.size ?? displayRunData.slimPools.length}
               renderCardLink={renderAutocardNameLink}
               onPageChange={() => cardStatsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
             />

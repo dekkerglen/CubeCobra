@@ -6,8 +6,8 @@ import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
 
-type SortKey = keyof CardStats | 'deckInclusion' | 'openerTakeRate';
-type DeckLocationFilter = 'all' | 'deck' | 'sideboard';
+type SortKey = keyof CardStats | 'deckInclusion' | 'poolPct' | 'openerTakeRate';
+type DeckLocationFilter = 'all' | 'pool' | 'deck' | 'sideboard';
 
 const CardStatsTable: React.FC<{
   cardStats: CardStats[];
@@ -18,6 +18,7 @@ const CardStatsTable: React.FC<{
   inSideboardOracles: Set<string> | null;
   deckInclusionPct: Map<string, number>;
   visiblePoolCounts: Map<string, number>;
+  totalScopedPools: number;
   onPageChange?: () => void;
   renderCardLink: (oracleId: string, name: string, imageUrl?: string) => React.ReactNode;
 }> = ({
@@ -29,6 +30,7 @@ const CardStatsTable: React.FC<{
   inSideboardOracles,
   deckInclusionPct,
   visiblePoolCounts,
+  totalScopedPools,
   onPageChange,
   renderCardLink,
 }) => {
@@ -50,6 +52,7 @@ const CardStatsTable: React.FC<{
 
   const filtered = cardStats.filter((cardStatsEntry) => {
     if (!cardStatsEntry.name.toLowerCase().includes(filter.toLowerCase())) return false;
+    if (locationFilter === 'pool' && (visiblePoolCounts.get(cardStatsEntry.oracle_id) ?? 0) === 0) return false;
     if (locationFilter === 'deck' && inDeckOracles && !inDeckOracles.has(cardStatsEntry.oracle_id)) return false;
     if (locationFilter === 'sideboard' && inSideboardOracles && !inSideboardOracles.has(cardStatsEntry.oracle_id)) return false;
     return true;
@@ -61,6 +64,9 @@ const CardStatsTable: React.FC<{
     if (sortKey === 'deckInclusion') {
       av = deckInclusionPct.get(a.oracle_id) ?? 0;
       bv = deckInclusionPct.get(b.oracle_id) ?? 0;
+    } else if (sortKey === 'poolPct') {
+      av = totalScopedPools > 0 ? (visiblePoolCounts.get(a.oracle_id) ?? 0) / totalScopedPools : 0;
+      bv = totalScopedPools > 0 ? (visiblePoolCounts.get(b.oracle_id) ?? 0) / totalScopedPools : 0;
     } else if (sortKey === 'openerTakeRate') {
       av = a.p1p1Seen > 0 ? a.p1p1Count / a.p1p1Seen : 0;
       bv = b.p1p1Seen > 0 ? b.p1p1Count / b.p1p1Seen : 0;
@@ -97,6 +103,7 @@ const CardStatsTable: React.FC<{
     'p1p1Count',
     'p1p1Seen',
     'deckInclusion',
+    'poolPct',
     'openerTakeRate',
   ]);
 
@@ -148,25 +155,29 @@ const CardStatsTable: React.FC<{
             </button>
           )}
         </div>
-        {inDeckOracles && (
-          <Flexbox direction="row" gap="1">
-            {(['all', 'deck', 'sideboard'] as const).map((value) => (
-              <button
+        <Flexbox direction="row" gap="3" alignItems="center" className="flex-wrap">
+          {(['all', 'pool', 'deck', 'sideboard'] as const).map((value) => {
+            const label = value === 'all' ? 'All' : value === 'pool' ? 'In pool' : value === 'deck' ? 'In deck' : 'In sideboard';
+            const disabled = (value === 'deck' || value === 'sideboard') && !inDeckOracles;
+            return (
+              <label
                 key={value}
-                type="button"
-                onClick={() => setLocationFilter(value)}
-                className={[
-                  'px-2 py-0.5 rounded text-xs font-medium border',
-                  locationFilter === value
-                    ? 'bg-link text-white border-link'
-                    : 'bg-bg text-text-secondary border-border hover:bg-bg-active',
-                ].join(' ')}
+                className={['flex items-center gap-1.5 text-xs cursor-pointer select-none', disabled ? 'opacity-40 cursor-not-allowed' : ''].join(' ')}
               >
-                {value === 'all' ? 'All cards' : value === 'deck' ? 'In deck' : 'In sideboard'}
-              </button>
-            ))}
-          </Flexbox>
-        )}
+                <input
+                  type="radio"
+                  name="locationFilter"
+                  value={value}
+                  checked={locationFilter === value}
+                  disabled={disabled}
+                  onChange={() => setLocationFilter(value)}
+                  className="accent-link"
+                />
+                {label}
+              </label>
+            );
+          })}
+        </Flexbox>
       </Flexbox>
       <div className="overflow-x-auto rounded border border-border bg-bg">
         <table className="min-w-full divide-y divide-border text-sm">
@@ -190,9 +201,14 @@ const CardStatsTable: React.FC<{
                 'Of opening packs in pack 1 that contained this card, how often it was the pick',
               )}
               {renderSortHeader(
+                'Pool %',
+                'poolPct',
+                'How often this card appeared in a drafted pool within the current scope',
+              )}
+              {renderSortHeader(
                 'Deck %',
                 'deckInclusion',
-                'Of decks that drafted this card, how often it made the main deck vs. sideboard',
+                'Of pools that drafted this card, how often it made the main deck vs. sideboard',
               )}
               <th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">Filter</th>
             </tr>
@@ -202,6 +218,7 @@ const CardStatsTable: React.FC<{
               const inclPct = deckInclusionPct.get(cardStatsEntry.oracle_id);
               const isFilteredCard = selectedCardOracles.includes(cardStatsEntry.oracle_id);
               const visiblePoolCount = visiblePoolCounts.get(cardStatsEntry.oracle_id) ?? cardStatsEntry.poolIndices.length;
+              const poolPct = totalScopedPools > 0 ? visiblePoolCount / totalScopedPools : null;
               const openerTakeRate = cardStatsEntry.p1p1Seen > 0 ? cardStatsEntry.p1p1Count / cardStatsEntry.p1p1Seen : 0;
               return (
                 <tr key={cardStatsEntry.oracle_id} className={isFilteredCard ? 'bg-bg-active' : 'hover:bg-bg-active'}>
@@ -219,6 +236,9 @@ const CardStatsTable: React.FC<{
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{cardStatsEntry.p1p1Count}</td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">
                     {cardStatsEntry.p1p1Seen > 0 ? `${(openerTakeRate * 100).toFixed(1)}%` : '—'}
+                  </td>
+                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">
+                    {poolPct !== null ? `${(poolPct * 100).toFixed(1)}%` : '—'}
                   </td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">
                     {inclPct !== undefined ? `${(inclPct * 100).toFixed(1)}%` : '—'}
