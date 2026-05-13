@@ -1435,6 +1435,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       skeletons={skeletons}
       selectedSkeletonId={selectedSkeletonId}
       onAddCard={handleToggleSelectedCard}
+      onAddDeckCard={handleToggleSelectedDeckCard}
       onSelectArchetype={setSelectedArchetype}
       onSelectSkeleton={setSelectedSkeletonId}
       onClearAll={clearActiveFilter}

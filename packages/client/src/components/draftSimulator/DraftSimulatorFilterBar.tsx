@@ -119,6 +119,7 @@ const DraftSimulatorFilterBar: React.FC<{
   skeletons: ArchetypeSkeleton[];
   selectedSkeletonId: number | null;
   onAddCard: (oracleId: string) => void;
+  onAddDeckCard: (oracleId: string) => void;
   onSelectArchetype: (archetype: string | null) => void;
   onSelectSkeleton: (clusterId: number | null) => void;
   onClearAll: () => void;
@@ -135,6 +136,7 @@ const DraftSimulatorFilterBar: React.FC<{
   skeletons,
   selectedSkeletonId,
   onAddCard,
+  onAddDeckCard,
   onSelectArchetype,
   onSelectSkeleton,
   onClearAll,
@@ -142,6 +144,7 @@ const DraftSimulatorFilterBar: React.FC<{
   renderSkeletonLabel,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const [cardFilterMode, setCardFilterMode] = useState<'pool' | 'deck'>('deck');
   const hasFilters = chips.length > 0;
   const topColorProfiles = archetypeDistribution.slice(0, 8);
   const topSkeletons = skeletons.slice(0, 8);
@@ -208,11 +211,23 @@ const DraftSimulatorFilterBar: React.FC<{
             <CardFilterInput
               cardStats={cardStats}
               selectedCardOracles={selectedCardOracles}
-              onAddCard={onAddCard}
+              onAddCard={cardFilterMode === 'deck' ? onAddDeckCard : onAddCard}
             />
-            <Text xs className="mt-1 text-text-secondary/70">
-              Up to two card filters. Current: {selectedCardOracles.length}/2.
-            </Text>
+            <div className="mt-1.5 flex items-center gap-3">
+              {(['deck', 'pool'] as const).map((mode) => (
+                <label key={mode} className="flex items-center gap-1 text-xs text-text-secondary cursor-pointer select-none">
+                  <input
+                    type="radio"
+                    name="cardFilterMode"
+                    value={mode}
+                    checked={cardFilterMode === mode}
+                    onChange={() => setCardFilterMode(mode)}
+                    className="accent-link"
+                  />
+                  {mode === 'deck' ? 'In deck' : 'In pool'}
+                </label>
+              ))}
+            </div>
           </div>
           <div>
             <Text xs className="mb-1.5 font-medium uppercase tracking-[0.14em] text-text-secondary/70">
