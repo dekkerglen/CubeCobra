@@ -60,6 +60,8 @@ export function extractThemeFeatures(type: string, oracleTags: string[] | undefi
 }
 
 function pluralizeCreatureType(name: string): string {
+  // Invariant plurals — already plural or unchanged
+  if (name === 'Merfolk' || name === 'Sheep' || name === 'Fish') return name;
   if (name.endsWith('f')) return name.slice(0, -1) + 'ves';
   if (name.endsWith('s') || name.endsWith('x') || name.endsWith('z')) return name + 'es';
   return name + 's';
