@@ -179,7 +179,7 @@ const DraftSimulatorBottomSection: React.FC<{
   status,
   renderAutocardNameLink,
 }) => {
-  const visibleTabs = mobileLayout ? BOTTOM_TABS.filter((tab) => tab.key !== 'archetypes' && tab.key !== 'deckColor') : BOTTOM_TABS;
+  const visibleTabs = BOTTOM_TABS;
 
   return (
   <div className="simSection simSectionBottomTabs flex flex-col gap-0 pt-3 border-t border-border">
@@ -216,7 +216,7 @@ const DraftSimulatorBottomSection: React.FC<{
       ))}
       </div>
     </div>
-    {bottomTab === 'archetypes' && !mobileLayout && (
+    {bottomTab === 'archetypes' && (
       <div className="flex flex-col gap-4">
         {clusteringInProgress ? (
           <div className="flex flex-col gap-3 py-2">

@@ -1527,19 +1527,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     );
   })();
 
-  const resultsMobileArchetypesNode: React.ReactNode = displayRunData ? (
-    <ArchetypeSkeletonSection
-      skeletons={skeletons}
-      totalPools={displayRunData.slimPools.length}
-      selectedSkeletonId={selectedSkeletonId}
-      onSelectSkeleton={setSelectedSkeletonId}
-      clusterThemesByClusterId={clusterThemesByClusterId}
-      poolArchetypeLabels={poolArchetypeLabels}
-      poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
-      skeletonColorProfiles={skeletonColorProfiles}
-      excludeManaFixingLands={excludeManaFixingLands}
-    />
-  ) : null;
+  // Archetypes are now handled as a tab inside DraftSimulatorBottomSection on both mobile and desktop
+  const resultsMobileArchetypesNode: React.ReactNode = null;
 
   const resultsOovWarningNode: React.ReactNode =
     oovWarningPct != null && oovWarningPct > 0.05 ? (
