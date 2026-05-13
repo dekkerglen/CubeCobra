@@ -16,6 +16,7 @@ const CardStatsTable: React.FC<{
   onSelectDeckCard: (id: string) => void;
   selectedDeckCardOracles: string[];
   deckCardPoolIndices: Map<string, number[]>;
+  visibleDeckCounts: Map<string, number>;
   inDeckOracles: Set<string> | null;
   deckInclusionPct: Map<string, number>;
   visiblePoolCounts: Map<string, number>;
@@ -30,6 +31,7 @@ const CardStatsTable: React.FC<{
   onSelectDeckCard,
   selectedDeckCardOracles,
   deckCardPoolIndices,
+  visibleDeckCounts,
   inDeckOracles,
   deckInclusionPct,
   visiblePoolCounts,
@@ -66,8 +68,8 @@ const CardStatsTable: React.FC<{
       av = totalScopedPools > 0 ? (visiblePoolCounts.get(a.oracle_id) ?? 0) / totalScopedPools : 0;
       bv = totalScopedPools > 0 ? (visiblePoolCounts.get(b.oracle_id) ?? 0) / totalScopedPools : 0;
     } else if (sortKey === 'deckFilterCount') {
-      av = deckCardPoolIndices.get(a.oracle_id)?.length ?? 0;
-      bv = deckCardPoolIndices.get(b.oracle_id)?.length ?? 0;
+      av = visibleDeckCounts.get(a.oracle_id) ?? 0;
+      bv = visibleDeckCounts.get(b.oracle_id) ?? 0;
     } else if (sortKey === 'openerTakeRate') {
       av = a.p1p1Seen > 0 ? a.p1p1Count / a.p1p1Seen : 0;
       bv = b.p1p1Seen > 0 ? b.p1p1Count / b.p1p1Seen : 0;
@@ -199,7 +201,7 @@ const CardStatsTable: React.FC<{
               const isFilteredCard = selectedCardOracles.includes(cardStatsEntry.oracle_id);
               const isFilteredDeckCard = selectedDeckCardOracles.includes(cardStatsEntry.oracle_id);
               const visiblePoolCount = visiblePoolCounts.get(cardStatsEntry.oracle_id) ?? cardStatsEntry.poolIndices.length;
-              const deckPoolCount = deckCardPoolIndices.get(cardStatsEntry.oracle_id)?.length ?? 0;
+              const deckPoolCount = visibleDeckCounts.get(cardStatsEntry.oracle_id) ?? 0;
               const poolPct = totalScopedPools > 0 ? visiblePoolCount / totalScopedPools : null;
               const openerTakeRate = cardStatsEntry.p1p1Seen > 0 ? cardStatsEntry.p1p1Count / cardStatsEntry.p1p1Seen : 0;
               return (

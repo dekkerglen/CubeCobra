@@ -97,6 +97,7 @@ const DraftSimulatorBottomSection: React.FC<{
   handleToggleSelectedDeckCard: (oracleId: string) => void;
   selectedDeckCardOracles: string[];
   deckCardPoolIndices: Map<string, number[]>;
+  visibleDeckCounts: Map<string, number>;
   inDeckOracles: Set<string> | null;
   inSideboardOracles: Set<string> | null;
   deckInclusionPct: Map<string, number>;
@@ -153,6 +154,7 @@ const DraftSimulatorBottomSection: React.FC<{
   handleToggleSelectedDeckCard,
   selectedDeckCardOracles,
   deckCardPoolIndices,
+  visibleDeckCounts,
   inDeckOracles,
   inSideboardOracles,
   deckInclusionPct,
@@ -341,6 +343,7 @@ const DraftSimulatorBottomSection: React.FC<{
               onSelectDeckCard={handleToggleSelectedDeckCard}
               selectedDeckCardOracles={selectedDeckCardOracles}
               deckCardPoolIndices={deckCardPoolIndices}
+              visibleDeckCounts={visibleDeckCounts}
               inDeckOracles={inDeckOracles}
 
               deckInclusionPct={deckInclusionPct}

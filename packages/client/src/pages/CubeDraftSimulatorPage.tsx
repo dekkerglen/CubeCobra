@@ -1274,6 +1274,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     filteredDecks,
     deckInclusionPct,
     deckCardPoolIndices,
+    visibleDeckCounts,
     inDeckOracles,
     inSideboardOracles,
     visibleCardStats,
@@ -1585,6 +1586,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       handleToggleSelectedDeckCard={handleToggleSelectedDeckCard}
       selectedDeckCardOracles={selectedDeckCardOracles}
       deckCardPoolIndices={deckCardPoolIndices}
+      visibleDeckCounts={visibleDeckCounts}
       inDeckOracles={inDeckOracles}
       inSideboardOracles={inSideboardOracles}
       deckInclusionPct={deckInclusionPct}

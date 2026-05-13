@@ -286,6 +286,18 @@ export default function useDraftSimulatorSelection({
     return counts;
   }, [visibleCardStats]);
 
+  // Deck counts scoped to the active filter — analogous to visiblePoolCounts but for mainboards
+  const visibleDeckCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    if (!filteredDecks) return counts;
+    for (const deck of filteredDecks) {
+      for (const oracleId of deck.mainboard) {
+        counts.set(oracleId, (counts.get(oracleId) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [filteredDecks]);
+
   const hasApproximateFilteredStats = !!(activeFilterPoolIndexSet && !currentRunSetup);
 
   const scopedPools = useMemo(
@@ -358,6 +370,7 @@ export default function useDraftSimulatorSelection({
     filteredDecks,
     deckInclusionPct,
     deckCardPoolIndices,
+    visibleDeckCounts,
     inDeckOracles,
     inSideboardOracles,
     visibleCardStats,
