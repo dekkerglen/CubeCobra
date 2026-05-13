@@ -82,14 +82,10 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, addedByB
   });
 
   const submit = useCallback(async () => {
-    const success = await commitChanges(postTitle, postContent);
-    if (success) {
-      setPostTitle(DEFAULT_BLOG_TITLE);
-      setPostContent('');
-
-      // go to cube page
-      window.location.href = `/cube/list/${cube.id}`;
-    }
+    await commitChanges(postTitle, postContent);
+    setPostTitle(DEFAULT_BLOG_TITLE);
+    setPostContent('');
+    window.location.href = `/cube/list/${cube.id}`;
   }, [commitChanges, cube.id, postContent, postTitle, setPostContent, setPostTitle]);
 
   const handleAdd = useCallback(
