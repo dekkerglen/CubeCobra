@@ -185,8 +185,8 @@ const CardStatsTable: React.FC<{
                 'deckInclusion',
                 'Of pools that drafted this card, how often it made the main deck vs. sideboard',
               )}
-              <th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">Pool</th>
-              <th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">Deck</th>
+              <th className="px-3 py-2 text-right text-xs font-medium tracking-wider">Pool</th>
+              <th className="px-3 py-2 text-right text-xs font-medium tracking-wider">Deck</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
