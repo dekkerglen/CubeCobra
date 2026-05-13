@@ -6,11 +6,56 @@ import { NextFunction, Request, Response } from '../types/express';
 
 // Simple profanity filter replacement to avoid ES module issues
 class SimpleProfanityFilter {
-  private badWords: Set<string>;
+  // Words matched via substring (should never appear anywhere, even embedded in other words)
+  private substringWords: Set<string>;
+  // Words matched via word boundary (avoid false positives like "senft" matching "nft")
+  private wordBoundaryWords: Set<string>;
 
   constructor() {
-    this.badWords = new Set([
-      // Additional words to filter
+    // Slurs and hate speech — always block as substrings
+    this.substringWords = new Set([
+      'nigger',
+      'nigga',
+      'faggot',
+      'fag',
+      'dyke',
+      'tranny',
+      'retard',
+      'spic',
+      'wetback',
+      'beaner',
+      'kike',
+      'chink',
+      'gook',
+      'raghead',
+      'towelhead',
+      'coon',
+      'darkie',
+      'honky',
+      'wop',
+      'dago',
+      'jigaboo',
+      'pickaninny',
+      'mammy',
+      'sambo',
+      'zipperhead',
+      'porch monkey',
+      'jungle bunny',
+      'cotton picker',
+      'camel jockey',
+      'sand nigger',
+      'chinaman',
+      'slant eye',
+      'paki',
+      'wigger',
+      'nude',
+      'deepnude',
+      'undress',
+      'deepfake',
+    ]);
+
+    // Spam, marketing, and drug terms — match as whole words only
+    this.wordBoundaryWords = new Set([
       'dhabi',
       'dubai',
       'persian',
@@ -59,35 +104,52 @@ class SimpleProfanityFilter {
       'monopoly-go',
       'fullmovie',
       'ultimate guide',
-      'nude',
-      'deepnude',
-      'undress',
-      'deepfake',
+      'gringo',
+      'spook',
+      'cracker',
     ]);
   }
 
   isProfane(text: string): boolean {
     if (!text) return false;
     const lowerText = text.toLowerCase();
-    return Array.from(this.badWords).some((word) => lowerText.includes(word));
+    // Substring match for slurs — always catch even if embedded
+    const hasSlur = Array.from(this.substringWords).some((word) => lowerText.includes(word));
+    if (hasSlur) return true;
+    // Word boundary match for spam/marketing terms
+    return Array.from(this.wordBoundaryWords).some((word) => {
+      const regex = new RegExp(`\\b${word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+      return regex.test(lowerText);
+    });
   }
 
   clean(text: string): string {
     if (!text) return text;
     let cleanText = text;
-    this.badWords.forEach((word) => {
-      const regex = new RegExp(word, 'gi');
+    // Substring replace for slurs
+    this.substringWords.forEach((word) => {
+      const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(escaped, 'gi');
+      cleanText = cleanText.replace(regex, '*'.repeat(word.length));
+    });
+    // Word boundary replace for spam terms
+    this.wordBoundaryWords.forEach((word) => {
+      const escaped = word.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      const regex = new RegExp(`\\b${escaped}\\b`, 'gi');
       cleanText = cleanText.replace(regex, '*'.repeat(word.length));
     });
     return cleanText;
   }
 
   addWords(...words: string[]): void {
-    words.forEach((word) => this.badWords.add(word.toLowerCase()));
+    words.forEach((word) => this.substringWords.add(word.toLowerCase()));
   }
 
   removeWords(...words: string[]): void {
-    words.forEach((word) => this.badWords.delete(word.toLowerCase()));
+    words.forEach((word) => {
+      this.substringWords.delete(word.toLowerCase());
+      this.wordBoundaryWords.delete(word.toLowerCase());
+    });
   }
 }
 

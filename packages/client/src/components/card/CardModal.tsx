@@ -111,7 +111,7 @@ const CardModal: React.FC<CardModalProps> = ({
   useEffect(() => {
     if (card.board && availableBoards.length > 0) {
       const otherBoard = availableBoards.find((b) => b.name.toLowerCase() !== card.board);
-      if (otherBoard && !targetBoard) {
+      if (otherBoard && (!targetBoard || targetBoard === card.board)) {
         setTargetBoard(otherBoard.name.toLowerCase());
       }
     }
@@ -313,7 +313,15 @@ const CardModal: React.FC<CardModalProps> = ({
                     block
                     outline
                     onClick={() => {
-                      const { index: _index, board: _board, details: _details, editIndex: _ei, removeIndex: _ri, markedForDelete: _md, ...copy } = card;
+                      const {
+                        index: _index,
+                        board: _board,
+                        details: _details,
+                        editIndex: _ei,
+                        removeIndex: _ri,
+                        markedForDelete: _md,
+                        ...copy
+                      } = card;
                       addCard(copy as Card, card.board!);
                       if (window.innerWidth >= 768) {
                         setRightSidebarMode('edit');

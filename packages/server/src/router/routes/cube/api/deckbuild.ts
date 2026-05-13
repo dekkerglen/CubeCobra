@@ -13,12 +13,7 @@ export const deckbuildHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const { mainboard, sideboard } = await deckbuild(
-      pool,
-      basics,
-      maxSpells ?? 23,
-      maxLands ?? 17,
-    );
+    const { mainboard, sideboard } = await deckbuild(pool, basics, maxSpells ?? 23, maxLands ?? 17);
 
     return res.status(200).send({
       success: 'true',

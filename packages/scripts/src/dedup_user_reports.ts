@@ -9,12 +9,12 @@
  *     src/dedup_user_reports.ts [--dry-run]
  */
 
-import 'dotenv/config';
-
+import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import { NoticeStatus, NoticeType } from '@utils/datatypes/Notice';
 import { Notice } from '@utils/datatypes/Notice';
 import { noticeDao } from 'dynamo/daos';
-import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
+
+import 'dotenv/config';
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');
@@ -69,19 +69,21 @@ async function main() {
     const keep = reports[0]!;
     const dupes = reports.slice(1);
 
-    console.log(`\n  User ${subject}: ${reports.length} report(s), keeping ${keep.id} (${new Date(keep.date).toISOString()})`);
+    console.log(
+      `\n  User ${subject}: ${reports.length} report(s), keeping ${keep.id} (${new Date(keep.date).toISOString()})`,
+    );
 
     for (const dupe of dupes) {
-      totalDuplicates++;
+      totalDuplicates += 1;
       console.log(`    Deleting ${dupe.id} (${new Date(dupe.date).toISOString()})`);
 
       if (!dryRun) {
         try {
           await noticeDao.delete(dupe);
-          totalDeleted++;
+          totalDeleted += 1;
         } catch (err: any) {
           console.error(`    ERROR deleting ${dupe.id}: ${err.message}`);
-          totalErrors++;
+          totalErrors += 1;
         }
       }
     }

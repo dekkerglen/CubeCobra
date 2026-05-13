@@ -49,7 +49,10 @@ const PasteBulkModal: React.FC<PasteBulkModalProps> = ({ isOpen, setOpen, cubeID
             <Alert color="warning" className="mb-2">
               <Flexbox direction="row" gap="2" alignItems="center">
                 <AlertIcon size={16} />
-                <Text sm>You have unsaved changes. Importing will merge into your current changelist. Consider saving your pending changes first.</Text>
+                <Text sm>
+                  You have unsaved changes. Importing will merge into your current changelist. Consider saving your
+                  pending changes first.
+                </Text>
               </Flexbox>
             </Alert>
           )}

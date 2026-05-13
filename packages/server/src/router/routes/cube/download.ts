@@ -1,5 +1,6 @@
 import { cardCollectorNumber, cardName, cardSet } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
+import { CubeCards } from '@utils/datatypes/Cube';
 import filterutil from '@utils/filtering/FilterCards';
 import { sortForDownload } from '@utils/sorting/Sort';
 import { cubeDao } from 'dynamo/daos';
@@ -7,8 +8,6 @@ import { cardFromId } from 'serverutils/carddb';
 import { CSV_HEADER, exportToMtgo, writeCard } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
-
-import { CubeCards } from '@utils/datatypes/Cube';
 
 import { Request, Response } from '../../../types/express';
 

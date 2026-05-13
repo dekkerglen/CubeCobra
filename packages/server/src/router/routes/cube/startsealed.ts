@@ -47,14 +47,16 @@ export const startSealedHandler = async (req: Request, res: Response) => {
     const source = shuffle(mainboard).slice(0, numCards);
     const pool = createPool();
     const cardsArray: any[] = [];
-    for (const card of source) {
+
+    // Helper to add a card to the pool at the appropriate position
+    const addCardToPool = (card: any) => {
       let index1 = 0;
       let index2 = 0;
 
       // sort by color
-      const details = cardFromId((card as any).cardID);
-      const type = (card as any).type_line || details.type;
-      const colors = cardutil.cardColors(card as any);
+      const details = card.details || cardFromId(card.cardID);
+      const type = card.type_line || details.type;
+      const colors = cardutil.cardColors(card);
 
       if (type.toLowerCase().includes('land')) {
         index1 = 7;
@@ -71,12 +73,39 @@ export const startSealedHandler = async (req: Request, res: Response) => {
       }
 
       const cardIndex = cardsArray.length;
-      (card as any).index = cardIndex;
+      card.index = cardIndex;
       cardsArray.push(card);
       if (pool[index2]?.[index1]) {
         pool[index2]![index1]!.push(cardIndex);
       } else {
         pool[index2]![0]!.push(cardIndex);
+      }
+    };
+
+    for (const card of source) {
+      // Expand vouchers into their sub-cards
+      if (cardutil.isVoucher(card as any) && (card as any).voucher_cards && (card as any).voucher_cards.length > 0) {
+        for (const vc of (card as any).voucher_cards) {
+          const subCard = {
+            cardID: vc.cardID,
+            imgUrl: vc.imgUrl,
+            imgBackUrl: vc.imgBackUrl,
+            colors: vc.colors,
+            colorCategory: vc.colorCategory,
+            finish: vc.finish,
+            status: vc.status,
+            cmc: vc.cmc,
+            type_line: vc.type_line,
+            rarity: vc.rarity,
+            notes: vc.notes,
+            tags: vc.tags,
+            custom_name: vc.custom_name,
+            details: vc.details || cardFromId(vc.cardID),
+          };
+          addCardToPool(subCard);
+        }
+      } else {
+        addCardToPool(card);
       }
     }
 

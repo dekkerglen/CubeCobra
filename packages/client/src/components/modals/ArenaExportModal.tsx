@@ -22,7 +22,13 @@ interface ArenaExportModalProps {
   exportAllBoards?: boolean;
 }
 
-const ArenaExportModal: React.FC<ArenaExportModalProps> = ({ isOpen, setOpen, isSortUsed, isFilterUsed, exportAllBoards = false }) => {
+const ArenaExportModal: React.FC<ArenaExportModalProps> = ({
+  isOpen,
+  setOpen,
+  isSortUsed,
+  isFilterUsed,
+  exportAllBoards = false,
+}) => {
   const { alerts, addAlert, dismissAlerts } = useAlerts();
   const [text, setText] = useState('');
   const { cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);

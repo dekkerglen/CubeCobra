@@ -1,7 +1,7 @@
 import React, { useCallback, useState } from 'react';
 
 import { DndContext, DragEndEvent } from '@dnd-kit/core';
-import { cardType, makeSubtitle } from '@utils/cardutil';
+import { cardType, cmcColumn, makeSubtitle } from '@utils/cardutil';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
 
@@ -55,13 +55,16 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
 
         if (dragTime < 200) {
           // if the drag was too quick, it was a click so we move the card to the other location
-
-          const isCreature = cardType(initialDeck.cards[source.index]).toLowerCase().includes('creature');
+          const sourceBoard = source.type === 'deck' ? mainboard : sideboard;
+          const cardIndex = sourceBoard[source.row][source.col][source.index];
+          const card = initialDeck.cards[cardIndex];
+          const isCreature = cardType(card).toLowerCase().includes('creature');
+          const cmc = cmcColumn(card);
 
           const newTarget =
             source.type === 'deck'
-              ? DraftLocation.sideboard(0, source.col, sideboard[0][source.col].length)
-              : DraftLocation.deck(isCreature ? 0 : 1, source.col, mainboard[isCreature ? 0 : 1][source.col].length);
+              ? DraftLocation.sideboard(0, cmc, sideboard[0][cmc]?.length || 0)
+              : DraftLocation.deck(isCreature ? 0 : 1, cmc, mainboard[isCreature ? 0 : 1][cmc]?.length || 0);
 
           // moving cards between mainboard and sideboard
           const sourceLocation = source.type === 'deck' ? mainboard : sideboard;
@@ -70,10 +73,10 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
           const targetLocation = newTarget.type === 'deck' ? mainboard : sideboard;
           const setTarget = newTarget.type === 'deck' ? setMainboard : setSideboard;
 
-          const [card, newSourceLocation] = removeCard(sourceLocation, source);
+          const [removedCard, newSourceLocation] = removeCard(sourceLocation, source);
           setSource(newSourceLocation);
 
-          setTarget(addCard(targetLocation, newTarget, card));
+          setTarget(addCard(targetLocation, newTarget, removedCard));
         }
 
         return;
