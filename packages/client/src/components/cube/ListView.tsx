@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import {
   cardColorIdentity,
@@ -91,6 +91,22 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
   const [loadingVersions, setLoadingVersions] = useState<Set<string>>(new Set());
 
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
+
+  // Reset checked state when card indices change structurally (e.g., after a commit
+  // that removes cards and reassigns indices), so stale index keys don't incorrectly
+  // match different cards.
+  const cardIndexKey = useMemo(
+    () =>
+      cards
+        .map((c) => cardIndex(c))
+        .sort((a, b) => a - b)
+        .join(','),
+    [cards],
+  );
+
+  useEffect(() => {
+    setChecked({});
+  }, [cardIndexKey]);
 
   const sorted = useMemo(
     () =>

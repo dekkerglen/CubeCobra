@@ -21,6 +21,10 @@ jest.mock('../../../src/dynamo/daos', () => ({
 
 jest.mock('serverutils/cubefn');
 
+jest.mock('serverutils/util', () => ({
+  addNotification: jest.fn(),
+}));
+
 import { collaboratorIndexDao, cubeDao, userDao } from '../../../src/dynamo/daos';
 
 describe('POST /cube/api/collaborators/:id/add', () => {

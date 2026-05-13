@@ -1,3 +1,4 @@
+import { normalizeName } from '@utils/cardutil';
 import { boardNameToKey, getBoardDefinitions } from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId } from 'serverutils/carddb';
@@ -54,7 +55,8 @@ export const cubecardnamesHandler = async (req: Request, res: Response) => {
     const cardnames: string[] = [];
 
     for (const card of cubeCards[boardKey]) {
-      binaryInsert(cardFromId(card.cardID).name, cardnames);
+      //Normalize the name like update_cards.ts, as AutoCompleteInput also normalizes what a user types
+      binaryInsert(normalizeName(cardFromId(card.cardID).name), cardnames);
     }
 
     const result = turnToTree(cardnames);

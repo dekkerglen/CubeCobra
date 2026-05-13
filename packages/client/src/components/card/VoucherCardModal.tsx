@@ -15,7 +15,6 @@ import {
   isCardCmcValid,
   normalizeName,
 } from '@utils/cardutil';
-import { cdnUrl } from '@utils/cdnUrl';
 import Card, { BoardType, CARD_STATUSES, FINISHES, VoucherCard } from '@utils/datatypes/Card';
 import { getBoardDefinitions, TagColor } from '@utils/datatypes/Cube';
 import TagData from '@utils/datatypes/TagData';
@@ -263,9 +262,9 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
       return imageUsed;
     }
     if (selectedSubCard) {
-      return selectedSubCard.imgUrl || selectedSubCard.details?.image_normal || cdnUrl('/content/default_card.png');
+      return selectedSubCard.imgUrl || selectedSubCard.details?.image_normal || '/content/default_card.png';
     }
-    return cdnUrl('/content/default_card.png');
+    return '/content/default_card.png';
   }, [selection, imageUsed, selectedSubCard]);
 
   return (
@@ -382,7 +381,7 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
               <div className="mt-2">
                 <ImageFallback
                   src={getSelectedImage()}
-                  fallbackSrc={cdnUrl('/content/default_card.png')}
+                  fallbackSrc="/content/default_card.png"
                   alt={selection === 'voucher' ? cardName(card) : selectedSubCard?.details?.name || 'Card'}
                   className="w-full rounded"
                 />

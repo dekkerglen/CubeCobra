@@ -1,5 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
+import { isVoucher } from '@utils/cardutil';
 import Deck from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
 
@@ -25,54 +26,6 @@ interface BreakdownProps {
 const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber, setPickNumber }) => {
   const [ratings, setRatings] = useState<number[]>([]);
   const [showRatings, setShowRatings] = useLocalStorage(`showDraftRatings-${draft.id}`, true);
-  // Cube context embedding (32-dim) — same value used by CubeDraftPage; fetched once per cube and reused.
-  const [cubeContextEmbedding, setCubeContextEmbedding] = useLocalStorage<number[] | null>(
-    `cube-context-${draft.cube}`,
-    null,
-  );
-  // Gate predict calls until the context fetch resolves so the breakdown ratings
-  // match the with-context predictions the bots actually used during the live draft.
-  const [cubeContextReady, setCubeContextReady] = useState<boolean>(
-    Boolean(cubeContextEmbedding && cubeContextEmbedding.length > 0),
-  );
-
-  useEffect(() => {
-    if (cubeContextEmbedding && cubeContextEmbedding.length > 0) {
-      setCubeContextReady(true);
-      return;
-    }
-    if (!draft.cube) {
-      setCubeContextReady(true);
-      return;
-    }
-
-    let cancelled = false;
-    (async () => {
-      try {
-        const response = await fetch('/api/draftbots/cubecontext', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cubeId: draft.cube }),
-        });
-        if (!response.ok) {
-          if (!cancelled) setCubeContextReady(true);
-          return;
-        }
-        const data = await response.json();
-        if (cancelled) return;
-        if (Array.isArray(data?.embedding)) {
-          setCubeContextEmbedding(data.embedding);
-        }
-        setCubeContextReady(true);
-      } catch {
-        // Non-fatal: server falls back to zero context.
-        if (!cancelled) setCubeContextReady(true);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [draft.cube, cubeContextEmbedding, setCubeContextEmbedding]);
 
   // Handle both CubeCobra and Draftmancer drafts
   const {
@@ -151,13 +104,30 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
     (item) => item.cardIndex === (currentPickData ? currentPickData.cardIndex : undefined),
   );
 
-  useEffect(() => {
-    // Same gating as CubeDraftPage: don't fire the analysis until the cube-context
-    // fetch settles. Otherwise we'd briefly display zero-context ratings, then
-    // re-render with full context — making the displayed ratings disagree with
-    // whatever the bot actually picked during the draft.
-    if (!cubeContextReady) return;
+  // Helper to get oracle_ids from a card index, expanding vouchers to sub-card oracle_ids
+  const getCardOracleIds = useCallback(
+    (cardIndex: number): string[] => {
+      const card = draft.cards[cardIndex];
+      if (!card) return [];
 
+      if (isVoucher(card)) {
+        // Prefer voucher_card_indices (new drafts), fallback to voucher_cards (legacy)
+        if (card.voucher_card_indices && card.voucher_card_indices.length > 0) {
+          return card.voucher_card_indices
+            .map((idx) => draft.cards[idx]?.details?.oracle_id)
+            .filter((id): id is string => Boolean(id));
+        }
+        if (card.voucher_cards && card.voucher_cards.length > 0) {
+          return card.voucher_cards.map((vc) => vc.details?.oracle_id).filter((id): id is string => Boolean(id));
+        }
+      }
+
+      return card.details?.oracle_id ? [card.details.oracle_id] : [];
+    },
+    [draft.cards],
+  );
+
+  useEffect(() => {
     const fetchPredictions = async () => {
       if (!cardsInPack.length) return;
 
@@ -185,31 +155,36 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
         const packOracleIds = packCardInfos.flatMap((info) => info.oracleIds);
         const picksOracleIds = allPicks.flatMap((idx) => getCardOracleIds(idx));
 
-        const body: { pack: string[]; picks: string[]; cubeContext?: number[] } = {
-          pack: packOracleIds,
-          picks: picksOracleIds,
-        };
-        if (cubeContextEmbedding && cubeContextEmbedding.length > 0) {
-          body.cubeContext = cubeContextEmbedding;
-        }
-
         const response = await fetch(`/api/draftbots/predict`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(body),
+          body: JSON.stringify({
+            pack: packOracleIds,
+            picks: picksOracleIds,
+          }),
         });
 
         if (response.ok) {
           const data = await response.json();
-          const newRatings = new Array(cardsInPack.length).fill(0);
-          data.prediction.forEach((pred: { oracle: string; rating: number }) => {
-            const cardIndex = cardsInPack.findIndex(
-              (idx) => draft.cards[idx.cardIndex].details?.oracle_id === pred.oracle,
-            );
-            if (cardIndex !== -1) {
-              newRatings[cardIndex] = pred.rating;
-            }
+          // Build a map of oracle -> rating
+          // /api/draftbots/predict returns { prediction: [{ oracle, rating }, ...] } - flat array
+          const oracleRatings = new Map<string, number>();
+          (data.prediction || []).forEach((pred: { oracle: string; rating: number }) => {
+            oracleRatings.set(pred.oracle, pred.rating);
           });
+
+          // For each card in pack, sum the ratings of its unique oracle_ids (handles vouchers)
+          // Deduplicate to avoid counting same oracle multiple times if voucher has duplicate cards
+          // For vouchers, SUM is correct because picking a voucher gives you ALL sub-cards
+          const rawRatings = packCardInfos.map((info) => {
+            if (info.oracleIds.length === 0) return 0;
+            const uniqueOracleIds = [...new Set(info.oracleIds)];
+            return uniqueOracleIds.reduce((acc, oracleId) => acc + (oracleRatings.get(oracleId) || 0), 0);
+          });
+
+          // Normalize: duplicates get the same rating, then we normalize so total = 100%
+          const total = rawRatings.reduce((acc, r) => acc + r, 0);
+          const newRatings = total > 0 ? rawRatings.map((r) => r / total) : rawRatings;
 
           setRatings(newRatings);
         }
@@ -219,7 +194,7 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
     };
 
     fetchPredictions();
-  }, [cardsInPack, draft.cards, pack, pick, picksList, getCardOracleIds, cubeContextEmbedding, cubeContextReady]);
+  }, [cardsInPack, draft.cards, pack, pick, picksList, getCardOracleIds]);
 
   // Add keyboard navigation
   useEffect(() => {

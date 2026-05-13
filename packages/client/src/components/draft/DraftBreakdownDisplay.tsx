@@ -43,23 +43,14 @@ const DraftBreakdownDisplay: React.FC<DraftBreakdownDisplayProps> = ({
 }) => {
   return (
     <div className="draft-breakdown-display" role="region" aria-label="Draft picks and recommendations">
-      <div className="text-xs text-gray-600 text-center mb-2">(Use arrow keys ← → to navigate picks)</div>
+      <p className="text-xs lg:text-sm italic text-text-secondary text-center mb-2">
+        (Use arrow keys ← → to navigate picks)
+      </p>
       {showRatings && (
-        <div
-          className="recommendation-description"
-          style={{
-            marginBottom: '1rem',
-            padding: '0.5rem',
-            backgroundColor: '#f0f0f0',
-            borderRadius: '4px',
-            textAlign: 'center',
-          }}
-        >
-          <p style={{ margin: 0, fontSize: '0.9rem', color: '#333' }}>
-            These values are generated using the CubeCobra machine learning engine; the highest value indicates what a
-            bot's pick would have been in that position in the draft.
-          </p>
-        </div>
+        <p className="text-xs lg:text-sm italic text-text-secondary text-center mb-4">
+          These values are generated using the CubeCobra machine learning engine; the highest value indicates what a
+          bot's pick would have been in that position in the draft.
+        </p>
       )}
       <div>
         <Card className="mb-3">

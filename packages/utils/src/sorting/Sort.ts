@@ -11,6 +11,8 @@ import {
   cardDevotion,
   cardElo,
   cardFinish,
+  cardFirstPrintYear,
+  cardKeywords,
   cardName,
   cardPickCount,
   cardPopularity,

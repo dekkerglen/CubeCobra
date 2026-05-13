@@ -71,6 +71,8 @@ alphaNumericOpValue -> equalityOperator alphaNumericValue {% ([op, value]) => eq
 
 gameOpValue -> equalityOperator gameValue {% ([op, value]) => setContainsOperation(op, value) %}
 
+exactGameOpValue -> equalityOperator "is-"i gameValue {% ([op, , value]) => setContainsOperation(op, value) %}
+
 gameValue -> ("Paper"i | "Arena"i | "Mtgo"i) {% ([[game]]) => game.toLowerCase() %}
 
 @{%
