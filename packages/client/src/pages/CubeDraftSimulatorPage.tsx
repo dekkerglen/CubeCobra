@@ -1960,10 +1960,12 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
         </p>
         <p>
           Each bot uses a machine learning model trained on hundreds of thousands of real human draft picks. At each
-          pick, the bot encodes its current pool into a 128-dimensional embedding vector that represents the archetype
-          and strategy it has been drafting toward. The draft decoder then scores every card in the pack based on how
-          well it fits that embedding, and the bot selects the highest-rated card. Because the model learned directly
-          from human draft data, it naturally prioritizes synergy and deck cohesion over raw individual card power.
+          pick, the bot encodes its current pool into a 128-dimensional embedding that represents the archetype and
+          strategy it has been drafting toward. That pool embedding is combined with a 32-dimensional cube-context
+          vector — a summary of the cube's overall card composition — to form a 160-dimensional input to the draft
+          decoder, which scores every card in the pack and selects the highest-rated one. Because the model learned
+          directly from human draft data, it naturally prioritizes synergy and deck cohesion over raw individual card
+          power.
         </p>
         <p>
           The simulation tracks pick rate, average pick position within the pack, wheel count (drafted after the pack
@@ -1979,27 +1981,6 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
         <p>
           Pack generation still starts on the server, because CubeCobra needs the cube, the draft format, and the exact
           initial seat/pack layout. After that setup payload arrives, the expensive simulation work runs in the browser.
-        </p>
-        <p>
-          The draft model and deckbuilder are loaded through TensorFlow.js and executed on the client with the browser
-          GPU path. In practice that means your machine does the pick-by-pick inference and deckbuilding locally instead
-          of sending every draft step back to the backend.
-        </p>
-        <p>
-          Completed runs are stored locally in IndexedDB, not on CubeCobra&apos;s servers. That keeps the tool
-          effectively backend-light after setup while still allowing recent runs to be reopened from this browser.
-        </p>
-      </div>
-    ),
-  },
-  {
-    q: 'How does it run?',
-    answer: (
-      <div className="space-y-3 text-sm text-text-secondary leading-relaxed">
-        <p>
-          Pack generation still starts on the server, because CubeCobra needs the cube, the draft format, and the
-          exact initial seat/pack layout. After that setup payload arrives, the expensive simulation work runs in the
-          browser.
         </p>
         <p>
           The draft model and deckbuilder are loaded through TensorFlow.js and executed on the client with the browser
