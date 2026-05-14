@@ -173,7 +173,10 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
 
     // Special handling for Playtest sub-items
     if (parentKey === 'playtest' && playtestViewContext) {
-      if (['playtest', 'sample-pack', 'practice-draft', 'decks'].includes(activeLink)) {
+      if (
+        subItem.key !== 'draft-simulator' &&
+        ['playtest', 'sample-pack', 'practice-draft', 'decks'].includes(activeLink)
+      ) {
         e.preventDefault();
         playtestViewContext.setView(subItem.key);
       }
