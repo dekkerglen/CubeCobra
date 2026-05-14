@@ -152,7 +152,7 @@ const ClusterDetailPanel: React.FC<{
 
   const CARD_TABS = [
     { key: 'staples', label: 'Staples', title: 'Cards drafted most often across decks in this cluster' },
-    { key: 'distinct', label: 'Distinct', title: 'Cards characteristic of this cluster — embedding × lift, assigned to their best-fit cluster across the page so no card appears in more than one tab here' },
+    { key: 'identity', label: 'Identity', title: 'Cards most representative of this cluster — appear in >5% of cluster decks, sorted by closeness to the cluster centroid' },
     { key: 'exemplary', label: 'Exemplary Deck', title: 'A real deck from this cluster chosen to best match the cluster\u2019s representative high-priority card bucket' },
     { key: 'recommendations', label: 'Recommendations', title: 'Use the cluster as a local recommender seed and suggest cards that would strengthen it' },
   ] as const;
@@ -247,7 +247,7 @@ const ClusterDetailPanel: React.FC<{
     [excludeManaFixingLands],
   );
   const visibleCommonCards = pickList(skeleton.coreCards);
-  const visibleDistinctCards = pickList(skeleton.distinctCards);
+  const visibleIdentityCards = pickList(skeleton.identityCards);
 
   const visibleClusterRecommendations = useMemo(() => {
     const list = excludeManaFixingLands
@@ -467,7 +467,7 @@ const ClusterDetailPanel: React.FC<{
             )}
           </div>
         )}
-        {cardTab === 'distinct' && (
+        {cardTab === 'identity' && (
           <div className="flex flex-col gap-3">
             <div className="flex justify-end">
               <label className="inline-flex items-center gap-2 text-xs text-text-secondary">
@@ -480,17 +480,17 @@ const ClusterDetailPanel: React.FC<{
                 Hide mana-fixing lands
               </label>
             </div>
-            {visibleDistinctCards.length > 0 ? (
+            {visibleIdentityCards.length > 0 ? (
               <div className="grid grid-cols-4 md:grid-cols-6 gap-1.5">
-                {visibleDistinctCards.slice(0, 12).map((card) => (
+                {visibleIdentityCards.slice(0, 12).map((card) => (
                   <SkeletonCardImage key={card.oracle_id} card={card} onCardClick={onCardClick} />
                 ))}
               </div>
             ) : (
               <Text sm className="text-text-secondary">
-                {(skeleton.distinctCards?.default.length ?? 0) === 0
-                  ? 'No distinct cards found for this cluster.'
-                  : 'No distinct cards remain after filtering.'}
+                {(skeleton.identityCards?.default.length ?? 0) === 0
+                  ? 'No identity cards found for this cluster.'
+                  : 'No identity cards remain after filtering.'}
               </Text>
             )}
           </div>

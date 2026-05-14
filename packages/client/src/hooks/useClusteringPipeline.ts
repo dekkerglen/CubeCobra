@@ -126,7 +126,7 @@ export default function useClusteringPipeline({
       cacheVersion < SCORING_ALGORITHM_VERSION ||
       skeletons.some(
         (s) =>
-          s.distinctCards === undefined ||
+          s.identityCards === undefined ||
           Array.isArray(s.coreCards) ||
           !Array.isArray(s.coreCards?.default),
       );

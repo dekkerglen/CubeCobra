@@ -196,7 +196,8 @@ export interface ArchetypeSkeleton {
   poolCount: number;
   poolIndices: number[]; // indices into slimPools
   coreCards: RankedCards; // staples: most-drafted cards in this cluster, ranked by raw fraction
-  distinctCards?: RankedCards; // distinct characterizers: cosine(card_emb, centroid) × log(1 + lift), assigned to home cluster across page (no overlap across distinct/core tabs), 10% floor; per-cluster fallback when sparse
+  distinctCards?: RankedCards; // legacy: kept so older locally cached runs still type-check
+  identityCards?: RankedCards; // identity cards: appear in >5% of cluster decks, sorted by cosine(card_emb, centroid) desc
   signatureCards?: SkeletonCard[]; // legacy: kept so older locally cached runs still type-check
   occasionalCards: SkeletonCard[]; // deprecated; kept for older locally stored runs
   sideboardCards: SkeletonCard[]; // most common sideboard-only cards across decks in this cluster
