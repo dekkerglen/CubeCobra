@@ -296,6 +296,7 @@ const DraftMapCard: React.FC<{
   setDraftBreakdownOpen: React.Dispatch<React.SetStateAction<boolean>>;
   mapPanelHasBoth: boolean;
   selectedCards: CardStats[];
+  selectedDeckCards: CardStats[];
   displayRunData: SimulationRunData;
   selectedCard: CardStats | null;
   selectedCardStats: CardStats | null;
@@ -319,6 +320,7 @@ const DraftMapCard: React.FC<{
   draftMapScopeSubtitle: string;
   draftMapScopeSeatCount: number;
   onClearSelectedCards: () => void;
+  onClearSelectedDeckCards: () => void;
   cubeOracleSet: Set<string>;
   excludeManaFixingLands: boolean;
   setExcludeManaFixingLands: (v: boolean) => void;
@@ -350,6 +352,7 @@ const DraftMapCard: React.FC<{
   setDraftBreakdownOpen,
   mapPanelHasBoth,
   selectedCards,
+  selectedDeckCards,
   displayRunData,
   selectedCard,
   selectedCardStats,
@@ -368,6 +371,7 @@ const DraftMapCard: React.FC<{
   draftMapScopeSubtitle,
   draftMapScopeSeatCount,
   onClearSelectedCards,
+  onClearSelectedDeckCards,
   cubeOracleSet,
   excludeManaFixingLands,
   setExcludeManaFixingLands,
@@ -500,35 +504,55 @@ const DraftMapCard: React.FC<{
             )}
           </div>
           {showDraftMapScopePanel && (() => {
-            const cardInfo: MapSelectedCardInfo | undefined = mapPanelHasBoth && selectedCards.length > 0
+            const hasAnyCardFilter = selectedCards.length > 0 || selectedDeckCards.length > 0;
+
+            // Build a combined display name: "X in pool and Y in deck" / "X and Y in deck" / etc.
+            const buildCardFilterLabel = (): string => {
+              const poolNames = selectedCards.map((c) => c.name);
+              const deckNames = selectedDeckCards.map((c) => c.name);
+              const joinNames = (names: string[]) =>
+                names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+              if (poolNames.length > 0 && deckNames.length > 0)
+                return `${joinNames(poolNames)} in pool and ${joinNames(deckNames)} in deck`;
+              if (deckNames.length > 0) return `${joinNames(deckNames)} in deck`;
+              return `${joinNames(poolNames)} in pool`;
+            };
+
+            const allCardImages = [
+              ...selectedCards.map((c) => ({ oracleId: c.oracle_id, name: c.name, imageUrl: displayRunData.cardMeta[c.oracle_id]?.imageUrl ?? '' })),
+              ...selectedDeckCards.map((c) => ({ oracleId: c.oracle_id, name: c.name, imageUrl: displayRunData.cardMeta[c.oracle_id]?.imageUrl ?? '' })),
+            ].filter((img) => img.imageUrl);
+
+            const cardInfo: MapSelectedCardInfo | undefined = mapPanelHasBoth && hasAnyCardFilter
               ? {
-                  cardImages: selectedCards
-                    .map((c) => ({ oracleId: c.oracle_id, name: c.name, imageUrl: displayRunData.cardMeta[c.oracle_id]?.imageUrl ?? '' }))
-                    .filter((img) => img.imageUrl),
-                  name: selectedCards.map((c) => c.name).join(' + '),
-                  pickRate: selectedCards.length === 1 ? (statsForScope?.pickRate ?? selectedCard?.pickRate) : undefined,
-                  avgPickPosition: selectedCards.length === 1 ? (statsForScope?.avgPickPosition ?? selectedCard?.avgPickPosition) : undefined,
-                  onClear: onClearSelectedCards,
+                  cardImages: allCardImages,
+                  name: buildCardFilterLabel(),
+                  pickRate: selectedCards.length === 1 && selectedDeckCards.length === 0 ? (statsForScope?.pickRate ?? selectedCard?.pickRate) : undefined,
+                  avgPickPosition: selectedCards.length === 1 && selectedDeckCards.length === 0 ? (statsForScope?.avgPickPosition ?? selectedCard?.avgPickPosition) : undefined,
+                  onClear: () => { onClearSelectedCards(); onClearSelectedDeckCards(); },
                 }
               : undefined;
             return (
               <div className="min-w-0 flex flex-col gap-3">
-                {!mapPanelHasBoth && selectedCards.length > 0 && (
+                {!mapPanelHasBoth && hasAnyCardFilter && (
                   <div className="rounded-lg border border-border bg-bg-accent/40 px-3 py-2.5">
                     <Flexbox direction="row" gap="3" alignItems="start" className="min-w-0">
-                      {selectedCard && displayRunData.cardMeta[selectedCard.oracle_id]?.imageUrl && (
-                        <div className="flex-shrink-0">
-                          <LinkedCardImage
-                            oracleId={selectedCard.oracle_id}
-                            name={selectedCard.name}
-                            imageUrl={displayRunData.cardMeta[selectedCard.oracle_id].imageUrl}
-                            size={SIM_PREVIEW_CARD_W}
-                          />
+                      {allCardImages.length > 0 && (
+                        <div className="flex flex-row gap-1 flex-shrink-0">
+                          {allCardImages.map((img) => (
+                            <LinkedCardImage
+                              key={img.oracleId}
+                              oracleId={img.oracleId}
+                              name={img.name}
+                              imageUrl={img.imageUrl}
+                              size={SIM_PREVIEW_CARD_W}
+                            />
+                          ))}
                         </div>
                       )}
                       <div className="min-w-0 flex-1">
                         <Text semibold className="leading-snug">
-                          {selectedCards.map((c) => c.name).join(' + ')}
+                          {buildCardFilterLabel()}
                         </Text>
                         {selectedCardScopeLabel && (
                           <div className="mt-0.5">
@@ -538,7 +562,7 @@ const DraftMapCard: React.FC<{
                         <div className="mt-0.5">
                           <Text xs className="text-text-secondary/60">{detailedViewSubtitle}</Text>
                         </div>
-                        {statsForScope && (
+                        {statsForScope && selectedCards.length === 1 && selectedDeckCards.length === 0 && (
                           <Flexbox direction="row" gap="3" alignItems="center" className="flex-wrap mt-1.5">
                             <span className="text-xs text-text-secondary/50 font-medium">
                               Pick rate <span className="text-text-secondary/80">{`${(statsForScope.pickRate * 100).toFixed(1)}%`}</span>
@@ -549,7 +573,7 @@ const DraftMapCard: React.FC<{
                           </Flexbox>
                         )}
                       </div>
-                      <button type="button" className="flex-shrink-0 text-xs text-text-secondary hover:text-text" onClick={onClearSelectedCards}>
+                      <button type="button" className="flex-shrink-0 text-xs text-text-secondary hover:text-text" onClick={() => { onClearSelectedCards(); onClearSelectedDeckCards(); }}>
                         ✕
                       </button>
                     </Flexbox>

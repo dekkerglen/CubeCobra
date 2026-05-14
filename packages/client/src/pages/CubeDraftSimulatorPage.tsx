@@ -1469,6 +1469,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       setDraftBreakdownOpen={setDraftBreakdownOpen}
       mapPanelHasBoth={mapPanelHasBoth}
       selectedCards={selectedCards}
+      selectedDeckCards={selectedDeckCards}
       displayRunData={displayRunData}
       selectedCard={selectedCard}
       selectedCardStats={selectedCardStats}
@@ -1487,6 +1488,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       draftMapScopeSubtitle={draftMapScopeSubtitle}
       draftMapScopeSeatCount={draftMapScopeSeatCount}
       onClearSelectedCards={() => setSelectedCardOracles([])}
+      onClearSelectedDeckCards={() => setSelectedDeckCardOracles([])}
       cubeOracleSet={cubeOracleSet}
       excludeManaFixingLands={excludeManaFixingLands}
       setExcludeManaFixingLands={setExcludeManaFixingLands}
