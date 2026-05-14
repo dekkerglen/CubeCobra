@@ -79,6 +79,19 @@ export async function loadDraftBot(onProgress?: (pct: number) => void): Promise<
     // Dynamic import — keeps TF.js (~3 MB) out of the main bundle
     tf = await import('@tensorflow/tfjs');
 
+    // On iOS, WebGL hits the shared memory budget (~1.2 GB) and gets killed
+    // mid-simulation. Switch to the WASM backend which uses system RAM instead.
+    const isIOS =
+      typeof navigator !== 'undefined' &&
+      (/iPhone|iPad|iPod/.test(navigator.userAgent) ||
+        (navigator.maxTouchPoints > 1 && /Mac/.test(navigator.userAgent)));
+    if (isIOS) {
+      const wasmModule = await import('@tensorflow/tfjs-backend-wasm');
+      wasmModule.setWasmPaths('https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-wasm@4.22.0/dist/');
+      await tf.setBackend('wasm');
+      await tf.ready();
+    }
+
     // Oracle index map (1.6 MB) — maps integer index → oracle_id
     const mapRes = await fetch(`${MODEL_BASE}/indexToOracleMap.json`);
     if (!mapRes.ok) throw new Error(`Failed to load oracle index map: ${mapRes.status}`);
