@@ -23,7 +23,21 @@
 import { cdnUrl } from '@utils/cdnUrl';
 import { BasicLandInfo } from '@utils/datatypes/SimulationReport';
 
-const modelUrl = (path: string): string => cdnUrl(`/model/${path}`);
+// Two ways to reach the model bundle:
+//   - CDN (CloudFront assets bucket) — fast, but the mirror has lagged in prod
+//     and returned 403s for individual files (e.g. indexToOracleMap.json).
+//   - Same-origin /model/* — the Express proxy (routes/model.ts) that streams
+//     from the public S3 bucket. Slower but always has the full bundle.
+const cdnModelUrl = (path: string): string => cdnUrl(`/model/${path}`);
+const originModelUrl = (path: string): string => `/model/${path}`;
+
+// Resolved once per page load by probing the oracle map. If the CDN copy is
+// missing/!ok we pin every subsequent model request — TF.js graph models
+// included — to the same-origin proxy so a partial mirror can't break drafting.
+let useCdnForModel: boolean | null = null;
+
+const modelUrl = (path: string): string =>
+  useCdnForModel === false ? originModelUrl(path) : cdnModelUrl(path);
 
 let tf: typeof import('@tensorflow/tfjs') | null = null;
 
@@ -94,8 +108,17 @@ export async function loadDraftBot(onProgress?: (pct: number) => void): Promise<
       await tf.ready();
     }
 
-    // Oracle index map (1.6 MB) — maps integer index → oracle_id
-    const mapRes = await fetch(modelUrl('indexToOracleMap.json'));
+    // Oracle index map (1.6 MB) — maps integer index → oracle_id. This is the
+    // first model request, so use it to resolve which base works: prefer the
+    // CDN, fall back to the same-origin proxy, and pin that choice for the rest
+    // of the load (TF.js graph models below).
+    let mapRes = await fetch(cdnModelUrl('indexToOracleMap.json'));
+    if (mapRes.ok) {
+      useCdnForModel = true;
+    } else {
+      useCdnForModel = false;
+      mapRes = await fetch(originModelUrl('indexToOracleMap.json'));
+    }
     if (!mapRes.ok) throw new Error(`Failed to load oracle index map: ${mapRes.status}`);
     const oracleMap: Record<string, string> = await mapRes.json();
     numOracles = Object.keys(oracleMap).length;
