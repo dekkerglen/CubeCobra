@@ -1,4 +1,5 @@
-Since 1.6.0
+I'm very excited to announce a large number of changes that we have been working on the last few months. The guiding philosophy behind this update is that we want to make the site intuitive and easy to use, especially towards newcomers to Cube. I recently had a conversation with someone who was a long time magic player, but had never made a cube. I observed them using the website, and they often expressed confusion or even frustration at certain points. I think that I have developed a sort of tunnel vision in some respects with how users are actually interacting with the site, and grown too comfortable with the current status quo of the site. 
+
 
 # New Features
 

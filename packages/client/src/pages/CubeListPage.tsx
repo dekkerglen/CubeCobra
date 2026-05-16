@@ -1,7 +1,6 @@
 import React, { useContext, useEffect, useMemo, useRef } from 'react';
 
-import Card from '@utils/datatypes/Card';
-import Cube, { getViewByName, getViewDefinitions } from '@utils/datatypes/Cube';
+import Cube, { CubeCards, getViewByName, getViewDefinitions } from '@utils/datatypes/Cube';
 import { UserRoles } from '@utils/datatypes/User';
 
 import Container from 'components/base/Container';
@@ -34,10 +33,7 @@ import MainLayout from 'layouts/MainLayout';
 
 interface CubeListPageProps {
   cube: Cube;
-  cards: {
-    mainboard: Card[];
-    maybeboard: Card[];
-  };
+  cards: CubeCards;
 }
 
 const CubeListPageRaw: React.FC = () => {
@@ -275,10 +271,14 @@ const CubeListPage: React.FC<CubeListPageProps> = ({ cube, cards }) => {
   const user = useContext(UserContext);
   const isAdmin = !!user && Array.isArray(user.roles) && user.roles.includes(UserRoles.ADMIN);
   const isOwner = (!!user && cube.owner?.id === user.id) || isAdmin;
-  // Only auto-open the edit sidebar for an owner whose cube is still empty
-  // (no mainboard/maybeboard cards — basics aren't included in this prop), so
-  // it doesn't intrude every time they view an established cube.
-  const isCubeEmpty = cards.mainboard.length === 0 && cards.maybeboard.length === 0;
+  // Only auto-open the edit sidebar for an owner whose cube is still empty, so
+  // it doesn't intrude every time they view an established cube. Boards can be
+  // customized, so iterate every board rather than assuming mainboard/maybeboard
+  // exist. Basics auto-populate on creation and so don't count as "started".
+  const isCubeEmpty = Object.entries(cards).every(([boardName, list]) => {
+    if (boardName.toLowerCase() === 'basics') return true;
+    return !Array.isArray(list) || list.length === 0;
+  });
 
   return (
     <MainLayout useContainer={false}>
