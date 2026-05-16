@@ -165,7 +165,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
       transparent={transparent}
     >
       <Flexbox direction="col" gap="1" className="max-h-96 overflow-auto p-2">
-        {(user.cubes || []).slice(0, 10).map((item) => (
+        {(user.cubes || []).slice(0, 20).map((item) => (
           <NavLink key={`dropdown_cube_${item.name}`} href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}>
             {item.name}
           </NavLink>
@@ -243,7 +243,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
           <Flexbox direction="col" gap="3">
             <Flexbox direction="col" gap="2">
               <div className="text-xs uppercase font-bold text-text-secondary tracking-wide">Your Cubes</div>
-              {(user.cubes || []).slice(0, 10).map((item) => (
+              {(user.cubes || []).slice(0, 20).map((item) => (
                 <NavLink key={`combined_cube_${item.name}`} href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}>
                   {item.name}
                 </NavLink>
@@ -533,7 +533,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
                 <Flexbox direction="col" gap="3">
                   <Flexbox direction="col" gap="2">
                     <div className="text-xs uppercase font-bold text-text-secondary tracking-wide">Your Cubes</div>
-                    {(user.cubes || []).slice(0, 10).map((item) => (
+                    {(user.cubes || []).slice(0, 20).map((item) => (
                       <NavLink
                         key={`mobile_cube_${item.name}`}
                         href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}

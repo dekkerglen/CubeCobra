@@ -20,7 +20,15 @@ export const handler = async (req: Request, res: Response) => {
   const result = await cubeDao.queryByOwner(owner, sort, ascending, lastKey || undefined, 36);
 
   // Filter by listing visibility
-  const cubes = result.items.filter((cube: any) => isCubeListed(cube, req.user));
+  let cubes = result.items.filter((cube: any) => isCubeListed(cube, req.user));
+
+  // The owner's pinned cubes are hoisted onto the first page (see user/view.ts);
+  // drop them from later pages so they don't appear twice.
+  if (req.user && req.user.id === owner) {
+    const pinnedResult = await cubeDao.queryCubesPinnedBy(owner, undefined, 200);
+    const pinnedIds = new Set(pinnedResult.cubeIds);
+    cubes = cubes.filter((cube: any) => !pinnedIds.has(cube.id));
+  }
 
   return res.status(200).send({
     success: 'true',

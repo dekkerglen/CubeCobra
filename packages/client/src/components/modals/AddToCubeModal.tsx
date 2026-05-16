@@ -1,4 +1,4 @@
-import React, { useContext, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { cardId, cardImageUrl, cardName } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
@@ -14,6 +14,7 @@ import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Select from '../base/Select';
+import Spinner from '../base/Spinner';
 import ImageFallback from '../ImageFallback';
 import LoadingButton from '../LoadingButton';
 
@@ -39,16 +40,52 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
 }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const user: User | null = useContext(UserContext);
-  const cubes: Cube[] = useMemo(() => user?.cubes ?? [], [user?.cubes]);
 
-  let def = cubeContext;
-  if (cubes.length > 0) {
-    def = cubes.map((cube) => cube.id).includes(cubeContext ?? '') ? (cubeContext ?? '') : cubes[0].id;
-  }
-  const [selectedCube, setSelectedCube] = useState<string>(cubes && cubes.length > 0 ? (def ?? '') : '');
+  const [cubes, setCubes] = useState<Cube[]>([]);
+  const [cubesLoaded, setCubesLoaded] = useState<boolean>(false);
+  const [cubesLoading, setCubesLoading] = useState<boolean>(false);
+  const [selectedCube, setSelectedCube] = useState<string>('');
   const [selectedBoard, setSelectedBoard] = useLocalStorage<string>('selectedBoardForATCModal', 'mainboard');
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
+
+  // Lazy-load the user's full cube list (pinned first, then by date edited) the
+  // first time the modal opens.
+  useEffect(() => {
+    if (!isOpen || cubesLoaded || cubesLoading || !user) return;
+    let cancelled = false;
+    (async () => {
+      setCubesLoading(true);
+      try {
+        const res = await csrfFetch('/cube/api/mycubes');
+        if (cancelled) return;
+        if (res.ok) {
+          const json = await res.json();
+          if (json.success === 'true' && Array.isArray(json.cubes)) {
+            setCubes(json.cubes as Cube[]);
+            setCubesLoaded(true);
+          }
+        }
+      } catch {
+        // best-effort; an empty list renders the "no cubes" state
+      } finally {
+        if (!cancelled) setCubesLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isOpen, cubesLoaded, cubesLoading, user, csrfFetch]);
+
+  // Pick a sensible default selection once cubes are available.
+  useEffect(() => {
+    if (cubes.length === 0) return;
+    setSelectedCube((prev) => {
+      if (prev && cubes.some((cube) => cube.id === prev)) return prev;
+      if (cubeContext && cubes.some((cube) => cube.id === cubeContext)) return cubeContext;
+      return cubes[0].id;
+    });
+  }, [cubes, cubeContext]);
 
   // Get board options for the selected cube
   const boardOptions = useMemo(() => {
@@ -136,6 +173,28 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
     }
     setLoading(false);
   };
+
+  if (user && (cubesLoading || !cubesLoaded)) {
+    return (
+      <Modal isOpen={isOpen} setOpen={setOpen} sm scrollable>
+        <ModalHeader setOpen={setOpen}>{cardName(card)}</ModalHeader>
+        <ModalBody className="centered" scrollable>
+          <Flexbox direction="col" alignItems="center" gap="2" className="py-6">
+            <Spinner lg />
+          </Flexbox>
+        </ModalBody>
+        <ModalFooter>
+          <Flexbox direction="row" justify="between" gap="2" className="w-full">
+            {!hideAnalytics && (
+              <Button block color="accent" href={`/tool/card/${cardId(card)}`} target="_blank">
+                Analytics
+              </Button>
+            )}
+          </Flexbox>
+        </ModalFooter>
+      </Modal>
+    );
+  }
 
   if (!cubes || cubes.length === 0) {
     return (
