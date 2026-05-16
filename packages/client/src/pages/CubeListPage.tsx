@@ -275,10 +275,18 @@ const CubeListPage: React.FC<CubeListPageProps> = ({ cube, cards }) => {
   const user = useContext(UserContext);
   const isAdmin = !!user && Array.isArray(user.roles) && user.roles.includes(UserRoles.ADMIN);
   const isOwner = (!!user && cube.owner?.id === user.id) || isAdmin;
+  // Only auto-open the edit sidebar for an owner whose cube is still empty
+  // (no mainboard/maybeboard cards — basics aren't included in this prop), so
+  // it doesn't intrude every time they view an established cube.
+  const isCubeEmpty = cards.mainboard.length === 0 && cards.maybeboard.length === 0;
 
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cube.id} defaultView={defaultView} defaultEditSidebarOpen={isOwner}>
+      <DisplayContextProvider
+        cubeID={cube.id}
+        defaultView={defaultView}
+        defaultEditSidebarOpen={isOwner && isCubeEmpty}
+      >
         <RotoDraftContextProvider>
           <CubeLayout
             cube={cube}

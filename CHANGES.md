@@ -8,7 +8,6 @@ Since 1.6.0
 - New cubes get a random art crop from a curated card set instead of always Doubling Cube
 - Changelog entries are now clickable, each linking to a detail page with the full changelog
 - Point-in-time cube list view on changelog detail pages — same view controls (table, visual spoiler, curve, stacks), filter, sort, and display sidebar as the main list, boards kept distinct (mainboard, maybeboard)
-- Full-width banner on the PIT list page marking it as a historical snapshot, with a link back to the changelog entry
 - "Download Point in Time Cube" on changelog detail pages — reconstructs the historical cube as CSV
 - "Compare Point in Time Cube with Present" — side-by-side historical vs current
 - Export button on all compare pages (regular and PIT) — text file with In Both, Only in Base, Only in Comparison
@@ -18,34 +17,34 @@ Since 1.6.0
 - New `kw:`/`keyword:`/`keywords:` filter by keyword (e.g. `kw:flying`, `keywords>3`)
 - New `is:standard` filter — first printed in a standard expansion
 - New `is:supplemental` filter — first printed in a supplemental product
-- Improved bot deckbuilding — cards added one at a time by ML score with a cumulative 10%-per-copy duplicate penalty, so bots stop stacking duplicates
+- Improved bot deckbuilding — no changes to model but changed how we are using it
 - `game:arena`/`game:paper`/`game:mtgo` now match any printing ever available in that game, not just the current printing
 - New `game:is-arena`/`game:is-paper`/`game:is-mtgo` filter — only the specific printing's availability (the old strict behavior)
 - Adding a collaborator now notifies that user
 - Added `date_last_updated` to cube exports
 - New "Use Base Card Data" display option — sorts/filters use a card's original printed attributes (CMC, colors, color category, type, rarity, name) instead of overrides
-- New "Disable Follow Notifications" setting — suppress notifications when users follow your cube (Options) or you (Display Preferences)
-- Bot decks get meaningful archetype names (e.g. "UW Control", "RG Aggro") from ML cluster centers instead of generic labels
+- New "Disable Follow Notifications" setting — suppress notifications when users follow your cube or you
+- Bot decks get meaningful archetype names (e.g. "UW Control", "RG Aggro") from hand annotated ML cluster centers instead of generic labels
 - Deck naming is back — set your own deck name in the deckbuilder; blank auto-generates a cluster-based archetype name
 - New Draft Simulator (in the cube nav) — runs hundreds of full drafts against the ML bots in your browser, then shows per-card pick stats (average pick, wheel rate, draft rating vs. Elo), the archetypes that emerged with color-pair breakdown, a draft map, and the simulated bot decks and pools; choose drafts/seats, filter and sort the stats, and drill into any archetype or deck
-- Streamlined cube creation — "Create A New Cube" creates it instantly (named `${username}'s New Cube`) and lands you on its list page, no modal; rename from the cube hero anytime
-- Edit sidebar expanded by default on desktop when viewing the list page of a cube you own
+- Streamlined cube creation — "Create A New Cube" creates it instantly (named `<username>'s New Cube`) and lands you on its list page, no modal; rename from the cube hero anytime
+- Edit sidebar expanded by default on desktop when viewing the list page of an empty cube you own
 - New "Welcome to your new cube!" onboarding card on an empty owned cube's list page, pointing to the edit sidebar, packages, or the seed crystal generator
-- New "Seed Crystal" generator — bootstrap a partial or complete cube from one seed card by combining its synergistic neighbours with Smart Search fillers; options for printing preference, card count, color inclusion, and a balanced mode (even across colors / colorless / multicolored / lands). Smart Search runs iteratively (~100 cards per call, each batch fed into the next), so the cube refines as it grows
-- Renamed the "Recommender" Analysis tab to "Smart Search" (now under "At a Glance") and rebuilt it to match CubeCobra's search UX: inline filter, paginated grid of card images, same context-aware sort. Core Cards panel, maybeboard toggle, and show-images checkbox removed; clicking a result opens Add to Cube prefilled with the current cube
+- New "Seed Crystal" generator — bootstrap a partial or complete cube from one seed card using the draftbot and smart search models
+- Renamed the "Recommender" Analysis tab to "Smart Search" and rebuilt it to match CubeCobra's search UX: inline filter, paginated grid of card images, same context-aware sort. Core Cards panel, maybeboard toggle, and show-images checkbox removed
 - Brought back "Save as Default Sort" in the display sidebar — saves the current sort as the active view's default
 - New help blurbs at the bottom of the display and edit sidebars (links to Boards/Views settings and Smart Search)
 - Edit sidebar's Board dropdown defaults to the first board in the current view (and follows view switches) instead of always Mainboard
 - Richer link previews for shared blog posts and comments — comment links show the comment text and poster avatar; blog links show an excerpt plus a changelist summary with the cube's image
 - Redesigned landing page and dashboard with a new hero — unified search across cubes, cards, and packages with suggestion chips, and a Featured Cubes marquee. Landing is hero-only; the dashboard sits below with Daily P1P1 and Your Cubes split 50/50 and the activity feed under Daily P1P1 (standalone "Latest Content" and "Featured Cubes" cards removed)
 - Redesigned cube preview tiles — cover image fills the tile, with name, category tags, follower/card counts, and owner overlaid on a bottom gradient
-- New Resources page at `/resources` (top nav) — community tools, the content archive (articles, videos, podcasts), cube communities, the Hedron Network, the Cube Map, and latest podcasts
+- New Resources page at `/resources` (top nav) — community tools, the content archive (articles, videos, podcasts), cube communities, Hedron Network, the Cube Map, and latest podcasts
 - Restructured top nav and footer — Home is top-level, Explore is a richer sectioned dropdown with a Search Cubes shortcut, a top-level Resources entry, separate Login/Register for logged-out users; navbar cube search and the Explore Cubes page removed; footer reorganized with Popular / Recently Updated / Recently Drafted links
 - Redesigned Cube Search, Card Search, and Packages pages with the Landing/Dashboard hero treatment; Top Cards consolidated into Search Cards with a **Card Images** / **Info Rows** toggle (sortable table: Cost, Type, Elo, Total Picks, Cube Count)
-- Packages are created on a dedicated page (warning that contents lock once submitted); users get a Packages profile tab; navbar gains a `+` quick-create dropdown and a Your Packages menu
+- Packages are created on a dedicated page; users get a Packages profile tab; navbar gains a `+` quick-create dropdown and a Your Packages menu
 - New Help hub at `/help` with a shared layout — Filter Syntax, Markdown Guide, API Docs, Card Updates, Contact, and Donate share a hero with a sticky pill nav
 - Liked Packages — upvoting a package also records a like (browse Packages You've Liked). Cube edit sidebar gains "Add Package" (Import): a modal with your packages and liked packages dropdowns that adds the package's cards to your changelist
-- Liked Cubes page — browsable list of cubes you've followed (also viewable for any user)
+- Liked Cubes page — browsable list of cubes you've liked, previously followed (also viewable for any user)
 - Followers and Following pages — each its own page with the new profile layout, replacing /user/social
 - Redesigned user profile pages — left side card (avatar, name, supporter badges, follower/following/liked-cubes/liked-packages count links, Edit Profile or Follow/Report, markdown bio); right-side floating tabs (Cubes/Packages/Drafts/Blog) across all profile sub-pages including Liked and Followers/Following. "Decks" tab renamed "Drafts"
 - Supporter badges — active Patreon supporters get an animated "Patron" pill; tiered supporters (Cobra Hatchling, Coiling Oracle, Lotus Cobra) get a tier-coloured pill that shimmers on hover
@@ -55,7 +54,7 @@ Since 1.6.0
 - Drafts of your cubes get their own full-width page (from the Your Cubes dropdown) with a responsive grid up to 6 per row
 - Dashboard activity feed loads asynchronously after the page, uses "Show More" instead of pagination, and its empty state links to Popular Cubes; non-supporters get a banner ad every 10 posts
 - Reorganized the "Your Stuff" / mobile cubes dropdown into Your Cubes, Actions (create cube/package), and More (View all, Liked, Drafts, View all packages, Liked packages)
-- Featured Cubes carousel hides at smaller viewport heights and, on mobile, sits near the bottom alongside the "Explore More" chevron
+- Pin your own cubes — a Pin toggle replaces Like on cubes you own; pinned cubes sort to the top of the Your Cubes dropdown, your dashboard, and your profile's Cubes page
 
 # Bug Fixes
 
