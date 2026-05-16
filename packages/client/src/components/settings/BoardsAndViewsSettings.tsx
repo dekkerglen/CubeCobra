@@ -475,25 +475,23 @@ const BoardsAndViewsSettings: React.FC = () => {
               {/* Mix boards rather than show separately */}
               {editingViewDraft.boards.length > 1 && (
                 <Flexbox direction="col" gap="4">
-                  <div>
-                    <Text sm className="font-medium mb-2">
-                      Mix boards
-                    </Text>
-                    <Text xs className="text-text-secondary">
-                      Show included boards as though it were one single board
-                    </Text>
-                    <div className="grid grid-cols-1 gap-2">
-                      <Checkbox
-                        key={'mix'}
-                        label="Mix"
-                        checked={editingViewDraft.mixBoards ?? false}
-                        setChecked={() =>
-                          setEditingViewDraft((view) => {
-                            return { ...view!, mixBoards: !view?.mixBoards };
-                          })
-                        }
-                      />
-                    </div>
+                  <Text sm className="font-medium mb-2">
+                    Mix boards
+                  </Text>
+                  <Text xs className="text-text-secondary">
+                    Show included boards as though it were one single board
+                  </Text>
+                  <div className="grid grid-cols-1 gap-2">
+                    <Checkbox
+                      key={'mix'}
+                      label="Mix"
+                      checked={editingViewDraft.mixBoards ?? false}
+                      setChecked={() =>
+                        setEditingViewDraft((view) => {
+                          return { ...view!, mixBoards: !view?.mixBoards };
+                        })
+                      }
+                    />
                   </div>
                 </Flexbox>
               )}
