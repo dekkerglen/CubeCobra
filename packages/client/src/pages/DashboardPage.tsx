@@ -155,7 +155,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         {cubes.length > 2 && <Link href={`/user/view/${user?.id}`}>View All</Link>}
       </Flexbox>
       {cubes.length > 0 ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2">
           {cubes.slice(0, 12).map((cube) => (
             <CubePreview key={cube.id} cube={cube} />
           ))}
@@ -247,7 +247,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                 {/* DESKTOP LAYOUT (≥ 768px) */}
                 <div className="hidden md:block">
                   <Row className="my-2">
-                    <Col xs={12} md={7}>
+                    <Col xs={12} md={6}>
                       <Flexbox direction="col" gap="2">
                         {yourCubesSection}
                         {collaboratingCubes.length > 0 && (
@@ -255,7 +255,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                         )}
                       </Flexbox>
                     </Col>
-                    <Col xs={12} md={5}>
+                    <Col xs={12} md={6}>
                       {featuredAndP1P1Section}
                     </Col>
                   </Row>
