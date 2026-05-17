@@ -67,7 +67,7 @@ export interface CubeContextValue {
   bulkAddCard: (newCards: Card[], board: BoardType) => Promise<void>;
   removeCard: (index: number, board: BoardType) => void;
   swapCard: (index: number, card: Card, board: BoardType) => Promise<void>;
-  editCard: (index: number, card: Card, board: BoardType) => void;
+  editCard: (index: number, card: Card, board: BoardType) => Promise<void>;
   editAddedCard: (addIndex: number, card: Card, board: BoardType) => Promise<void>;
   editSwappedCard: (swapIndex: number, card: Card, board: BoardType) => Promise<void>;
   clearChanges: () => void;
@@ -633,7 +633,7 @@ export function CubeContextProvider({
   );
 
   const editCard = useCallback(
-    (index: number, card: Card, board: BoardType) => {
+    async (index: number, card: Card, board: BoardType) => {
       // don't push an edit if this card is marked for delete
 
       if (
@@ -657,7 +657,21 @@ export function CubeContextProvider({
       delete oldCard.details;
 
       const newCardData = deepCopy(card);
-      delete newCardData.details;
+
+      // When the printing (cardID) changes, pull the new printing's full
+      // details from the scryfall_id-keyed cache so the displayed art updates.
+      // versionDict is sparse (no art_crop) and often not loaded yet for this
+      // card, so relying on it leaves stale art. Mirrors editSwappedCard.
+      if (oldCard.cardID !== newCardData.cardID && newCardData.cardID) {
+        const newDetails = await getDetails(newCardData.cardID);
+        if (newDetails) {
+          newCardData.details = newDetails;
+        } else {
+          delete newCardData.details;
+        }
+      } else {
+        delete newCardData.details;
+      }
 
       // if this card has already been edited, overwrite the edit
       const editIndex = edits.findIndex((e: CubeCardEdit) => e.index === index);

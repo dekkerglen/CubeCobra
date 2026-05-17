@@ -605,12 +605,21 @@ export const editDeckHandler = async (req: Request, res: Response) => {
 
     targetSeat.mainboard = JSON.parse(main);
     targetSeat.sideboard = JSON.parse(side);
-    targetSeat.title = (title || '').substring(0, 100);
+    const trimmedTitle = (title || '').trim().substring(0, 100);
+    targetSeat.title = trimmedTitle;
     (targetSeat as any).body = (description || '').substring(0, 1000);
 
     deck.complete = true;
 
-    await draftDao.update(deck);
+    if (trimmedTitle) {
+      // User named their deck — use it and don't let the archetype generator
+      // overwrite it on this save or any later edit.
+      deck.name = trimmedTitle;
+      await draftDao.update(deck, { skipNameUpdate: true });
+    } else {
+      // No name supplied — fall back to the generated archetype name.
+      await draftDao.update(deck);
+    }
 
     req.flash('success', 'Deck saved successfully');
     return redirect(req, res, `/cube/deck/${deck.id}`);

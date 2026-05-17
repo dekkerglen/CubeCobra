@@ -1,107 +1,109 @@
-Since 1.6.0
+I'm very excited to announce a large number of changes that we have been working on the last few months. The guiding philosophy behind this update is that we want to make the site intuitive and easy to use, especially towards newcomers to Cube. I recently had a conversation with someone who was a long time magic player, but had never made a cube. I observed them using the website, and they often expressed confusion or even frustration at certain points. I think that I have developed a sort of tunnel vision in some respects with how users are actually interacting with the site, and grown too comfortable with the current status quo of the site. 
+
 
 # New Features
 
-- New API Documentation page (`/apidocs`) — comprehensive reference for all public-facing API endpoints
-- New "Voucher" card type — a special card that contains a list of other cards; when drafted, the voucher expands into its contained cards instead of being picked directly. Supports custom names, `is:voucher` filter, and CSV import/export.
-- New "At a Glance" analysis page — a quick dashboard with key stats, pricing, mana curve, and distribution charts for your cube
-- New cubes now get a random art crop from a curated set of cards instead of always using Doubling Cube
-- Changelog entries are now clickable — each links to a dedicated detail page showing the full changelog
-- Point-in-time cube list view on changelog detail pages — uses the same modern view controls (table, visual spoiler, curve, stacks), filter, sort, and display sidebar as the main cube list page, with boards kept distinct (mainboard, maybeboard)
-- Full-width banner on the PIT list page clearly indicating you are viewing a historical snapshot, with a link back to the changelog entry
-- "Download Point in Time Cube" on changelog detail pages — reconstructs the historical cube and downloads it as CSV
-- "Compare Point in Time Cube with Present" on changelog detail pages — side-by-side comparison of historical vs current cube
-- Export button on all compare pages (both regular cube compare and PIT compare) — downloads a structured text file with three sections: In Both, Only in Base, Only in Comparison
-- New `First Year` group sort for sorting cards by the year they were first printed
-- New `Keywords` group sort for sorting/grouping cards by their keywords (e.g. Flying, Trample, Deathtouch)
-- New `year:`, `firstyear:`, and `fy:` filter for filtering cards by first print year (e.g. `year>2000`, `fy<=1995`)
-- New `kw:`, `keyword:`, and `keywords:` filter for filtering cards by keyword (e.g. `kw:flying`, `keywords>3`)
-- New `is:standard` filter for cards that were first printed in a standard expansion set
-- New `is:supplemental` filter for cards that were first printed in supplemental products
-- Improved bot deckbuilding algorithm — cards are now added one at a time using ML scores with a cumulative 10% duplicate penalty per copy, preventing bots from stacking too many copies of the same card
-- New `game:arena` / `game:paper` / `game:mtgo` filter now checks across all printings of a card (any version ever available in that game), instead of only the current printing's availability
-- New `game:is-arena` / `game:is-paper` / `game:is-mtgo` filter for checking whether the specific printing is available in that game (the previous strict behavior)
-- Adding a user as a collaborator now creates a notification to that user
-- Add `date_last_updated` to cube exports.
-- New "Use Base Card Data" display option — when enabled, sorts and filters use a card's original printed attributes (CMC, colors, color category, type, rarity, name) instead of any user-set overrides, so you can see how your cube looks by the cards' base data
-- New "Disable Follow Notifications" setting — suppress notifications when users follow your cube (cube-level, in Options settings) or follow you (user-level, in Display Preferences)
-- Bot decks now get meaningful archetype names (e.g. "UW Control", "RG Aggro") derived from ML cluster centers, instead of generic labels
-- Deck naming is back — you can set your own deck name in the deckbuilder, and if you leave it blank an archetype name is generated automatically using the same cluster-based mechanism
-- Streamlined cube creation — "Create A New Cube" now creates the cube instantly (named `${username}'s New Cube`) and drops you on its list page, no modal in the way. You can rename it from the cube hero whenever you want
-- Edit sidebar is now expanded by default on desktop when you're viewing the list page of a cube you own — your tools are right there the moment you land
-- New "Welcome to your new cube!" onboarding card on the list page of an empty cube you own, pointing you at the edit sidebar, packages, or the new seed crystal generator
-- New "Seed Crystal" generator — bootstrap a partial or complete cube from a single seed card by combining its synergistic neighbours with Smart Search fillers, with options for printing preference, card count, color inclusion, and a balanced mode that distributes the cube evenly across colors / colorless / multicolored / lands. Smart Search runs iteratively (~100 cards per call, with each batch fed back into the next call's context), so the cube refines as it grows instead of coming out of a single ranking pass
-- Renamed the "Recommender" Analysis tab to "Smart Search" — now sits right under "At a Glance" — and rebuilt the page to match the rest of CubeCobra's search UX: inline filter, paginated grid of card images. Same context-aware sort; the "Core Cards" panel, maybeboard toggle, and show-images checkbox are gone. Clicking a result opens the Add to Cube modal pre-filled with the cube you're searching from
-- Brought back "Save as Default Sort" in the display sidebar — saves the current sort order as the default for the active view (the new home for per-view sort defaults)
-- New help blurbs at the bottom of the display and edit sidebars — the display sidebar links to the Boards and Views settings, and the edit sidebar links to Smart Search
-- The edit sidebar's Board dropdown now defaults to the first board in the view you're looking at (and follows you when you switch views), instead of always starting on Mainboard
-- Richer link previews for shared blog posts and comments — comment links now show the comment text and the poster's avatar, and blog post links show an excerpt of the post plus a summary of the changelist with the cube's image
-- Redesigned landing page and dashboard with a new hero — unified search across cubes, cards, and packages with curated suggestion chips, and a marquee carousel of Featured Cubes underneath. The landing page is now hero-only; the dashboard sits below the hero with Daily P1P1 and Your Cubes split 50/50, the activity feed flowing under Daily P1P1 in the same column (the standalone "Latest Content" and "Featured Cubes" cards were removed since featured cubes now live in the hero)
-- Redesigned cube preview tiles — the cover image fills the tile, with the cube name, category tags, follower count, card count, and owner overlaid on a dark gradient at the bottom
-- New Resources page at `/resources`, linked from the top nav — gathers community tools, the content archive (articles, videos, podcasts), cube communities, the Hedron Network for cube tournaments, the Cube Map, and a list of the latest podcasts
-- Restructured the top nav and footer — Home is now a top-level link, Explore is a richer sectioned dropdown that now includes a Search Cubes shortcut, a new top-level Resources entry sits alongside it, logged-out users see separate Login and Register entries, the navbar cube search and the Explore Cubes page were removed, and footer columns were reorganized with new Popular / Recently Updated / Recently Drafted Cubes links
-- Redesigned the Cube Search, Card Search, and Packages pages with the same hero treatment as Landing / Dashboard, and consolidated Top Cards into Search Cards with a toggle between **Card Images** and **Info Rows** (sortable table with Cost, Type, Elo, Total Picks, Cube Count)
-- Packages are now created on a dedicated page (with a clear warning that contents are locked once submitted), users get a Packages tab on their profile, and the navbar gains a `+` quick-create dropdown and a Your Packages menu
-- New Help hub at `/help` and a shared Help layout — Filter Syntax, Markdown Guide, API Docs, Card Updates, Contact, and Donate all share a year_of_snake hero with a sticky pill nav on the left to jump between them
-- Liked Packages: upvoting a package now also recorded as a "like" so you can browse Packages You've Liked. The cube edit sidebar gains an "Add Package" button under Import that opens a modal with two dropdowns — your packages and your liked packages — and adds the chosen package's cards to your current changelist
-- Liked Cubes page — a dedicated browsable list of cubes you've followed (also viewable for any other user)
-- Followers and Following pages — each has its own page with the new profile layout, replacing the old combined /user/social page
-- Redesigned user profile pages — a side card on the left with the user's avatar, name, supporter badges, follower / following / liked-cubes / liked-packages counts as inline links, an Edit Profile button (or Follow / Report), and the markdown bio. To the right, floating tabs (Cubes / Packages / Drafts / Blog) — no more page-wide nav bar — apply to every profile sub-page including the new Liked and Followers/Following pages. The "Decks" tab is now labelled "Drafts"
-- Supporter badges — active Patreon supporters get an animated "Patron" pill on their profile, and tiered supporters (Cobra Hatchling, Coiling Oracle, Lotus Cobra) get an additional tier-coloured pill that shimmers on hover
-- Settings page restyled like the Help hub — the page root shows a grid of section tiles (Profile, Change Password, Update Email, Display Preferences, Patreon Integration, Delete Account); picking one collapses the tiles into pill buttons on the left while the selected section's content opens on the right
+- New API Documentation page (`/apidocs`) — reference for all public API endpoints
+- New "Voucher" card type — contains a list of other cards; when drafted it expands into its contained cards instead of being picked directly. Supports custom names, `is:voucher` filter, and CSV import/export
+- New "At a Glance" analysis page — dashboard of key stats, pricing, mana curve, and distribution charts
+- New cubes get a random art crop from a curated card set instead of always Doubling Cube
+- Changelog entries are now clickable, each linking to a detail page with the full changelog
+- Point-in-time cube list view on changelog detail pages — same view controls (table, visual spoiler, curve, stacks), filter, sort, and display sidebar as the main list, boards kept distinct (mainboard, maybeboard)
+- "Download Point in Time Cube" on changelog detail pages — reconstructs the historical cube as CSV
+- "Compare Point in Time Cube with Present" — side-by-side historical vs current
+- Export button on all compare pages (regular and PIT) — text file with In Both, Only in Base, Only in Comparison
+- New `First Year` group sort (year a card was first printed)
+- New `Keywords` group sort (group by keyword, e.g. Flying, Trample)
+- New `year:`/`firstyear:`/`fy:` filter for first print year (e.g. `year>2000`, `fy<=1995`)
+- New `kw:`/`keyword:`/`keywords:` filter by keyword (e.g. `kw:flying`, `keywords>3`)
+- New `is:standard` filter — first printed in a standard expansion
+- New `is:supplemental` filter — first printed in a supplemental product
+- Improved bot deckbuilding — no changes to model but changed how we are using it
+- `game:arena`/`game:paper`/`game:mtgo` now match any printing ever available in that game, not just the current printing
+- New `game:is-arena`/`game:is-paper`/`game:is-mtgo` filter — only the specific printing's availability (the old strict behavior)
+- Adding a collaborator now notifies that user
+- Added `date_last_updated` to cube exports
+- New "Use Base Card Data" display option — sorts/filters use a card's original printed attributes (CMC, colors, color category, type, rarity, name) instead of overrides
+- New "Disable Follow Notifications" setting — suppress notifications when users follow your cube or you
+- Bot decks get meaningful archetype names (e.g. "UW Control", "RG Aggro") from hand annotated ML cluster centers instead of generic labels
+- Deck naming is back — set your own deck name in the deckbuilder; blank auto-generates a cluster-based archetype name
+- New Draft Simulator (in the cube nav) — runs hundreds of full drafts against the ML bots in your browser, then shows per-card pick stats (average pick, wheel rate, draft rating vs. Elo), the archetypes that emerged with color-pair breakdown, a draft map, and the simulated bot decks and pools; choose drafts/seats, filter and sort the stats, and drill into any archetype or deck
+- Streamlined cube creation — "Create A New Cube" creates it instantly (named `<username>'s New Cube`) and lands you on its list page, no modal; rename from the cube hero anytime
+- Edit sidebar expanded by default on desktop when viewing the list page of an empty cube you own
+- New "Welcome to your new cube!" onboarding card on an empty owned cube's list page, pointing to the edit sidebar, packages, or the seed crystal generator
+- New "Seed Crystal" generator — bootstrap a partial or complete cube from one seed card using the draftbot and smart search models
+- Renamed the "Recommender" Analysis tab to "Smart Search" and rebuilt it to match CubeCobra's search UX: inline filter, paginated grid of card images, same context-aware sort. Core Cards panel, maybeboard toggle, and show-images checkbox removed
+- Brought back "Save as Default Sort" in the display sidebar — saves the current sort as the active view's default
+- New help blurbs at the bottom of the display and edit sidebars (links to Boards/Views settings and Smart Search)
+- Edit sidebar's Board dropdown defaults to the first board in the current view (and follows view switches) instead of always Mainboard
+- Richer link previews for shared blog posts and comments — comment links show the comment text and poster avatar; blog links show an excerpt plus a changelist summary with the cube's image
+- Redesigned landing page and dashboard with a new hero — unified search across cubes, cards, and packages with suggestion chips, and a Featured Cubes marquee. Landing is hero-only; the dashboard sits below with Daily P1P1 and Your Cubes split 50/50 and the activity feed under Daily P1P1 (standalone "Latest Content" and "Featured Cubes" cards removed)
+- Redesigned cube preview tiles — cover image fills the tile, with name, category tags, follower/card counts, and owner overlaid on a bottom gradient
+- New Resources page at `/resources` (top nav) — community tools, the content archive (articles, videos, podcasts), cube communities, Hedron Network, the Cube Map, and latest podcasts
+- Restructured top nav and footer — Home is top-level, Explore is a richer sectioned dropdown with a Search Cubes shortcut, a top-level Resources entry, separate Login/Register for logged-out users; navbar cube search and the Explore Cubes page removed; footer reorganized with Popular / Recently Updated / Recently Drafted links
+- Redesigned Cube Search, Card Search, and Packages pages with the Landing/Dashboard hero treatment; Top Cards consolidated into Search Cards with a **Card Images** / **Info Rows** toggle (sortable table: Cost, Type, Elo, Total Picks, Cube Count)
+- Packages are created on a dedicated page; users get a Packages profile tab; navbar gains a `+` quick-create dropdown and a Your Packages menu
+- New Help hub at `/help` with a shared layout — Filter Syntax, Markdown Guide, API Docs, Card Updates, Contact, and Donate share a hero with a sticky pill nav
+- Liked Packages — upvoting a package also records a like (browse Packages You've Liked). Cube edit sidebar gains "Add Package" (Import): a modal with your packages and liked packages dropdowns that adds the package's cards to your changelist
+- Liked Cubes page — browsable list of cubes you've liked, previously followed (also viewable for any user)
+- Followers and Following pages — each its own page with the new profile layout, replacing /user/social
+- Redesigned user profile pages — left side card (avatar, name, supporter badges, follower/following/liked-cubes/liked-packages count links, Edit Profile or Follow/Report, markdown bio); right-side floating tabs (Cubes/Packages/Drafts/Blog) across all profile sub-pages including Liked and Followers/Following. "Decks" tab renamed "Drafts"
+- Supporter badges — active Patreon supporters get an animated "Patron" pill; tiered supporters (Cobra Hatchling, Coiling Oracle, Lotus Cobra) get a tier-coloured pill that shimmers on hover
+- Settings page restyled like the Help hub — root shows section tiles (Profile, Change Password, Update Email, Display Preferences, Patreon Integration, Delete Account); picking one collapses to left pill buttons with content on the right
 - Your Cubes and Packages navbar dropdowns each gain a "Liked" link
-- Username menu cleanup — "Your Profile" is now just **Profile**, "Account Information" is now **Settings**, and the redundant "Followed and Followers" link is gone (its content moved to the new Followers / Following pages linked from the profile card)
-- Drafts of your cubes now live on their own full-width page (linked from the Your Cubes dropdown) with a responsive grid that scales up to 6 drafts per row on the largest screens
-- Dashboard activity Feed now loads asynchronously after the rest of the page so it no longer holds up page load, uses a "Show More" button at the end instead of pagination, and the empty state's "like some cubes" links to Popular Cubes. For non-supporters, a banner ad is injected after every 10 posts.
-- Reorganized the consolidated "Your Stuff" / mobile cubes dropdown into three sections — Your Cubes (with the highlighted background), Actions (Create a new cube / package), and More (View all, Liked, Drafts of your cubes, View all packages, Liked packages)
-- Featured Cubes carousel on the hero hides at smaller viewport heights to keep the search front and centre, and on mobile sits closer to the bottom of the screen alongside the "Explore More" chevron
+- Username menu cleanup — "Your Profile" → **Profile**, "Account Information" → **Settings**, redundant "Followed and Followers" link removed (moved to the new Followers/Following pages)
+- Drafts of your cubes get their own full-width page (from the Your Cubes dropdown) with a responsive grid up to 6 per row
+- Dashboard activity feed loads asynchronously after the page, uses "Show More" instead of pagination, and its empty state links to Popular Cubes; non-supporters get a banner ad every 10 posts
+- Reorganized the "Your Stuff" / mobile cubes dropdown into Your Cubes, Actions (create cube/package), and More (View all, Liked, Drafts, View all packages, Liked packages)
+- Pin your own cubes — a Pin toggle replaces Like on cubes you own; pinned cubes sort to the top of the Your Cubes dropdown, your dashboard, and your profile's Cubes page
 
 # Bug Fixes
 
-- Fixed deck data exports containing invalid -1 card values — exported deck data now correctly excludes cards that couldn't be mapped to valid card IDs
-- Fixed quarterly data exports including private and unlisted cubes — the cube export and deck export jobs now only export data from public cubes
-- Fixed blog posts from private and unlisted cubes leaking into follower feeds — blog posts, cube commits, package additions, and bulk imports for non-public cubes no longer publish feed items to followers
-- Fixed blog posts from unlisted cubes being visible on user blog pages and in dashboard feeds — display-side filtering now excludes both private and unlisted cube blogs (previously only private was filtered)
-- Fixed blog post pagination endpoint (`getmoreblogsbycube`) missing a cube visibility check — it now verifies the cube exists and is viewable before returning posts
-- Fixed cube JSON API (`/cube/api/cubeJSON/:id`) using stale `cube.defaultSorts` (which moved to views) — the API now returns all boards and applies the standard default sort (Color Category → Types-Multicolor → Mana Value → Alphabetical) instead of relying on sorts that are no longer set on the cube object
-- Fixed moving cards between boards (e.g. maybeboard → mainboard) incorrectly keeping the card on the same board — the target board selector was not resetting when switching between cards on different boards
-- Fixed "Cannot set properties of undefined (setting 'markedForDelete')" crash caused by stale pending changes in localStorage referencing card indices that no longer exist — now detected as a version mismatch and handled by the existing stale changes recovery flow
-- Fixed sample pack and P1P1 generation failing when a cube uses a custom draft format that references non-mainboard boards (e.g. maybeboard) — pack generation now passes all boards to the draft engine instead of only mainboard
-- Fixed default sorts saved in views not being applied on page load — view-level `defaultSorts` are now used instead of only cube-level sorts
-- Fixed bookmarked URLs with query parameters (display view, sort order, filters) not being applied on page load — an effect that applies view defaults when switching views was also firing on initial mount, overwriting URL-sourced values before they could be read
-- Fixed Scunthorpe problem in profanity filter — words like "senft" no longer falsely trigger on substring matches (e.g. "nft"). Spam/marketing terms now use word-boundary matching while slurs use substring matching to prevent evasion.
-- Fixed list view selections persisting incorrectly after removing cards — when cards were removed via "Edit Selected" → "Remove all" → "Save Changes," the checked state used stale card indices, causing a different card to appear selected after the commit
-- Improved draft creation error messages — instead of the generic "no cards in board" message, errors now distinguish between a board having no cards at all, running out of cards mid-draft (with the original count and a suggestion to add more cards or reduce players/packs), and having remaining cards that don't match a slot filter (with the filter text and card counts)
-- Improved date display — dates within the last 7 days now show relative time (e.g. "3 hours ago"), while older dates show an absolute format (e.g. "Feb 7, 2026")
-- Fixed Cube card count not updating in the hero as mainboard changes were saved
-- Fixed problem selecting cards with accented charcters (eg Lórien) when adding to a draft record for cards in the cube
-- Fixed deckbuild land count and non-land count settings not being saved
-- Moved bot deckbuilding to the client side with a progress bar — instead of one long server request that could time out, the client now makes ~31 small incremental ML calls (1 batch build + ~30 draft steps), showing a live percentage and step counter during the process
-- Improved draft naming durability for unknown or malformed cards — cluster/archetype naming now skips missing card references instead of throwing during finish/update flows
-- Fixed invalid-card image fallback pointing to an unreachable external URL — placeholder cards now use the local default card image path
-- Fixed pick-by-pick breakdown collapsing duplicate cards in packs when "collapse duplicates" is enabled for the cube
-- Fixed board display order in cube list views not respecting the order configured in view settings
-- Respect Right Sidebar inline position when adjusting Cube Table and Stacks layouts.
-- Fixed "Disable Clone Notifications" cube setting not persisting — the setting would revert after saving
-- Fixed edit/remove card only searching the filtered card list — when a filter was active, removing or replacing a card by name would fail if the card wasn't in the filtered results; the lookup now searches the full unfiltered card list
-- Fixed card edits (property changes) inflating +/- counts in the edit pane — edits no longer count as both an addition and a removal. Instead, edited cards are shown as a separate count with a wrench icon (e.g. "+5, -3, 🔧2"), both in the pending changes panel and in committed changelogs
-- Fixed committing large changelogs (e.g. bulk uploads with many cards) causing request timeouts
-- Improved performance of saving changes for large updates — card data is now fetched in a single batch request instead of one-at-a-time
-- Fixed newly-released cards missing data like "Drafted With" and other cross-card information after they were added to the database
-- Fixed Top Cards deduping rows by card name — different cards that happen to share a name (e.g. Everythingamajig) now appear as separate rows, and alternate-name printings of the same card (e.g. omenpath cards) are correctly collapsed into one
-- Fixed Card Search showing an infinite spinner on first load with no filter
-- Fixed search/result counts showing a stale "0 results" while a fetch was in flight — now shows "Searching…"
-- Fixed open dropdown nav menus going white-on-white in light mode on hero pages with a transparent navbar — the trigger's open-state text now picks up the theme text color instead of the override meant for the dark dropdown panel
-- Fixed automatic deck archetype names not being applied in production — the cluster-center and annotation data files were missing from production deploys, so bot decks and unnamed user decks fell back to a blank/null archetype
-- Fixed draft bots making noticeably worse picks than the pick-by-pick breakdown suggested for the same state — the live bot path was sending raw oracle IDs to the ML model while the breakdown was sending normalized ones, so bots received lower-quality ratings for cards the model had since learned. Card-substitution fallbacks (used for cards outside the training set) are now skipped whenever the card is already known to the model, fixing stale substitution pointers left over from the previous model.
+- Fixed deck data exports containing invalid -1 card values — exports now exclude cards that couldn't be mapped to valid IDs
+- Fixed quarterly data exports including private/unlisted cubes — cube and deck export jobs now only export public cubes
+- Fixed blog posts from private/unlisted cubes leaking into follower feeds — blog posts, commits, package adds, and bulk imports for non-public cubes no longer publish feed items
+- Fixed unlisted-cube blog posts visible on user blog pages and dashboard feeds — display filtering now excludes private and unlisted (was private only)
+- Fixed blog pagination (`getmoreblogsbycube`) missing a visibility check — now verifies the cube exists and is viewable
+- Fixed cube JSON API (`/cube/api/cubeJSON/:id`) using stale `cube.defaultSorts` — now returns all boards and applies the standard default sort (Color Category → Types-Multicolor → Mana Value → Alphabetical)
+- Fixed moving cards between boards keeping the card on the same board — the target board selector wasn't resetting when switching between cards on different boards
+- Fixed "Cannot set properties of undefined (setting 'markedForDelete')" crash from stale localStorage changes referencing missing card indices — now treated as a version mismatch via the existing recovery flow
+- Fixed sample pack/P1P1 generation failing for custom draft formats referencing non-mainboard boards — pack generation now passes all boards to the draft engine
+- Fixed view-level `defaultSorts` not applied on page load (only cube-level sorts were)
+- Fixed bookmarked URLs with query params (view, sort, filters) not applied on load — the view-defaults effect was also firing on initial mount and overwriting URL values
+- Fixed Scunthorpe problem in the profanity filter — spam/marketing terms use word-boundary matching while slurs use substring matching, so words like "senft" no longer falsely trigger
+- Fixed list view selections persisting after removing cards — checked state used stale indices after "Edit Selected" → "Remove all" → "Save Changes"
+- Improved draft creation errors — now distinguish no cards in a board, running out mid-draft (with count and suggestions), and remaining cards not matching a slot filter (with filter text and counts)
+- Improved date display — within 7 days shows relative time ("3 hours ago"), older shows absolute ("Feb 7, 2026")
+- Fixed cube card count not updating in the hero as mainboard changes were saved
+- Fixed selecting cards with accented characters (e.g. Lórien) when adding to a draft record
+- Fixed deckbuild land/non-land count settings not being saved
+- Moved bot deckbuilding to the client with a progress bar — instead of one long server request that could time out, the client makes ~31 small incremental ML calls (1 batch build + ~30 draft steps) with a live percentage/step counter
+- Improved draft naming durability for unknown/malformed cards — naming skips missing card references instead of throwing during finish/update
+- Fixed invalid-card image fallback pointing to an unreachable external URL — now uses the local default card image
+- Fixed pick-by-pick breakdown collapsing duplicate cards when "collapse duplicates" is enabled
+- Fixed board display order in cube list views not respecting view settings
+- Right Sidebar inline position now respected when adjusting Cube Table and Stacks layouts
+- Fixed "Disable Clone Notifications" cube setting not persisting
+- Fixed edit/remove card only searching the filtered list — name lookup now searches the full unfiltered list
+- Fixed card edits inflating +/- counts — edited cards now show as a separate count with a wrench icon (e.g. "+5, -3, 🔧2") in the pending panel and committed changelogs
+- Fixed committing large changelogs (e.g. bulk uploads) timing out
+- Improved performance of saving large updates — card data fetched in a single batch instead of one-at-a-time
+- Fixed newly-released cards missing "Drafted With" and other cross-card data after being added
+- Fixed Top Cards deduping rows by card name — distinct cards sharing a name (e.g. Everythingamajig) appear separately, while alternate-name printings of one card (e.g. omenpath) collapse into one
+- Fixed Card Search infinite spinner on first load with no filter
+- Fixed stale "0 results" while a fetch was in flight — now shows "Searching…"
+- Fixed open dropdown nav menus going white-on-white in light mode on transparent-navbar hero pages
+- Fixed automatic deck archetype names not applied in production — cluster-center and annotation data files were missing from production deploys, so decks fell back to a blank archetype
+- Fixed draft bots making worse picks than the pick-by-pick breakdown for the same state — the live path sent raw oracle IDs while the breakdown sent normalized ones; substitution fallbacks are now skipped when the card is already known to the model, fixing stale pointers from the previous model
 
 # Technical Changes
 
-- Static assets (JS bundles, CSS, fonts, images) are now served via S3 + CloudFront instead of being served directly from the application servers — reduces load on the main fleet and improves cache hit rates and latency for users
-- Reduced the production main app fleet from 5/6 to 3/4 instances — feasible after offloading static asset serving to CloudFront
-- Card catalog files (`imagedict`, `full_names`, `cardtree`, `cardimages`) now ship from the assets bucket via CloudFront as content-hashed objects with a tiny `cards/manifest.json` mapping canonical names to current hashes; the four legacy server routes are gone and the server no longer loads `full_names`/`cardtree` into memory
-- Replaced the sprawling `Cube.following: string[]` and `User.followedCubes: string[]` arrays with a per-relationship hash-row model. Each cube-like is one row on the cube's hash partition (`PK=HASH#CUBE#{id}`, `SK=LIKE#{userId}`, plus a `LIKE-BY#{userId}` GSI1) so both "who liked this cube" and "what cubes did this user like" paginate cleanly. Denormalized `Cube.likeCount` and `User.likedCubesCount` counters keep the cheap displays cheap
-- Same treatment for User-to-User follows. `User.following` (followers) and `User.followedUsers` (who you follow) replaced with FOLLOWER rows on the followed user's partition + a `FOLLOWING-BY#{userId}` GSI; counters live on `User.followerCount` / `User.followingCount`. Notification fanout (blog posts, commits, package adds, bulk imports, devblog) now pages through hash rows instead of iterating arrays
-- Cube view routes (`/cube/list`, `/cube/about`, `/cube/playtest`, `/cube/analysis`, `/cube/records`) ship cards without `details` populated via a new `{ populate: false }` option on `cubeDao.getCards`; `about` and `analysis` handlers were rewritten to read details via `cardFromId(cardID)` directly
-- New client-side card detail cache backed by IndexedDB (`cardDetailsCache.ts`) with a 7-day per-row TTL, microtask coalescing of misses into a single batch POST, and `useCardDetail` / `useCardDetails` hooks
-- `CubeContext` detects undetailed cards on mount, hydrates them from the cache, and exposes `cardsLoading` so cube pages can show a spinner during the fetch window; every existing client caller of `getdetailsforcards` / `getcardfromid` was rerouted through the cache
+- Static assets (JS, CSS, fonts, images) now served via S3 + CloudFront instead of the app servers — less fleet load, better cache hit rates and latency
+- Reduced the production main app fleet from 5/6 to 3/4 instances after offloading static assets to CloudFront
+- Card catalog files (`imagedict`, `full_names`, `cardtree`, `cardimages`) now ship from the assets bucket via CloudFront as content-hashed objects with a small `cards/manifest.json` mapping names to hashes; the four legacy server routes are gone and the server no longer loads `full_names`/`cardtree` in memory
+- Replaced `Cube.following[]` / `User.followedCubes[]` with a per-relationship hash-row model — one row per like on the cube's partition (`PK=HASH#CUBE#{id}`, `SK=LIKE#{userId}`, `LIKE-BY#{userId}` GSI1) so both directions paginate; denormalized `Cube.likeCount` / `User.likedCubesCount` keep cheap displays cheap
+- Same for user follows — `User.following` / `User.followedUsers` replaced with FOLLOWER rows on the followed user's partition + `FOLLOWING-BY#{userId}` GSI; counters on `User.followerCount` / `User.followingCount`; notification fanout (blogs, commits, package adds, bulk imports, devblog) pages hash rows instead of arrays
+- Cube view routes (`/cube/list`, `/about`, `/playtest`, `/analysis`, `/records`) ship cards without `details` via a new `{ populate: false }` on `cubeDao.getCards`; `about`/`analysis` rewritten to read details via `cardFromId(cardID)`
+- New IndexedDB-backed client card detail cache (`cardDetailsCache.ts`) — 7-day per-row TTL, microtask coalescing of misses into one batch POST, `useCardDetail`/`useCardDetails` hooks
+- `CubeContext` detects undetailed cards on mount, hydrates from the cache, and exposes `cardsLoading`; all client callers of `getdetailsforcards`/`getcardfromid` rerouted through the cache
+- Draft Simulator runs the draft/deckbuild ML models in-browser via TensorFlow.js — model bundle fetched once from the CDN (`/model/*`), drafts/deckbuilding/clustering all client-side (no app or recommender fleet load), results cached in IndexedDB so reopening is instant; the model is a one-shot manual upload to the assets bucket (`scripts/uploadMLModel.ts`), not a per-deploy step

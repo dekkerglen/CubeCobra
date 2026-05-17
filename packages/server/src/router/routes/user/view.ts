@@ -1,7 +1,7 @@
 import { PatronStatuses } from '@utils/datatypes/Patron';
 import { cubeDao, packageDao, patronDao, userDao } from 'dynamo/daos';
 import { isCubeListed } from 'serverutils/cubefn';
-import { getCubesSortValues, handleRouteError, redirect, render } from 'serverutils/render';
+import { getCubesSortValues, getPinnedCubesForOwner, handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
 
@@ -21,8 +21,18 @@ export const handler = async (req: Request, res: Response) => {
 
     const { sort, ascending } = getCubesSortValues(user);
 
-    const result = await cubeDao.queryByOwner(user.id, sort, ascending, undefined, 36);
-    const cubes = result.items.filter((cube: any) => isCubeListed(cube, req.user));
+    const [result, { pinnedCubes, pinnedIds }] = await Promise.all([
+      cubeDao.queryByOwner(user.id, sort, ascending, undefined, 36),
+      getPinnedCubesForOwner(user.id, req.user?.id),
+    ]);
+
+    // Hoist the owner's pinned cubes to the top. Subsequent pages (via
+    // /user/getmorecubes) filter these out so they never duplicate.
+    const visiblePinned = pinnedCubes.filter((cube) => isCubeListed(cube, req.user));
+    const pageItems = result.items.filter(
+      (cube: any) => isCubeListed(cube, req.user) && !pinnedIds.has(cube.id),
+    );
+    const cubes = [...visiblePinned, ...pageItems];
 
     const following = !!req.user && (await userDao.getFollow(req.user.id, user.id));
 

@@ -845,25 +845,33 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
 
     // Only recalculate names if seats changed (and not explicitly skipped)
     if (!options?.skipNameUpdate) {
-      // Extract cube name from existing draft name to avoid extra DB query
-      // Draft name format: "{colors} {type} of {cubeName}"
-      const existingCubeName = item.name?.split(' of ').pop();
-      let cubeName = existingCubeName;
+      // A user-supplied deck name lives on the owner's seat as `title`. Only
+      // fall back to the generated archetype name when that name is blank, so
+      // no save or edit ever wipes a name the user typed.
+      const userDeckTitle = (item.seats[0]?.title || '').trim();
+      if (userDeckTitle) {
+        item.name = userDeckTitle.substring(0, 100);
+      } else {
+        // Extract cube name from existing draft name to avoid extra DB query
+        // Draft name format: "{colors} {type} of {cubeName}"
+        const existingCubeName = item.name?.split(' of ').pop();
+        let cubeName = existingCubeName;
 
-      // Only fetch cube if we don't have a valid cube name
-      if (!cubeName || cubeName === 'Unknown Cube') {
-        const cube = await this.cubeDao.getById(item.cube);
-        cubeName = cube?.name || 'Unknown Cube';
-      }
+        // Only fetch cube if we don't have a valid cube name
+        if (!cubeName || cubeName === 'Unknown Cube') {
+          const cube = await this.cubeDao.getById(item.cube);
+          cubeName = cube?.name || 'Unknown Cube';
+        }
 
-      // Recalculate seat names and draft from mainboard colors
-      const { seatNames, name } = await this.getDeckColors(item, cubeName);
-      item.seatNames = seatNames;
-      item.name = name;
+        // Recalculate seat names and draft from mainboard colors
+        const { seatNames, name } = await this.getDeckColors(item, cubeName);
+        item.seatNames = seatNames;
+        item.name = name;
 
-      // Update seat names within each seat
-      for (let i = 0; i < item.seats.length; i++) {
-        item.seats[i]!.name = seatNames[i];
+        // Update seat names within each seat
+        for (let i = 0; i < item.seats.length; i++) {
+          item.seats[i]!.name = seatNames[i];
+        }
       }
     }
 

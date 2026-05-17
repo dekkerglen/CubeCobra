@@ -53,14 +53,56 @@ const trimCube = (cube: CubeType): Pick<CubeType, 'id' | 'shortId' | 'name'> => 
   name: cube.name,
 });
 
+const DROPDOWN_CUBE_LIMIT = 20;
+
+/**
+ * Resolves the cubes an owner has pinned, in most-recently-pinned order.
+ * Pins are private to the owner, so this returns nothing unless the viewer
+ * is the owner. Callers hoist these to the top of cube listings.
+ */
+export const getPinnedCubesForOwner = async (
+  ownerId: string,
+  viewerId: string | undefined,
+  limit = 200,
+): Promise<{ pinnedCubes: CubeType[]; pinnedIds: Set<string> }> => {
+  if (!viewerId || viewerId !== ownerId) {
+    return { pinnedCubes: [], pinnedIds: new Set() };
+  }
+
+  const pinnedResult = await cubeDao.queryCubesPinnedBy(ownerId, undefined, limit);
+  if (pinnedResult.cubeIds.length === 0) {
+    return { pinnedCubes: [], pinnedIds: new Set() };
+  }
+
+  const fetched = await cubeDao.batchGet(pinnedResult.cubeIds);
+  const byId = new Map(fetched.map((cube) => [cube.id, cube]));
+  const pinnedCubes = pinnedResult.cubeIds
+    .map((id) => byId.get(id))
+    .filter((cube): cube is CubeType => cube !== undefined);
+
+  return { pinnedCubes, pinnedIds: new Set(pinnedCubes.map((cube) => cube.id)) };
+};
+
 const getCubes = async (req: Request, callback: (cubes: CubeType[]) => void): Promise<void> => {
   if (!req.user) {
     callback([]);
-  } else {
-    const { sort, ascending } = getCubesSortValues(req.user);
-    const query = await cubeDao.queryByOwner(req.user.id, sort, ascending, undefined, 10);
-    callback(query.items);
+    return;
   }
+
+  const { sort, ascending } = getCubesSortValues(req.user);
+  const userId = req.user.id;
+
+  // Query the user's owned cubes and their pinned cubes in parallel, then merge:
+  // pinned cubes first (most recently pinned), then the rest of the owned cubes,
+  // deduped, capped at the dropdown limit.
+  const [ownerQuery, { pinnedCubes, pinnedIds }] = await Promise.all([
+    cubeDao.queryByOwner(userId, sort, ascending, undefined, DROPDOWN_CUBE_LIMIT),
+    getPinnedCubesForOwner(userId, userId, DROPDOWN_CUBE_LIMIT),
+  ]);
+
+  const rest = ownerQuery.items.filter((cube) => !pinnedIds.has(cube.id));
+
+  callback([...pinnedCubes, ...rest].slice(0, DROPDOWN_CUBE_LIMIT));
 };
 
 const redirect = (req: Request, res: Response, to: string): void => {

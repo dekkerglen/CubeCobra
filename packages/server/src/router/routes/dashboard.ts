@@ -3,7 +3,7 @@ import { sanitizeChangelog } from 'dynamo/dao/ChangelogDynamoDao';
 import { collaboratorIndexDao, cubeDao, draftDao, feedDao } from 'dynamo/daos';
 import { getDailyP1P1 } from 'serverutils/dailyP1P1';
 import { getFeaturedCubes } from 'serverutils/featuredQueue';
-import { getCubesSortValues, handleRouteError, redirect, render } from 'serverutils/render';
+import { getCubesSortValues, getPinnedCubesForOwner, handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../types/express';
 import { csrfProtection, ensureAuth } from '../middleware';
@@ -53,13 +53,17 @@ const dashboardHandler = async (req: Request, res: Response) => {
     const collaboratingCubes = collaboratingCubeIds.length > 0 ? await cubeDao.batchGet(collaboratingCubeIds) : [];
 
     const { sort, ascending } = getCubesSortValues(req.user);
-    const userCubes = await cubeDao.queryByOwner(req.user.id, sort, ascending, undefined, 36);
+    const [userCubes, { pinnedCubes, pinnedIds }] = await Promise.all([
+      cubeDao.queryByOwner(req.user.id, sort, ascending, undefined, 36),
+      getPinnedCubesForOwner(req.user.id, req.user.id),
+    ]);
+    const cubes = [...pinnedCubes, ...userCubes.items.filter((cube) => !pinnedIds.has(cube.id))];
 
     return render(req, res, 'DashboardPage', {
       featured,
       dailyP1P1,
       collaboratingCubes,
-      cubes: userCubes.items,
+      cubes,
     });
   } catch (err) {
     return handleRouteError(req, res, err, '/landing');

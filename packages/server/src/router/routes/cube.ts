@@ -321,6 +321,54 @@ export const isFollowedHandler = async (req: Request, res: Response) => {
   }
 };
 
+export const pinHandler = async (req: Request, res: Response) => {
+  const { user } = req;
+  const cube = await cubeDao.getById(req.params.id!);
+
+  if (!cube || !isCubeViewable(cube, user)) {
+    req.flash('danger', 'Cube not found');
+    return res.status(404).send({ success: 'false' });
+  }
+
+  if (cube.owner.id !== user!.id) {
+    return res.status(403).send({ success: 'false' });
+  }
+
+  await cubeDao.writePin(cube.id, user!.id);
+
+  return res.status(200).send({ success: 'true' });
+};
+
+export const unpinHandler = async (req: Request, res: Response) => {
+  const { user } = req;
+  const cube = await cubeDao.getById(req.params.id!);
+
+  if (!cube || !isCubeViewable(cube, user)) {
+    req.flash('danger', 'Cube not found');
+    return res.status(404).send({ success: 'false' });
+  }
+
+  if (cube.owner.id !== user!.id) {
+    return res.status(403).send({ success: 'false' });
+  }
+
+  await cubeDao.deletePin(cube.id, user!.id);
+
+  return res.status(200).send({ success: 'true' });
+};
+
+export const isPinnedHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.user || !req.params.id) {
+      return res.status(200).send({ pinned: false });
+    }
+    const pinned = await cubeDao.getPin(req.params.id, req.user.id);
+    return res.status(200).send({ pinned });
+  } catch (_err) {
+    return res.status(200).send({ pinned: false });
+  }
+};
+
 export const featureHandler = async (req: Request, res: Response) => {
   const redirectUrl = `/cube/list/${encodeURIComponent(req.params.id!)}`;
   try {
@@ -572,6 +620,21 @@ export const routes = [
     path: '/isfollowed/:id',
     method: 'get',
     handler: [csrfProtection, isFollowedHandler],
+  },
+  {
+    path: '/pin/:id',
+    method: 'post',
+    handler: [csrfProtection, ensureAuth, pinHandler],
+  },
+  {
+    path: '/unpin/:id',
+    method: 'post',
+    handler: [csrfProtection, ensureAuth, unpinHandler],
+  },
+  {
+    path: '/ispinned/:id',
+    method: 'get',
+    handler: [csrfProtection, isPinnedHandler],
   },
   {
     path: '/feature/:id',

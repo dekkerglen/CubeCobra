@@ -39,16 +39,6 @@ export interface DeploymentPipelineProps {
   productionDomain: string;
 
   /**
-   * Beta environment data bucket (source of the ML model when mirroring to the assets/CDN bucket)
-   */
-  betaDataBucket: string;
-
-  /**
-   * Production environment data bucket (source of the ML model when mirroring to the assets/CDN bucket)
-   */
-  productionDataBucket: string;
-
-  /**
    * AWS account ID
    */
   account: string;
@@ -140,13 +130,10 @@ export class DeploymentPipeline extends Construct {
               // instances can resolve their hashed bundle URLs immediately.
               'echo Uploading static assets to S3...',
               'npm run upload-assets --workspace=packages/scripts',
-              // Mirror the ML model from the data bucket into the assets
-              // bucket so it's reachable through CloudFront. The recommender
-              // service still loads from the data bucket on boot; this just
-              // makes the same bytes available behind the CDN.
-              'echo Mirroring ML model to assets bucket...',
-              `export DATA_BUCKET=${props.betaDataBucket}`,
-              'npm run upload-ml-model --workspace=packages/scripts',
+              // NOTE: the ML model is NOT mirrored here. It's a ~500 MB bundle
+              // that changes ~once a year, so it's a one-shot manual upload
+              // into the assets bucket (see scripts/uploadMLModel.ts), not a
+              // per-deploy step.
               'echo Deploying to Beta environment...',
               'cd packages/cdk',
               'npx cdk deploy CubeCobraBetaStack --require-approval never --context environment=beta --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION',
@@ -393,9 +380,10 @@ export class DeploymentPipeline extends Construct {
               'echo CDN distribution: $CDN_DISTRIBUTION_ID',
               'echo Uploading static assets to S3...',
               'npm run upload-assets --workspace=packages/scripts',
-              'echo Mirroring ML model to assets bucket...',
-              `export DATA_BUCKET=${props.productionDataBucket}`,
-              'npm run upload-ml-model --workspace=packages/scripts',
+              // NOTE: the ML model is NOT mirrored here. It's a ~500 MB bundle
+              // that changes ~once a year, so it's a one-shot manual upload
+              // into the assets bucket (see scripts/uploadMLModel.ts), not a
+              // per-deploy step.
               'echo Deploying to Production environment...',
               'cd packages/cdk',
               'npx cdk deploy CubeCobraProdStack --require-approval never --context environment=production --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION',

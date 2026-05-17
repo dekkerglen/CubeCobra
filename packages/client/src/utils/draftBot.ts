@@ -23,6 +23,10 @@
 import { cdnUrl } from '@utils/cdnUrl';
 import { BasicLandInfo } from '@utils/datatypes/SimulationReport';
 
+// Models are served only from the CDN. We deliberately do NOT fall back to the
+// app origin: the bundle is ~70 MB and proxying it through our server would
+// wreck egress costs. If this 403s, the fix is the model mirror (the assets
+// bucket must actually contain /model/*), not a server-side proxy.
 const modelUrl = (path: string): string => cdnUrl(`/model/${path}`);
 
 let tf: typeof import('@tensorflow/tfjs') | null = null;

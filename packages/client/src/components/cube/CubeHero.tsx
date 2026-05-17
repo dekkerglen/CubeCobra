@@ -12,6 +12,8 @@ import {
   KebabHorizontalIcon,
   LinkIcon,
   PackageIcon,
+  PinIcon,
+  PinSlashIcon,
   QuestionIcon,
   RssIcon,
   StopIcon,
@@ -74,6 +76,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const [isFilterUsed, setIsFilterUsed] = useState(true);
   const [exportAllBoards, setExportAllBoards] = useState(false);
   const [followedState, setFollowedState] = useState(!!user && !!cube.likedByCurrentUser);
+  const [pinnedState, setPinnedState] = useState(!!user && isCubeOwner && !!cube.pinnedByCurrentUser);
 
   // Server-rendered cube objects don't always carry `likedByCurrentUser`, so when
   // the field is missing fall back to a single lightweight check. Bounded to one
@@ -97,6 +100,30 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
       cancelled = true;
     };
   }, [csrfFetch, cube.id, cube.likedByCurrentUser, user]);
+
+  // The pin control only shows for the cube owner. When the server didn't supply
+  // `pinnedByCurrentUser`, fall back to a single lightweight check, bounded to
+  // one request per CubeHero mount.
+  React.useEffect(() => {
+    if (!user || !isCubeOwner || typeof cube.pinnedByCurrentUser === 'boolean') return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await csrfFetch(`/cube/ispinned/${cube.id}`);
+        if (cancelled || !res.ok) return;
+        const json = await res.json();
+        if (typeof json.pinned === 'boolean') {
+          setPinnedState(json.pinned);
+        }
+      } catch {
+        // best-effort; default state is fine if this fails
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [csrfFetch, cube.id, cube.pinnedByCurrentUser, isCubeOwner, user]);
+
   const [maskGradient, setMaskGradient] = useState('linear-gradient(to left, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 50%)');
   const [mobileMaskGradient, setMobileMaskGradient] = useState(
     'linear-gradient(to bottom, rgba(0,0,0,0.5) 0%, rgba(0,0,0,0) 100%)',
@@ -158,6 +185,34 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
         if (!response.ok) {
           console.error(response);
           setFollowedState(false);
+        }
+      });
+    }
+  };
+
+  const handlePinToggle = () => {
+    if (!user || !isCubeOwner) return;
+
+    if (pinnedState) {
+      setPinnedState(false);
+      csrfFetch(`/cube/unpin/${cube.id}`, {
+        method: 'POST',
+        headers: {},
+      }).then((response) => {
+        if (!response.ok) {
+          console.error(response);
+          setPinnedState(true);
+        }
+      });
+    } else {
+      setPinnedState(true);
+      csrfFetch(`/cube/pin/${cube.id}`, {
+        method: 'POST',
+        headers: {},
+      }).then((response) => {
+        if (!response.ok) {
+          console.error(response);
+          setPinnedState(false);
         }
       });
     }
@@ -570,6 +625,18 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                       </Text>
                     </button>
                   )}
+                  {user && isCubeOwner && (
+                    <button
+                      onClick={handlePinToggle}
+                      className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                      aria-label={pinnedState ? 'Unpin cube' : 'Pin cube'}
+                    >
+                      {pinnedState ? <PinSlashIcon size={20} /> : <PinIcon size={20} />}
+                      <Text sm className="text-white">
+                        {pinnedState ? 'Unpin' : 'Pin'}
+                      </Text>
+                    </button>
+                  )}
                   <ShareCubeButton
                     className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
                     aria-label="Share cube"
@@ -678,6 +745,18 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                       {followedState ? <HeartFillIcon size={20} className="text-red-500" /> : <HeartIcon size={20} />}
                       <Text xs className="text-white">
                         {followedState ? 'Liked' : 'Like'}
+                      </Text>
+                    </button>
+                  )}
+                  {user && isCubeOwner && (
+                    <button
+                      onClick={handlePinToggle}
+                      className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                      aria-label={pinnedState ? 'Unpin cube' : 'Pin cube'}
+                    >
+                      {pinnedState ? <PinSlashIcon size={20} /> : <PinIcon size={20} />}
+                      <Text xs className="text-white">
+                        {pinnedState ? 'Unpin' : 'Pin'}
                       </Text>
                     </button>
                   )}
@@ -947,6 +1026,18 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   </Text>
                 </button>
               )}
+              {user && isCubeOwner && (
+                <button
+                  onClick={handlePinToggle}
+                  className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                  aria-label={pinnedState ? 'Unpin cube' : 'Pin cube'}
+                >
+                  {pinnedState ? <PinSlashIcon size={20} /> : <PinIcon size={20} />}
+                  <Text sm className="text-white">
+                    {pinnedState ? 'Unpin' : 'Pin'}
+                  </Text>
+                </button>
+              )}
               <ShareCubeButton
                 className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
                 aria-label="Share cube"
@@ -1055,6 +1146,18 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   {followedState ? <HeartFillIcon size={20} className="text-red-500" /> : <HeartIcon size={20} />}
                   <Text xs className="text-white">
                     {followedState ? 'Liked' : 'Like'}
+                  </Text>
+                </button>
+              )}
+              {user && isCubeOwner && (
+                <button
+                  onClick={handlePinToggle}
+                  className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                  aria-label={pinnedState ? 'Unpin cube' : 'Pin cube'}
+                >
+                  {pinnedState ? <PinSlashIcon size={20} /> : <PinIcon size={20} />}
+                  <Text xs className="text-white">
+                    {pinnedState ? 'Unpin' : 'Pin'}
                   </Text>
                 </button>
               )}

@@ -2338,4 +2338,97 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     );
     return result.Attributes?.item?.likeCount ?? 0;
   }
+
+  // ---------- Cube Pin relationships ----------
+  // An owner pinning their own cube is stored as a single row on the cube's hash
+  // partition, mirroring the like-row pattern:
+  //   PK = HASH#CUBE#{cubeId}
+  //   SK = PIN#{userId}
+  //   GSI1PK = PIN-BY#{userId}   (for "what cubes has this user pinned" via GSI)
+  //   GSI1SK = DATE#{timestamp}  (most recently pinned first)
+  // Pins are private to the owner and not counted on the cube.
+
+  private pinSK(userId: string): string {
+    return `PIN#${userId}`;
+  }
+
+  private pinByGSI1PK(userId: string): string {
+    return `PIN-BY#${userId}`;
+  }
+
+  /**
+   * Writes a pin row for (cubeId, userId). Idempotent (overwrites if exists).
+   */
+  public async writePin(cubeId: string, userId: string, timestamp: number = Date.now()): Promise<void> {
+    await this.dynamoClient.send(
+      new PutCommand({
+        TableName: this.tableName,
+        Item: {
+          PK: `HASH#${this.typedKey(cubeId)}`,
+          SK: this.pinSK(userId),
+          GSI1PK: this.pinByGSI1PK(userId),
+          GSI1SK: `DATE#${String(timestamp).padStart(15, '0')}`,
+          userId,
+          cubeId,
+          pinnedAt: timestamp,
+        },
+      }),
+    );
+  }
+
+  /**
+   * Deletes a pin row for (cubeId, userId). Idempotent.
+   */
+  public async deletePin(cubeId: string, userId: string): Promise<void> {
+    await this.dynamoClient.send(
+      new DeleteCommand({
+        TableName: this.tableName,
+        Key: {
+          PK: `HASH#${this.typedKey(cubeId)}`,
+          SK: this.pinSK(userId),
+        },
+      }),
+    );
+  }
+
+  /**
+   * Returns true if the user currently pins the cube.
+   */
+  public async getPin(cubeId: string, userId: string): Promise<boolean> {
+    const result = await this.dynamoClient.send(
+      new GetCommand({
+        TableName: this.tableName,
+        Key: {
+          PK: `HASH#${this.typedKey(cubeId)}`,
+          SK: this.pinSK(userId),
+        },
+      }),
+    );
+    return !!result.Item;
+  }
+
+  /**
+   * Lists cube IDs that the user has pinned, paginated by most recently pinned.
+   */
+  public async queryCubesPinnedBy(
+    userId: string,
+    lastKey?: Record<string, any>,
+    limit: number = 20,
+  ): Promise<{ cubeIds: string[]; lastKey?: Record<string, any> }> {
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :pk',
+      ExpressionAttributeValues: {
+        ':pk': this.pinByGSI1PK(userId),
+      },
+      ScanIndexForward: false,
+      ExclusiveStartKey: lastKey,
+      Limit: limit,
+    };
+
+    const result = await this.dynamoClient.send(new QueryCommand(params));
+    const cubeIds = (result.Items || []).map((item: any) => item.cubeId).filter(Boolean);
+    return { cubeIds, lastKey: result.LastEvaluatedKey };
+  }
 }
