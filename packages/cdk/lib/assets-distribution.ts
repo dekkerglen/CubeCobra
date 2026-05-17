@@ -2,7 +2,10 @@ import { CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
 import {
   AllowedMethods,
+  CacheCookieBehavior,
+  CacheHeaderBehavior,
   CachePolicy,
+  CacheQueryStringBehavior,
   Distribution,
   HttpVersion,
   OriginRequestPolicy,
@@ -106,6 +109,55 @@ export class AssetsDistribution extends Construct {
       },
     });
 
+    // stylesheet.css is served from a fixed, unhashed path with a 1-year
+    // immutable Cache-Control and is cache-busted purely by a ?v=<git-sha>
+    // query string. The AWS managed cache policies (including
+    // CACHING_OPTIMIZED_FOR_UNCOMPRESSED_OBJECTS, used here before) do NOT keep
+    // the query string in the cache key, so every ?v= collapsed onto one key
+    // and the busting silently never worked — new CSS could not propagate for
+    // up to a year without a manual /css/stylesheet.css invalidation. This
+    // policy keeps the query string in the key; TTLs mirror the managed policy
+    // (origin sends max-age=1y immutable, so the effective TTL is a year and
+    // freshness comes from the changing ?v= producing a fresh key each deploy).
+    // Compression intentionally left off to exactly match prior behavior.
+    const cssCachePolicy = new CachePolicy(this, 'AssetsCssCachePolicy', {
+      cachePolicyName: `cubecobra-assets-${props.environmentName}-css`,
+      comment: 'CSS at a fixed path, busted by ?v=<sha>; query string must be in the cache key',
+      minTtl: Duration.seconds(1),
+      defaultTtl: Duration.days(1),
+      maxTtl: Duration.days(365),
+      queryStringBehavior: CacheQueryStringBehavior.all(),
+      headerBehavior: CacheHeaderBehavior.none(),
+      cookieBehavior: CacheCookieBehavior.none(),
+      enableAcceptEncodingGzip: false,
+      enableAcceptEncodingBrotli: false,
+    });
+
+    // CloudFront standard (legacy) access logs → a dedicated bucket. Used to
+    // attribute egress per URI prefix (/model/* vs /js/* vs /content/*) when
+    // diagnosing CloudFront spend. Standard log delivery writes objects via S3
+    // ACLs, so this bucket MUST keep ACLs enabled (BUCKET_OWNER_PREFERRED) —
+    // unlike the assets bucket above, which enforces ownership and disables
+    // ACLs (CloudFront would fail to deliver logs there). Logs are voluminous
+    // and only needed for a forensic window, so a 30-day lifecycle keeps the
+    // storage cost negligible. SSE-S3 only: standard logging rejects SSE-KMS.
+    const logBucket = new Bucket(this, 'AssetsLogBucket', {
+      bucketName: `cubecobra-assets-logs-${props.environmentName}`,
+      blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
+      encryption: BucketEncryption.S3_MANAGED,
+      objectOwnership: ObjectOwnership.BUCKET_OWNER_PREFERRED,
+      enforceSSL: true,
+      versioned: false,
+      removalPolicy: RemovalPolicy.RETAIN,
+      lifecycleRules: [
+        {
+          id: 'expire-access-logs',
+          enabled: true,
+          expiration: Duration.days(30),
+        },
+      ],
+    });
+
     this.distribution = new Distribution(this, 'AssetsDistribution', {
       domainNames: [this.assetDomain],
       certificate,
@@ -130,13 +182,14 @@ export class AssetsDistribution extends Construct {
           responseHeadersPolicy: responseHeaders,
           compress: true,
         },
-        // stylesheet.css uses ?v=<sha> for cache busting — make sure CloudFront
-        // includes the query string in its key.
+        // stylesheet.css is at a fixed unhashed path, busted by ?v=<sha> — use
+        // the custom policy above that actually keeps the query string in the
+        // cache key (the managed policies strip it; see cssCachePolicy).
         'css/*': {
           origin,
           viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           allowedMethods: AllowedMethods.ALLOW_GET_HEAD_OPTIONS,
-          cachePolicy: CachePolicy.CACHING_OPTIMIZED_FOR_UNCOMPRESSED_OBJECTS,
+          cachePolicy: cssCachePolicy,
           originRequestPolicy: OriginRequestPolicy.CORS_S3_ORIGIN,
           responseHeadersPolicy: responseHeaders,
           compress: true,
@@ -146,6 +199,11 @@ export class AssetsDistribution extends Construct {
       httpVersion: HttpVersion.HTTP2_AND_3,
       enableIpv6: true,
       comment: `cubecobra-assets-${props.environmentName}`,
+      enableLogging: true,
+      logBucket,
+      logFilePrefix: 'cf-access-logs/',
+      // Cookies are irrelevant to byte/URI attribution and only bloat logs.
+      logIncludesCookies: false,
     });
 
     // Route53 alias for assets.<domain> → CloudFront. Z2FDTNDATAQYW2 is the
@@ -178,6 +236,10 @@ export class AssetsDistribution extends Construct {
     new CfnOutput(this, 'AssetsDistributionId', {
       value: this.distribution.distributionId,
       exportName: `CubeCobra-${props.environmentName}-AssetsDistributionId`,
+    });
+    new CfnOutput(this, 'AssetsLogBucketName', {
+      value: logBucket.bucketName,
+      exportName: `CubeCobra-${props.environmentName}-AssetsLogBucketName`,
     });
     new CfnOutput(this, 'AssetsBaseUrl', {
       value: `https://${this.assetDomain}`,

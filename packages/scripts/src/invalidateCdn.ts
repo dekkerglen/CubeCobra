@@ -6,13 +6,20 @@ dotenv.config();
 
 // Creates a CloudFront invalidation after a deploy.
 //
-// Hashed bundles (`/js/*.bundle.js`, `*.[hash].css`) NEVER need invalidation —
-// the filename changes when the content does, and CloudFront caches them
-// forever. We only need to bust unhashed paths: manifest.json, /content/* (any
-// images that were updated in this deploy), favicon.ico, and the legacy
-// stylesheet.css path. The `?v=${GIT_COMMIT}` query string already busts
-// stylesheet.css if the cache policy includes the query string in its key,
-// but invalidating the path is a free safety net.
+// Hashed bundles (`/js/*.bundle.js`) NEVER need invalidation — the filename
+// changes when the content does, and CloudFront caches them for a year.
+// /content/* is the same in spirit: those assets are append-only and are never
+// overwritten in place, so a cached object can't be stale. Invalidating the
+// whole content tree every deploy just evicts good cache entries for nothing,
+// so it's deliberately NOT in the default set. (If you ever do overwrite a
+// content file, pass its path explicitly or use `--all`.)
+//
+// What's left is genuinely unhashed-and-mutable: manifest.json (the 60s atomic
+// bundle pointer) and the legacy fixed-path stylesheet.css. The
+// `?v=${GIT_COMMIT}` query string now busts stylesheet.css on its own — the
+// css cache policy keeps the query string in the cache key (see
+// assets-distribution.ts cssCachePolicy) — so this invalidation is a true,
+// free safety net rather than load-bearing.
 //
 // Distribution ID is read from CDN_DISTRIBUTION_ID, exported by the CDK stack
 // and surfaced into the deploy job (or via `aws cloudformation describe-stacks`).
@@ -20,7 +27,7 @@ dotenv.config();
 // Pass paths via argv or default to a safe set. Use `--all` to invalidate `/*`
 // (rare; only when you've changed something everywhere or you're not sure).
 
-const DEFAULT_PATHS = ['/manifest.json', '/content/*', '/css/stylesheet.css'];
+const DEFAULT_PATHS = ['/manifest.json', '/css/stylesheet.css'];
 
 const parseArgs = (): { distributionId: string; paths: string[] } => {
   const distributionId = process.env.CDN_DISTRIBUTION_ID;
