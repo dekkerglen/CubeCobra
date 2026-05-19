@@ -51,8 +51,16 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
 
   // Lazy-load the user's full cube list (pinned first, then by date edited) the
   // first time the modal opens.
+  //
+  // `cubesLoading` is deliberately NOT in the deps and is not used as a guard:
+  // it's set inside this effect, so including it would tear the effect down
+  // and re-run it as soon as setCubesLoading(true) fires, with cleanup setting
+  // cancelled=true *before* the response arrives. That cancellation then
+  // suppresses the `finally` clear of cubesLoading, leaving the spinner stuck
+  // (the bug Smart Search hit, because Suggestions.tsx mounts the modal fresh
+  // on every card click). `cubesLoaded` is the only guard we need.
   useEffect(() => {
-    if (!isOpen || cubesLoaded || cubesLoading || !user) return;
+    if (!isOpen || cubesLoaded || !user) return;
     let cancelled = false;
     (async () => {
       setCubesLoading(true);
@@ -61,6 +69,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
         if (cancelled) return;
         if (res.ok) {
           const json = await res.json();
+          if (cancelled) return;
           if (json.success === 'true' && Array.isArray(json.cubes)) {
             setCubes(json.cubes as Cube[]);
             setCubesLoaded(true);
@@ -75,7 +84,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [isOpen, cubesLoaded, cubesLoading, user, csrfFetch]);
+  }, [isOpen, cubesLoaded, user, csrfFetch]);
 
   // Pick a sensible default selection once cubes are available.
   useEffect(() => {
