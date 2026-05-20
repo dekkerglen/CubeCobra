@@ -68,7 +68,7 @@ const EditBlogModal: React.FC<EditBlogModalProps> = ({ isOpen, setOpen, post, cu
             onChange={(e) => setTitle(e.target.value)}
           />
           {post && <input type="hidden" name="id" value={post.id} />}
-          <TextEntry name="markdown" value={markdown} setValue={setMarkdown} maxLength={10000} />
+          <TextEntry name="markdown" value={markdown} setValue={setMarkdown} maxLength={30000} />
           {alerts.map(({ color, message }) => (
             <Alert key={message} color={color} className="mt-2">
               {message}

@@ -1,33 +1,32 @@
-I'm very excited to announce a large number of changes that we have been working on the last few months. Myself and a handful of contributors have been enormously productive, as you may have noticed from so many of the UX changes on the site recently! 
+I'm very excited to announce a large number of changes that we have been working on the last few months. Myself and a handful of contributors have been enormously productive, as you may have noticed from so many of the UX changes on the site recently!
 
 ### Some New Stuff
 
-I've added a special "Voucher Card". Similar to "Custom Card" - this is a special cased card. This one allows you to add cards nested inside the voucher. When you draft a voucher, you get all the cards contained in it! Perfect for if you want a buy-one-get-four squadron hawk, or perhaps want to allow drafters to pickup a copy of Urza's Tower, Power plant, and Mine all in one pick.
+I've added a special "Voucher Card". Similar to "Custom Card" - this is a special cased card. This one allows you to add cards nested inside the voucher. When you draft a voucher, you get all the cards contained in it! Perfect for if you want a buy-one-get-four Squadron Hawk, or perhaps want to allow drafters to pick up a copy of Urza's Tower, Power Plant, and Mine all in one pick.
 
-"At a Glance" is a new feature heavily inspired by the work done by @haganbmj [here](https://Cube.griselbrand.com/). The existing analysis tools technically could do everything shown here, but this page makes it much easier to get some simple analysis done.
+"At a Glance" is a new feature heavily inspired by the work done by @haganbmj [here](https://cube.griselbrand.com/). The existing analysis tools technically could do everything shown here, but this page makes it much easier to get some simple analysis done.
 
 Point-in-time views have finally arrived. Our data model has always supported this, but I haven't gotten around to implementing this until now. Click on any Cube changelog and now you can look at that Cube as a point-in-time directly after that changelog was applied. Compare it with the current list, maybe export the difference. This one has definitely grown to be one of my go-tos for figuring out all the changes I made to my Cube list over a few weeks (and many small changelogs) that I now need to reflect in the physical copy.
 
 We added a page with some API docs. Hope this makes tinkering on your side project easier!
 
-Draft Simulator is a very large new feature that one of our contributors has been tinkering with over the last few months. A lot of really good engineering work has been put into making this feature a reality - including setting up a system that supports our ML model to run in-browser. This allows us to run simulated bot drafts without creating unreasonable compute costs on our end, allowing us to do several thousand drafts and do some fascinating analysis on the results. It uses the archetype annotation to label clusters, and also uses the Smart Search to find new cards for a specific discovered archetype. There is really a lot going on here, so please try it out and let us know what you think!
+Draft Simulator is a very large new feature that one of our contributors has been tinkering with over the last few months. A lot of really good engineering work has been put into making this feature a reality - including setting up a system that supports our ML model to run in-browser. This allows us to run simulated bot drafts without creating unreasonable compute costs on our end, allowing us to run several thousand drafts and do some fascinating analysis on the results. It uses the archetype annotation to label clusters, and also uses the Smart Search to find new cards for a specific discovered archetype. There is really a lot going on here, so please try it out and let us know what you think!
 
 ### ML Features
 
-CubeCobra has maintained a fairly sophisticated machine learning model that has evolved a lot over the years. This model powers our draftbots, card synergy (seen on card pages), bot deckbuilder, and also the Smart Search (previously called recommender). We have just published a new version of the model, freshly trained! This model architecture has been tweaked so the draftbots now have full context of the Cube that is being drafted. The deckbuild has been overhauled, but the model is the same - we only changed the algorithm that uses the model. The results look quite good, but we're still keeping an eye out for edge cases and anomalies and will adjust as needed.
+CubeCobra has maintained a fairly sophisticated machine learning model that has evolved a lot over the years. This model powers our draftbots, card synergy (seen on card pages), bot deckbuilder, and also the Smart Search (previously called recommender). We have just published a new version of the model, freshly trained! This model architecture has been tweaked so the draftbots now have full context of the Cube that is being drafted. The deckbuilder has been overhauled, but the model is the same - we only changed the algorithm that uses the model. The results look quite good, but we're still keeping an eye out for edge cases and anomalies and will adjust as needed.
 
 As I mentioned earlier, the Recommender has now been rebranded as Smart Search. I believe this feature has suffered from bad branding, and a UX that doesn't encourage users to use it in a useful way. This feature isn't meant to just give you cards to add to your Cube - it is a way to search for cards and use the context of the Cube to sort the cards in a more meaningful way. When I explore cards on Scryfall, I would often use "EDHRec Rank" sorting, which is fine, but not great for Cube. Using the same queries in Smart Search yields more fruitful results, in my experience.
 
 I've created a new development tool I call "Archetype Annotater". Similar to the [Lucky Paper Cube Map](https://luckypaper.co/articles/mapping-the-magic-landscape/), it projects all decks drafted on Cobra, and then clusters them. I've tuned the tool to result in around 50 clusters, of which I've hand annotated. Now your drafts (and the bot seats) will automatically have more meaningful names, by projecting the deck into that same space and figuring out which cluster it belongs to.
 
-
 ### UI Changes
 
-We have restructured the overall navigation of the site. Outside of Cube pages, there are four main sections: Landing, Explore, Resources, and Help. Resources is brand new - I do think CubeCobra should be a hub where we link and promote other projects in the Cube space. If you have or use a project you feel is appropriate to be listed there, please let me know and I will consider adding it! Help pages are a consolidation of other miscellaneous pages, now bundled into a more organized hub. These pages now feature splash images using some of the artwork I have commissioned over the years - it feels very satisfying to put those gorgeous (imo) pieces in a place they can be appreciated by more people. 
+We have restructured the overall navigation of the site. Outside of Cube pages, there are four main sections: Landing, Explore, Resources, and Help. Resources is brand new - I do think CubeCobra should be a hub where we link and promote other projects in the Cube space. If you have or use a project you feel is appropriate to be listed there, please let me know and I will consider adding it! Help pages are a consolidation of other miscellaneous pages, now bundled into a more organized hub. These pages now feature splash images using some of the artwork I have commissioned over the years - it feels very satisfying to put those gorgeous (imo) pieces in a place they can be appreciated by more people.
 
 The home page has mostly been simplified. This refers to both the logged out and logged in variants. I've removed sections for recent drafts and content. A search component has been added that can be toggled between searching for Cubes, Cards, and Packages - with some example queries. I believe that putting this here will lead to more organic discovery of features.
 
-Packages have been a feature on the site for many years, but for most of that time have been clunky and/or broken. I've now promoted packages to be a front and center entity alongside cubes. You can now quickly create a new package, view your packages, and view the packages you've liked. When you're editing a Cube, you can easily pull up those lists of packages and add them directly to your Cube. Packages have been moved under the explore menu. Of note- packages are immutable by design. Similar philosophy to sites like Twitter where we don't want to allow packages with a lot of likes to be modified.
+Packages have been a feature on the site for many years, but for most of that time have been clunky and/or broken. I've now promoted packages to be a front and center entity alongside Cubes. You can now quickly create a new package, view your packages, and view the packages you've liked. When you're editing a Cube, you can easily pull up those lists of packages and add them directly to your Cube. Packages have been moved under the explore menu. Of note — packages are immutable by design. Similar philosophy to sites like Twitter where we don't want to allow packages with a lot of likes to be modified.
 
 User profile pages have been overhauled. Packages have been added as a new tab, and now it is easy to view a user's follows, followers, liked cubes, and liked packages. The Cube and deck preview component has been revised, I think it looks a little sleeker now. "Account Information" has been rebranded as "Settings" and also has an overhauled UI.
 
@@ -46,7 +45,7 @@ With this update, I will no longer be publishing new content on Cube Cobra. I wi
 - New API Documentation page (`/apidocs`) — reference for all public API endpoints
 - New "Voucher" card type — contains a list of other cards; when drafted it expands into its contained cards instead of being picked directly. Supports custom names, `is:voucher` filter, and CSV import/export
 - New "At a Glance" analysis page — dashboard of key stats, pricing, mana curve, and distribution charts
-- New cubes get a random art crop from a curated card set instead of always Doubling Cube
+- New Cubes get a random art crop from a curated card set instead of always Doubling Cube
 - Changelog entries are now clickable, each linking to a detail page with the full changelog
 - Point-in-time Cube list view on changelog detail pages — same view controls (table, visual spoiler, curve, stacks), filter, sort, and display sidebar as the main list, boards kept distinct (mainboard, maybeboard)
 - "Download Point in Time Cube" on changelog detail pages — reconstructs the historical Cube as CSV
@@ -86,7 +85,7 @@ With this update, I will no longer be publishing new content on Cube Cobra. I wi
 - Packages are created on a dedicated page; users get a Packages profile tab; navbar gains a `+` quick-create dropdown and a Your Packages menu
 - New Help hub at `/help` with a shared layout — Filter Syntax, Markdown Guide, API Docs, Card Updates, Contact, and Donate share a hero with a sticky pill nav
 - Liked Packages — upvoting a package also records a like (browse Packages You've Liked). Cube edit sidebar gains "Add Package" (Import): a modal with your packages and liked packages dropdowns that adds the package's cards to your changelist
-- Liked Cubes page — browsable list of cubes you've liked, previously followed (also viewable for any user)
+- Liked Cubes page — browsable list of Cubes you've liked, previously followed (also viewable for any user)
 - Followers and Following pages — each its own page with the new profile layout, replacing /user/social
 - Redesigned user profile pages — left side card (avatar, name, supporter badges, follower/following/liked-cubes/liked-packages count links, Edit Profile or Follow/Report, markdown bio); right-side floating tabs (Cubes/Packages/Drafts/Blog) across all profile sub-pages including Liked and Followers/Following. "Decks" tab renamed "Drafts"
 - Supporter badges — active Patreon supporters get an animated "Patron" pill; tiered supporters (Cobra Hatchling, Coiling Oracle, Lotus Cobra) get a tier-coloured pill that shimmers on hover
@@ -96,16 +95,16 @@ With this update, I will no longer be publishing new content on Cube Cobra. I wi
 - Drafts of your cubes get their own full-width page (from the Your Cubes dropdown) with a responsive grid up to 6 per row
 - Dashboard activity feed loads asynchronously after the page, uses "Show More" instead of pagination, and its empty state links to Popular Cubes; non-supporters get a banner ad every 10 posts
 - Reorganized the "Your Stuff" / mobile cubes dropdown into Your Cubes, Actions (create Cube/package), and More (View all, Liked, Drafts, View all packages, Liked packages)
-- Pin your own cubes — a Pin toggle replaces Like on cubes you own; pinned cubes sort to the top of the Your Cubes dropdown, your dashboard, and your profile's Cubes page
+- Pin your own Cubes — a Pin toggle replaces Like on Cubes you own; pinned Cubes sort to the top of the Your Cubes dropdown, your dashboard, and your profile's Cubes page
 
 # Bug Fixes
 
 - Fixed deck data exports containing invalid -1 card values — exports now exclude cards that couldn't be mapped to valid IDs
-- Fixed quarterly data exports including private/unlisted cubes — Cube and deck export jobs now only export public cubes
-- Fixed blog posts from private/unlisted cubes leaking into follower feeds — blog posts, commits, package adds, and bulk imports for non-public cubes no longer publish feed items
+- Fixed quarterly data exports including private/unlisted cubes — Cube and deck export jobs now only export public Cubes
+- Fixed blog posts from private/unlisted Cubes leaking into follower feeds — blog posts, commits, package adds, and bulk imports for non-public Cubes no longer publish feed items
 - Fixed unlisted-Cube blog posts visible on user blog pages and dashboard feeds — display filtering now excludes private and unlisted (was private only)
 - Fixed blog pagination (`getmoreblogsbycube`) missing a visibility check — now verifies the Cube exists and is viewable
-- Fixed Cube JSON API (`/Cube/api/cubeJSON/:id`) using stale `Cube.defaultSorts` — now returns all boards and applies the standard default sort (Color Category → Types-Multicolor → Mana Value → Alphabetical)
+- Fixed Cube JSON API (`/cube/api/cubeJSON/:id`) using stale `Cube.defaultSorts` — now returns all boards and applies the standard default sort (Color Category → Types-Multicolor → Mana Value → Alphabetical)
 - Fixed moving cards between boards keeping the card on the same board — the target board selector wasn't resetting when switching between cards on different boards
 - Fixed "Cannot set properties of undefined (setting 'markedForDelete')" crash from stale localStorage changes referencing missing card indices — now treated as a version mismatch via the existing recovery flow
 - Fixed sample pack/P1P1 generation failing for custom draft formats referencing non-mainboard boards — pack generation now passes all boards to the draft engine
@@ -113,7 +112,7 @@ With this update, I will no longer be publishing new content on Cube Cobra. I wi
 - Fixed bookmarked URLs with query params (view, sort, filters) not applied on load — the view-defaults effect was also firing on initial mount and overwriting URL values
 - Fixed Scunthorpe problem in the profanity filter — spam/marketing terms use word-boundary matching while slurs use substring matching, so words like "senft" no longer falsely trigger
 - Fixed list view selections persisting after removing cards — checked state used stale indices after "Edit Selected" → "Remove all" → "Save Changes"
-- Improved draft creation errors — now distinguish no cards in a board, running out mid-draft (with count and suggestions), and remaining cards not matching a slot filter (with filter text and counts)
+- Improved draft creation errors — now distinguish no cards in a board, running out of cards mid-draft (with count and suggestions), and remaining cards not matching a slot filter (with filter text and counts)
 - Improved date display — within 7 days shows relative time ("3 hours ago"), older shows absolute ("Feb 7, 2026")
 - Fixed Cube card count not updating in the hero as mainboard changes were saved
 - Fixed selecting cards with accented characters (e.g. Lórien) when adding to a draft record
@@ -135,5 +134,5 @@ With this update, I will no longer be publishing new content on Cube Cobra. I wi
 - Fixed stale "0 results" while a fetch was in flight — now shows "Searching…"
 - Fixed open dropdown nav menus going white-on-white in light mode on transparent-navbar hero pages
 - Fixed automatic deck archetype names not applied in production — cluster-center and annotation data files were missing from production deploys, so decks fell back to a blank archetype
-- Fixed draft bots making worse picks than the pick-by-pick breakdown for the same state — the live path sent raw oracle IDs while the breakdown sent normalized ones; substitution fallbacks are now skipped when the card is already known to the model, fixing stale pointers from the previous model
+- Fixed draftbots making worse picks than the pick-by-pick breakdown for the same state — the live path sent raw oracle IDs while the breakdown sent normalized ones; substitution fallbacks are now skipped when the card is already known to the model, fixing stale pointers from the previous model
 

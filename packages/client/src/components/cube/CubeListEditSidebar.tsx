@@ -338,7 +338,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
                     onChange={(e) => setPostTitle(e.target.value)}
                     className="mb-2 !h-auto"
                   />
-                  <TextEntry name="blog" value={postContent} setValue={setPostContent} maxLength={10000} rows={4} />
+                  <TextEntry name="blog" value={postContent} setValue={setPostContent} maxLength={30000} rows={4} />
                 </Flexbox>
               )}
 
@@ -540,7 +540,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
                       onChange={(e) => setPostTitle(e.target.value)}
                       className="mb-2 !h-auto"
                     />
-                    <TextEntry name="blog" value={postContent} setValue={setPostContent} maxLength={10000} rows={4} />
+                    <TextEntry name="blog" value={postContent} setValue={setPostContent} maxLength={30000} rows={4} />
                   </div>
                 )}
               </div>

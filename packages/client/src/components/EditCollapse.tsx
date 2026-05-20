@@ -265,7 +265,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
                     value={postTitle}
                     onChange={(e) => setPostTitle(e.target.value)}
                   />
-                  <TextEntry name="blog" value={postContent} setValue={setPostContent} maxLength={10000} />
+                  <TextEntry name="blog" value={postContent} setValue={setPostContent} maxLength={30000} />
                 </Flexbox>
               </Col>
             )}

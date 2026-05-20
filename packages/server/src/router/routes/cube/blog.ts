@@ -73,8 +73,8 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       return;
     }
 
-    if (req.body.markdown && req.body.markdown.length > 10000) {
-      res.status(400).json({ error: 'Blog post markdown cannot be longer than 10,000 characters.' });
+    if (req.body.markdown && req.body.markdown.length > 30000) {
+      res.status(400).json({ error: 'Blog post markdown cannot be longer than 30,000 characters.' });
       return;
     }
 
@@ -91,7 +91,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
         return;
       }
 
-      blog.body = req.body.markdown.substring(0, 10000);
+      blog.body = req.body.markdown.substring(0, 30000);
       blog.title = req.body.title;
 
       await blogDao.update(blog);
@@ -119,7 +119,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
     }
 
     const id: string = await blogDao.createBlog({
-      body: req.body.markdown?.substring(0, 10000) || '',
+      body: req.body.markdown?.substring(0, 30000) || '',
       owner: user.id,
       cube: cube.id,
       title: req.body.title,
