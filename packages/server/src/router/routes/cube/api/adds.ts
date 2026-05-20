@@ -1,9 +1,29 @@
+import { typeIsSpecialZoneType } from '@utils/cardutil';
+import { CardDetails } from '@utils/datatypes/Card';
 import { makeFilter } from '@utils/filtering/FilterCards';
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId, getAllMostReasonable } from 'serverutils/carddb';
 import { recommendOrThrow } from 'serverutils/ml';
 
 import { Request, Response } from '../../../../types/express';
+
+// Set codes for the Mystery Booster playtest cards (Gavin Verhey's "mystery
+// event" / convention playtest cards). These aren't real, tournament-playable
+// cards and shouldn't be suggested as cube additions.
+const MYSTERY_PLAYTEST_SETS = new Set(['cmb1', 'cmb2']);
+
+// Smart Search suggests cards to ADD to a cube, so it should never surface
+// cards that can't sit in a normal cube list. Tokens are already dropped
+// upstream (printedCardList excludes them); here we also drop basic lands,
+// special-zone cards (planes, schemes, phenomena, vanguards, conspiracies,
+// contraptions), and Mystery Booster playtest cards.
+const isExcludedFromSmartSearch = (card: CardDetails): boolean => {
+  const type = card.type ?? '';
+  if (type.includes('Basic') && type.includes('Land')) return true;
+  if (typeIsSpecialZoneType(type)) return true;
+  if (card.set && MYSTERY_PLAYTEST_SETS.has(card.set.toLowerCase())) return true;
+  return false;
+};
 
 export const addsHandler = async (req: Request, res: Response) => {
   try {
@@ -21,6 +41,8 @@ export const addsHandler = async (req: Request, res: Response) => {
 
     limit = parseInt(limit, 10);
     skip = parseInt(skip, 10);
+    if (!Number.isFinite(limit) || limit <= 0) limit = 96;
+    if (!Number.isFinite(skip) || skip < 0) skip = 0;
 
     // Smart Search is filter-driven. With no filter there is nothing to rank,
     // so return empty instead of dumping the whole recommender list.
@@ -37,25 +59,46 @@ export const addsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    // The two halves are independent, so run them concurrently:
-    //   1. recommender — cube cards -> oracles -> ML service -> per-oracle rating
-    //   2. filter       — apply the filter to the whole catalog
-    // We use recommendOrThrow here so a flaky ML service surfaces as a real
-    // 503 to the client instead of silently degrading to filter order, which
-    // looks indistinguishable from "the cube wasn't mapped correctly".
-    const ratingsPromise = (async (): Promise<Map<string, number>> => {
-      // populate: false — we only need oracle_ids, resolved via cardFromId.
-      const cards = await cubeDao.getCards(cubeID, undefined, { populate: false });
-      const oracles = cards.mainboard.map((card: any) => cardFromId(card.cardID)?.oracle_id).filter(Boolean);
-      const { adds } = await recommendOrThrow(oracles);
-      return new Map(adds.map((a): [string, number] => [a.oracle, a.rating]));
-    })();
+    // The cube's own cards. Fetched concurrently with the (synchronous) catalog
+    // filter below; needed so we can exclude cards already in the cube from the
+    // suggestions, and to give the model cube context.
+    const cubeCardsPromise = cubeDao.getCards(cubeID, undefined, { populate: false });
 
+    // Apply the user's filter to the whole catalog here on the server — it has
+    // the card catalog and filter module. getAllMostReasonable already drops
+    // tokens; isExcludedFromSmartSearch drops basics, special-zone cards, and
+    // Mystery Booster playtest cards. Each eligible oracle maps to one
+    // displayable (printing-preferred) card.
     const eligible = getAllMostReasonable(filter, printingPreference);
+    const eligibleByOracle = new Map<string, CardDetails>();
+    for (const card of eligible) {
+      const oracleId = card.oracle_id;
+      if (!oracleId || eligibleByOracle.has(oracleId)) continue;
+      if (isExcludedFromSmartSearch(card)) continue;
+      eligibleByOracle.set(oracleId, card);
+    }
 
-    let ratings: Map<string, number>;
+    const eligibleOracles = [...eligibleByOracle.keys()];
+
+    // Filter matched nothing — skip the ML round trip entirely.
+    if (eligibleOracles.length === 0) {
+      return res.status(200).send({ cardIDs: [], hasMoreAdds: false });
+    }
+
+    const cubeCards = await cubeCardsPromise;
+    const cubeOracles = cubeCards.mainboard
+      .map((card: any) => cardFromId(card.cardID)?.oracle_id)
+      .filter((id: any): id is string => Boolean(id));
+
+    // The recommender ranks the eligible oracles by fit and returns just the
+    // requested page plus the total. We pass oracle ids, not ML indices: the
+    // oracle<->index mapping lives entirely inside the recommender, so the two
+    // services never need a shared index table (a mismatch there would corrupt
+    // every rating). recommendOrThrow throws on ML failure so we can surface a
+    // real 503 instead of silently degrading to filter order.
+    let result: Awaited<ReturnType<typeof recommendOrThrow>>;
     try {
-      ratings = await ratingsPromise;
+      result = await recommendOrThrow(cubeOracles, { eligibleOracles, skip, limit });
     } catch (mlErr) {
       const error = mlErr as Error;
       req.logger.error('Smart Search recommender call failed', error.stack ?? error.message);
@@ -69,22 +112,19 @@ export const addsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    // Apply recommender scores to the filtered cards and sort by rating.
-    // Cards the recommender didn't score keep their filter order at the bottom
-    // (Array.sort is stable; equal ratings — including both unscored — return 0).
-    const ranked = eligible
-      .map((card) => ({ card, rating: ratings.get(card.oracle_id) ?? Number.NEGATIVE_INFINITY }))
-      .sort((a, b) => (a.rating === b.rating ? 0 : b.rating - a.rating));
+    // result.adds is the requested page of ranked oracle ids (cube cards and
+    // unrankable cards already handled by the recommender). Map each back to
+    // its displayable card via eligibleByOracle — every returned oracle is one
+    // we sent, so nothing can be dropped here. The client resolves full
+    // details from its IndexedDB cache (utils/cardDetailsCache), batching
+    // misses through /cube/api/getdetailsforcards.
+    const cardIDs = result.adds
+      .map((item) => eligibleByOracle.get(item.oracle)?.scryfall_id)
+      .filter((id): id is string => Boolean(id));
 
-    const slice = ranked.slice(skip, skip + limit);
-
-    // Return scryfall_ids only. The client resolves details from its IndexedDB
-    // cache (utils/cardDetailsCache), batching any misses through
-    // /cube/api/getdetailsforcards. getAllMostReasonable already picks the
-    // printing-preferred version, so scryfall_id is the right printing.
     return res.status(200).send({
-      cardIDs: slice.map((item) => item.card.scryfall_id).filter(Boolean),
-      hasMoreAdds: ranked.length > skip + limit,
+      cardIDs,
+      hasMoreAdds: skip + limit < result.totalAdds,
     });
   } catch (err) {
     const error = err as Error;

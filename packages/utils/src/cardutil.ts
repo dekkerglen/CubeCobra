@@ -611,7 +611,7 @@ export const cardManaSymbols = (card: Card): ManaSymbol[] => {
     .filter(Boolean) as ManaSymbol[];
 };
 
-const typeIsSpecialZoneType = (type: string): boolean =>
+export const typeIsSpecialZoneType = (type: string): boolean =>
   /\b(plane|phenomenon|vanguard|scheme|conspiracy|contraption)\b/i.test(type);
 
 export const cardIsSpecialZoneType = (card: Card): boolean => typeIsSpecialZoneType(cardType(card));
