@@ -260,7 +260,15 @@ export function CubeContextProvider({
     for (const list of Object.values(hydratedCards)) {
       if (!Array.isArray(list)) continue;
       for (const card of list) {
-        if (card && !card.details && card.cardID) allIds.push(card.cardID);
+        if (!card) continue;
+        if (!card.details && card.cardID) allIds.push(card.cardID);
+        // Voucher contents ship stripped too — collect their IDs so the
+        // sub-cards inside a voucher hydrate alongside the top-level cards.
+        if (Array.isArray(card.voucher_cards)) {
+          for (const vc of card.voucher_cards) {
+            if (vc && !vc.details && vc.cardID) allIds.push(vc.cardID);
+          }
+        }
       }
     }
     if (allIds.length === 0) {
@@ -278,9 +286,25 @@ export function CubeContextProvider({
             continue;
           }
           nextCards[board] = list.map((card) => {
-            if (card?.details || !card?.cardID) return card;
-            const details = detailsById[card.cardID];
-            return details ? { ...card, details } : card;
+            if (!card) return card;
+            let next = card;
+            if (!card.details && card.cardID) {
+              const details = detailsById[card.cardID];
+              if (details) next = { ...next, details };
+            }
+            // Hydrate the cards nested inside a voucher as well, otherwise they
+            // render as "Unidentified Card" after a refresh.
+            if (Array.isArray(card.voucher_cards) && card.voucher_cards.some((vc) => vc && !vc.details && vc.cardID)) {
+              next = {
+                ...next,
+                voucher_cards: card.voucher_cards.map((vc) => {
+                  if (!vc || vc.details || !vc.cardID) return vc;
+                  const vcDetails = detailsById[vc.cardID];
+                  return vcDetails ? { ...vc, details: vcDetails } : vc;
+                }),
+              };
+            }
+            return next;
           });
         }
         return { ...prev, cards: nextCards };
