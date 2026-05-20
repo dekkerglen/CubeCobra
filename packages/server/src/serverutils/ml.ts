@@ -55,34 +55,44 @@ export const encode = async (oracles: string[]): Promise<number[]> => {
   }
 };
 
+// Throwing variant — see buildOrThrow. Callers that need to distinguish a
+// transient ML failure from a genuine empty result (e.g. Smart Search, which
+// must surface "ML unavailable" instead of silently falling back to filter
+// order and looking like a buggy cube mapping) use this instead of recommend().
+export const recommendOrThrow = async (
+  oracles: string[],
+): Promise<{ adds: { oracle: string; rating: number }[]; cuts: { oracle: string; rating: number }[] }> => {
+  const response = await mlServiceRequest<{
+    success: boolean;
+    adds: { oracle: string; rating: number }[];
+    cuts: { oracle: string; rating: number }[];
+  }>('recommend', { oracles });
+
+  // Filter the OUTPUT recommendations to remove tokens, basic lands, etc.
+  const filteredAdds = response.adds.filter((item) => {
+    const cardIds = carddb.oracleToId[item.oracle];
+    if (!cardIds || cardIds.length === 0) return false;
+    const firstCardId = cardIds[0];
+    if (!firstCardId) return false;
+    const card = cardFromId(firstCardId);
+    if (!card || card.error) return false;
+    if (card.isToken) return false;
+    if (card.type?.includes('Basic') && card.type?.includes('Land')) return false;
+    return true;
+  });
+
+  return {
+    adds: filteredAdds,
+    cuts: response.cuts,
+  };
+};
+
 export const recommend = async (
   oracles: string[],
 ): Promise<{ adds: { oracle: string; rating: number }[]; cuts: { oracle: string; rating: number }[] }> => {
   try {
-    const response = await mlServiceRequest<{
-      success: boolean;
-      adds: { oracle: string; rating: number }[];
-      cuts: { oracle: string; rating: number }[];
-    }>('recommend', { oracles });
-
-    // Filter the OUTPUT recommendations to remove tokens, basic lands, etc.
-    const filteredAdds = response.adds.filter((item) => {
-      const cardIds = carddb.oracleToId[item.oracle];
-      if (!cardIds || cardIds.length === 0) return false;
-      const firstCardId = cardIds[0];
-      if (!firstCardId) return false;
-      const card = cardFromId(firstCardId);
-      if (!card || card.error) return false;
-      if (card.isToken) return false;
-      if (card.type?.includes('Basic') && card.type?.includes('Land')) return false;
-      return true;
-    });
-
-    return {
-      adds: filteredAdds,
-      cuts: response.cuts,
-    };
-  } catch (_err) {
+    return await recommendOrThrow(oracles);
+  } catch {
     return {
       adds: [],
       cuts: [],

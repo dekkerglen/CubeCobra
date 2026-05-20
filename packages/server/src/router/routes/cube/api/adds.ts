@@ -1,7 +1,7 @@
 import { makeFilter } from '@utils/filtering/FilterCards';
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId, getAllMostReasonable } from 'serverutils/carddb';
-import { recommend } from 'serverutils/ml';
+import { recommendOrThrow } from 'serverutils/ml';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -40,18 +40,34 @@ export const addsHandler = async (req: Request, res: Response) => {
     // The two halves are independent, so run them concurrently:
     //   1. recommender — cube cards -> oracles -> ML service -> per-oracle rating
     //   2. filter       — apply the filter to the whole catalog
-    // recommend() resolves to an empty list on any failure, so a flaky ML
-    // service degrades to filter order rather than failing the request.
+    // We use recommendOrThrow here so a flaky ML service surfaces as a real
+    // 503 to the client instead of silently degrading to filter order, which
+    // looks indistinguishable from "the cube wasn't mapped correctly".
     const ratingsPromise = (async (): Promise<Map<string, number>> => {
       // populate: false — we only need oracle_ids, resolved via cardFromId.
       const cards = await cubeDao.getCards(cubeID, undefined, { populate: false });
       const oracles = cards.mainboard.map((card: any) => cardFromId(card.cardID)?.oracle_id).filter(Boolean);
-      const { adds } = await recommend(oracles);
+      const { adds } = await recommendOrThrow(oracles);
       return new Map(adds.map((a): [string, number] => [a.oracle, a.rating]));
     })();
 
     const eligible = getAllMostReasonable(filter, printingPreference);
-    const ratings = await ratingsPromise;
+
+    let ratings: Map<string, number>;
+    try {
+      ratings = await ratingsPromise;
+    } catch (mlErr) {
+      const error = mlErr as Error;
+      req.logger.error('Smart Search recommender call failed', error.stack ?? error.message);
+      return res.status(503).send({
+        success: 'false',
+        mlUnavailable: true,
+        message:
+          'The card recommender is temporarily unavailable, so Smart Search results would be unranked. Please try again in a moment.',
+        cardIDs: [],
+        hasMoreAdds: false,
+      });
+    }
 
     // Apply recommender scores to the filtered cards and sort by rating.
     // Cards the recommender didn't score keep their filter order at the bottom

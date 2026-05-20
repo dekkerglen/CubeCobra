@@ -45,6 +45,23 @@ export const updateDraftFormatsHandler = async (req: Request, res: Response) => 
       }
     }
 
+    // Defense in depth: strip the legacy `board` field from every slot before
+    // persisting. The editor migrates it into the filter string on load, but
+    // this guards against older clients (or hand-crafted requests) sending it.
+    // Once stripped, createdraft.ts only ever sees the filter string, and the
+    // board scope lives in `board=...` clauses (see compileSlotFilter).
+    for (const format of formats) {
+      if (!Array.isArray(format.packs)) continue;
+      for (const pack of format.packs) {
+        if (!pack || !Array.isArray(pack.slots)) continue;
+        pack.slots = pack.slots.map((slot: any) => {
+          if (!slot || typeof slot !== 'object') return slot;
+          const { board: _legacyBoard, ...rest } = slot;
+          return rest;
+        });
+      }
+    }
+
     const cube = await cubeDao.getById(req.params.id!);
 
     if (!isCubeViewable(cube, req.user)) {

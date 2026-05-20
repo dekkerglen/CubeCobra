@@ -61,6 +61,8 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   const autobuildUsedRef = useRef(false);
   const [displayDropdownOpen, setDisplayDropdownOpen] = React.useState(false);
   const [autobuilding, setAutobuilding] = useState(false);
+  const [autobuildProgress, setAutobuildProgress] = useState<{ step: number; totalSteps: number } | null>(null);
+  const [autobuildError, setAutobuildError] = useState<string | null>(null);
   const seatData = draft.seats[seat];
   const [deckTitle, setDeckTitle] = useState(seatData?.title || '');
   const formData = useMemo<Record<string, string>>(
@@ -75,12 +77,15 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
 
   const autoBuildDeck = useCallback(async () => {
     setAutobuilding(true);
+    setAutobuildError(null);
+    setAutobuildProgress(null);
+
     try {
-      const response = await csrfFetch('/cube/api/deckbuild', {
+      // Phase 1: start the deckbuild session. The server runs a single ML
+      // build call, seeds the first 10 cards, and returns a session ID.
+      const startResponse = await csrfFetch('/cube/api/deckbuild/start', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           pool: [...mainboard.flat(3), ...sideboard.flat(3)].map((index) => cards[index].details),
           basics: basics.map((index) => cards[index].details),
@@ -89,58 +94,96 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
         }),
       });
 
-      const json = await response.json();
-
-      if (json.success === 'true') {
-        const pool = [...mainboard.flat(3), ...sideboard.flat(3)];
-        const newMainboard = [];
-
-        for (const oracle of json.mainboard) {
-          const poolIndex = pool.findIndex((cardindex) => cardOracleId(cards[cardindex]) === oracle);
-          if (poolIndex === -1) {
-            // try basics
-            const basicsIndex = basics.findIndex((cardindex) => cardOracleId(cards[cardindex]) === oracle);
-            if (basicsIndex !== -1) {
-              newMainboard.push(basics[basicsIndex]);
-            } else {
-              console.error(`Could not find card ${oracle} in pool or basics`);
-            }
-          } else {
-            newMainboard.push(pool[poolIndex]);
-            pool.splice(poolIndex, 1);
-          }
-        }
-
-        // format mainboard
-        const formattedMainboard = setupPicks(2, 8);
-        const formattedSideboard = setupPicks(1, 8);
-
-        for (const index of newMainboard) {
-          const card = cards[index];
-          const { row, col } = getCardDefaultRowColumn(card);
-
-          formattedMainboard[row][col].push(index);
-        }
-
-        for (const index of pool) {
-          if (!basics.includes(index)) {
-            const card = cards[index];
-            const { col } = getCardDefaultRowColumn(card);
-
-            formattedSideboard[0][col].push(index);
-          }
-        }
-
-        setDeck(formattedMainboard);
-        setSideboard(formattedSideboard);
-        autobuildUsedRef.current = true;
-      } else {
-        console.error(json);
+      if (!startResponse.ok) {
+        throw new Error(`Autobuild start failed: ${startResponse.status}`);
       }
+
+      let result = await startResponse.json();
+      if (!result?.success) {
+        throw new Error(result?.message || 'Autobuild start failed');
+      }
+
+      setAutobuildProgress({ step: result.step, totalSteps: result.totalSteps });
+
+      // Phase 2: walk the session forward one pick per HTTP call until the
+      // server reports complete. Each step is one ML call, so latency is
+      // capped per request and the progress bar reflects actual work done.
+      while (!result.complete) {
+        const stepResponse = await csrfFetch('/cube/api/deckbuild/step', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId: result.sessionId }),
+        });
+
+        if (!stepResponse.ok) {
+          throw new Error(`Autobuild step failed: ${stepResponse.status}`);
+        }
+
+        const next = await stepResponse.json();
+        if (!next?.success) {
+          throw new Error(next?.message || 'Autobuild step failed');
+        }
+
+        // Preserve sessionId across iterations — /step doesn't echo it back.
+        result = { ...next, sessionId: result.sessionId };
+        setAutobuildProgress({ step: result.step, totalSteps: result.totalSteps });
+      }
+
+      // Result contains { mainboard, sideboard } as oracle IDs.
+      const pool = [...mainboard.flat(3), ...sideboard.flat(3)];
+      const newMainboard: number[] = [];
+
+      for (const oracle of result.mainboard as string[]) {
+        const poolIndex = pool.findIndex((cardindex) => cardOracleId(cards[cardindex]) === oracle);
+        if (poolIndex === -1) {
+          // Server filled remaining slots with basics, which live in the
+          // separate `basics` array rather than the pool.
+          const basicsIndex = basics.findIndex((cardindex) => cardOracleId(cards[cardindex]) === oracle);
+          if (basicsIndex !== -1) {
+            newMainboard.push(basics[basicsIndex]);
+          } else {
+            console.error(`Could not find card ${oracle} in pool or basics`);
+          }
+        } else {
+          newMainboard.push(pool[poolIndex]);
+          pool.splice(poolIndex, 1);
+        }
+      }
+
+      // Format mainboard / sideboard into the row/col grid the UI expects.
+      const formattedMainboard = setupPicks(2, 8);
+      const formattedSideboard = setupPicks(1, 8);
+
+      for (const index of newMainboard) {
+        const card = cards[index];
+        const { row, col } = getCardDefaultRowColumn(card);
+        formattedMainboard[row][col].push(index);
+      }
+
+      for (const index of pool) {
+        if (!basics.includes(index)) {
+          const card = cards[index];
+          const { col } = getCardDefaultRowColumn(card);
+          formattedSideboard[0][col].push(index);
+        }
+      }
+
+      setDeck(formattedMainboard);
+      setSideboard(formattedSideboard);
+      autobuildUsedRef.current = true;
+    } catch (err) {
+      console.error('Autobuild failed:', err);
+      setAutobuildError(err instanceof Error ? err.message : 'Autobuild failed');
     } finally {
       setAutobuilding(false);
+      setAutobuildProgress(null);
     }
   }, [csrfFetch, mainboard, sideboard, basics, cards, setDeck, setSideboard, maxLands, maxSpells]);
+
+  const autobuildPercent =
+    autobuildProgress && autobuildProgress.totalSteps > 0
+      ? Math.min(100, Math.round((autobuildProgress.step / autobuildProgress.totalSteps) * 100))
+      : 0;
 
   return (
     <Flexbox direction="row" gap="2" justify="start" alignItems="center" className="w-full mt-2 px-2" wrap="wrap">
@@ -157,18 +200,37 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
         <FileMediaIcon size={16} />
         Add Basics
       </BasicsModalLink>
-      <Link
-        onClick={() => !autobuilding && autoBuildDeck()}
-        className={`flex items-center gap-2 transition-colors font-medium px-2 ${
-          autobuilding
-            ? '!text-text-secondary !cursor-not-allowed pointer-events-none opacity-60'
-            : '!text-link hover:!text-link-active !cursor-pointer'
-        }`}
-        aria-disabled={autobuilding}
-      >
-        {autobuilding ? <Spinner sm /> : <ZapIcon size={16} />}
-        Autobuild
-      </Link>
+      {autobuilding ? (
+        <Flexbox direction="row" gap="2" alignItems="center" className="px-2 min-w-[12rem]">
+          <Spinner sm />
+          <div className="flex-1 min-w-[8rem]">
+            <div className="w-full bg-bg-secondary rounded-full h-2 overflow-hidden">
+              <div
+                className="bg-bg-active h-full rounded-full transition-all duration-200"
+                style={{ width: `${autobuildPercent}%` }}
+              />
+            </div>
+            <span className="text-xs text-text-secondary">
+              {autobuildProgress
+                ? `Autobuilding ${autobuildPercent}% (step ${autobuildProgress.step} of ${autobuildProgress.totalSteps})`
+                : 'Autobuilding...'}
+            </span>
+          </div>
+        </Flexbox>
+      ) : (
+        <Link
+          onClick={() => autoBuildDeck()}
+          className="flex items-center gap-2 transition-colors font-medium px-2 !text-link hover:!text-link-active !cursor-pointer"
+        >
+          <ZapIcon size={16} />
+          Autobuild
+        </Link>
+      )}
+      {autobuildError && !autobuilding && (
+        <span className="text-xs text-danger px-2" role="alert">
+          {autobuildError}
+        </span>
+      )}
       <Dropdown
         trigger={
           <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">

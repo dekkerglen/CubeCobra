@@ -1,4 +1,4 @@
-I'm very excited to announce a large number of changes that we have been working on the last few months. The guiding philosophy behind this update is that we want to make the site intuitive and easy to use, especially towards newcomers to Cube. I think that I have developed a sort of tunnel vision in some respects with how users are actually interacting with the site, and grown too comfortable with the current status quo of the UX. Over time we have added features that I now believe don't actually belong on the site, and also we have many features that are very useful but due to bad UX design have been misunderstood and underutilized.
+I'm very excited to announce a large number of changes that we have been working on the last few months. Myself and a handful of contributors have been enormously productive, as you may have noticed from so many of the UX changes on the site recently! 
 
 ### Some New Stuff
 
@@ -8,7 +8,18 @@ I've added a special "Voucher Card". Similar to "Custom Card" - this is a specia
 
 Point-in-time views have finally arrived. Our data model has always supported this, but I haven't gotten around to implementing this until now. Click on any Cube changelog and now you can look at that Cube as a point-in-time directly after that changelog was applied. Compare it with the current list, maybe export the difference. This one has definitely grown to be one of my go-tos for figuring out all the changes I made to my Cube list over a few weeks (and many small changelogs) that I now need to reflect in the physical copy.
 
-We added a page with some API docs. About time.
+We added a page with some API docs. Hope this makes tinkering on your side project easier!
+
+Draft Simulator is a very large new feature that one of our contributors has been tinkering with over the last few months. A lot of really good engineering work has been put into making this feature a reality - including setting up a system that supports our ML model to run in-browser. This allows us to run simulated bot drafts without creating unreasonable compute costs on our end, allowing us to do several thousand drafts and do some fascinating analysis on the results. It uses the archetype annotation to label clusters, and also uses the Smart Search to find new cards for a specific discovered archetype. There is really a lot going on here, so please try it out and let us know what you think!
+
+### ML Features
+
+CubeCobra has maintained a fairly sophisticated machine learning model that has evolved a lot over the years. This model powers our draftbots, card synergy (seen on card pages), bot deckbuilder, and also the Smart Search (previously called recommender). We have just published a new version of the model, freshly trained! This model architecture has been tweaked so the draftbots now have full context of the Cube that is being drafted. The deckbuild has been overhauled, but the model is the same - we only changed the algorithm that uses the model. The results look quite good, but we're still keeping an eye out for edge cases and anomalies and will adjust as needed.
+
+As I mentioned earlier, the Recommender has now been rebranded as Smart Search. I believe this feature has suffered from bad branding, and a UX that doesn't encourage users to use it in a useful way. This feature isn't meant to just give you cards to add to your Cube - it is a way to search for cards and use the context of the Cube to sort the cards in a more meaningful way. When I explore cards on Scryfall, I would often use "EDHRec Rank" sorting, which is fine, but not great for Cube. Using the same queries in Smart Search yields more fruitful results, in my experience.
+
+I've created a new development tool I call "Archetype Annotater". Similar to the [Lucky Paper Cube Map](https://luckypaper.co/articles/mapping-the-magic-landscape/), it projects all decks drafted on Cobra, and then clusters them. I've tuned the tool to result in around 50 clusters, of which I've hand annotated. Now your drafts (and the bot seats) will automatically have more meaningful names, by projecting the deck into that same space and figuring out which cluster it belongs to.
+
 
 ### UI Changes
 
@@ -22,23 +33,6 @@ User profile pages have been overhauled. Packages have been added as a new tab, 
 
 I've streamlined the new user workflow. Cubes can now be created with a simple click. When you open an empty Cube, you are now presented with a getting started guide, with a couple options for adding cards into the Cube. I think we have underestimated the gap that non-Cube designers have to experience to actually start designing a Cube. My hope is that these changes help bridge that gap, and make Cube curation more accessible and easier to get started with.
 
-### ML Features
-
-CubeCobra has maintained a fairly sophisticated machine learning model that has evolved a lot over the years. This model powers our draftbots, card synergy (seen on card pages), bot deckbuilder, and also the Smart Search (previously called recommender). We have just published a new version of the model, freshly trained! This model architecture has been tweaked so the draftbots now have full context of the Cube that is being drafted. The deckbuild has been overhauled, but the model is the same - we only changed the algorithm that uses the model. The results look quite good, but we're still keeping an eye out for edge cases and anomalies and will adjust as needed.
-
-As I mentioned earlier, the Recommender has now been rebranded as Smart Search. I believe this feature has suffered from bad branding, and a UX that doesn't encourage users to use it in a useful way. This feature isn't meant to just give you cards to add to your Cube - it is a way to search for cards and use the context of the Cube to sort the cards in a more meaningful way. When I explore cards on Scryfall, I would often use "EDHRec Rank" sorting, which is fine, but not great. Using the same queries in Smart Search yields more fruitful results, in my experience.
-
-I've created a new development tool I call "Archetype Annotater". Similar to the [Lucky Paper Cube Map](https://luckypaper.co/articles/mapping-the-magic-landscape/), it projects all decks drafted on Cobra, and then clusters them. I've tuned the tool to result in around 50 clusters, of which I've hand annotated. Now your drafts (and the bot seats) will automatically have more meaningful names, by projecting the deck into that same space and figuring out which cluster it belongs to.
-
-Draft Simulator is a very large new feature that one of our contributors has been tinkering with over the last few months. A lot of really good engineering work has been put into making this feature a reality - including setting up a system that supports our ML model to run in-browser. This allows us to run simulated bot drafts without creating unreasonable compute costs on our end, allowing us to do several thousand drafts and do some fascinating analysis on the results. It uses the archetype annotation to label clusters, and also uses the Smart Search to find new cards for a specific discovered archetype. There is really a lot going on here, so please try it out and let us know what you think!
-
-### Costs and Performance
-
-Alright this section will maybe not be as fun of a read. CubeCobra does rely on advertisement revenue in order to cover our infrastructure costs. Users can opt-out of ads by just giving $1 a month on Patreon - and that makes a huge difference on our bottom line. Unfortunately, the state of the Internet and generative AI has wreaked havoc on the advertising industry. Despite having over twice as much traffic today as we did this day last year, we are bringing in about half as much from advertisements. Fortunately, affiliate traffic has grown which has helped balance the budget.
-
-So with that context in mind, I've decided to spend a lot of time on analyzing our usage, understanding what is contributing to our costs, and making infrastructure changes to help improve costs and performance. We've implemented several new patterns, including moving a lot more of our static content into a CDN. We also changed how detailed card information hits your browser so more information is cached locally. Autocomplete has been moved completely to the server side, avoiding the need to download large files that powered those controls. We've found these changes have significantly reduced the amount of data sent from servers to your browser, which saves us in data transfer costs. The wins here have also lightened the load on servers, which has allowed us to scale back our servers while maintaining the same level of user load.
-
-Some of the UX decisions described here have been motivated by reducing data transfer. That's why we decided to remove content and recent drafts from the home page. That is a high volume page, with slow load times due to having to perform several complex queries to fetch all the data that was shown. The functionality is still present, you just need to navigate to the appropriate page. 
 
 ### Content
 
@@ -64,6 +58,7 @@ With this update, I will no longer be publishing new content on Cube Cobra. I wi
 - New `kw:`/`keyword:`/`keywords:` filter by keyword (e.g. `kw:flying`, `keywords>3`)
 - New `is:standard` filter — first printed in a standard expansion
 - New `is:supplemental` filter — first printed in a supplemental product
+- New `board:`/`board=` filter (e.g. `board=mainboard`, `board=basics`) — matches cards by which board they're in; custom draft format slots now use it (default `board=mainboard`, or draw from multiple boards like `ci=r (board=mainboard or board=modulex)`), replacing the per-slot board dropdown
 - Improved bot deckbuilding — no changes to model but changed how we are using it
 - `game:arena`/`game:paper`/`game:mtgo` now match any printing ever available in that game, not just the current printing
 - New `game:is-arena`/`game:is-paper`/`game:is-mtgo` filter — only the specific printing's availability (the old strict behavior)
@@ -142,13 +137,3 @@ With this update, I will no longer be publishing new content on Cube Cobra. I wi
 - Fixed automatic deck archetype names not applied in production — cluster-center and annotation data files were missing from production deploys, so decks fell back to a blank archetype
 - Fixed draft bots making worse picks than the pick-by-pick breakdown for the same state — the live path sent raw oracle IDs while the breakdown sent normalized ones; substitution fallbacks are now skipped when the card is already known to the model, fixing stale pointers from the previous model
 
-# Technical Changes
-
-- Static assets (JS, CSS, fonts, images) now served via S3 + CloudFront instead of the app servers — less fleet load, better cache hit rates and latency
-- Reduced the production main app fleet from 5/6 to 3/4 instances after offloading static assets to CloudFront
-- Replaced `Cube.following[]` / `User.followedCubes[]` with a per-relationship hash-row model — one row per like on the Cube's partition (`PK=HASH#CUBE#{id}`, `SK=LIKE#{userId}`, `LIKE-BY#{userId}` GSI1) so both directions paginate; denormalized `Cube.likeCount` / `User.likedCubesCount` keep cheap displays cheap
-- Same for user follows — `User.following` / `User.followedUsers` replaced with FOLLOWER rows on the followed user's partition + `FOLLOWING-BY#{userId}` GSI; counters on `User.followerCount` / `User.followingCount`; notification fanout (blogs, commits, package adds, bulk imports, devblog) pages hash rows instead of arrays
-- Cube view routes (`/Cube/list`, `/about`, `/playtest`, `/analysis`, `/records`) ship cards without `details` via a new `{ populate: false }` on `cubeDao.getCards`; `about`/`analysis` rewritten to read details via `cardFromId(cardID)`
-- New IndexedDB-backed client card detail cache (`cardDetailsCache.ts`) — 7-day per-row TTL, microtask coalescing of misses into one batch POST, `useCardDetail`/`useCardDetails` hooks
-- `CubeContext` detects undetailed cards on mount, hydrates from the cache, and exposes `cardsLoading`; all client callers of `getdetailsforcards`/`getcardfromid` rerouted through the cache
-- Draft Simulator runs the draft/deckbuild ML models in-browser via TensorFlow.js — model bundle fetched once from the CDN (`/model/*`), drafts/deckbuilding/clustering all client-side (no app or recommender fleet load), results cached in IndexedDB so reopening is instant; the model is a one-shot manual upload to the assets bucket (`scripts/uploadMLModel.ts`), not a per-deploy step

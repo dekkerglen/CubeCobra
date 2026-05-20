@@ -6,7 +6,7 @@ import Draft, { CardSlot, DraftFormat, DraftState } from '../datatypes/Draft';
 import User from '../datatypes/User';
 import { buildDefaultSteps, createDefaultDraftFormat } from '../draftutil';
 import { arraysEqual, fromEntries } from '../Util';
-import { compileFilter, Filter } from './draftFilter';
+import { compileSlotFilter, Filter } from './draftFilter';
 
 type RNGFunction = () => number;
 
@@ -54,80 +54,83 @@ const createNextCardFn = (
   duplicates: boolean = false,
   rng: RNGFunction,
 ): NextCardFn => {
-  // Track original board sizes to give better error messages
-  const originalSizes: Record<string, number> = {};
-  // Create mutable copies of each board's cards
-  const pools: Record<string, Card[]> = {};
+  // Slot filters now express their board scope inline via the `board=` filter
+  // syntax (e.g. `c=r (board=mainboard or board=modulex)`). To support that we
+  // pool every board into a single multiset; the filter handles which board(s)
+  // each slot is allowed to draw from. Cards keep their .board stamp so the
+  // filter can discriminate.
+  const stampedBoards: Record<string, Card[]> = {};
   for (const [board, cards] of Object.entries(boardCards)) {
-    originalSizes[board] = cards.length;
-    pools[board] = [...cards];
+    stampedBoards[board] = cards.map((card) => {
+      if (card.board === undefined) {
+        // Defensive: most cards come pre-stamped from the dynamo dao, but the
+        // filter relies on this field so we make sure it's there.
+        return { ...card, board };
+      }
+      return card;
+    });
   }
 
-  return (cardFilters: string[], board: string = 'mainboard'): DraftResult => {
-    const cards = pools[board];
-    if (!cards || cards.length === 0) {
-      const originalSize = originalSizes[board] ?? 0;
-      if (originalSize === 0) {
-        throw new Error(`Unable to create draft: board "${board}" has no cards.`);
-      }
+  const unifiedPool: Card[] = ([] as Card[]).concat(...Object.values(stampedBoards));
+  const originalUnifiedSize = unifiedPool.length;
+  const originalBoardSizes: Record<string, number> = Object.fromEntries(
+    Object.entries(stampedBoards).map(([k, v]) => [k, v.length]),
+  );
+
+  return (cardFilters: string[], legacyBoard: string = 'mainboard'): DraftResult => {
+    if (unifiedPool.length === 0) {
       throw new Error(
-        `Unable to create draft: ran out of cards in board "${board}" (started with ${originalSize}). ` +
+        `Unable to create draft: ran out of cards (started with ${originalUnifiedSize}). ` +
           `Try adding more cards or reducing the number of players/packs.`,
       );
     }
 
     // each filter is an array of parsed filter tokens, we choose one randomly
-    let validCards = cards;
+    let validCards: Card[] = unifiedPool;
     let index: number | null = null;
     const messages: string[] = [];
     if (cardFilters.length > 0) {
       do {
         index = Math.floor(rng() * cardFilters.length);
         const filterString = cardFilters[index];
-        if (!filterString) {
+        if (filterString === undefined) {
           cardFilters.splice(index, 1);
           continue;
         }
-        const filter = compileFilter(filterString);
-        validCards = matchingCards(cards, filter);
+        const filter = compileSlotFilter(filterString, legacyBoard);
+        validCards = matchingCards(unifiedPool, filter);
         if (validCards.length === 0) {
-          // TODO: display warnings for players
           messages.push(`Warning: no cards matching filter: ${filter.filterText}`);
-          // try another options and remove this filter as it is now empty
           cardFilters.splice(index, 1);
         }
       } while (validCards.length === 0 && cardFilters.length > 0);
+    } else {
+      // No filter string at all — still scope to the legacy default board.
+      const filter = compileSlotFilter('', legacyBoard);
+      validCards = matchingCards(unifiedPool, filter);
     }
 
     if (validCards.length === 0) {
-      const originalSize = originalSizes[board] ?? 0;
+      const sizeBreakdown = Object.entries(originalBoardSizes)
+        .map(([b, sz]) => `${b}=${sz}`)
+        .join(', ');
       throw new Error(
-        `Unable to create draft: no remaining cards in board "${board}" (${cards.length} of ${originalSize} left) match the slot filter.\n${messages.join('\n')}`,
+        `Unable to create draft: no remaining cards (${unifiedPool.length} of ${originalUnifiedSize} left; originally ${sizeBreakdown}) match the slot filter.\n${messages.join('\n')}`,
       );
     }
 
     index = Math.floor(rng() * validCards.length);
 
-    // slice out the first card with the index, or error out
     const card = validCards[index];
     if (!card) {
       throw new Error('Unable to create draft: selected card is undefined.');
     }
 
     if (!duplicates) {
-      // remove from this board's pool
-      const cardIdx = cards.indexOf(card);
-      cards.splice(cardIdx, 1);
-
-      // Global uniqueness: also remove from other boards' pools
-      for (const [otherBoard, otherCards] of Object.entries(pools)) {
-        if (otherBoard !== board) {
-          const otherIdx = otherCards.indexOf(card);
-          if (otherIdx >= 0) {
-            otherCards.splice(otherIdx, 1);
-          }
-        }
-      }
+      // Remove the card from the unified pool. Identity is by reference here
+      // because each card occupies exactly one slot in stampedBoards/unifiedPool.
+      const cardIdx = unifiedPool.indexOf(card);
+      if (cardIdx >= 0) unifiedPool.splice(cardIdx, 1);
     }
 
     return { card, messages };
@@ -135,10 +138,20 @@ const createNextCardFn = (
 };
 
 const createAsfanFn = (boardCards: Record<string, Card[]>, duplicates: boolean = false): AsfanFn => {
-  return (cardFilters: string[], board: string = 'mainboard'): AsfanResult => {
-    const cards = boardCards[board];
-    if (!cards || cards.length === 0) {
-      throw new Error(`Unable to calculate asfan: board "${board}" has no cards.`);
+  // Mirror createNextCardFn: unify all boards into one pool so the slot's
+  // `board=` filter (or its default-to-mainboard scope) decides which cards
+  // are eligible. Stamp .board on each card so the filter can see it.
+  const unifiedPool: Card[] = [];
+  for (const [board, cards] of Object.entries(boardCards)) {
+    for (const card of cards) {
+      if (card.board === undefined) card.board = board;
+      unifiedPool.push(card);
+    }
+  }
+
+  return (cardFilters: string[], legacyBoard: string = 'mainboard'): AsfanResult => {
+    if (unifiedPool.length === 0) {
+      throw new Error('Unable to calculate asfan: no cards across any board.');
     }
 
     // each filter is an array of parsed filter tokens, we choose one randomly
@@ -146,11 +159,11 @@ const createAsfanFn = (boardCards: Record<string, Card[]>, duplicates: boolean =
     const failedFilters: string[] = [];
     for (let i = 0; i < cardFilters.length; i++) {
       const filterString = cardFilters[i];
-      if (!filterString) {
+      if (filterString === undefined) {
         continue;
       }
-      const filter = compileFilter(filterString);
-      let validCards = matchingCards(cards, filter);
+      const filter = compileSlotFilter(filterString, legacyBoard);
+      let validCards = matchingCards(unifiedPool, filter);
       if (!duplicates) {
         validCards = validCards.filter((card) => (card.asfan || 0) < 1);
       }
@@ -164,8 +177,8 @@ const createAsfanFn = (boardCards: Record<string, Card[]>, duplicates: boolean =
     if (validCardGroups.length === 0) {
       const filterInfo =
         failedFilters.length > 0
-          ? `No cards in board "${board}" (${cards.length} cards) match the slot filter: ${failedFilters.join(', ')}`
-          : `No cards in board "${board}" match the slot filter.`;
+          ? `No cards match the slot filter: ${failedFilters.join(', ')}`
+          : `No cards match the slot filter.`;
       throw new Error(`Unable to calculate asfan: ${filterInfo}`);
     }
     for (const validCards of validCardGroups) {
@@ -468,14 +481,17 @@ const checkPacks = (format: DraftFormat, seats: number, checkFn: CheckFn): Check
 
 export const checkFormat = (format: DraftFormat, cards: Card[]): CheckResult => {
   // check that all filters are sane and match at least one card
-  const checkFn: CheckFn = (cardFilters: string[]): CheckResult => {
+  const checkFn: CheckFn = (cardFilters: string[], legacyBoard: string = 'mainboard'): CheckResult => {
     const messages: string[] = [];
     for (let i = 0; i < cardFilters.length; i++) {
       const filterString = cardFilters[i];
-      if (!filterString) {
+      if (filterString === undefined) {
         continue;
       }
-      const filter = compileFilter(filterString);
+      // Use the slot-aware compile so filters that only reference `board=` are
+      // validated correctly (and so default-mainboard scoping is consistent
+      // with createNextCardFn).
+      const filter = compileSlotFilter(filterString, legacyBoard);
       const validCards = matchingCards(cards, filter);
       if (validCards.length === 0) {
         messages.push(`Warning: no cards matching filter: ${filter.filterText}`);

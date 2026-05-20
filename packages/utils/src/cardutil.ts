@@ -121,6 +121,14 @@ export const pickRate = ({ picks, passes }: { picks: number; passes: number }): 
 
 export const cardTags = (card: Card): string[] => card.tags || [];
 
+// Board accessor for the `board=...` filter. Cards in cube/draft contexts are
+// stamped with a board key (mainboard / maybeboard / basics / custom boards)
+// when they're loaded out of the dynamo cube row. Cards in non-cube contexts
+// (catalog search, smart search against the global card pool) don't carry a
+// board, so we default to 'mainboard' — this means `board=mainboard` is a
+// no-op for those contexts rather than excluding everything.
+export const cardBoard = (card: Card): string => (card.board ?? 'mainboard').toString();
+
 export const cardFinish = (card: Card): string => card.finish ?? 'Non-foil';
 
 export const isFoilFinish = (finish: string): boolean => finish !== 'Non-foil';

@@ -3,17 +3,37 @@ import { batchBuildOrThrow, batchDraftOrThrow, buildOrThrow, draft as draftbotPi
 
 // Bot deckbuilding leans on the ML service for every pick. A transient 5xx /
 // timeout must not be read as "no more cards" — that silently truncates the
-// deck. Retry instead; the cap bounds a service that is truly down so we fail
-// loudly (the caller falls back to a naive layout) rather than hang forever.
-const ML_MAX_ATTEMPTS = 100;
+// deck. Retry instead, but bounded:
+//   - small attempt cap so a wedged ML service fails fast and the caller can
+//     surface a real error (or fall back to a naive layout)
+//   - exponential backoff with jitter so retries don't pile onto the same
+//     overloaded recommender connection in lockstep
+//   - overall time budget so a single ML call can't hold an HTTP request open
+//     past ELB/client timeouts (which previously produced ERR_HTTP_HEADERS_SENT
+//     when the eventual 200 raced with the closed socket)
+const ML_MAX_ATTEMPTS = 3;
+const ML_RETRY_BASE_MS = 150;
+const ML_RETRY_MAX_DELAY_MS = 1_000;
+const ML_RETRY_BUDGET_MS = 8_000;
 
 async function withMlRetry<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  const deadline = Date.now() + ML_RETRY_BUDGET_MS;
   let lastErr: unknown;
   for (let attempt = 1; attempt <= ML_MAX_ATTEMPTS; attempt += 1) {
     try {
       return await fn();
     } catch (err) {
       lastErr = err;
+      if (attempt >= ML_MAX_ATTEMPTS) break;
+
+      // Exponential backoff with jitter, clamped, then clamped again against
+      // the overall budget so we never sleep past the deadline.
+      const exp = Math.min(ML_RETRY_MAX_DELAY_MS, ML_RETRY_BASE_MS * 2 ** (attempt - 1));
+      const jittered = Math.floor(Math.random() * exp);
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      const delay = Math.min(jittered, remaining);
+      if (delay > 0) await new Promise((r) => setTimeout(r, delay));
     }
   }
   throw new Error(

@@ -28,6 +28,7 @@ const Suggestions: React.FC = () => {
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [errorState, setErrorState] = useState<'none' | 'ml-unavailable' | 'generic'>('none');
   const [modalCard, setModalCard] = useState<CardType | null>(null);
 
   // When the filter changes, jump back to page 0. We track this in a separate
@@ -53,6 +54,7 @@ const Suggestions: React.FC = () => {
     let cancelled = false;
     const run = async () => {
       setLoading(true);
+      setErrorState('none');
       const res = await csrfFetch(`/cube/api/adds`, {
         method: 'POST',
         body: JSON.stringify({
@@ -67,6 +69,17 @@ const Suggestions: React.FC = () => {
       if (cancelled) return;
       const json = await res.json();
       if (cancelled) return;
+
+      // The server returns 503 with mlUnavailable: true when the recommender is
+      // down. Surface that as a distinct error state instead of falling back to
+      // filter order (which is indistinguishable from "the cube wasn't mapped").
+      if (!res.ok) {
+        setPageCards([]);
+        setHasMore(false);
+        setErrorState(json?.mlUnavailable ? 'ml-unavailable' : 'generic');
+        setLoading(false);
+        return;
+      }
 
       const cardIDs: string[] = json.cardIDs || [];
       const detailsById = cardIDs.length > 0 ? await getCardDetails(cardIDs) : {};
@@ -85,6 +98,7 @@ const Suggestions: React.FC = () => {
       if (!cancelled) {
         setPageCards([]);
         setHasMore(false);
+        setErrorState('generic');
         setLoading(false);
       }
     });
@@ -159,6 +173,29 @@ const Suggestions: React.FC = () => {
             </Text>
             </Flexbox>
           </CardBody>
+      ) : errorState === 'ml-unavailable' ? (
+        <Card className="mt-2">
+          <CardBody>
+            <Text lg semibold>
+              Recommender unavailable
+            </Text>
+            <Text sm className="text-text-secondary">
+              The card recommender is temporarily unavailable, so we can't rank Smart Search results right now. Please
+              try again in a moment.
+            </Text>
+          </CardBody>
+        </Card>
+      ) : errorState === 'generic' ? (
+        <Card className="mt-2">
+          <CardBody>
+            <Text lg semibold>
+              Something went wrong
+            </Text>
+            <Text sm className="text-text-secondary">
+              We couldn't fetch Smart Search results. Please try again.
+            </Text>
+          </CardBody>
+        </Card>
       ) : (
         <Card className="mt-2">
           <CardBody>
