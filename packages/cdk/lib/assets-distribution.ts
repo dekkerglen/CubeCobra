@@ -1,3 +1,5 @@
+import * as path from 'path';
+
 import { CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
 import {
@@ -7,6 +9,10 @@ import {
   CachePolicy,
   CacheQueryStringBehavior,
   Distribution,
+  Function as CloudFrontFunction,
+  FunctionCode,
+  FunctionEventType,
+  FunctionRuntime,
   HttpVersion,
   OriginRequestPolicy,
   PriceClass,
@@ -158,6 +164,20 @@ export class AssetsDistribution extends Construct {
       ],
     });
 
+    // Viewer-request filter that returns 403 for heavy-egress crawler
+    // user-agents (Amazonbot, AhrefsBot, the AI training bots, etc.) before
+    // CloudFront serves a byte. Search engines are intentionally allowed
+    // through — see assetsBotFilter.js for the blocklist and rationale.
+    // Attached to every behavior below so /js/*, /css/* and the default
+    // (/content/*, /model/*) are all covered.
+    const botFilter = new CloudFrontFunction(this, 'AssetsBotFilter', {
+      functionName: `cubecobra-assets-${props.environmentName}-bot-filter`,
+      runtime: FunctionRuntime.JS_2_0,
+      code: FunctionCode.fromFile({ filePath: path.join(__dirname, 'assetsBotFilter.js') }),
+      comment: 'Returns 403 for high-egress crawler user-agents.',
+    });
+    const botFilterAssociation = [{ function: botFilter, eventType: FunctionEventType.VIEWER_REQUEST }];
+
     this.distribution = new Distribution(this, 'AssetsDistribution', {
       domainNames: [this.assetDomain],
       certificate,
@@ -168,6 +188,7 @@ export class AssetsDistribution extends Construct {
         cachePolicy: CachePolicy.CACHING_OPTIMIZED,
         originRequestPolicy: OriginRequestPolicy.CORS_S3_ORIGIN,
         responseHeadersPolicy: responseHeaders,
+        functionAssociations: botFilterAssociation,
         compress: true,
       },
       additionalBehaviors: {
@@ -180,6 +201,7 @@ export class AssetsDistribution extends Construct {
           cachePolicy: CachePolicy.CACHING_OPTIMIZED,
           originRequestPolicy: OriginRequestPolicy.CORS_S3_ORIGIN,
           responseHeadersPolicy: responseHeaders,
+          functionAssociations: botFilterAssociation,
           compress: true,
         },
         // stylesheet.css is at a fixed unhashed path, busted by ?v=<sha> — use
@@ -192,6 +214,7 @@ export class AssetsDistribution extends Construct {
           cachePolicy: cssCachePolicy,
           originRequestPolicy: OriginRequestPolicy.CORS_S3_ORIGIN,
           responseHeadersPolicy: responseHeaders,
+          functionAssociations: botFilterAssociation,
           compress: true,
         },
       },
