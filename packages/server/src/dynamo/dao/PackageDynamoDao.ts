@@ -256,35 +256,37 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
   }
 
   /**
-   * Applies keyword filter to query parameters.
+   * Builds a predicate that reproduces the old keyword FilterExpression
+   * (`contains(item.keywords, :word)` for each word) in application code.
+   *
+   * GSI3 is KEYS_ONLY, so the keyword match can no longer run server-side as a
+   * FilterExpression — it is applied to the unhydrated package after the
+   * base-table fetch (see BaseDynamoDao.queryKeysOnlyIndex).
+   *
+   * @param keywords - Space-separated keyword string; empty means "no filter".
+   * @returns A predicate over the unhydrated package, or undefined if no filter applies.
    */
-  private applyKeywordFilter(params: QueryCommandInput, keywords: string): QueryCommandInput {
+  private buildKeywordPredicate(keywords: string): ((pkg: UnhydratedCardPackage) => boolean) | undefined {
     if (!keywords) {
-      return params;
+      return undefined;
     }
 
-    const words = (keywords?.toLowerCase()?.split(' ') || []).map(normalizeName).map(
+    const words = (keywords?.toLowerCase()?.split(' ') || [])
+      .map(normalizeName)
       // remove any non-alphanumeric characters
-      (word) => word.replace(/[^a-z0-9]/g, ''),
-    );
+      .map((word) => word.replace(/[^a-z0-9]/g, ''))
+      .filter((word) => word.length > 0);
 
-    // all words must exist in the keywords
-    params.FilterExpression = words.map((word) => `contains(#keywords, :${word})`).join(' and ');
+    if (words.length === 0) {
+      return undefined;
+    }
 
-    params.ExpressionAttributeNames = {
-      ...params.ExpressionAttributeNames,
-      '#keywords': 'item.keywords',
+    // All words must be present in the package's keywords list (matches the
+    // semantics of `contains(item.keywords, :word)` for a list attribute).
+    return (pkg) => {
+      const pkgKeywords = pkg.keywords ?? [];
+      return words.every((word) => pkgKeywords.includes(word));
     };
-
-    params.ExpressionAttributeValues = {
-      ...params.ExpressionAttributeValues,
-      ...words.reduce((acc: Record<string, string>, word) => {
-        acc[`:${word}`] = word;
-        return acc;
-      }, {}),
-    };
-
-    return params;
   }
 
   /**
@@ -431,7 +433,7 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
     items: CardPackage[];
     lastKey?: Record<string, any>;
   }> {
-    let params: QueryCommandInput = {
+    const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI3',
       KeyConditionExpression: 'GSI3PK = :pk',
@@ -443,9 +445,9 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
       Limit: limit,
     };
 
-    params = this.applyKeywordFilter(params, keywords);
-
-    return this.query(params);
+    // GSI3 is KEYS_ONLY: resolve full items from the base table; the keyword
+    // filter runs in code rather than as a server-side FilterExpression.
+    return this.queryKeysOnlyIndex(params, this.buildKeywordPredicate(keywords));
   }
 
   /**

@@ -247,20 +247,9 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
       ExclusiveStartKey: lastKey,
     };
 
-    // Add filter condition if status is provided
-    if (status) {
-      params.FilterExpression = '#item.#status = :status';
-      params.ExpressionAttributeValues = {
-        ...params.ExpressionAttributeValues,
-        ':status': status,
-      };
-      params.ExpressionAttributeNames = {
-        '#item': 'item',
-        '#status': 'status',
-      };
-    }
-
-    return this.query(params);
+    // GSI3 is KEYS_ONLY: resolve full items from the base table. The optional
+    // status filter runs in code rather than as a server-side FilterExpression.
+    return this.queryKeysOnlyIndex(params, status ? (episode) => episode.status === status : undefined);
   }
 
   /**
@@ -282,19 +271,16 @@ export class EpisodeDynamoDao extends BaseDynamoDao<Episode, UnhydratedEpisode> 
       TableName: this.tableName,
       IndexName: 'GSI3',
       KeyConditionExpression: 'GSI3PK = :pk',
-      FilterExpression: 'item.#status = :status',
       ExpressionAttributeValues: {
         ':pk': gsi3pk,
-        ':status': status,
-      },
-      ExpressionAttributeNames: {
-        '#status': 'status',
       },
       ScanIndexForward: false,
       ExclusiveStartKey: lastKey,
     };
 
-    const result = await this.query(params);
+    // GSI3 is KEYS_ONLY: resolve full items from the base table; the status
+    // filter runs in code rather than as a server-side FilterExpression.
+    const result = await this.queryKeysOnlyIndex(params, (episode) => episode.status === status);
     console.log(`[EpisodeDao.queryByPodcastAndStatus] Query returned ${result.items?.length || 0} items`);
     if (result.items && result.items.length > 0 && result.items[0]) {
       console.log(

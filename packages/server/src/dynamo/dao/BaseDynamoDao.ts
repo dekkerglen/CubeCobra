@@ -1,5 +1,6 @@
 import { Sha256 } from '@aws-crypto/sha256-js';
 import {
+  BatchGetCommand,
   BatchWriteCommand,
   DeleteCommand,
   DynamoDBDocumentClient,
@@ -306,6 +307,170 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
         meta: { params },
       });
     }
+  }
+
+  /**
+   * Fetches full items from the base table for a list of primary keys, in
+   * chunks of 100 (the BatchGetItem limit), retrying any UnprocessedKeys with
+   * exponential backoff.
+   *
+   * Results are returned in the same order as `keys`; any key with no matching
+   * item in the table is omitted. Duplicate keys are de-duplicated for the
+   * fetch but each input position still resolves in the returned order.
+   *
+   * Used to resolve full items after querying a KEYS_ONLY GSI, which returns
+   * only key attributes and not the `item` payload.
+   *
+   * @param keys - Base-table primary keys (PK + SK) to fetch.
+   * @returns The raw DynamoItems, ordered to match `keys`.
+   */
+  protected async batchGetRaw(keys: Key[]): Promise<DynamoItem<U>[]> {
+    if (keys.length === 0) {
+      return [];
+    }
+
+    const cacheKey = (key: Key): string => `${key.PK} ${key.SK}`;
+
+    // De-duplicate keys before fetching — BatchGetItem rejects duplicate keys
+    // in a single request, and a GSI page can occasionally surface the same
+    // base item more than once.
+    const seen = new Set<string>();
+    const uniqueKeys = keys.filter((key) => {
+      const id = cacheKey(key);
+      if (seen.has(id)) {
+        return false;
+      }
+      seen.add(id);
+      return true;
+    });
+
+    const found = new Map<string, DynamoItem<U>>();
+    const CHUNK_SIZE = 100;
+    const MAX_RETRIES = 5;
+
+    try {
+      for (let i = 0; i < uniqueKeys.length; i += CHUNK_SIZE) {
+        let pending: Key[] = uniqueKeys.slice(i, i + CHUNK_SIZE);
+        let attempt = 0;
+
+        while (pending.length > 0) {
+          const response = await this.dynamoClient.send(
+            new BatchGetCommand({
+              RequestItems: {
+                [this.tableName]: { Keys: pending },
+              },
+            }),
+          );
+
+          for (const raw of (response.Responses?.[this.tableName] ?? []) as DynamoItem<U>[]) {
+            found.set(cacheKey(raw), raw);
+          }
+
+          pending = (response.UnprocessedKeys?.[this.tableName]?.Keys as Key[] | undefined) ?? [];
+
+          if (pending.length > 0) {
+            attempt += 1;
+            if (attempt > MAX_RETRIES) {
+              throw new Error(`BatchGet did not converge: ${pending.length} keys still unprocessed after ${MAX_RETRIES} retries`);
+            }
+            // Exponential backoff before retrying throttled keys.
+            await new Promise((resolve) => setTimeout(resolve, 2 ** attempt * 50));
+          }
+        }
+      }
+    } catch (e) {
+      const error = e instanceof Error ? e : new Error(String(e));
+      const code = error instanceof DaoError ? error.code : ErrorCode.INTERNAL_SERVER_ERROR;
+
+      throw new DaoError(`Error batch getting items: ${error.message}`, code, { cause: error });
+    }
+
+    // Preserve the order of the input keys; drop any key with no matching item.
+    return keys
+      .map((key) => found.get(cacheKey(key)))
+      .filter((item): item is DynamoItem<U> => item !== undefined);
+  }
+
+  /**
+   * Runs a query against a KEYS_ONLY GSI and resolves the full items from the
+   * base table.
+   *
+   * GSI3 and GSI4 use a KEYS_ONLY projection, so an index query returns only
+   * key attributes — not the `item` payload. This helper runs the index query,
+   * then batch-fetches the full items from the base table, preserving the
+   * order produced by the index (i.e. the GSI sort key).
+   *
+   * IMPORTANT: because the index carries no payload attributes, `params` must
+   * NOT contain a FilterExpression referencing non-key attributes — DynamoDB
+   * cannot evaluate it. Filter the returned raw items in the calling DAO
+   * instead (see `queryKeysOnlyIndex`).
+   *
+   * @param params - Query parameters targeting a KEYS_ONLY GSI.
+   * @returns The raw items (base-table payloads) and the index pagination key.
+   */
+  protected async queryKeysOnlyIndexRaw(params: QueryCommandInput): Promise<{
+    rawItems: DynamoItem<U>[];
+    lastKey?: Record<string, any>;
+  }> {
+    try {
+      const data = await this.dynamoClient.send(new QueryCommand(params));
+
+      const keys: Key[] = (data.Items ?? []).map((item) => ({
+        PK: item.PK as string,
+        SK: item.SK as string,
+      }));
+
+      const rawItems = await this.batchGetRaw(keys);
+
+      return {
+        rawItems,
+        lastKey: data.LastEvaluatedKey,
+      };
+    } catch (e) {
+      const error = e instanceof Error ? e : new Error(String(e));
+      const code = error instanceof DaoError ? error.code : ErrorCode.INTERNAL_SERVER_ERROR;
+
+      throw new DaoError(`Error querying KEYS_ONLY index: ${error.message}`, code, {
+        cause: error,
+        meta: { params },
+      });
+    }
+  }
+
+  /**
+   * KEYS_ONLY-index equivalent of {@link query}: queries the index, resolves
+   * the full items from the base table, optionally filters them on the raw
+   * (unhydrated) payload, then hydrates. Index ordering is preserved.
+   *
+   * Use `filterFn` to replace any FilterExpression that previously ran against
+   * non-key attributes — those can no longer be evaluated by DynamoDB on a
+   * KEYS_ONLY index. As with a server-side FilterExpression, the filter is
+   * applied after the index `Limit`, so a page may yield fewer items than the
+   * limit while still returning a `lastKey` to continue.
+   *
+   * @param params - Query parameters targeting a KEYS_ONLY GSI (no payload FilterExpression).
+   * @param filterFn - Optional predicate applied to each unhydrated item.
+   * @returns The hydrated, ordered items and the index pagination key.
+   */
+  protected async queryKeysOnlyIndex(
+    params: QueryCommandInput,
+    filterFn?: (item: U) => boolean,
+  ): Promise<{
+    items: T[];
+    lastKey?: Record<string, any>;
+  }> {
+    const { rawItems, lastKey } = await this.queryKeysOnlyIndexRaw(params);
+
+    const unhydratedItems = rawItems
+      .map((raw) => raw.item)
+      .filter((item) => (filterFn ? filterFn(item) : true));
+
+    const hydratedItems = await this.hydrateItems(unhydratedItems);
+
+    return {
+      items: hydratedItems,
+      lastKey,
+    };
   }
 
   /**
