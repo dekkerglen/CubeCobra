@@ -68,7 +68,7 @@
     "response-time": "^2.3.4",
     "rss": "^1.2.2",
     "rss-parser": "^3.13.0",
-    "sanitize-html": "^2.17.0",
+    "sanitize-html": "^2.17.4",
     "seedrandom": "^3.0.5",
     "serialize-javascript": "^7.0.5",
     "sharp": "^0.34.5",
