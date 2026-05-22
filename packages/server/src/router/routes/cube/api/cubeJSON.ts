@@ -1,8 +1,9 @@
 import Card from '@utils/datatypes/Card';
 import { sortForDownload } from '@utils/sorting/Sort';
-import { changelogDao, cubeDao } from 'dynamo/daos';
+import { cubeDao } from 'dynamo/daos';
 import rateLimit from 'express-rate-limit';
-import { isCubeViewable, reconstructCubeAtChangelog } from 'serverutils/cubefn';
+import { parseDateParam, resolveCubeCards } from 'serverutils/cubeCards';
+import { isCubeViewable } from 'serverutils/cubefn';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
 
@@ -35,24 +36,12 @@ export const cubeJSONHandler = async (req: Request, res: Response) => {
       return res.status(404).send('Cube not found.');
     }
 
-    const dateParam = req.query.date as string | undefined;
-    let cubeCards = await cubeDao.getCards(cube.id);
-    let changelogMeta: { id: string; date: number } | undefined;
-
-    if (dateParam) {
-      const dateMs = parseInt(dateParam, 10);
-      if (isNaN(dateMs)) {
-        return res.status(400).send('Invalid date parameter. Must be a unix timestamp in milliseconds.');
-      }
-
-      const changelog = await changelogDao.getNearest(cube.id, dateMs);
-      if (!changelog) {
-        return res.status(404).send('No changelogs found for this cube.');
-      }
-
-      cubeCards = await reconstructCubeAtChangelog(cube.id, changelog.date, cubeCards, changelogDao);
-      changelogMeta = { id: changelog.id, date: changelog.date };
+    const dateMs = parseDateParam(req.query.date as string | undefined);
+    if (dateMs !== undefined && isNaN(dateMs)) {
+      return res.status(400).send('Invalid date parameter. Must be a unix timestamp in milliseconds.');
     }
+
+    const { cards: cubeCards, changelog: changelogMeta } = await resolveCubeCards(cube.id, dateMs);
 
     // Sort every board using the default ordered sort
     for (const boardName of Object.keys(cubeCards)) {
