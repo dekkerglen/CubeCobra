@@ -1,9 +1,11 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import Card from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 
+import Button from 'components/base/Button';
 import Container from 'components/base/Container';
+import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
@@ -41,9 +43,27 @@ const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ dat
 
   const [cubeView, setCubeView] = useQueryParam('display', 'table');
 
+  // Date picker state — default to the active snapshot's date
+  const [dateValue, setDateValue] = useState(() => {
+    // The `date` prop is a localized date string (e.g. "5/22/2026"); parse it back to YYYY-MM-DD
+    const parsed = new Date(date);
+    if (!isNaN(parsed.getTime())) {
+      return parsed.toISOString().split('T')[0];
+    }
+    return new Date().toISOString().split('T')[0];
+  });
+
+  const handleDateJump = useCallback(() => {
+    if (!dateValue || !cube?.id) return;
+    const dateMs = new Date(dateValue).getTime();
+    window.location.href = `/cube/changelog/${cube.id}/at?date=${dateMs}`;
+  }, [dateValue, cube?.id]);
+
   // Override canEdit to false — this is a read-only point-in-time view
   const readOnlyContext = useMemo(() => ({ ...cubeContext, canEdit: false }), [cubeContext]);
 
+  // FIXME: The Download button here only supports CSV and appears to only support the Mainboard.
+  //  Rather than continuing to improve on that, though, the better solve would be to make the cube's Export dropdown in the header apply to the changelog.
   return (
     <CubeContext.Provider value={readOnlyContext}>
       <div
@@ -72,6 +92,21 @@ const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ dat
                 Download Cube
               </Text>
             </Link>
+          </Flexbox>
+          <Flexbox direction="row" gap="2" alignItems="center">
+            <Text sm className="text-text-secondary">
+              Jump to a Point in Time
+            </Text>
+            <div className="max-w-32">
+              <Input
+                type="date"
+                value={dateValue}
+                onChange={(e) => setDateValue(e.target.value)}
+              />
+            </div>
+            <Button color="accent" type="button" onClick={handleDateJump}>
+              Go
+            </Button>
           </Flexbox>
         </Flexbox>
       </div>

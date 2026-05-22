@@ -5,6 +5,7 @@ import { EyeIcon } from '@primer/octicons-react';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
+import Input from 'components/base/Input';
 import Link from 'components/base/Link';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
@@ -95,6 +96,17 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
     setLoading(false);
   }, [currentLastKey, safeItems, page, csrfFetch]);
 
+  const [dateValue, setDateValue] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+  });
+
+  const handleDateJump = useCallback(() => {
+    if (!dateValue || !cube?.id) return;
+    const dateMs = new Date(dateValue).getTime();
+    window.location.href = `/cube/changelog/${cube.id}/at?date=${dateMs}`;
+  }, [dateValue, cube?.id]);
+
   const pager = (
     <Pagination
       count={pageCount}
@@ -125,6 +137,21 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
 
   return (
     <Flexbox direction="col" gap="2">
+      <Flexbox direction="row" justify="end" alignItems="center" className="w-full" gap="2">
+        <Text sm className="text-text-secondary">
+          Jump to a Point in Time
+        </Text>
+        <div className="max-w-32">
+          <Input
+            type="date"
+            value={dateValue}
+            onChange={(e) => setDateValue(e.target.value)}
+          />
+        </div>
+        <Button color="accent" type="button" onClick={handleDateJump}>
+          Go
+        </Button>
+      </Flexbox>
       <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
         <Text lg semibold>
           Changes ({safeItems.length}

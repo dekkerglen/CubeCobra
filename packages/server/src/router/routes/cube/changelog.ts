@@ -222,7 +222,46 @@ export const pitListHandler = async (req: Request, res: Response) => {
   }
 };
 
+export const dateResolveHandler = async (req: Request, res: Response) => {
+  try {
+    const cubeId = req.params.cubeId!;
+    const dateParam = req.query.date as string | undefined;
+
+    if (!dateParam) {
+      req.flash('danger', 'Date parameter is required.');
+      return redirect(req, res, `/cube/about/${cubeId}?view=changelog`);
+    }
+
+    const dateMs = parseInt(dateParam, 10);
+    if (isNaN(dateMs)) {
+      req.flash('danger', 'Invalid date parameter.');
+      return redirect(req, res, `/cube/about/${cubeId}?view=changelog`);
+    }
+
+    const cube = await cubeDao.getById(cubeId);
+    if (!isCubeViewable(cube, req.user) || !cube) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+
+    const changelog = await changelogDao.getNearest(cube.id, dateMs);
+    if (!changelog) {
+      req.flash('danger', 'No changelogs found for this cube.');
+      return redirect(req, res, `/cube/about/${cubeId}?view=changelog`);
+    }
+
+    return redirect(req, res, `/cube/changelog/${cube.id}/${changelog.id}/list`);
+  } catch (err) {
+    return handleRouteError(req, res, err as Error, `/cube/about/${req.params.cubeId}?view=changelog`);
+  }
+};
+
 export const routes = [
+  {
+    path: '/:cubeId/at',
+    method: 'get',
+    handler: [dateResolveHandler],
+  },
   {
     path: '/:cubeId/:changelogId/download',
     method: 'get',
