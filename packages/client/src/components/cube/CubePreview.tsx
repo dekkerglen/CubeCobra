@@ -35,7 +35,7 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube }) => {
           <div className="absolute inset-x-0 bottom-0 h-1/2 bg-gradient-to-t from-black/95 via-black/70 to-transparent pointer-events-none" />
 
           <div className="absolute inset-x-0 bottom-0 p-3 flex flex-col gap-1.5">
-            <Text bold xl className="text-white line-clamp-2 leading-tight">
+            <Text bold xl className="text-white line-clamp-2 leading-tight text-shadow">
               {cube.name}
             </Text>
 
