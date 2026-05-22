@@ -50,11 +50,11 @@ const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ dat
         className="bg-bg-accent border-y border-border py-3 px-4 text-center"
         style={{ marginLeft: '-0.5rem', marginRight: '-0.5rem', width: 'calc(100% + 1rem)' }}
       >
-        <Flexbox direction="row" alignItems="center" justify="center" gap="4" className="flex-wrap">
+        <Flexbox direction="col" alignItems="center" gap="1">
           <Text semibold md className="text-text">
             You are viewing a point-in-time snapshot of {cube.name} ({date})
           </Text>
-          <Flexbox direction="row" gap="2">
+          <Flexbox direction="row" gap="2" alignItems="center">
             <Link href={`/cube/changelog/${cube.id}/${changelogId}`}>
               <Text sm className="text-link underline">
                 Back to changelog entry
@@ -64,6 +64,12 @@ const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ dat
             <Link href={`/cube/changelog/${cube.id}/${changelogId}/compare`}>
               <Text sm className="text-link underline">
                 Compare with Present
+              </Text>
+            </Link>
+            <Text sm className="text-text-secondary">|</Text>
+            <Link href={`/cube/changelog/${cube.id}/${changelogId}/download`}>
+              <Text sm className="text-link underline">
+                Download Cube
               </Text>
             </Link>
           </Flexbox>
