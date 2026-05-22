@@ -41,26 +41,18 @@ export class DynamodbTables extends Construct {
       projectionType: ProjectionType.ALL,
     });
 
-    // GSI3/GSI4 use a KEYS_ONLY projection. They are write-heavy (every cube and
-    // draft write fans into them) but read-cold — they back niche access patterns
-    // (card-count / recency sort, drafts-by-owner/type, episodes-by-podcast,
-    // packages-by-owner). A full (ALL) projection would replicate every item
-    // attribute into each index, paying storage and per-write cost for payload
-    // that the read paths re-fetch from the base table anyway. KEYS_ONLY stores
-    // only the key attributes; the DAO read layer resolves full items via a
-    // BatchGet against the base table (see BaseDynamoDao.queryKeysOnlyIndex).
     table.addGlobalSecondaryIndex({
       indexName: 'GSI3',
       partitionKey: { name: 'GSI3PK', type: AttributeType.STRING },
       sortKey: { name: 'GSI3SK', type: AttributeType.STRING },
-      projectionType: ProjectionType.KEYS_ONLY,
+      projectionType: ProjectionType.ALL,
     });
 
     table.addGlobalSecondaryIndex({
       indexName: 'GSI4',
       partitionKey: { name: 'GSI4PK', type: AttributeType.STRING },
       sortKey: { name: 'GSI4SK', type: AttributeType.STRING },
-      projectionType: ProjectionType.KEYS_ONLY,
+      projectionType: ProjectionType.ALL,
     });
 
     Tags.of(table).add('environment', props.prefix);

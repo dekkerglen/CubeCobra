@@ -522,24 +522,29 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       TableName: this.tableName,
       IndexName: 'GSI3',
       KeyConditionExpression: 'GSI3PK = :cubeOwner',
+      FilterExpression: '#item.#complete = :complete',
+      ExpressionAttributeNames: {
+        '#item': 'item',
+        '#complete': 'complete',
+      },
       ExpressionAttributeValues: {
         ':cubeOwner': `${this.itemType()}#CUBEOWNER#${cubeOwner}`,
+        ':complete': true,
       },
       ScanIndexForward: false,
       Limit: 200,
       ExclusiveStartKey: lastKey,
     };
 
-    // GSI3 is KEYS_ONLY: the index returns key attributes only, so resolve the
-    // full items from the base table and apply the `complete` filter in code
-    // (it can no longer run as a server-side FilterExpression against the index).
-    const { rawItems, lastKey: nextKey } = await this.queryKeysOnlyIndexRaw(params);
-    const unhydratedItems = rawItems.map((raw) => raw.item).filter((draft) => draft.complete === true);
+    // Query DynamoDB
+    const data = await this.dynamoClient.send(new QueryCommand(params));
+    const dynamoItems = (data.Items || []) as any[];
+    const unhydratedItems = dynamoItems.map((item) => item.item as UnhydratedDraft);
 
     if (unhydratedItems.length === 0) {
       return {
         items: [],
-        lastKey: nextKey,
+        lastKey: data.LastEvaluatedKey,
       };
     }
 
@@ -579,7 +584,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
 
     return {
       items: hydratedItems,
-      lastKey: nextKey,
+      lastKey: data.LastEvaluatedKey,
     };
   }
 
@@ -595,17 +600,21 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       TableName: this.tableName,
       IndexName: 'GSI3',
       KeyConditionExpression: 'GSI3PK = :cubeOwner',
+      FilterExpression: '#item.#complete = :complete',
+      ExpressionAttributeNames: {
+        '#item': 'item',
+        '#complete': 'complete',
+      },
       ExpressionAttributeValues: {
         ':cubeOwner': `${this.itemType()}#CUBEOWNER#${cubeOwner}`,
+        ':complete': true,
       },
       ScanIndexForward: false,
       Limit: 200,
       ExclusiveStartKey: lastKey,
     };
 
-    // GSI3 is KEYS_ONLY: resolve full items from the base table; the `complete`
-    // filter runs in code rather than as a server-side FilterExpression.
-    return this.queryKeysOnlyIndex(params, (draft) => draft.complete === true);
+    return this.query(params);
   }
 
   /**
@@ -630,8 +639,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       lastKey,
     );
 
-    // GSI4 is KEYS_ONLY: resolve full items from the base table.
-    return this.queryKeysOnlyIndex(params);
+    return this.query(params);
   }
 
   /**
@@ -664,8 +672,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       ExclusiveStartKey: lastKey,
     };
 
-    // GSI4 is KEYS_ONLY: resolve full items from the base table.
-    return this.queryKeysOnlyIndex(params);
+    return this.query(params);
   }
 
   /**
@@ -702,14 +709,14 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       ExclusiveStartKey: lastKey,
     };
 
-    // GSI4 is KEYS_ONLY: the index returns key attributes only, so resolve the
-    // full items from the base table (no further hydration / S3 reads).
-    const { rawItems, lastKey: nextKey } = await this.queryKeysOnlyIndexRaw(params);
-    const unhydratedItems = rawItems.map((raw) => raw.item);
+    // Query directly without hydration
+    const data = await this.dynamoClient.send(new QueryCommand(params));
+    const dynamoItems = (data.Items || []) as any[];
+    const unhydratedItems = dynamoItems.map((item) => item.item as UnhydratedDraft);
 
     return {
       items: unhydratedItems,
-      lastKey: nextKey,
+      lastKey: data.LastEvaluatedKey,
     };
   }
 

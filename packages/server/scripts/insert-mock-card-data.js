@@ -165,7 +165,7 @@ async function createTable() {
               { AttributeName: 'GSI3PK', KeyType: 'HASH' },
               { AttributeName: 'GSI3SK', KeyType: 'RANGE' },
             ],
-            Projection: { ProjectionType: 'KEYS_ONLY' },
+            Projection: { ProjectionType: 'ALL' },
           },
           {
             IndexName: 'GSI4',
@@ -173,7 +173,7 @@ async function createTable() {
               { AttributeName: 'GSI4PK', KeyType: 'HASH' },
               { AttributeName: 'GSI4SK', KeyType: 'RANGE' },
             ],
-            Projection: { ProjectionType: 'KEYS_ONLY' },
+            Projection: { ProjectionType: 'ALL' },
           },
         ],
       })
