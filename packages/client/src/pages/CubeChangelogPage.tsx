@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 
 import { CubeChangeLog } from '@utils/datatypes/ChangeLog';
 import Cube from '@utils/datatypes/Cube';
@@ -22,18 +22,6 @@ interface CubeChangelogPageProps {
 }
 
 const CubeChangelogPage: React.FC<CubeChangelogPageProps> = ({ cube, changelog }) => {
-  const [downloading, setDownloading] = useState(false);
-
-  const handleDownload = useCallback(async () => {
-    setDownloading(true);
-    try {
-      window.location.href = `/cube/changelog/${cube.id}/${changelog.id}/download`;
-    } finally {
-      // Give the browser a moment to start the download before clearing state
-      setTimeout(() => setDownloading(false), 3000);
-    }
-  }, [cube.id, changelog.id]);
-
   return (
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
@@ -53,10 +41,7 @@ const CubeChangelogPage: React.FC<CubeChangelogPageProps> = ({ cube, changelog }
                   </Text>
                   <Flexbox direction="row" gap="2" wrap="wrap">
                     <Button color="accent" type="link" href={`/cube/changelog/${cube.id}/${changelog.id}/list`}>
-                      View Cube
-                    </Button>
-                    <Button color="primary" type="button" onClick={handleDownload} disabled={downloading}>
-                      {downloading ? 'Downloading...' : 'Download Cube'}
+                      View List
                     </Button>
                     <Button
                       color="secondary"
