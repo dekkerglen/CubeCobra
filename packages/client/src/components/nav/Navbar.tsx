@@ -181,7 +181,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
           </>
         )}
       </Flexbox>
-      <CardFooter>
+      <CardFooter className="border-border-secondary">
         <Flexbox direction="col" gap="2">
           {(user.cubes || []).length > 2 && <NavLink href={`/user/view/${user.id}`}>View All</NavLink>}
           <NavLink href={`/cube/liked/${user.id}`}>Liked Cubes</NavLink>
