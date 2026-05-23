@@ -2,6 +2,16 @@
 
 An open source web application for building, managing, and playtesting Magic: the Gathering cubes.
 
+## Star History
+
+<a href="https://www.star-history.com/?repos=dekkerglen%2Fcubecobra&type=timeline&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=dekkerglen/cubecobra&type=timeline&theme=dark&legend=top-left" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=dekkerglen/cubecobra&type=timeline&legend=top-left" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=dekkerglen/cubecobra&type=timeline&legend=top-left" />
+ </picture>
+</a>
+
 ## About
 
 CubeCobra is a modern web platform that enables Magic: The Gathering players to:
