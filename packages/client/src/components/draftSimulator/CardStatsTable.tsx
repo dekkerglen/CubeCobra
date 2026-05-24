@@ -6,7 +6,7 @@ import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
 
-type SortKey = keyof CardStats | 'deckInclusion' | 'poolPct' | 'deckFilterCount' | 'openerTakeRate';
+type SortKey = keyof CardStats | 'deckInclusion' | 'poolPct' | 'deckFilterCount' | 'openerTakeRate' | 'pxp1TakeRate';
 
 const CardStatsTable: React.FC<{
   cardStats: CardStats[];
@@ -15,6 +15,8 @@ const CardStatsTable: React.FC<{
   selectedCardOracles: string[];
   onSelectDeckCard: (id: string) => void;
   selectedDeckCardOracles: string[];
+  onSelectP1P1Card: (id: string) => void;
+  selectedP1P1CardOracles: string[];
   visibleDeckCounts: Map<string, number>;
   inDeckOracles: Set<string> | null;
   deckInclusionPct: Map<string, number>;
@@ -29,6 +31,8 @@ const CardStatsTable: React.FC<{
   selectedCardOracles,
   onSelectDeckCard,
   selectedDeckCardOracles,
+  onSelectP1P1Card,
+  selectedP1P1CardOracles,
   visibleDeckCounts,
   inDeckOracles,
   deckInclusionPct,
@@ -71,6 +75,9 @@ const CardStatsTable: React.FC<{
     } else if (sortKey === 'openerTakeRate') {
       av = a.p1p1Seen > 0 ? a.p1p1Count / a.p1p1Seen : 0;
       bv = b.p1p1Seen > 0 ? b.p1p1Count / b.p1p1Seen : 0;
+    } else if (sortKey === 'pxp1TakeRate') {
+      av = (a.pxp1Seen ?? 0) > 0 ? (a.pxp1Count ?? 0) / (a.pxp1Seen ?? 1) : 0;
+      bv = (b.pxp1Seen ?? 0) > 0 ? (b.pxp1Count ?? 0) / (b.pxp1Seen ?? 1) : 0;
     } else if (sortKey === 'avgPickPosition') {
       av = a.avgPickPosition > 0 ? a.avgPickPosition : Number.POSITIVE_INFINITY;
       bv = b.avgPickPosition > 0 ? b.avgPickPosition : Number.POSITIVE_INFINITY;
@@ -107,6 +114,7 @@ const CardStatsTable: React.FC<{
     'poolPct',
     'deckFilterCount',
     'openerTakeRate',
+    'pxp1TakeRate',
   ]);
 
   const renderSortHeader = (label: string, col: SortKey, tooltip?: string) => (
@@ -180,6 +188,11 @@ const CardStatsTable: React.FC<{
                 'Of opening packs in pack 1 that contained this card, how often it was the pick',
               )}
               {renderSortHeader(
+                'Taken PXP1 %',
+                'pxp1TakeRate',
+                'Of first picks across all packs that contained this card, how often it was taken',
+              )}
+              {renderSortHeader(
                 'Pool %',
                 'poolPct',
                 'How often this card appeared in a drafted pool within the current scope',
@@ -198,6 +211,7 @@ const CardStatsTable: React.FC<{
               const inclPct = deckInclusionPct.get(cardStatsEntry.oracle_id);
               const isFilteredCard = selectedCardOracles.includes(cardStatsEntry.oracle_id);
               const isFilteredDeckCard = selectedDeckCardOracles.includes(cardStatsEntry.oracle_id);
+              const isFilteredP1P1Card = selectedP1P1CardOracles.includes(cardStatsEntry.oracle_id);
               const visiblePoolCount = visiblePoolCounts.get(cardStatsEntry.oracle_id) ?? cardStatsEntry.poolIndices.length;
               const deckPoolCount = visibleDeckCounts.get(cardStatsEntry.oracle_id) ?? 0;
               const poolPct = totalScopedPools > 0 ? visiblePoolCount / totalScopedPools : null;
@@ -215,9 +229,27 @@ const CardStatsTable: React.FC<{
                     {cardStatsEntry.avgPickPosition > 0 ? cardStatsEntry.avgPickPosition.toFixed(1) : '—'}
                   </td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{cardStatsEntry.wheelCount}</td>
-                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{cardStatsEntry.p1p1Count}</td>
+                  <td className="px-3 py-2 text-right">
+                    <button
+                      type="button"
+                      className={[
+                        'px-2 py-0.5 rounded text-xs font-medium border',
+                        isFilteredP1P1Card ? 'bg-link text-white border-link' : 'bg-link/10 text-link border-link/30 hover:bg-link/20',
+                        cardStatsEntry.p1p1Count === 0 ? 'opacity-40 cursor-not-allowed' : '',
+                      ].join(' ')}
+                      disabled={cardStatsEntry.p1p1Count === 0}
+                      onClick={() => onSelectP1P1Card(cardStatsEntry.oracle_id)}
+                    >
+                      {isFilteredP1P1Card ? <>✕ </> : null}<span className="tabular-nums">{cardStatsEntry.p1p1Count}</span>
+                    </button>
+                  </td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">
                     {cardStatsEntry.p1p1Seen > 0 ? `${(openerTakeRate * 100).toFixed(1)}%` : '—'}
+                  </td>
+                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">
+                    {(cardStatsEntry.pxp1Seen ?? 0) > 0
+                      ? `${(((cardStatsEntry.pxp1Count ?? 0) / (cardStatsEntry.pxp1Seen ?? 1)) * 100).toFixed(1)}%`
+                      : '—'}
                   </td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">
                     {poolPct !== null ? `${(poolPct * 100).toFixed(1)}%` : '—'}

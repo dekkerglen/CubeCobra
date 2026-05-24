@@ -550,6 +550,7 @@ async function runClientSimulation(
       p1p1Count: raw.p1p1Count,
       p1p1Seen: raw.p1p1Seen,
       poolIndices: raw.poolIndices,
+      p1p1PoolIndices: [],
     });
   }
   cardStats.sort((a, b) => a.avgPickPosition - b.avgPickPosition);
@@ -960,6 +961,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   // Card pool view
   const [selectedCardOracles, setSelectedCardOracles] = useState<string[]>([]);
   const [selectedDeckCardOracles, setSelectedDeckCardOracles] = useState<string[]>([]);
+  const [selectedP1P1CardOracles, setSelectedP1P1CardOracles] = useState<string[]>([]);
   const [selectedArchetype, setSelectedArchetype] = useState<string | null>(null);
   const [selectedSkeletonId, setSelectedSkeletonId] = useState<number | null>(null);
   const [focusedPoolIndex, setFocusedPoolIndex] = useState<number | null>(null);
@@ -984,6 +986,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const resetViewSelection = useCallback(() => {
     setSelectedCardOracles([]);
     setSelectedDeckCardOracles([]);
+    setSelectedP1P1CardOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
     setFocusedPoolIndex(null);
@@ -1180,22 +1183,24 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     () => ({
       selectedCardOracles,
       selectedDeckCardOracles,
+      selectedP1P1CardOracles,
       selectedSkeletonId,
       selectedArchetype,
       focusedPoolIndex,
       focusedPoolViewMode,
     }),
-    [selectedCardOracles, selectedDeckCardOracles, selectedSkeletonId, selectedArchetype, focusedPoolIndex, focusedPoolViewMode],
+    [selectedCardOracles, selectedDeckCardOracles, selectedP1P1CardOracles, selectedSkeletonId, selectedArchetype, focusedPoolIndex, focusedPoolViewMode],
   );
   const selectionSetters = useMemo<DraftSimulatorSelectionSetters>(
     () => ({
       setSelectedCardOracles,
       setSelectedDeckCardOracles,
+      setSelectedP1P1CardOracles,
       setSelectedArchetype,
       setSelectedSkeletonId,
       setFocusedPoolIndex,
     }),
-    [setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex],
+    [setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedP1P1CardOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex],
   );
 
   // Top Gwen archetype labels per color pair, for the Deck Color Distribution chart
@@ -1269,6 +1274,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const {
     selectedCards,
     selectedDeckCards,
+    selectedP1P1Cards,
     selectedCard,
     activeFilterPoolIndexSet,
     filteredDecks,
@@ -1334,6 +1340,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     setters: selectionSetters,
     selectedCards,
     selectedDeckCards,
+    selectedP1P1Cards,
     selectedCard,
     activeFilterPoolIndexSet,
     selectedPools,
@@ -1351,6 +1358,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
   const handleToggleSelectedDeckCard = useCallback((oracleId: string) => {
     setSelectedDeckCardOracles((current) => {
+      if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
+      if (current.length < 2) return [...current, oracleId];
+      return [current[1]!, oracleId];
+    });
+  }, []);
+
+  const handleToggleSelectedP1P1Card = useCallback((oracleId: string) => {
+    setSelectedP1P1CardOracles((current) => {
       if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
       if (current.length < 2) return [...current, oracleId];
       return [current[1]!, oracleId];
@@ -1437,6 +1452,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       selectedSkeletonId={selectedSkeletonId}
       onAddCard={handleToggleSelectedCard}
       onAddDeckCard={handleToggleSelectedDeckCard}
+      onAddP1P1Card={handleToggleSelectedP1P1Card}
       onSelectArchetype={setSelectedArchetype}
       onSelectSkeleton={setSelectedSkeletonId}
       onClearAll={clearActiveFilter}
@@ -1576,6 +1592,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       selectedCardOracles={selectedCardOracles}
       handleToggleSelectedDeckCard={handleToggleSelectedDeckCard}
       selectedDeckCardOracles={selectedDeckCardOracles}
+      handleToggleSelectedP1P1Card={handleToggleSelectedP1P1Card}
+      selectedP1P1CardOracles={selectedP1P1CardOracles}
       deckCardPoolIndices={deckCardPoolIndices}
       visibleDeckCounts={visibleDeckCounts}
       inDeckOracles={inDeckOracles}

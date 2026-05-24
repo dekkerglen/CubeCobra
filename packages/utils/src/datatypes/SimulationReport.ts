@@ -9,7 +9,10 @@ export interface CardStats {
   wheelCount: number; // times picked at position > numSeats (went around the table)
   p1p1Count: number; // times picked as first pick of pack 1
   p1p1Seen: number; // times seen in an opening pack for pack 1 pick 1
+  pxp1Count?: number; // times picked as first pick of any pack
+  pxp1Seen?: number; // times seen as first pick of any pack
   poolIndices: number[]; // indexes into slimPools / simulatedPools for pools containing this card
+  p1p1PoolIndices: number[]; // pool indices where this card was taken p1p1
   elo: number; // card's Elo rating from the card database
 }
 

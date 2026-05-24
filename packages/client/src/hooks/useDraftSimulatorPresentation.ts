@@ -24,6 +24,7 @@ interface UseDraftSimulatorPresentationArgs {
   setters: DraftSimulatorSelectionSetters;
   selectedCards: CardStats[];
   selectedDeckCards: CardStats[];
+  selectedP1P1Cards: CardStats[];
   selectedCard: CardStats | null;
   activeFilterPoolIndexSet: Set<number> | null;
   selectedPools: DraftSimulatorDerivedData['displayedPools'];
@@ -44,9 +45,10 @@ interface UseDraftSimulatorPresentationArgs {
 export default function useDraftSimulatorPresentation({
   data: { displayRunData, activeDecks, displayedPools, skeletons, poolArchetypeLabels, skeletonColorProfiles },
   state: { selectedSkeletonId, selectedArchetype, focusedPoolIndex },
-  setters: { setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex },
+  setters: { setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedP1P1CardOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex },
   selectedCards,
   selectedDeckCards,
+  selectedP1P1Cards,
   selectedCard,
   activeFilterPoolIndexSet,
   selectedPools,
@@ -65,6 +67,7 @@ export default function useDraftSimulatorPresentation({
     if (selectedArchetype) chips.push(`Deck Color: ${archetypeFullName(selectedArchetype)}`);
     for (const c of selectedCards) chips.push(`In Pool: ${c.name}`);
     for (const c of selectedDeckCards) chips.push(`In Deck: ${c.name}`);
+    for (const c of selectedP1P1Cards) chips.push(`P1P1: ${c.name}`);
     return chips;
   }, [selectedSkeletonId, selectedArchetype, selectedCards, selectedDeckCards, skeletons]);
 
@@ -74,7 +77,7 @@ export default function useDraftSimulatorPresentation({
   );
 
   const scopeOnlySummary = useMemo(() => {
-    const nonCard = activeFilterChips.filter((c) => !c.startsWith('In Pool:') && !c.startsWith('In Deck:'));
+    const nonCard = activeFilterChips.filter((c) => !c.startsWith('In Pool:') && !c.startsWith('In Deck:') && !c.startsWith('P1P1:'));
     return nonCard.length > 0 ? nonCard.join(' · ') : null;
   }, [activeFilterChips]);
 
@@ -96,6 +99,15 @@ export default function useDraftSimulatorPresentation({
         detail: 'In Deck',
         onClear: () =>
           setSelectedDeckCardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
+      });
+    }
+    for (const selectedCardEntry of selectedP1P1Cards) {
+      chips.push({
+        key: `p1p1-${selectedCardEntry.oracle_id}`,
+        label: selectedCardEntry.name,
+        detail: 'P1P1',
+        onClear: () =>
+          setSelectedP1P1CardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
       });
     }
     if (selectedSkeletonId !== null) {
@@ -132,6 +144,7 @@ export default function useDraftSimulatorPresentation({
   }, [
     selectedCards,
     selectedDeckCards,
+    selectedP1P1Cards,
     selectedSkeletonId,
     selectedArchetype,
     focusedPoolIndex,
@@ -141,6 +154,8 @@ export default function useDraftSimulatorPresentation({
     skeletonColorProfiles,
     setSelectedArchetype,
     setSelectedCardOracles,
+    setSelectedDeckCardOracles,
+    setSelectedP1P1CardOracles,
     setSelectedSkeletonId,
     setFocusedPoolIndex,
     getSkeletonDisplayName,
@@ -192,10 +207,11 @@ export default function useDraftSimulatorPresentation({
   const clearActiveFilter = useCallback(() => {
     setSelectedCardOracles([]);
     setSelectedDeckCardOracles([]);
+    setSelectedP1P1CardOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
     setFocusedPoolIndex(null);
-  }, [setFocusedPoolIndex, setSelectedArchetype, setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedSkeletonId]);
+  }, [setFocusedPoolIndex, setSelectedArchetype, setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedP1P1CardOracles, setSelectedSkeletonId]);
 
   const downloadDraftBreakdownCsv = useCallback((pools: DraftSimulatorDerivedData['displayedPools'], label: string) => {
     if (!displayRunData) return;

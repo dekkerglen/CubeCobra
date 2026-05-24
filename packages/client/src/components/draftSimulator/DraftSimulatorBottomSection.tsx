@@ -96,6 +96,8 @@ const DraftSimulatorBottomSection: React.FC<{
   selectedCardOracles: string[];
   handleToggleSelectedDeckCard: (oracleId: string) => void;
   selectedDeckCardOracles: string[];
+  handleToggleSelectedP1P1Card: (oracleId: string) => void;
+  selectedP1P1CardOracles: string[];
   deckCardPoolIndices: Map<string, number[]>;
   visibleDeckCounts: Map<string, number>;
   inDeckOracles: Set<string> | null;
@@ -153,6 +155,8 @@ const DraftSimulatorBottomSection: React.FC<{
   selectedCardOracles,
   handleToggleSelectedDeckCard,
   selectedDeckCardOracles,
+  handleToggleSelectedP1P1Card,
+  selectedP1P1CardOracles,
   deckCardPoolIndices,
   visibleDeckCounts,
   inDeckOracles,
@@ -362,9 +366,10 @@ const DraftSimulatorBottomSection: React.FC<{
               selectedCardOracles={selectedCardOracles}
               onSelectDeckCard={handleToggleSelectedDeckCard}
               selectedDeckCardOracles={selectedDeckCardOracles}
+              onSelectP1P1Card={handleToggleSelectedP1P1Card}
+              selectedP1P1CardOracles={selectedP1P1CardOracles}
               visibleDeckCounts={visibleDeckCounts}
               inDeckOracles={inDeckOracles}
-
               deckInclusionPct={deckInclusionPct}
               visiblePoolCounts={visiblePoolCounts}
               totalScopedPools={activeFilterPoolIndexSet?.size ?? displayRunData.slimPools.length}

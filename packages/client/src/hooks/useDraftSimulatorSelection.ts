@@ -130,7 +130,7 @@ function buildActiveFilterPreview({
 
 interface UseDraftSimulatorSelectionArgs {
   data: DraftSimulatorDerivedData;
-  state: Pick<DraftSimulatorSelectionState, 'selectedCardOracles' | 'selectedDeckCardOracles' | 'selectedSkeletonId' | 'selectedArchetype'>;
+  state: Pick<DraftSimulatorSelectionState, 'selectedCardOracles' | 'selectedDeckCardOracles' | 'selectedP1P1CardOracles' | 'selectedSkeletonId' | 'selectedArchetype'>;
   filteredCardStatsCache: { current: Map<string, CardStats[]> };
   computeFilteredCardStats: (
     setup: NonNullable<DraftSimulatorDerivedData['currentRunSetup']>,
@@ -143,7 +143,7 @@ interface UseDraftSimulatorSelectionArgs {
 
 export default function useDraftSimulatorSelection({
   data: { displayRunData, currentRunSetup, displayedPools, activeDecks, skeletons },
-  state: { selectedCardOracles, selectedDeckCardOracles, selectedSkeletonId, selectedArchetype },
+  state: { selectedCardOracles, selectedDeckCardOracles, selectedP1P1CardOracles, selectedSkeletonId, selectedArchetype },
   filteredCardStatsCache,
   computeFilteredCardStats,
   bottomTab,
@@ -168,6 +168,33 @@ export default function useDraftSimulatorSelection({
         : [],
     [displayRunData, selectedDeckCardOracles],
   );
+
+  const selectedP1P1Cards = useMemo(
+    () =>
+      displayRunData
+        ? selectedP1P1CardOracles
+            .map((oracle) => displayRunData.cardStats.find((c) => c.oracle_id === oracle) ?? null)
+            .filter((c): c is CardStats => !!c)
+        : [],
+    [displayRunData, selectedP1P1CardOracles],
+  );
+
+  // oracle_id → pool indices where that card was taken p1p1 (pack 0, pick 1)
+  const p1p1CardPoolIndices = useMemo<Map<string, number[]>>(() => {
+    if (!displayRunData) return new Map();
+    const map = new Map<string, number[]>();
+    for (let i = 0; i < displayRunData.slimPools.length; i++) {
+      const p1p1Pick = displayRunData.slimPools[i]!.picks.find(
+        (p) => p.packNumber === 0 && p.pickNumber === 1,
+      );
+      if (p1p1Pick) {
+        const entry = map.get(p1p1Pick.oracle_id);
+        if (entry) entry.push(i);
+        else map.set(p1p1Pick.oracle_id, [i]);
+      }
+    }
+    return map;
+  }, [displayRunData]);
 
   // oracle_id → pool indices where that card is in the mainboard
   const deckCardPoolIndices = useMemo<Map<string, number[]>>(() => {
@@ -208,6 +235,11 @@ export default function useDraftSimulatorSelection({
       if (poolIndices) filterSets.push(new Set<number>(poolIndices));
     }
 
+    for (const card of selectedP1P1Cards) {
+      const indices = p1p1CardPoolIndices.get(card.oracle_id);
+      if (indices) filterSets.push(new Set<number>(indices));
+    }
+
     if (filterSets.length === 0) return null;
 
     const [first, ...rest] = filterSets;
@@ -216,7 +248,7 @@ export default function useDraftSimulatorSelection({
       if (!rest.every((set) => set.has(value))) intersection.delete(value);
     }
     return intersection;
-  }, [selectedArchetype, selectedSkeletonId, selectedCards, selectedDeckCardOracles, deckCardPoolIndices, skeletons, displayedPools]);
+  }, [selectedArchetype, selectedSkeletonId, selectedCards, selectedDeckCardOracles, selectedP1P1Cards, deckCardPoolIndices, p1p1CardPoolIndices, skeletons, displayedPools]);
 
   const filteredDecks = useMemo(() => {
     if (!activeDecks) return null;
@@ -365,6 +397,7 @@ export default function useDraftSimulatorSelection({
   return {
     selectedCards,
     selectedDeckCards,
+    selectedP1P1Cards,
     selectedCard,
     activeFilterPoolIndexSet,
     filteredDecks,

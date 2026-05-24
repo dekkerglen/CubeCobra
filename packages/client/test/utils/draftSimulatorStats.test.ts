@@ -28,6 +28,7 @@ const makeCardStats = (oracleId: string, poolIndices: number[]): CardStats => ({
   p1p1Count: poolIndices.length,
   p1p1Seen: 1,
   poolIndices,
+  p1p1PoolIndices: poolIndices,
   elo: 1200,
 });
 

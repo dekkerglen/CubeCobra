@@ -15,7 +15,10 @@ interface RawStats {
   wheelCount: number;
   p1p1Count: number;
   p1p1Seen: number;
+  pxp1Count: number;
+  pxp1Seen: number;
   poolIndices: number[];
+  p1p1PoolIndices: number[];
 }
 
 export function computeFilteredCardStats(
@@ -46,7 +49,10 @@ export function computeFilteredCardStats(
         wheelCount: 0,
         p1p1Count: 0,
         p1p1Seen: 0,
+        pxp1Count: 0,
+        pxp1Seen: 0,
         poolIndices: [],
+        p1p1PoolIndices: [],
       };
       statsMap.set(oracleId, stats);
     }
@@ -85,6 +91,7 @@ export function computeFilteredCardStats(
                 for (const oracleId of pack) {
                   getStats(oracleId).timesSeen++;
                   if (packNum === 0 && pickNumInPack === 1) getStats(oracleId).p1p1Seen++;
+                  if (pickNumInPack === 1) getStats(oracleId).pxp1Seen++;
                 }
               }
 
@@ -102,7 +109,11 @@ export function computeFilteredCardStats(
                 entry.pickPositionSum += pickNumInPack;
                 entry.pickPositionCount++;
                 if (pickNumInPack > numSeats) entry.wheelCount++;
-                if (packNum === 0 && pickNumInPack === 1) entry.p1p1Count++;
+                if (packNum === 0 && pickNumInPack === 1) {
+                  entry.p1p1Count++;
+                  entry.p1p1PoolIndices.push(poolIndex);
+                }
+                if (pickNumInPack === 1) entry.pxp1Count++;
                 entry.poolIndices.push(poolIndex);
               }
             }
@@ -152,7 +163,7 @@ export function computeFilteredCardStats(
   }
 
   return runData.cardStats
-    .map((base) => {
+    .map((base): CardStats | null => {
       const filtered = statsMap.get(base.oracle_id);
       if (!filtered || filtered.timesSeen === 0) return null;
       return {
@@ -167,7 +178,10 @@ export function computeFilteredCardStats(
         wheelCount: filtered.wheelCount,
         p1p1Count: filtered.p1p1Count,
         p1p1Seen: filtered.p1p1Seen,
+        pxp1Count: filtered.pxp1Count,
+        pxp1Seen: filtered.pxp1Seen,
         poolIndices: filtered.poolIndices,
+        p1p1PoolIndices: filtered.p1p1PoolIndices,
       };
     })
     .filter((cardStats): cardStats is CardStats => cardStats !== null);
