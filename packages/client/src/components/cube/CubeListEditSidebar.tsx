@@ -75,6 +75,9 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
   const [includeExtras, setIncludeExtras] = useLocalStorage(`${cube.id}-includeExtras`, false);
   const [boardToEdit, setBoardToEdit] = useLocalStorage<BoardType>(`${cube.id}-editBoard`, 'mainboard');
 
+  // Memoize so AutocompleteInput's cache is only invalidated when options change
+  const addCardMatches = useMemo(() => cardNameMatches(specifyEdition, includeExtras), [specifyEdition, includeExtras]);
+
   // Get board options from cube's board definitions
   const boardOptions = useMemo(() => {
     const boards = getBoardDefinitions(cube, changedCards);
@@ -260,7 +263,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
               Add Card
             </Text>
             <AutocompleteInput
-              getMatches={cardNameMatches(specifyEdition, includeExtras)}
+              getMatches={addCardMatches}
               type="text"
               innerRef={addRef}
               name="add"
@@ -417,7 +420,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
               <div className="flex gap-2">
                 <div className="flex-1">
                   <AutocompleteInput
-                    getMatches={cardNameMatches(specifyEdition, includeExtras)}
+                    getMatches={addCardMatches}
                     type="text"
                     innerRef={addRef}
                     name="add"
