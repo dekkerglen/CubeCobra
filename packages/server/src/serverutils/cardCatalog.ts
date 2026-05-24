@@ -100,12 +100,16 @@ export async function initializeCardDb(basePath: string = 'private') {
 
   catalog.printedCardList = Object.values(catalog._carddict).filter((card) => !card.digital && !card.isToken);
 
+  // CubeCobra synthetic cards that should always appear in autocomplete
+  const ALWAYS_ALLOW_IDS = new Set(['custom-card', 'voucher']);
+
   // Build filtered name arrays for autocomplete — include only names with at
   // least one "reasonable" printing (excludes tokens, digital, art series, promos, etc.)
   catalog.reasonable_names = catalog.cardnames.filter((name) => {
     const ids = catalog.nameToId[name];
     if (!ids) return false;
     return ids.some((id) => {
+      if (ALWAYS_ALLOW_IDS.has(id)) return true;
       const card = catalog._carddict[id];
       return card && reasonableCard(card);
     });
@@ -114,6 +118,7 @@ export async function initializeCardDb(basePath: string = 'private') {
   catalog.reasonable_full_names = catalog.full_names.filter((fullName) => {
     const image = catalog.imagedict[fullName];
     if (!image || !image.id) return false;
+    if (ALWAYS_ALLOW_IDS.has(image.id)) return true;
     const card = catalog._carddict[image.id];
     return card && reasonableCard(card);
   });
