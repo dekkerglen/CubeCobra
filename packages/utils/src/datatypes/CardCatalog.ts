@@ -119,6 +119,8 @@ export interface Catalog {
   indexToOracle: string[];
   metadatadict: Record<string, CardMetadata>;
   printedCardList: any[];
+  reasonable_names: string[];
+  reasonable_full_names: string[];
   comboTree: ComboTree;
   oracleToIndex: Record<string, number>;
   // Combo-specific oracle index mapping - saved alongside comboTree to ensure index consistency
