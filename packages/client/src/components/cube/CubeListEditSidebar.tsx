@@ -72,6 +72,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
   const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, '');
   const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, DEFAULT_BLOG_TITLE);
   const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.id}-specifyEdition`, false);
+  const [includeExtras, setIncludeExtras] = useLocalStorage(`${cube.id}-includeExtras`, false);
   const [boardToEdit, setBoardToEdit] = useLocalStorage<BoardType>(`${cube.id}-editBoard`, 'mainboard');
 
   // Get board options from cube's board definitions
@@ -259,7 +260,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
               Add Card
             </Text>
             <AutocompleteInput
-              getMatches={cardNameMatches(specifyEdition)}
+              getMatches={cardNameMatches(specifyEdition, includeExtras)}
               type="text"
               innerRef={addRef}
               name="add"
@@ -308,6 +309,11 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
               label="Specify Versions"
               checked={specifyEdition}
               setChecked={(value) => setSpecifyEdition(value)}
+            />
+            <Checkbox
+              label="Include Extras"
+              checked={includeExtras}
+              setChecked={(value) => setIncludeExtras(value)}
             />
             <Flexbox direction="row" gap="2" alignItems="center">
               <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
@@ -411,7 +417,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
               <div className="flex gap-2">
                 <div className="flex-1">
                   <AutocompleteInput
-                    getMatches={cardNameMatches(specifyEdition)}
+                    getMatches={cardNameMatches(specifyEdition, includeExtras)}
                     type="text"
                     innerRef={addRef}
                     name="add"
@@ -462,11 +468,16 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
           {/* Second Row: Specify Versions, Create Blog Post, Import */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {/* Specify Versions */}
-            <div className="flex items-center">
+            <div className="flex items-center gap-4">
               <Checkbox
                 label="Specify Versions"
                 checked={specifyEdition}
                 setChecked={(value) => setSpecifyEdition(value)}
+              />
+              <Checkbox
+                label="Include Extras"
+                checked={includeExtras}
+                setChecked={(value) => setIncludeExtras(value)}
               />
             </div>
 
