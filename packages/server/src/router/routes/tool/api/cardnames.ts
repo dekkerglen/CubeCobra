@@ -31,7 +31,19 @@ export const cardNamesHandler = async (req: Request, res: Response) => {
       return res.status(200).send({ success: 'true', names: [] });
     }
 
-    const source = full ? catalog.full_names : catalog.cardnames;
+    const includeExtras = req.query.extras === '1' || req.query.extras === 'true';
+
+    let source: string[];
+    if (full && includeExtras) {
+      source = catalog.full_names;
+    } else if (full) {
+      source = catalog.reasonable_full_names;
+    } else if (includeExtras) {
+      source = catalog.cardnames;
+    } else {
+      source = catalog.reasonable_names;
+    }
+
     const names = prefixMatches(source, query, limit);
 
     return res.status(200).send({ success: 'true', names });

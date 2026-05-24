@@ -1,5 +1,5 @@
 // import missing types from @utils/datatypes/Catalog
-import { normalizeName } from '@utils/cardutil';
+import { normalizeName, reasonableCard } from '@utils/cardutil';
 import { Catalog } from '@utils/datatypes/CardCatalog';
 import json from 'big-json';
 import fs from 'fs';
@@ -18,6 +18,8 @@ const catalog: Catalog = {
   oracleToIndex: {},
   metadatadict: {},
   printedCardList: [], // for card filters
+  reasonable_names: [],
+  reasonable_full_names: [],
   comboOracleToIndex: {}, // Combo-specific mapping saved with comboTree
 };
 
@@ -97,6 +99,25 @@ export async function initializeCardDb(basePath: string = 'private') {
   }
 
   catalog.printedCardList = Object.values(catalog._carddict).filter((card) => !card.digital && !card.isToken);
+
+  // Build filtered name arrays for autocomplete — include only names with at
+  // least one "reasonable" printing (excludes tokens, digital, art series, promos, etc.)
+  catalog.reasonable_names = catalog.cardnames.filter((name) => {
+    const ids = catalog.nameToId[name];
+    if (!ids) return false;
+    return ids.some((id) => {
+      const card = catalog._carddict[id];
+      return card && reasonableCard(card);
+    });
+  });
+
+  catalog.reasonable_full_names = catalog.full_names.filter((fullName) => {
+    const image = catalog.imagedict[fullName];
+    if (!image || !image.id) return false;
+    const card = catalog._carddict[image.id];
+    return card && reasonableCard(card);
+  });
+
   catalog.oracleToIndex = Object.fromEntries(
     catalog.indexToOracle.map((oracleId: string, index: number) => [oracleId, index]),
   );
