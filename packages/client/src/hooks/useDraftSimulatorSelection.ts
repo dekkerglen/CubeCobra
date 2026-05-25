@@ -9,6 +9,7 @@ import type {
   SkeletonCard,
 } from '@utils/datatypes/SimulationReport';
 
+import { getColorPathAnchorPicks } from '../utils/draftSimulatorColorPath';
 import type {
   DraftSimulatorBottomTab,
   DraftSimulatorDerivedData,
@@ -17,6 +18,16 @@ import type {
 } from './draftSimulatorHookTypes';
 
 const LOCK_CANDIDATE_LIMIT = 12;
+
+function intersectPoolSets(sets: Set<number>[]): Set<number> | null {
+  if (sets.length === 0) return null;
+  const [first, ...rest] = sets;
+  const intersection = new Set<number>(first);
+  for (const value of [...intersection]) {
+    if (!rest.every((set) => set.has(value))) intersection.delete(value);
+  }
+  return intersection;
+}
 
 function buildActiveFilterPreview({
   displayRunData: runData,
@@ -130,7 +141,7 @@ function buildActiveFilterPreview({
 
 interface UseDraftSimulatorSelectionArgs {
   data: DraftSimulatorDerivedData;
-  state: Pick<DraftSimulatorSelectionState, 'selectedCardOracles' | 'selectedDeckCardOracles' | 'selectedP1P1CardOracles' | 'selectedSkeletonId' | 'selectedArchetype'>;
+  state: Pick<DraftSimulatorSelectionState, 'selectedCardOracles' | 'selectedDeckCardOracles' | 'selectedP1P1CardOracles' | 'selectedFirstColorPickOracles' | 'selectedSecondColorPickOracles' | 'selectedSkeletonId' | 'selectedArchetype'>;
   filteredCardStatsCache: { current: Map<string, CardStats[]> };
   computeFilteredCardStats: (
     setup: NonNullable<DraftSimulatorDerivedData['currentRunSetup']>,
@@ -143,7 +154,15 @@ interface UseDraftSimulatorSelectionArgs {
 
 export default function useDraftSimulatorSelection({
   data: { displayRunData, currentRunSetup, displayedPools, activeDecks, skeletons },
-  state: { selectedCardOracles, selectedDeckCardOracles, selectedP1P1CardOracles, selectedSkeletonId, selectedArchetype },
+  state: {
+    selectedCardOracles,
+    selectedDeckCardOracles,
+    selectedP1P1CardOracles,
+    selectedFirstColorPickOracles,
+    selectedSecondColorPickOracles,
+    selectedSkeletonId,
+    selectedArchetype,
+  },
   filteredCardStatsCache,
   computeFilteredCardStats,
   bottomTab,
@@ -179,6 +198,26 @@ export default function useDraftSimulatorSelection({
     [displayRunData, selectedP1P1CardOracles],
   );
 
+  const selectedFirstColorPickCards = useMemo(
+    () =>
+      displayRunData
+        ? selectedFirstColorPickOracles
+            .map((oracle) => displayRunData.cardStats.find((c) => c.oracle_id === oracle) ?? null)
+            .filter((c): c is CardStats => !!c)
+        : [],
+    [displayRunData, selectedFirstColorPickOracles],
+  );
+
+  const selectedSecondColorPickCards = useMemo(
+    () =>
+      displayRunData
+        ? selectedSecondColorPickOracles
+            .map((oracle) => displayRunData.cardStats.find((c) => c.oracle_id === oracle) ?? null)
+            .filter((c): c is CardStats => !!c)
+        : [],
+    [displayRunData, selectedSecondColorPickOracles],
+  );
+
   // oracle_id → pool indices where that card was taken p1p1 (pack 0, pick 1)
   const p1p1CardPoolIndices = useMemo<Map<string, number[]>>(() => {
     if (!displayRunData) return new Map();
@@ -210,6 +249,43 @@ export default function useDraftSimulatorSelection({
     return map;
   }, [activeDecks]);
 
+  // poolIndex → oracle IDs of the picks that established the deck's first and second final colors
+  const poolColorAnchors = useMemo<Map<number, { first: string | null; second: string | null }>>(() => {
+    const map = new Map<number, { first: string | null; second: string | null }>();
+    if (!displayRunData) return map;
+    for (const pool of displayedPools) {
+      const deck = activeDecks?.[pool.poolIndex] ?? null;
+      const { firstColorAnchorPick, secondColorBridgePick } = getColorPathAnchorPicks(pool, deck, displayRunData.cardMeta);
+      map.set(pool.poolIndex, {
+        first: firstColorAnchorPick?.oracle_id ?? null,
+        second: secondColorBridgePick?.oracle_id ?? null,
+      });
+    }
+    return map;
+  }, [displayRunData, displayedPools, activeDecks]);
+
+  const firstColorPickPoolIndices = useMemo<Map<string, number[]>>(() => {
+    const map = new Map<string, number[]>();
+    for (const [poolIndex, anchors] of poolColorAnchors) {
+      if (!anchors.first) continue;
+      const entry = map.get(anchors.first);
+      if (entry) entry.push(poolIndex);
+      else map.set(anchors.first, [poolIndex]);
+    }
+    return map;
+  }, [poolColorAnchors]);
+
+  const secondColorPickPoolIndices = useMemo<Map<string, number[]>>(() => {
+    const map = new Map<string, number[]>();
+    for (const [poolIndex, anchors] of poolColorAnchors) {
+      if (!anchors.second) continue;
+      const entry = map.get(anchors.second);
+      if (entry) entry.push(poolIndex);
+      else map.set(anchors.second, [poolIndex]);
+    }
+    return map;
+  }, [poolColorAnchors]);
+
   const activeFilterPoolIndexSet = useMemo(() => {
     const filterSets: Set<number>[] = [];
 
@@ -240,15 +316,42 @@ export default function useDraftSimulatorSelection({
       if (indices) filterSets.push(new Set<number>(indices));
     }
 
-    if (filterSets.length === 0) return null;
-
-    const [first, ...rest] = filterSets;
-    const intersection = new Set<number>(first);
-    for (const value of [...intersection]) {
-      if (!rest.every((set) => set.has(value))) intersection.delete(value);
+    for (const oracleId of selectedFirstColorPickOracles) {
+      const indices = firstColorPickPoolIndices.get(oracleId);
+      if (indices) filterSets.push(new Set<number>(indices));
     }
-    return intersection;
-  }, [selectedArchetype, selectedSkeletonId, selectedCards, selectedDeckCardOracles, selectedP1P1Cards, deckCardPoolIndices, p1p1CardPoolIndices, skeletons, displayedPools]);
+
+    for (const oracleId of selectedSecondColorPickOracles) {
+      const indices = secondColorPickPoolIndices.get(oracleId);
+      if (indices) filterSets.push(new Set<number>(indices));
+    }
+
+    return intersectPoolSets(filterSets);
+  }, [
+    selectedArchetype,
+    selectedSkeletonId,
+    selectedCards,
+    selectedDeckCardOracles,
+    selectedP1P1Cards,
+    selectedFirstColorPickOracles,
+    selectedSecondColorPickOracles,
+    deckCardPoolIndices,
+    p1p1CardPoolIndices,
+    firstColorPickPoolIndices,
+    secondColorPickPoolIndices,
+    skeletons,
+    displayedPools,
+  ]);
+
+  // oracle_id → number of pools where the card established the deck's first / second color
+  const firstColorPickCounts = useMemo<Map<string, number>>(
+    () => new Map([...firstColorPickPoolIndices].map(([oracle, indices]) => [oracle, indices.length])),
+    [firstColorPickPoolIndices],
+  );
+  const secondColorPickCounts = useMemo<Map<string, number>>(
+    () => new Map([...secondColorPickPoolIndices].map(([oracle, indices]) => [oracle, indices.length])),
+    [secondColorPickPoolIndices],
+  );
 
   const filteredDecks = useMemo(() => {
     if (!activeDecks) return null;
@@ -399,6 +502,10 @@ export default function useDraftSimulatorSelection({
     selectedDeckCards,
     selectedP1P1Cards,
     selectedCard,
+    selectedFirstColorPickCards,
+    selectedSecondColorPickCards,
+    firstColorPickCounts,
+    secondColorPickCounts,
     activeFilterPoolIndexSet,
     filteredDecks,
     deckInclusionPct,

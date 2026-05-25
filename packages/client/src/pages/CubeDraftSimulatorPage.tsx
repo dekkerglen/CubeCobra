@@ -101,6 +101,8 @@ interface RawStats {
   wheelCount: number;
   p1p1Count: number;
   p1p1Seen: number;
+  pxp1Count: number;
+  pxp1Seen: number;
   poolIndices: number[];
 }
 
@@ -389,6 +391,8 @@ async function runClientSimulation(
         wheelCount: 0,
         p1p1Count: 0,
         p1p1Seen: 0,
+        pxp1Count: 0,
+        pxp1Seen: 0,
         poolIndices: [],
       };
       statsMap.set(oracle, s);
@@ -441,6 +445,7 @@ async function runClientSimulation(
                 const st = getStats(oracle);
                 st.timesSeen++;
                 if (isP1P1) st.p1p1Seen++;
+                if (pickNumInPack === 1) st.pxp1Seen++;
               }
 
           let picks: string[];
@@ -479,6 +484,7 @@ async function runClientSimulation(
                 entry.pickPositionCount++;
                 if (pickNumInPack > numSeats) entry.wheelCount++;
                 if (packNum === 0 && pickNumInPack === 1) entry.p1p1Count++;
+                if (pickNumInPack === 1) entry.pxp1Count++;
               }
             }
 
@@ -549,6 +555,8 @@ async function runClientSimulation(
       wheelCount: raw.wheelCount,
       p1p1Count: raw.p1p1Count,
       p1p1Seen: raw.p1p1Seen,
+      pxp1Count: raw.pxp1Count,
+      pxp1Seen: raw.pxp1Seen,
       poolIndices: raw.poolIndices,
       p1p1PoolIndices: [],
     });
@@ -962,6 +970,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [selectedCardOracles, setSelectedCardOracles] = useState<string[]>([]);
   const [selectedDeckCardOracles, setSelectedDeckCardOracles] = useState<string[]>([]);
   const [selectedP1P1CardOracles, setSelectedP1P1CardOracles] = useState<string[]>([]);
+  const [selectedFirstColorPickOracles, setSelectedFirstColorPickOracles] = useState<string[]>([]);
+  const [selectedSecondColorPickOracles, setSelectedSecondColorPickOracles] = useState<string[]>([]);
   const [selectedArchetype, setSelectedArchetype] = useState<string | null>(null);
   const [selectedSkeletonId, setSelectedSkeletonId] = useState<number | null>(null);
   const [focusedPoolIndex, setFocusedPoolIndex] = useState<number | null>(null);
@@ -987,6 +997,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     setSelectedCardOracles([]);
     setSelectedDeckCardOracles([]);
     setSelectedP1P1CardOracles([]);
+    setSelectedFirstColorPickOracles([]);
+    setSelectedSecondColorPickOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
     setFocusedPoolIndex(null);
@@ -1046,6 +1058,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
           pool: pool.picks.map((p) => p.oracle_id),
           cardMeta: setup.cardMeta,
           basics: setup.basics,
+          maxSpells: setup.deckbuildSpells,
+          maxLands: setup.deckbuildLands,
         }));
         const decks = await localBatchDeckbuild(entries, batchSize, signal);
         // Collect metadata for any basic oracle IDs that appear in mainboards but aren't in setup.cardMeta
@@ -1184,23 +1198,27 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       selectedCardOracles,
       selectedDeckCardOracles,
       selectedP1P1CardOracles,
+      selectedFirstColorPickOracles,
+      selectedSecondColorPickOracles,
       selectedSkeletonId,
       selectedArchetype,
       focusedPoolIndex,
       focusedPoolViewMode,
     }),
-    [selectedCardOracles, selectedDeckCardOracles, selectedP1P1CardOracles, selectedSkeletonId, selectedArchetype, focusedPoolIndex, focusedPoolViewMode],
+    [selectedCardOracles, selectedDeckCardOracles, selectedP1P1CardOracles, selectedFirstColorPickOracles, selectedSecondColorPickOracles, selectedSkeletonId, selectedArchetype, focusedPoolIndex, focusedPoolViewMode],
   );
   const selectionSetters = useMemo<DraftSimulatorSelectionSetters>(
     () => ({
       setSelectedCardOracles,
       setSelectedDeckCardOracles,
       setSelectedP1P1CardOracles,
+      setSelectedFirstColorPickOracles,
+      setSelectedSecondColorPickOracles,
       setSelectedArchetype,
       setSelectedSkeletonId,
       setFocusedPoolIndex,
     }),
-    [setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedP1P1CardOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex],
+    [setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedP1P1CardOracles, setSelectedFirstColorPickOracles, setSelectedSecondColorPickOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex],
   );
 
   // Top Gwen archetype labels per color pair, for the Deck Color Distribution chart
@@ -1276,6 +1294,10 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     selectedDeckCards,
     selectedP1P1Cards,
     selectedCard,
+    selectedFirstColorPickCards,
+    selectedSecondColorPickCards,
+    firstColorPickCounts,
+    secondColorPickCounts,
     activeFilterPoolIndexSet,
     filteredDecks,
     deckInclusionPct,
@@ -1299,6 +1321,30 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     bottomTab,
     pairingsExcludeLands,
   });
+  const scopedArchetypeDistribution = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const pool of scopedPools) counts.set(pool.archetype, (counts.get(pool.archetype) ?? 0) + 1);
+    const totalPools = scopedPools.length || 1;
+    return [...counts.entries()]
+      .map(([colorPair, count]) => ({ colorPair, count, percentage: count / totalPools }))
+      .sort((a, b) => b.count - a.count);
+  }, [scopedPools]);
+  const scopedColorPairTopArchetypes = useMemo<Map<string, string[]>>(() => {
+    if (!poolArchetypeLabels || !scopedPools.length) return new Map();
+    const buckets = new Map<string, Map<string, number>>();
+    for (const pool of scopedPools) {
+      const label = poolArchetypeLabels.get(pool.poolIndex);
+      if (!label) continue;
+      if (!buckets.has(pool.archetype)) buckets.set(pool.archetype, new Map());
+      const counts = buckets.get(pool.archetype)!;
+      counts.set(label, (counts.get(label) ?? 0) + 1);
+    }
+    const result = new Map<string, string[]>();
+    for (const [colorPair, counts] of buckets) {
+      result.set(colorPair, [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([label]) => label));
+    }
+    return result;
+  }, [poolArchetypeLabels, scopedPools]);
   const {
     selectedPools,
     focusedPool,
@@ -1330,6 +1376,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     downloadDraftBreakdownCsv,
     downloadCardStatsCsv,
     scopedCardStatsTitle,
+    archetypesTitle,
+    deckColorTitle,
     draftBreakdownTitle,
     sideboardTitle,
     pairingsTitle,
@@ -1341,6 +1389,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     selectedCards,
     selectedDeckCards,
     selectedP1P1Cards,
+    selectedFirstColorPickCards,
+    selectedSecondColorPickCards,
     selectedCard,
     activeFilterPoolIndexSet,
     selectedPools,
@@ -1366,6 +1416,22 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
   const handleToggleSelectedP1P1Card = useCallback((oracleId: string) => {
     setSelectedP1P1CardOracles((current) => {
+      if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
+      if (current.length < 2) return [...current, oracleId];
+      return [current[1]!, oracleId];
+    });
+  }, []);
+
+  const handleToggleSelectedFirstColorPick = useCallback((oracleId: string) => {
+    setSelectedFirstColorPickOracles((current) => {
+      if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
+      if (current.length < 2) return [...current, oracleId];
+      return [current[1]!, oracleId];
+    });
+  }, []);
+
+  const handleToggleSelectedSecondColorPick = useCallback((oracleId: string) => {
+    setSelectedSecondColorPickOracles((current) => {
       if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
       if (current.length < 2) return [...current, oracleId];
       return [current[1]!, oracleId];
@@ -1446,13 +1512,15 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       totalPools={displayedPools.length}
       cardStats={displayRunData.cardStats}
       selectedCardOracles={selectedCardOracles}
-      archetypeDistribution={displayedArchetypeDistribution}
+      archetypeDistribution={scopedArchetypeDistribution}
       selectedArchetype={selectedArchetype}
       skeletons={skeletons}
       selectedSkeletonId={selectedSkeletonId}
       onAddCard={handleToggleSelectedCard}
       onAddDeckCard={handleToggleSelectedDeckCard}
       onAddP1P1Card={handleToggleSelectedP1P1Card}
+      onAddFirstColorPick={handleToggleSelectedFirstColorPick}
+      onAddSecondColorPick={handleToggleSelectedSecondColorPick}
       onSelectArchetype={setSelectedArchetype}
       onSelectSkeleton={setSelectedSkeletonId}
       onClearAll={clearActiveFilter}
@@ -1576,11 +1644,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       skeletonColorProfiles={skeletonColorProfiles}
       selectedArchetype={selectedArchetype}
       setSelectedArchetype={setSelectedArchetype}
-      displayedArchetypeDistribution={displayedArchetypeDistribution}
-      colorPairTopArchetypes={colorPairTopArchetypes}
+      displayedArchetypeDistribution={scopedArchetypeDistribution}
+      colorPairTopArchetypes={scopedColorPairTopArchetypes}
       clearActiveFilter={clearActiveFilter}
       activeFilterPoolIndexSet={activeFilterPoolIndexSet}
       hasApproximateFilteredStats={hasApproximateFilteredStats}
+      archetypesTitle={archetypesTitle}
+      deckColorTitle={deckColorTitle}
       scopedCardStatsTitle={scopedCardStatsTitle}
       draftBreakdownTitle={draftBreakdownTitle}
       sideboardTitle={sideboardTitle}
@@ -1594,6 +1664,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       selectedDeckCardOracles={selectedDeckCardOracles}
       handleToggleSelectedP1P1Card={handleToggleSelectedP1P1Card}
       selectedP1P1CardOracles={selectedP1P1CardOracles}
+      handleToggleSelectedFirstColorPick={handleToggleSelectedFirstColorPick}
+      selectedFirstColorPickOracles={selectedFirstColorPickOracles}
+      firstColorPickCounts={firstColorPickCounts}
+      handleToggleSelectedSecondColorPick={handleToggleSelectedSecondColorPick}
+      selectedSecondColorPickOracles={selectedSecondColorPickOracles}
+      secondColorPickCounts={secondColorPickCounts}
       deckCardPoolIndices={deckCardPoolIndices}
       visibleDeckCounts={visibleDeckCounts}
       inDeckOracles={inDeckOracles}

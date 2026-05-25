@@ -121,6 +121,8 @@ const DraftSimulatorFilterBar: React.FC<{
   onAddCard: (oracleId: string) => void;
   onAddDeckCard: (oracleId: string) => void;
   onAddP1P1Card: (oracleId: string) => void;
+  onAddFirstColorPick: (oracleId: string) => void;
+  onAddSecondColorPick: (oracleId: string) => void;
   onSelectArchetype: (archetype: string | null) => void;
   onSelectSkeleton: (clusterId: number | null) => void;
   onClearAll: () => void;
@@ -139,6 +141,8 @@ const DraftSimulatorFilterBar: React.FC<{
   onAddCard,
   onAddDeckCard,
   onAddP1P1Card,
+  onAddFirstColorPick,
+  onAddSecondColorPick,
   onSelectArchetype,
   onSelectSkeleton,
   onClearAll,
@@ -146,7 +150,7 @@ const DraftSimulatorFilterBar: React.FC<{
   renderSkeletonLabel,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [cardFilterMode, setCardFilterMode] = useState<'pool' | 'deck' | 'p1p1'>('deck');
+  const [cardFilterMode, setCardFilterMode] = useState<'pool' | 'deck' | 'p1p1' | 'firstColor' | 'secondColor'>('deck');
   const hasFilters = chips.length > 0;
   const topColorProfiles = archetypeDistribution.slice(0, 8);
   const topSkeletons = skeletons.slice(0, 8);
@@ -213,10 +217,20 @@ const DraftSimulatorFilterBar: React.FC<{
             <CardFilterInput
               cardStats={cardStats}
               selectedCardOracles={selectedCardOracles}
-              onAddCard={cardFilterMode === 'deck' ? onAddDeckCard : cardFilterMode === 'p1p1' ? onAddP1P1Card : onAddCard}
+              onAddCard={
+                cardFilterMode === 'deck'
+                  ? onAddDeckCard
+                  : cardFilterMode === 'p1p1'
+                    ? onAddP1P1Card
+                    : cardFilterMode === 'firstColor'
+                      ? onAddFirstColorPick
+                      : cardFilterMode === 'secondColor'
+                        ? onAddSecondColorPick
+                        : onAddCard
+              }
             />
-            <div className="mt-1.5 flex items-center gap-3">
-              {(['deck', 'pool', 'p1p1'] as const).map((mode) => (
+            <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">
+              {(['deck', 'pool', 'p1p1', 'firstColor', 'secondColor'] as const).map((mode) => (
                 <label key={mode} className="flex items-center gap-1 text-xs text-text-secondary cursor-pointer select-none">
                   <input
                     type="radio"
@@ -226,7 +240,15 @@ const DraftSimulatorFilterBar: React.FC<{
                     onChange={() => setCardFilterMode(mode)}
                     className="accent-link"
                   />
-                  {mode === 'deck' ? 'In deck' : mode === 'p1p1' ? 'P1P1' : 'In pool'}
+                  {mode === 'deck'
+                    ? 'In deck'
+                    : mode === 'p1p1'
+                      ? 'P1P1'
+                      : mode === 'firstColor'
+                        ? 'Color 1'
+                        : mode === 'secondColor'
+                          ? 'Color 2'
+                          : 'In pool'}
                 </label>
               ))}
             </div>

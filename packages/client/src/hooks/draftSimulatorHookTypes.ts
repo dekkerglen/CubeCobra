@@ -35,6 +35,8 @@ export interface DraftSimulatorSelectionState {
   selectedCardOracles: string[];
   selectedDeckCardOracles: string[];
   selectedP1P1CardOracles: string[];
+  selectedFirstColorPickOracles: string[];
+  selectedSecondColorPickOracles: string[];
   selectedSkeletonId: number | null;
   selectedArchetype: string | null;
   focusedPoolIndex: number | null;
@@ -45,6 +47,8 @@ export interface DraftSimulatorSelectionSetters {
   setSelectedCardOracles: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedDeckCardOracles: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedP1P1CardOracles: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedFirstColorPickOracles: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedSecondColorPickOracles: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedArchetype: React.Dispatch<React.SetStateAction<string | null>>;
   setSelectedSkeletonId: React.Dispatch<React.SetStateAction<number | null>>;
   setFocusedPoolIndex: React.Dispatch<React.SetStateAction<number | null>>;

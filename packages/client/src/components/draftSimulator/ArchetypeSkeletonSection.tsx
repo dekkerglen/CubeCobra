@@ -35,8 +35,10 @@ function getSkeletonDisplayName(
 }
 
 export const ArchetypeSkeletonSection: React.FC<{
+  title?: string;
   skeletons: ArchetypeSkeleton[];
   totalPools: number;
+  visiblePoolIndexSet?: Set<number> | null;
   selectedSkeletonId: number | null;
   onSelectSkeleton: (id: number | null) => void;
   clusterThemesByClusterId?: Map<number, string[]>;
@@ -44,10 +46,12 @@ export const ArchetypeSkeletonSection: React.FC<{
   poolArchetypeLabelsLoading?: boolean;
   skeletonColorProfiles?: Map<number, string>;
   excludeManaFixingLands: boolean;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles, excludeManaFixingLands }) => (
+}> = ({ title, skeletons, totalPools, visiblePoolIndexSet, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles, excludeManaFixingLands }) => (
   <ArchetypeSkeletonSectionInner
+    title={title}
     skeletons={skeletons}
     totalPools={totalPools}
+    visiblePoolIndexSet={visiblePoolIndexSet}
     selectedSkeletonId={selectedSkeletonId}
     onSelectSkeleton={onSelectSkeleton}
     clusterThemesByClusterId={clusterThemesByClusterId}
@@ -59,8 +63,10 @@ export const ArchetypeSkeletonSection: React.FC<{
 );
 
 export const ArchetypeSkeletonSectionInner: React.FC<{
+  title?: string;
   skeletons: ArchetypeSkeleton[];
   totalPools: number;
+  visiblePoolIndexSet?: Set<number> | null;
   selectedSkeletonId: number | null;
   onSelectSkeleton: (id: number | null) => void;
   clusterThemesByClusterId?: Map<number, string[]>;
@@ -68,7 +74,20 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
   poolArchetypeLabelsLoading?: boolean;
   skeletonColorProfiles?: Map<number, string>;
   excludeManaFixingLands: boolean;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles = new Map(), excludeManaFixingLands }) => {
+}> = ({ title = 'Archetypes', skeletons, totalPools, visiblePoolIndexSet, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles = new Map(), excludeManaFixingLands }) => {
+  const getVisiblePoolCount = (skeleton: ArchetypeSkeleton) =>
+    visiblePoolIndexSet
+      ? skeleton.poolIndices.filter((poolIndex) => visiblePoolIndexSet.has(poolIndex)).length
+      : skeleton.poolCount;
+
+  const sortedSkeletons = skeletons
+    .filter((skeleton) => getVisiblePoolCount(skeleton) > 0)
+    .sort((a, b) => {
+      const aVisiblePoolCount = getVisiblePoolCount(a);
+      const bVisiblePoolCount = getVisiblePoolCount(b);
+      if (bVisiblePoolCount !== aVisiblePoolCount) return bVisiblePoolCount - aVisiblePoolCount;
+      return b.poolCount - a.poolCount;
+    });
 
   const renderSkeleton = (skeleton: ArchetypeSkeleton, skIdx: number) => {
     // Compute dominant Gwen archetype label for this cluster
@@ -94,6 +113,8 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
       : getSkeletonDisplayName(skeleton, poolArchetypeLabels, skeletonColorProfiles);
     const themes = clusterThemesByClusterId?.get(skeleton.clusterId) ?? [];
     const isSelected = selectedSkeletonId === skeleton.clusterId;
+    const visiblePoolCount = getVisiblePoolCount(skeleton);
+    const visiblePct = totalPools > 0 ? (visiblePoolCount / totalPools) * 100 : 0;
 
     return (
       <div
@@ -113,7 +134,7 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
                 : displayName}
             </span>
             <span className="text-[11px] text-text-secondary">
-              {skeleton.poolCount} seats · {((skeleton.poolCount / totalPools) * 100).toFixed(1)}%
+              {visiblePoolCount} seats · {visiblePct.toFixed(1)}%
             </span>
             {isSelected && (
               <span className="inline-flex items-center bg-link/20 text-link border border-link/30 rounded px-1.5 py-0.5 text-[10px] font-medium">
@@ -156,7 +177,7 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
       <CardHeader>
         <div className="flex flex-col gap-0.5">
           <div className="flex items-center gap-2">
-            <Text semibold>Archetypes</Text>
+            <Text semibold>{title}</Text>
           </div>
           <Text xs className="text-text-secondary">
             Grouped by shared cards
@@ -166,7 +187,7 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
       <CardBody>
         <Flexbox direction="col" gap="3">
           <div className="overflow-hidden rounded-lg border border-border/80 divide-y divide-border/70">
-            {skeletons.map((skeleton, idx) => renderSkeleton(skeleton, idx))}
+            {sortedSkeletons.map((skeleton, idx) => renderSkeleton(skeleton, idx))}
           </div>
         </Flexbox>
       </CardBody>

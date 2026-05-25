@@ -85,6 +85,8 @@ const DraftSimulatorBottomSection: React.FC<{
   clearActiveFilter: () => void;
   activeFilterPoolIndexSet: Set<number> | null;
   hasApproximateFilteredStats: boolean;
+  archetypesTitle: string;
+  deckColorTitle: string;
   scopedCardStatsTitle: string;
   draftBreakdownTitle: string;
   sideboardTitle: string;
@@ -98,6 +100,12 @@ const DraftSimulatorBottomSection: React.FC<{
   selectedDeckCardOracles: string[];
   handleToggleSelectedP1P1Card: (oracleId: string) => void;
   selectedP1P1CardOracles: string[];
+  handleToggleSelectedFirstColorPick: (oracleId: string) => void;
+  selectedFirstColorPickOracles: string[];
+  firstColorPickCounts: Map<string, number>;
+  handleToggleSelectedSecondColorPick: (oracleId: string) => void;
+  selectedSecondColorPickOracles: string[];
+  secondColorPickCounts: Map<string, number>;
   deckCardPoolIndices: Map<string, number[]>;
   visibleDeckCounts: Map<string, number>;
   inDeckOracles: Set<string> | null;
@@ -144,6 +152,8 @@ const DraftSimulatorBottomSection: React.FC<{
   clearActiveFilter,
   activeFilterPoolIndexSet,
   hasApproximateFilteredStats,
+  archetypesTitle,
+  deckColorTitle,
   scopedCardStatsTitle,
   draftBreakdownTitle,
   sideboardTitle,
@@ -157,6 +167,12 @@ const DraftSimulatorBottomSection: React.FC<{
   selectedDeckCardOracles,
   handleToggleSelectedP1P1Card,
   selectedP1P1CardOracles,
+  handleToggleSelectedFirstColorPick,
+  selectedFirstColorPickOracles,
+  firstColorPickCounts,
+  handleToggleSelectedSecondColorPick,
+  selectedSecondColorPickOracles,
+  secondColorPickCounts,
   deckCardPoolIndices,
   visibleDeckCounts,
   inDeckOracles,
@@ -259,8 +275,10 @@ const DraftSimulatorBottomSection: React.FC<{
           </div>
         ) : skeletons.length > 0 ? (
           <ArchetypeSkeletonSection
+            title={archetypesTitle}
             skeletons={skeletons}
-            totalPools={displayRunData.slimPools.length}
+            totalPools={activeFilterPoolIndexSet?.size ?? displayRunData.slimPools.length}
+            visiblePoolIndexSet={activeFilterPoolIndexSet}
             selectedSkeletonId={selectedSkeletonId}
             onSelectSkeleton={(id) => {
               setSelectedSkeletonId(id);
@@ -285,7 +303,7 @@ const DraftSimulatorBottomSection: React.FC<{
           <CardHeader>
             <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2">
               <div>
-                <Text semibold>Deck Color Distribution</Text>
+                <Text semibold>{deckColorTitle}</Text>
                 <div className="mt-0.5">
                   <Text xs className="text-text-secondary">
                     Click a row to filter stats by color profile
@@ -368,6 +386,12 @@ const DraftSimulatorBottomSection: React.FC<{
               selectedDeckCardOracles={selectedDeckCardOracles}
               onSelectP1P1Card={handleToggleSelectedP1P1Card}
               selectedP1P1CardOracles={selectedP1P1CardOracles}
+              onSelectFirstColorPick={handleToggleSelectedFirstColorPick}
+              selectedFirstColorPickOracles={selectedFirstColorPickOracles}
+              firstColorPickCounts={firstColorPickCounts}
+              onSelectSecondColorPick={handleToggleSelectedSecondColorPick}
+              selectedSecondColorPickOracles={selectedSecondColorPickOracles}
+              secondColorPickCounts={secondColorPickCounts}
               visibleDeckCounts={visibleDeckCounts}
               inDeckOracles={inDeckOracles}
               deckInclusionPct={deckInclusionPct}
@@ -422,6 +446,7 @@ const DraftSimulatorBottomSection: React.FC<{
           poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
           clusterThemes={allPoolClusterThemes}
           clusterTagAllowlist={allPoolTagAllowlist}
+          renderAutocardNameLink={renderAutocardNameLink}
         />
       </div>
                 )}

@@ -15,13 +15,15 @@ import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
 import { RowColorShare, COLOR_KEYS, MANA_CURVE_BUCKETS, MTG_COLORS } from './SimulatorCharts';
 import { CMC_COLS } from './SimDeckView';
+import { getColorPathAnchorPicks } from '../../utils/draftSimulatorColorPath';
 import { archetypeFullName } from '../../utils/draftSimulatorThemes';
 import { getPoolMainCards, inferDraftThemes } from '../../utils/draftSimulatorThemes';
 
 const POOL_PAGE_SIZE = 10;
 
-type DraftBreakdownSortKey = 'draft' | 'seat' | 'color' | 'creatures' | 'avgMv';
+type DraftBreakdownSortKey = 'draft' | 'seat' | 'color' | 'creatures' | 'avgMv' | 'firstColor' | 'secondColor';
 type DeckLocationFilter = 'all' | 'deck' | 'sideboard';
+type DraftBreakdownViewMode = 'deck' | 'draft';
 
 interface DraftBreakdownRowSummary {
   pool: SimulatedPool;
@@ -29,6 +31,9 @@ interface DraftBreakdownRowSummary {
   colors: string;
   themes: string[];
   highlights: SimulatedPickCard[];
+  openingPicks: SimulatedPickCard[];
+  firstColorAnchorPick: SimulatedPickCard | null;
+  secondColorBridgePick: SimulatedPickCard | null;
   creatureCount: number;
   nonCreatureCount: number;
   landCount: number;
@@ -38,7 +43,7 @@ interface DraftBreakdownRowSummary {
 }
 
 function getColorProfileCodes(colorPair: string): string[] {
-  const letters = colorPair.split('').filter((c) => c in MTG_COLORS && c !== 'C' && c !== 'M');
+  const letters = colorPair.split('').filter((c) => MTG_COLORS[c] !== undefined && c !== 'C' && c !== 'M');
   return letters.length === 0 ? ['C'] : letters;
 }
 
@@ -128,12 +133,16 @@ export function buildDraftBreakdownRowSummary(
   tagAllowlist?: Set<string>,
 ): DraftBreakdownRowSummary {
   const composition = getDraftComposition(pool, deck, cardMeta);
+  const { firstColorAnchorPick, secondColorBridgePick } = getColorPathAnchorPicks(pool, deck, cardMeta);
   return {
     pool,
     deck,
     colors: pool.archetype,
     themes: inferDraftThemes(pool, deck, cardMeta, clusterThemes, tagAllowlist),
     highlights: getDraftHighlights(pool, deck, cardMeta),
+    openingPicks: pool.picks.slice(0, 5),
+    firstColorAnchorPick,
+    secondColorBridgePick,
     ...composition,
   };
 }
@@ -159,6 +168,40 @@ export const ColorPips: React.FC<{ colors: string }> = React.memo(({ colors }) =
     ))}
   </span>
 ));
+
+const PickColorSpectrum: React.FC<{ picks: SimulatedPickCard[]; cardMeta: Record<string, CardMeta> }> = ({ picks, cardMeta }) => {
+  const getPickColors = (oracleId: string): string[] => {
+    const identity = (cardMeta[oracleId]?.colorIdentity ?? []).filter((color) => MTG_COLORS[color] !== undefined && color !== 'M');
+    return identity.length > 0 ? identity : ['C'];
+  };
+
+  const getPickBackground = (oracleId: string): string => {
+    const colors = getPickColors(oracleId).map((color) => MTG_COLORS[color]?.bg ?? MTG_COLORS.C!.bg);
+    if (colors.length === 1) return colors[0]!;
+    const stopStep = colors.length > 1 ? 100 / (colors.length - 1) : 100;
+    const stops = colors.map((color, index) => `${color} ${Math.round(index * stopStep)}%`).join(', ');
+    return `linear-gradient(180deg, ${stops})`;
+  };
+
+  if (picks.length === 0) return null;
+
+  return (
+    <div className="flex w-full overflow-hidden rounded border border-black/10 bg-bg-accent" style={{ height: 44 }}>
+      {picks.map((pick, index) => (
+        <div
+          key={`${pick.oracle_id}-${pick.packNumber}-${pick.pickNumber}-${index}`}
+          className="h-full"
+          style={{
+            width: `${100 / picks.length}%`,
+            background: getPickBackground(pick.oracle_id),
+            boxShadow: index > 0 ? 'inset 1px 0 0 rgba(15, 23, 42, 0.16)' : undefined,
+          }}
+          title={`P${pick.packNumber + 1}P${pick.pickNumber} · ${pick.name}`}
+        />
+      ))}
+    </div>
+  );
+};
 
 export const TinyCurve: React.FC<{ creatureCounts: number[]; nonCreatureCounts: number[] }> = ({
   creatureCounts,
@@ -222,6 +265,7 @@ const DraftBreakdownTable: React.FC<{
   poolArchetypeLabelsLoading?: boolean;
   clusterThemes?: Map<number, { tag: string; lift: number }[]>;
   clusterTagAllowlist?: Set<string>;
+  renderAutocardNameLink?: (oracleId: string, name: string, imageUrl?: string) => React.ReactNode;
 }> = ({
   pools,
   deckBuilds,
@@ -237,6 +281,7 @@ const DraftBreakdownTable: React.FC<{
   poolArchetypeLabelsLoading = false,
   clusterThemes: clusterThemesProp,
   clusterTagAllowlist: clusterTagAllowlistProp,
+  renderAutocardNameLink,
 }) => {
   const hasDeck = !!deckBuilds && deckBuilds.length > 0;
   const [selectedPool, setSelectedPool] = useState<number | null>(pools[0]?.poolIndex ?? null);
@@ -247,6 +292,7 @@ const DraftBreakdownTable: React.FC<{
   const [seatFilter, setSeatFilter] = useState('');
   const [draftFilter, setDraftFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState<DeckLocationFilter>('all');
+  const [viewMode, setViewMode] = useState<DraftBreakdownViewMode>('deck');
   const [poolPage, setPoolPage] = useState(1);
 
   // Use parent-provided themes (computed over all pools) when available; avoids filtered-view degradation.
@@ -295,6 +341,12 @@ const DraftBreakdownTable: React.FC<{
     } else if (sortKey === 'creatures') {
       av = a.creatureCount;
       bv = b.creatureCount;
+    } else if (sortKey === 'firstColor') {
+      av = a.firstColorAnchorPick?.name ?? '￿';
+      bv = b.firstColorAnchorPick?.name ?? '￿';
+    } else if (sortKey === 'secondColor') {
+      av = a.secondColorBridgePick?.name ?? '￿';
+      bv = b.secondColorBridgePick?.name ?? '￿';
     } else {
       av = a.avgMv;
       bv = b.avgMv;
@@ -347,6 +399,26 @@ const DraftBreakdownTable: React.FC<{
       <div>
       {/* Toolbar — visually attached to the table */}
       <div className="flex flex-wrap items-center gap-2 rounded-t-lg border border-border bg-bg-accent px-3 py-2">
+        <div className="flex items-center gap-1 mr-2">
+          {([
+            ['deck', 'Deck View'],
+            ['draft', 'Draft View'],
+          ] as const).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              onClick={() => setViewMode(value)}
+              className={[
+                'px-2 py-1 rounded text-xs font-medium border',
+                viewMode === value
+                  ? 'bg-link text-white border-link'
+                  : 'bg-bg text-text-secondary border-border hover:bg-bg-active',
+              ].join(' ')}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
         {showLocationFilter && hasDeck && (
           <div className="flex items-center gap-1">
             {(['all', 'deck', 'sideboard'] as const).map((v) => (
@@ -416,6 +488,15 @@ const DraftBreakdownTable: React.FC<{
             .slice(0, 5)
             .filter((c) => c.imageUrl)
             .map((c) => ({ ...c, imageUrl: c.imageUrl.replace('/normal/', '/art_crop/') }));
+          const openingPickImages = summary.openingPicks
+            .filter((c) => c.imageUrl)
+            .map((c) => ({ ...c, imageUrl: c.imageUrl.replace('/normal/', '/art_crop/') }));
+          const firstColorAnchorImage = summary.firstColorAnchorPick?.imageUrl
+            ? { ...summary.firstColorAnchorPick, imageUrl: summary.firstColorAnchorPick.imageUrl.replace('/normal/', '/art_crop/') }
+            : null;
+          const secondColorBridgeImage = summary.secondColorBridgePick?.imageUrl
+            ? { ...summary.secondColorBridgePick, imageUrl: summary.secondColorBridgePick.imageUrl.replace('/normal/', '/art_crop/') }
+            : null;
           return (
             <button
               key={summary.pool.poolIndex}
@@ -458,7 +539,32 @@ const DraftBreakdownTable: React.FC<{
                     )}
                   </div>
                 </Flexbox>
-                {summary.themes.length > 0 && (
+                {viewMode === 'draft' ? (
+                  <div className="flex flex-col gap-2">
+                    <PickColorSpectrum picks={summary.pool.picks} cardMeta={cardMeta} />
+                    <div className="flex items-start gap-2 flex-wrap">
+                      {firstColorAnchorImage && (
+                        <div key={firstColorAnchorImage.oracle_id} className="flex-shrink-0 overflow-hidden rounded" style={{ width: 48, height: 48 }} title={`P${firstColorAnchorImage.packNumber + 1}P${firstColorAnchorImage.pickNumber} · ${firstColorAnchorImage.name}`}>
+                          <img src={firstColorAnchorImage.imageUrl} alt={firstColorAnchorImage.name} className="w-full h-full object-cover object-center" />
+                        </div>
+                      )}
+                      {secondColorBridgeImage && (
+                        <div key={secondColorBridgeImage.oracle_id} className="flex-shrink-0 overflow-hidden rounded" style={{ width: 48, height: 48 }} title={`P${secondColorBridgeImage.packNumber + 1}P${secondColorBridgeImage.pickNumber} · ${secondColorBridgeImage.name}`}>
+                          <img src={secondColorBridgeImage.imageUrl} alt={secondColorBridgeImage.name} className="w-full h-full object-cover object-center" />
+                        </div>
+                      )}
+                      {openingPickImages.length > 0 && (
+                        <div className="flex flex-wrap gap-0.5">
+                          {openingPickImages.map((c, idx) => (
+                            <div key={`${c.oracle_id}-${idx}`} className="flex-shrink-0 overflow-hidden rounded" style={{ width: 48, height: 48 }} title={`P${c.packNumber + 1}P${c.pickNumber} · ${c.name}`}>
+                              <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover object-center" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ) : summary.themes.length > 0 && (
                   <div className="flex flex-wrap gap-1">
                     {summary.themes.map((theme) => (
                       <span key={theme} className="rounded bg-bg-accent px-1.5 py-0.5 text-[11px] text-text-secondary">
@@ -476,15 +582,25 @@ const DraftBreakdownTable: React.FC<{
       {/* Desktop table */}
       <div className="hidden overflow-x-auto rounded-b border border-t-0 border-border bg-bg md:block">
         <table className="min-w-full text-base" style={{ tableLayout: 'fixed' }}>
-          <colgroup>
-            <col style={{ width: 150 }} />
-            <col style={{ width: 200 }} />
-            <col style={{ width: 180 }} />
-            <col style={{ width: 340 }} />
-
-            <col style={{ width: 200 }} />
-            <col style={{ width: 160 }} />
-            <col />
+            <colgroup>
+              <col style={{ width: 150 }} />
+              <col style={{ width: 200 }} />
+              {viewMode === 'deck' ? (
+              <>
+                <col style={{ width: 180 }} />
+                <col style={{ width: 340 }} />
+                <col style={{ width: 200 }} />
+                <col style={{ width: 160 }} />
+                <col />
+              </>
+            ) : (
+              <>
+                <col style={{ width: 320 }} />
+                <col style={{ width: 220 }} />
+                <col style={{ width: 220 }} />
+                <col />
+              </>
+            )}
           </colgroup>
           <thead className="sticky top-0 z-10">
             <tr className="border-b-2 border-border bg-bg-accent">
@@ -492,17 +608,32 @@ const DraftBreakdownTable: React.FC<{
               <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
                 Archetype
               </th>
-              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
-                Color share
-              </th>
-              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
-                Theme
-              </th>
-              {renderSortHeader('Composition', 'creatures')}
-              {renderSortHeader('Curve', 'avgMv')}
-              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
-                Key cards
-              </th>
+              {viewMode === 'deck' ? (
+                <>
+                  <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
+                    Color share
+                  </th>
+                  <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
+                    Theme
+                  </th>
+                  {renderSortHeader('Composition', 'creatures')}
+                  {renderSortHeader('Curve', 'avgMv')}
+                  <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
+                    Key cards
+                  </th>
+                </>
+              ) : (
+                <>
+                  <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary" style={{ width: '40%' }}>
+                    Draft colors
+                  </th>
+                  {renderSortHeader('Color 1 First Pick', 'firstColor', 'text-left align-top')}
+                  {renderSortHeader('Color 2 First Pick', 'secondColor', 'text-left align-top')}
+                  <th scope="col" className="px-3 py-2 text-left align-top text-xs font-semibold text-text-secondary">
+                    First picks
+                  </th>
+                </>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-border/50">
@@ -512,6 +643,11 @@ const DraftBreakdownTable: React.FC<{
                 .slice(0, 8)
                 .filter((c) => c.imageUrl)
                 .map((c) => ({ ...c, imageUrl: c.imageUrl.replace('/normal/', '/art_crop/') }));
+              const openingPickImages = summary.openingPicks
+                .filter((c) => c.imageUrl)
+                .map((c) => ({ ...c, imageUrl: c.imageUrl.replace('/normal/', '/art_crop/') }));
+              const firstColorAnchorArt = summary.firstColorAnchorPick?.imageUrl?.replace('/normal/', '/art_crop/') ?? '';
+              const secondColorBridgeArt = summary.secondColorBridgePick?.imageUrl?.replace('/normal/', '/art_crop/') ?? '';
               return (
                 <tr
                   key={summary.pool.poolIndex}
@@ -540,65 +676,160 @@ const DraftBreakdownTable: React.FC<{
                       <span className="inline-block h-3 w-28 animate-pulse rounded bg-bg-accent" />
                     ) : null}
                   </td>
-                  <td className="px-3 py-4">
-                    <RowColorShare deck={summary.deck} cardMeta={cardMeta} />
-                  </td>
-                  <td className="px-3 py-4">
-                    <div className="flex flex-wrap gap-1">
-                      {summary.themes.map((theme) => (
-                        <span
-                          key={theme}
-                          className="inline-flex items-center rounded bg-bg-accent px-2 text-xs font-semibold text-text-secondary"
-                          style={{ height: 22 }}
-                        >
-                          {theme}
-                        </span>
-                      ))}
-                    </div>
-                  </td>
-                  <td className="px-3 py-4">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums" style={{ height: 22, fontSize: 12, background: '#dbeafe', color: '#3b82f6' }}>
-                        <span className="font-bold" style={{ color: '#1d4ed8' }}>{summary.creatureCount}</span>
-                        <span style={{ opacity: 0.75 }}>C</span>
-                      </span>
-                      <span className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums" style={{ height: 22, fontSize: 12, background: '#f1f5f9', color: '#64748b' }}>
-                        <span className="font-bold" style={{ color: '#334155' }}>{summary.nonCreatureCount}</span>
-                        <span style={{ opacity: 0.75 }}>NC</span>
-                      </span>
-                      {summary.landCount > 0 && (
-                        <span className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums" style={{ height: 22, fontSize: 12, background: '#fef3c7', color: '#92400e' }}>
-                          <span className="font-bold" style={{ color: '#78350f' }}>{summary.landCount}</span>
-                          <span style={{ opacity: 0.75 }}>L</span>
-                        </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-3 py-4">
-                    <TinyCurve
-                      creatureCounts={summary.creatureCurveCounts}
-                      nonCreatureCounts={summary.nonCreatureCurveCounts}
-                    />
-                  </td>
-                  <td className="py-1.5 pr-2 pl-6">
-                    <div className="flex gap-0.5">
-                      {artImages.slice(0, 6).map((c) => (
-                        <div
-                          key={c.oracle_id}
-                          className="flex-shrink-0 overflow-hidden"
-                          style={{
-                            width: 52,
-                            height: 52,
-                            borderRadius: 7,
-                            border: '1px solid rgba(17,24,39,0.08)',
-                          }}
-                          title={c.name}
-                        >
-                          <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover object-center" />
+                  {viewMode === 'deck' ? (
+                    <>
+                      <td className="px-3 py-4">
+                        <RowColorShare deck={summary.deck} cardMeta={cardMeta} />
+                      </td>
+                      <td className="px-3 py-4">
+                        <div className="flex flex-wrap gap-1">
+                          {summary.themes.map((theme) => (
+                            <span
+                              key={theme}
+                              className="inline-flex items-center rounded bg-bg-accent px-2 text-xs font-semibold text-text-secondary"
+                              style={{ height: 22 }}
+                            >
+                              {theme}
+                            </span>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </td>
+                      </td>
+                      <td className="px-3 py-4">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums" style={{ height: 22, fontSize: 12, background: '#dbeafe', color: '#3b82f6' }}>
+                            <span className="font-bold" style={{ color: '#1d4ed8' }}>{summary.creatureCount}</span>
+                            <span style={{ opacity: 0.75 }}>C</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums" style={{ height: 22, fontSize: 12, background: '#f1f5f9', color: '#64748b' }}>
+                            <span className="font-bold" style={{ color: '#334155' }}>{summary.nonCreatureCount}</span>
+                            <span style={{ opacity: 0.75 }}>NC</span>
+                          </span>
+                          {summary.landCount > 0 && (
+                            <span className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums" style={{ height: 22, fontSize: 12, background: '#fef3c7', color: '#92400e' }}>
+                              <span className="font-bold" style={{ color: '#78350f' }}>{summary.landCount}</span>
+                              <span style={{ opacity: 0.75 }}>L</span>
+                            </span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-3 py-4">
+                        <TinyCurve
+                          creatureCounts={summary.creatureCurveCounts}
+                          nonCreatureCounts={summary.nonCreatureCurveCounts}
+                        />
+                      </td>
+                      <td className="py-1.5 pr-2 pl-6">
+                        <div className="flex gap-0.5">
+                          {artImages.slice(0, 6).map((c) => (
+                            <div
+                              key={c.oracle_id}
+                              className="flex-shrink-0 overflow-hidden"
+                              style={{
+                                width: 52,
+                                height: 52,
+                                borderRadius: 7,
+                                border: '1px solid rgba(17,24,39,0.08)',
+                              }}
+                              title={c.name}
+                            >
+                              <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover object-center" />
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                    </>
+                  ) : (
+                    <>
+                      <td className="px-3 py-4" style={{ width: '40%' }}>
+                        <PickColorSpectrum picks={summary.pool.picks} cardMeta={cardMeta} />
+                      </td>
+                      <td className="px-3 py-4">
+                        {summary.firstColorAnchorPick ? (
+                          <div
+                            className="flex items-center gap-2 min-w-0"
+                            title={`P${summary.firstColorAnchorPick.packNumber + 1}P${summary.firstColorAnchorPick.pickNumber}`}
+                          >
+                            {firstColorAnchorArt && (
+                              <div
+                                className="flex-shrink-0 overflow-hidden"
+                                style={{ width: 52, height: 52, borderRadius: 7, border: '1px solid rgba(17,24,39,0.08)' }}
+                              >
+                                <img src={firstColorAnchorArt} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </div>
+                            )}
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-sm font-medium text-text truncate">
+                                {renderAutocardNameLink
+                                  ? renderAutocardNameLink(
+                                      summary.firstColorAnchorPick.oracle_id,
+                                      summary.firstColorAnchorPick.name,
+                                      summary.firstColorAnchorPick.imageUrl,
+                                    )
+                                  : summary.firstColorAnchorPick.name}
+                              </span>
+                              <span className="text-xs text-text-secondary tabular-nums">
+                                P{summary.firstColorAnchorPick.packNumber + 1}P{summary.firstColorAnchorPick.pickNumber}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-text-secondary">—</span>
+                        )}
+                      </td>
+                      <td className="px-3 py-4">
+                        {summary.secondColorBridgePick ? (
+                          <div
+                            className="flex items-center gap-2 min-w-0"
+                            title={`P${summary.secondColorBridgePick.packNumber + 1}P${summary.secondColorBridgePick.pickNumber}`}
+                          >
+                            {secondColorBridgeArt && (
+                              <div
+                                className="flex-shrink-0 overflow-hidden"
+                                style={{ width: 52, height: 52, borderRadius: 7, border: '1px solid rgba(17,24,39,0.08)' }}
+                              >
+                                <img src={secondColorBridgeArt} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              </div>
+                            )}
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-sm font-medium text-text truncate">
+                                {renderAutocardNameLink
+                                  ? renderAutocardNameLink(
+                                      summary.secondColorBridgePick.oracle_id,
+                                      summary.secondColorBridgePick.name,
+                                      summary.secondColorBridgePick.imageUrl,
+                                    )
+                                  : summary.secondColorBridgePick.name}
+                              </span>
+                              <span className="text-xs text-text-secondary tabular-nums">
+                                P{summary.secondColorBridgePick.packNumber + 1}P{summary.secondColorBridgePick.pickNumber}
+                              </span>
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-xs text-text-secondary">—</span>
+                        )}
+                      </td>
+                      <td className="py-1.5 pr-2 pl-3">
+                        <div className="flex gap-0.5">
+                          {openingPickImages.map((c, idx) => (
+                            <div
+                              key={`${c.oracle_id}-${idx}`}
+                              className="flex-shrink-0 overflow-hidden"
+                              style={{
+                                width: 52,
+                                height: 52,
+                                borderRadius: 7,
+                                border: '1px solid rgba(17,24,39,0.08)',
+                              }}
+                              title={`P${c.packNumber + 1}P${c.pickNumber} · ${c.name}`}
+                            >
+                              <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover object-center" />
+                            </div>
+                          ))}
+                        </div>
+                      </td>
+                    </>
+                  )}
                 </tr>
               );
             })}

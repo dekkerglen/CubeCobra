@@ -25,6 +25,8 @@ interface UseDraftSimulatorPresentationArgs {
   selectedCards: CardStats[];
   selectedDeckCards: CardStats[];
   selectedP1P1Cards: CardStats[];
+  selectedFirstColorPickCards: CardStats[];
+  selectedSecondColorPickCards: CardStats[];
   selectedCard: CardStats | null;
   activeFilterPoolIndexSet: Set<number> | null;
   selectedPools: DraftSimulatorDerivedData['displayedPools'];
@@ -45,10 +47,21 @@ interface UseDraftSimulatorPresentationArgs {
 export default function useDraftSimulatorPresentation({
   data: { displayRunData, activeDecks, displayedPools, skeletons, poolArchetypeLabels, skeletonColorProfiles },
   state: { selectedSkeletonId, selectedArchetype, focusedPoolIndex },
-  setters: { setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedP1P1CardOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex },
+  setters: {
+    setSelectedCardOracles,
+    setSelectedDeckCardOracles,
+    setSelectedP1P1CardOracles,
+    setSelectedFirstColorPickOracles,
+    setSelectedSecondColorPickOracles,
+    setSelectedArchetype,
+    setSelectedSkeletonId,
+    setFocusedPoolIndex,
+  },
   selectedCards,
   selectedDeckCards,
   selectedP1P1Cards,
+  selectedFirstColorPickCards,
+  selectedSecondColorPickCards,
   selectedCard,
   activeFilterPoolIndexSet,
   selectedPools,
@@ -110,6 +123,24 @@ export default function useDraftSimulatorPresentation({
           setSelectedP1P1CardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
       });
     }
+    for (const selectedCardEntry of selectedFirstColorPickCards) {
+      chips.push({
+        key: `first-color-${selectedCardEntry.oracle_id}`,
+        label: selectedCardEntry.name,
+        detail: 'Color 1 Pick',
+        onClear: () =>
+          setSelectedFirstColorPickOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
+      });
+    }
+    for (const selectedCardEntry of selectedSecondColorPickCards) {
+      chips.push({
+        key: `second-color-${selectedCardEntry.oracle_id}`,
+        label: selectedCardEntry.name,
+        detail: 'Color 2 Pick',
+        onClear: () =>
+          setSelectedSecondColorPickOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
+      });
+    }
     if (selectedSkeletonId !== null) {
       const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
       if (sk) {
@@ -145,6 +176,8 @@ export default function useDraftSimulatorPresentation({
     selectedCards,
     selectedDeckCards,
     selectedP1P1Cards,
+    selectedFirstColorPickCards,
+    selectedSecondColorPickCards,
     selectedSkeletonId,
     selectedArchetype,
     focusedPoolIndex,
@@ -156,6 +189,8 @@ export default function useDraftSimulatorPresentation({
     setSelectedCardOracles,
     setSelectedDeckCardOracles,
     setSelectedP1P1CardOracles,
+    setSelectedFirstColorPickOracles,
+    setSelectedSecondColorPickOracles,
     setSelectedSkeletonId,
     setFocusedPoolIndex,
     getSkeletonDisplayName,
@@ -208,10 +243,21 @@ export default function useDraftSimulatorPresentation({
     setSelectedCardOracles([]);
     setSelectedDeckCardOracles([]);
     setSelectedP1P1CardOracles([]);
+    setSelectedFirstColorPickOracles([]);
+    setSelectedSecondColorPickOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
     setFocusedPoolIndex(null);
-  }, [setFocusedPoolIndex, setSelectedArchetype, setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedP1P1CardOracles, setSelectedSkeletonId]);
+  }, [
+    setFocusedPoolIndex,
+    setSelectedArchetype,
+    setSelectedCardOracles,
+    setSelectedDeckCardOracles,
+    setSelectedP1P1CardOracles,
+    setSelectedFirstColorPickOracles,
+    setSelectedSecondColorPickOracles,
+    setSelectedSkeletonId,
+  ]);
 
   const downloadDraftBreakdownCsv = useCallback((pools: DraftSimulatorDerivedData['displayedPools'], label: string) => {
     if (!displayRunData) return;
@@ -294,23 +340,26 @@ export default function useDraftSimulatorPresentation({
 
     const poolNames = joinNames(selectedCards.map((c) => c.name));
     const deckNames = joinNames(selectedDeckCards.map((c) => c.name));
+    const p1p1Names = joinNames(selectedP1P1Cards.map((c) => c.name));
 
-    if (!scopeLabel && !poolNames && !deckNames) return null;
-    if (!poolNames && !deckNames) return `for ${scopeLabel ? `${scopeLabel} Draft Pools` : 'Draft Pools'}`;
+    if (!scopeLabel && !poolNames && !deckNames && !p1p1Names) return null;
+    if (!poolNames && !deckNames && !p1p1Names) return `for ${scopeLabel ? `${scopeLabel} Draft Pools` : 'Draft Pools'}`;
 
     // When only deck filters are active use "Draft Decks", otherwise "Draft Pools"
-    const poolsWord = poolNames ? 'Pools' : 'Decks';
+    const poolsWord = poolNames || p1p1Names ? 'Pools' : 'Decks';
     const base = scopeLabel ? `${scopeLabel} Draft ${poolsWord}` : `Draft ${poolsWord}`;
 
     const parts: string[] = [];
     if (poolNames) parts.push(`that include ${poolNames}`);
     if (deckNames) parts.push(`${poolNames ? 'Decks ' : ''}that include ${deckNames}`);
+    if (p1p1Names) parts.push(`that P1P1'd ${p1p1Names}`);
     return `for ${base} ${parts.join(' and ')}`;
   }, [
     selectedSkeletonId,
     selectedArchetype,
     selectedCards,
     selectedDeckCards,
+    selectedP1P1Cards,
     skeletons,
     poolArchetypeLabels,
     skeletonColorProfiles,
@@ -323,6 +372,14 @@ export default function useDraftSimulatorPresentation({
   );
   const draftBreakdownTitle = useMemo(
     () => `Draft Breakdown${filteredPoolScopeSuffix ? ` ${filteredPoolScopeSuffix}` : ''}`,
+    [filteredPoolScopeSuffix],
+  );
+  const archetypesTitle = useMemo(
+    () => `Archetypes${filteredPoolScopeSuffix ? ` ${filteredPoolScopeSuffix}` : ''}`,
+    [filteredPoolScopeSuffix],
+  );
+  const deckColorTitle = useMemo(
+    () => `Deck Color Distribution${filteredPoolScopeSuffix ? ` ${filteredPoolScopeSuffix}` : ''}`,
     [filteredPoolScopeSuffix],
   );
   const sideboardTitle = useMemo(
@@ -347,6 +404,8 @@ export default function useDraftSimulatorPresentation({
     downloadCardStatsCsv,
     cardStatsTitle,
     scopedCardStatsTitle,
+    archetypesTitle,
+    deckColorTitle,
     draftBreakdownTitle,
     sideboardTitle,
     pairingsTitle,

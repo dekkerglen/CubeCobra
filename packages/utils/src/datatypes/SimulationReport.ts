@@ -225,4 +225,7 @@ export interface SimulationSetupResponse {
   numSeats: number;
   // Cube's basic land options for client-side deckbuilding
   basics: BasicLandInfo[];
+  // Cube's custom deck size settings (defaults: 23 spells + 17 lands)
+  deckbuildSpells?: number;
+  deckbuildLands?: number;
 }
