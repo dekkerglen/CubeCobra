@@ -566,7 +566,7 @@ function convertCard(
   newcard.promo_types = card.promo_types || undefined;
 
   newcard.digital = card.digital;
-  newcard.isToken = card.layout === 'token';
+  newcard.isToken = card.layout === 'token' || card.layout === 'double_faced_token';
   newcard.border_color = card.border_color as 'black' | 'white' | 'silver' | 'gold' | undefined;
   newcard.name = name;
   newcard.name_lower = cardutil.normalizeName(name);

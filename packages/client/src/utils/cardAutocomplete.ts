@@ -21,10 +21,10 @@ const getJson = async (url: string, signal?: AbortSignal): Promise<any | null> =
 // Global card-name autocomplete. `full` switches between bare names and
 // name-with-set strings (printing-specific suggestions).
 export const cardNameMatches =
-  (full: boolean = false): MatchFetcher =>
+  (full: boolean = false, includeExtras: boolean = false): MatchFetcher =>
   async (query, signal) => {
     const json = await getJson(
-      `/tool/api/cardnames?q=${encodeURIComponent(query)}&full=${full ? '1' : '0'}`,
+      `/tool/api/cardnames?q=${encodeURIComponent(query)}&full=${full ? '1' : '0'}&extras=${includeExtras ? '1' : '0'}`,
       signal,
     );
     return json?.success === 'true' ? json.names : [];

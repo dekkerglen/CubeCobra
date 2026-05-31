@@ -366,16 +366,16 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                                 // Special handling for List sub-items (view navigation)
                                 if (item.key === 'list' && !subItem.href) {
                                   const viewKey = subItem.key;
-                                  const listHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.label}`;
+                                  const listHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
 
                                   // View is active if activeView matches
-                                  const isActive = activeLink === 'list' && activeView === subItem.label;
+                                  const isActive = activeLink === 'list' && activeView === subItem.key;
 
                                   // If already on list page, change view; otherwise navigate
                                   const handleClick = (e: React.MouseEvent) => {
                                     if (activeLink === 'list') {
                                       e.preventDefault();
-                                      setActiveView(subItem.label);
+                                      setActiveView(subItem.key);
                                     }
                                   };
 

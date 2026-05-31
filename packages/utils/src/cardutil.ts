@@ -659,6 +659,7 @@ export function reasonableCard(card: CardDetailsType): boolean {
     card.tcgplayer_id !== undefined &&
     card.collector_number.indexOf('★') === -1 &&
     card.layout !== 'art_series' &&
+    card.layout !== 'double_faced_token' &&
     !card?.hasFlavorName
   );
 }

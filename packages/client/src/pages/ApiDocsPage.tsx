@@ -267,6 +267,11 @@ const ApiDocsPage: React.FC = () => (
                   <Param name=":id" type="path" required>
                     Cube UUID or short ID / custom slug
                   </Param>
+                  <Param name="date" type="query">
+                    Unix timestamp in milliseconds. When provided, returns the cube as it was at the nearest
+                    changelog at or before this date. Response includes a <InlineCode>changelog</InlineCode> field
+                    with the resolved changelog ID and date.
+                  </Param>
                 </>
               }
               responseExample={`{
@@ -292,6 +297,7 @@ const ApiDocsPage: React.FC = () => (
     ],
     "maybeboard": [ ... ]
   },
+  "changelog": { "id": "abc123", "date": 1710460800000 },
   "maybe": [ ... ],
   "tag_colors": [ ... ],
   "default_sorts": ["Color Category", "Types-Multicolor", "Mana Value", "Alphabetical"]
@@ -299,7 +305,9 @@ const ApiDocsPage: React.FC = () => (
               notes={
                 <Text sm className="text-text-secondary">
                   Cards are sorted by the default sort (Color Category → Types-Multicolor → Mana Value → Alphabetical).
-                  All boards are always returned regardless of cube visibility settings.
+                  All boards are always returned regardless of cube visibility settings. The{' '}
+                  <InlineCode>changelog</InlineCode> field is only present when the <InlineCode>date</InlineCode>{' '}
+                  query parameter is used.
                 </Text>
               }
             />
@@ -315,6 +323,10 @@ const ApiDocsPage: React.FC = () => (
                 <>
                   <Param name=":id" type="path" required>
                     Cube UUID or short ID
+                  </Param>
+                  <Param name="date" type="query">
+                    Unix timestamp in milliseconds. When provided, returns card names from the cube at the nearest
+                    changelog at or before this date.
                   </Param>
                 </>
               }

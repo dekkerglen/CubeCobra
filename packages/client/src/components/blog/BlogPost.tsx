@@ -1,6 +1,6 @@
 import React, { useContext } from 'react';
 
-import { PencilIcon, TrashIcon } from '@primer/octicons-react';
+import { EyeIcon, PencilIcon, TrashIcon } from '@primer/octicons-react';
 import BlogPostData from '@utils/datatypes/BlogPost';
 import User from '@utils/datatypes/User';
 
@@ -10,6 +10,7 @@ import Datetime from 'components/base/Datetime';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
+import Tooltip from 'components/base/Tooltip';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
 import CommentsSection from 'components/comments/CommentsSection';
 import EditBlogModal from 'components/EditBlogModal';
@@ -46,6 +47,15 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false }
               </Flexbox>
             </Text>
             <Flexbox direction="row" gap="2">
+              {post.changelist && (
+                <Tooltip text="View cube at this point in time" wrapperTag="span">
+                  <Link href={`/cube/changelog/${post.cube}/${post.changelist}/list`}>
+                    <Button color="accent">
+                      <EyeIcon size={16} />
+                    </Button>
+                  </Link>
+                </Tooltip>
+              )}
               {canEdit && (
                 <>
                   <EditBlogButton color="primary" modalprops={{ cubeID: post.cube, post }}>

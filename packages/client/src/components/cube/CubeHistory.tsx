@@ -1,10 +1,15 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
+import { EyeIcon } from '@primer/octicons-react';
+
+import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
+import Input from 'components/base/Input';
 import Link from 'components/base/Link';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
+import Tooltip from 'components/base/Tooltip';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
@@ -91,6 +96,17 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
     setLoading(false);
   }, [currentLastKey, safeItems, page, csrfFetch]);
 
+  const [dateValue, setDateValue] = useState(() => {
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+  });
+
+  const handleDateJump = useCallback(() => {
+    if (!dateValue || !cube?.id) return;
+    const dateMs = new Date(dateValue).getTime();
+    window.location.href = `/cube/changelog/${cube.id}/at?date=${dateMs}`;
+  }, [dateValue, cube?.id]);
+
   const pager = (
     <Pagination
       count={pageCount}
@@ -121,6 +137,21 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
 
   return (
     <Flexbox direction="col" gap="2">
+      <Flexbox direction="row" justify="end" alignItems="center" className="w-full" gap="2">
+        <Text sm className="text-text-secondary">
+          Jump to a Point in Time
+        </Text>
+        <div className="max-w-32">
+          <Input
+            type="date"
+            value={dateValue}
+            onChange={(e) => setDateValue(e.target.value)}
+          />
+        </div>
+        <Button color="accent" type="button" onClick={handleDateJump}>
+          Go
+        </Button>
+      </Flexbox>
       <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
         <Text lg semibold>
           Changes ({safeItems.length}
@@ -133,11 +164,18 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
           safeItems.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((changelog) => (
             <Card className="mb-2" key={changelog.date}>
               <CardHeader>
-                <Link href={`/cube/changelog/${changelog.cubeId}/${changelog.id}`}>
-                  <Text semibold sm>
-                    {formatDateTime(new Date(changelog.date))}
-                  </Text>
-                </Link>
+                <Flexbox direction="row" justify="between" alignItems="center">
+                  <Link href={`/cube/changelog/${changelog.cubeId}/${changelog.id}`}>
+                    <Text semibold sm>
+                      {formatDateTime(new Date(changelog.date))}
+                    </Text>
+                  </Link>
+                  <Tooltip text="View cube at this point in time" wrapperTag="span">
+                    <Button color="accent" type="link" href={`/cube/changelog/${changelog.cubeId}/${changelog.id}/list`}>
+                      <EyeIcon size={14} />
+                    </Button>
+                  </Tooltip>
+                </Flexbox>
               </CardHeader>
               <div style={{ overflow: 'auto', maxHeight: '20vh' }}>
                 <CardBody>
@@ -156,12 +194,19 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
             {safeItems.length > 0 ? (
               evens.map((changelog) => (
                 <Card className="my-2" key={changelog.date}>
-                  <CardHeader className="text-right">
-                    <Link href={`/cube/changelog/${changelog.cubeId}/${changelog.id}`}>
-                      <Text semibold sm>
-                        {formatDateTime(new Date(changelog.date))}
-                      </Text>
-                    </Link>
+                  <CardHeader>
+                    <Flexbox direction="row" justify="between" alignItems="center">
+                      <Link href={`/cube/changelog/${changelog.cubeId}/${changelog.id}`}>
+                        <Text semibold sm>
+                          {formatDateTime(new Date(changelog.date))}
+                        </Text>
+                      </Link>
+                      <Tooltip text="View cube at this point in time" wrapperTag="span">
+                        <Button color="accent" type="link" href={`/cube/changelog/${changelog.cubeId}/${changelog.id}/list`}>
+                          <EyeIcon size={14} />
+                        </Button>
+                      </Tooltip>
+                    </Flexbox>
                   </CardHeader>
                   <div style={{ overflow: 'auto', height: '15vh' }}>
                     <CardBody>
@@ -179,11 +224,18 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
             {odds.map((changelog) => (
               <Card className="my-2" key={changelog.date}>
                 <CardHeader>
-                  <Link href={`/cube/changelog/${changelog.cubeId}/${changelog.id}`}>
-                    <Text semibold sm>
-                      {formatDateTime(new Date(changelog.date))}
-                    </Text>
-                  </Link>
+                  <Flexbox direction="row" justify="between" alignItems="center">
+                    <Link href={`/cube/changelog/${changelog.cubeId}/${changelog.id}`}>
+                      <Text semibold sm>
+                        {formatDateTime(new Date(changelog.date))}
+                      </Text>
+                    </Link>
+                    <Tooltip text="View cube at this point in time" wrapperTag="span">
+                      <Button color="accent" type="link" href={`/cube/changelog/${changelog.cubeId}/${changelog.id}/list`}>
+                        <EyeIcon size={14} />
+                      </Button>
+                    </Tooltip>
+                  </Flexbox>
                 </CardHeader>
                 <div style={{ overflow: 'auto', height: '15vh' }}>
                   <CardBody>
