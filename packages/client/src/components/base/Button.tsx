@@ -41,6 +41,12 @@ const ButtonLink: React.FC<ButtonLinkProps> = ({
       return;
     }
 
+    // Don't show spinner when opening in a new tab (modifier keys)
+    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) {
+      onClick?.(e);
+      return;
+    }
+
     setLoading(true); // Set loading state to true to prevent further clicks
     onClick?.(e); // Fire side effects (e.g. analytics) before navigation
     //Allow default anchor behaviour to take effect
