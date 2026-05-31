@@ -215,7 +215,10 @@ const DraftSimulatorFilterBar: React.FC<{
             />
             <div className="mt-1.5 flex items-center gap-3">
               {(['deck', 'pool'] as const).map((mode) => (
-                <label key={mode} className="flex items-center gap-1 text-xs text-text-secondary cursor-pointer select-none">
+                <label
+                  key={mode}
+                  className="flex items-center gap-1 text-xs text-text-secondary cursor-pointer select-none"
+                >
                   <input
                     type="radio"
                     name="cardFilterMode"
@@ -284,7 +287,9 @@ const DraftSimulatorFilterBar: React.FC<{
                 <button
                   key={skeleton.clusterId}
                   type="button"
-                  onClick={() => onSelectSkeleton(selectedSkeletonId === skeleton.clusterId ? null : skeleton.clusterId)}
+                  onClick={() =>
+                    onSelectSkeleton(selectedSkeletonId === skeleton.clusterId ? null : skeleton.clusterId)
+                  }
                   className={[
                     'rounded border px-2 py-1 text-xs font-medium',
                     selectedSkeletonId === skeleton.clusterId

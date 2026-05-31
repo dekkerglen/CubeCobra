@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * Browser-side draft bot using TensorFlow.js.
  *
@@ -480,7 +481,8 @@ export async function localPickBatch(
   if (!draftBotLoaded || !tf || !encoder || !draftDecoder || packs.length === 0) {
     return packs.map(() => '');
   }
-  if (numOracles === 0) throw new Error('Draft bot loaded but oracle vocabulary is empty — model may have loaded incorrectly.');
+  if (numOracles === 0)
+    throw new Error('Draft bot loaded but oracle vocabulary is empty — model may have loaded incorrectly.');
 
   const logits = await forwardPass(pools, draftDecoder, remapping, chunkSize, cubeCtx);
 

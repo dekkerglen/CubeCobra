@@ -1,3 +1,5 @@
+import type { ArchetypeSkeleton, BuiltDeck, CardMeta, SimulatedPool } from '@utils/datatypes/SimulationReport';
+
 import {
   archetypeFullName,
   computeClusterThemes,
@@ -7,8 +9,6 @@ import {
   getPoolMainCards,
   inferDraftThemes,
 } from '../../src/utils/draftSimulatorThemes';
-
-import type { ArchetypeSkeleton, BuiltDeck, CardMeta, SimulatedPool } from '@utils/datatypes/SimulationReport';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -259,7 +259,10 @@ describe('computeClusterThemes', () => {
       art: makeMeta({ type: 'Artifact' }),
       ench: makeMeta({ type: 'Enchantment' }),
     };
-    const pools = [makePool(0, ['art', 'art', 'art', 'art', 'art']), makePool(1, ['ench', 'ench', 'ench', 'ench', 'ench'])];
+    const pools = [
+      makePool(0, ['art', 'art', 'art', 'art', 'art']),
+      makePool(1, ['ench', 'ench', 'ench', 'ench', 'ench']),
+    ];
     const skeletonA = makeSkeleton(0, [0]);
     const skeletonB = makeSkeleton(1, [1]);
 
@@ -268,7 +271,10 @@ describe('computeClusterThemes', () => {
     for (const tag of result.tagAllowlist) {
       let found = false;
       for (const rankedTags of result.poolThemes.values()) {
-        if (rankedTags.some((t) => t.tag === tag)) { found = true; break; }
+        if (rankedTags.some((t) => t.tag === tag)) {
+          found = true;
+          break;
+        }
       }
       expect(found).toBe(true);
     }
@@ -356,7 +362,13 @@ describe('inferDraftThemes', () => {
     const pool = makePool(0, [...Object.keys(meta).filter((k) => k.startsWith('rem'))]);
 
     const clusterThemes = new Map([
-      [0, [{ tag: 'otag:removal', lift: 3 }, { tag: 'otag:card-draw', lift: 2 }]],
+      [
+        0,
+        [
+          { tag: 'otag:removal', lift: 3 },
+          { tag: 'otag:card-draw', lift: 2 },
+        ],
+      ],
     ]);
     // Only removal is in allowlist — draw should not count
     const tagAllowlist = new Set(['otag:removal']);

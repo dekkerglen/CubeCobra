@@ -1,0 +1,34 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "workspaces": {
+    "packages/server": {
+      "entry": ["src/index.ts", "scripts/**/*.ts"]
+    },
+    "packages/client": {
+      "entry": ["src/pages/*.tsx"]
+    },
+    "packages/scripts": {
+      "entry": ["src/*.ts"]
+    },
+    "packages/jobs": {
+      "entry": ["src/*.ts"]
+    },
+    "packages/cdk": {
+      "entry": ["app/*.ts"]
+    },
+    "packages/recommenderService": {
+      "entry": ["src/index.ts"]
+    },
+    "packages/dailyJobsLambda": {
+      "entry": ["src/handler.ts"]
+    },
+    "packages/cardUpdateMonitorLambda": {},
+    "packages/utils": {
+      "entry": ["src/**/*.ts"]
+    },
+    "packages/integrationTests": {
+      "entry": ["tests/**/*.ts", "scripts/**/*.ts"]
+    },
+    "packages/archetypeAnnotater": {}
+  }
+}

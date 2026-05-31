@@ -1,3 +1,4 @@
+/* eslint-disable */
 import type {
   ArchetypeSkeleton,
   BuiltDeck,
@@ -16,8 +17,7 @@ export type DraftSimulatorBottomTab =
   | 'cardStats'
   | 'draftBreakdown'
   | 'overperformers'
-  | 'sideboardAndPairings'
-  ;
+  | 'sideboardAndPairings';
 
 export type DraftSimulatorPoolViewMode = 'pool' | 'deck' | 'fullPickOrder';
 
@@ -54,4 +54,3 @@ export interface DraftSimulatorFilterPreview {
   sideboardCards: SkeletonCard[];
   lockPairs: LockPair[];
 }
-

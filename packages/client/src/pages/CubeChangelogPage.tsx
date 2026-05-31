@@ -43,11 +43,7 @@ const CubeChangelogPage: React.FC<CubeChangelogPageProps> = ({ cube, changelog }
                     <Button color="accent" type="link" href={`/cube/changelog/${cube.id}/${changelog.id}/list`}>
                       View List
                     </Button>
-                    <Button
-                      color="secondary"
-                      type="link"
-                      href={`/cube/changelog/${cube.id}/${changelog.id}/compare`}
-                    >
+                    <Button color="secondary" type="link" href={`/cube/changelog/${cube.id}/${changelog.id}/compare`}>
                       Compare with Present
                     </Button>
                   </Flexbox>

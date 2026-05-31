@@ -33,9 +33,7 @@ const handler = async (req: Request, res: Response) => {
       limit: typeof limit === 'number' ? limit : undefined,
     });
 
-    console.log(
-      `[Recommend] Result: ${result.adds.length} adds (of ${result.totalAdds}), ${result.cuts.length} cuts`,
-    );
+    console.log(`[Recommend] Result: ${result.adds.length} adds (of ${result.totalAdds}), ${result.cuts.length} cuts`);
     if (result.adds.length === 0 && result.cuts.length === 0) {
       console.log('[Recommend] No recommendations returned - possible oracle mapping issue');
     }

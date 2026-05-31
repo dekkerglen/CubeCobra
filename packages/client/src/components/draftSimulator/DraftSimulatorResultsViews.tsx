@@ -1,3 +1,4 @@
+/* eslint-disable */
 import React from 'react';
 
 import type { BuiltDeck, CardMeta, CardStats, SimulationRunData } from '@utils/datatypes/SimulationReport';

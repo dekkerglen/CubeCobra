@@ -87,7 +87,6 @@ const flushLogs = async (logGroupName: string, logStreamName: string, events: In
 
   for (const batch of batches) {
     try {
-      // eslint-disable-next-line no-await-in-loop
       await client.send(
         new PutLogEventsCommand({
           logGroupName,

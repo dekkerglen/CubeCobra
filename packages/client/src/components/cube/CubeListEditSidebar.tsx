@@ -313,11 +313,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
               checked={specifyEdition}
               setChecked={(value) => setSpecifyEdition(value)}
             />
-            <Checkbox
-              label="Include Extras"
-              checked={includeExtras}
-              setChecked={(value) => setIncludeExtras(value)}
-            />
+            <Checkbox label="Include Extras" checked={includeExtras} setChecked={(value) => setIncludeExtras(value)} />
             <Flexbox direction="row" gap="2" alignItems="center">
               <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
               <Tooltip text="The last checked status for 'Create Blog Post' will be remembered per Cube. The default can be set in your display preferences now.">

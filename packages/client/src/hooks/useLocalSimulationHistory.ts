@@ -1,14 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 
-import type {
-  SimulationRunData,
-  SimulationRunEntry,
-  SimulationSetupResponse,
-} from '@utils/datatypes/SimulationReport';
+import type { SimulationRunData, SimulationRunEntry, SimulationSetupResponse } from '@utils/datatypes/SimulationReport';
 
 import {
-  type ClusteringCache,
   clearLocalSimulationStore,
+  type ClusteringCache,
   persistSimulationRun,
   readLocalSimulationStore,
   writeLocalSimulationStore,
@@ -115,13 +111,7 @@ export default function useLocalSimulationHistory({
         loadRunInFlight.current = false;
       }
     },
-    [
-      cubeId,
-      selectedTs,
-      displayRunData,
-      onResetViewSelection,
-      onResetSessionCaches,
-    ],
+    [cubeId, selectedTs, displayRunData, onResetViewSelection, onResetSessionCaches],
   );
 
   const handleDeleteRun = useCallback(
@@ -158,7 +148,9 @@ export default function useLocalSimulationHistory({
   const handlePersistCompletedRun = useCallback(
     async (entry: SimulationRunEntry, runData: SimulationRunData, clusterCache?: ClusteringCache) => {
       const nextRun = historyEntryFromRun(entry, runData);
-      setRuns((currentRuns) => [nextRun, ...currentRuns.filter((runEntry) => runEntry.entry.ts !== entry.ts)].slice(0, 5));
+      setRuns((currentRuns) =>
+        [nextRun, ...currentRuns.filter((runEntry) => runEntry.entry.ts !== entry.ts)].slice(0, 5),
+      );
       setDisplayRunData(runData);
       setCurrentRunSetup(setupFromRunData(runData));
       setSelectedTs(entry.ts);

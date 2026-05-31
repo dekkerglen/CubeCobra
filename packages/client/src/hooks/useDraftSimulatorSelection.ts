@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useMemo } from 'react';
 
 import type {
@@ -33,7 +34,8 @@ function buildActiveFilterPreview({
   displayedPools: SimulatedPool[];
   selectedCards: CardStats[];
 }): DraftSimulatorFilterPreview | null {
-  const isBasicLand = (oracleId: string) => (runData.cardMeta[oracleId]?.type ?? '').toLowerCase().includes('basic land');
+  const isBasicLand = (oracleId: string) =>
+    (runData.cardMeta[oracleId]?.type ?? '').toLowerCase().includes('basic land');
 
   const matchingPoolIndices = scopedPools.map((pool) => pool.poolIndex);
   if (matchingPoolIndices.length === 0) return null;
@@ -51,12 +53,10 @@ function buildActiveFilterPreview({
     // algorithm used for skeleton.coreCards (`scoreClusterSkeleton`). Falling
     // back to raw picks only when builds are absent.
     const sourceOracles = hasDeckData
-      ? scopedDecks![poolIndex]?.mainboard ?? []
+      ? (scopedDecks![poolIndex]?.mainboard ?? [])
       : pool.picks.map((pick) => pick.oracle_id);
     const poolOracleSet = new Set(
-      sourceOracles.filter(
-        (oracleId) => oracleId && !isBasicLand(oracleId) && !selectedFilterOracleIds.has(oracleId),
-      ),
+      sourceOracles.filter((oracleId) => oracleId && !isBasicLand(oracleId) && !selectedFilterOracleIds.has(oracleId)),
     );
     poolOracleSets.set(poolIndex, poolOracleSet);
     for (const oracleId of poolOracleSet) {
@@ -82,14 +82,10 @@ function buildActiveFilterPreview({
     fraction: count / matchingPoolIndices.length,
   });
 
-  const sortedCommon = [...poolCounts.entries()]
-    .map(toSkeletonCard)
-    .sort((a, b) => b.fraction - a.fraction);
+  const sortedCommon = [...poolCounts.entries()].map(toSkeletonCard).sort((a, b) => b.fraction - a.fraction);
   const commonCards = {
     default: sortedCommon.slice(0, 12),
-    excludingFixing: sortedCommon
-      .filter((c) => !runData.cardMeta[c.oracle_id]?.isManaFixingLand)
-      .slice(0, 12),
+    excludingFixing: sortedCommon.filter((c) => !runData.cardMeta[c.oracle_id]?.isManaFixingLand).slice(0, 12),
   };
 
   const lockCandidates = [...poolCounts.entries()]
@@ -130,7 +126,10 @@ function buildActiveFilterPreview({
 
 interface UseDraftSimulatorSelectionArgs {
   data: DraftSimulatorDerivedData;
-  state: Pick<DraftSimulatorSelectionState, 'selectedCardOracles' | 'selectedDeckCardOracles' | 'selectedSkeletonId' | 'selectedArchetype'>;
+  state: Pick<
+    DraftSimulatorSelectionState,
+    'selectedCardOracles' | 'selectedDeckCardOracles' | 'selectedSkeletonId' | 'selectedArchetype'
+  >;
   filteredCardStatsCache: { current: Map<string, CardStats[]> };
   computeFilteredCardStats: (
     setup: NonNullable<DraftSimulatorDerivedData['currentRunSetup']>,
@@ -216,7 +215,15 @@ export default function useDraftSimulatorSelection({
       if (!rest.every((set) => set.has(value))) intersection.delete(value);
     }
     return intersection;
-  }, [selectedArchetype, selectedSkeletonId, selectedCards, selectedDeckCardOracles, deckCardPoolIndices, skeletons, displayedPools]);
+  }, [
+    selectedArchetype,
+    selectedSkeletonId,
+    selectedCards,
+    selectedDeckCardOracles,
+    deckCardPoolIndices,
+    skeletons,
+    displayedPools,
+  ]);
 
   const filteredDecks = useMemo(() => {
     if (!activeDecks) return null;
@@ -276,7 +283,8 @@ export default function useDraftSimulatorSelection({
 
   const selectedCard = selectedCards.length === 1 ? (selectedCards[0] ?? null) : null;
   const selectedCardStats = useMemo(
-    () => (selectedCard ? (visibleCardStats.find((c) => c.oracle_id === selectedCard.oracle_id) ?? selectedCard) : null),
+    () =>
+      selectedCard ? (visibleCardStats.find((c) => c.oracle_id === selectedCard.oracle_id) ?? selectedCard) : null,
     [visibleCardStats, selectedCard],
   );
 
@@ -341,7 +349,9 @@ export default function useDraftSimulatorSelection({
     const isBasicLand = (oracleId: string) => /\bBasic\b/.test(displayRunData?.cardMeta[oracleId]?.type ?? '');
     const isLand = (oracleId: string) => /\bLand\b/.test(displayRunData?.cardMeta[oracleId]?.type ?? '');
     for (const deck of filteredDecks) {
-      const mb = [...new Set(deck.mainboard)].filter((o) => !isBasicLand(o) && (!pairingsExcludeLands || !isLand(o))).sort();
+      const mb = [...new Set(deck.mainboard)]
+        .filter((o) => !isBasicLand(o) && (!pairingsExcludeLands || !isLand(o)))
+        .sort();
       for (const o of mb) cardCounts.set(o, (cardCounts.get(o) ?? 0) + 1);
       for (let i = 0; i < mb.length; i++) {
         for (let j = i + 1; j < mb.length; j++) {

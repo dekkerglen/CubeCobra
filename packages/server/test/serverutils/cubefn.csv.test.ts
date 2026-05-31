@@ -195,12 +195,7 @@ describe('writeCard — round-trip', () => {
   });
 
   it('round-trips tricky names through writeCard + CSVtoCards', () => {
-    const tricky = [
-      'Borrowing 100,000 Arrows',
-      "Yawgmoth's Will",
-      'Fire // Ice',
-      'Say "Hello"',
-    ];
+    const tricky = ['Borrowing 100,000 Arrows', "Yawgmoth's Will", 'Fire // Ice', 'Say "Hello"'];
 
     const { res, body } = makeResStub();
     res.write(`${CSV_HEADER}\r\n`);

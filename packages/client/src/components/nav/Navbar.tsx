@@ -420,15 +420,8 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
   );
 
   return (
-    <div
-      className={classNames(
-        'px-6 py-2 relative',
-        transparent ? 'nav-transparent' : 'bg-bg-secondary',
-      )}
-    >
-      {transparent && (
-        <div className="absolute inset-0 bg-bg-secondary/80 backdrop-blur-sm" />
-      )}
+    <div className={classNames('px-6 py-2 relative', transparent ? 'nav-transparent' : 'bg-bg-secondary')}>
+      {transparent && <div className="absolute inset-0 bg-bg-secondary/80 backdrop-blur-sm" />}
       <ResponsiveDiv baseVisible md className="w-full max-w-full relative">
         <Flexbox justify="between" alignItems="center" direction="row">
           <a href="/">

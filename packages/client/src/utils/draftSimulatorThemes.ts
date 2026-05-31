@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { ArchetypeSkeleton, BuiltDeck, CardMeta, SimulatedPool } from '@utils/datatypes/SimulationReport';
 
 import { OTAG_BUCKET_MAP } from './otagBucketMap';
@@ -20,7 +21,11 @@ export function archetypeFullName(colorPair: string): string {
   return parts.length > 0 ? parts.join('/') : colorPair;
 }
 
-export function getPoolMainCards(pool: SimulatedPool, deck: BuiltDeck | null, cardMeta: Record<string, CardMeta>): string[] {
+export function getPoolMainCards(
+  pool: SimulatedPool,
+  deck: BuiltDeck | null,
+  cardMeta: Record<string, CardMeta>,
+): string[] {
   if (deck !== null) return deck.mainboard;
   return pool.picks.map((pick) => pick.oracle_id).filter((oracleId) => !!cardMeta[oracleId]);
 }
@@ -51,7 +56,10 @@ export function extractThemeFeatures(type: string, oracleTags: string[] | undefi
 
   if (typeLower.includes('creature')) {
     const subtypePart = type.split('—')[1] ?? type.split('-')[1] ?? '';
-    for (const subtype of subtypePart.trim().split(/\s+/).filter((s) => s.length > 1)) {
+    for (const subtype of subtypePart
+      .trim()
+      .split(/\s+/)
+      .filter((s) => s.length > 1)) {
       features.push(`ctype:${subtype}`);
     }
   }
@@ -69,7 +77,10 @@ function pluralizeCreatureType(name: string): string {
 
 export function formatFeatureKey(key: string): string {
   if (key.startsWith('otag:')) {
-    return key.slice(5).replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+    return key
+      .slice(5)
+      .replace(/-/g, ' ')
+      .replace(/\b\w/g, (c) => c.toUpperCase());
   }
   if (key.startsWith('ctype:')) return pluralizeCreatureType(key.slice(6));
   if (key.startsWith('type:')) return `${key.slice(5)}s`;

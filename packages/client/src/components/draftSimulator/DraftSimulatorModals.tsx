@@ -3,9 +3,9 @@ import React from 'react';
 import type { SimulationRunEntry } from '@utils/datatypes/SimulationReport';
 
 import Button from '../base/Button';
+import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Text from '../base/Text';
-import { Flexbox } from '../base/Layout';
 import ConfirmDeleteModal from '../modals/ConfirmDeleteModal';
 
 export const PriorRunDeleteModal: React.FC<{

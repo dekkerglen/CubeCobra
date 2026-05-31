@@ -1,0 +1,77 @@
+'use strict';
+var __createBinding =
+  (this && this.__createBinding) ||
+  (Object.create
+    ? function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        var desc = Object.getOwnPropertyDescriptor(m, k);
+        if (!desc || ('get' in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+          desc = {
+            enumerable: true,
+            get: function () {
+              return m[k];
+            },
+          };
+        }
+        Object.defineProperty(o, k2, desc);
+      }
+    : function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        o[k2] = m[k];
+      });
+var __setModuleDefault =
+  (this && this.__setModuleDefault) ||
+  (Object.create
+    ? function (o, v) {
+        Object.defineProperty(o, 'default', { enumerable: true, value: v });
+      }
+    : function (o, v) {
+        o['default'] = v;
+      });
+var __importStar =
+  (this && this.__importStar) ||
+  function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null)
+      for (var k in mod)
+        if (k !== 'default' && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+  };
+Object.defineProperty(exports, '__esModule', { value: true });
+exports.ScheduledJob = void 0;
+const aws_ec2_1 = require('aws-cdk-lib/aws-ec2');
+const ecs = __importStar(require('aws-cdk-lib/aws-ecs'));
+const events = __importStar(require('aws-cdk-lib/aws-events'));
+const targets = __importStar(require('aws-cdk-lib/aws-events-targets'));
+const constructs_1 = require('constructs');
+class ScheduledJob extends constructs_1.Construct {
+  constructor(scope, id, cluster, repository, props) {
+    super(scope, id);
+    const taskDefinition = new ecs.FargateTaskDefinition(this, `${id}TaskDefinition`, {
+      memoryLimitMiB: props.memoryLimitMib,
+      cpu: props.cpu,
+    });
+    taskDefinition.addContainer(`${id}Container`, {
+      image: ecs.ContainerImage.fromEcrRepository(repository, props.tag),
+      command: props.command,
+      logging: new ecs.AwsLogDriver({
+        streamPrefix: id,
+      }),
+    });
+    const rule = new events.Rule(this, `${id}ScheduleRule`, {
+      schedule: props.schedule,
+    });
+    rule.addTarget(
+      new targets.EcsTask({
+        cluster: cluster,
+        taskDefinition: taskDefinition,
+        subnetSelection: { subnetType: aws_ec2_1.SubnetType.PUBLIC },
+        assignPublicIp: true,
+      }),
+    );
+  }
+}
+exports.ScheduledJob = ScheduledJob;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoic2NoZWR1bGVkLWpvYi5qcyIsInNvdXJjZVJvb3QiOiIiLCJzb3VyY2VzIjpbInNjaGVkdWxlZC1qb2IudHMiXSwibmFtZXMiOltdLCJtYXBwaW5ncyI6Ijs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFBQSxpREFBaUQ7QUFFakQseURBQTJDO0FBQzNDLCtEQUFpRDtBQUNqRCx3RUFBMEQ7QUFDMUQsMkNBQXVDO0FBVXZDLE1BQWEsWUFBYSxTQUFRLHNCQUFTO0lBQ3pDLFlBQ0UsS0FBZ0IsRUFDaEIsRUFBVSxFQUNWLE9BQXFCLEVBQ3JCLFVBQTJCLEVBQzNCLEtBQXdCO1FBRXhCLEtBQUssQ0FBQyxLQUFLLEVBQUUsRUFBRSxDQUFDLENBQUM7UUFFakIsTUFBTSxjQUFjLEdBQUcsSUFBSSxHQUFHLENBQUMscUJBQXFCLENBQUMsSUFBSSxFQUFFLEdBQUcsRUFBRSxnQkFBZ0IsRUFBRTtZQUNoRixjQUFjLEVBQUUsS0FBSyxDQUFDLGNBQWM7WUFDcEMsR0FBRyxFQUFFLEtBQUssQ0FBQyxHQUFHO1NBQ2YsQ0FBQyxDQUFDO1FBRUgsY0FBYyxDQUFDLFlBQVksQ0FBQyxHQUFHLEVBQUUsV0FBVyxFQUFFO1lBQzVDLEtBQUssRUFBRSxHQUFHLENBQUMsY0FBYyxDQUFDLGlCQUFpQixDQUFDLFVBQVUsRUFBRSxLQUFLLENBQUMsR0FBRyxDQUFDO1lBQ2xFLE9BQU8sRUFBRSxLQUFLLENBQUMsT0FBTztZQUN0QixPQUFPLEVBQUUsSUFBSSxHQUFHLENBQUMsWUFBWSxDQUFDO2dCQUM1QixZQUFZLEVBQUUsRUFBRTthQUNqQixDQUFDO1NBQ0gsQ0FBQyxDQUFDO1FBRUgsTUFBTSxJQUFJLEdBQUcsSUFBSSxNQUFNLENBQUMsSUFBSSxDQUFDLElBQUksRUFBRSxHQUFHLEVBQUUsY0FBYyxFQUFFO1lBQ3RELFFBQVEsRUFBRSxLQUFLLENBQUMsUUFBUTtTQUN6QixDQUFDLENBQUM7UUFFSCxJQUFJLENBQUMsU0FBUyxDQUNaLElBQUksT0FBTyxDQUFDLE9BQU8sQ0FBQztZQUNsQixPQUFPLEVBQUUsT0FBTztZQUNoQixjQUFjLEVBQUUsY0FBYztZQUM5QixlQUFlLEVBQUUsRUFBRSxVQUFVLEVBQUUsb0JBQVUsQ0FBQyxNQUFNLEVBQUU7WUFDbEQsY0FBYyxFQUFFLElBQUk7U0FDckIsQ0FBQyxDQUNILENBQUM7SUFDSixDQUFDO0NBQ0Y7QUFwQ0Qsb0NBb0NDIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgU3VibmV0VHlwZSB9IGZyb20gJ2F3cy1jZGstbGliL2F3cy1lYzInO1xuaW1wb3J0ICogYXMgZWNyIGZyb20gJ2F3cy1jZGstbGliL2F3cy1lY3InO1xuaW1wb3J0ICogYXMgZWNzIGZyb20gJ2F3cy1jZGstbGliL2F3cy1lY3MnO1xuaW1wb3J0ICogYXMgZXZlbnRzIGZyb20gJ2F3cy1jZGstbGliL2F3cy1ldmVudHMnO1xuaW1wb3J0ICogYXMgdGFyZ2V0cyBmcm9tICdhd3MtY2RrLWxpYi9hd3MtZXZlbnRzLXRhcmdldHMnO1xuaW1wb3J0IHsgQ29uc3RydWN0IH0gZnJvbSAnY29uc3RydWN0cyc7XG5cbmV4cG9ydCBpbnRlcmZhY2UgU2NoZWR1bGVkSm9iUHJvcHMge1xuICBjb21tYW5kOiBzdHJpbmdbXTtcbiAgbWVtb3J5TGltaXRNaWI6IG51bWJlcjtcbiAgY3B1OiBudW1iZXI7XG4gIHNjaGVkdWxlOiBldmVudHMuU2NoZWR1bGU7XG4gIHRhZz86IHN0cmluZztcbn1cblxuZXhwb3J0IGNsYXNzIFNjaGVkdWxlZEpvYiBleHRlbmRzIENvbnN0cnVjdCB7XG4gIGNvbnN0cnVjdG9yKFxuICAgIHNjb3BlOiBDb25zdHJ1Y3QsXG4gICAgaWQ6IHN0cmluZyxcbiAgICBjbHVzdGVyOiBlY3MuSUNsdXN0ZXIsXG4gICAgcmVwb3NpdG9yeTogZWNyLklSZXBvc2l0b3J5LFxuICAgIHByb3BzOiBTY2hlZHVsZWRKb2JQcm9wcyxcbiAgKSB7XG4gICAgc3VwZXIoc2NvcGUsIGlkKTtcblxuICAgIGNvbnN0IHRhc2tEZWZpbml0aW9uID0gbmV3IGVjcy5GYXJnYXRlVGFza0RlZmluaXRpb24odGhpcywgYCR7aWR9VGFza0RlZmluaXRpb25gLCB7XG4gICAgICBtZW1vcnlMaW1pdE1pQjogcHJvcHMubWVtb3J5TGltaXRNaWIsXG4gICAgICBjcHU6IHByb3BzLmNwdSxcbiAgICB9KTtcblxuICAgIHRhc2tEZWZpbml0aW9uLmFkZENvbnRhaW5lcihgJHtpZH1Db250YWluZXJgLCB7XG4gICAgICBpbWFnZTogZWNzLkNvbnRhaW5lckltYWdlLmZyb21FY3JSZXBvc2l0b3J5KHJlcG9zaXRvcnksIHByb3BzLnRhZyksXG4gICAgICBjb21tYW5kOiBwcm9wcy5jb21tYW5kLFxuICAgICAgbG9nZ2luZzogbmV3IGVjcy5Bd3NMb2dEcml2ZXIoe1xuICAgICAgICBzdHJlYW1QcmVmaXg6IGlkLFxuICAgICAgfSksXG4gICAgfSk7XG5cbiAgICBjb25zdCBydWxlID0gbmV3IGV2ZW50cy5SdWxlKHRoaXMsIGAke2lkfVNjaGVkdWxlUnVsZWAsIHtcbiAgICAgIHNjaGVkdWxlOiBwcm9wcy5zY2hlZHVsZSxcbiAgICB9KTtcblxuICAgIHJ1bGUuYWRkVGFyZ2V0KFxuICAgICAgbmV3IHRhcmdldHMuRWNzVGFzayh7XG4gICAgICAgIGNsdXN0ZXI6IGNsdXN0ZXIsXG4gICAgICAgIHRhc2tEZWZpbml0aW9uOiB0YXNrRGVmaW5pdGlvbixcbiAgICAgICAgc3VibmV0U2VsZWN0aW9uOiB7IHN1Ym5ldFR5cGU6IFN1Ym5ldFR5cGUuUFVCTElDIH0sXG4gICA

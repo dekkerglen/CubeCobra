@@ -1,0 +1,83 @@
+'use strict';
+var __createBinding =
+  (this && this.__createBinding) ||
+  (Object.create
+    ? function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        var desc = Object.getOwnPropertyDescriptor(m, k);
+        if (!desc || ('get' in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+          desc = {
+            enumerable: true,
+            get: function () {
+              return m[k];
+            },
+          };
+        }
+        Object.defineProperty(o, k2, desc);
+      }
+    : function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        o[k2] = m[k];
+      });
+var __setModuleDefault =
+  (this && this.__setModuleDefault) ||
+  (Object.create
+    ? function (o, v) {
+        Object.defineProperty(o, 'default', { enumerable: true, value: v });
+      }
+    : function (o, v) {
+        o['default'] = v;
+      });
+var __importStar =
+  (this && this.__importStar) ||
+  function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null)
+      for (var k in mod)
+        if (k !== 'default' && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+  };
+Object.defineProperty(exports, '__esModule', { value: true });
+exports.Pipeline = void 0;
+const aws_cdk_lib_1 = require('aws-cdk-lib');
+const iam = __importStar(require('aws-cdk-lib/aws-iam'));
+const constructs_1 = require('constructs');
+/**
+ * Pipeline creates the OpenID Connect provider and the IAM role needed for GitHub actions to access AWS.
+ *
+ * This avoids long-live credentials and automates authentication. Permissions are scoped and tokens are short-lived.
+ */
+class Pipeline extends constructs_1.Construct {
+  constructor(scope, id, props) {
+    super(scope, id);
+    this.oidcProvider = new iam.OpenIdConnectProvider(this, `${id}GitHubOidcProvider`, {
+      url: 'https://token.actions.githubusercontent.com',
+      clientIds: ['sts.amazonaws.com'],
+    });
+    new aws_cdk_lib_1.CfnOutput(this, `${id}OidcProviderArn`, {
+      value: this.oidcProvider.openIdConnectProviderArn,
+      description: 'The ARN of the GitHub OIDC Provider',
+    });
+    this.githubRole = new iam.Role(this, `${id}GitHubRole`, {
+      assumedBy: new iam.FederatedPrincipal(
+        this.oidcProvider.openIdConnectProviderArn,
+        {
+          'ForAnyValue:StringLike': {
+            'token.actions.githubusercontent.com:sub': props.githubRepositories.map((repo) => `repo:${repo}:*`),
+          },
+        },
+        'sts:AssumeRoleWithWebIdentity',
+      ),
+      description: 'Role assumed by GitHub Actions to interact with ECR',
+    });
+    // Output this role because we'll need the ARN in our GitHub action
+    new aws_cdk_lib_1.CfnOutput(this, `${id}GitHubActionsRoleArn`, {
+      value: this.githubRole.roleArn,
+      description: 'The ARN of the IAM role for GitHub Actions',
+    });
+  }
+}
+exports.Pipeline = Pipeline;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicGlwZWxpbmUuanMiLCJzb3VyY2VSb290IjoiIiwic291cmNlcyI6WyJwaXBlbGluZS50cyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztBQUFBLDZDQUF3QztBQUd4Qyx5REFBMkM7QUFDM0MsMkNBQXVDO0FBTXZDOzs7O0dBSUc7QUFDSCxNQUFhLFFBQVMsU0FBUSxzQkFBUztJQUlyQyxZQUFZLEtBQWdCLEVBQUUsRUFBVSxFQUFFLEtBQW9CO1FBQzVELEtBQUssQ0FBQyxLQUFLLEVBQUUsRUFBRSxDQUFDLENBQUM7UUFFakIsSUFBSSxDQUFDLFlBQVksR0FBRyxJQUFJLEdBQUcsQ0FBQyxxQkFBcUIsQ0FBQyxJQUFJLEVBQUUsR0FBRyxFQUFFLG9CQUFvQixFQUFFO1lBQ2pGLEdBQUcsRUFBRSw2Q0FBNkM7WUFDbEQsU0FBUyxFQUFFLENBQUMsbUJBQW1CLENBQUM7U0FDakMsQ0FBQyxDQUFDO1FBRUgsSUFBSSx1QkFBUyxDQUFDLElBQUksRUFBRSxHQUFHLEVBQUUsaUJBQWlCLEVBQUU7WUFDMUMsS0FBSyxFQUFFLElBQUksQ0FBQyxZQUFZLENBQUMsd0JBQXdCO1lBQ2pELFdBQVcsRUFBRSxxQ0FBcUM7U0FDbkQsQ0FBQyxDQUFDO1FBRUgsSUFBSSxDQUFDLFVBQVUsR0FBRyxJQUFJLEdBQUcsQ0FBQyxJQUFJLENBQUMsSUFBSSxFQUFFLEdBQUcsRUFBRSxZQUFZLEVBQUU7WUFDdEQsU0FBUyxFQUFFLElBQUksR0FBRyxDQUFDLGtCQUFrQixDQUNuQyxJQUFJLENBQUMsWUFBWSxDQUFDLHdCQUF3QixFQUMxQztnQkFDRSx3QkFBd0IsRUFBRTtvQkFDeEIseUNBQXlDLEVBQUUsS0FBSyxDQUFDLGtCQUFrQixDQUFDLEdBQUcsQ0FBQyxDQUFDLElBQUksRUFBRSxFQUFFLENBQUMsUUFBUSxJQUFJLElBQUksQ0FBQztpQkFDcEc7YUFDRixFQUNELCtCQUErQixDQUNoQztZQUNELFdBQVcsRUFBRSxxREFBcUQ7U0FDbkUsQ0FBQyxDQUFDO1FBRUgsbUVBQW1FO1FBQ25FLElBQUksdUJBQVMsQ0FBQyxJQUFJLEVBQUUsR0FBRyxFQUFFLHNCQUFzQixFQUFFO1lBQy9DLEtBQUssRUFBRSxJQUFJLENBQUMsVUFBVSxDQUFDLE9BQU87WUFDOUIsV0FBVyxFQUFFLDRDQUE0QztTQUMxRCxDQUFDLENBQUM7SUFDTCxDQUFDO0NBQ0Y7QUFwQ0QsNEJBb0NDIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgQ2ZuT3V0cHV0IH0gZnJvbSAnYXdzLWNkay1saWInO1xuaW1wb3J0IHsgT3BlbklkQ29ubmVjdFByb3ZpZGVyIH0gZnJvbSAnYXdzLWNkay1saWIvYXdzLWVrcyc7XG5pbXBvcnQgeyBSb2xlIH0gZnJvbSAnYXdzLWNkay1saWIvYXdzLWlhbSc7XG5pbXBvcnQgKiBhcyBpYW0gZnJvbSAnYXdzLWNkay1saWIvYXdzLWlhbSc7XG5pbXBvcnQgeyBDb25zdHJ1Y3QgfSBmcm9tICdjb25zdHJ1Y3RzJztcblxuaW50ZXJmYWNlIFBpcGVsaW5lUHJvcHMge1xuICBnaXRodWJSZXBvc2l0b3JpZXM6IHN0cmluZ1tdO1xufVxuXG4vKipcbiAqIFBpcGVsaW5lIGNyZWF0ZXMgdGhlIE9wZW5JRCBDb25uZWN0IHByb3ZpZGVyIGFuZCB0aGUgSUFNIHJvbGUgbmVlZGVkIGZvciBHaXRIdWIgYWN0aW9ucyB0byBhY2Nlc3MgQVdTLlxuICpcbiAqIFRoaXMgYXZvaWRzIGxvbmctbGl2ZSBjcmVkZW50aWFscyBhbmQgYXV0b21hdGVzIGF1dGhlbnRpY2F0aW9uLiBQZXJtaXNzaW9ucyBhcmUgc2NvcGVkIGFuZCB0b2tlbnMgYXJlIHNob3J0LWxpdmVkLlxuICovXG5leHBvcnQgY2xhc3MgUGlwZWxpbmUgZXh0ZW5kcyBDb25zdHJ1Y3Qge1xuICBwdWJsaWMgcmVhZG9ubHkgZ2l0aHViUm9sZTogUm9sZTtcbiAgcHJpdmF0ZSBvaWRjUHJvdmlkZXI6IE9wZW5JZENvbm5lY3RQcm92aWRlcjtcblxuICBjb25zdHJ1Y3RvcihzY29wZTogQ29uc3RydWN0LCBpZDogc3RyaW5nLCBwcm9wczogUGlwZWxpbmVQcm9wcykge1xuICAgIHN1cGVyKHNjb3BlLCBpZCk7XG5cbiAgICB0aGlzLm9pZGNQcm92aWRlciA9IG5ldyBpYW0uT3BlbklkQ29ubmVjdFByb3ZpZGVyKHRoaXMsIGAke2lkfUdpdEh1Yk9pZGNQcm92aWRlcmAsIHtcbiAgICAgIHVybDogJ2h0dHBzOi8vdG9rZW4uYWN0aW9ucy5naXRodWJ1c2VyY29udGVudC5jb20nLFxuICAgICAgY2xpZW50SWRzOiBbJ3N0cy5hbWF6b25hd3MuY29tJ10sXG4gICAgfSk7XG5cbiAgICBuZXcgQ2ZuT3V0cHV0KHRoaXMsIGAke2lkfU9pZGNQcm92aWRlckFybmAsIHtcbiAgICAgIHZhbHVlOiB0aGlzLm9pZGNQcm92aWRlci5vcGVuSWRDb25uZWN0UHJvdmlkZXJBcm4sXG4gICAgICBkZXNjcmlwdGlvbjogJ1RoZSBBUk4gb2YgdGhlIEdpdEh1YiBPSURDIFByb3ZpZGVyJyxcbiAgICB9KTtcblxuICAgIHRoaXMuZ2l0aHViUm9sZSA9IG5ldyBpYW0uUm9sZSh0aGlzLCBgJHtpZH1HaXRIdWJSb2xlYCwge1xuICAgICAgYXNzdW1lZEJ5OiBuZXcgaWFtLkZlZGVyYXRlZFByaW5jaXBhbChcbiAgICAgICAgdGhpcy5vaWRjUHJvdmlkZXIub3BlbklkQ29ubmVjdFByb3ZpZGVyQXJuLFxuICAgICAgICB7XG4gICAgICAgICAgJ0ZvckFueVZhbHVlOlN0cmluZ0xpa2UnOiB7XG4gICAgICAgICAgICAndG9rZW4uYWN0aW9ucy5naXRodWJ1c2VyY29udGVudC5jb206c3ViJzogcHJvcHMuZ2l0aHViUmVwb3NpdG9yaWVzLm1hcCgocmVwbykgPT4gYHJlcG86JHtyZXBvfToqYCksXG4gICAgICAgICAgfSxcbiAgICAgICAgfSxcbiAgICAgICAgJ3N0czpBc3N1bWVSb2xlV2l0aFdlYklkZW50aXR5JyxcbiAgICAgICksXG4gICAgICBkZXNjcmlwdGlvbjogJ1JvbGUgYXNzdW1lZCBieSBHaXRIdWIgQWN0aW9ucyB0byBpbnRlcmFjdCB3aXRoIEVDUicsXG4gICAgfSk7XG5cbiAgICAvLyBPdXRwdXQgdGhpcyByb2xlIGJlY2F1c2Ugd2UnbGwgbmVlZCB0aGUgQVJOIGluIG91ciBHaXRIdWIgYWN0aW9uXG4gICAgbmV3IENmbk91dHB1dCh0aGlzLCBgJHtpZH1HaXRIdWJBY3Rpb25zUm9sZUFybmAsIHtcbiAgICAgIHZhbHVlOiB0aGlzLmdpdGh1YlJvbGUucm9sZUFybixcbiAgICAgIGRlc2NyaXB0aW9uOiAnVGh

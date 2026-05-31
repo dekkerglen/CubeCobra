@@ -12,7 +12,7 @@ const getJson = async (url: string, signal?: AbortSignal): Promise<any | null> =
     return await res.json();
   } catch (err) {
     if ((err as Error).name === 'AbortError') return null;
-    // eslint-disable-next-line no-console
+
     console.error('autocomplete fetch failed', err);
     return null;
   }
@@ -34,10 +34,7 @@ export const cardNameMatches =
 export const cubeCardNameMatches =
   (cubeId: string, board: string): MatchFetcher =>
   async (query, signal) => {
-    const json = await getJson(
-      `/cube/api/cubecardnames/${cubeId}/${board}?q=${encodeURIComponent(query)}`,
-      signal,
-    );
+    const json = await getJson(`/cube/api/cubecardnames/${cubeId}/${board}?q=${encodeURIComponent(query)}`, signal);
     return json?.success === 'true' ? json.cardnames : [];
   };
 

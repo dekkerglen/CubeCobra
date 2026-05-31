@@ -377,10 +377,7 @@ function convertParsedCost(card: ScryfallCard, preflipped?: boolean) {
       .toLowerCase()
       .split('}{')
       .reverse();
-  } else if (
-    card.mana_cost &&
-    (card.layout === 'split' || card.layout === 'adventure' || card.layout === 'prepare')
-  ) {
+  } else if (card.mana_cost && (card.layout === 'split' || card.layout === 'adventure' || card.layout === 'prepare')) {
     // 'prepare' (Secrets of Strixhaven) uses the adventure-style inset layout: a
     // creature with a small spell inset on the right, top-level mana_cost is
     // "{front} // {prepare}" — same shape as adventure cards.

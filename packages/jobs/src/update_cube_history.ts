@@ -14,7 +14,7 @@ import { BoardChanges, DefaultElo } from '@utils/datatypes/Card';
 import type ChangeLogType from '@utils/datatypes/ChangeLog';
 import History, { Period } from '@utils/datatypes/History';
 
-import { downloadJson, listFiles, uploadJson, uploadJsonStreaming } from './utils/s3';
+import { downloadJson, listFiles, uploadJsonStreaming } from './utils/s3';
 
 type CubeDict = Record<string, string[]>;
 

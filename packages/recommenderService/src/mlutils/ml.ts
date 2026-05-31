@@ -316,8 +316,7 @@ export const recommend = (oracles: string[], options?: RecommendOptions): Recomm
     totalAdds = ranked.length;
 
     const skip = Math.max(0, Math.floor(options.skip ?? 0));
-    const limit =
-      options.limit !== undefined && options.limit > 0 ? Math.floor(options.limit) : ranked.length - skip;
+    const limit = options.limit !== undefined && options.limit > 0 ? Math.floor(options.limit) : ranked.length - skip;
     adds = ranked.slice(skip, skip + limit);
     console.log(
       `[ML] recommend() ranked ${totalAdds} eligible adds, returning page [${skip}, ${skip + adds.length}), ${cuts.length} cuts`,
@@ -335,9 +334,7 @@ export const recommend = (oracles: string[], options?: RecommendOptions): Recomm
     ranked.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
     totalAdds = ranked.length;
     adds = ranked.slice(0, MAX_RECOMMEND_ADDS);
-    console.log(
-      `[ML] recommend() returning ${adds.length} adds (capped from ${totalAdds}), ${cuts.length} cuts`,
-    );
+    console.log(`[ML] recommend() returning ${adds.length} adds (capped from ${totalAdds}), ${cuts.length} cuts`);
   }
 
   return { adds, cuts, totalAdds };
@@ -392,9 +389,7 @@ export const draftBatch = (packs: string[][], pools: string[][]): { oracle: stri
   if (!encoder || !draftDecoder || packs.length === 0) return packs.map(() => []);
 
   const batchVector = pools.map((pool) =>
-    encodeIndeces(
-      pool.map((oracle) => oracleToIndex[oracle]).filter((index): index is number => index !== undefined),
-    ),
+    encodeIndeces(pool.map((oracle) => oracleToIndex[oracle]).filter((index): index is number => index !== undefined)),
   );
 
   // Single batched forward pass: [N, numOracles] → encoder → draftDecoder → [N, numOracles]
@@ -410,7 +405,9 @@ export const draftBatch = (packs: string[][], pools: string[][]): { oracle: stri
     const packEntries = pack
       .map((oracle) => {
         const index = oracleIdToMlIndex(oracle);
-        return index === null || index === undefined ? null : { oracle, index, raw: flatResult[rowOffset + index] ?? 0 };
+        return index === null || index === undefined
+          ? null
+          : { oracle, index, raw: flatResult[rowOffset + index] ?? 0 };
       })
       .filter((entry): entry is { oracle: string; index: number; raw: number } => entry !== null);
 
