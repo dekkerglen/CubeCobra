@@ -61,6 +61,16 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   const getMatchesRef = useRef(getMatches);
   getMatchesRef.current = getMatches;
 
+  // Clear cache when the fetcher changes (e.g., toggling filter options).
+  // Callers should memoize getMatches so identity only changes when params do.
+  const prevGetMatches = useRef(getMatches);
+  useEffect(() => {
+    if (prevGetMatches.current !== getMatches) {
+      cache.current.clear();
+      prevGetMatches.current = getMatches;
+    }
+  }, [getMatches]);
+
   const normalizedValue = normalize(value);
 
   // Debounced async lookup. Fires only once the user has typed enough and the
