@@ -1,5 +1,6 @@
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId } from 'serverutils/carddb';
+import { parseDateParam, resolveCubeCards } from 'serverutils/cubeCards';
 import { isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
@@ -16,7 +17,12 @@ export const cubelistHandler = async (req: Request, res: Response) => {
       return res.status(404).send('Cube not found.');
     }
 
-    const cubeCards = await cubeDao.getCards(cube.id);
+    const dateMs = parseDateParam(req.query.date as string | undefined);
+    if (dateMs !== undefined && isNaN(dateMs)) {
+      return res.status(400).send('Invalid date parameter. Must be a unix timestamp in milliseconds.');
+    }
+
+    const { cards: cubeCards } = await resolveCubeCards(cube.id, dateMs);
 
     const names = cubeCards.mainboard.map((card: any) => cardFromId(card.cardID).name);
     res.contentType('text/plain');
