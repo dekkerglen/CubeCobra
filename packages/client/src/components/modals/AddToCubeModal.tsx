@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
-import { cardId, cardImageUrl, cardName } from '@utils/cardutil';
+import { cardId, cardImageUrl, cardName, isCustomOrVoucher } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 import Cube, { boardNameToKey, getBoardDefinitions } from '@utils/datatypes/Cube';
@@ -116,47 +116,30 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
   const add = async (): Promise<void> => {
     setLoading(true);
     try {
-      // Build card object with custom properties if they exist
+      // For regular cards we only need to send the cardID — the server resolves
+      // every other printed attribute from the card catalog. Previously we
+      // mirrored card.colors / card.type_line / card.cmc / etc. into the request,
+      // which were identical copies of catalog values and ended up persisted on
+      // the cube, bloating the document and freezing those fields against
+      // future catalog corrections. Only custom/voucher cards still need the
+      // full payload because the catalog has no entry for them.
       const cardData: any = {
         cardID: cardId(card),
       };
 
-      // Include optional custom card properties
-      if (card.tags && card.tags.length > 0) {
-        cardData.tags = card.tags;
-      }
-      if (card.notes) {
-        cardData.notes = card.notes;
-      }
-      if (card.finish) {
-        cardData.finish = card.finish;
-      }
-      if (card.status) {
-        cardData.status = card.status;
-      }
-      if (card.colors && card.colors.length > 0) {
-        cardData.colors = card.colors;
-      }
-      if (card.type_line) {
-        cardData.type_line = card.type_line;
-      }
-      if (card.rarity) {
-        cardData.rarity = card.rarity;
-      }
-      if (card.cmc !== undefined) {
-        cardData.cmc = card.cmc;
-      }
-      if (card.custom_name) {
-        cardData.custom_name = card.custom_name;
-      }
-      if (card.imgUrl) {
-        cardData.imgUrl = card.imgUrl;
-      }
-      if (card.imgBackUrl) {
-        cardData.imgBackUrl = card.imgBackUrl;
-      }
-      if (card.colorCategory) {
-        cardData.colorCategory = card.colorCategory;
+      if (isCustomOrVoucher(card)) {
+        if (card.tags && card.tags.length > 0) cardData.tags = card.tags;
+        if (card.notes) cardData.notes = card.notes;
+        if (card.finish) cardData.finish = card.finish;
+        if (card.status) cardData.status = card.status;
+        if (card.colors && card.colors.length > 0) cardData.colors = card.colors;
+        if (card.type_line) cardData.type_line = card.type_line;
+        if (card.rarity) cardData.rarity = card.rarity;
+        if (card.cmc !== undefined) cardData.cmc = card.cmc;
+        if (card.custom_name) cardData.custom_name = card.custom_name;
+        if (card.imgUrl) cardData.imgUrl = card.imgUrl;
+        if (card.imgBackUrl) cardData.imgBackUrl = card.imgBackUrl;
+        if (card.colorCategory) cardData.colorCategory = card.colorCategory;
       }
 
       const response = await csrfFetch(`/cube/api/addtocube/${selectedCube}`, {

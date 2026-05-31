@@ -1,3 +1,4 @@
+import { isCustomOrVoucher } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import { cubeDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
@@ -8,6 +9,21 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 import { Request, Response } from '../../../types/express';
 
 /**
+ * Identity key for delta computation. Normal cards collapse by cardID
+ * (scryfall_id). Custom/voucher cards all share the same sentinel cardID,
+ * so we additionally key on the user-provided name — otherwise every custom
+ * card in a CSV gets treated as a duplicate of the first one and ends up
+ * copying its characteristics.
+ */
+function cardDeltaKey(card: Card): string {
+  if (isCustomOrVoucher(card)) {
+    const name = ((card as any).custom_name || (card as any).name || '').toLowerCase();
+    return `${card.cardID}::${name}`;
+  }
+  return card.cardID;
+}
+
+/**
  * Compute adds/removes delta between current and new card lists for a single board.
  * Handles multiple copies of the same card correctly.
  */
@@ -16,31 +32,33 @@ function computeBoardDelta(currentCards: Card[], newCards: Card[]): { adds: any[
   const newCounts = new Map<string, number>();
 
   currentCards.forEach((c) => {
-    currentCounts.set(c.cardID, (currentCounts.get(c.cardID) || 0) + 1);
+    const k = cardDeltaKey(c);
+    currentCounts.set(k, (currentCounts.get(k) || 0) + 1);
   });
 
   newCards.forEach((c) => {
-    newCounts.set(c.cardID, (newCounts.get(c.cardID) || 0) + 1);
+    const k = cardDeltaKey(c);
+    newCounts.set(k, (newCounts.get(k) || 0) + 1);
   });
 
-  const allCardIDs = new Set([...currentCounts.keys(), ...newCounts.keys()]);
+  const allKeys = new Set([...currentCounts.keys(), ...newCounts.keys()]);
   const adds: any[] = [];
   const removes: any[] = [];
 
-  allCardIDs.forEach((cardID) => {
-    const currentCount = currentCounts.get(cardID) || 0;
-    const newCount = newCounts.get(cardID) || 0;
+  allKeys.forEach((key) => {
+    const currentCount = currentCounts.get(key) || 0;
+    const newCount = newCounts.get(key) || 0;
     const diff = newCount - currentCount;
 
     if (diff > 0) {
-      const newCard = newCards.find((c) => c.cardID === cardID);
+      const newCard = newCards.find((c) => cardDeltaKey(c) === key);
       for (let i = 0; i < diff; i++) {
         adds.push(newCard);
       }
     } else if (diff < 0) {
       const cardsToRemove = currentCards
         .map((c, idx) => ({ card: c, index: idx }))
-        .filter((item) => item.card.cardID === cardID)
+        .filter((item) => cardDeltaKey(item.card) === key)
         .slice(currentCount + diff, currentCount);
 
       cardsToRemove.forEach((item) => {

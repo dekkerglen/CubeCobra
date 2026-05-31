@@ -98,6 +98,15 @@ const oracleIsLand = (oracle: string): boolean => {
   return !!(oracleIds && oracleIds[0] && cardFromId(oracleIds[0]).type.includes('Land'));
 };
 
+// Conspiracy and Vanguard cards are draft-affecting cards that should never
+// be selected for a bot's mainboard. They remain in the sideboard.
+const oracleIsConspiracyOrVanguard = (oracle: string): boolean => {
+  const oracleIds = carddb.oracleToId[oracle];
+  if (!oracleIds || !oracleIds[0]) return false;
+  const type = cardFromId(oracleIds[0]).type || '';
+  return type.includes('Conspiracy') || type.includes('Vanguard');
+};
+
 // Convert internal session state to the deck shape callers want, filling
 // remaining mainboard slots with basics chosen by mana-source heuristic.
 const finalize = (s: DeckbuildSessionState): { mainboard: string[]; sideboard: string[] } => {
@@ -202,6 +211,8 @@ export const startHandler = async (req: Request, res: Response) => {
       const originals = fromMl[item.oracle] ?? [item.oracle];
       const oracle = originals.find((o) => remainingPool.includes(o));
       if (!oracle) continue;
+
+      if (oracleIsConspiracyOrVanguard(oracle)) continue;
 
       const land = oracleIsLand(oracle);
       if (land && landCount >= maxLands) continue;
@@ -318,6 +329,7 @@ export const stepHandler = async (req: Request, res: Response) => {
     s.createdAt = Date.now();
 
     const candidates = s.remainingPool.filter((oracle) => {
+      if (oracleIsConspiracyOrVanguard(oracle)) return false;
       const land = oracleIsLand(oracle);
       if (land && s.landCount >= s.maxLands) return false;
       if (!land && s.spellCount >= s.maxSpells) return false;
@@ -390,6 +402,7 @@ export const stepHandler = async (req: Request, res: Response) => {
     const stillActive =
       s.mainboard.length < s.deckSize &&
       s.remainingPool.some((oracle) => {
+        if (oracleIsConspiracyOrVanguard(oracle)) return false;
         const land = oracleIsLand(oracle);
         if (land && s.landCount >= s.maxLands) return false;
         if (!land && s.spellCount >= s.maxSpells) return false;

@@ -328,6 +328,17 @@ function convertCmc(card: ScryfallCard, preflipped: boolean, faceAttributeSource
     }
   }
 
+  // For some DFC layouts the top-level cmc is 0 even though the printed front
+  // face has a real mana value. This is true of "reversible_card" promos and
+  // of Secret Lair same-face DFC promos (e.g. the Birds of Paradise promo where
+  // both faces are Birds — top-level cmc is 0 but each face is 1).
+  // Fall back to the face cmc when the top-level value would otherwise drop a
+  // real mana cost. Normal DFCs (Delver, etc.) already carry card.cmc, so they
+  // are unaffected.
+  if (!card.cmc && faceAttributeSource.cmc) {
+    return faceAttributeSource.cmc;
+  }
+
   return card.cmc || 0;
 }
 
@@ -366,7 +377,13 @@ function convertParsedCost(card: ScryfallCard, preflipped?: boolean) {
       .toLowerCase()
       .split('}{')
       .reverse();
-  } else if (card.mana_cost && (card.layout === 'split' || card.layout === 'adventure')) {
+  } else if (
+    card.mana_cost &&
+    (card.layout === 'split' || card.layout === 'adventure' || card.layout === 'prepare')
+  ) {
+    // 'prepare' (Secrets of Strixhaven) uses the adventure-style inset layout: a
+    // creature with a small spell inset on the right, top-level mana_cost is
+    // "{front} // {prepare}" — same shape as adventure cards.
     parsedCost = card.mana_cost
       .substr(1, card.mana_cost.length - 2)
       .replace(' // ', '{split}')
@@ -426,10 +443,12 @@ function convertColors(card: ScryfallCard, preflipped?: boolean) {
 
   // card has faces
   switch (card.layout) {
-    // NOTE: flip, split and Adventure cards include colors in the main details but not in the card faces
+    // NOTE: flip, split, Adventure, and Prepare (Strixhaven inset spell) cards
+    // include colors in the main details but not in the card faces.
     case 'flip':
     case 'split':
     case 'adventure':
+    case 'prepare':
       return Array.from(card.colors);
     default:
   }

@@ -14,7 +14,7 @@ import { BoardChanges, DefaultElo } from '@utils/datatypes/Card';
 import type ChangeLogType from '@utils/datatypes/ChangeLog';
 import History, { Period } from '@utils/datatypes/History';
 
-import { downloadJson, listFiles, uploadJson } from './utils/s3';
+import { downloadJson, listFiles, uploadJson, uploadJsonStreaming } from './utils/s3';
 
 type CubeDict = Record<string, string[]>;
 
@@ -58,7 +58,7 @@ const saveCubesHistory = async (cubes: CubeDict, key: string) => {
       .filter((index): index is number => index !== undefined);
   }
 
-  await uploadJson(`cubes_history/${key}.json`, cubeHistory);
+  await uploadJsonStreaming(`cubes_history/${key}.json`, cubeHistory);
 };
 
 const loadCubesHistory = async (key: string): Promise<CubeDict> => {

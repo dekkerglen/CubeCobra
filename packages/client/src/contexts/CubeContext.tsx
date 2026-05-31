@@ -222,7 +222,7 @@ export function CubeContextProvider({
 }) {
   const { csrfFetch } = useContext(CSRFContext);
   const user = useContext(UserContext);
-  const { changes, setChanges, clearChanges, version, setVersion } = useContext(ChangesContext);
+  const { changes, setChanges, clearChanges, version, setVersion, setValidationCards } = useContext(ChangesContext);
   const { filterInput, cardFilter } = useContext(FilterContext)!;
 
   const { setOpenCollapse, activeView, useBaseCardData } = useContext(DisplayContext);
@@ -318,6 +318,16 @@ export function CubeContextProvider({
     // captured at provider construction is the input we want to hydrate.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [needsHydration]);
+
+  // Keep ChangesContext's validation cards in sync with our live cube state.
+  // Without this, removing certain cards (vouchers, which hydrate differently
+  // than they serialize) or editing a card you've just added (whose index
+  // doesn't exist in the initial server payload) incorrectly trips the
+  // version-mismatch guard until the page is refreshed.
+  useEffect(() => {
+    setValidationCards(cube.cards as Record<string, Card[]>);
+  }, [cube.cards, setValidationCards]);
+
   const defaultSorts = useMemo(() => {
     const currentView = getViewByName(cube, activeView);
     if (currentView?.defaultSorts && currentView.defaultSorts.length === 4) {

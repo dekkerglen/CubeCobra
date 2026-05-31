@@ -218,37 +218,49 @@ const CardSearch: React.FC = () => {
               </p>
             </div>
 
-            <Flexbox direction="row" alignItems="center" gap="2" className="w-full">
-              <button
-                type="button"
-                onClick={() => setAdvancedOpen(true)}
-                aria-label="Advanced filters"
-                className="text-button-text/80 hover:text-button-text cursor-pointer p-1 inline-flex items-center"
-              >
-                <QuestionIcon size={20} />
-              </button>
-              <Input
-                placeholder='Filter cards: e.g. name:"Ambush Viper"'
-                value={filterText}
-                valid={(filterInput?.length ?? 0) > 0 ? filterValid : undefined}
-                onChange={(event) => setFilterText(event.target.value)}
-                onEnter={() => setFilterInput(filterText)}
-                className="!bg-white !text-gray-800 !placeholder-gray-500 !border-gray-300"
-              />
-              <button
-                type="button"
-                onClick={() => setControlsOpen(true)}
-                aria-label="Display options"
-                className="md:hidden text-button-text/80 hover:text-button-text cursor-pointer p-1 inline-flex items-center"
-              >
-                <GearIcon size={20} />
-              </button>
-              <div className="hidden md:block">
-                <LoadingButton color="primary" onClick={() => setFilterInput(filterText)}>
-                  <span className="px-3">Search</span>
-                </LoadingButton>
-              </div>
-            </Flexbox>
+            <form
+              action="#"
+              onSubmit={(e) => {
+                e.preventDefault();
+                setFilterInput(filterText);
+              }}
+              className="w-full"
+            >
+              <Flexbox direction="row" alignItems="center" gap="2" className="w-full">
+                <button
+                  type="button"
+                  onClick={() => setAdvancedOpen(true)}
+                  aria-label="Advanced filters"
+                  className="text-button-text/80 hover:text-button-text cursor-pointer p-1 inline-flex items-center"
+                >
+                  <QuestionIcon size={20} />
+                </button>
+                <Input
+                  placeholder='Filter cards: e.g. name:"Ambush Viper"'
+                  value={filterText}
+                  valid={(filterInput?.length ?? 0) > 0 ? filterValid : undefined}
+                  onChange={(event) => setFilterText(event.target.value)}
+                  onEnter={() => setFilterInput(filterText)}
+                  className="!bg-white !text-gray-800 !placeholder-gray-500 !border-gray-300"
+                  otherInputProps={{ enterKeyHint: 'search', name: 'f' }}
+                />
+                {/* Hidden submit so mobile virtual keyboards' "Go"/"Search" key submits the form */}
+                <button type="submit" aria-hidden="true" tabIndex={-1} className="hidden" />
+                <button
+                  type="button"
+                  onClick={() => setControlsOpen(true)}
+                  aria-label="Display options"
+                  className="md:hidden text-button-text/80 hover:text-button-text cursor-pointer p-1 inline-flex items-center"
+                >
+                  <GearIcon size={20} />
+                </button>
+                <div className="hidden md:block">
+                  <LoadingButton color="primary" onClick={() => setFilterInput(filterText)}>
+                    <span className="px-3">Search</span>
+                  </LoadingButton>
+                </div>
+              </Flexbox>
+            </form>
           </div>
         </div>
 
