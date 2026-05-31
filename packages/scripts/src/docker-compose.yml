@@ -13,6 +13,8 @@ services:
       - NODE_OPTIONS=--max-old-space-size=8192
     env_file:
       - ../../server/.env_EXAMPLE
+      - path: ../../server/.env
+        required: false
     ports:
       # Webpack / browser entry point
       - 8080:8080
