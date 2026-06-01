@@ -24,6 +24,7 @@ interface UseDraftSimulatorPresentationArgs {
   setters: DraftSimulatorSelectionSetters;
   selectedCards: CardStats[];
   selectedDeckCards: CardStats[];
+  selectedSideboardCards: CardStats[];
   selectedCard: CardStats | null;
   activeFilterPoolIndexSet: Set<number> | null;
   selectedPools: DraftSimulatorDerivedData['displayedPools'];
@@ -44,9 +45,17 @@ interface UseDraftSimulatorPresentationArgs {
 export default function useDraftSimulatorPresentation({
   data: { displayRunData, activeDecks, displayedPools, skeletons, poolArchetypeLabels, skeletonColorProfiles },
   state: { selectedSkeletonId, selectedArchetype, focusedPoolIndex },
-  setters: { setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex },
+  setters: {
+    setSelectedCardOracles,
+    setSelectedDeckCardOracles,
+    setSelectedSideboardCardOracles,
+    setSelectedArchetype,
+    setSelectedSkeletonId,
+    setFocusedPoolIndex,
+  },
   selectedCards,
   selectedDeckCards,
+  selectedSideboardCards,
   selectedCard,
   activeFilterPoolIndexSet,
   selectedPools,
@@ -65,8 +74,9 @@ export default function useDraftSimulatorPresentation({
     if (selectedArchetype) chips.push(`Deck Color: ${archetypeFullName(selectedArchetype)}`);
     for (const c of selectedCards) chips.push(`In Pool: ${c.name}`);
     for (const c of selectedDeckCards) chips.push(`In Deck: ${c.name}`);
+    for (const c of selectedSideboardCards) chips.push(`In Sideboard: ${c.name}`);
     return chips;
-  }, [selectedSkeletonId, selectedArchetype, selectedCards, selectedDeckCards, skeletons]);
+  }, [selectedSkeletonId, selectedArchetype, selectedCards, selectedDeckCards, selectedSideboardCards, skeletons]);
 
   const activeFilterSummary = useMemo(
     () => (activeFilterChips.length > 0 ? activeFilterChips.join(' · ') : null),
@@ -74,7 +84,9 @@ export default function useDraftSimulatorPresentation({
   );
 
   const scopeOnlySummary = useMemo(() => {
-    const nonCard = activeFilterChips.filter((c) => !c.startsWith('In Pool:') && !c.startsWith('In Deck:'));
+    const nonCard = activeFilterChips.filter(
+      (c) => !c.startsWith('In Pool:') && !c.startsWith('In Deck:') && !c.startsWith('In Sideboard:'),
+    );
     return nonCard.length > 0 ? nonCard.join(' · ') : null;
   }, [activeFilterChips]);
 
@@ -96,6 +108,15 @@ export default function useDraftSimulatorPresentation({
         detail: 'In Deck',
         onClear: () =>
           setSelectedDeckCardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
+      });
+    }
+    for (const selectedCardEntry of selectedSideboardCards) {
+      chips.push({
+        key: `sideboard-${selectedCardEntry.oracle_id}`,
+        label: selectedCardEntry.name,
+        detail: 'In Sideboard',
+        onClear: () =>
+          setSelectedSideboardCardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
       });
     }
     if (selectedSkeletonId !== null) {
@@ -132,6 +153,7 @@ export default function useDraftSimulatorPresentation({
   }, [
     selectedCards,
     selectedDeckCards,
+    selectedSideboardCards,
     selectedSkeletonId,
     selectedArchetype,
     focusedPoolIndex,
@@ -141,6 +163,8 @@ export default function useDraftSimulatorPresentation({
     skeletonColorProfiles,
     setSelectedArchetype,
     setSelectedCardOracles,
+    setSelectedDeckCardOracles,
+    setSelectedSideboardCardOracles,
     setSelectedSkeletonId,
     setFocusedPoolIndex,
     getSkeletonDisplayName,
@@ -192,10 +216,18 @@ export default function useDraftSimulatorPresentation({
   const clearActiveFilter = useCallback(() => {
     setSelectedCardOracles([]);
     setSelectedDeckCardOracles([]);
+    setSelectedSideboardCardOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
     setFocusedPoolIndex(null);
-  }, [setFocusedPoolIndex, setSelectedArchetype, setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedSkeletonId]);
+  }, [
+    setFocusedPoolIndex,
+    setSelectedArchetype,
+    setSelectedCardOracles,
+    setSelectedDeckCardOracles,
+    setSelectedSideboardCardOracles,
+    setSelectedSkeletonId,
+  ]);
 
   const downloadDraftBreakdownCsv = useCallback((pools: DraftSimulatorDerivedData['displayedPools'], label: string) => {
     if (!displayRunData) return;

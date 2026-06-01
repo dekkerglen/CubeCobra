@@ -960,6 +960,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   // Card pool view
   const [selectedCardOracles, setSelectedCardOracles] = useState<string[]>([]);
   const [selectedDeckCardOracles, setSelectedDeckCardOracles] = useState<string[]>([]);
+  const [selectedSideboardCardOracles, setSelectedSideboardCardOracles] = useState<string[]>([]);
   const [selectedArchetype, setSelectedArchetype] = useState<string | null>(null);
   const [selectedSkeletonId, setSelectedSkeletonId] = useState<number | null>(null);
   const [focusedPoolIndex, setFocusedPoolIndex] = useState<number | null>(null);
@@ -984,6 +985,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const resetViewSelection = useCallback(() => {
     setSelectedCardOracles([]);
     setSelectedDeckCardOracles([]);
+    setSelectedSideboardCardOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
     setFocusedPoolIndex(null);
@@ -1180,22 +1182,39 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     () => ({
       selectedCardOracles,
       selectedDeckCardOracles,
+      selectedSideboardCardOracles,
       selectedSkeletonId,
       selectedArchetype,
       focusedPoolIndex,
       focusedPoolViewMode,
     }),
-    [selectedCardOracles, selectedDeckCardOracles, selectedSkeletonId, selectedArchetype, focusedPoolIndex, focusedPoolViewMode],
+    [
+      selectedCardOracles,
+      selectedDeckCardOracles,
+      selectedSideboardCardOracles,
+      selectedSkeletonId,
+      selectedArchetype,
+      focusedPoolIndex,
+      focusedPoolViewMode,
+    ],
   );
   const selectionSetters = useMemo<DraftSimulatorSelectionSetters>(
     () => ({
       setSelectedCardOracles,
       setSelectedDeckCardOracles,
+      setSelectedSideboardCardOracles,
       setSelectedArchetype,
       setSelectedSkeletonId,
       setFocusedPoolIndex,
     }),
-    [setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex],
+    [
+      setSelectedCardOracles,
+      setSelectedDeckCardOracles,
+      setSelectedSideboardCardOracles,
+      setSelectedArchetype,
+      setSelectedSkeletonId,
+      setFocusedPoolIndex,
+    ],
   );
 
   // Top Gwen archetype labels per color pair, for the Deck Color Distribution chart
@@ -1269,12 +1288,15 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const {
     selectedCards,
     selectedDeckCards,
+    selectedSideboardCards,
     selectedCard,
     activeFilterPoolIndexSet,
     filteredDecks,
     deckInclusionPct,
     deckCardPoolIndices,
+    sideboardCardPoolIndices,
     visibleDeckCounts,
+    visibleSideboardCounts,
     inDeckOracles,
     inSideboardOracles,
     visibleCardStats,
@@ -1334,6 +1356,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     setters: selectionSetters,
     selectedCards,
     selectedDeckCards,
+    selectedSideboardCards,
     selectedCard,
     activeFilterPoolIndexSet,
     selectedPools,
@@ -1351,6 +1374,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
   const handleToggleSelectedDeckCard = useCallback((oracleId: string) => {
     setSelectedDeckCardOracles((current) => {
+      if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
+      if (current.length < 2) return [...current, oracleId];
+      return [current[1]!, oracleId];
+    });
+  }, []);
+
+  const handleToggleSelectedSideboardCard = useCallback((oracleId: string) => {
+    setSelectedSideboardCardOracles((current) => {
       if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
       if (current.length < 2) return [...current, oracleId];
       return [current[1]!, oracleId];
@@ -1576,8 +1607,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       selectedCardOracles={selectedCardOracles}
       handleToggleSelectedDeckCard={handleToggleSelectedDeckCard}
       selectedDeckCardOracles={selectedDeckCardOracles}
+      handleToggleSelectedSideboardCard={handleToggleSelectedSideboardCard}
+      selectedSideboardCardOracles={selectedSideboardCardOracles}
       deckCardPoolIndices={deckCardPoolIndices}
+      sideboardCardPoolIndices={sideboardCardPoolIndices}
       visibleDeckCounts={visibleDeckCounts}
+      visibleSideboardCounts={visibleSideboardCounts}
       inDeckOracles={inDeckOracles}
       inSideboardOracles={inSideboardOracles}
       deckInclusionPct={deckInclusionPct}

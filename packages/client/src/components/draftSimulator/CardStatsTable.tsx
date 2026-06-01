@@ -6,7 +6,13 @@ import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
 
-type SortKey = keyof CardStats | 'deckInclusion' | 'poolPct' | 'deckFilterCount' | 'openerTakeRate';
+type SortKey =
+  | keyof CardStats
+  | 'deckInclusion'
+  | 'poolPct'
+  | 'deckFilterCount'
+  | 'sideboardFilterCount'
+  | 'openerTakeRate';
 
 const CardStatsTable: React.FC<{
   cardStats: CardStats[];
@@ -15,8 +21,12 @@ const CardStatsTable: React.FC<{
   selectedCardOracles: string[];
   onSelectDeckCard: (id: string) => void;
   selectedDeckCardOracles: string[];
+  onSelectSideboardCard: (id: string) => void;
+  selectedSideboardCardOracles: string[];
   visibleDeckCounts: Map<string, number>;
+  visibleSideboardCounts: Map<string, number>;
   inDeckOracles: Set<string> | null;
+  inSideboardOracles: Set<string> | null;
   deckInclusionPct: Map<string, number>;
   visiblePoolCounts: Map<string, number>;
   totalScopedPools: number;
@@ -29,8 +39,12 @@ const CardStatsTable: React.FC<{
   selectedCardOracles,
   onSelectDeckCard,
   selectedDeckCardOracles,
+  onSelectSideboardCard,
+  selectedSideboardCardOracles,
   visibleDeckCounts,
+  visibleSideboardCounts,
   inDeckOracles,
+  inSideboardOracles,
   deckInclusionPct,
   visiblePoolCounts,
   totalScopedPools,
@@ -68,6 +82,9 @@ const CardStatsTable: React.FC<{
     } else if (sortKey === 'deckFilterCount') {
       av = visibleDeckCounts.get(a.oracle_id) ?? 0;
       bv = visibleDeckCounts.get(b.oracle_id) ?? 0;
+    } else if (sortKey === 'sideboardFilterCount') {
+      av = visibleSideboardCounts.get(a.oracle_id) ?? 0;
+      bv = visibleSideboardCounts.get(b.oracle_id) ?? 0;
     } else if (sortKey === 'openerTakeRate') {
       av = a.p1p1Seen > 0 ? a.p1p1Count / a.p1p1Seen : 0;
       bv = b.p1p1Seen > 0 ? b.p1p1Count / b.p1p1Seen : 0;
@@ -106,6 +123,7 @@ const CardStatsTable: React.FC<{
     'deckInclusion',
     'poolPct',
     'deckFilterCount',
+    'sideboardFilterCount',
     'openerTakeRate',
   ]);
 
@@ -191,6 +209,11 @@ const CardStatsTable: React.FC<{
               )}
               {renderSortHeader('Pool', 'poolPct', 'How often this card appeared in a drafted pool within the current scope')}
               {renderSortHeader('Deck', 'deckFilterCount', 'How many pools put this card in the mainboard within the current scope')}
+              {renderSortHeader(
+                'Sideboard',
+                'sideboardFilterCount',
+                'How many pools put this card in the sideboard within the current scope',
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-border">
@@ -198,8 +221,10 @@ const CardStatsTable: React.FC<{
               const inclPct = deckInclusionPct.get(cardStatsEntry.oracle_id);
               const isFilteredCard = selectedCardOracles.includes(cardStatsEntry.oracle_id);
               const isFilteredDeckCard = selectedDeckCardOracles.includes(cardStatsEntry.oracle_id);
+              const isFilteredSideboardCard = selectedSideboardCardOracles.includes(cardStatsEntry.oracle_id);
               const visiblePoolCount = visiblePoolCounts.get(cardStatsEntry.oracle_id) ?? cardStatsEntry.poolIndices.length;
               const deckPoolCount = visibleDeckCounts.get(cardStatsEntry.oracle_id) ?? 0;
+              const sideboardPoolCount = visibleSideboardCounts.get(cardStatsEntry.oracle_id) ?? 0;
               const poolPct = totalScopedPools > 0 ? visiblePoolCount / totalScopedPools : null;
               const openerTakeRate = cardStatsEntry.p1p1Seen > 0 ? cardStatsEntry.p1p1Count / cardStatsEntry.p1p1Seen : 0;
               return (
@@ -249,6 +274,26 @@ const CardStatsTable: React.FC<{
                       onClick={() => onSelectDeckCard(cardStatsEntry.oracle_id)}
                     >
                       {isFilteredDeckCard ? <>✕ <span className="tabular-nums">{deckPoolCount}</span></> : <span className="tabular-nums">{deckPoolCount}</span>}
+                    </button>
+                  </td>
+                  <td className="px-3 py-2 text-right">
+                    <button
+                      type="button"
+                      className={[
+                        'px-2 py-0.5 rounded text-xs font-medium border',
+                        isFilteredSideboardCard ? 'bg-link text-white border-link' : 'bg-link/10 text-link border-link/30 hover:bg-link/20',
+                        !inSideboardOracles ? 'opacity-40 cursor-not-allowed' : '',
+                      ].join(' ')}
+                      disabled={!inSideboardOracles}
+                      onClick={() => onSelectSideboardCard(cardStatsEntry.oracle_id)}
+                    >
+                      {isFilteredSideboardCard ? (
+                        <>
+                          ✕ <span className="tabular-nums">{sideboardPoolCount}</span>
+                        </>
+                      ) : (
+                        <span className="tabular-nums">{sideboardPoolCount}</span>
+                      )}
                     </button>
                   </td>
                 </tr>

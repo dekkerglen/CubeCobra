@@ -130,7 +130,7 @@ function buildActiveFilterPreview({
 
 interface UseDraftSimulatorSelectionArgs {
   data: DraftSimulatorDerivedData;
-  state: Pick<DraftSimulatorSelectionState, 'selectedCardOracles' | 'selectedDeckCardOracles' | 'selectedSkeletonId' | 'selectedArchetype'>;
+  state: Pick<DraftSimulatorSelectionState, 'selectedCardOracles' | 'selectedDeckCardOracles' | 'selectedSideboardCardOracles' | 'selectedSkeletonId' | 'selectedArchetype'>;
   filteredCardStatsCache: { current: Map<string, CardStats[]> };
   computeFilteredCardStats: (
     setup: NonNullable<DraftSimulatorDerivedData['currentRunSetup']>,
@@ -143,7 +143,7 @@ interface UseDraftSimulatorSelectionArgs {
 
 export default function useDraftSimulatorSelection({
   data: { displayRunData, currentRunSetup, displayedPools, activeDecks, skeletons },
-  state: { selectedCardOracles, selectedDeckCardOracles, selectedSkeletonId, selectedArchetype },
+  state: { selectedCardOracles, selectedDeckCardOracles, selectedSideboardCardOracles, selectedSkeletonId, selectedArchetype },
   filteredCardStatsCache,
   computeFilteredCardStats,
   bottomTab,
@@ -169,12 +169,36 @@ export default function useDraftSimulatorSelection({
     [displayRunData, selectedDeckCardOracles],
   );
 
+  const selectedSideboardCards = useMemo(
+    () =>
+      displayRunData
+        ? selectedSideboardCardOracles
+            .map((oracle) => displayRunData.cardStats.find((c) => c.oracle_id === oracle) ?? null)
+            .filter((c): c is CardStats => !!c)
+        : [],
+    [displayRunData, selectedSideboardCardOracles],
+  );
+
   // oracle_id → pool indices where that card is in the mainboard
   const deckCardPoolIndices = useMemo<Map<string, number[]>>(() => {
     if (!activeDecks) return new Map();
     const map = new Map<string, number[]>();
     for (let i = 0; i < activeDecks.length; i++) {
       for (const oracleId of activeDecks[i]!.mainboard) {
+        const entry = map.get(oracleId);
+        if (entry) entry.push(i);
+        else map.set(oracleId, [i]);
+      }
+    }
+    return map;
+  }, [activeDecks]);
+
+  // oracle_id → pool indices where that card is in the sideboard
+  const sideboardCardPoolIndices = useMemo<Map<string, number[]>>(() => {
+    if (!activeDecks) return new Map();
+    const map = new Map<string, number[]>();
+    for (let i = 0; i < activeDecks.length; i++) {
+      for (const oracleId of new Set(activeDecks[i]!.sideboard)) {
         const entry = map.get(oracleId);
         if (entry) entry.push(i);
         else map.set(oracleId, [i]);
@@ -208,6 +232,11 @@ export default function useDraftSimulatorSelection({
       if (poolIndices) filterSets.push(new Set<number>(poolIndices));
     }
 
+    for (const oracleId of selectedSideboardCardOracles) {
+      const poolIndices = sideboardCardPoolIndices.get(oracleId);
+      if (poolIndices) filterSets.push(new Set<number>(poolIndices));
+    }
+
     if (filterSets.length === 0) return null;
 
     const [first, ...rest] = filterSets;
@@ -216,7 +245,17 @@ export default function useDraftSimulatorSelection({
       if (!rest.every((set) => set.has(value))) intersection.delete(value);
     }
     return intersection;
-  }, [selectedArchetype, selectedSkeletonId, selectedCards, selectedDeckCardOracles, deckCardPoolIndices, skeletons, displayedPools]);
+  }, [
+    selectedArchetype,
+    selectedSkeletonId,
+    selectedCards,
+    selectedDeckCardOracles,
+    selectedSideboardCardOracles,
+    deckCardPoolIndices,
+    sideboardCardPoolIndices,
+    skeletons,
+    displayedPools,
+  ]);
 
   const filteredDecks = useMemo(() => {
     if (!activeDecks) return null;
@@ -298,6 +337,18 @@ export default function useDraftSimulatorSelection({
     return counts;
   }, [filteredDecks]);
 
+  // Sideboard counts scoped to the active filter — analogous to visibleDeckCounts but for sideboards
+  const visibleSideboardCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    if (!filteredDecks) return counts;
+    for (const deck of filteredDecks) {
+      for (const oracleId of new Set(deck.sideboard)) {
+        counts.set(oracleId, (counts.get(oracleId) ?? 0) + 1);
+      }
+    }
+    return counts;
+  }, [filteredDecks]);
+
   const hasApproximateFilteredStats = !!(activeFilterPoolIndexSet && !currentRunSetup);
 
   const scopedPools = useMemo(
@@ -365,12 +416,15 @@ export default function useDraftSimulatorSelection({
   return {
     selectedCards,
     selectedDeckCards,
+    selectedSideboardCards,
     selectedCard,
     activeFilterPoolIndexSet,
     filteredDecks,
     deckInclusionPct,
     deckCardPoolIndices,
+    sideboardCardPoolIndices,
     visibleDeckCounts,
+    visibleSideboardCounts,
     inDeckOracles,
     inSideboardOracles,
     visibleCardStats,

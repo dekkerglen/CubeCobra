@@ -1,7 +1,10 @@
+import { type LandTrimDeck, runManabaseTrim } from '@utils/drafting/landTrim';
+import type { BasicCardLike } from '@utils/drafting/manabaseHeuristics';
 import { randomUUID } from 'crypto';
+import { buildLandMetaLookup } from 'serverutils/buildLandMetaLookup';
 import carddb, { cardFromId, getOracleForMl, getReasonableCardByOracle } from 'serverutils/carddb';
 import { calculateBasics, deckbuild } from 'serverutils/draftbots';
-import { buildOrThrow, draftOrThrow } from 'serverutils/ml';
+import { batchDraftOrThrow, buildOrThrow, draftOrThrow } from 'serverutils/ml';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -100,7 +103,28 @@ const oracleIsLand = (oracle: string): boolean => {
 
 // Convert internal session state to the deck shape callers want, filling
 // remaining mainboard slots with basics chosen by mana-source heuristic.
-const finalize = (s: DeckbuildSessionState): { mainboard: string[]; sideboard: string[] } => {
+const finalize = async (s: DeckbuildSessionState): Promise<{ mainboard: string[]; sideboard: string[] }> => {
+  const trimDecks: LandTrimDeck[] = [
+    {
+      mainboard: s.mainboard,
+      sideboard: s.remainingPool,
+      basics: s.basicsCards
+        .filter((b: any) => b?.oracle_id)
+        .map<BasicCardLike>((b: any) => ({ oracleId: b.oracle_id, colorIdentity: b.color_identity ?? [] })),
+      deckSize: s.deckSize,
+      maxLands: s.maxLands,
+      cardMeta: buildLandMetaLookup(s.mainboard, s.basicsCards),
+      originalPool: [...s.mainboard, ...s.remainingPool],
+    },
+  ];
+  try {
+    await runManabaseTrim(trimDecks, batchDraftOrThrow);
+  } catch (err) {
+    // Finalize the untrimmed deck rather than failing the request, but record the failure
+    // so a wedged rerank service is visible in logs.
+    console.warn('cube/api/deckbuild manabase trim failed; finalizing without trim', err);
+  }
+
   const mainboardCards = s.mainboard.map(getReasonableCardByOracle);
   const basicsToAdd = calculateBasics(mainboardCards, s.basicsCards, s.deckSize);
   const mainboardOracles = [
@@ -249,7 +273,7 @@ export const startHandler = async (req: Request, res: Response) => {
     const anyActive = mainboard.length < deckSize && remainingPool.length > 0;
     if (!anyActive) {
       state.complete = true;
-      state.result = finalize(state);
+      state.result = await finalize(state);
       sessions.set(sessionId, state);
       return res.status(200).json({
         success: true,
@@ -328,7 +352,7 @@ export const stepHandler = async (req: Request, res: Response) => {
     // a category cap or the pool is exhausted.
     if (candidates.length === 0 || s.mainboard.length >= s.deckSize) {
       s.complete = true;
-      s.result = finalize(s);
+      s.result = await finalize(s);
       return res.status(200).json({
         success: true,
         step: s.step,
@@ -365,7 +389,7 @@ export const stepHandler = async (req: Request, res: Response) => {
     if (!bestOracle || bestScore <= 0) {
       // Model didn't recommend any of the remaining candidates — finalize.
       s.complete = true;
-      s.result = finalize(s);
+      s.result = await finalize(s);
       return res.status(200).json({
         success: true,
         step: s.step,
@@ -398,7 +422,7 @@ export const stepHandler = async (req: Request, res: Response) => {
 
     if (!stillActive) {
       s.complete = true;
-      s.result = finalize(s);
+      s.result = await finalize(s);
       return res.status(200).json({
         success: true,
         step: s.step,

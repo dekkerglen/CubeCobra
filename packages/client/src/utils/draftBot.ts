@@ -22,6 +22,8 @@
 
 import { cdnUrl } from '@utils/cdnUrl';
 import { BasicLandInfo } from '@utils/datatypes/SimulationReport';
+import { type LandTrimDeck, runManabaseTrim } from '@utils/drafting/landTrim';
+import { pickAddedBasics } from '@utils/drafting/manabaseHeuristics';
 
 // Models are served only from the CDN. We deliberately do NOT fall back to the
 // app origin: the bundle is ~70 MB and proxying it through our server would
@@ -480,7 +482,8 @@ export async function localPickBatch(
   if (!draftBotLoaded || !tf || !encoder || !draftDecoder || packs.length === 0) {
     return packs.map(() => '');
   }
-  if (numOracles === 0) throw new Error('Draft bot loaded but oracle vocabulary is empty — model may have loaded incorrectly.');
+  if (numOracles === 0)
+    throw new Error('Draft bot loaded but oracle vocabulary is empty — model may have loaded incorrectly.');
 
   const logits = await forwardPass(pools, draftDecoder, remapping, chunkSize, cubeCtx);
 
@@ -641,10 +644,20 @@ export async function localRecommend(
 
 export interface DeckbuildEntry {
   pool: string[];
-  /** Card metadata keyed by oracle_id — needs type, colorIdentity, parsedCost, mlOracleId */
+  /** Card metadata keyed by oracle_id — needs type, colorIdentity, parsedCost, mlOracleId.
+   *  `name` and `isManaFixingLand` are populated by the simulator's setup endpoint and read
+   *  by the manabase-trim heuristics. */
   cardMeta: Record<
     string,
-    { type: string; colorIdentity: string[]; parsedCost?: string[]; producedMana?: string[]; mlOracleId?: string }
+    {
+      name?: string;
+      type: string;
+      colorIdentity: string[];
+      parsedCost?: string[];
+      producedMana?: string[];
+      mlOracleId?: string;
+      isManaFixingLand?: boolean;
+    }
   >;
   basics: BasicLandInfo[];
   maxSpells?: number;
@@ -699,36 +712,7 @@ export function calculateBasicsForDeck(
   cardMeta: DeckbuildEntry['cardMeta'],
   deckSize: number,
 ): string[] {
-  if (basics.length === 0) return [];
-
-  const basicLands = basics.filter((basic) => basic.type.includes('Land'));
-  if (basicLands.length === 0) return [];
-
-  const result: string[] = [];
-  const basicsNeeded = deckSize - mainboard.length;
-
-  for (let i = 0; i < basicsNeeded; i++) {
-    const cards = [...mainboard, ...result]
-      .map((oracle) => getDeckCardMeta(oracle, cardMeta, basics))
-      .filter((card): card is DeckCardMeta | BasicLandInfo => card !== null);
-    const pips = colorDemandPerSource(cards);
-
-    let bestBasic = basicLands[0]!;
-    let bestScore = deckCardColors(bestBasic).reduce((sum, color) => sum + (pips[color] ?? 0), 0);
-
-    for (let j = 1; j < basicLands.length; j++) {
-      const candidate = basicLands[j]!;
-      const score = deckCardColors(candidate).reduce((sum, color) => sum + (pips[color] ?? 0), 0);
-      if (score > bestScore) {
-        bestBasic = candidate;
-        bestScore = score;
-      }
-    }
-
-    result.push(bestBasic.oracleId);
-  }
-
-  return result;
+  return pickAddedBasics(mainboard, cardMeta, basics, deckSize).map((basic) => basic.oracleId);
 }
 
 export function chooseBestMappedOracle(
@@ -905,6 +889,36 @@ export async function localBatchDeckbuild(
       if (land) seat.landCount += 1;
       else seat.spellCount += 1;
       anyProgress = true;
+    }
+  }
+
+  // Manabase trim: cut off-color non-fetches, dead fetches, and force-cut typed duals
+  // that contribute < 2 deck colors. Operates across all seats in parallel — one batched
+  // ML rerank per pass. Lands cut from the mainboard land in `trimSideboards[s]` and get
+  // concatenated into the final sideboard below. Mainboard size is preserved (swap-in-
+  // place) so the basics fill behaves the same as without trim.
+  const trimSideboards: string[][] = seats.map(() => []);
+  const trimDecks: LandTrimDeck[] = seats.map((seat, idx) => ({
+    mainboard: seat.mainboard,
+    sideboard: trimSideboards[idx]!,
+    basics: entries[idx]!.basics,
+    deckSize: seat.deckSize,
+    maxLands: seat.maxLands,
+    cardMeta: entries[idx]!.cardMeta,
+    originalPool: seat.originalPool,
+  }));
+  await runManabaseTrim(
+    trimDecks,
+    (batchInputs) => localBatchDraftRanked(batchInputs, sharedRemapping, chunkSize, cubeCtx),
+    { signal },
+  );
+  // Each cut land that's still in the original pool needs to be reflected in
+  // remainingCounts so the sideboard reconstruction below picks it up.
+  for (let s = 0; s < seats.length; s += 1) {
+    const seat = seats[s]!;
+    for (const oracle of trimSideboards[s]!) {
+      seat.remainingCounts[oracle] = (seat.remainingCounts[oracle] ?? 0) + 1;
+      seat.remainingCount += 1;
     }
   }
 
