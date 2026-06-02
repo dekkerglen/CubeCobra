@@ -96,8 +96,12 @@ const DraftSimulatorBottomSection: React.FC<{
   selectedCardOracles: string[];
   handleToggleSelectedDeckCard: (oracleId: string) => void;
   selectedDeckCardOracles: string[];
+  handleToggleSelectedSideboardCard: (oracleId: string) => void;
+  selectedSideboardCardOracles: string[];
   deckCardPoolIndices: Map<string, number[]>;
+  sideboardCardPoolIndices: Map<string, number[]>;
   visibleDeckCounts: Map<string, number>;
+  visibleSideboardCounts: Map<string, number>;
   inDeckOracles: Set<string> | null;
   inSideboardOracles: Set<string> | null;
   deckInclusionPct: Map<string, number>;
@@ -153,8 +157,12 @@ const DraftSimulatorBottomSection: React.FC<{
   selectedCardOracles,
   handleToggleSelectedDeckCard,
   selectedDeckCardOracles,
+  handleToggleSelectedSideboardCard,
+  selectedSideboardCardOracles,
   deckCardPoolIndices,
+  sideboardCardPoolIndices,
   visibleDeckCounts,
+  visibleSideboardCounts,
   inDeckOracles,
   inSideboardOracles,
   deckInclusionPct,
@@ -362,8 +370,12 @@ const DraftSimulatorBottomSection: React.FC<{
               selectedCardOracles={selectedCardOracles}
               onSelectDeckCard={handleToggleSelectedDeckCard}
               selectedDeckCardOracles={selectedDeckCardOracles}
+              onSelectSideboardCard={handleToggleSelectedSideboardCard}
+              selectedSideboardCardOracles={selectedSideboardCardOracles}
               visibleDeckCounts={visibleDeckCounts}
+              visibleSideboardCounts={visibleSideboardCounts}
               inDeckOracles={inDeckOracles}
+              inSideboardOracles={inSideboardOracles}
 
               deckInclusionPct={deckInclusionPct}
               visiblePoolCounts={visiblePoolCounts}
