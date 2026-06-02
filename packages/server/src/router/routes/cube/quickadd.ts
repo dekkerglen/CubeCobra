@@ -4,7 +4,6 @@ import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { getRandomNewCubeImage } from 'serverutils/imageutil';
 import { handleRouteError, redirect } from 'serverutils/render';
-import { hasProfanity } from 'serverutils/util';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../types/express';
@@ -24,17 +23,11 @@ export const quickAddHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/login');
     }
 
+    // The name is system-generated from the (already validated) username, so it
+    // needs no length or profanity validation. Running hasProfanity here would
+    // produce false positives for usernames that happen to contain an innocent
+    // substring of a banned word (e.g. "raccoon" contains "coon").
     const name = `${user.username}'s New Cube`;
-
-    if (name.length < 5 || name.length > 100) {
-      req.flash('danger', 'Cube name should be at least 5 characters long, and shorter than 100 characters.');
-      return redirect(req, res, `/user/view/${user.id}`);
-    }
-
-    if (hasProfanity(name)) {
-      req.flash('danger', 'Cube name contains a banned word. If you feel this was a mistake, please contact us.');
-      return redirect(req, res, `/user/view/${user.id}`);
-    }
 
     // if this user has two empty cubes, we deny them from making a new cube
     const cubes = await cubeDao.queryByOwner(user.id);

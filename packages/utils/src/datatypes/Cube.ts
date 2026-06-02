@@ -187,10 +187,18 @@ export function getViewDefinitions(cube: Cube): ViewDefinition[] {
 }
 
 /**
- * Gets a specific view by name
+ * Gets a specific view by name or by its URL-safe key.
+ *
+ * Navigation links carry the view either by its display name (e.g. "Base Packs")
+ * or by its URL-safe key (e.g. "base-packs", see viewNameToKey). Match both so a
+ * multi-word view doesn't silently fall through to the mainboard fallback.
  */
 export function getViewByName(cube: Cube, name: string): ViewDefinition | undefined {
-  return getViewDefinitions(cube).find((v) => v.name.toLowerCase() === name.toLowerCase());
+  const target = name.toLowerCase();
+  return getViewDefinitions(cube).find((v) => {
+    const lower = v.name.toLowerCase();
+    return lower === target || lower.replace(/\s+/g, '-') === target;
+  });
 }
 
 /**
