@@ -181,7 +181,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
           </>
         )}
       </Flexbox>
-      <CardFooter>
+      <CardFooter className="border-border-secondary">
         <Flexbox direction="col" gap="2">
           {(user.cubes || []).length > 2 && <NavLink href={`/user/view/${user.id}`}>View All</NavLink>}
           <NavLink href={`/cube/liked/${user.id}`}>Liked Cubes</NavLink>
@@ -420,13 +420,9 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
   );
 
   return (
-    <div
-      className={classNames(
-        'px-6 py-2',
-        transparent ? 'nav-transparent bg-bg-secondary/80 backdrop-blur-sm' : 'bg-bg-secondary',
-      )}
-    >
-      <ResponsiveDiv baseVisible md className="w-full max-w-full">
+    <div className={classNames('px-6 py-2 relative', transparent ? 'nav-transparent' : 'bg-bg-secondary')}>
+      {transparent && <div className="absolute inset-0 bg-bg-secondary/80 backdrop-blur-sm" />}
+      <ResponsiveDiv baseVisible md className="w-full max-w-full relative">
         <Flexbox justify="between" alignItems="center" direction="row">
           <a href="/">
             <img
@@ -439,7 +435,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
         </Flexbox>
       </ResponsiveDiv>
 
-      <ResponsiveDiv md className="w-full max-w-full">
+      <ResponsiveDiv md className="w-full max-w-full relative">
         <Flexbox justify="between" alignItems="center" direction="row" gap="4">
           <Flexbox alignItems="center" direction="row" gap="2">
             <a href="/">

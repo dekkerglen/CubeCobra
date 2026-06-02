@@ -2,17 +2,11 @@ import { useMemo } from 'react';
 
 import type { CardStats } from '@utils/datatypes/SimulationReport';
 
-import type {
-  DraftSimulatorDerivedData,
-  DraftSimulatorSelectionState,
-} from './draftSimulatorHookTypes';
+import type { DraftSimulatorDerivedData, DraftSimulatorSelectionState } from './draftSimulatorHookTypes';
 
 interface UseDraftSimulatorFocusArgs {
   data: Pick<DraftSimulatorDerivedData, 'displayRunData' | 'displayedPools' | 'activeDecks'>;
-  state: Pick<
-    DraftSimulatorSelectionState,
-    'selectedSkeletonId' | 'focusedPoolIndex' | 'focusedPoolViewMode'
-  >;
+  state: Pick<DraftSimulatorSelectionState, 'selectedSkeletonId' | 'focusedPoolIndex' | 'focusedPoolViewMode'>;
   activeFilterPoolIndexSet: Set<number> | null;
   selectedCards: CardStats[];
   selectedCard: CardStats | null;
@@ -36,7 +30,8 @@ export default function useDraftSimulatorFocus({
   );
 
   const focusedPool = useMemo(
-    () => (focusedPoolIndex === null ? null : (displayedPools.find((pool) => pool.poolIndex === focusedPoolIndex) ?? null)),
+    () =>
+      focusedPoolIndex === null ? null : (displayedPools.find((pool) => pool.poolIndex === focusedPoolIndex) ?? null),
     [displayedPools, focusedPoolIndex],
   );
 
@@ -57,8 +52,10 @@ export default function useDraftSimulatorFocus({
     [focusedPoolViewMode, focusedDeckAvailable, focusedFullPickOrderAvailable],
   );
 
-  const showDraftMapScopePanel = selectedSkeletonId !== null || activeFilterPoolIndexSet !== null || selectedCards.length > 0;
-  const mapPanelHasBoth = selectedCards.length > 0 && (selectedSkeletonId !== null || activeFilterPoolIndexSet !== null);
+  const showDraftMapScopePanel =
+    selectedSkeletonId !== null || activeFilterPoolIndexSet !== null || selectedCards.length > 0;
+  const mapPanelHasBoth =
+    selectedCards.length > 0 && (selectedSkeletonId !== null || activeFilterPoolIndexSet !== null);
   const draftMapScopeSeatCount = activeFilterPoolIndexSet?.size ?? displayRunData?.slimPools.length ?? 0;
   const draftMapScopeSubtitle = activeFilterPoolIndexSet
     ? `${draftMapScopeSeatCount} matching seat${draftMapScopeSeatCount !== 1 ? 's' : ''}`

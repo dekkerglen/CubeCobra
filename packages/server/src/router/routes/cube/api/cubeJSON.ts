@@ -1,7 +1,8 @@
 import Card from '@utils/datatypes/Card';
-import { sortForDownload } from '@utils/sorting/Sort';
+import { getCubeSorts, sortForDownload } from '@utils/sorting/Sort';
 import { cubeDao } from 'dynamo/daos';
 import rateLimit from 'express-rate-limit';
+import { parseDateParam, resolveCubeCards } from 'serverutils/cubeCards';
 import { isCubeViewable } from 'serverutils/cubefn';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
@@ -35,18 +36,37 @@ export const cubeJSONHandler = async (req: Request, res: Response) => {
       return res.status(404).send('Cube not found.');
     }
 
-    const cubeCards = await cubeDao.getCards(cube.id);
+    const dateMs = parseDateParam(req.query.date as string | undefined);
+    if (dateMs !== undefined && isNaN(dateMs)) {
+      return res.status(400).send('Invalid date parameter. Must be a unix timestamp in milliseconds.');
+    }
 
-    // Sort every board using the default ordered sort (no longer depends on cube.defaultSorts, which moved to views)
+    const { cards: cubeCards, changelog: changelogMeta } = await resolveCubeCards(cube.id, dateMs);
+
+    // Sort every board using the cube's configured default sorts (falling back to the canonical defaults).
+    const [primary, secondary, tertiary, quaternary] = getCubeSorts(cube);
     for (const boardName of Object.keys(cubeCards)) {
       const board = cubeCards[boardName];
       if (Array.isArray(board)) {
-        cubeCards[boardName] = sortForDownload(board as Card[]);
+        cubeCards[boardName] = sortForDownload(
+          board as Card[],
+          primary,
+          secondary,
+          tertiary,
+          quaternary,
+          false,
+          cube,
+        );
       }
     }
 
+    const response: Record<string, any> = { ...cube, cards: cubeCards };
+    if (changelogMeta) {
+      response.changelog = changelogMeta;
+    }
+
     res.contentType('application/json');
-    return res.status(200).send(JSON.stringify({ ...cube, cards: cubeCards }));
+    return res.status(200).send(JSON.stringify(response));
   } catch (err) {
     const error = err as Error;
     req.logger.error(error.message, error.stack);

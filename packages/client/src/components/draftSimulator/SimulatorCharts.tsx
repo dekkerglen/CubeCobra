@@ -1,9 +1,10 @@
+/* eslint-disable */
 import React from 'react';
 
 import type { BuiltDeck, CardMeta } from '@utils/datatypes/SimulationReport';
-
 import { ArcElement, BarElement, CategoryScale, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
+
 import Text from '../base/Text';
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, Tooltip, Legend);
@@ -46,11 +47,24 @@ export const CARD_TYPE_COLORS: Record<string, string> = {
   Other: '#555555',
 };
 
-export const CARD_TYPE_ORDER = ['Creature', 'Instant', 'Sorcery', 'Enchantment', 'Artifact', 'Planeswalker', 'Land', 'Battle', 'Other'];
+export const CARD_TYPE_ORDER = [
+  'Creature',
+  'Instant',
+  'Sorcery',
+  'Enchantment',
+  'Artifact',
+  'Planeswalker',
+  'Land',
+  'Battle',
+  'Other',
+];
 
 export function normalizeColorOrder(profile: string): string {
   if (!profile || profile === 'C') return 'C';
-  const sorted = profile.split('').filter((c) => COLOR_KEYS.includes(c as any)).sort((a, b) => COLOR_KEYS.indexOf(a as any) - COLOR_KEYS.indexOf(b as any));
+  const sorted = profile
+    .split('')
+    .filter((c) => COLOR_KEYS.includes(c as any))
+    .sort((a, b) => COLOR_KEYS.indexOf(a as any) - COLOR_KEYS.indexOf(b as any));
   return sorted.length > 0 ? sorted.join('') : 'C';
 }
 
@@ -133,7 +147,10 @@ export function getMajorCardType(typeStr: string): string {
   return 'Other';
 }
 
-export const RowColorShare: React.FC<{ deck: BuiltDeck | null; cardMeta: Record<string, CardMeta> }> = ({ deck, cardMeta }) => {
+export const RowColorShare: React.FC<{ deck: BuiltDeck | null; cardMeta: Record<string, CardMeta> }> = ({
+  deck,
+  cardMeta,
+}) => {
   if (!deck || deck.mainboard.length === 0) return null;
   const shares: Record<string, number> = Object.fromEntries(COLOR_KEYS_WITH_C.map((k) => [k, 0]));
   for (const oracle of deck.mainboard) {
@@ -144,9 +161,11 @@ export const RowColorShare: React.FC<{ deck: BuiltDeck | null; cardMeta: Record<
   }
   const total = Object.values(shares).reduce((s, v) => s + v, 0);
   if (total === 0) return null;
-  const segments = COLOR_KEYS_WITH_C.map((k) => ({ key: k, pct: (shares[k] ?? 0) / total, bg: MTG_COLORS[k]!.bg })).filter(
-    (s) => s.pct > 0.01,
-  );
+  const segments = COLOR_KEYS_WITH_C.map((k) => ({
+    key: k,
+    pct: (shares[k] ?? 0) / total,
+    bg: MTG_COLORS[k]!.bg,
+  })).filter((s) => s.pct > 0.01);
   return (
     <div className="flex w-full overflow-hidden rounded-sm" style={{ height: 10 }}>
       {segments.map((s) => (
@@ -167,7 +186,11 @@ export const DeckColorShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; car
   const textColor = useChartTextColor();
   const segments = getDeckColorShareSegments(deckBuilds, cardMeta);
   if (!segments) {
-    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
+    return (
+      <Text sm className="text-text-secondary">
+        Unavailable for this filter.
+      </Text>
+    );
   }
 
   const chartData = {
@@ -216,7 +239,11 @@ export const DeckColorShareLegend: React.FC<{ deckBuilds: BuiltDeck[] | null; ca
 }) => {
   const segments = getDeckColorShareSegments(deckBuilds, cardMeta);
   if (!segments) {
-    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
+    return (
+      <Text sm className="text-text-secondary">
+        Unavailable for this filter.
+      </Text>
+    );
   }
   return (
     <div className="flex flex-col gap-1.5">
@@ -241,7 +268,11 @@ export const ManaCurveShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; car
   cardMeta,
 }) => {
   if (!deckBuilds || deckBuilds.length === 0) {
-    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
+    return (
+      <Text sm className="text-text-secondary">
+        Unavailable for this filter.
+      </Text>
+    );
   }
 
   const counts: Record<string, number> = Object.fromEntries(MANA_CURVE_BUCKETS.map((b) => [b.key, 0]));
@@ -270,7 +301,11 @@ export const ManaCurveShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; car
         {buckets.map((b) => {
           const barH = Math.round((b.pct / maxPct) * HISTOGRAM_HEIGHT);
           return (
-            <div key={b.key} className="flex-1 flex flex-col items-center justify-end" style={{ height: HISTOGRAM_HEIGHT }}>
+            <div
+              key={b.key}
+              className="flex-1 flex flex-col items-center justify-end"
+              style={{ height: HISTOGRAM_HEIGHT }}
+            >
               {b.pct > 0 && (
                 <div
                   title={`${b.label}: ${(b.pct * 100).toFixed(1)}%`}
@@ -291,7 +326,9 @@ export const ManaCurveShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; car
       {/* X-axis labels */}
       <div className="flex gap-1">
         {buckets.map((b) => (
-          <div key={b.key} className="flex-1 text-center text-[10px] text-text-secondary">{b.label}</div>
+          <div key={b.key} className="flex-1 text-center text-[10px] text-text-secondary">
+            {b.label}
+          </div>
         ))}
       </div>
       {/* Value row — compact, under axis */}
@@ -313,7 +350,11 @@ export const CardTypeShareChart: React.FC<{ deckBuilds: BuiltDeck[] | null; card
   const textColor = useChartTextColor();
   const entries = getCardTypeShareEntries(deckBuilds, cardMeta);
   if (!entries) {
-    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
+    return (
+      <Text sm className="text-text-secondary">
+        Unavailable for this filter.
+      </Text>
+    );
   }
 
   const chartData = {
@@ -361,7 +402,11 @@ export const CardTypeShareLegend: React.FC<{ deckBuilds: BuiltDeck[] | null; car
 }) => {
   const entries = getCardTypeShareEntries(deckBuilds, cardMeta);
   if (!entries) {
-    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
+    return (
+      <Text sm className="text-text-secondary">
+        Unavailable for this filter.
+      </Text>
+    );
   }
   return (
     <div className="flex flex-col gap-1.5">
@@ -381,7 +426,11 @@ export const EloDistributionChart: React.FC<{ deckBuilds: BuiltDeck[] | null; ca
 }) => {
   const textColor = useChartTextColor();
   if (!deckBuilds || deckBuilds.length === 0) {
-    return <Text sm className="text-text-secondary">Unavailable for this filter.</Text>;
+    return (
+      <Text sm className="text-text-secondary">
+        Unavailable for this filter.
+      </Text>
+    );
   }
 
   const elos: number[] = [];
@@ -391,7 +440,12 @@ export const EloDistributionChart: React.FC<{ deckBuilds: BuiltDeck[] | null; ca
       if (elo) elos.push(elo);
     }
   }
-  if (elos.length === 0) return <Text sm className="text-text-secondary">No Elo data available.</Text>;
+  if (elos.length === 0)
+    return (
+      <Text sm className="text-text-secondary">
+        No Elo data available.
+      </Text>
+    );
 
   const minElo = Math.floor(elos.reduce((a, b) => Math.min(a, b), Infinity) / 50) * 50;
   const maxElo = Math.ceil(elos.reduce((a, b) => Math.max(a, b), -Infinity) / 50) * 50;

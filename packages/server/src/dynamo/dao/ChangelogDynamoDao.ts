@@ -332,6 +332,47 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
   }
 
   /**
+   * Finds the nearest changelog at or before a given date for a cube.
+   * Falls back to the earliest changelog if none exist at/before the date.
+   * Returns undefined if the cube has no changelogs at all.
+   */
+  public async getNearest(cubeId: string, date: number): Promise<Changelog | undefined> {
+    // Query for the most recent changelog at or before the given date
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :cube AND GSI1SK <= :date',
+      ExpressionAttributeValues: {
+        ':cube': `${this.itemType()}#CUBE#${cubeId}`,
+        ':date': `DATE#${date}`,
+      },
+      ScanIndexForward: false,
+      Limit: 1,
+    };
+
+    const result = await this.query(params);
+
+    if (result.items.length > 0) {
+      return result.items[0];
+    }
+
+    // No changelog at/before this date — fall back to the earliest
+    const earliestParams: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :cube',
+      ExpressionAttributeValues: {
+        ':cube': `${this.itemType()}#CUBE#${cubeId}`,
+      },
+      ScanIndexForward: true,
+      Limit: 1,
+    };
+
+    const earliestResult = await this.query(earliestParams);
+    return earliestResult.items[0];
+  }
+
+  /**
    * Creates a new changelog and stores it in both DynamoDB and S3.
    */
   public async createChangelog(changelog: Changes, cubeId: string): Promise<string> {

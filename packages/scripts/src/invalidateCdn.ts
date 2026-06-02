@@ -15,9 +15,11 @@ dotenv.config();
 // content file, pass its path explicitly or use `--all`.)
 //
 // What's left is genuinely unhashed-and-mutable: manifest.json (the 60s atomic
-// bundle pointer) and the legacy fixed-path stylesheet.css. The
-// `?v=${GIT_COMMIT}` query string now busts stylesheet.css on its own — the
-// css cache policy keeps the query string in the cache key (see
+// bundle pointer), the legacy fixed-path stylesheet.css, and robots.txt
+// (uploaded from packages/server/public/robots.txt with a 1d cache, so we'd
+// otherwise wait up to a day for robots.txt edits to take effect on a deploy).
+// The `?v=${GIT_COMMIT}` query string now busts stylesheet.css on its own —
+// the css cache policy keeps the query string in the cache key (see
 // assets-distribution.ts cssCachePolicy) — so this invalidation is a true,
 // free safety net rather than load-bearing.
 //
@@ -27,7 +29,7 @@ dotenv.config();
 // Pass paths via argv or default to a safe set. Use `--all` to invalidate `/*`
 // (rare; only when you've changed something everywhere or you're not sure).
 
-const DEFAULT_PATHS = ['/manifest.json', '/css/stylesheet.css'];
+const DEFAULT_PATHS = ['/manifest.json', '/css/stylesheet.css', '/robots.txt'];
 
 const parseArgs = (): { distributionId: string; paths: string[] } => {
   const distributionId = process.env.CDN_DISTRIBUTION_ID;

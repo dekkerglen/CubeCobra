@@ -19,6 +19,23 @@ let cubeContextEncoder: GraphModel;
 // draft_decoder takes pool[128] ⊕ cube_ctx_vec[32] = 160-dim.
 const CUBE_CONTEXT_DIM = 32;
 
+// The recommend decoder scores the entire oracle vocabulary (~30k cards).
+// Returning every non-cube card as an `add` produced a ~3 MB JSON response.
+// This recommender is single-threaded (Node + TF) and its event loop is
+// saturated by batchdraft tensor ops, so it could not flush a 3 MB body
+// before the caller's 10s timeout fired — every overlapping Smart Search
+// request aborted.
+//
+// The fix has two paths:
+//   - Smart Search passes `eligibleOracles` (the oracle ids that matched the
+//     server-side filter) plus skip/limit; we rank just that subset and return
+//     only the requested page — a few KB.
+//   - Callers with no filter context (the cuts endpoint, Seed Crystal) get a
+//     bounded top-N ranking so the response can't balloon back to multi-MB.
+//     5000 keeps the response ~0.5 MB and still gives Seed Crystal ample
+//     candidate headroom (it targets ~2x cube size).
+const MAX_RECOMMEND_ADDS = 5000;
+
 const errorHandler = (modelName: string, err: { message: any; stack: any }) => {
   if (process.env?.NODE_ENV === 'development') {
     console.warn(`${modelName} not found, bot stuff will not work as expected`);
@@ -200,28 +217,45 @@ const oracleIdToMlIndex = (oracleId: string) => {
   return null;
 };
 
-export const recommend = (oracles: string[]) => {
+export type RatedOracle = { oracle: string; rating: number };
+
+export interface RecommendOptions {
+  // The user's filter has already been applied server-side; these are the
+  // oracle ids of cards eligible to be `add`ed. When present we rank only this
+  // subset and return just the requested page.
+  //
+  // We pass oracle ids (not ML indices): the oracle<->index mapping lives
+  // entirely inside this service, so the server and recommender never need to
+  // agree on an index table. Passing indices would couple them to identical
+  // index maps — and any drift silently corrupts ratings (array[wrongIndex]).
+  // Cards already in the cube (`oracles`) are excluded from the ranking here.
+  eligibleOracles?: string[];
+  // Pagination range over the ranked `adds` list. Ignored if eligibleOracles
+  // is absent.
+  skip?: number;
+  limit?: number;
+}
+
+export interface RecommendResult {
+  // Filtered path: the ranked page (oracle ids). No-filter path (cuts
+  // endpoint, Seed Crystal): ranked non-cube oracle ids, capped.
+  adds: RatedOracle[];
+  cuts: RatedOracle[];
+  // Total number of eligible adds before pagination, so the caller can decide
+  // whether more pages exist.
+  totalAdds: number;
+}
+
+export const recommend = (oracles: string[], options?: RecommendOptions): RecommendResult => {
   console.log(`[ML] recommend() called with ${oracles.length} oracles`);
 
   if (!encoder || !recommendDecoder) {
     console.log('[ML] Models not loaded - encoder or recommendDecoder is null');
-    return {
-      adds: [],
-      cuts: [],
-    };
+    return { adds: [], cuts: [], totalAdds: 0 };
   }
 
-  const allOracles = getAllOracleIds();
-  console.log(`[ML] Total oracles available: ${allOracles.length}`);
-
   const mappedIndices = oracles
-    .map((oracle) => {
-      const index = oracleIdToMlIndex(oracle);
-      if (index === null || index === undefined) {
-        console.log(`[ML] Oracle ${oracle} not found in index`);
-      }
-      return index;
-    })
+    .map((oracle) => oracleIdToMlIndex(oracle))
     .filter((index): index is number => index !== null && index !== undefined);
 
   console.log(`[ML] Mapped ${mappedIndices.length} of ${oracles.length} oracles to indices`);
@@ -236,41 +270,74 @@ export const recommend = (oracles: string[]) => {
     return result.dataSync();
   });
 
-  const res = [];
-
-  for (const oracle of allOracles) {
+  // Rating for a single oracle, or null if the model has no index for it.
+  const ratingFor = (oracle: string): number | null => {
     const index = oracleIdToMlIndex(oracle);
-
-    if (index === null || index === undefined) {
-      continue;
-    }
-
-    res.push({
-      oracle,
-      rating: array[index] ?? 0,
-    });
-  }
+    if (index === null || index === undefined) return null;
+    return array[index] ?? 0;
+  };
 
   const oracleSet = new Set(oracles);
-  const adds: { oracle: string; rating: number }[] = [];
-  const cuts: { oracle: string; rating: number }[] = [];
 
-  res
-    .sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0))
-    .forEach((card) => {
-      if (oracleSet.has(card.oracle)) {
-        cuts.push(card);
+  // cuts: every (unique) cube card the model knows, scored worst-first.
+  const cuts: RatedOracle[] = [];
+  for (const oracle of oracleSet) {
+    const rating = ratingFor(oracle);
+    if (rating === null) continue;
+    cuts.push({ oracle, rating });
+  }
+  cuts.sort((a, b) => (a.rating ?? 0) - (b.rating ?? 0));
+
+  let adds: RatedOracle[] = [];
+  let totalAdds: number;
+
+  if (options?.eligibleOracles) {
+    // Filtered path: the server already applied the user's filter. Rank the
+    // eligible oracles by score and slice the requested page. Cards the model
+    // doesn't know are appended last (rating 0), mirroring the prior
+    // "unscored sorts to the bottom" behavior.
+    //
+    // Exclude cards already in the cube — they aren't "adds". Done here (not
+    // just trusting the caller) because the recommender natively has the cube
+    // oracles, and this is where the adds/cuts split has always lived.
+    const scored: RatedOracle[] = [];
+    const unscored: RatedOracle[] = [];
+    for (const oracle of options.eligibleOracles) {
+      if (oracleSet.has(oracle)) continue; // already in the cube
+      const rating = ratingFor(oracle);
+      if (rating === null) {
+        unscored.push({ oracle, rating: 0 });
       } else {
-        adds.push(card);
+        scored.push({ oracle, rating });
       }
-    });
+    }
+    scored.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    const ranked = scored.concat(unscored);
+    totalAdds = ranked.length;
 
-  cuts.reverse();
+    const skip = Math.max(0, Math.floor(options.skip ?? 0));
+    const limit = options.limit !== undefined && options.limit > 0 ? Math.floor(options.limit) : ranked.length - skip;
+    adds = ranked.slice(skip, skip + limit);
+    console.log(
+      `[ML] recommend() ranked ${totalAdds} eligible adds, returning page [${skip}, ${skip + adds.length}), ${cuts.length} cuts`,
+    );
+  } else {
+    // No filter context (cuts endpoint, Seed Crystal): rank every non-cube
+    // oracle, but cap the response at MAX_RECOMMEND_ADDS so it can't balloon.
+    const ranked: RatedOracle[] = [];
+    for (const oracle of getAllOracleIds()) {
+      if (oracleSet.has(oracle)) continue;
+      const rating = ratingFor(oracle);
+      if (rating === null) continue;
+      ranked.push({ oracle, rating });
+    }
+    ranked.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
+    totalAdds = ranked.length;
+    adds = ranked.slice(0, MAX_RECOMMEND_ADDS);
+    console.log(`[ML] recommend() returning ${adds.length} adds (capped from ${totalAdds}), ${cuts.length} cuts`);
+  }
 
-  return {
-    adds,
-    cuts,
-  };
+  return { adds, cuts, totalAdds };
 };
 
 export const build = (oracles: string[]) => {
@@ -322,9 +389,7 @@ export const draftBatch = (packs: string[][], pools: string[][]): { oracle: stri
   if (!encoder || !draftDecoder || packs.length === 0) return packs.map(() => []);
 
   const batchVector = pools.map((pool) =>
-    encodeIndeces(
-      pool.map((oracle) => oracleToIndex[oracle]).filter((index): index is number => index !== undefined),
-    ),
+    encodeIndeces(pool.map((oracle) => oracleToIndex[oracle]).filter((index): index is number => index !== undefined)),
   );
 
   // Single batched forward pass: [N, numOracles] → encoder → draftDecoder → [N, numOracles]
@@ -340,7 +405,9 @@ export const draftBatch = (packs: string[][], pools: string[][]): { oracle: stri
     const packEntries = pack
       .map((oracle) => {
         const index = oracleIdToMlIndex(oracle);
-        return index === null || index === undefined ? null : { oracle, index, raw: flatResult[rowOffset + index] ?? 0 };
+        return index === null || index === undefined
+          ? null
+          : { oracle, index, raw: flatResult[rowOffset + index] ?? 0 };
       })
       .filter((entry): entry is { oracle: string; index: number; raw: number } => entry !== null);
 

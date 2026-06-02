@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { AlertIcon } from '@primer/octicons-react';
 
 import ChangesContext from '../../contexts/ChangesContext';
+import { trackEvent } from '../../utils/analytics';
 import Alert from '../base/Alert';
 import Button from '../base/Button';
 import Input from '../base/Input';
@@ -10,7 +11,6 @@ import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Text from '../base/Text';
 import CSRFForm from '../CSRFForm';
-import { trackEvent } from '../../utils/analytics';
 
 interface UploadBulkReplaceModalProps {
   isOpen: boolean;

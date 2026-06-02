@@ -3,6 +3,7 @@ import React, { useContext, useState } from 'react';
 import { AlertIcon } from '@primer/octicons-react';
 
 import ChangesContext from '../../contexts/ChangesContext';
+import { trackEvent } from '../../utils/analytics';
 import Alert from '../base/Alert';
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
@@ -11,7 +12,6 @@ import Select from '../base/Select';
 import Text from '../base/Text';
 import TextArea from '../base/TextArea';
 import CSRFForm from '../CSRFForm';
-import { trackEvent } from '../../utils/analytics';
 
 interface PasteBulkModalProps {
   isOpen: boolean;

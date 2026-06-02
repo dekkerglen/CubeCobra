@@ -24,6 +24,15 @@ export interface ChangesContextValue {
   clearChanges: () => void;
   versionMismatch: boolean;
   fixedChanges?: Changes;
+  /**
+   * Lets the cube context push the *live* board state (post-hydration,
+   * post-commit) into ChangesContext so the version-mismatch index validation
+   * runs against current cards instead of the stale initial server payload.
+   * Without this, adding a card and then editing it (or removing certain
+   * cards that hydrate differently than they serialize, like vouchers)
+   * incorrectly trips the version-mismatch guard.
+   */
+  setValidationCards: (cards?: Record<BoardType, Card[]>) => void;
 }
 
 const ChangesContext = createContext<ChangesContextValue>({
@@ -39,6 +48,9 @@ const ChangesContext = createContext<ChangesContextValue>({
     throw new Error('Function not implemented.');
   },
   versionMismatch: false,
+  setValidationCards: function (): void {
+    throw new Error('Function not implemented.');
+  },
 });
 
 interface ChangesContextProvider {
@@ -50,11 +62,19 @@ interface ChangesContextProvider {
 export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ children, cube, cards }) => {
   const [changes, updateChanges] = useLocalStorage<Changes>(`cubecobra-changes-${cube.id}`, {});
   const [version, setVersionState] = useState(cube.version);
+  // Effective cards used by the version-mismatch index validation. Starts at
+  // the (initial server-rendered) prop; CubeContext keeps this in sync with
+  // its live cube state via setValidationCards.
+  const [effectiveCards, setEffectiveCards] = useState<Record<BoardType, Card[]> | undefined>(cards);
   const { setOpenCollapse } = useContext(DisplayContext);
 
   // Wrapper to ensure version updates are captured
   const setVersion = useCallback((newVersion: number) => {
     setVersionState(newVersion);
+  }, []);
+
+  const setValidationCards = useCallback((newCards?: Record<BoardType, Card[]>) => {
+    setEffectiveCards(newCards);
   }, []);
 
   const setChanges = useCallback(
@@ -109,7 +129,7 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
 
     // Even if versions match, check that changes don't reference out-of-bounds card indices.
     // This can happen when localStorage has stale changes from a previous session.
-    if (!versionMismatch && cards && Object.keys(changes).length > 0) {
+    if (!versionMismatch && effectiveCards && Object.keys(changes).length > 0) {
       const hasInvalidIndices = (boardChanges: BoardChanges | undefined, boardCards: Card[] | undefined): boolean => {
         if (!boardChanges || !boardCards) return false;
         for (const remove of boardChanges.removes || []) {
@@ -126,7 +146,7 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
 
       for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
         const boardChanges = changes[board] as BoardChanges | undefined;
-        const boardCards = cards[board as BoardType];
+        const boardCards = effectiveCards[board as BoardType];
         if (hasInvalidIndices(boardChanges, boardCards)) {
           versionMismatch = true;
           break;
@@ -147,18 +167,18 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
           swaps: [],
         };
 
-        if (cards && (mainboard.removes || []).length > 0) {
+        if (effectiveCards && (mainboard.removes || []).length > 0) {
           // we go through and see if the index matches the oldCard
           fixedChanges.mainboard.removes = (mainboard.removes || []).filter((remove: CubeCardRemove) => {
-            return cardsAreEquivalent(remove.oldCard, cards.mainboard[remove.index]);
+            return cardsAreEquivalent(remove.oldCard, effectiveCards.mainboard[remove.index]);
           });
 
           fixedChanges.mainboard.edits = (mainboard.edits || []).filter((edit: CubeCardEdit) => {
-            return cardsAreEquivalent(edit.oldCard, cards.mainboard[edit.index]);
+            return cardsAreEquivalent(edit.oldCard, effectiveCards.mainboard[edit.index]);
           });
 
           fixedChanges.mainboard.swaps = (mainboard.swaps || []).filter((swap: CubeCardSwap) => {
-            return cardsAreEquivalent(swap.oldCard, cards.mainboard[swap.index]);
+            return cardsAreEquivalent(swap.oldCard, effectiveCards.mainboard[swap.index]);
           });
         }
       }
@@ -171,18 +191,18 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
           swaps: [],
         };
 
-        if (cards && (maybeboard.removes || []).length > 0) {
+        if (effectiveCards && (maybeboard.removes || []).length > 0) {
           // we go through and see if the index matches the oldCard
           fixedChanges.maybeboard.removes = (maybeboard.removes || []).filter((remove: CubeCardRemove) => {
-            return cardsAreEquivalent(remove.oldCard, cards.maybeboard[remove.index]);
+            return cardsAreEquivalent(remove.oldCard, effectiveCards.maybeboard[remove.index]);
           });
 
           fixedChanges.maybeboard.edits = (maybeboard.edits || []).filter((edit: CubeCardEdit) => {
-            return cardsAreEquivalent(edit.oldCard, cards.maybeboard[edit.index]);
+            return cardsAreEquivalent(edit.oldCard, effectiveCards.maybeboard[edit.index]);
           });
 
           fixedChanges.maybeboard.swaps = (maybeboard.swaps || []).filter((swap: CubeCardSwap) => {
-            return cardsAreEquivalent(swap.oldCard, cards.maybeboard[swap.index]);
+            return cardsAreEquivalent(swap.oldCard, effectiveCards.maybeboard[swap.index]);
           });
         }
       }
@@ -227,6 +247,7 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
         clearChanges,
         fixedChanges,
         versionMismatch,
+        setValidationCards,
       };
     }
 
@@ -237,8 +258,9 @@ export const ChangesContextProvider: React.FC<ChangesContextProvider> = ({ child
       setChanges,
       clearChanges,
       versionMismatch,
+      setValidationCards,
     };
-  }, [cards, changes, clearChanges, setChanges, setVersion, version]);
+  }, [effectiveCards, changes, clearChanges, setChanges, setVersion, setValidationCards, version]);
 
   return <ChangesContext.Provider value={value}>{children}</ChangesContext.Provider>;
 };

@@ -1,19 +1,43 @@
+import { type LandTrimDeck, runManabaseTrim } from '@utils/drafting/landTrim';
+import { type BasicCardLike, pickAddedBasics } from '@utils/drafting/manabaseHeuristics';
+
+import { buildLandMetaLookup } from './buildLandMetaLookup';
 import carddb, { cardFromId, getOracleForMl, getReasonableCardByOracle } from './carddb';
 import { batchBuildOrThrow, batchDraftOrThrow, buildOrThrow, draft as draftbotPick, draftOrThrow } from './ml';
 
 // Bot deckbuilding leans on the ML service for every pick. A transient 5xx /
 // timeout must not be read as "no more cards" — that silently truncates the
-// deck. Retry instead; the cap bounds a service that is truly down so we fail
-// loudly (the caller falls back to a naive layout) rather than hang forever.
-const ML_MAX_ATTEMPTS = 100;
+// deck. Retry instead, but bounded:
+//   - small attempt cap so a wedged ML service fails fast and the caller can
+//     surface a real error (or fall back to a naive layout)
+//   - exponential backoff with jitter so retries don't pile onto the same
+//     overloaded recommender connection in lockstep
+//   - overall time budget so a single ML call can't hold an HTTP request open
+//     past ELB/client timeouts (which previously produced ERR_HTTP_HEADERS_SENT
+//     when the eventual 200 raced with the closed socket)
+const ML_MAX_ATTEMPTS = 3;
+const ML_RETRY_BASE_MS = 150;
+const ML_RETRY_MAX_DELAY_MS = 1_000;
+const ML_RETRY_BUDGET_MS = 8_000;
 
 async function withMlRetry<T>(label: string, fn: () => Promise<T>): Promise<T> {
+  const deadline = Date.now() + ML_RETRY_BUDGET_MS;
   let lastErr: unknown;
   for (let attempt = 1; attempt <= ML_MAX_ATTEMPTS; attempt += 1) {
     try {
       return await fn();
     } catch (err) {
       lastErr = err;
+      if (attempt >= ML_MAX_ATTEMPTS) break;
+
+      // Exponential backoff with jitter, clamped, then clamped again against
+      // the overall budget so we never sleep past the deadline.
+      const exp = Math.min(ML_RETRY_MAX_DELAY_MS, ML_RETRY_BASE_MS * 2 ** (attempt - 1));
+      const jittered = Math.floor(Math.random() * exp);
+      const remaining = deadline - Date.now();
+      if (remaining <= 0) break;
+      const delay = Math.min(jittered, remaining);
+      if (delay > 0) await new Promise((r) => setTimeout(r, delay));
     }
   }
   throw new Error(
@@ -32,85 +56,24 @@ async function withMlRetry<T>(label: string, fn: () => Promise<T>): Promise<T> {
   };
   */
 
-/**
- * Returns color_demand / sources for each color.
- * color_demand = number of non-land cards whose color_identity includes that color.
- * sources = 1 (baseline) + number of lands already in the deck that can produce that color.
- *
- * Using color_identity instead of parsed_cost because color_identity is reliably populated
- * on every card, whereas parsed_cost may be empty and would cause all pips to be 0,
- * making every basic land tie and only the first one ever being selected.
- *
- * produced_mana is used for lands (with color_identity fallback) so that fetchlands
- * and other lands without color_identity are counted correctly as mana sources.
- */
-const colorDemandPerSource = (cards: any[]): Record<string, number> => {
-  const demand: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-  const sources: Record<string, number> = { W: 1, U: 1, B: 1, R: 1, G: 1 };
-
-  for (const card of cards) {
-    if ((card.type ?? '').includes('Land')) {
-      const produced: string[] = card.produced_mana?.length > 0 ? card.produced_mana : (card.color_identity ?? []);
-      for (const color of produced) {
-        if (sources[color] !== undefined) sources[color] += 1;
-      }
-    } else {
-      for (const color of card.color_identity ?? []) {
-        if (demand[color] !== undefined) demand[color] += 1;
-      }
-    }
-  }
-
-  return {
-    W: (demand.W ?? 0) / (sources.W ?? 1),
-    U: (demand.U ?? 0) / (sources.U ?? 1),
-    B: (demand.B ?? 0) / (sources.B ?? 1),
-    R: (demand.R ?? 0) / (sources.R ?? 1),
-    G: (demand.G ?? 0) / (sources.G ?? 1),
-  };
-};
-
 const calculateBasics = (mainboard: any[], basics: any[], deckSize: number = 40): any[] => {
-  if (basics.length === 0) {
-    return [];
-  }
-
-  const result = [];
-
-  const basicsNeeded = deckSize - mainboard.length;
-
-  const basicLands = basics.filter((card: any) => card.type.includes('Land'));
-  //Cube basics don't have to be actual land cards (could be land art cards or just regular cards).
-  //We need lands though in order to calculate pip sources and if none are found we bail, and the bot gets no basics added
-  if (basicLands.length === 0) {
-    return [];
-  }
-
-  for (let i = 0; i < basicsNeeded; i++) {
-    const pips = colorDemandPerSource([...mainboard, ...result]);
-
-    const basicColors = (card: any): string[] =>
-      card.produced_mana?.length > 0 ? card.produced_mana : card.color_identity;
-
-    let bestBasic = 0;
-    let score = basicColors(basicLands[0])
-      .map((color: string) => pips[color] ?? 0)
-      .reduce((a: number, b: number) => a + b, 0);
-    //Cube's are not restricted to having 1 of each basic land. Could have multiple of a basic land type or none of a type
-    for (let j = 1; j < basicLands.length; j++) {
-      const newScore = basicColors(basicLands[j])
-        .map((color: string) => pips[color] ?? 0)
-        .reduce((a: number, b: number) => a + b, 0);
-      if (newScore > score) {
-        bestBasic = j;
-        score = newScore;
-      }
-    }
-
-    result.push(basicLands[bestBasic]);
-  }
-
-  return result;
+  const cardMeta = buildLandMetaLookup(
+    mainboard.map((card: any) => card.oracle_id),
+    basics,
+  );
+  const basicCards: Array<BasicCardLike & { card: any }> = basics.map((card: any) => ({
+    card,
+    oracleId: card.oracle_id,
+    type: card.type ?? '',
+    colorIdentity: card.color_identity ?? [],
+    producedMana: card.produced_mana ?? [],
+  }));
+  return pickAddedBasics(
+    mainboard.map((card: any) => card.oracle_id),
+    cardMeta,
+    basicCards,
+    deckSize,
+  ).map((basic) => basic.card);
 };
 
 export const deckbuild = async (
@@ -126,6 +89,15 @@ export const deckbuild = async (
   const oracleIsLand = (oracle: string): boolean => {
     const oracleIds = carddb.oracleToId[oracle];
     return !!(oracleIds && oracleIds[0] && cardFromId(oracleIds[0]).type.includes('Land'));
+  };
+
+  // Conspiracy / Vanguard cards affect the draft but should not be selected
+  // for a constructed mainboard; they remain in the sideboard.
+  const oracleIsConspiracyOrVanguard = (oracle: string): boolean => {
+    const oracleIds = carddb.oracleToId[oracle];
+    if (!oracleIds || !oracleIds[0]) return false;
+    const type = cardFromId(oracleIds[0]).type || '';
+    return type.includes('Conspiracy') || type.includes('Vanguard');
   };
 
   // Build ML substitution maps: original oracle <-> ML oracle
@@ -167,6 +139,8 @@ export const deckbuild = async (
     const oracle = originals.find((o) => remainingPool.includes(o));
     if (!oracle) continue;
 
+    if (oracleIsConspiracyOrVanguard(oracle)) continue;
+
     const land = oracleIsLand(oracle);
 
     if (land && landCount >= maxLands) continue;
@@ -193,6 +167,7 @@ export const deckbuild = async (
   while (mainboard.length < deckSize && remainingPool.length > 0) {
     // Filter remaining pool to only cards that fit under the limits
     const candidates = remainingPool.filter((oracle) => {
+      if (oracleIsConspiracyOrVanguard(oracle)) return false;
       const land = oracleIsLand(oracle);
       if (land && landCount >= maxLands) return false;
       if (!land && spellCount >= maxSpells) return false;
@@ -241,6 +216,31 @@ export const deckbuild = async (
     else spellCount += 1;
   }
 
+  // Manabase trim — same heuristic + batched ML rerank path as batchDeckbuild, just one
+  // deck wide. Cut lands are pushed back into remainingPool to land in the sideboard.
+  try {
+    await runManabaseTrim(
+      [
+        {
+          mainboard,
+          sideboard: remainingPool,
+          basics: basics
+            .filter((b: any) => b?.oracle_id)
+            .map((b: any) => ({ oracleId: b.oracle_id, colorIdentity: b.color_identity ?? [] })),
+          deckSize,
+          maxLands,
+          cardMeta: buildLandMetaLookup(mainboard, basics),
+          originalPool: [...mainboard, ...remainingPool],
+        },
+      ],
+      (inputs) => withMlRetry('deckbuild (trim rerank)', () => batchDraftOrThrow(inputs)),
+    );
+  } catch (err) {
+    // Ship the partially-trimmed deck rather than failing the build, but record the
+    // failure so a wedged rerank service is visible in logs.
+    console.warn('deckbuild manabase trim failed; shipping partial trim', err);
+  }
+
   // Fill remaining slots with basics
   mainboard.push(
     ...calculateBasics(mainboard.map(getReasonableCardByOracle), basics, deckSize).map((card) => card.oracle_id),
@@ -256,6 +256,11 @@ export const deckbuild = async (
 };
 
 /**
+ * Build a minimal LandMeta lookup for the oracles in a mainboard plus the cube's basics so
+ * the shared manabase heuristics can query types, color identity, produced mana, and the
+ * "is this a fixer/fetch?" flag without re-touching the carddb on every check.
+ */
+/**
  * Build multiple bot decks in a single batched ML call.
  * Phase 1: batch deckbuild model to seed 10 cards per seat.
  * Phase 2: iteratively batch draft model to pick one card per seat per round.
@@ -269,6 +274,15 @@ export const batchDeckbuild = async (
   const oracleIsLand = (oracle: string): boolean => {
     const oracleIds = carddb.oracleToId[oracle];
     return !!(oracleIds && oracleIds[0] && cardFromId(oracleIds[0]).type.includes('Land'));
+  };
+
+  // Conspiracy / Vanguard cards affect the draft but should not be selected
+  // for a constructed mainboard; they remain in the sideboard.
+  const oracleIsConspiracyOrVanguard = (oracle: string): boolean => {
+    const oracleIds = carddb.oracleToId[oracle];
+    if (!oracleIds || !oracleIds[0]) return false;
+    const type = cardFromId(oracleIds[0]).type || '';
+    return type.includes('Conspiracy') || type.includes('Vanguard');
   };
 
   const allPoolOracles = entries.map((entry) => entry.pool.map((card: any) => card.oracle_id));
@@ -332,6 +346,8 @@ export const batchDeckbuild = async (
       const oracle = originals.find((o) => seat.remainingPool.includes(o));
       if (!oracle) continue;
 
+      if (oracleIsConspiracyOrVanguard(oracle)) continue;
+
       const land = oracleIsLand(oracle);
 
       if (land && seat.landCount >= seat.maxLands) continue;
@@ -370,6 +386,7 @@ export const batchDeckbuild = async (
 
       // Filter candidates that fit under limits
       const candidates = seat.remainingPool.filter((oracle) => {
+        if (oracleIsConspiracyOrVanguard(oracle)) return false;
         const land = oracleIsLand(oracle);
         if (land && seat.landCount >= seat.maxLands) return false;
         if (!land && seat.spellCount >= seat.maxSpells) return false;
@@ -433,6 +450,31 @@ export const batchDeckbuild = async (
 
       anyProgress = true;
     }
+  }
+
+  // Manabase trim: shared heuristic layer + batched ML reranks. Cuts off-color non-fetches,
+  // dead fetches, and force-cuts typed duals contributing < 2 deck colors. Mainboard size is
+  // preserved (swap-in-place); cut lands are pushed back onto remainingPool so they land in
+  // the final sideboard.
+  const trimDecks: LandTrimDeck[] = seats.map((seat) => ({
+    mainboard: seat.mainboard,
+    sideboard: seat.remainingPool,
+    basics: seat.basics
+      .filter((b) => b?.oracle_id)
+      .map<BasicCardLike>((b) => ({ oracleId: b.oracle_id, colorIdentity: b.color_identity ?? [] })),
+    deckSize: seat.deckSize,
+    maxLands: seat.maxLands,
+    cardMeta: buildLandMetaLookup(seat.mainboard, seat.basics),
+    originalPool: [...seat.mainboard, ...seat.remainingPool],
+  }));
+  try {
+    await runManabaseTrim(trimDecks, (inputs) =>
+      withMlRetry('batch deckbuild (trim rerank)', () => batchDraftOrThrow(inputs)),
+    );
+  } catch (err) {
+    // Ship the partially-trimmed decks rather than dropping the whole build, but record
+    // the failure so a wedged rerank service is visible in logs.
+    console.warn('batch deckbuild manabase trim failed; shipping partial trim', err);
   }
 
   // Fill basics and build final results

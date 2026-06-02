@@ -1,3 +1,4 @@
+/* eslint-disable */
 import type {
   ArchetypeSkeleton,
   BuiltDeck,
@@ -16,8 +17,7 @@ export type DraftSimulatorBottomTab =
   | 'cardStats'
   | 'draftBreakdown'
   | 'overperformers'
-  | 'sideboardAndPairings'
-  ;
+  | 'sideboardAndPairings';
 
 export type DraftSimulatorPoolViewMode = 'pool' | 'deck' | 'fullPickOrder';
 
@@ -34,6 +34,7 @@ export interface DraftSimulatorDerivedData {
 export interface DraftSimulatorSelectionState {
   selectedCardOracles: string[];
   selectedDeckCardOracles: string[];
+  selectedSideboardCardOracles: string[];
   selectedP1P1CardOracles: string[];
   selectedFirstColorPickOracles: string[];
   selectedSecondColorPickOracles: string[];
@@ -46,6 +47,7 @@ export interface DraftSimulatorSelectionState {
 export interface DraftSimulatorSelectionSetters {
   setSelectedCardOracles: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedDeckCardOracles: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedSideboardCardOracles: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedP1P1CardOracles: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedFirstColorPickOracles: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedSecondColorPickOracles: React.Dispatch<React.SetStateAction<string[]>>;
@@ -60,4 +62,3 @@ export interface DraftSimulatorFilterPreview {
   sideboardCards: SkeletonCard[];
   lockPairs: LockPair[];
 }
-

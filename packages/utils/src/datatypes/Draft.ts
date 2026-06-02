@@ -11,7 +11,14 @@ export type DraftStep = {
 
 export interface CardSlot {
   filter: string;
-  board?: string; // Board to pull card from. Defaults to 'mainboard' if undefined.
+  /**
+   * @deprecated Legacy. Board scope now lives inside the filter string as a
+   * `board=...` clause (see compileSlotFilter in drafting/draftFilter.ts).
+   * Old data may still have this field set; the editor migrates it into the
+   * filter string on load and the server strips it on save. New code should
+   * not write this field.
+   */
+  board?: string;
 }
 
 export interface Pack {

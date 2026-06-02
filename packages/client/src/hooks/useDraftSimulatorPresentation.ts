@@ -24,6 +24,7 @@ interface UseDraftSimulatorPresentationArgs {
   setters: DraftSimulatorSelectionSetters;
   selectedCards: CardStats[];
   selectedDeckCards: CardStats[];
+  selectedSideboardCards: CardStats[];
   selectedP1P1Cards: CardStats[];
   selectedFirstColorPickCards: CardStats[];
   selectedSecondColorPickCards: CardStats[];
@@ -50,6 +51,7 @@ export default function useDraftSimulatorPresentation({
   setters: {
     setSelectedCardOracles,
     setSelectedDeckCardOracles,
+    setSelectedSideboardCardOracles,
     setSelectedP1P1CardOracles,
     setSelectedFirstColorPickOracles,
     setSelectedSecondColorPickOracles,
@@ -59,6 +61,7 @@ export default function useDraftSimulatorPresentation({
   },
   selectedCards,
   selectedDeckCards,
+  selectedSideboardCards,
   selectedP1P1Cards,
   selectedFirstColorPickCards,
   selectedSecondColorPickCards,
@@ -80,9 +83,18 @@ export default function useDraftSimulatorPresentation({
     if (selectedArchetype) chips.push(`Deck Color: ${archetypeFullName(selectedArchetype)}`);
     for (const c of selectedCards) chips.push(`In Pool: ${c.name}`);
     for (const c of selectedDeckCards) chips.push(`In Deck: ${c.name}`);
+    for (const c of selectedSideboardCards) chips.push(`In Sideboard: ${c.name}`);
     for (const c of selectedP1P1Cards) chips.push(`P1P1: ${c.name}`);
     return chips;
-  }, [selectedSkeletonId, selectedArchetype, selectedCards, selectedDeckCards, skeletons]);
+  }, [
+    selectedSkeletonId,
+    selectedArchetype,
+    selectedCards,
+    selectedDeckCards,
+    selectedSideboardCards,
+    selectedP1P1Cards,
+    skeletons,
+  ]);
 
   const activeFilterSummary = useMemo(
     () => (activeFilterChips.length > 0 ? activeFilterChips.join(' · ') : null),
@@ -90,7 +102,13 @@ export default function useDraftSimulatorPresentation({
   );
 
   const scopeOnlySummary = useMemo(() => {
-    const nonCard = activeFilterChips.filter((c) => !c.startsWith('In Pool:') && !c.startsWith('In Deck:') && !c.startsWith('P1P1:'));
+    const nonCard = activeFilterChips.filter(
+      (c) =>
+        !c.startsWith('In Pool:') &&
+        !c.startsWith('In Deck:') &&
+        !c.startsWith('In Sideboard:') &&
+        !c.startsWith('P1P1:'),
+    );
     return nonCard.length > 0 ? nonCard.join(' · ') : null;
   }, [activeFilterChips]);
 
@@ -112,6 +130,15 @@ export default function useDraftSimulatorPresentation({
         detail: 'In Deck',
         onClear: () =>
           setSelectedDeckCardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
+      });
+    }
+    for (const selectedCardEntry of selectedSideboardCards) {
+      chips.push({
+        key: `sideboard-${selectedCardEntry.oracle_id}`,
+        label: selectedCardEntry.name,
+        detail: 'In Sideboard',
+        onClear: () =>
+          setSelectedSideboardCardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
       });
     }
     for (const selectedCardEntry of selectedP1P1Cards) {
@@ -175,6 +202,7 @@ export default function useDraftSimulatorPresentation({
   }, [
     selectedCards,
     selectedDeckCards,
+    selectedSideboardCards,
     selectedP1P1Cards,
     selectedFirstColorPickCards,
     selectedSecondColorPickCards,
@@ -188,6 +216,7 @@ export default function useDraftSimulatorPresentation({
     setSelectedArchetype,
     setSelectedCardOracles,
     setSelectedDeckCardOracles,
+    setSelectedSideboardCardOracles,
     setSelectedP1P1CardOracles,
     setSelectedFirstColorPickOracles,
     setSelectedSecondColorPickOracles,
@@ -242,6 +271,7 @@ export default function useDraftSimulatorPresentation({
   const clearActiveFilter = useCallback(() => {
     setSelectedCardOracles([]);
     setSelectedDeckCardOracles([]);
+    setSelectedSideboardCardOracles([]);
     setSelectedP1P1CardOracles([]);
     setSelectedFirstColorPickOracles([]);
     setSelectedSecondColorPickOracles([]);
@@ -253,6 +283,7 @@ export default function useDraftSimulatorPresentation({
     setSelectedArchetype,
     setSelectedCardOracles,
     setSelectedDeckCardOracles,
+    setSelectedSideboardCardOracles,
     setSelectedP1P1CardOracles,
     setSelectedFirstColorPickOracles,
     setSelectedSecondColorPickOracles,

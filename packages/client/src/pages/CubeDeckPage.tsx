@@ -10,6 +10,7 @@ import CubeDeckNavbar from 'components/cube/CubeDeckNavbar';
 import DeckCard from 'components/DeckCard';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
+import UpgradePrompt from 'components/UpgradePrompt';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import UserContext from 'contexts/UserContext';
 import { useCardDetails } from 'hooks/useCardDetails';
@@ -63,6 +64,7 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft }) => {
                 view={view}
                 setView={setView}
               />
+              <UpgradePrompt className="mt-3" storageKey="deckPage" message="Hope you enjoyed your draft!" />
               <Row className="mt-3 mb-3">
                 <Col>
                   <DeckCard

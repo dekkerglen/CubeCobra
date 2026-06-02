@@ -4,7 +4,7 @@ import { Request, Response } from '../../types/express';
 
 const handler = async (req: Request, res: Response) => {
   try {
-    const { oracles } = req.body;
+    const { oracles, eligibleOracles, skip, limit } = req.body;
 
     if (!Array.isArray(oracles)) {
       return res.status(400).json({
@@ -13,11 +13,27 @@ const handler = async (req: Request, res: Response) => {
       });
     }
 
-    console.log(`[Recommend] Received request with ${oracles.length} oracles:`, oracles);
+    if (eligibleOracles !== undefined && !Array.isArray(eligibleOracles)) {
+      return res.status(400).json({
+        success: false,
+        message: 'eligibleOracles must be an array when provided',
+      });
+    }
 
-    const result = recommend(oracles);
+    console.log(
+      `[Recommend] Received request: ${oracles.length} cube oracles` +
+        (Array.isArray(eligibleOracles)
+          ? `, ${eligibleOracles.length} eligible oracles, skip=${skip}, limit=${limit}`
+          : ''),
+    );
 
-    console.log(`[Recommend] Result: ${result.adds.length} adds, ${result.cuts.length} cuts`);
+    const result = recommend(oracles, {
+      eligibleOracles: Array.isArray(eligibleOracles) ? eligibleOracles : undefined,
+      skip: typeof skip === 'number' ? skip : undefined,
+      limit: typeof limit === 'number' ? limit : undefined,
+    });
+
+    console.log(`[Recommend] Result: ${result.adds.length} adds (of ${result.totalAdds}), ${result.cuts.length} cuts`);
     if (result.adds.length === 0 && result.cuts.length === 0) {
       console.log('[Recommend] No recommendations returned - possible oracle mapping issue');
     }

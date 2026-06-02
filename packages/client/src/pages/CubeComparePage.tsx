@@ -4,8 +4,8 @@ import Card from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 
 import { useCardDetails } from 'hooks/useCardDetails';
-import Query from 'utils/Query';
 import { getPlaceholderCardDetails } from 'utils/placeholderCardDetails';
+import Query from 'utils/Query';
 
 import CompareView from '../components/CompareView';
 import CubeCompareNavbar from '../components/cube/CubeCompareNavbar';

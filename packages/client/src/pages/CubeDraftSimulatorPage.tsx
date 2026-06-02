@@ -969,6 +969,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   // Card pool view
   const [selectedCardOracles, setSelectedCardOracles] = useState<string[]>([]);
   const [selectedDeckCardOracles, setSelectedDeckCardOracles] = useState<string[]>([]);
+  const [selectedSideboardCardOracles, setSelectedSideboardCardOracles] = useState<string[]>([]);
   const [selectedP1P1CardOracles, setSelectedP1P1CardOracles] = useState<string[]>([]);
   const [selectedFirstColorPickOracles, setSelectedFirstColorPickOracles] = useState<string[]>([]);
   const [selectedSecondColorPickOracles, setSelectedSecondColorPickOracles] = useState<string[]>([]);
@@ -996,6 +997,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const resetViewSelection = useCallback(() => {
     setSelectedCardOracles([]);
     setSelectedDeckCardOracles([]);
+    setSelectedSideboardCardOracles([]);
     setSelectedP1P1CardOracles([]);
     setSelectedFirstColorPickOracles([]);
     setSelectedSecondColorPickOracles([]);
@@ -1197,6 +1199,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     () => ({
       selectedCardOracles,
       selectedDeckCardOracles,
+      selectedSideboardCardOracles,
       selectedP1P1CardOracles,
       selectedFirstColorPickOracles,
       selectedSecondColorPickOracles,
@@ -1205,12 +1208,24 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       focusedPoolIndex,
       focusedPoolViewMode,
     }),
-    [selectedCardOracles, selectedDeckCardOracles, selectedP1P1CardOracles, selectedFirstColorPickOracles, selectedSecondColorPickOracles, selectedSkeletonId, selectedArchetype, focusedPoolIndex, focusedPoolViewMode],
+    [
+      selectedCardOracles,
+      selectedDeckCardOracles,
+      selectedSideboardCardOracles,
+      selectedP1P1CardOracles,
+      selectedFirstColorPickOracles,
+      selectedSecondColorPickOracles,
+      selectedSkeletonId,
+      selectedArchetype,
+      focusedPoolIndex,
+      focusedPoolViewMode,
+    ],
   );
   const selectionSetters = useMemo<DraftSimulatorSelectionSetters>(
     () => ({
       setSelectedCardOracles,
       setSelectedDeckCardOracles,
+      setSelectedSideboardCardOracles,
       setSelectedP1P1CardOracles,
       setSelectedFirstColorPickOracles,
       setSelectedSecondColorPickOracles,
@@ -1218,7 +1233,17 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       setSelectedSkeletonId,
       setFocusedPoolIndex,
     }),
-    [setSelectedCardOracles, setSelectedDeckCardOracles, setSelectedP1P1CardOracles, setSelectedFirstColorPickOracles, setSelectedSecondColorPickOracles, setSelectedArchetype, setSelectedSkeletonId, setFocusedPoolIndex],
+    [
+      setSelectedCardOracles,
+      setSelectedDeckCardOracles,
+      setSelectedSideboardCardOracles,
+      setSelectedP1P1CardOracles,
+      setSelectedFirstColorPickOracles,
+      setSelectedSecondColorPickOracles,
+      setSelectedArchetype,
+      setSelectedSkeletonId,
+      setFocusedPoolIndex,
+    ],
   );
 
   // Top Gwen archetype labels per color pair, for the Deck Color Distribution chart
@@ -1292,6 +1317,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const {
     selectedCards,
     selectedDeckCards,
+    selectedSideboardCards,
     selectedP1P1Cards,
     selectedCard,
     selectedFirstColorPickCards,
@@ -1302,7 +1328,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     filteredDecks,
     deckInclusionPct,
     deckCardPoolIndices,
+    sideboardCardPoolIndices,
     visibleDeckCounts,
+    visibleSideboardCounts,
     inDeckOracles,
     inSideboardOracles,
     visibleCardStats,
@@ -1388,6 +1416,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     setters: selectionSetters,
     selectedCards,
     selectedDeckCards,
+    selectedSideboardCards,
     selectedP1P1Cards,
     selectedFirstColorPickCards,
     selectedSecondColorPickCards,
@@ -1408,6 +1437,14 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
   const handleToggleSelectedDeckCard = useCallback((oracleId: string) => {
     setSelectedDeckCardOracles((current) => {
+      if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
+      if (current.length < 2) return [...current, oracleId];
+      return [current[1]!, oracleId];
+    });
+  }, []);
+
+  const handleToggleSelectedSideboardCard = useCallback((oracleId: string) => {
+    setSelectedSideboardCardOracles((current) => {
       if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
       if (current.length < 2) return [...current, oracleId];
       return [current[1]!, oracleId];
@@ -1662,6 +1699,8 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       selectedCardOracles={selectedCardOracles}
       handleToggleSelectedDeckCard={handleToggleSelectedDeckCard}
       selectedDeckCardOracles={selectedDeckCardOracles}
+      handleToggleSelectedSideboardCard={handleToggleSelectedSideboardCard}
+      selectedSideboardCardOracles={selectedSideboardCardOracles}
       handleToggleSelectedP1P1Card={handleToggleSelectedP1P1Card}
       selectedP1P1CardOracles={selectedP1P1CardOracles}
       handleToggleSelectedFirstColorPick={handleToggleSelectedFirstColorPick}
@@ -1671,7 +1710,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       selectedSecondColorPickOracles={selectedSecondColorPickOracles}
       secondColorPickCounts={secondColorPickCounts}
       deckCardPoolIndices={deckCardPoolIndices}
+      sideboardCardPoolIndices={sideboardCardPoolIndices}
       visibleDeckCounts={visibleDeckCounts}
+      visibleSideboardCounts={visibleSideboardCounts}
       inDeckOracles={inDeckOracles}
       inSideboardOracles={inSideboardOracles}
       deckInclusionPct={deckInclusionPct}

@@ -23,6 +23,11 @@ jest.mock('serverutils/cubefn');
 
 jest.mock('serverutils/util', () => ({
   addNotification: jest.fn(),
+  // The collaborators handlers call isAdmin to grant admins owner-equivalent
+  // access. Default to false so the non-owner / collaborator paths under test
+  // hit the 403 branch instead of throwing on an undefined function (which
+  // would surface as a 500 here).
+  isAdmin: jest.fn().mockReturnValue(false),
 }));
 
 import { collaboratorIndexDao, cubeDao, userDao } from '../../../src/dynamo/daos';

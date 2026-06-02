@@ -44,6 +44,93 @@ export const uploadJson = async (key: string, data: any): Promise<void> => {
 };
 
 /**
+ * Upload a JSON object to S3 by streaming it to a temp file first.
+ * Use this for payloads that may exceed V8's max string length (~512MB),
+ * which would cause JSON.stringify to throw "Invalid string length".
+ *
+ * Serializes top-level (and one level of nested) entries one at a time so
+ * the full JSON is never materialized as a single string in memory.
+ */
+export const uploadJsonStreaming = async (key: string, data: Record<string, any> | any[]): Promise<void> => {
+  const fs = await import('fs');
+  const os = await import('os');
+  const pathMod = await import('path');
+  const { randomUUID } = await import('crypto');
+
+  const tmpPath = pathMod.join(os.tmpdir(), `s3-upload-${randomUUID()}.json`);
+  const stream = fs.createWriteStream(tmpPath, { encoding: 'utf-8' });
+
+  const write = (chunk: string): Promise<void> =>
+    new Promise((resolve, reject) => {
+      if (!stream.write(chunk)) {
+        stream.once('drain', () => resolve());
+        stream.once('error', reject);
+      } else {
+        resolve();
+      }
+    });
+
+  const writeValue = async (value: any): Promise<void> => {
+    if (Array.isArray(value)) {
+      await write('[');
+      let first = true;
+      for (const item of value) {
+        if (!first) await write(',');
+        await write(JSON.stringify(item));
+        first = false;
+      }
+      await write(']');
+    } else if (value && typeof value === 'object') {
+      await write('{');
+      let first = true;
+      for (const [k, v] of Object.entries(value)) {
+        if (!first) await write(',');
+        await write(`${JSON.stringify(k)}:${JSON.stringify(v)}`);
+        first = false;
+      }
+      await write('}');
+    } else {
+      await write(JSON.stringify(value));
+    }
+  };
+
+  try {
+    if (Array.isArray(data)) {
+      await write('[');
+      let first = true;
+      for (const item of data) {
+        if (!first) await write(',');
+        await writeValue(item);
+        first = false;
+      }
+      await write(']');
+    } else {
+      await write('{');
+      let first = true;
+      for (const [k, v] of Object.entries(data)) {
+        if (!first) await write(',');
+        await write(`${JSON.stringify(k)}:`);
+        await writeValue(v);
+        first = false;
+      }
+      await write('}');
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      stream.end((err?: any) => (err ? reject(err) : resolve()));
+    });
+
+    await uploadFile(key, tmpPath, 'application/json');
+  } finally {
+    try {
+      await fs.promises.unlink(tmpPath);
+    } catch {
+      // ignore cleanup failures
+    }
+  }
+};
+
+/**
  * Upload a file from the filesystem to S3
  * Uses streaming to avoid loading large files into memory
  */

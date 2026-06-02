@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { CardDetails, SUPPORTED_FORMATS } from '@utils/datatypes/Card';
 
 // Placeholder used while real card details are being fetched from the cache

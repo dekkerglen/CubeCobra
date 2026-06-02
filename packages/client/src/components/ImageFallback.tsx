@@ -33,14 +33,7 @@ const ImageFallback: React.FC<ImageFallbackProps> = ({ src, fallbackSrc, innerRe
     };
   }, [src, fallbackSrc]);
 
-  return (
-    <img
-      className={`card-border ${className}`}
-      src={resolvedSrc}
-      ref={innerRef}
-      {...props}
-    />
-  );
+  return <img className={`card-border ${className}`} src={resolvedSrc} ref={innerRef} {...props} />;
 };
 
 export default ImageFallback;

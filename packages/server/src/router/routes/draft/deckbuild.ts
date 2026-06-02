@@ -1,5 +1,8 @@
 import { isVoucher } from '@utils/cardutil';
+import { type LandTrimDeck, runManabaseTrim } from '@utils/drafting/landTrim';
+import type { BasicCardLike } from '@utils/drafting/manabaseHeuristics';
 import { cubeDao, draftDao } from 'dynamo/daos';
+import { buildLandMetaLookup } from 'serverutils/buildLandMetaLookup';
 import carddb, { cardFromId, getOracleForMl, getReasonableCardByOracle } from 'serverutils/carddb';
 import { calculateBasics } from 'serverutils/draftbots';
 import { batchBuild, batchDraft } from 'serverutils/ml';
@@ -59,10 +62,40 @@ const oracleIsLand = (oracle: string): boolean => {
   return !!(oracleIds && oracleIds[0] && cardFromId(oracleIds[0]).type.includes('Land'));
 };
 
-const finalizeBotDecks = (
+// Conspiracy and Vanguard cards are draft-affecting cards that should never
+// end up in a bot's mainboard. They can be drafted (they live in packs) but
+// at deck construction time we leave them in the sideboard.
+const oracleIsConspiracyOrVanguard = (oracle: string): boolean => {
+  const oracleIds = carddb.oracleToId[oracle];
+  if (!oracleIds || !oracleIds[0]) return false;
+  const type = cardFromId(oracleIds[0]).type || '';
+  return type.includes('Conspiracy') || type.includes('Vanguard');
+};
+
+const finalizeBotDecks = async (
   seats: SeatState[],
   basicsCards: any[],
-): { seatIndex: number; mainboard: string[]; sideboard: string[] }[] => {
+): Promise<{ seatIndex: number; mainboard: string[]; sideboard: string[] }[]> => {
+  const trimDecks: LandTrimDeck[] = seats.map((seat) => ({
+    mainboard: seat.mainboard,
+    sideboard: seat.remainingPool,
+    basics: basicsCards
+      .filter((b: any) => b?.oracle_id)
+      .map<BasicCardLike>((b: any) => ({ oracleId: b.oracle_id, colorIdentity: b.color_identity ?? [] })),
+    deckSize: seat.deckSize,
+    maxLands: seat.maxLands,
+    cardMeta: buildLandMetaLookup(seat.mainboard, basicsCards),
+    originalPool: [...seat.mainboard, ...seat.remainingPool],
+  }));
+
+  try {
+    await runManabaseTrim(trimDecks, batchDraft);
+  } catch (err) {
+    // Return the untrimmed decks rather than failing the draft, but record the failure
+    // so a wedged rerank service is visible in logs.
+    console.warn('draft/deckbuild manabase trim failed; returning untrimmed decks', err);
+  }
+
   return seats.map((seat) => {
     // Add basics to fill remaining slots
     const mainboardCards = seat.mainboard.map(getReasonableCardByOracle);
@@ -206,6 +239,8 @@ export const startHandler = async (req: Request, res: Response) => {
         const oracle = originals.find((o) => seat.remainingPool.includes(o));
         if (!oracle) continue;
 
+        if (oracleIsConspiracyOrVanguard(oracle)) continue;
+
         const land = oracleIsLand(oracle);
         if (land && seat.landCount >= seat.maxLands) continue;
         if (!land && seat.spellCount >= seat.maxSpells) continue;
@@ -232,7 +267,7 @@ export const startHandler = async (req: Request, res: Response) => {
     const anyActive = seats.some((seat) => seat.mainboard.length < seat.deckSize && seat.remainingPool.length > 0);
 
     if (!anyActive) {
-      const botDecks = finalizeBotDecks(seats, basicsCards);
+      const botDecks = await finalizeBotDecks(seats, basicsCards);
       return res.status(200).json({ success: true, step: 1, totalSteps: 1, complete: true, botDecks });
     }
 
@@ -305,6 +340,7 @@ export const stepHandler = async (req: Request, res: Response) => {
       if (seat.mainboard.length >= seat.deckSize || seat.remainingPool.length === 0) continue;
 
       const candidates = seat.remainingPool.filter((oracle) => {
+        if (oracleIsConspiracyOrVanguard(oracle)) return false;
         const land = oracleIsLand(oracle);
         if (land && seat.landCount >= seat.maxLands) return false;
         if (!land && seat.spellCount >= seat.maxSpells) return false;
@@ -322,7 +358,7 @@ export const stepHandler = async (req: Request, res: Response) => {
 
     if (batchInputs.length === 0) {
       // All seats are done
-      const botDecks = finalizeBotDecks(session.seats, session.basicsCards);
+      const botDecks = await finalizeBotDecks(session.seats, session.basicsCards);
       session.complete = true;
       session.botDecks = botDecks;
       return res.status(200).json({
@@ -385,6 +421,7 @@ export const stepHandler = async (req: Request, res: Response) => {
       stillActive = session.seats.some((seat) => {
         if (seat.mainboard.length >= seat.deckSize || seat.remainingPool.length === 0) return false;
         return seat.remainingPool.some((oracle) => {
+          if (oracleIsConspiracyOrVanguard(oracle)) return false;
           const land = oracleIsLand(oracle);
           if (land && seat.landCount >= seat.maxLands) return false;
           if (!land && seat.spellCount >= seat.maxSpells) return false;
@@ -394,7 +431,7 @@ export const stepHandler = async (req: Request, res: Response) => {
     }
 
     if (!stillActive) {
-      const botDecks = finalizeBotDecks(session.seats, session.basicsCards);
+      const botDecks = await finalizeBotDecks(session.seats, session.basicsCards);
       session.complete = true;
       session.botDecks = botDecks;
       return res.status(200).json({

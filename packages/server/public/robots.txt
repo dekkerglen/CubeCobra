@@ -1,0 +1,73 @@
+# robots.txt for assets.cubecobra.com
+#
+# This file is uploaded to s3://cubecobra-assets-<stage>/ by the deploy
+# pipeline (packages/scripts/src/uploadAssets.ts) and served from the
+# CloudFront distribution defined in packages/cdk/lib/assets-distribution.ts.
+#
+# The assets host serves JS bundles, CSS, images, and TensorFlow.js model
+# shards. There is no SEO value in indexing these files standalone --
+# search engines fetch them while rendering pages on cubecobra.com.
+#
+# Strategy: deny-all by default, with narrow allowances for the crawlers
+# that legitimately need access for page-rendering and ad serving. The
+# heaviest CloudFront-egress offenders (Amazonbot, AhrefsBot, etc.) are
+# also called out explicitly so per-bot tuning (e.g. Crawl-delay) is easy
+# later.
+
+# --- Crawlers explicitly allowed (page-rendering / ad serving) ---
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Googlebot-Video
+Allow: /
+
+User-agent: Googlebot-Mobile
+Allow: /
+
+User-agent: Mediapartners-Google
+Allow: /
+
+User-agent: AdsBot-Google
+Allow: /
+
+User-agent: AdsBot-Google-Mobile
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# --- Top bandwidth offenders, called out explicitly ---
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: PulsePoint-Crawler
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+# --- Everything else: blocked ---
+# Assets are not meant to be indexed independently.
+
+User-agent: *
+Disallow: /

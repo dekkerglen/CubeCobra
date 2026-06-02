@@ -1,8 +1,4 @@
-import type {
-  ArchetypeSkeleton,
-  SimulationRunData,
-  SimulationRunEntry,
-} from '@utils/datatypes/SimulationReport';
+import type { ArchetypeSkeleton, SimulationRunData, SimulationRunEntry } from '@utils/datatypes/SimulationReport';
 
 export const LOCAL_SIM_HISTORY_LIMIT = 5;
 const LOCAL_SIM_STORAGE_VERSION = 1;
@@ -27,7 +23,12 @@ export interface ClusteringCache {
 
 export interface LocalSimulationStore {
   version: number;
-  runs: { entry: SimulationRunEntry; runData: SimulationRunData; clusterCache?: ClusteringCache; clusterCachePending?: boolean }[];
+  runs: {
+    entry: SimulationRunEntry;
+    runData: SimulationRunData;
+    clusterCache?: ClusteringCache;
+    clusterCachePending?: boolean;
+  }[];
 }
 
 interface IndexedDbSimulationRunRecord {
@@ -97,7 +98,12 @@ export async function readLocalSimulationStore(cubeId: string): Promise<LocalSim
 
 export async function writeLocalSimulationStore(
   cubeId: string,
-  runs: { entry: SimulationRunEntry; runData: SimulationRunData; clusterCache?: ClusteringCache; clusterCachePending?: boolean }[],
+  runs: {
+    entry: SimulationRunEntry;
+    runData: SimulationRunData;
+    clusterCache?: ClusteringCache;
+    clusterCachePending?: boolean;
+  }[],
 ): Promise<void> {
   const nextRuns = [...runs].sort((a, b) => b.entry.ts - a.entry.ts);
   const desiredKeys = new Set(
@@ -169,7 +175,11 @@ export async function clearLocalSimulationStore(cubeId: string): Promise<void> {
   await writeLocalSimulationStore(cubeId, []);
 }
 
-export async function patchClusteringCache(cubeId: string, ts: number, patch: Partial<ClusteringCache>): Promise<boolean> {
+export async function patchClusteringCache(
+  cubeId: string,
+  ts: number,
+  patch: Partial<ClusteringCache>,
+): Promise<boolean> {
   const db = await openLocalSimulationDb();
   try {
     return await new Promise<boolean>((resolve, reject) => {

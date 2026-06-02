@@ -121,6 +121,14 @@ export const pickRate = ({ picks, passes }: { picks: number; passes: number }): 
 
 export const cardTags = (card: Card): string[] => card.tags || [];
 
+// Board accessor for the `board=...` filter. Cards in cube/draft contexts are
+// stamped with a board key (mainboard / maybeboard / basics / custom boards)
+// when they're loaded out of the dynamo cube row. Cards in non-cube contexts
+// (catalog search, smart search against the global card pool) don't carry a
+// board, so we default to 'mainboard' — this means `board=mainboard` is a
+// no-op for those contexts rather than excluding everything.
+export const cardBoard = (card: Card): string => (card.board ?? 'mainboard').toString();
+
 export const cardFinish = (card: Card): string => card.finish ?? 'Non-foil';
 
 export const isFoilFinish = (finish: string): boolean => finish !== 'Non-foil';
@@ -603,7 +611,7 @@ export const cardManaSymbols = (card: Card): ManaSymbol[] => {
     .filter(Boolean) as ManaSymbol[];
 };
 
-const typeIsSpecialZoneType = (type: string): boolean =>
+export const typeIsSpecialZoneType = (type: string): boolean =>
   /\b(plane|phenomenon|vanguard|scheme|conspiracy|contraption)\b/i.test(type);
 
 export const cardIsSpecialZoneType = (card: Card): boolean => typeIsSpecialZoneType(cardType(card));
@@ -630,13 +638,15 @@ export const isManaFixingLand = (details: CardDetailsType): boolean => {
   return BASIC_LAND_TYPE_NAMES.some((name) => text.includes(name));
 };
 
+const UNREASONABLE_PROMO_TYPES = [
+  'surgefoil', 'galaxyfoil', 'textured', 'serialized', 'gilded',
+  'neonink', 'oilslick', 'rainbowfoil', 'confettifoil', 'embossed',
+  'boosterfun', 'promopack', 'prerelease', 'datestamped',
+];
+
 const arePromoTypesReasonable = (card: CardDetailsType): boolean => {
-  return (
-    card.promo_types === undefined ||
-    //Post Omenpaths support (https://scryfall.com/blog/through-the-omenpaths-added-plus-english-printed-text-support-235) ll
-    //UB cards have this promo type
-    (Array.isArray(card.promo_types) && card.promo_types.length === 1 && card.promo_types[0] === 'universesbeyond')
-  );
+  if (!card.promo_types || card.promo_types.length === 0) return true;
+  return !card.promo_types.some((type) => UNREASONABLE_PROMO_TYPES.includes(type));
 };
 
 export function reasonableCard(card: CardDetailsType): boolean {
@@ -651,6 +661,7 @@ export function reasonableCard(card: CardDetailsType): boolean {
     card.tcgplayer_id !== undefined &&
     card.collector_number.indexOf('★') === -1 &&
     card.layout !== 'art_series' &&
+    card.layout !== 'double_faced_token' &&
     !card?.hasFlavorName
   );
 }

@@ -69,6 +69,7 @@ import {
   cardGamesEverAvailable,
   cardFirstPrintYear,
   cardKeywords,
+  cardBoard,
 } from '../../cardutil';
 
 
@@ -2411,6 +2412,7 @@ var grammar = {
     {"name": "condition$subexpression$1", "symbols": ["gameCondition"]},
     {"name": "condition$subexpression$1", "symbols": ["firstYearCondition"]},
     {"name": "condition$subexpression$1", "symbols": ["keywordCondition"]},
+    {"name": "condition$subexpression$1", "symbols": ["boardCondition"]},
     {"name": "condition", "symbols": ["condition$subexpression$1"], "postprocess": ([[condition]]) => condition},
     {"name": "cmcCondition$subexpression$1$subexpression$1", "symbols": [/[mM]/, /[vV]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "cmcCondition$subexpression$1", "symbols": ["cmcCondition$subexpression$1$subexpression$1"]},
@@ -2675,6 +2677,8 @@ var grammar = {
     {"name": "keywordCondition$subexpression$1$subexpression$3", "symbols": [/[kK]/, /[eE]/, /[yY]/, /[wW]/, /[oO]/, /[rR]/, /[dD]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "keywordCondition$subexpression$1", "symbols": ["keywordCondition$subexpression$1$subexpression$3"]},
     {"name": "keywordCondition", "symbols": ["keywordCondition$subexpression$1", "stringSetElementOpValue"], "postprocess": ([, valuePred]) => genericCondition('keywords', cardKeywords, valuePred)},
+    {"name": "boardCondition$subexpression$1", "symbols": [/[bB]/, /[oO]/, /[aA]/, /[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "boardCondition", "symbols": ["boardCondition$subexpression$1", "stringOpValue"], "postprocess": ([, valuePred]) => genericCondition('board', cardBoard, valuePred)},
     {"name": "isCondition$subexpression$1", "symbols": [/[iI]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "isCondition", "symbols": ["isCondition$subexpression$1", "isOpValue"], "postprocess": ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred)},
     {"name": "notCondition$subexpression$1", "symbols": [/[nN]/, /[oO]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},

@@ -74,7 +74,7 @@ const DevBlogEntry: React.FC<DevBlogEntryProps> = ({ items, setItems }) => {
         <Text semibold md>
           Body:
         </Text>
-        <TextEntry name="blog" value={body} setValue={setBody} maxLength={10000} />
+        <TextEntry name="blog" value={body} setValue={setBody} maxLength={30000} />
         <Button color="primary" block outline onClick={submit}>
           Submit
         </Button>

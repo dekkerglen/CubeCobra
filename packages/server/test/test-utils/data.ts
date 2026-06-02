@@ -121,9 +121,11 @@ export const createCardDetails = (overrides?: Partial<CardDetails>): CardDetails
     ...overrides,
   };
 
-  details.games = hasGamesOverride ? (overrides?.games ?? ['paper']) : (details.games ?? ['paper']);
+  // Respect an explicit `games: undefined` override (used by tests that exercise
+  // the "no games" default path) rather than coercing it back to ['paper'].
+  details.games = hasGamesOverride ? (overrides?.games as any) : (details.games ?? ['paper']);
   details.gamesEverAvailable = hasGamesEverAvailableOverride
-    ? (overrides?.gamesEverAvailable ?? ['paper'])
+    ? (overrides?.gamesEverAvailable as any)
     : (details.games ?? ['paper']);
 
   return details;

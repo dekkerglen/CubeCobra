@@ -59,19 +59,49 @@ const DraftFormatsSettings: React.FC = () => {
   const [deckbuildSpells, setDeckbuildSpells] = useState<number>(cube.deckbuildSpells ?? 23);
   const [deckbuildLands, setDeckbuildLands] = useState<number>(cube.deckbuildLands ?? 17);
 
+  // Migrates a legacy slot (with a top-level `board` field) into the new shape
+  // where the board is folded into the filter string as `board=<name>`. Slots
+  // that already encode the board in their filter, or that don't have a legacy
+  // board, are passed through unchanged (minus the dropped field).
+  const migrateSlot = useCallback((s: CardSlot): CardSlot => {
+    const legacyBoard = (s as any).board as string | undefined;
+    const filter = (s.filter ?? '').trim();
+    // Detect any `board:` or `board=` token anywhere in the filter so we don't
+    // double-stamp formats that have already been migrated.
+    const filterHasBoard = /\bboard\s*[:=]/i.test(filter);
+
+    if (!legacyBoard) {
+      // Drop the field (it shouldn't be there at all); keep the rest as-is.
+      const { board: _board, ...rest } = s as any;
+      return rest as CardSlot;
+    }
+
+    if (filterHasBoard) {
+      // Filter already constrains board; legacy field is redundant — drop it.
+      const { board: _board, ...rest } = s as any;
+      return rest as CardSlot;
+    }
+
+    // Append ` board=<legacy>` to the filter string. Wildcards/empties become
+    // just the board clause.
+    const mergedFilter = filter === '' || filter === '*' ? `board=${legacyBoard}` : `${filter} board=${legacyBoard}`;
+    const { board: _board, ...rest } = s as any;
+    return { ...rest, filter: mergedFilter };
+  }, []);
+
   const getInitialFormats = useCallback((): DraftFormat[] => {
     if (cube.formats && cube.formats.length > 0) {
       return cube.formats.map((f) => ({
         ...f,
         packs: f.packs.map((p) => ({
           ...p,
-          slots: p.slots.map((s: CardSlot) => ({ ...s })),
+          slots: p.slots.map((s: CardSlot) => migrateSlot({ ...s })),
           steps: p.steps ? [...p.steps] : null,
         })),
       }));
     }
     return [];
-  }, [cube.formats]);
+  }, [cube.formats, migrateSlot]);
 
   useEffect(() => {
     setFormats(getInitialFormats());
@@ -464,7 +494,6 @@ const DraftFormatsSettings: React.FC = () => {
                                       canRemove={true}
                                       setPack={(newPack: Pack) => updatePack(index, packIndex, newPack)}
                                       removePack={() => removePackFromFormat(index, packIndex)}
-                                      availableBoards={availableBoards}
                                       copyPack={() => {
                                         const newFormats = [...formats];
                                         newFormats[index].packs.splice(packIndex + 1, 0, {

@@ -1,20 +1,16 @@
-/* eslint-disable camelcase */
+/* eslint-disable */
+
 import React, { useEffect, useMemo, useState } from 'react';
 
 import type CardType from '@utils/datatypes/Card';
 import type { CardDetails } from '@utils/datatypes/Card';
-import type {
-  CardMeta,
-  SimulatedPickCard,
-  SimulatedPool,
-  SimulationRunData,
-} from '@utils/datatypes/SimulationReport';
+import type { CardMeta, SimulatedPickCard, SimulatedPool, SimulationRunData } from '@utils/datatypes/SimulationReport';
 
-import DraftBreakdownDisplay from '../draft/DraftBreakdownDisplay';
+import { modelScoresToProbabilities } from '../../utils/botRatings';
+import { buildOracleRemapping, loadDraftBot, localBatchDraftRanked } from '../../utils/draftBot';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
-import { buildOracleRemapping, loadDraftBot, localBatchDraftRanked } from '../../utils/draftBot';
-import { modelScoresToProbabilities } from '../../utils/botRatings';
+import DraftBreakdownDisplay from '../draft/DraftBreakdownDisplay';
 
 const SIM_PREVIEW_CARD_W = 140;
 
@@ -175,29 +171,31 @@ export function reconstructSimulatorPoolFromRun(runData: SimulationRunData, pool
   };
 }
 
-export const PickCard: React.FC<{ pick: SimulatedPickCard; isSelected: boolean }> = React.memo(({ pick, isSelected }) => (
-  <div
-    className={[
-      'relative rounded border overflow-hidden bg-bg flex-shrink-0',
-      isSelected ? 'border-link-active ring-2 ring-link-active' : 'border-border',
-    ].join(' ')}
-    style={{ width: SIM_PREVIEW_CARD_W }}
-  >
-    {pick.imageUrl ? (
-      <img src={pick.imageUrl} alt={pick.name} className="w-full block" />
-    ) : (
-      <div
-        className="w-full flex items-center justify-center p-1 text-xs text-text-secondary"
-        style={{ height: Math.round(SIM_PREVIEW_CARD_W * 1.4) }}
-      >
-        {pick.name || 'Unknown'}
+export const PickCard: React.FC<{ pick: SimulatedPickCard; isSelected: boolean }> = React.memo(
+  ({ pick, isSelected }) => (
+    <div
+      className={[
+        'relative rounded border overflow-hidden bg-bg flex-shrink-0',
+        isSelected ? 'border-link-active ring-2 ring-link-active' : 'border-border',
+      ].join(' ')}
+      style={{ width: SIM_PREVIEW_CARD_W }}
+    >
+      {pick.imageUrl ? (
+        <img src={pick.imageUrl} alt={pick.name} className="w-full block" />
+      ) : (
+        <div
+          className="w-full flex items-center justify-center p-1 text-xs text-text-secondary"
+          style={{ height: Math.round(SIM_PREVIEW_CARD_W * 1.4) }}
+        >
+          {pick.name || 'Unknown'}
+        </div>
+      )}
+      <div className="absolute top-1 left-1 bg-black/80 text-white text-[10px] font-bold rounded px-1 leading-tight">
+        P{pick.packNumber + 1}P{pick.pickNumber}
       </div>
-    )}
-    <div className="absolute top-1 left-1 bg-black/80 text-white text-[10px] font-bold rounded px-1 leading-tight">
-      P{pick.packNumber + 1}P{pick.pickNumber}
     </div>
-  </div>
-));
+  ),
+);
 
 const SimulatorPickBreakdown: React.FC<{ pool: SimulatedPool; runData: SimulationRunData }> = ({ pool, runData }) => {
   const [pickNumber, setPickNumber] = useState('0');

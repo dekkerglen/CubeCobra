@@ -1,7 +1,6 @@
 import React, { useMemo } from 'react';
 
 import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
-import { BoardDefinition } from '@utils/datatypes/Cube';
 import { DraftAction, Pack } from '@utils/datatypes/Draft';
 import { buildDefaultSteps, DEFAULT_STEPS } from '@utils/draftutil';
 
@@ -21,7 +20,6 @@ interface CustomPackCardProps {
   setPack: (pack: Pack) => void;
   removePack: () => void;
   copyPack: () => void;
-  availableBoards?: BoardDefinition[];
 }
 
 const ACTION_LABELS: Record<string, string> = Object.freeze({
@@ -48,21 +46,11 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
   setPack,
   removePack,
   copyPack,
-  availableBoards,
 }) => {
   const [slotsOpen, toggleSlotsOpen] = useToggle(true);
   const [stepsOpen, toggleStepsOpen] = useToggle(false);
   const steps = useMemo(() => pack.steps ?? buildDefaultSteps(pack.slots.length), [pack]);
 
-  const boardOptions = useMemo(() => {
-    if (!availableBoards || availableBoards.length === 0) {
-      return [{ value: 'mainboard', label: 'Mainboard' }];
-    }
-    return availableBoards.map((b) => ({
-      value: b.name.toLowerCase().replace(/\s+/g, ''),
-      label: b.name,
-    }));
-  }, [availableBoards]);
   return (
     <Card key={packIndex} className="mb-4 pack-outline">
       <CardHeader className="px-2">
@@ -90,22 +78,18 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
                     <Text semibold md>
                       {slotIndex + 1}
                     </Text>
-                    <Select
-                      dense
-                      value={slot.board || 'mainboard'}
-                      options={boardOptions}
-                      setValue={(value) => {
-                        const newSlots = [...pack.slots];
-                        newSlots[slotIndex] = { ...slot, board: value === 'mainboard' ? undefined : value };
-                        setPack({ ...pack, slots: newSlots });
-                      }}
-                    />
                     <Input
                       type="text"
                       value={slot.filter}
+                      placeholder="Filter (defaults to board=mainboard; use board=name to draw from another board)"
                       onChange={(e) => {
                         const newSlots = [...pack.slots];
-                        newSlots[slotIndex] = { ...slot, filter: e.target.value };
+                        // We never write a `board` field on slots anymore — board
+                        // scope lives inside the filter string (see compileSlotFilter
+                        // in utils/drafting/draftFilter.ts). Strip any stray legacy
+                        // field that might have slipped through.
+                        const { board: _board, ...rest } = slot as any;
+                        newSlots[slotIndex] = { ...rest, filter: e.target.value };
                         setPack({ ...pack, slots: newSlots });
                       }}
                     />

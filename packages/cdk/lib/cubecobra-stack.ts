@@ -139,7 +139,7 @@ export class CubeCobraStack extends cdk.Stack {
 
     // Create recommender service first (internal ALB, not publicly accessible)
     // We need its endpoint URL for the main server's ML_SERVICE_URL
-    const recommenderFleetSize = params.environmentName === 'production' ? 2 : 1;
+    const recommenderFleetSize = params.environmentName === 'production' ? 3 : 1;
     const recommenderService = new RecommenderService(this, 'RecommenderService', {
       vpc,
       environmentName: params.environmentName,

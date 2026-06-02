@@ -2,8 +2,8 @@ import React, { useMemo } from 'react';
 
 import type { BuiltDeck, CardMeta } from '@utils/datatypes/SimulationReport';
 
-import { DeckStacksStatic } from '../DeckCard';
 import Text from '../base/Text';
+import { DeckStacksStatic } from '../DeckCard';
 
 export const CMC_COLS = 8;
 
@@ -12,7 +12,10 @@ export const CMC_COLS = 8;
 export function buildPilesFromOracles(
   oracleIds: string[],
   cardMeta: Record<string, CardMeta>,
-): { piles: number[][][]; cards: { cardID: string; details: { oracle_id: string; name: string; image_normal: string } }[] } {
+): {
+  piles: number[][][];
+  cards: { cardID: string; details: { oracle_id: string; name: string; image_normal: string } }[];
+} {
   const cards: { cardID: string; details: { oracle_id: string; name: string; image_normal: string } }[] = [];
   const oracleToIndex: Record<string, number> = {};
   for (const id of oracleIds) {
@@ -22,9 +25,7 @@ export function buildPilesFromOracles(
     cards.push({ cardID: id, details: { oracle_id: id, name: meta?.name ?? id, image_normal: meta?.imageUrl ?? '' } });
   }
 
-  const piles: number[][][] = Array.from({ length: 3 }, () =>
-    Array.from({ length: CMC_COLS }, () => [] as number[]),
-  );
+  const piles: number[][][] = Array.from({ length: 3 }, () => Array.from({ length: CMC_COLS }, () => [] as number[]));
 
   for (const id of oracleIds) {
     const meta = cardMeta[id];

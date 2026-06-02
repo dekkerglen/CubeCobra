@@ -1169,6 +1169,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .mt-6 {
   margin-top: 1.5rem;
 }
+.mt-auto {
+  margin-top: auto;
+}
 .box-border {
   box-sizing: border-box;
 }
@@ -1462,6 +1465,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .min-w-\[1\.25rem\] {
   min-width: 1.25rem;
 }
+.min-w-\[12rem\] {
+  min-width: 12rem;
+}
 .min-w-\[180px\] {
   min-width: 180px;
 }
@@ -1470,6 +1476,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .min-w-\[72px\] {
   min-width: 72px;
+}
+.min-w-\[8rem\] {
+  min-width: 8rem;
 }
 .min-w-fit {
   min-width: -webkit-fit-content;
@@ -1484,6 +1493,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .max-w-2xl {
   max-width: 42rem;
+}
+.max-w-32 {
+  max-width: 8rem;
 }
 .max-w-3xl {
   max-width: 48rem;
@@ -2405,6 +2417,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .bg-button-accent {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--button-accent) / var(--tw-bg-opacity, 1));
+}
+.bg-button-accent\/10 {
+  background-color: rgb(var(--button-accent) / 0.1);
 }
 .bg-button-danger {
   --tw-bg-opacity: 1;

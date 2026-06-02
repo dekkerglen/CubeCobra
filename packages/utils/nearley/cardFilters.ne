@@ -61,6 +61,7 @@ import {
   cardGamesEverAvailable,
   cardFirstPrintYear,
   cardKeywords,
+  cardBoard,
 } from '../../cardutil';
 %} # %}
 
@@ -119,6 +120,7 @@ condition -> (
   | gameCondition
   | firstYearCondition
   | keywordCondition
+  | boardCondition
 ) {% ([[condition]]) => condition %}
 
 cmcCondition -> ("mv"i | "cmc"i) integerOpValue {% ([, valuePred]) => genericCondition('cmc', cardCmc, valuePred) %}
@@ -201,6 +203,12 @@ gameCondition -> "game"i gameOpValue {% ([, valuePred]) => genericCondition('gam
 firstYearCondition -> ("year"i | "firstyear"i | "fy"i) integerOpValue {% ([, valuePred]) => genericCondition('firstPrintYear', cardFirstPrintYear, valuePred) %}
 
 keywordCondition -> ("kw"i | "keyword"i | "keywords"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('keywords', cardKeywords, valuePred) %}
+
+# board=mainboard, board=maybeboard, board=basics, or any custom-board key.
+# In non-cube contexts cardBoard() defaults to 'mainboard' so board=mainboard
+# is a no-op there and board=anythingElse simply excludes the result, which
+# is fine because non-cube callers don't put board= in their filters anyway.
+boardCondition -> "board"i stringOpValue {% ([, valuePred]) => genericCondition('board', cardBoard, valuePred) %}
 
 isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
 

@@ -1,6 +1,5 @@
 import 'dotenv/config';
 
-import carddb, { cardFromId } from './carddb';
 import { error } from './cloudwatch';
 
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:5002';
@@ -55,37 +54,68 @@ export const encode = async (oracles: string[]): Promise<number[]> => {
   }
 };
 
-export const recommend = async (
-  oracles: string[],
-): Promise<{ adds: { oracle: string; rating: number }[]; cuts: { oracle: string; rating: number }[] }> => {
+export interface RecommendOptions {
+  // Oracle ids of cards eligible to be recommended as `adds`. Smart Search
+  // applies the user's filter against the catalog server-side and passes the
+  // matching oracle ids here; the recommender ranks only this subset and
+  // returns just the requested page. We pass oracle ids (not ML indices) so
+  // the server and recommender never need a shared index table — the model's
+  // oracle<->index mapping lives entirely inside the recommender.
+  // When omitted, the recommender ranks all non-cube cards and returns a
+  // bounded top-N (see MAX_RECOMMEND_ADDS in the service).
+  eligibleOracles?: string[];
+  skip?: number;
+  limit?: number;
+}
+
+export interface RecommendResult {
+  // Filtered path: the ranked page. No-filter path (cuts endpoint, Seed
+  // Crystal): ranked non-cube oracle ids, capped.
+  adds: { oracle: string; rating: number }[];
+  cuts: { oracle: string; rating: number }[];
+  // Total eligible adds before pagination — lets callers compute hasMore.
+  totalAdds: number;
+}
+
+// Throwing variant — see buildOrThrow. Callers that need to distinguish a
+// transient ML failure from a genuine empty result (e.g. Smart Search, which
+// must surface "ML unavailable" instead of silently falling back to filter
+// order and looking like a buggy cube mapping) use this instead of recommend().
+//
+// Token/basic exclusion is no longer done here: in the filtered path the
+// recommender only ranks the eligible oracles the caller supplies, and that
+// set is built from getAllMostReasonable (which already excludes tokens) plus
+// explicit basic/special-zone/playtest filtering. The legacy unfiltered path
+// stays bounded.
+export const recommendOrThrow = async (oracles: string[], options?: RecommendOptions): Promise<RecommendResult> => {
+  const response = await mlServiceRequest<{
+    success: boolean;
+    adds?: { oracle: string; rating: number }[];
+    cuts?: { oracle: string; rating: number }[];
+    totalAdds?: number;
+  }>('recommend', {
+    oracles,
+    ...(options?.eligibleOracles !== undefined ? { eligibleOracles: options.eligibleOracles } : {}),
+    ...(options?.skip !== undefined ? { skip: options.skip } : {}),
+    ...(options?.limit !== undefined ? { limit: options.limit } : {}),
+  });
+
+  const adds = response.adds ?? [];
+  return {
+    adds,
+    cuts: response.cuts ?? [],
+    totalAdds: response.totalAdds ?? adds.length,
+  };
+};
+
+export const recommend = async (oracles: string[], options?: RecommendOptions): Promise<RecommendResult> => {
   try {
-    const response = await mlServiceRequest<{
-      success: boolean;
-      adds: { oracle: string; rating: number }[];
-      cuts: { oracle: string; rating: number }[];
-    }>('recommend', { oracles });
-
-    // Filter the OUTPUT recommendations to remove tokens, basic lands, etc.
-    const filteredAdds = response.adds.filter((item) => {
-      const cardIds = carddb.oracleToId[item.oracle];
-      if (!cardIds || cardIds.length === 0) return false;
-      const firstCardId = cardIds[0];
-      if (!firstCardId) return false;
-      const card = cardFromId(firstCardId);
-      if (!card || card.error) return false;
-      if (card.isToken) return false;
-      if (card.type?.includes('Basic') && card.type?.includes('Land')) return false;
-      return true;
-    });
-
-    return {
-      adds: filteredAdds,
-      cuts: response.cuts,
-    };
-  } catch (_err) {
+    return await recommendOrThrow(oracles, options);
+  } catch {
     return {
       adds: [],
       cuts: [],
+      totalAdds: 0,
     };
   }
 };

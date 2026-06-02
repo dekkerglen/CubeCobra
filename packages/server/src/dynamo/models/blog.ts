@@ -124,7 +124,7 @@ const fillRequiredDetails = (document: UnhydratedBlogPost): UnhydratedBlogPost =
     cube: document.cube,
     date: document.date || now,
     owner: document.owner,
-    body: document.body ? document.body.substring(0, 10000) : undefined,
+    body: document.body ? document.body.substring(0, 30000) : undefined,
     title: document.title,
     changelist: document.changelist,
     dateCreated: document.dateCreated || now,

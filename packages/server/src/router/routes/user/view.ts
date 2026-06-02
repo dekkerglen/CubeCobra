@@ -29,9 +29,7 @@ export const handler = async (req: Request, res: Response) => {
     // Hoist the owner's pinned cubes to the top. Subsequent pages (via
     // /user/getmorecubes) filter these out so they never duplicate.
     const visiblePinned = pinnedCubes.filter((cube) => isCubeListed(cube, req.user));
-    const pageItems = result.items.filter(
-      (cube: any) => isCubeListed(cube, req.user) && !pinnedIds.has(cube.id),
-    );
+    const pageItems = result.items.filter((cube: any) => isCubeListed(cube, req.user) && !pinnedIds.has(cube.id));
     const cubes = [...visiblePinned, ...pageItems];
 
     const following = !!req.user && (await userDao.getFollow(req.user.id, user.id));
