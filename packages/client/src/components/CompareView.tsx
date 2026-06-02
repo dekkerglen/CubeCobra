@@ -199,7 +199,7 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
     <Flexbox direction="col" gap="3" className="my-2">
       <Card>
         <CardBody>
-          <SummaryCard label="All Cards" both={both.length} onlyA={onlyA.length} onlyB={onlyB.length} />
+          <SummaryCard label="All Cards" both={bothCounts.total} onlyA={onlyACounts.total} onlyB={onlyBCounts.total} />
         </CardBody>
       </Card>
       {getLabels(cards, sortPrimary ?? 'Unsorted', cube?.showUnsorted, cube)
