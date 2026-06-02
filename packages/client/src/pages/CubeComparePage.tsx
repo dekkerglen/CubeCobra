@@ -35,6 +35,28 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cub
 
   const filteredCards = cardFilter ? cards.filter(cardFilter.filter) : cards;
 
+  // Map original indices to filtered indices
+  const createFilteredIndices = useMemo(() => {
+    const cardFilterFn = cardFilter?.filter;
+    if (!cardFilterFn) return (indices: number[]) => indices;
+
+    const indexMap = new Map<number, number>();
+    let filteredIndex = 0;
+
+    for (let i = 0; i < cards.length; i++) {
+      if (cardFilterFn(cards[i])) {
+        indexMap.set(i, filteredIndex);
+        filteredIndex += 1;
+      }
+    }
+
+    return (indices: number[]) => indices.map((i) => indexMap.get(i)).filter((i) => i !== undefined) as number[];
+  }, [cards, cardFilter]);
+
+  const filteredBoth = useMemo(() => createFilteredIndices(both), [both, createFilteredIndices]);
+  const filteredOnlyA = useMemo(() => createFilteredIndices(onlyA), [onlyA, createFilteredIndices]);
+  const filteredOnlyB = useMemo(() => createFilteredIndices(onlyB), [onlyB, createFilteredIndices]);
+
   return (
     <>
       <CubeCompareNavbar
@@ -45,9 +67,9 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cub
         openCollapse={openCollapse}
         setOpenCollapse={setOpenCollapse}
         cards={filteredCards}
-        both={both}
-        onlyA={onlyA}
-        onlyB={onlyB}
+        both={filteredBoth}
+        onlyA={filteredOnlyA}
+        onlyB={filteredOnlyB}
         pitDate={pitDate}
       />
       <DynamicFlash />
