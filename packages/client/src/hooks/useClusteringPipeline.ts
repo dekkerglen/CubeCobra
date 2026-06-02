@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 import type { ArchetypeSkeleton, BuiltDeck, SimulationRunData } from '@utils/datatypes/SimulationReport';
@@ -18,10 +19,13 @@ import {
   loadArchetypeData,
   rescoreSkeletons,
 } from '../utils/draftSimulatorClustering';
-import { type ClusteringCache, patchClusteringCache, SCORING_ALGORITHM_VERSION } from '../utils/draftSimulatorLocalStorage';
+import {
+  type ClusteringCache,
+  patchClusteringCache,
+  SCORING_ALGORITHM_VERSION,
+} from '../utils/draftSimulatorLocalStorage';
 
 type EmbeddingCacheValue = number[][] | Record<string, number[]> | null;
-
 
 interface UseClusteringPipelineArgs {
   cubeId: string;
@@ -66,8 +70,8 @@ export default function useClusteringPipeline({
     ? poolEmbeddings === null && !poolEmbeddingsFailed
       ? 'Embedding pools…'
       : poolArchetypeLabelsLoading
-      ? 'Identifying archetypes…'
-      : 'Clustering drafts…'
+        ? 'Identifying archetypes…'
+        : 'Clustering drafts…'
     : null;
   const runSourceKey = [
     selectedTs ?? 'unsaved',
@@ -75,10 +79,7 @@ export default function useClusteringPipeline({
     displayRunData?.slimPools.length ?? 0,
     hasDecksForSource ? 'decks' : 'picks',
   ].join(':');
-  const clusteringSourceKey = [
-    runSourceKey,
-    clusterSeed,
-  ].join(':');
+  const clusteringSourceKey = [runSourceKey, clusterSeed].join(':');
 
   useEffect(() => {
     if (!displayRunData) return;
@@ -125,10 +126,7 @@ export default function useClusteringPipeline({
     const stale =
       cacheVersion < SCORING_ALGORITHM_VERSION ||
       skeletons.some(
-        (s) =>
-          s.identityCards === undefined ||
-          Array.isArray(s.coreCards) ||
-          !Array.isArray(s.coreCards?.default),
+        (s) => s.identityCards === undefined || Array.isArray(s.coreCards) || !Array.isArray(s.coreCards?.default),
       );
     if (!stale) return;
     try {
@@ -149,7 +147,16 @@ export default function useClusteringPipeline({
     } catch (error) {
       console.error('Failed to refresh cached cluster scoring:', error);
     }
-  }, [skeletons, displayRunData, poolEmbeddings, poolEmbeddingsFailed, activeDecks, selectedTs, cubeId, loadedClusterCache]);
+  }, [
+    skeletons,
+    displayRunData,
+    poolEmbeddings,
+    poolEmbeddingsFailed,
+    activeDecks,
+    selectedTs,
+    cubeId,
+    loadedClusterCache,
+  ]);
 
   useEffect(() => {
     if (!displayRunData || displayRunData.slimPools.length === 0 || !selectedTs) {

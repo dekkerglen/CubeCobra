@@ -2,7 +2,14 @@ import React, { useMemo } from 'react';
 
 import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
 import { cardName } from '@utils/cardutil';
-import Card, { BoardChanges, CardDetails, Changes, CubeCardEdit, CubeCardRemove, CubeCardSwap } from '@utils/datatypes/Card';
+import Card, {
+  BoardChanges,
+  CardDetails,
+  Changes,
+  CubeCardEdit,
+  CubeCardRemove,
+  CubeCardSwap,
+} from '@utils/datatypes/Card';
 
 import withAutocard from 'components/WithAutocard';
 import { useCardDetails } from 'hooks/useCardDetails';

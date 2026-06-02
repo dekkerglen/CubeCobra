@@ -61,7 +61,9 @@ const DraftVsEloTable: React.FC<{
       <td className="px-3 py-2 text-text-secondary text-right tabular-nums">#{row.eloRank}</td>
       <td className="px-3 py-2 text-text-secondary text-right tabular-nums">#{row.draftRank}</td>
       <td className="px-3 py-2 text-right tabular-nums">
-        <span className={row.delta > 0 ? 'text-green-400 font-medium' : row.delta < 0 ? 'text-red-400 font-medium' : ''}>
+        <span
+          className={row.delta > 0 ? 'text-green-400 font-medium' : row.delta < 0 ? 'text-red-400 font-medium' : ''}
+        >
           {row.delta > 0 ? `+${row.delta}` : row.delta}
         </span>
       </td>

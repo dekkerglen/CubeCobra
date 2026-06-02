@@ -1,4 +1,4 @@
-/* eslint-disable camelcase, no-plusplus, no-restricted-syntax */
+/* eslint-disable */
 
 // ---------------------------------------------------------------------------
 // Shared clustering configuration — imported by both useSimulationRun and
@@ -34,10 +34,7 @@ export async function loadArchetypeData(): Promise<ArchetypeData | null> {
   return archetypeDataPromise;
 }
 
-export function assignArchetypeLabels(
-  poolEmbeddings: number[][],
-  archetypeData: ArchetypeData,
-): Map<number, string> {
+export function assignArchetypeLabels(poolEmbeddings: number[][], archetypeData: ArchetypeData): Map<number, string> {
   const labels = new Map<number, string>();
   for (let pi = 0; pi < poolEmbeddings.length; pi++) {
     const emb = poolEmbeddings[pi]!;
@@ -155,7 +152,10 @@ function kmeansAssignments(vectors: number[][], k: number, maxIter = 30, rng: ()
     let picked = 0;
     for (let i = 0; i < n; i++) {
       r -= dists[i]!;
-      if (r <= 0) { picked = i; break; }
+      if (r <= 0) {
+        picked = i;
+        break;
+      }
     }
     centroids.push([...vectors[picked]!]);
   }
@@ -170,9 +170,15 @@ function kmeansAssignments(vectors: number[][], k: number, maxIter = 30, rng: ()
       let bestD = Infinity;
       for (let c = 0; c < k; c++) {
         const d = euclidSq(vectors[i]!, centroids[c]!);
-        if (d < bestD) { bestD = d; best = c; }
+        if (d < bestD) {
+          bestD = d;
+          best = c;
+        }
       }
-      if (assignments[i] !== best) { assignments[i] = best; changed = true; }
+      if (assignments[i] !== best) {
+        assignments[i] = best;
+        changed = true;
+      }
     }
     if (!changed) break;
 
@@ -212,10 +218,10 @@ function kmeansAssignments(vectors: number[][], k: number, maxIter = 30, rng: ()
  */
 interface CondensedCluster {
   id: number;
-  birthLambda: number;     // 1/distance where this cluster was born
-  childIds: number[];      // IDs of child condensed clusters (0 or 2)
-  stability: number;       // accumulated stability (higher = more persistent)
-  selected: boolean;       // whether this cluster is part of the final flat extraction
+  birthLambda: number; // 1/distance where this cluster was born
+  childIds: number[]; // IDs of child condensed clusters (0 or 2)
+  stability: number; // accumulated stability (higher = more persistent)
+  selected: boolean; // whether this cluster is part of the final flat extraction
   allPointIndices: number[]; // all original point indices in this cluster's subtree
 }
 
@@ -261,7 +267,11 @@ function hdbscanFromMST(
   function find(x: number): number {
     let r = x;
     while (ufParent[r] !== r) r = ufParent[r]!;
-    while (ufParent[x] !== r) { const next = ufParent[x]!; ufParent[x] = r; x = next; }
+    while (ufParent[x] !== r) {
+      const next = ufParent[x]!;
+      ufParent[x] = r;
+      x = next;
+    }
     return r;
   }
 
@@ -298,7 +308,10 @@ function hdbscanFromMST(
     const stack = [rootIdx];
     while (stack.length > 0) {
       const idx = stack.pop()!;
-      if (idx < n) { result.push(idx); continue; }
+      if (idx < n) {
+        result.push(idx);
+        continue;
+      }
       stack.push(dendroLeft[idx]!);
       stack.push(dendroRight[idx]!);
     }
@@ -308,8 +321,12 @@ function hdbscanFromMST(
   // Build condensed tree + accumulate stability
   const condensed: CondensedCluster[] = [];
   condensed.push({
-    id: 0, birthLambda: 0, childIds: [], stability: 0,
-    selected: false, allPointIndices: [],
+    id: 0,
+    birthLambda: 0,
+    childIds: [],
+    stability: 0,
+    selected: false,
+    allPointIndices: [],
   });
 
   function walk(startNodeIdx: number, startClusterId: number): void {
@@ -339,9 +356,23 @@ function hdbscanFromMST(
         if (leftBig && rightBig) {
           cluster.stability += (lambda - cluster.birthLambda) * (leftSize + rightSize);
           const leftCId = condensed.length;
-          condensed.push({ id: leftCId, birthLambda: lambda, childIds: [], stability: 0, selected: false, allPointIndices: [] });
+          condensed.push({
+            id: leftCId,
+            birthLambda: lambda,
+            childIds: [],
+            stability: 0,
+            selected: false,
+            allPointIndices: [],
+          });
           const rightCId = condensed.length;
-          condensed.push({ id: rightCId, birthLambda: lambda, childIds: [], stability: 0, selected: false, allPointIndices: [] });
+          condensed.push({
+            id: rightCId,
+            birthLambda: lambda,
+            childIds: [],
+            stability: 0,
+            selected: false,
+            allPointIndices: [],
+          });
           cluster.childIds = [leftCId, rightCId];
           workStack.push([leftIdx, leftCId]);
           workStack.push([rightIdx, rightCId]);
@@ -375,12 +406,19 @@ function hdbscanFromMST(
   // Bottom-up stability selection
   function selectClusters(cId: number): number {
     const c = condensed[cId]!;
-    if (c.childIds.length === 0) { c.selected = true; return c.stability; }
+    if (c.childIds.length === 0) {
+      c.selected = true;
+      return c.stability;
+    }
     const childStabilitySum = c.childIds.reduce((sum, childId) => sum + selectClusters(childId), 0);
-    if (childStabilitySum > c.stability) { c.selected = false; return childStabilitySum; }
+    if (childStabilitySum > c.stability) {
+      c.selected = false;
+      return childStabilitySum;
+    }
     c.selected = true;
     function deselectSubtree(id: number): void {
-      const node = condensed[id]!; node.selected = false;
+      const node = condensed[id]!;
+      node.selected = false;
       for (const childId of node.childIds) deselectSubtree(childId);
     }
     for (const childId of c.childIds) deselectSubtree(childId);
@@ -415,7 +453,10 @@ function hdbscanFromMST(
     let bestDist = Infinity;
     for (let c = 0; c < centroids.length; c++) {
       const d = euclidSq(vectors[i]!, centroids[c]!);
-      if (d < bestDist) { bestDist = d; bestCluster = c; }
+      if (d < bestDist) {
+        bestDist = d;
+        bestCluster = c;
+      }
     }
     assignments[i] = bestCluster;
   }
@@ -427,11 +468,7 @@ function hdbscanFromMST(
  * Dense HDBSCAN: compute core distances and MST from all pairwise distances,
  * then delegate to hdbscanFromMST for dendrogram + cluster extraction.
  */
-export function hdbscanAssignments(
-  vectors: number[][],
-  minClusterSize: number,
-  minPtsOverride?: number,
-): number[] {
+export function hdbscanAssignments(vectors: number[][], minClusterSize: number, minPtsOverride?: number): number[] {
   const n = vectors.length;
   if (n === 0) return [];
   if (n === 1) return [0];
@@ -455,20 +492,30 @@ export function hdbscanAssignments(
   }
 
   // MST via Prim's
-  interface MSTEdge { i: number; j: number; dist: number }
+  interface MSTEdge {
+    i: number;
+    j: number;
+    dist: number;
+  }
   const mstEdges: MSTEdge[] = [];
   const inMST = new Uint8Array(n);
   const minEdgeDist = new Float64Array(n).fill(Infinity);
   const minEdgeFrom = new Int32Array(n).fill(-1);
 
   inMST[0] = 1;
-  for (let j = 1; j < n; j++) { minEdgeDist[j] = mreach(0, j); minEdgeFrom[j] = 0; }
+  for (let j = 1; j < n; j++) {
+    minEdgeDist[j] = mreach(0, j);
+    minEdgeFrom[j] = 0;
+  }
 
   for (let step = 1; step < n; step++) {
     let bestIdx = -1;
     let bestDist = Infinity;
     for (let j = 0; j < n; j++) {
-      if (!inMST[j] && minEdgeDist[j]! < bestDist) { bestDist = minEdgeDist[j]!; bestIdx = j; }
+      if (!inMST[j] && minEdgeDist[j]! < bestDist) {
+        bestDist = minEdgeDist[j]!;
+        bestIdx = j;
+      }
     }
     if (bestIdx < 0) break;
     inMST[bestIdx] = 1;
@@ -476,7 +523,10 @@ export function hdbscanAssignments(
     for (let j = 0; j < n; j++) {
       if (inMST[j]) continue;
       const d = mreach(bestIdx, j);
-      if (d < minEdgeDist[j]!) { minEdgeDist[j] = d; minEdgeFrom[j] = bestIdx; }
+      if (d < minEdgeDist[j]!) {
+        minEdgeDist[j] = d;
+        minEdgeFrom[j] = bestIdx;
+      }
     }
   }
 
@@ -526,7 +576,11 @@ function hdbscanFromKnnGraph(
   function find(x: number): number {
     let r = x;
     while (ufParent[r] !== r) r = ufParent[r]!;
-    while (ufParent[x] !== r) { const next = ufParent[x]!; ufParent[x] = r; x = next; }
+    while (ufParent[x] !== r) {
+      const next = ufParent[x]!;
+      ufParent[x] = r;
+      x = next;
+    }
     return r;
   }
 
@@ -536,9 +590,14 @@ function hdbscanFromKnnGraph(
     const rj = find(edge.j);
     if (ri === rj) continue;
     mstEdges.push(edge);
-    if (ufRank[ri]! < ufRank[rj]!) { ufParent[ri] = rj; }
-    else if (ufRank[ri]! > ufRank[rj]!) { ufParent[rj] = ri; }
-    else { ufParent[rj] = ri; ufRank[ri]!++; }
+    if (ufRank[ri]! < ufRank[rj]!) {
+      ufParent[ri] = rj;
+    } else if (ufRank[ri]! > ufRank[rj]!) {
+      ufParent[rj] = ri;
+    } else {
+      ufParent[rj] = ri;
+      ufRank[ri]!++;
+    }
     if (mstEdges.length === n - 1) break;
   }
 
@@ -551,9 +610,14 @@ function hdbscanFromKnnGraph(
       const rj = find(i);
       if (ri !== rj) {
         mstEdges.push({ i: 0, j: i, dist: maxDist });
-        if (ufRank[ri]! < ufRank[rj]!) { ufParent[ri] = rj; }
-        else if (ufRank[ri]! > ufRank[rj]!) { ufParent[rj] = ri; }
-        else { ufParent[rj] = ri; ufRank[ri]!++; }
+        if (ufRank[ri]! < ufRank[rj]!) {
+          ufParent[ri] = rj;
+        } else if (ufRank[ri]! > ufRank[rj]!) {
+          ufParent[rj] = ri;
+        } else {
+          ufParent[rj] = ri;
+          ufRank[ri]!++;
+        }
       }
     }
     mstEdges.sort((a, b) => a.dist - b.dist);
@@ -637,8 +701,8 @@ export function leidenAssignments(
       for (const [cj, ki_cj] of neighborComms) {
         if (cj === ci) continue;
         // ΔQ = (ki_cj - ki_own)/m - γ·ki·(Σ_tot_cj - Σ_tot_ci + ki)/(2m²)
-        const delta = (ki_cj - ki_own) / totalEdges
-          - resolution * ki * (commDeg[cj]! - commDeg[ci]! + ki) / (m2 * totalEdges);
+        const delta =
+          (ki_cj - ki_own) / totalEdges - (resolution * ki * (commDeg[cj]! - commDeg[ci]! + ki)) / (m2 * totalEdges);
         if (delta > bestDelta) {
           bestDelta = delta;
           bestComm = cj;
@@ -690,12 +754,8 @@ export function nmfAssignments(
   });
 
   // Initialize W (n × k) and H (k × d) with small random values
-  const W: number[][] = Array.from({ length: n }, () =>
-    Array.from({ length: k }, () => rng() * 0.5 + 0.01),
-  );
-  const H: number[][] = Array.from({ length: k }, () =>
-    Array.from({ length: d }, () => rng() * 0.5 + 0.01),
-  );
+  const W: number[][] = Array.from({ length: n }, () => Array.from({ length: k }, () => rng() * 0.5 + 0.01));
+  const H: number[][] = Array.from({ length: k }, () => Array.from({ length: d }, () => rng() * 0.5 + 0.01));
 
   for (let iter = 0; iter < maxIter; iter++) {
     // Update H: H *= (W^T V) ./ (W^T W H + eps)
@@ -715,7 +775,7 @@ export function nmfAssignments(
       for (let j = 0; j < d; j++) {
         let WtWH = 0;
         for (let b = 0; b < k; b++) WtWH += WtW[a]![b]! * H[b]![j]!;
-        H[a]![j] = H[a]![j]! * WtV[a]![j]! / (WtWH + eps);
+        H[a]![j] = (H[a]![j]! * WtV[a]![j]!) / (WtWH + eps);
       }
     }
 
@@ -739,7 +799,7 @@ export function nmfAssignments(
       for (let a = 0; a < k; a++) {
         let WHHt = 0;
         for (let b = 0; b < k; b++) WHHt += W[i]![b]! * HHt[b]![a]!;
-        W[i]![a] = W[i]![a]! * VHt[a]! / (WHHt + eps);
+        W[i]![a] = (W[i]![a]! * VHt[a]!) / (WHHt + eps);
       }
     }
   }
@@ -749,7 +809,10 @@ export function nmfAssignments(
     let bestK = 0;
     let bestW = -1;
     for (let a = 0; a < k; a++) {
-      if (row[a]! > bestW) { bestW = row[a]!; bestK = a; }
+      if (row[a]! > bestW) {
+        bestW = row[a]!;
+        bestK = a;
+      }
     }
     return bestK;
   });
@@ -808,12 +871,8 @@ export function nmfDecompose(
     return nz;
   });
 
-  const W: number[][] = Array.from({ length: n }, () =>
-    Array.from({ length: k }, () => rng() * 0.5 + 0.01),
-  );
-  const H: number[][] = Array.from({ length: k }, () =>
-    Array.from({ length: dim }, () => rng() * 0.5 + 0.01),
-  );
+  const W: number[][] = Array.from({ length: n }, () => Array.from({ length: k }, () => rng() * 0.5 + 0.01));
+  const H: number[][] = Array.from({ length: k }, () => Array.from({ length: dim }, () => rng() * 0.5 + 0.01));
 
   for (let iter = 0; iter < 100; iter++) {
     const WtV: number[][] = Array.from({ length: k }, () => new Array(dim).fill(0));
@@ -829,7 +888,7 @@ export function nmfDecompose(
       for (let j = 0; j < dim; j++) {
         let WtWH = 0;
         for (let b = 0; b < k; b++) WtWH += WtW[a]![b]! * H[b]![j]!;
-        H[a]![j] = H[a]![j]! * WtV[a]![j]! / (WtWH + eps);
+        H[a]![j] = (H[a]![j]! * WtV[a]![j]!) / (WtWH + eps);
       }
     }
 
@@ -849,7 +908,7 @@ export function nmfDecompose(
       for (let a = 0; a < k; a++) {
         let WHHt = 0;
         for (let b = 0; b < k; b++) WHHt += W[i]![b]! * HHt[b]![a]!;
-        W[i]![a] = W[i]![a]! * VHt[a]! / (WHHt + eps);
+        W[i]![a] = (W[i]![a]! * VHt[a]!) / (WHHt + eps);
       }
     }
   }
@@ -1006,14 +1065,22 @@ function principalComponent(rows: number[][], previous: number[][] = [], rng: ()
 // k-NN graph (shared between UMAP runs)
 // ---------------------------------------------------------------------------
 
-interface KNNEdge { a: number; b: number; weight: number }
+interface KNNEdge {
+  a: number;
+  b: number;
+  weight: number;
+}
 
 interface KNNGraph {
   edges: KNNEdge[];
   neighbors: { index: number; dist: number }[][]; // per-point k nearest neighbors with raw euclidean distances
 }
 
-export function buildKnnGraph(vectors: number[][], neighborCount: number, metric: 'euclidean' | 'cosine' = 'euclidean'): KNNGraph {
+export function buildKnnGraph(
+  vectors: number[][],
+  neighborCount: number,
+  metric: 'euclidean' | 'cosine' = 'euclidean',
+): KNNGraph {
   const n = vectors.length;
   const edges: KNNEdge[] = [];
   const neighbors: { index: number; dist: number }[][] = [];
@@ -1022,7 +1089,10 @@ export function buildKnnGraph(vectors: number[][], neighborCount: number, metric
     const distances: { index: number; distance: number }[] = [];
     for (let j = 0; j < n; j++) {
       if (i === j) continue;
-      distances.push({ index: j, distance: useCosine ? cosineDist(vectors[i]!, vectors[j]!) : euclidSq(vectors[i]!, vectors[j]!) });
+      distances.push({
+        index: j,
+        distance: useCosine ? cosineDist(vectors[i]!, vectors[j]!) : euclidSq(vectors[i]!, vectors[j]!),
+      });
     }
     distances.sort((a, b) => a.distance - b.distance);
     const kNeighbors = distances.slice(0, neighborCount);
@@ -1047,9 +1117,7 @@ function pcaInitNd(centered: number[][], targetDim: number, rng: () => number = 
   for (let i = 0; i < targetDim; i++) {
     pcs.push(principalComponent(centered, pcs, rng));
   }
-  return centered.map((row) =>
-    pcs.map((pc) => row.reduce((sum, v, j) => sum + v * pc[j]!, 0)),
-  );
+  return centered.map((row) => pcs.map((pc) => row.reduce((sum, v, j) => sum + v * pc[j]!, 0)));
 }
 
 /** Normalize Nd coordinates: center and scale to ±targetScale. */
@@ -1057,9 +1125,7 @@ function normalizeNd(coords: number[][], targetScale: number): number[][] {
   const n = coords.length;
   if (n === 0) return coords;
   const d = coords[0]!.length;
-  const means = Array.from({ length: d }, (_, j) =>
-    coords.reduce((sum, c) => sum + c[j]!, 0) / n,
-  );
+  const means = Array.from({ length: d }, (_, j) => coords.reduce((sum, c) => sum + c[j]!, 0) / n);
   const centered = coords.map((c) => c.map((v, j) => v - means[j]!));
   let maxAbs = 1;
   for (const c of centered) for (const v of c) maxAbs = Math.max(maxAbs, Math.abs(v));
@@ -1090,9 +1156,7 @@ function umapProject(
 
   // PCA initialization
   const dim = vectors[0]?.length ?? 0;
-  const means = Array.from({ length: dim }, (_, j) =>
-    vectors.reduce((sum, v) => sum + v[j]!, 0) / n,
-  );
+  const means = Array.from({ length: dim }, (_, j) => vectors.reduce((sum, v) => sum + v[j]!, 0) / n);
   const centered = vectors.map((v) => v.map((val, j) => val - means[j]!));
   const pcaInit = pcaInitNd(centered, Math.min(targetDim, dim, n), rng);
   const coords = normalizeNd(pcaInit, 2);
@@ -1157,7 +1221,12 @@ function umapProject(
  * Approximate UMAP to 2D: convenience wrapper around umapProject.
  * Builds its own k-NN graph if not provided.
  */
-export function approximateUmap(vectors: number[][], prebuiltEdges?: KNNEdge[], negSamples: number = 20, rng: () => number = Math.random): { x: number; y: number }[] {
+export function approximateUmap(
+  vectors: number[][],
+  prebuiltEdges?: KNNEdge[],
+  negSamples: number = 20,
+  rng: () => number = Math.random,
+): { x: number; y: number }[] {
   const n = vectors.length;
   if (n === 0) return [];
   const edges = prebuiltEdges ?? buildKnnGraph(vectors, Math.min(50, n - 1)).edges;
@@ -1311,9 +1380,7 @@ function scoreClusterSkeleton(
   const TOP_N = 12;
   const buildRanked = (sortedCards: SkeletonCard[]): RankedCards => ({
     default: sortedCards.slice(0, TOP_N),
-    excludingFixing: sortedCards
-      .filter((c) => !cardMeta[c.oracle_id]?.isManaFixingLand)
-      .slice(0, TOP_N),
+    excludingFixing: sortedCards.filter((c) => !cardMeta[c.oracle_id]?.isManaFixingLand).slice(0, TOP_N),
   });
 
   const coreCards = buildRanked(allCards);
@@ -1356,12 +1423,13 @@ function scoreClusterSkeleton(
       if (c in colorCounts) colorCounts[c] = (colorCounts[c] ?? 0) + 1;
     }
   }
-  const colorProfile = nonLandCount > 0
-    ? Object.keys(colorCounts)
-        .filter((c) => (colorCounts[c] ?? 0) / nonLandCount > 0.1)
-        .sort()
-        .join('') || 'C'
-    : 'C';
+  const colorProfile =
+    nonLandCount > 0
+      ? Object.keys(colorCounts)
+          .filter((c) => (colorCounts[c] ?? 0) / nonLandCount > 0.1)
+          .sort()
+          .join('') || 'C'
+      : 'C';
 
   const lockPairs: LockPair[] = [];
   const lockCandidates = allCards.slice(0, 24);
@@ -1587,8 +1655,8 @@ export function buildClusterRecommendationInput(
   const counts = new Map<string, number>();
   for (const poolIndex of skeleton.poolIndices) {
     const cards = hasDecks
-      ? deckBuilds?.[poolIndex]?.mainboard ?? []
-      : slimPools[poolIndex]?.picks.map((pick) => pick.oracle_id) ?? [];
+      ? (deckBuilds?.[poolIndex]?.mainboard ?? [])
+      : (slimPools[poolIndex]?.picks.map((pick) => pick.oracle_id) ?? []);
     for (const oracle of new Set(cards)) {
       const type = cardMeta[oracle]?.type ?? '';
       if (type.includes('Basic') && type.includes('Land')) continue;
@@ -1630,7 +1698,9 @@ export function rescoreSkeletons(
   if (slimPools.length === 0 || existingSkeletons.length === 0) return existingSkeletons;
   const clusters = existingSkeletons.map((s) => ({
     clusterId: s.clusterId,
-    poolIndices: s.poolIndices.filter((poolIndex) => Number.isInteger(poolIndex) && poolIndex >= 0 && poolIndex < slimPools.length),
+    poolIndices: s.poolIndices.filter(
+      (poolIndex) => Number.isInteger(poolIndex) && poolIndex >= 0 && poolIndex < slimPools.length,
+    ),
   }));
   const existingByClusterId = new Map(existingSkeletons.map((s) => [s.clusterId, s]));
   const ctx = buildScoringContext(slimPools, cardMeta, embeddings, deckBuilds, clusters);

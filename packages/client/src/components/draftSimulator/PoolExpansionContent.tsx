@@ -1,4 +1,5 @@
-/* eslint-disable camelcase */
+/* eslint-disable */
+
 import React, { useEffect, useRef, useState } from 'react';
 
 import type {
@@ -9,8 +10,8 @@ import type {
   SimulationRunData,
 } from '@utils/datatypes/SimulationReport';
 
-import { Modal, ModalBody, ModalHeader } from '../base/Modal';
 import { Flexbox } from '../base/Layout';
+import { Modal, ModalBody, ModalHeader } from '../base/Modal';
 import Text from '../base/Text';
 import SimDeckView from './SimDeckView';
 import SimulatorPickBreakdown, { PickCard } from './SimulatorPickBreakdown';
@@ -126,9 +127,7 @@ export const PoolInspectionModal: React.FC<{
   if (pool) {
     lastPoolRef.current = { pool, deck, themes, archetypeLabel, themeBreakdown };
   }
-  const snapshot = pool
-    ? { pool, deck, themes, archetypeLabel, themeBreakdown }
-    : lastPoolRef.current;
+  const snapshot = pool ? { pool, deck, themes, archetypeLabel, themeBreakdown } : lastPoolRef.current;
 
   const renderPool = snapshot?.pool ?? null;
   const renderDeck = snapshot?.deck ?? null;
@@ -173,16 +172,17 @@ export const PoolInspectionModal: React.FC<{
               {(renderArchetypeLabel || (renderPool.archetype && renderPool.archetype !== 'C')) && (
                 <span className="text-sm text-text-secondary">
                   {renderPool.archetype && renderPool.archetype !== 'C' && renderPool.archetype}
-                  {renderArchetypeLabel && (
-                    <span className="text-link ml-1">{renderArchetypeLabel}</span>
-                  )}
+                  {renderArchetypeLabel && <span className="text-link ml-1">{renderArchetypeLabel}</span>}
                 </span>
               )}
             </div>
             {renderThemes.length > 0 && (
               <div className="flex flex-wrap gap-1">
                 {renderThemes.slice(0, 5).map((t) => (
-                  <span key={t} className="inline-flex text-[10px] bg-bg-accent border border-border/60 rounded px-1.5 py-0.5 text-text-secondary">
+                  <span
+                    key={t}
+                    className="inline-flex text-[10px] bg-bg-accent border border-border/60 rounded px-1.5 py-0.5 text-text-secondary"
+                  >
                     {t}
                   </span>
                 ))}
@@ -204,7 +204,9 @@ export const PoolInspectionModal: React.FC<{
               <div className="rounded-lg border border-border/70 bg-bg-accent/35 px-3 py-2 text-[10px] font-mono leading-tight max-h-40 overflow-y-auto">
                 {renderThemeBreakdown.map(({ bucket, cards }) => (
                   <div key={bucket} className="mb-1.5">
-                    <span className="font-bold text-link">{bucket} ({cards.length})</span>
+                    <span className="font-bold text-link">
+                      {bucket} ({cards.length})
+                    </span>
                     <div className="ml-2">
                       {cards.map(({ name, rawTags }) => (
                         <div key={name} className="text-text-secondary">

@@ -1,0 +1,64 @@
+'use strict';
+var __createBinding =
+  (this && this.__createBinding) ||
+  (Object.create
+    ? function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        var desc = Object.getOwnPropertyDescriptor(m, k);
+        if (!desc || ('get' in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+          desc = {
+            enumerable: true,
+            get: function () {
+              return m[k];
+            },
+          };
+        }
+        Object.defineProperty(o, k2, desc);
+      }
+    : function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        o[k2] = m[k];
+      });
+var __setModuleDefault =
+  (this && this.__setModuleDefault) ||
+  (Object.create
+    ? function (o, v) {
+        Object.defineProperty(o, 'default', { enumerable: true, value: v });
+      }
+    : function (o, v) {
+        o['default'] = v;
+      });
+var __importStar =
+  (this && this.__importStar) ||
+  function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null)
+      for (var k in mod)
+        if (k !== 'default' && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+  };
+Object.defineProperty(exports, '__esModule', { value: true });
+exports.BootstrapStack = void 0;
+const cdk = __importStar(require('aws-cdk-lib'));
+const ssm = __importStar(require('aws-cdk-lib/aws-ssm'));
+const pipeline_1 = require('./pipeline');
+/**
+ * The BootstrapStack creates resources needed before we can properly automate deployment. It is meant to run only
+ * once per environment (unless we make changes).
+ */
+class BootstrapStack extends cdk.Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+    const pipeline = new pipeline_1.Pipeline(this, 'Pipeline', {
+      githubRepositories: ['dekkerglen/CubeCobra'],
+    });
+    new ssm.StringParameter(this, 'GitHubActionsRoleArnParameter', {
+      parameterName: '/cdk/bootstrap/github-actions-role-arn',
+      stringValue: pipeline.githubRole.roleArn,
+    });
+  }
+}
+exports.BootstrapStack = BootstrapStack;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYm9vdHN0cmFwLXN0YWNrLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiYm9vdHN0cmFwLXN0YWNrLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsaURBQW1DO0FBQ25DLHlEQUEyQztBQUczQyx5Q0FBc0M7QUFFdEM7OztHQUdHO0FBQ0gsTUFBYSxjQUFlLFNBQVEsR0FBRyxDQUFDLEtBQUs7SUFDM0MsWUFBWSxLQUFnQixFQUFFLEVBQVUsRUFBRSxLQUFzQjtRQUM5RCxLQUFLLENBQUMsS0FBSyxFQUFFLEVBQUUsRUFBRSxLQUFLLENBQUMsQ0FBQztRQUV4QixNQUFNLFFBQVEsR0FBRyxJQUFJLG1CQUFRLENBQUMsSUFBSSxFQUFFLFVBQVUsRUFBRTtZQUM5QyxrQkFBa0IsRUFBRSxDQUFDLHNCQUFzQixDQUFDO1NBQzdDLENBQUMsQ0FBQztRQUVILElBQUksR0FBRyxDQUFDLGVBQWUsQ0FBQyxJQUFJLEVBQUUsK0JBQStCLEVBQUU7WUFDN0QsYUFBYSxFQUFFLHdDQUF3QztZQUN2RCxXQUFXLEVBQUUsUUFBUSxDQUFDLFVBQVUsQ0FBQyxPQUFPO1NBQ3pDLENBQUMsQ0FBQztJQUNMLENBQUM7Q0FDRjtBQWJELHdDQWFDIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0ICogYXMgY2RrIGZyb20gJ2F3cy1jZGstbGliJztcbmltcG9ydCAqIGFzIHNzbSBmcm9tICdhd3MtY2RrLWxpYi9hd3Mtc3NtJztcbmltcG9ydCB7IENvbnN0cnVjdCB9IGZyb20gJ2NvbnN0cnVjdHMnO1xuXG5pbXBvcnQgeyBQaXBlbGluZSB9IGZyb20gJy4vcGlwZWxpbmUnO1xuXG4vKipcbiAqIFRoZSBCb290c3RyYXBTdGFjayBjcmVhdGVzIHJlc291cmNlcyBuZWVkZWQgYmVmb3JlIHdlIGNhbiBwcm9wZXJseSBhdXRvbWF0ZSBkZXBsb3ltZW50LiBJdCBpcyBtZWFudCB0byBydW4gb25seVxuICogb25jZSBwZXIgZW52aXJvbm1lbnQgKHVubGVzcyB3ZSBtYWtlIGNoYW5nZXMpLlxuICovXG5leHBvcnQgY2xhc3MgQm9vdHN0cmFwU3RhY2sgZXh0ZW5kcyBjZGsuU3RhY2sge1xuICBjb25zdHJ1Y3RvcihzY29wZTogQ29uc3RydWN0LCBpZDogc3RyaW5nLCBwcm9wcz86IGNkay5TdGFja1Byb3BzKSB7XG4gICAgc3VwZXIoc2NvcGUsIGlkLCBwcm9wcyk7XG5cbiAgICBjb25zdCBwaXBlbGluZSA9IG5ldyBQaXBlbGluZSh0aGlzLCAnUGlwZWxpbmUnLCB7XG4gICAgICBnaXRodWJSZXBvc2l0b3JpZXM6IFsnZGVra2VyZ2xlbi9DdWJlQ29icmEnXSxcbiAgICB9KTtcblxuICAgIG5ldyBzc20uU3RyaW5nUGFyYW1ldGVyKHRoaXMsICdHaXRIdWJBY3Rpb25zUm9sZUFyblBhcmFtZXRlcicsIHtcbiAgICAgIHBhcmFtZXRlck5hbWU6ICcvY2RrL2Jvb3RzdHJhcC9naX

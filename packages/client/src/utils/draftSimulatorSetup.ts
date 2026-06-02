@@ -8,11 +8,7 @@ import type Card from '@utils/datatypes/Card';
 import type Cube from '@utils/datatypes/Cube';
 import type { CubeCards } from '@utils/datatypes/Cube';
 import { boardNameToKey } from '@utils/datatypes/Cube';
-import type {
-  BasicLandInfo,
-  CardMeta,
-  SimulationSetupResponse,
-} from '@utils/datatypes/SimulationReport';
+import type { BasicLandInfo, CardMeta, SimulationSetupResponse } from '@utils/datatypes/SimulationReport';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 
 type ExtendedRequestInit = RequestInit & { timeout?: number };

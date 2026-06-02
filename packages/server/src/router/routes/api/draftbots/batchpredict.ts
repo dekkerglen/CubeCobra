@@ -21,6 +21,7 @@ export interface PredictResponse {
 
 const OracleIDSchema = Joi.string().uuid();
 const CustomCard = Joi.string().valid('custom-card');
+const VoucherCard = Joi.string().valid('voucher');
 
 const CUBE_CONTEXT_DIM = 32;
 
@@ -28,14 +29,20 @@ const PredictBodySchema = Joi.object({
   inputs: Joi.array()
     .items(
       Joi.object({
-        pack: Joi.array().items(OracleIDSchema, CustomCard).required(),
-        picks: Joi.array().items(OracleIDSchema, CustomCard).required(),
+        pack: Joi.array().items(OracleIDSchema, CustomCard, VoucherCard).required(),
+        picks: Joi.array().items(OracleIDSchema, CustomCard, VoucherCard).required(),
       }),
     )
     .required()
     .max(20),
   cubeContext: Joi.array().items(Joi.number()).length(CUBE_CONTEXT_DIM).optional(),
 });
+
+// Sentinel oracle ids that aren't real cards in the ML vocabulary. We strip them
+// before sending the pack/picks to the recommender, otherwise the ML service
+// returns an error and the whole batchpredict call (and the draft) bricks.
+const NON_ML_ORACLES = new Set(['voucher', 'custom-card']);
+const isMlOracle = (oracle: string): boolean => !NON_ML_ORACLES.has(oracle);
 
 const validatePredictBody = (req: Request, res: Response, next: NextFunction): void => {
   const { error } = PredictBodySchema.validate(req.body);
@@ -62,10 +69,13 @@ const handler = async (req: Request, res: Response) => {
 
     // Map oracle IDs to ML-known oracles per seat, mirroring predict.ts. Cards in the
     // training vocab pass through unchanged; unknown cards fall back to a mostSimilar.
+    // Sentinel ids ('voucher', 'custom-card') are stripped — they aren't real cards
+    // and the recommender would 4xx the whole batch if it saw them.
     const seatMaps = inputs.map((input) => {
       const toMl: Record<string, string> = {};
       const fromMl: Record<string, string[]> = {};
       for (const oracle of [...input.pack, ...input.picks]) {
+        if (!isMlOracle(oracle)) continue;
         if (toMl[oracle] !== undefined) continue;
         const mlOracle = getOracleForMl(oracle, null);
         toMl[oracle] = mlOracle;
@@ -79,8 +89,8 @@ const handler = async (req: Request, res: Response) => {
     // All inputs in a batch represent seats of a single draft and share the same cube context.
     const mlPrediction = await batchDraft(
       inputs.map((input, i) => ({
-        pack: input.pack.map((o) => seatMaps[i]!.toMl[o] ?? o),
-        pool: input.picks.map((o) => seatMaps[i]!.toMl[o] ?? o),
+        pack: input.pack.filter(isMlOracle).map((o) => seatMaps[i]!.toMl[o] ?? o),
+        pool: input.picks.filter(isMlOracle).map((o) => seatMaps[i]!.toMl[o] ?? o),
         cubeContext: predictBody.cubeContext,
       })),
     );

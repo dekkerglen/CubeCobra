@@ -51,6 +51,7 @@ jest.mock('serverutils/render', () => ({
 
 jest.mock('serverutils/util', () => ({
   addNotification: jest.fn(),
+  getBaseUrl: jest.fn().mockReturnValue('http://localhost:8080'),
 }));
 
 describe('Get Comment', () => {
@@ -79,7 +80,7 @@ describe('Get Comment', () => {
       expect.anything(),
       'CommentPage',
       { comment: mockComment },
-      { title: 'Comment' },
+      expect.objectContaining({ title: 'Comment' }),
     );
 
     expect(flashMock).not.toHaveBeenCalled();

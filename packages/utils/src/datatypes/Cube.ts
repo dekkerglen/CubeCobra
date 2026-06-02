@@ -197,7 +197,7 @@ export function getViewByName(cube: Cube, name: string): ViewDefinition | undefi
  * Converts a view name to a URL-safe key
  */
 export function viewNameToKey(viewName: string): string {
-  return viewName.toLowerCase().replace(/\s+/g, '-');
+  return encodeURIComponent(viewName.toLowerCase().replace(/\s+/g, '-'));
 }
 
 /**

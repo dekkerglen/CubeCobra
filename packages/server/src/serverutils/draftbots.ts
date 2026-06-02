@@ -91,6 +91,15 @@ export const deckbuild = async (
     return !!(oracleIds && oracleIds[0] && cardFromId(oracleIds[0]).type.includes('Land'));
   };
 
+  // Conspiracy / Vanguard cards affect the draft but should not be selected
+  // for a constructed mainboard; they remain in the sideboard.
+  const oracleIsConspiracyOrVanguard = (oracle: string): boolean => {
+    const oracleIds = carddb.oracleToId[oracle];
+    if (!oracleIds || !oracleIds[0]) return false;
+    const type = cardFromId(oracleIds[0]).type || '';
+    return type.includes('Conspiracy') || type.includes('Vanguard');
+  };
+
   // Build ML substitution maps: original oracle <-> ML oracle
   // Multiple originals can map to the same ML oracle
   const toMl: Record<string, string> = {};
@@ -130,6 +139,8 @@ export const deckbuild = async (
     const oracle = originals.find((o) => remainingPool.includes(o));
     if (!oracle) continue;
 
+    if (oracleIsConspiracyOrVanguard(oracle)) continue;
+
     const land = oracleIsLand(oracle);
 
     if (land && landCount >= maxLands) continue;
@@ -156,6 +167,7 @@ export const deckbuild = async (
   while (mainboard.length < deckSize && remainingPool.length > 0) {
     // Filter remaining pool to only cards that fit under the limits
     const candidates = remainingPool.filter((oracle) => {
+      if (oracleIsConspiracyOrVanguard(oracle)) return false;
       const land = oracleIsLand(oracle);
       if (land && landCount >= maxLands) return false;
       if (!land && spellCount >= maxSpells) return false;
@@ -264,6 +276,15 @@ export const batchDeckbuild = async (
     return !!(oracleIds && oracleIds[0] && cardFromId(oracleIds[0]).type.includes('Land'));
   };
 
+  // Conspiracy / Vanguard cards affect the draft but should not be selected
+  // for a constructed mainboard; they remain in the sideboard.
+  const oracleIsConspiracyOrVanguard = (oracle: string): boolean => {
+    const oracleIds = carddb.oracleToId[oracle];
+    if (!oracleIds || !oracleIds[0]) return false;
+    const type = cardFromId(oracleIds[0]).type || '';
+    return type.includes('Conspiracy') || type.includes('Vanguard');
+  };
+
   const allPoolOracles = entries.map((entry) => entry.pool.map((card: any) => card.oracle_id));
 
   // Build ML substitution maps per seat
@@ -325,6 +346,8 @@ export const batchDeckbuild = async (
       const oracle = originals.find((o) => seat.remainingPool.includes(o));
       if (!oracle) continue;
 
+      if (oracleIsConspiracyOrVanguard(oracle)) continue;
+
       const land = oracleIsLand(oracle);
 
       if (land && seat.landCount >= seat.maxLands) continue;
@@ -363,6 +386,7 @@ export const batchDeckbuild = async (
 
       // Filter candidates that fit under limits
       const candidates = seat.remainingPool.filter((oracle) => {
+        if (oracleIsConspiracyOrVanguard(oracle)) return false;
         const land = oracleIsLand(oracle);
         if (land && seat.landCount >= seat.maxLands) return false;
         if (!land && seat.spellCount >= seat.maxSpells) return false;

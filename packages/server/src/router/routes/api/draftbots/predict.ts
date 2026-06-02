@@ -18,6 +18,12 @@ const PredictBodySchema = Joi.object({
   picks: Joi.array().items(OracleIDSchema, CustomCard, VoucherCard).required(),
 });
 
+// Sentinel oracle ids that aren't real cards in the ML vocabulary. We strip
+// them before sending to the recommender — otherwise the model 4xxs and the
+// whole bot pick fails (which used to brick the draft).
+const NON_ML_ORACLES = new Set(['voucher', 'custom-card']);
+const isMlOracle = (oracle: string): boolean => !NON_ML_ORACLES.has(oracle);
+
 const validatePredictBody = (req: Request, res: Response, next: NextFunction): void => {
   const { error } = PredictBodySchema.validate(req.body);
   if (error) {
@@ -31,10 +37,12 @@ const handler = async (req: Request, res: Response) => {
   const predictBody = req.body as PredictBody;
 
   try {
-    // Map oracle IDs to ML-known oracles
+    // Map oracle IDs to ML-known oracles. Sentinel ids ('voucher', 'custom-card')
+    // are stripped — they aren't real cards and the recommender would error.
     const toMl: Record<string, string> = {};
     const fromMl: Record<string, string[]> = {};
     for (const oracle of [...predictBody.pack, ...predictBody.picks]) {
+      if (!isMlOracle(oracle)) continue;
       if (toMl[oracle] !== undefined) continue;
       const mlOracle = getOracleForMl(oracle, null);
       toMl[oracle] = mlOracle;
@@ -43,8 +51,8 @@ const handler = async (req: Request, res: Response) => {
       fromMl[mlOracle].push(oracle);
     }
 
-    const mlPack = predictBody.pack.map((o) => toMl[o] ?? o);
-    const mlPicks = predictBody.picks.map((o) => toMl[o] ?? o);
+    const mlPack = predictBody.pack.filter(isMlOracle).map((o) => toMl[o] ?? o);
+    const mlPicks = predictBody.picks.filter(isMlOracle).map((o) => toMl[o] ?? o);
 
     const mlPrediction = await draft(mlPack, mlPicks);
 

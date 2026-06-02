@@ -4,6 +4,19 @@ import classNames from 'classnames';
 
 import { Flexbox } from './Layout';
 
+/**
+ * Replace "smart" / curly quotes (the ones iOS, macOS, and Word inject
+ * automatically) with their straight ASCII equivalents. Search filters,
+ * card names, and most identifiers in CubeCobra are matched as straight
+ * quotes, so an autocorrected apostrophe silently breaks queries like
+ * name:"Yawgmoth's Will". Applying this to every shared Input keeps
+ * the user's typed value clean wherever it lands.
+ */
+export const normalizeQuotes = (value: string): string =>
+  value
+    .replace(/[‘’‚‛′❛❜]/g, "'")
+    .replace(/[“”„‟″❝❞]/g, '"');
+
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   className?: string;
   label?: string;
@@ -86,7 +99,21 @@ const Input: React.FC<InputProps> = ({
                 }
               }
         }
-        onChange={disabled ? undefined : onChange}
+        onChange={
+          disabled
+            ? undefined
+            : onChange
+              ? (event) => {
+                  const next = normalizeQuotes(event.target.value);
+                  if (next !== event.target.value) {
+                    // Mutate the underlying target so downstream consumers
+                    // (controlled `value`, refs, etc.) see the clean string.
+                    event.target.value = next;
+                  }
+                  onChange(event);
+                }
+              : undefined
+        }
         value={value}
         disabled={disabled}
         autoCapitalize={autoCapitalize}

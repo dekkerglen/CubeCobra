@@ -84,8 +84,7 @@ const DraftFormatsSettings: React.FC = () => {
 
     // Append ` board=<legacy>` to the filter string. Wildcards/empties become
     // just the board clause.
-    const mergedFilter =
-      filter === '' || filter === '*' ? `board=${legacyBoard}` : `${filter} board=${legacyBoard}`;
+    const mergedFilter = filter === '' || filter === '*' ? `board=${legacyBoard}` : `${filter} board=${legacyBoard}`;
     const { board: _board, ...rest } = s as any;
     return { ...rest, filter: mergedFilter };
   }, []);

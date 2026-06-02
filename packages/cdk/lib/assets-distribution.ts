@@ -1,5 +1,3 @@
-import * as path from 'path';
-
 import { CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
 import { Certificate, CertificateValidation } from 'aws-cdk-lib/aws-certificatemanager';
 import {
@@ -23,6 +21,7 @@ import { S3BucketOrigin } from 'aws-cdk-lib/aws-cloudfront-origins';
 import { CfnRecordSet, HostedZone } from 'aws-cdk-lib/aws-route53';
 import { BlockPublicAccess, Bucket, BucketEncryption, IBucket, ObjectOwnership } from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
+import * as path from 'path';
 
 export interface AssetsDistributionProps {
   /** Stage identifier used in resource names: 'beta' | 'production' | 'development'. */

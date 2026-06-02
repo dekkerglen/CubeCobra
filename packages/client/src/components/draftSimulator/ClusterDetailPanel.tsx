@@ -1,4 +1,3 @@
-/* eslint-disable camelcase */
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { isManaFixingLand } from '@utils/cardutil';
@@ -13,27 +12,22 @@ import type {
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
 
-import Text from '../base/Text';
-import Link from '../base/Link';
-import { Flexbox } from '../base/Layout';
-import withAutocard from '../WithAutocard';
 import { CSRFContext } from '../../contexts/CSRFContext';
-import {
-  buildOracleRemapping,
-  loadDraftRecommender,
-  localRecommend,
-} from '../../utils/draftBot';
+import { buildOracleRemapping, loadDraftRecommender, localRecommend } from '../../utils/draftBot';
 import { buildClusterRecommendationInput } from '../../utils/draftSimulatorClustering';
 import { archetypeFullName } from '../../utils/draftSimulatorThemes';
+import Link from '../base/Link';
+import Text from '../base/Text';
+import withAutocard from '../WithAutocard';
 import {
-  COLOR_KEYS,
+  CardTypeShareChart,
   CardTypeShareLegend,
+  COLOR_KEYS,
   DeckColorShareChart,
   DeckColorShareLegend,
-  ManaCurveShareChart,
-  CardTypeShareChart,
   EloDistributionChart,
   getDeckShareColors,
+  ManaCurveShareChart,
   normalizeColorOrder,
 } from './SimulatorCharts';
 
@@ -50,20 +44,27 @@ function autocardDetails(oracleId: string, name: string, imageUrl?: string): Par
   };
 }
 
-
-export const SkeletonCardImage: React.FC<{ card: SkeletonCard; size?: number; onCardClick?: (oracleId: string) => void }> = React.memo(({ card, size, onCardClick }) => (
+export const SkeletonCardImage: React.FC<{
+  card: SkeletonCard;
+  size?: number;
+  onCardClick?: (oracleId: string) => void;
+}> = React.memo(({ card, size, onCardClick }) => (
   <AutocardLink
     href={`/tool/card/${encodeURIComponent(card.oracle_id)}`}
     className="relative block hover:opacity-95"
     style={size ? { width: size } : undefined}
     title={`${card.name} — ${(card.fraction * 100).toFixed(0)}% of pools`}
     card={{ details: autocardDetails(card.oracle_id, card.name, card.imageUrl) } as any}
-    onClick={onCardClick ? (e: React.MouseEvent) => {
-      if (window.matchMedia('(pointer: coarse)').matches) {
-        e.preventDefault();
-        onCardClick(card.oracle_id);
-      }
-    } : undefined}
+    onClick={
+      onCardClick
+        ? (e: React.MouseEvent) => {
+            if (window.matchMedia('(pointer: coarse)').matches) {
+              e.preventDefault();
+              onCardClick(card.oracle_id);
+            }
+          }
+        : undefined
+    }
   >
     {card.imageUrl ? (
       <img
@@ -89,24 +90,28 @@ export const SkeletonCardImage: React.FC<{ card: SkeletonCard; size?: number; on
   </AutocardLink>
 ));
 
-export const LinkedCardImage: React.FC<{ oracleId: string; name: string; imageUrl: string; size: number; onCardClick?: (oracleId: string) => void }> = ({
-  oracleId,
-  name,
-  imageUrl,
-  size,
-  onCardClick,
-}) => (
+export const LinkedCardImage: React.FC<{
+  oracleId: string;
+  name: string;
+  imageUrl: string;
+  size: number;
+  onCardClick?: (oracleId: string) => void;
+}> = ({ oracleId, name, imageUrl, size, onCardClick }) => (
   <AutocardLink
     href={`/tool/card/${encodeURIComponent(oracleId)}`}
     className="relative flex-shrink-0 block hover:opacity-95"
     style={{ width: size }}
     card={{ details: autocardDetails(oracleId, name, imageUrl) } as any}
-    onClick={onCardClick ? (e: React.MouseEvent) => {
-      if (window.matchMedia('(pointer: coarse)').matches) {
-        e.preventDefault();
-        onCardClick(oracleId);
-      }
-    } : undefined}
+    onClick={
+      onCardClick
+        ? (e: React.MouseEvent) => {
+            if (window.matchMedia('(pointer: coarse)').matches) {
+              e.preventDefault();
+              onCardClick(oracleId);
+            }
+          }
+        : undefined
+    }
   >
     <img src={imageUrl} alt={name} className="w-full rounded border border-border shadow-sm" />
   </AutocardLink>
@@ -129,7 +134,23 @@ const ClusterDetailPanel: React.FC<{
   onOpenPool: (poolIndex: number) => void;
   onCardClick?: (oracleId: string) => void;
   onClose: () => void;
-}> = ({ skeleton, clusterIndex, totalPools, clusterDeckBuilds, cubeOracleSet, cardMeta, slimPools, deckBuilds, themes, poolArchetypeLabels, excludeManaFixingLands, setExcludeManaFixingLands, onOpenPool, onCardClick, onClose }) => {
+}> = ({
+  skeleton,
+  clusterIndex,
+  totalPools,
+  clusterDeckBuilds,
+  cubeOracleSet,
+  cardMeta,
+  slimPools,
+  deckBuilds,
+  themes,
+  poolArchetypeLabels,
+  excludeManaFixingLands,
+  setExcludeManaFixingLands,
+  onOpenPool,
+  onCardClick,
+  onClose,
+}) => {
   const { csrfFetch } = useContext(CSRFContext);
 
   // Compute actual color profile from deck color shares (≥10% threshold)
@@ -152,11 +173,25 @@ const ClusterDetailPanel: React.FC<{
 
   const CARD_TABS = [
     { key: 'staples', label: 'Staples', title: 'Cards drafted most often across decks in this cluster' },
-    { key: 'identity', label: 'Identity', title: 'Cards most representative of this cluster — appear in >5% of cluster decks, sorted by closeness to the cluster centroid' },
-    { key: 'exemplary', label: 'Exemplary Deck', title: 'A real deck from this cluster chosen to best match the cluster\u2019s representative high-priority card bucket' },
-    { key: 'recommendations', label: 'Recommendations', title: 'Use the cluster as a local recommender seed and suggest cards that would strengthen it' },
+    {
+      key: 'identity',
+      label: 'Identity',
+      title:
+        'Cards most representative of this cluster — appear in >5% of cluster decks, sorted by closeness to the cluster centroid',
+    },
+    {
+      key: 'exemplary',
+      label: 'Exemplary Deck',
+      title:
+        'A real deck from this cluster chosen to best match the cluster\u2019s representative high-priority card bucket',
+    },
+    {
+      key: 'recommendations',
+      label: 'Recommendations',
+      title: 'Use the cluster as a local recommender seed and suggest cards that would strengthen it',
+    },
   ] as const;
-  type CardTab = typeof CARD_TABS[number]['key'];
+  type CardTab = (typeof CARD_TABS)[number]['key'];
   const [cardTab, setCardTab] = useState<CardTab>('staples');
 
   // Greedy co-occurrence chain: each card is chosen because it appears alongside
@@ -177,7 +212,9 @@ const ClusterDetailPanel: React.FC<{
       const ranked =
         deck.deckbuildRatings && deck.deckbuildRatings.length > 0
           ? deck.deckbuildRatings.filter((entry) => mainboardSet.has(entry.oracle)).slice(0, representativeTopN)
-          : deck.mainboard.slice(0, representativeTopN).map((oracle, index) => ({ oracle, rating: representativeTopN - index }));
+          : deck.mainboard
+              .slice(0, representativeTopN)
+              .map((oracle, index) => ({ oracle, rating: representativeTopN - index }));
 
       ranked.forEach((entry, index) => {
         const rankWeight = (representativeTopN - index) / representativeTopN;
@@ -185,15 +222,13 @@ const ClusterDetailPanel: React.FC<{
       });
     }
 
-    let best:
-      | {
-          poolIndex: number;
-          deck: BuiltDeck;
-          score: number;
-          overlap: number;
-          topCards: string[];
-        }
-      | null = null;
+    let best: {
+      poolIndex: number;
+      deck: BuiltDeck;
+      score: number;
+      overlap: number;
+      topCards: string[];
+    } | null = null;
 
     for (const poolIndex of skeleton.poolIndices) {
       const deck = deckBuilds?.[poolIndex];
@@ -209,7 +244,10 @@ const ClusterDetailPanel: React.FC<{
 
       const topCards =
         deck.deckbuildRatings && deck.deckbuildRatings.length > 0
-          ? deck.deckbuildRatings.filter((entry) => mainboardSet.has(entry.oracle)).slice(0, 8).map((entry) => entry.oracle)
+          ? deck.deckbuildRatings
+              .filter((entry) => mainboardSet.has(entry.oracle))
+              .slice(0, 8)
+              .map((entry) => entry.oracle)
           : deck.mainboard.slice(0, 8);
 
       if (!best || score > best.score || (score === best.score && overlap > best.overlap)) {
@@ -218,7 +256,7 @@ const ClusterDetailPanel: React.FC<{
     }
 
     return best;
-  }, [cardTab, cardMeta, deckBuilds, hasDecks, skeleton.poolIndices]);
+  }, [cardTab, deckBuilds, hasDecks, skeleton.poolIndices]);
 
   const recommendationInput = useMemo(
     () => buildClusterRecommendationInput(skeleton, slimPools, cardMeta, deckBuilds),
@@ -373,7 +411,6 @@ const ClusterDetailPanel: React.FC<{
     };
   }, [cardMeta, cardTab, csrfFetch, cubeOracleSet, recommendationInputOracles, skeleton.recommendedAdds]);
 
-  const colorCodes = COLOR_KEYS.filter((c) => colorProfile.includes(c));
   const pct = totalPools > 0 ? ((skeleton.poolCount / totalPools) * 100).toFixed(1) : '0';
 
   // Top Gwen archetype labels within this cluster
@@ -392,14 +429,18 @@ const ClusterDetailPanel: React.FC<{
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 pt-2">
           <div>
-            <div><Text semibold className="text-lg leading-snug">
-              {clusterArchetypes.length > 0
-                ? `${colorProfile && colorProfile !== 'C' ? `${colorProfile} ` : ''}${clusterArchetypes[0]![0]}`
-                : archetypeFullName(colorProfile)}
-            </Text></div>
-            <div><Text xs className="text-text-secondary">
-              Cluster {clusterIndex + 1} · {skeleton.poolCount} seats · {pct}%
-            </Text></div>
+            <div>
+              <Text semibold className="text-lg leading-snug">
+                {clusterArchetypes.length > 0
+                  ? `${colorProfile && colorProfile !== 'C' ? `${colorProfile} ` : ''}${clusterArchetypes[0]![0]}`
+                  : archetypeFullName(colorProfile)}
+              </Text>
+            </div>
+            <div>
+              <Text xs className="text-text-secondary">
+                Cluster {clusterIndex + 1} · {skeleton.poolCount} seats · {pct}%
+              </Text>
+            </div>
           </div>
           {themes && themes.length > 0 && (
             <div className="mt-1.5 flex flex-wrap gap-1">
@@ -463,7 +504,9 @@ const ClusterDetailPanel: React.FC<{
                 ))}
               </div>
             ) : (
-              <Text sm className="text-text-secondary">No common cards remain after filtering.</Text>
+              <Text sm className="text-text-secondary">
+                No common cards remain after filtering.
+              </Text>
             )}
           </div>
         )}
@@ -500,7 +543,8 @@ const ClusterDetailPanel: React.FC<{
             {exemplaryDeck ? (
               <div className="rounded-lg border border-link/30 bg-link/5 px-4 py-4 flex flex-col items-center gap-2 text-center">
                 <Text semibold lg className="text-text">
-                  Draft {slimPools[exemplaryDeck.poolIndex]!.draftIndex + 1} · Seat {slimPools[exemplaryDeck.poolIndex]!.seatIndex + 1}
+                  Draft {slimPools[exemplaryDeck.poolIndex]!.draftIndex + 1} · Seat{' '}
+                  {slimPools[exemplaryDeck.poolIndex]!.seatIndex + 1}
                 </Text>
                 <Text xs className="text-text-secondary">
                   Matches {exemplaryDeck.overlap} representative cards from the cluster bucket.
@@ -514,7 +558,9 @@ const ClusterDetailPanel: React.FC<{
                 </button>
               </div>
             ) : (
-              <Text sm className="text-text-secondary">Deck builds are required to show an exemplary deck.</Text>
+              <Text sm className="text-text-secondary">
+                Deck builds are required to show an exemplary deck.
+              </Text>
             )}
           </div>
         )}
@@ -544,9 +590,13 @@ const ClusterDetailPanel: React.FC<{
                 Recommended Additions
               </Text>
               {recommendationsLoading ? (
-                <Text sm className="text-text-secondary">Generating recommendations…</Text>
+                <Text sm className="text-text-secondary">
+                  Generating recommendations…
+                </Text>
               ) : recommendationsError ? (
-                <Text sm className="text-text-secondary">{recommendationsError}</Text>
+                <Text sm className="text-text-secondary">
+                  {recommendationsError}
+                </Text>
               ) : visibleClusterRecommendations.length > 0 ? (
                 <div className="grid grid-cols-4 md:grid-cols-6 gap-1.5">
                   {visibleClusterRecommendations.map((item) => (
@@ -579,7 +629,9 @@ const ClusterDetailPanel: React.FC<{
       </div>
       <div className="flex flex-col gap-4 md:flex-row md:flex-wrap">
         <div className="flex-1 min-w-0">
-          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Deck Color Share</Text>
+          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">
+            Deck Color Share
+          </Text>
           <div className="hidden md:block">
             <DeckColorShareChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
           </div>
@@ -588,7 +640,9 @@ const ClusterDetailPanel: React.FC<{
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Card Types</Text>
+          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">
+            Card Types
+          </Text>
           <div className="hidden md:block">
             <CardTypeShareChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
           </div>
@@ -598,11 +652,15 @@ const ClusterDetailPanel: React.FC<{
         </div>
         <div className="flex-1 min-w-0 flex flex-col gap-4">
           <div>
-            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Mana Curve Share</Text>
+            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">
+              Mana Curve Share
+            </Text>
             <ManaCurveShareChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
           </div>
           <div>
-            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Elo Distribution</Text>
+            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">
+              Elo Distribution
+            </Text>
             <EloDistributionChart deckBuilds={clusterDeckBuilds} cardMeta={cardMeta} />
           </div>
         </div>

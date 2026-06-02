@@ -1,0 +1,65 @@
+'use strict';
+var __createBinding =
+  (this && this.__createBinding) ||
+  (Object.create
+    ? function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        var desc = Object.getOwnPropertyDescriptor(m, k);
+        if (!desc || ('get' in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+          desc = {
+            enumerable: true,
+            get: function () {
+              return m[k];
+            },
+          };
+        }
+        Object.defineProperty(o, k2, desc);
+      }
+    : function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        o[k2] = m[k];
+      });
+var __setModuleDefault =
+  (this && this.__setModuleDefault) ||
+  (Object.create
+    ? function (o, v) {
+        Object.defineProperty(o, 'default', { enumerable: true, value: v });
+      }
+    : function (o, v) {
+        o['default'] = v;
+      });
+var __importStar =
+  (this && this.__importStar) ||
+  function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null)
+      for (var k in mod)
+        if (k !== 'default' && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+  };
+Object.defineProperty(exports, '__esModule', { value: true });
+exports.AssetsStack = void 0;
+const cdk = __importStar(require('aws-cdk-lib'));
+const assets_distribution_1 = require('./assets-distribution');
+/**
+ * Static assets stack — lives in us-east-1 because CloudFront requires its
+ * ACM certificates there for custom domains.
+ *
+ * Deployed before the main CubeCobraStack: the bucket and distribution must
+ * exist before the deploy pipeline uploads bundles, and CDN_BASE_URL must
+ * resolve before any new EB instance starts serving traffic. Both stacks are
+ * wired up in `app/infra.ts`.
+ */
+class AssetsStack extends cdk.Stack {
+  constructor(scope, id, props) {
+    super(scope, id, props);
+    this.distribution = new assets_distribution_1.AssetsDistribution(this, 'Assets', {
+      environmentName: props.environmentName,
+      domain: props.domain,
+    });
+  }
+}
+exports.AssetsStack = AssetsStack;
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoiYXNzZXRzLXN0YWNrLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsiYXNzZXRzLXN0YWNrLnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBQUEsaURBQW1DO0FBRW5DLCtEQUEyRDtBQU8zRDs7Ozs7Ozs7R0FRRztBQUNILE1BQWEsV0FBWSxTQUFRLEdBQUcsQ0FBQyxLQUFLO0lBR3hDLFlBQVksS0FBYyxFQUFFLEVBQVUsRUFBRSxLQUF1QjtRQUM3RCxLQUFLLENBQUMsS0FBSyxFQUFFLEVBQUUsRUFBRSxLQUFLLENBQUMsQ0FBQztRQUV4QixJQUFJLENBQUMsWUFBWSxHQUFHLElBQUksd0NBQWtCLENBQUMsSUFBSSxFQUFFLFFBQVEsRUFBRTtZQUN6RCxlQUFlLEVBQUUsS0FBSyxDQUFDLGVBQWU7WUFDdEMsTUFBTSxFQUFFLEtBQUssQ0FBQyxNQUFNO1NBQ3JCLENBQUMsQ0FBQztJQUNMLENBQUM7Q0FDRjtBQVhELGtDQVdDIiwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0ICogYXMgY2RrIGZyb20gJ2F3cy1jZGstbGliJztcclxuXHJcbmltcG9ydCB7IEFzc2V0c0Rpc3RyaWJ1dGlvbiB9IGZyb20gJy4vYXNzZXRzLWRpc3RyaWJ1dGlvbic7XHJcblxyXG5leHBvcnQgaW50ZXJmYWNlIEFzc2V0c1N0YWNrUHJvcHMgZXh0ZW5kcyBjZGsuU3RhY2tQcm9wcyB7XHJcbiAgZW52aXJvbm1lbnROYW1lOiBzdHJpbmc7XHJcbiAgZG9tYWluOiBzdHJpbmc7XHJcbn1cclxuXHJcbi8qKlxyXG4gKiBTdGF0aWMgYXNzZXRzIHN0YWNrIOKAlCBsaXZlcyBpbiB1cy1lYXN0LTEgYmVjYXVzZSBDbG91ZEZyb250IHJlcXVpcmVzIGl0c1xyXG4gKiBBQ00gY2VydGlmaWNhdGVzIHRoZXJlIGZvciBjdXN0b20gZG9tYWlucy5cclxuICpcclxuICogRGVwbG95ZWQgYmVmb3JlIHRoZSBtYWluIEN1YmVDb2JyYVN0YWNrOiB0aGUgYnVja2V0IGFuZCBkaXN0cmlidXRpb24gbXVzdFxyXG4gKiBleGlzdCBiZWZvcmUgdGhlIGRlcGxveSBwaXBlbGluZSB1cGxvYWRzIGJ1bmRsZXMsIGFuZCBDRE5fQkFTRV9VUkwgbXVzdFxyXG4gKiByZXNvbHZlIGJlZm9yZSBhbnkgbmV3IEVCIGluc3RhbmNlIHN0YXJ0cyBzZXJ2aW5nIHRyYWZmaWMuIEJvdGggc3RhY2tzIGFyZVxyXG4gKiB3aXJlZCB1cCBpbiBgYXBwL2luZnJhLnRzYC5cclxuICovXHJcbmV4cG9ydCBjbGFzcyBBc3NldHNTdGFjayBleHRlbmRzIGNkay5TdGFjayB7XHJcbiAgcHVibGljIHJlYWRvbmx5IGRpc3RyaWJ1dGlvbjogQXNzZXRzRGlzdHJpYnV0aW9uO1xyXG5cclxuICBjb25zdHJ1Y3RvcihzY29wZTogY2RrLkFwcCwgaWQ6IHN0cmluZywgcHJvcHM6IEFzc2V0c1N0YWNrUHJvcHMpIHtcclxuICAgIHN1cGVyKHNjb3BlLCBpZCwgcHJvcHMpO1xyXG5cclxuICAgIHRoaXMuZGlzdHJpYnV0aW9uID0gbmV3IEFzc2V0c0Rpc3RyaWJ1dGlvbih0aGlzLCAnQXNzZXRzJywge1xyXG4g

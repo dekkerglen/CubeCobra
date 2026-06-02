@@ -1,4 +1,13 @@
-import { approximateUmap, buildKnnGraph, computeSkeletons, cosineDist, euclidSq, hdbscanAssignments, leidenAssignments, nmfAssignments } from '../../src/utils/draftSimulatorClustering';
+import {
+  approximateUmap,
+  buildKnnGraph,
+  computeSkeletons,
+  cosineDist,
+  euclidSq,
+  hdbscanAssignments,
+  leidenAssignments,
+  nmfAssignments,
+} from '../../src/utils/draftSimulatorClustering';
 
 const makeMeta = (id: string, type = 'Creature', colorIdentity: string[] = []) => ({
   name: id,
@@ -93,7 +102,7 @@ describe('hdbscanAssignments', () => {
   it('treats small groups as noise and assigns to nearest cluster', () => {
     // Two big clusters + 1 isolated point
     const vecs = [
-      ...Array.from({ length: 5 }, (_, i) => [i * 0.1, 0]),   // cluster near origin
+      ...Array.from({ length: 5 }, (_, i) => [i * 0.1, 0]), // cluster near origin
       ...Array.from({ length: 5 }, (_, i) => [10 + i * 0.1, 10]), // cluster far away
       [0.2, 0.1], // isolated but close to cluster A
     ];
@@ -109,7 +118,7 @@ describe('hdbscanAssignments', () => {
     for (let c = 0; c < 3; c++) {
       for (let i = 0; i < 10; i++) {
         const v = new Array(10).fill(0);
-        v[c * 3] = 10 + i * 0.1;         // each cluster is far apart in a different dimension
+        v[c * 3] = 10 + i * 0.1; // each cluster is far apart in a different dimension
         v[c * 3 + 1] = i * 0.1;
         vecs.push(v);
       }
@@ -270,7 +279,11 @@ describe('computeSkeletons', () => {
   });
 
   it('uses leiden clustering', () => {
-    const meta = { a: makeMeta('a', 'Creature', ['R']), b: makeMeta('b', 'Creature', ['G']), c: makeMeta('c', 'Creature', ['U']) };
+    const meta = {
+      a: makeMeta('a', 'Creature', ['R']),
+      b: makeMeta('b', 'Creature', ['G']),
+      c: makeMeta('c', 'Creature', ['U']),
+    };
     const pools = [
       ...Array.from({ length: 4 }, (_, i) => makePool(0, i, ['a'])),
       ...Array.from({ length: 4 }, (_, i) => makePool(1, i, ['b'])),
@@ -299,31 +312,35 @@ describe('computeSkeletons', () => {
       makePool(1, 2, ['sharedA', 'sharedB', 'onlyB1', 'onlyB2']),
     ];
     const embeddings = [
-      [1, 0, 0, 0], [1, 0, 0, 0], [1, 0, 0, 0],
-      [0, 1, 0, 0], [0, 1, 0, 0], [0, 1, 0, 0],
+      [1, 0, 0, 0],
+      [1, 0, 0, 0],
+      [1, 0, 0, 0],
+      [0, 1, 0, 0],
+      [0, 1, 0, 0],
+      [0, 1, 0, 0],
     ];
     const result = computeSkeletons(pools, meta, embeddings);
     expect(result.skeletons.length).toBeGreaterThanOrEqual(1);
 
     const allDistinctIds: string[] = [];
     for (const skel of result.skeletons) {
-      expect(skel.distinctCards).toBeDefined();
+      expect(skel.identityCards).toBeDefined();
       const coreDefaultIds = new Set(skel.coreCards.default.map((c) => c.oracle_id));
       const coreFixingIds = new Set(skel.coreCards.excludingFixing.map((c) => c.oracle_id));
-      for (const c of skel.distinctCards!.default) expect(coreDefaultIds.has(c.oracle_id)).toBe(false);
-      for (const c of skel.distinctCards!.excludingFixing) expect(coreFixingIds.has(c.oracle_id)).toBe(false);
-      for (const c of skel.distinctCards!.default) allDistinctIds.push(c.oracle_id);
+      for (const c of skel.identityCards!.default) expect(coreDefaultIds.has(c.oracle_id)).toBe(false);
+      for (const c of skel.identityCards!.excludingFixing) expect(coreFixingIds.has(c.oracle_id)).toBe(false);
+      for (const c of skel.identityCards!.default) allDistinctIds.push(c.oracle_id);
     }
-    // No card should appear in more than one cluster's distinct (default) tab.
+    // No card should appear in more than one cluster's identity (default) tab.
     expect(allDistinctIds.length).toBe(new Set(allDistinctIds).size);
   });
 
-  it('returns empty distinctCards when no embeddings are supplied', () => {
+  it('returns empty identityCards when no embeddings are supplied', () => {
     const meta = { a: makeMeta('a'), b: makeMeta('b') };
     const pools = [makePool(0, 0, ['a']), makePool(0, 1, ['b'])];
     const result = computeSkeletons(pools, meta, null);
     for (const skel of result.skeletons) {
-      expect(skel.distinctCards).toEqual({ default: [], excludingFixing: [] });
+      expect(skel.identityCards).toEqual({ default: [], excludingFixing: [] });
     }
   });
 });
@@ -365,13 +382,22 @@ describe('leidenAssignments', () => {
 
   it('separates two distinct groups', () => {
     const vecs = [
-      [0, 0], [0.1, 0], [0, 0.1], [0.1, 0.1],
-      [10, 10], [10.1, 10], [10, 10.1], [10.1, 10.1],
+      [0, 0],
+      [0.1, 0],
+      [0, 0.1],
+      [0.1, 0.1],
+      [10, 10],
+      [10.1, 10],
+      [10, 10.1],
+      [10.1, 10.1],
     ];
     const graph = buildKnnGraph(vecs, 3);
     // Use deterministic rng
     let seed = 42;
-    const rng = () => { seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; };
+    const rng = () => {
+      seed = (seed * 1103515245 + 12345) & 0x7fffffff;
+      return seed / 0x7fffffff;
+    };
     const result = leidenAssignments(graph, 8, 1.0, rng);
     expect(result).toHaveLength(8);
     // First four should be in the same community
@@ -386,9 +412,15 @@ describe('leidenAssignments', () => {
 
   it('higher resolution produces more communities', () => {
     const vecs = [
-      [0, 0], [0.5, 0], [1, 0],
-      [5, 0], [5.5, 0], [6, 0],
-      [10, 0], [10.5, 0], [11, 0],
+      [0, 0],
+      [0.5, 0],
+      [1, 0],
+      [5, 0],
+      [5.5, 0],
+      [6, 0],
+      [10, 0],
+      [10.5, 0],
+      [11, 0],
     ];
     const graph = buildKnnGraph(vecs, 4);
     const lowRes = new Set(leidenAssignments(graph, 9, 0.1)).size;

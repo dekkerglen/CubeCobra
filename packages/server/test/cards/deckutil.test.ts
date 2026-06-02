@@ -307,13 +307,19 @@ describe('reasonableCard', () => {
     expect(reasonableCard(details)).toBeFalsy();
   });
 
-  it('Unless the only promo is universes beyond', async () => {
+  it('Universes beyond promo type is reasonable', async () => {
     const details = createCardDetails({ ...overridesForNormalDetails, promo_types: ['universesbeyond'] });
 
     expect(reasonableCard(details)).toBeTruthy();
   });
 
-  it('More promo types on top of UB are not reasonable', async () => {
+  it('UB cards with source-material promo types are reasonable', async () => {
+    const details = createCardDetails({ ...overridesForNormalDetails, promo_types: ['ffiii', 'sourcematerial', 'universesbeyond'] });
+
+    expect(reasonableCard(details)).toBeTruthy();
+  });
+
+  it('UB cards with unreasonable promo types are not reasonable', async () => {
     const details = createCardDetails({ ...overridesForNormalDetails, promo_types: ['universesbeyond', 'surgefoil'] });
 
     expect(reasonableCard(details)).toBeFalsy();

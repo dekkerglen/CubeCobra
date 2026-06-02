@@ -14,7 +14,10 @@ declare module 'hdbscanjs' {
     parent: HdbscanNode | null;
     bbox: { minX: number; maxX: number; minY: number; maxY: number };
     isLeaf: boolean;
-    filter(filterFunc: (node: HdbscanNode) => boolean, bbox?: { minX: number; maxX: number; minY: number; maxY: number } | null): HdbscanNode[];
+    filter(
+      filterFunc: (node: HdbscanNode) => boolean,
+      bbox?: { minX: number; maxX: number; minY: number; maxY: number } | null,
+    ): HdbscanNode[];
   }
 
   type DistFunc = (p1: number[], p2: number[]) => number;

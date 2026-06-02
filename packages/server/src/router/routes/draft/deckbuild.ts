@@ -62,6 +62,16 @@ const oracleIsLand = (oracle: string): boolean => {
   return !!(oracleIds && oracleIds[0] && cardFromId(oracleIds[0]).type.includes('Land'));
 };
 
+// Conspiracy and Vanguard cards are draft-affecting cards that should never
+// end up in a bot's mainboard. They can be drafted (they live in packs) but
+// at deck construction time we leave them in the sideboard.
+const oracleIsConspiracyOrVanguard = (oracle: string): boolean => {
+  const oracleIds = carddb.oracleToId[oracle];
+  if (!oracleIds || !oracleIds[0]) return false;
+  const type = cardFromId(oracleIds[0]).type || '';
+  return type.includes('Conspiracy') || type.includes('Vanguard');
+};
+
 const finalizeBotDecks = async (
   seats: SeatState[],
   basicsCards: any[],
@@ -229,6 +239,8 @@ export const startHandler = async (req: Request, res: Response) => {
         const oracle = originals.find((o) => seat.remainingPool.includes(o));
         if (!oracle) continue;
 
+        if (oracleIsConspiracyOrVanguard(oracle)) continue;
+
         const land = oracleIsLand(oracle);
         if (land && seat.landCount >= seat.maxLands) continue;
         if (!land && seat.spellCount >= seat.maxSpells) continue;
@@ -328,6 +340,7 @@ export const stepHandler = async (req: Request, res: Response) => {
       if (seat.mainboard.length >= seat.deckSize || seat.remainingPool.length === 0) continue;
 
       const candidates = seat.remainingPool.filter((oracle) => {
+        if (oracleIsConspiracyOrVanguard(oracle)) return false;
         const land = oracleIsLand(oracle);
         if (land && seat.landCount >= seat.maxLands) return false;
         if (!land && seat.spellCount >= seat.maxSpells) return false;
@@ -408,6 +421,7 @@ export const stepHandler = async (req: Request, res: Response) => {
       stillActive = session.seats.some((seat) => {
         if (seat.mainboard.length >= seat.deckSize || seat.remainingPool.length === 0) return false;
         return seat.remainingPool.some((oracle) => {
+          if (oracleIsConspiracyOrVanguard(oracle)) return false;
           const land = oracleIsLand(oracle);
           if (land && seat.landCount >= seat.maxLands) return false;
           if (!land && seat.spellCount >= seat.maxSpells) return false;

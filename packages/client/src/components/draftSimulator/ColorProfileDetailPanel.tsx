@@ -4,21 +4,16 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { isManaFixingLand } from '@utils/cardutil';
 import type CardType from '@utils/datatypes/Card';
 import type { CardDetails } from '@utils/datatypes/Card';
-import type {
-  ArchetypeSkeleton,
-  BuiltDeck,
-  CardMeta,
-  SkeletonCard,
-  SlimPool,
-} from '@utils/datatypes/SimulationReport';
+import type { ArchetypeSkeleton, BuiltDeck, CardMeta, SkeletonCard, SlimPool } from '@utils/datatypes/SimulationReport';
 
-import Link from '../base/Link';
-import Text from '../base/Text';
-import withAutocard from '../WithAutocard';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import { buildOracleRemapping, loadDraftRecommender, localRecommend } from '../../utils/draftBot';
 import { buildClusterRecommendationInput } from '../../utils/draftSimulatorClustering';
 import { archetypeFullName } from '../../utils/draftSimulatorThemes';
+import Link from '../base/Link';
+import Text from '../base/Text';
+import withAutocard from '../WithAutocard';
+import { SkeletonCardImage } from './ClusterDetailPanel';
 import {
   CardTypeShareChart,
   CardTypeShareLegend,
@@ -27,7 +22,6 @@ import {
   EloDistributionChart,
   ManaCurveShareChart,
 } from './SimulatorCharts';
-import { SkeletonCardImage } from './ClusterDetailPanel';
 
 const AutocardLink = withAutocard(Link);
 
@@ -40,7 +34,7 @@ const CARD_TABS = [
   { key: 'recommendations', label: 'Recommendations' },
 ] as const;
 
-type CardTab = typeof CARD_TABS[number]['key'];
+type CardTab = (typeof CARD_TABS)[number]['key'];
 
 function isBasicLandOracle(oracleId: string, cardMeta: Record<string, CardMeta>): boolean {
   const type = cardMeta[oracleId]?.type ?? '';
@@ -63,8 +57,8 @@ function buildRankedCards(
 
   for (const poolIndex of poolIndices) {
     const cards = hasDecks
-      ? deckBuilds?.[poolIndex]?.mainboard ?? []
-      : slimPools[poolIndex]?.picks.map((pick) => pick.oracle_id) ?? [];
+      ? (deckBuilds?.[poolIndex]?.mainboard ?? [])
+      : (slimPools[poolIndex]?.picks.map((pick) => pick.oracle_id) ?? []);
     for (const oracle of new Set(cards)) {
       if (isBasicLandOracle(oracle, cardMeta)) continue;
       counts.set(oracle, (counts.get(oracle) ?? 0) + 1);
@@ -98,8 +92,8 @@ function buildDistinctCards(
 
   for (let poolIndex = 0; poolIndex < slimPools.length; poolIndex++) {
     const cards = hasDecks
-      ? deckBuilds?.[poolIndex]?.mainboard ?? []
-      : slimPools[poolIndex]?.picks.map((pick) => pick.oracle_id) ?? [];
+      ? (deckBuilds?.[poolIndex]?.mainboard ?? [])
+      : (slimPools[poolIndex]?.picks.map((pick) => pick.oracle_id) ?? []);
     for (const oracle of new Set(cards)) {
       if (isBasicLandOracle(oracle, cardMeta)) continue;
       globalCounts.set(oracle, (globalCounts.get(oracle) ?? 0) + 1);
@@ -107,7 +101,11 @@ function buildDistinctCards(
     }
   }
 
-  const coreIds = new Set(buildRankedCards(poolIndices, slimPools, cardMeta, deckBuilds).slice(0, 12).map((card) => card.oracle_id));
+  const coreIds = new Set(
+    buildRankedCards(poolIndices, slimPools, cardMeta, deckBuilds)
+      .slice(0, 12)
+      .map((card) => card.oracle_id),
+  );
   const otherTotal = Math.max(1, globalTotal - subsetTotal);
 
   return [...subsetCounts.entries()]
@@ -167,7 +165,10 @@ const ColorProfileDetailPanel: React.FC<{
   const [recommendationsError, setRecommendationsError] = useState<string | null>(null);
   const [recommendations, setRecommendations] = useState<ColorProfileRecommendation[]>([]);
 
-  const commonCards = useMemo(() => buildRankedCards(poolIndices, slimPools, cardMeta, deckBuilds), [poolIndices, slimPools, cardMeta, deckBuilds]);
+  const commonCards = useMemo(
+    () => buildRankedCards(poolIndices, slimPools, cardMeta, deckBuilds),
+    [poolIndices, slimPools, cardMeta, deckBuilds],
+  );
   const distinctCards = useMemo(
     () => buildDistinctCards(poolIndices, slimPools, cardMeta, deckBuilds),
     [poolIndices, slimPools, cardMeta, deckBuilds],
@@ -180,7 +181,10 @@ const ColorProfileDetailPanel: React.FC<{
         colorProfile: colorPair,
         poolCount: poolIndices.length,
         poolIndices,
-        coreCards: { default: commonCards, excludingFixing: commonCards.filter((card) => !isFixingOracle(card.oracle_id, cardMeta)) },
+        coreCards: {
+          default: commonCards,
+          excludingFixing: commonCards.filter((card) => !isFixingOracle(card.oracle_id, cardMeta)),
+        },
         distinctCards: {
           default: distinctCards,
           excludingFixing: distinctCards.filter((card) => !isFixingOracle(card.oracle_id, cardMeta)),
@@ -188,7 +192,7 @@ const ColorProfileDetailPanel: React.FC<{
         occasionalCards: [],
         sideboardCards: [],
         lockPairs: [],
-      } as ArchetypeSkeleton),
+      }) as ArchetypeSkeleton,
     [colorPair, poolIndices, commonCards, distinctCards, cardMeta],
   );
 
@@ -199,8 +203,8 @@ const ColorProfileDetailPanel: React.FC<{
   const visibleDistinctCards = useMemo(
     () =>
       excludeManaFixingLands
-        ? pseudoSkeleton.distinctCards?.excludingFixing ?? []
-        : pseudoSkeleton.distinctCards?.default ?? [],
+        ? (pseudoSkeleton.distinctCards?.excludingFixing ?? [])
+        : (pseudoSkeleton.distinctCards?.default ?? []),
     [excludeManaFixingLands, pseudoSkeleton],
   );
 
@@ -217,7 +221,9 @@ const ColorProfileDetailPanel: React.FC<{
       const ranked =
         deck.deckbuildRatings && deck.deckbuildRatings.length > 0
           ? deck.deckbuildRatings.filter((entry) => mainboardSet.has(entry.oracle)).slice(0, representativeTopN)
-          : deck.mainboard.slice(0, representativeTopN).map((oracle, index) => ({ oracle, rating: representativeTopN - index }));
+          : deck.mainboard
+              .slice(0, representativeTopN)
+              .map((oracle, index) => ({ oracle, rating: representativeTopN - index }));
 
       ranked.forEach((entry, index) => {
         const rankWeight = (representativeTopN - index) / representativeTopN;
@@ -251,7 +257,10 @@ const ColorProfileDetailPanel: React.FC<{
 
   useEffect(() => {
     let cancelled = false;
-    if (cardTab !== 'recommendations') return () => { cancelled = true; };
+    if (cardTab !== 'recommendations')
+      return () => {
+        cancelled = true;
+      };
     if (recommendationInput.seedOracles.length === 0) {
       setRecommendations([]);
       setRecommendationsError(null);
@@ -328,8 +337,16 @@ const ColorProfileDetailPanel: React.FC<{
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1 pt-2">
           <div>
-            <div><Text semibold className="text-lg leading-snug">{archetypeFullName(colorPair)}</Text></div>
-            <div><Text xs className="text-text-secondary">{poolIndices.length} seats · {pct}%</Text></div>
+            <div>
+              <Text semibold className="text-lg leading-snug">
+                {archetypeFullName(colorPair)}
+              </Text>
+            </div>
+            <div>
+              <Text xs className="text-text-secondary">
+                {poolIndices.length} seats · {pct}%
+              </Text>
+            </div>
           </div>
           {topArchetypeLabels && topArchetypeLabels.length > 0 && (
             <div className="mt-1.5 flex flex-wrap gap-1">
@@ -388,35 +405,38 @@ const ColorProfileDetailPanel: React.FC<{
           </div>
         )}
 
-        {cardTab === 'staples' && (
-          visibleCommonCards.length > 0 ? (
+        {cardTab === 'staples' &&
+          (visibleCommonCards.length > 0 ? (
             <div className="grid grid-cols-4 md:grid-cols-6 gap-1.5">
               {visibleCommonCards.slice(0, 12).map((card) => (
                 <SkeletonCardImage key={card.oracle_id} card={card} onCardClick={onCardClick} />
               ))}
             </div>
           ) : (
-            <Text sm className="text-text-secondary">No staple cards remain after filtering.</Text>
-          )
-        )}
+            <Text sm className="text-text-secondary">
+              No staple cards remain after filtering.
+            </Text>
+          ))}
 
-        {cardTab === 'distinct' && (
-          visibleDistinctCards.length > 0 ? (
+        {cardTab === 'distinct' &&
+          (visibleDistinctCards.length > 0 ? (
             <div className="grid grid-cols-4 md:grid-cols-6 gap-1.5">
               {visibleDistinctCards.slice(0, 12).map((card) => (
                 <SkeletonCardImage key={card.oracle_id} card={card} onCardClick={onCardClick} />
               ))}
             </div>
           ) : (
-            <Text sm className="text-text-secondary">No distinct cards found for this color profile.</Text>
-          )
-        )}
+            <Text sm className="text-text-secondary">
+              No distinct cards found for this color profile.
+            </Text>
+          ))}
 
-        {cardTab === 'exemplary' && (
-          exemplaryDeck ? (
+        {cardTab === 'exemplary' &&
+          (exemplaryDeck ? (
             <div className="rounded-lg border border-link/30 bg-link/5 px-4 py-4 flex flex-col items-center gap-2 text-center">
               <Text semibold lg className="text-text">
-                Draft {slimPools[exemplaryDeck.poolIndex]!.draftIndex + 1} · Seat {slimPools[exemplaryDeck.poolIndex]!.seatIndex + 1}
+                Draft {slimPools[exemplaryDeck.poolIndex]!.draftIndex + 1} · Seat{' '}
+                {slimPools[exemplaryDeck.poolIndex]!.seatIndex + 1}
               </Text>
               <Text xs className="text-text-secondary">
                 Matches {exemplaryDeck.overlap} representative cards from this color bucket.
@@ -430,9 +450,10 @@ const ColorProfileDetailPanel: React.FC<{
               </button>
             </div>
           ) : (
-            <Text sm className="text-text-secondary">Deck builds are required to show an exemplary deck.</Text>
-          )
-        )}
+            <Text sm className="text-text-secondary">
+              Deck builds are required to show an exemplary deck.
+            </Text>
+          ))}
 
         {cardTab === 'recommendations' && (
           <div className="flex flex-col gap-4">
@@ -449,9 +470,13 @@ const ColorProfileDetailPanel: React.FC<{
                 Recommended Additions
               </Text>
               {recommendationsLoading ? (
-                <Text sm className="text-text-secondary">Generating recommendations…</Text>
+                <Text sm className="text-text-secondary">
+                  Generating recommendations…
+                </Text>
               ) : recommendationsError ? (
-                <Text sm className="text-text-secondary">{recommendationsError}</Text>
+                <Text sm className="text-text-secondary">
+                  {recommendationsError}
+                </Text>
               ) : visibleRecommendations.length > 0 ? (
                 <div className="grid grid-cols-4 md:grid-cols-6 gap-1.5">
                   {visibleRecommendations.map((item) => (
@@ -485,7 +510,9 @@ const ColorProfileDetailPanel: React.FC<{
 
       <div className="flex flex-col gap-4 md:flex-row md:flex-wrap">
         <div className="flex-1 min-w-0">
-          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Deck Color Share</Text>
+          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">
+            Deck Color Share
+          </Text>
           <div className="hidden md:block">
             <DeckColorShareChart deckBuilds={subsetDeckBuilds} cardMeta={cardMeta} />
           </div>
@@ -494,7 +521,9 @@ const ColorProfileDetailPanel: React.FC<{
           </div>
         </div>
         <div className="flex-1 min-w-0">
-          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Card Types</Text>
+          <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">
+            Card Types
+          </Text>
           <div className="hidden md:block">
             <CardTypeShareChart deckBuilds={subsetDeckBuilds} cardMeta={cardMeta} />
           </div>
@@ -504,11 +533,15 @@ const ColorProfileDetailPanel: React.FC<{
         </div>
         <div className="flex-1 min-w-0 flex flex-col gap-4">
           <div>
-            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Mana Curve Share</Text>
+            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">
+              Mana Curve Share
+            </Text>
             <ManaCurveShareChart deckBuilds={subsetDeckBuilds} cardMeta={cardMeta} />
           </div>
           <div>
-            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">Elo Distribution</Text>
+            <Text xs className="text-text-secondary font-medium uppercase tracking-wider mb-1.5">
+              Elo Distribution
+            </Text>
             <EloDistributionChart deckBuilds={subsetDeckBuilds} cardMeta={cardMeta} />
           </div>
         </div>

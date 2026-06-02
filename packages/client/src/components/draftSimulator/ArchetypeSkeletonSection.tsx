@@ -1,10 +1,6 @@
 import React from 'react';
 
-import type {
-  ArchetypeSkeleton,
-  RankedCards,
-  SkeletonCard,
-} from '@utils/datatypes/SimulationReport';
+import type { ArchetypeSkeleton, RankedCards, SkeletonCard } from '@utils/datatypes/SimulationReport';
 
 import { Card, CardBody, CardHeader } from '../base/Card';
 import { Flexbox } from '../base/Layout';
@@ -44,7 +40,17 @@ export const ArchetypeSkeletonSection: React.FC<{
   poolArchetypeLabelsLoading?: boolean;
   skeletonColorProfiles?: Map<number, string>;
   excludeManaFixingLands: boolean;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles, excludeManaFixingLands }) => (
+}> = ({
+  skeletons,
+  totalPools,
+  selectedSkeletonId,
+  onSelectSkeleton,
+  clusterThemesByClusterId,
+  poolArchetypeLabels,
+  poolArchetypeLabelsLoading,
+  skeletonColorProfiles,
+  excludeManaFixingLands,
+}) => (
   <ArchetypeSkeletonSectionInner
     skeletons={skeletons}
     totalPools={totalPools}
@@ -68,9 +74,18 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
   poolArchetypeLabelsLoading?: boolean;
   skeletonColorProfiles?: Map<number, string>;
   excludeManaFixingLands: boolean;
-}> = ({ skeletons, totalPools, selectedSkeletonId, onSelectSkeleton, clusterThemesByClusterId, poolArchetypeLabels, poolArchetypeLabelsLoading, skeletonColorProfiles = new Map(), excludeManaFixingLands }) => {
-
-  const renderSkeleton = (skeleton: ArchetypeSkeleton, skIdx: number) => {
+}> = ({
+  skeletons,
+  totalPools,
+  selectedSkeletonId,
+  onSelectSkeleton,
+  clusterThemesByClusterId,
+  poolArchetypeLabels,
+  poolArchetypeLabelsLoading,
+  skeletonColorProfiles = new Map(),
+  excludeManaFixingLands,
+}) => {
+  const renderSkeleton = (skeleton: ArchetypeSkeleton, _skIdx: number) => {
     // Compute dominant Gwen archetype label for this cluster
     const dominantArchetype = (() => {
       if (!poolArchetypeLabels) return null;
@@ -96,10 +111,7 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
     const isSelected = selectedSkeletonId === skeleton.clusterId;
 
     return (
-      <div
-        key={skeleton.clusterId}
-        className={isSelected ? 'bg-link/5' : 'bg-bg'}
-      >
+      <div key={skeleton.clusterId} className={isSelected ? 'bg-link/5' : 'bg-bg'}>
         <button
           type="button"
           className="flex w-full flex-col gap-1.5 px-4 py-2.5 text-left hover:bg-bg-active transition-colors"
@@ -108,9 +120,11 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
           {/* Title row: name + seats + filtering badge */}
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-semibold tracking-tight text-sm">
-              {poolArchetypeLabelsLoading && !dominantArchetype
-                ? <span className="inline-block h-4 w-28 animate-pulse rounded bg-bg-accent align-middle" />
-                : displayName}
+              {poolArchetypeLabelsLoading && !dominantArchetype ? (
+                <span className="inline-block h-4 w-28 animate-pulse rounded bg-bg-accent align-middle" />
+              ) : (
+                displayName
+              )}
             </span>
             <span className="text-[11px] text-text-secondary">
               {skeleton.poolCount} seats · {((skeleton.poolCount / totalPools) * 100).toFixed(1)}%

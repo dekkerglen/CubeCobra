@@ -15,17 +15,12 @@ import {
   buildOracleRemapping,
   countOutOfVocabOracles,
   encodePools,
-  loadDraftRecommender,
   loadDraftBot,
+  loadDraftRecommender,
   localRecommend,
   reshapeEmbeddings,
   WebGLInferenceError,
 } from '../utils/draftBot';
-import {
-  buildClientSimulationSetup,
-  ClientSimulationSetupError,
-  fetchCubeForClientSimulation,
-} from '../utils/draftSimulatorSetup';
 import {
   assignArchetypeLabels,
   buildClusterRecommendationInput,
@@ -35,7 +30,17 @@ import {
   LEIDEN_RES_DIVISOR,
   loadArchetypeData,
 } from '../utils/draftSimulatorClustering';
-import { type ClusteringCache, getStoragePressureNotice, patchClusteringCache, SCORING_ALGORITHM_VERSION } from '../utils/draftSimulatorLocalStorage';
+import {
+  type ClusteringCache,
+  getStoragePressureNotice,
+  patchClusteringCache,
+  SCORING_ALGORITHM_VERSION,
+} from '../utils/draftSimulatorLocalStorage';
+import {
+  buildClientSimulationSetup,
+  ClientSimulationSetupError,
+  fetchCubeForClientSimulation,
+} from '../utils/draftSimulatorSetup';
 
 type ExtendedRequestInit = RequestInit & { timeout?: number };
 
@@ -124,12 +129,7 @@ async function precomputeClusterRecommendations(
     const batchResults = await Promise.all(
       batch.map(async (skeleton) => {
         throwIfAborted(signal);
-        const { seedOracles } = buildClusterRecommendationInput(
-          skeleton,
-          runData.slimPools,
-          runData.cardMeta,
-          decks,
-        );
+        const { seedOracles } = buildClusterRecommendationInput(skeleton, runData.slimPools, runData.cardMeta, decks);
         if (seedOracles.length === 0) return { ...skeleton, recommendedAdds: [] };
         const { adds } = await localRecommend(seedOracles, remapping);
         throwIfAborted(signal);
@@ -213,7 +213,9 @@ export default function useSimulationRun({
   onPersistCompletedRun,
 }: UseSimulationRunArgs) {
   const [status, setStatus] = useState<'idle' | 'running' | 'completed' | 'failed'>('idle');
-  const [simPhase, setSimPhase] = useState<'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'cluster' | 'save' | null>(null);
+  const [simPhase, setSimPhase] = useState<'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'cluster' | 'save' | null>(
+    null,
+  );
   const [modelLoadProgress, setModelLoadProgress] = useState(0);
   const [simProgress, setSimProgress] = useState(0);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
@@ -306,7 +308,9 @@ export default function useSimulationRun({
     try {
       const setupTimeout = new AbortController();
       const setupTimeoutId = setTimeout(() => setupTimeout.abort(), 120_000);
-      const setupSignal = AbortSignal.any ? AbortSignal.any([controller.signal, setupTimeout.signal]) : setupTimeout.signal;
+      const setupSignal = AbortSignal.any
+        ? AbortSignal.any([controller.signal, setupTimeout.signal])
+        : setupTimeout.signal;
       let setupData: SimulationSetupResponse;
       try {
         const setupStart = performance.now();
@@ -371,7 +375,7 @@ export default function useSimulationRun({
 
       let effectiveGpuBatchSize = gpuBatchSize;
       const retryNotices: string[] = [];
-      const runWithGpuRetry = async <T,>(
+      const runWithGpuRetry = async <T>(
         label: string,
         fn: (batchSize: number) => Promise<T>,
         onRetry?: () => void,
@@ -383,7 +387,9 @@ export default function useSimulationRun({
             if (!(err instanceof WebGLInferenceError)) throw err;
             const next = nextLowerGpuBatchSize(effectiveGpuBatchSize);
             if (!next) throw err;
-            retryNotices.push(`${label} exceeded GPU memory at batch size ${effectiveGpuBatchSize}; retried at ${next}.`);
+            retryNotices.push(
+              `${label} exceeded GPU memory at batch size ${effectiveGpuBatchSize}; retried at ${next}.`,
+            );
             effectiveGpuBatchSize = next;
             onRetry?.();
           }
@@ -394,7 +400,8 @@ export default function useSimulationRun({
       const simulationStart = performance.now();
       const report = await runWithGpuRetry(
         'Draft simulation',
-        (bs) => runClientSimulation(setupData as SimulationSetupResponse, numDrafts, setSimProgress, controller.signal, bs),
+        (bs) =>
+          runClientSimulation(setupData as SimulationSetupResponse, numDrafts, setSimProgress, controller.signal, bs),
         () => setSimProgress(0),
       );
       throwIfAborted(controller.signal);
@@ -403,9 +410,8 @@ export default function useSimulationRun({
 
       setSimPhase('deckbuild');
       const deckbuildStart = performance.now();
-      const deckResult = await runWithGpuRetry(
-        'Deckbuilding',
-        (bs) => buildAllDecks(report.slimPools, setupData as SimulationSetupResponse, controller.signal, bs),
+      const deckResult = await runWithGpuRetry('Deckbuilding', (bs) =>
+        buildAllDecks(report.slimPools, setupData as SimulationSetupResponse, controller.signal, bs),
       );
       throwIfAborted(controller.signal);
       deckbuildMs = performance.now() - deckbuildStart;
@@ -484,7 +490,9 @@ export default function useSimulationRun({
       const persistPromise = onPersistCompletedRun(entry, runData, clusterCache)
         .then((persistResult) => {
           if (!persistResult.persisted) {
-            onSetStorageNotice('Results are shown below, but this browser did not have enough local storage to save them.');
+            onSetStorageNotice(
+              'Results are shown below, but this browser did not have enough local storage to save them.',
+            );
           } else if (retryNotices.length > 0 || storagePressureNotice || clusteringNotice) {
             onSetStorageNotice([...retryNotices, storagePressureNotice, clusteringNotice].filter(Boolean).join(' '));
           } else {
@@ -503,7 +511,9 @@ export default function useSimulationRun({
         const capturedClusterCache = clusterCache;
         const capturedSignal = controller.signal;
         void Promise.all([recommenderWarmupPromise, persistPromise])
-          .then(() => precomputeClusterRecommendations(capturedClusterCache.skeletons, runData, deckResult.decks, capturedSignal))
+          .then(() =>
+            precomputeClusterRecommendations(capturedClusterCache.skeletons, runData, deckResult.decks, capturedSignal),
+          )
           .then((recommendedSkeletons) => {
             if (capturedSignal.aborted) return;
             void patchClusteringCache(cubeId, entry.ts, { skeletons: recommendedSkeletons });

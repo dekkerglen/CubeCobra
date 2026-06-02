@@ -51,12 +51,7 @@ const baseRunData = (
 describe('computeFilteredCardStats', () => {
   it('recomputes stats only for the selected pool set', () => {
     const setup: Pick<SimulationSetupResponse, 'initialPacks' | 'packSteps' | 'numSeats'> = {
-      initialPacks: [
-        [
-          [['a', 'b']],
-          [['c', 'd']],
-        ],
-      ],
+      initialPacks: [[[['a', 'b']], [['c', 'd']]]],
       packSteps: [[{ action: 'pick', amount: 1 }]],
       numSeats: 2,
     };
@@ -111,7 +106,12 @@ describe('computeFilteredCardStats', () => {
   it('handles trashrandom using recorded randomTrashByPool data', () => {
     const setup: Pick<SimulationSetupResponse, 'initialPacks' | 'packSteps' | 'numSeats'> = {
       initialPacks: [[[['a', 'b']]]],
-      packSteps: [[{ action: 'trashrandom', amount: 1 }, { action: 'pick', amount: 1 }]],
+      packSteps: [
+        [
+          { action: 'trashrandom', amount: 1 },
+          { action: 'pick', amount: 1 },
+        ],
+      ],
       numSeats: 1,
     };
 

@@ -85,6 +85,9 @@ describe('Followers API', () => {
   it('should handle more followers than the limit', async () => {
     const mockUser = createUser({ following: ['user1', 'user2', 'user3', 'user4'] });
     (userDao.getById as jest.Mock).mockResolvedValue(mockUser);
+    // The handler reads followers via userDao.getAllFollowers — `following`
+    // on the mock user wouldn't drive pagination on its own.
+    (userDao.getAllFollowers as jest.Mock).mockResolvedValue(['user1', 'user2', 'user3', 'user4']);
     const usersSetOne = [createUser({ id: 'user1' }), createUser({ id: 'user2' })];
     const usersSetTwo = [createUser({ id: 'user3' }), createUser({ id: 'user4' })];
     (userDao.batchGet as jest.Mock).mockResolvedValueOnce(usersSetOne);

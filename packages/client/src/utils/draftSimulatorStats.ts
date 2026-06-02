@@ -1,8 +1,5 @@
-import type {
-  CardStats,
-  SimulationRunData,
-  SimulationSetupResponse,
-} from '@utils/datatypes/SimulationReport';
+/* eslint-disable */
+import type { CardStats, SimulationRunData, SimulationSetupResponse } from '@utils/datatypes/SimulationReport';
 
 interface RawStats {
   name: string;

@@ -115,7 +115,8 @@ describe('isManaFixingLand', () => {
       isManaFixingLand(
         land({
           name: 'Evolving Wilds',
-          oracle_text: '{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.',
+          oracle_text:
+            '{T}, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.',
         }),
       ),
     ).toBe(true);
@@ -147,7 +148,7 @@ describe('isManaFixingLand', () => {
         land({
           name: "Mishra's Factory",
           type: 'Land',
-          oracle_text: '{T}: Add {C}. {1}: Mishra\'s Factory becomes a 2/2 Assembly-Worker artifact creature.',
+          oracle_text: "{T}: Add {C}. {1}: Mishra's Factory becomes a 2/2 Assembly-Worker artifact creature.",
           produced_mana: ['C'],
         }),
       ),

@@ -1,0 +1,78 @@
+'use strict';
+var __createBinding =
+  (this && this.__createBinding) ||
+  (Object.create
+    ? function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        var desc = Object.getOwnPropertyDescriptor(m, k);
+        if (!desc || ('get' in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+          desc = {
+            enumerable: true,
+            get: function () {
+              return m[k];
+            },
+          };
+        }
+        Object.defineProperty(o, k2, desc);
+      }
+    : function (o, m, k, k2) {
+        if (k2 === undefined) k2 = k;
+        o[k2] = m[k];
+      });
+var __setModuleDefault =
+  (this && this.__setModuleDefault) ||
+  (Object.create
+    ? function (o, v) {
+        Object.defineProperty(o, 'default', { enumerable: true, value: v });
+      }
+    : function (o, v) {
+        o['default'] = v;
+      });
+var __importStar =
+  (this && this.__importStar) ||
+  function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null)
+      for (var k in mod)
+        if (k !== 'default' && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+  };
+Object.defineProperty(exports, '__esModule', { value: true });
+const cdk = __importStar(require('aws-cdk-lib'));
+const assertions_1 = require('aws-cdk-lib/assertions');
+const route53 = __importStar(require('aws-cdk-lib/aws-route53'));
+const route53_1 = require('../lib/route53');
+const base_test_stack_1 = require('./base-test-stack');
+// Mock HostedZone.fromLookup() to return a fake hosted zone
+jest.spyOn(route53.HostedZone, 'fromLookup').mockImplementation(
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  (_scope, _id, _props) => ({
+    hostedZoneId: 'Z123456ABCDEF',
+  }),
+);
+class TestStack extends base_test_stack_1.BaseTestStack {
+  constructor(scope, id) {
+    super(scope, id);
+    new route53_1.Route53(this, 'TestRoute53', {
+      domain: 'example.com',
+      dnsName: 'some-lb.amazonaws.com',
+    });
+  }
+}
+test('Creates an Alias A Record in Route 53', () => {
+  const app = new cdk.App();
+  const stack = new TestStack(app, 'TestStack');
+  const template = assertions_1.Template.fromStack(stack);
+  template.hasResourceProperties('AWS::Route53::RecordSet', {
+    Name: 'example.com',
+    Type: 'A',
+    HostedZoneId: 'Z123456ABCDEF', // Mocked value
+    AliasTarget: {
+      DNSName: 'some-lb.amazonaws.com',
+      HostedZoneId: 'Z3AADJGX6KTTL2', // AWS ALB Hosted Zone ID
+    },
+  });
+});
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJmaWxlIjoicm91dGU1My50ZXN0LmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXMiOlsicm91dGU1My50ZXN0LnRzIl0sIm5hbWVzIjpbXSwibWFwcGluZ3MiOiI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFBQSxpREFBbUM7QUFDbkMsdURBQWtEO0FBQ2xELGlFQUFtRDtBQUduRCw0Q0FBeUM7QUFDekMsdURBQWtEO0FBRWxELDREQUE0RDtBQUM1RCxJQUFJLENBQUMsS0FBSyxDQUFDLE9BQU8sQ0FBQyxVQUFVLEVBQUUsWUFBWSxDQUFDLENBQUMsa0JBQWtCO0FBQzdELDZEQUE2RDtBQUM3RCxDQUFDLE1BQWlCLEVBQUUsR0FBVyxFQUFFLE1BQXVDLEVBQUUsRUFBRSxDQUMxRSxDQUFDO0lBQ0MsWUFBWSxFQUFFLGVBQWU7Q0FDOUIsQ0FBd0IsQ0FDNUIsQ0FBQztBQUVGLE1BQU0sU0FBVSxTQUFRLCtCQUFhO0lBQ25DLFlBQVksS0FBZ0IsRUFBRSxFQUFVO1FBQ3RDLEtBQUssQ0FBQyxLQUFLLEVBQUUsRUFBRSxDQUFDLENBQUM7UUFFakIsSUFBSSxpQkFBTyxDQUFDLElBQUksRUFBRSxhQUFhLEVBQUU7WUFDL0IsTUFBTSxFQUFFLGFBQWE7WUFDckIsT0FBTyxFQUFFLHVCQUF1QjtTQUNqQyxDQUFDLENBQUM7SUFDTCxDQUFDO0NBQ0Y7QUFFRCxJQUFJLENBQUMsdUNBQXVDLEVBQUUsR0FBRyxFQUFFO0lBQ2pELE1BQU0sR0FBRyxHQUFHLElBQUksR0FBRyxDQUFDLEdBQUcsRUFBRSxDQUFDO0lBQzFCLE1BQU0sS0FBSyxHQUFHLElBQUksU0FBUyxDQUFDLEdBQUcsRUFBRSxXQUFXLENBQUMsQ0FBQztJQUM5QyxNQUFNLFFBQVEsR0FBRyxxQkFBUSxDQUFDLFNBQVMsQ0FBQyxLQUFLLENBQUMsQ0FBQztJQUUzQyxRQUFRLENBQUMscUJBQXFCLENBQUMseUJBQXlCLEVBQUU7UUFDeEQsSUFBSSxFQUFFLGFBQWE7UUFDbkIsSUFBSSxFQUFFLEdBQUc7UUFDVCxZQUFZLEVBQUUsZUFBZSxFQUFFLGVBQWU7UUFDOUMsV0FBVyxFQUFFO1lBQ1gsT0FBTyxFQUFFLHVCQUF1QjtZQUNoQyxZQUFZLEVBQUUsZ0JBQWdCLEVBQUUseUJBQXlCO1NBQzFEO0tBQ0YsQ0FBQyxDQUFDO0FBQ0wsQ0FBQyxDQUFDLENBQUMiLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgKiBhcyBjZGsgZnJvbSAnYXdzLWNkay1saWInO1xuaW1wb3J0IHsgVGVtcGxhdGUgfSBmcm9tICdhd3MtY2RrLWxpYi9hc3NlcnRpb25zJztcbmltcG9ydCAqIGFzIHJvdXRlNTMgZnJvbSAnYXdzLWNkay1saWIvYXdzLXJvdXRlNTMnO1xuaW1wb3J0IHsgQ29uc3RydWN0IH0gZnJvbSAnY29uc3RydWN0cyc7XG5cbmltcG9ydCB7IFJvdXRlNTMgfSBmcm9tICcuLi9saWIvcm91dGU1Myc7XG5pbXBvcnQgeyBCYXNlVGVzdFN0YWNrIH0gZnJvbSAnLi9iYXNlLXRlc3Qtc3RhY2snO1xuXG4vLyBNb2NrIEhvc3RlZFpvbmUuZnJvbUxvb2t1cCgpIHRvIHJldHVybiBhIGZha2UgaG9zdGVkIHpvbmVcbmplc3Quc3B5T24ocm91dGU1My5Ib3N0ZWRab25lLCAnZnJvbUxvb2t1cCcpLm1vY2tJbXBsZW1lbnRhdGlvbihcbiAgLy8gZXNsaW50LWRpc2FibGUtbmV4dC1saW5lIEB0eXBlc2NyaXB0LWVzbGludC9uby11bnVzZWQtdmFyc1xuICAoX3Njb3BlOiBDb25zdHJ1Y3QsIF9pZDogc3RyaW5nLCBfcHJvcHM6IHJvdXRlNTMuSG9zdGVkWm9uZVByb3ZpZGVyUHJvcHMpID0+XG4gICAgKHtcbiAgICAgIGhvc3RlZFpvbmVJZDogJ1oxMjM0NTZBQkNERUYnLFxuICAgIH0pIGFzIHJvdXRlNTMuSUhvc3RlZFpvbmUsXG4pO1xuXG5jbGFzcyBUZXN0U3RhY2sgZXh0ZW5kcyBCYXNlVGVzdFN0YWNrIHtcbiAgY29uc3RydWN0b3Ioc2NvcGU6IENvbnN0cnVjdCwgaWQ6IHN0cmluZykge1xuICAgIHN1cGVyKHNjb3BlLCBpZCk7XG5cbiAgICBuZXcgUm91dGU1Myh0aGlzLCAnVGVzdFJvdXRlNTMnLCB7XG4gICAgICBkb21haW46ICdleGFtcGxlLmNvbScsXG4gICAgICBkbnNOYW1lOiAnc29tZS1sYi5hbWF6b25hd3MuY29tJyxcbiAgICB9KTtcbiAgfVxufVxuXG50ZXN0KCdDcmVhdGVzIGFuIEFsaWFzIEEgUmVjb3JkIGluIFJvdXRlIDUzJywgKCkgPT4ge1xuICBjb25zdCBhcHAgPSBuZXcgY2RrLkFwcCgpO1xuICBjb25zdCBzdGFjayA9IG5ldyBUZXN0U3RhY2soYXBwLCAnVGVzdFN0YWNrJyk7XG4gIGNvbnN0IHRlbXBsYXRlID0gVGVtcGxhdGUuZnJvbVN0YWNrKHN0YWNrKTtcblxuICB0ZW1wbGF0ZS5oYXNSZXNvdXJjZVByb3BlcnRpZXMoJ0FXUzo6Um91dGU1Mzo6UmVjb3JkU2V0Jywge1xuICAgIE5hbWU6ICdleGFtcGxlLmNvbScsXG4gICAgVHlwZTogJ0EnLFxuICAgIEhvc3RlZFpvbmVJZDogJ1oxMjM0NTZBQkNERUYnLCAvLyBNb2NrZWQgdmFsdWVcbiAgICBBbGlhc1RhcmdldDoge1xuICAgICAgRE5TTmFtZTogJ3NvbWUtbGIuYW1hem9uYXdzLmNvbScsXG4gICAgICBIb3N0ZWRab25lSWQ6ICdaM0FBREpHWDZLVFRMMicsIC8vIEFXUyBBTEIgSG9zdGVkIFpvbmUgSURcbiAgICB9LFxuICB9KTtcbn0pO1xuIl19

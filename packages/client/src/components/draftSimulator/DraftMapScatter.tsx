@@ -1,6 +1,14 @@
 import React, { useMemo } from 'react';
 
-import { Chart as ChartJS, LinearScale, PointElement, ScatterController, Tooltip, Legend, type ChartOptions } from 'chart.js';
+import {
+  Chart as ChartJS,
+  type ChartOptions,
+  Legend,
+  LinearScale,
+  PointElement,
+  ScatterController,
+  Tooltip,
+} from 'chart.js';
 import { Scatter } from 'react-chartjs-2';
 
 import Text from '../base/Text';
@@ -45,7 +53,9 @@ const CLUSTER_COLORS = [
 ];
 
 function getColorProfileCodes(colorPair: string): string[] {
-  const letters = colorPair.split('').filter((c) => c in MTG_COLORS && c !== 'C' && c !== 'M');
+  const letters = colorPair
+    .split('')
+    .filter((c) => Object.prototype.hasOwnProperty.call(MTG_COLORS, c) && c !== 'C' && c !== 'M');
   return letters.length === 0 ? ['C'] : letters;
 }
 
@@ -84,14 +94,6 @@ const DraftMapScatter: React.FC<{
   colorMode: DraftMapColorMode;
   onSelectPoint: (point: DraftMapPoint) => void;
 }> = ({ points, selectedPoolIndex, activePoolIndexSet, colorMode, onSelectPoint }) => {
-  if (points.length === 0) {
-    return (
-      <Text sm className="text-text-secondary">
-        Draft map is unavailable for this run.
-      </Text>
-    );
-  }
-
   const hasActiveFilter = activePoolIndexSet !== null;
   const isInActiveFilter = (point: DraftMapPoint) => !hasActiveFilter || activePoolIndexSet.has(point.poolIndex);
   const pointBaseColor = (point: DraftMapPoint) => {
@@ -109,7 +111,9 @@ const DraftMapScatter: React.FC<{
         {
           label: 'Draft decks',
           data: points,
-          backgroundColor: points.map((point) => hexToRgba(pointBaseColor(point), isInActiveFilter(point) ? 0.9 : 0.15)),
+          backgroundColor: points.map((point) =>
+            hexToRgba(pointBaseColor(point), isInActiveFilter(point) ? 0.9 : 0.15),
+          ),
           borderColor: 'transparent',
           borderWidth: 0,
           pointRadius: points.map((point) => (isInActiveFilter(point) ? 4 : 3)),
@@ -130,6 +134,9 @@ const DraftMapScatter: React.FC<{
           : []),
       ],
     }),
+    // isInActiveFilter / pointBaseColor are inlined-closure helpers derived from
+    // these inputs; listing the inputs is what actually drives invalidation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [points, selectedPoint, colorMode, activePoolIndexSet],
   );
 
@@ -157,12 +164,15 @@ const DraftMapScatter: React.FC<{
     [selectedPoint, points, onSelectPoint],
   );
 
-  return (
-    <Scatter
-      data={data}
-      options={options}
-    />
-  );
+  if (points.length === 0) {
+    return (
+      <Text sm className="text-text-secondary">
+        Draft map is unavailable for this run.
+      </Text>
+    );
+  }
+
+  return <Scatter data={data} options={options} />;
 };
 
 export default React.memo(DraftMapScatter);

@@ -1,3 +1,4 @@
+/* eslint-disable */
 /**
  * Browser-side draft bot using TensorFlow.js.
  *

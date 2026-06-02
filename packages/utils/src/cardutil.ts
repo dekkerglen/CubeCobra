@@ -638,13 +638,15 @@ export const isManaFixingLand = (details: CardDetailsType): boolean => {
   return BASIC_LAND_TYPE_NAMES.some((name) => text.includes(name));
 };
 
+const UNREASONABLE_PROMO_TYPES = [
+  'surgefoil', 'galaxyfoil', 'textured', 'serialized', 'gilded',
+  'neonink', 'oilslick', 'rainbowfoil', 'confettifoil', 'embossed',
+  'boosterfun', 'promopack', 'prerelease', 'datestamped',
+];
+
 const arePromoTypesReasonable = (card: CardDetailsType): boolean => {
-  return (
-    card.promo_types === undefined ||
-    //Post Omenpaths support (https://scryfall.com/blog/through-the-omenpaths-added-plus-english-printed-text-support-235) ll
-    //UB cards have this promo type
-    (Array.isArray(card.promo_types) && card.promo_types.length === 1 && card.promo_types[0] === 'universesbeyond')
-  );
+  if (!card.promo_types || card.promo_types.length === 0) return true;
+  return !card.promo_types.some((type) => UNREASONABLE_PROMO_TYPES.includes(type));
 };
 
 export function reasonableCard(card: CardDetailsType): boolean {
@@ -659,6 +661,7 @@ export function reasonableCard(card: CardDetailsType): boolean {
     card.tcgplayer_id !== undefined &&
     card.collector_number.indexOf('★') === -1 &&
     card.layout !== 'art_series' &&
+    card.layout !== 'double_faced_token' &&
     !card?.hasFlavorName
   );
 }

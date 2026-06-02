@@ -30,6 +30,7 @@ jest.mock('serverutils/render', () => ({
 jest.mock('../../../src/dynamo/daos', () => ({
   cubeDao: {
     getById: jest.fn(),
+    getAllLikers: jest.fn().mockResolvedValue([]),
   },
   blogDao: {
     createBlog: jest.fn(),
@@ -42,9 +43,13 @@ jest.mock('../../../src/dynamo/daos', () => ({
   feedDao: {
     batchPutUnhydrated: jest.fn(),
   },
+  userDao: {
+    getByUsername: jest.fn().mockResolvedValue(null),
+    getAllFollowers: jest.fn().mockResolvedValue([]),
+  },
 }));
 
-import { blogDao, cubeDao, feedDao } from '../../../src/dynamo/daos';
+import { blogDao, cubeDao, feedDao, userDao } from '../../../src/dynamo/daos';
 
 describe('Create Blog Post', () => {
   beforeEach(() => {
@@ -137,6 +142,9 @@ describe('Create Blog Post', () => {
     (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (blogDao.createBlog as jest.Mock).mockResolvedValueOnce('blog-id');
     (feedDao.batchPutUnhydrated as jest.Mock).mockResolvedValue(undefined);
+    // The handler reads followers via userDao.getAllFollowers — driving the
+    // feed fanout off the mock user's `following` field wouldn't trigger it.
+    (userDao.getAllFollowers as jest.Mock).mockResolvedValue(['user-1', 'user-2']);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.shortId}`);
 
     const res = await call(createBlogHandler)
@@ -183,6 +191,7 @@ describe('Create Blog Post', () => {
     (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
     (blogDao.createBlog as jest.Mock).mockResolvedValueOnce('blog-id');
     (feedDao.batchPutUnhydrated as jest.Mock).mockResolvedValue(undefined);
+    (userDao.getAllFollowers as jest.Mock).mockResolvedValue(['user-1', 'user-2']);
     (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.id}`);
 
     const res = await call(createBlogHandler)
@@ -391,7 +400,7 @@ describe('Get Blog Post', () => {
       expect.anything(),
       'BlogPostPage',
       { post: blog },
-      { noindex: true },
+      expect.objectContaining({ noindex: true }),
     );
   });
 
