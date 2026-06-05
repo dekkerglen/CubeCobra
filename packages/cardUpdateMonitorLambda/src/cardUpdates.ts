@@ -4,6 +4,7 @@ import { cardUpdateTaskDao } from '@server/dynamo/daos';
 import { CardUpdateTaskStatus } from '@utils/datatypes/CardUpdateTask';
 
 import { checkEcsTaskHealth, isTaskRunning, startEcsTask } from './utils/ecs';
+import { SCRYFALL_HEADERS } from './utils/scryfall';
 
 interface ScryfallBulkData {
   data: Array<{
@@ -37,7 +38,7 @@ const s3 = new S3({
  */
 async function checkScryfallFileSize(): Promise<{ size: number; updatedAt: string } | null> {
   try {
-    const response = await fetch('https://api.scryfall.com/bulk-data');
+    const response = await fetch('https://api.scryfall.com/bulk-data', { headers: SCRYFALL_HEADERS });
     if (!response.ok) {
       console.error(`Failed to fetch Scryfall bulk data: ${response.status}`);
       return null;
