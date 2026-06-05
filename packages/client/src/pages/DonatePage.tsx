@@ -1,119 +1,27 @@
 import React from 'react';
 
 import { CheckIcon, HeartFillIcon } from '@primer/octicons-react';
-import { PatronLevels } from '@utils/datatypes/Patron';
 
-import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import RenderToRoot from 'components/RenderToRoot';
-import { PatronTierBadge } from 'components/user/PatronBadge';
 import HelpLayout from 'layouts/HelpLayout';
 
 const PATREON_URL = 'https://www.patreon.com/cubecobra';
 const PAYPAL_URL = 'https://www.paypal.me/cubecobra';
 const DISCORD_URL = 'https://discord.gg/YYF9x65Ane';
 
-interface Tier {
-  level: number;
-  price: string;
-  tagline: string;
-  perks: string[];
-  highlight?: boolean;
-}
-
-// Tiers mirror the Cube Cobra Patreon. Prices are documented for context, but
-// the page also points visitors to Patreon for the authoritative pricing.
-const TIERS: Tier[] = [
-  {
-    level: PatronLevels['Cobra Hatchling'],
-    price: 'Entry tier',
-    tagline: 'Support the site and browse ad-free.',
-    perks: [
-      'A completely ad-free Cube Cobra',
-      'A supporter badge on your profile',
-      'Access to supporter-only Discord channels',
-    ],
-  },
-  {
-    level: PatronLevels['Coiling Oracle'],
-    price: 'From $5 / month',
-    tagline: 'Put your cube in front of the whole community.',
-    highlight: true,
-    perks: [
-      'Everything in Cobra Hatchling',
-      'Feature your cube in the rotating Featured Cubes list',
-      'A chance to appear in the daily Pack 1, Pick 1',
-      'The distinctive Coiling Oracle badge',
-    ],
-  },
-  {
-    level: PatronLevels['Lotus Cobra'],
-    price: 'From $15 / month',
-    tagline: 'Help shape where Cube Cobra goes next.',
-    perks: [
-      'Everything in Coiling Oracle',
-      'Submit high-priority feature requests',
-      'Priority input with the development team',
-      'The prestigious top-tier Lotus Cobra badge',
-    ],
-  },
+const PERKS = [
+  'Ad-free browsing across the site',
+  'A supporter badge on your profile',
+  'Access to supporter-only Discord channels',
+  'Higher tiers can queue their cube for the rotating Featured Cubes list',
 ];
 
-const TierCard: React.FC<{ tier: Tier }> = ({ tier }) => (
-  <Card className={`h-full ${tier.highlight ? 'border-2 border-button-accent' : ''}`}>
-    <CardHeader className={tier.highlight ? 'bg-button-accent/10' : undefined}>
-      <Flexbox direction="col" gap="1">
-        <Flexbox direction="row" justify="between" alignItems="center" gap="2">
-          <PatronTierBadge level={tier.level} />
-          {tier.highlight && (
-            <Text sm semibold className="uppercase text-button-accent">
-              Most popular
-            </Text>
-          )}
-        </Flexbox>
-        <Text xl semibold>
-          {PatronLevels[tier.level]}
-        </Text>
-        <Text md className="text-text-secondary">
-          {tier.price}
-        </Text>
-      </Flexbox>
-    </CardHeader>
-    <CardBody className="h-full">
-      <Flexbox direction="col" gap="3" className="h-full">
-        <Text className="text-text-secondary">{tier.tagline}</Text>
-        <Flexbox direction="col" gap="2">
-          {tier.perks.map((perk) => (
-            <Flexbox key={perk} direction="row" alignItems="start" gap="2">
-              <span className="text-green-600 mt-1 flex-shrink-0">
-                <CheckIcon size={14} />
-              </span>
-              <Text md>{perk}</Text>
-            </Flexbox>
-          ))}
-        </Flexbox>
-        <Button
-          type="link"
-          color={tier.highlight ? 'accent' : 'primary'}
-          outline={!tier.highlight}
-          block
-          href={PATREON_URL}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="mt-auto"
-        >
-          Choose {PatronLevels[tier.level]}
-        </Button>
-      </Flexbox>
-    </CardBody>
-  </Card>
-);
-
 const DonatePage: React.FC = () => (
-  <HelpLayout activeHref="/help/donate">
+  <HelpLayout activeHref="/help/donate" noBanner>
     <Flexbox direction="col" gap="4">
       {/* Hero section */}
       <Card>
@@ -126,18 +34,16 @@ const DonatePage: React.FC = () => (
               Support Cube Cobra
             </Text>
             <Text lg className="text-text-secondary max-w-2xl">
-              Cube Cobra is free for everyone, and always will be. It is built and run by a tiny team and paid for by
-              players like you. If the site has made your cubes better, becoming a supporter is what keeps it online and
-              ad-free.
+              Cube Cobra is free to use. If you'd like to support the site, you can donate via{' '}
+              <Link href={PATREON_URL} target="_blank" rel="noopener noreferrer">
+                Patreon
+              </Link>{' '}
+              or{' '}
+              <Link href={PAYPAL_URL} target="_blank" rel="noopener noreferrer">
+                PayPal
+              </Link>
+              .
             </Text>
-            <Flexbox direction="row" gap="2" wrap="wrap" justify="center">
-              <Button type="link" color="accent" href={PATREON_URL} target="_blank" rel="noopener noreferrer">
-                Become a supporter
-              </Button>
-              <Button type="link" color="primary" outline href={PAYPAL_URL} target="_blank" rel="noopener noreferrer">
-                Make a one-time donation
-              </Button>
-            </Flexbox>
           </Flexbox>
         </CardBody>
       </Card>
@@ -150,43 +56,37 @@ const DonatePage: React.FC = () => (
           </Text>
         </CardHeader>
         <CardBody>
-          <Flexbox direction="col" gap="2">
-            <p>
-              Every contribution goes directly toward the cost of running Cube Cobra - servers, card data, image
-              hosting, and the time it takes to keep building new features. There are no investors, and the tools you
-              use every day are never locked behind a paywall.
-            </p>
-            <p>
-              Supporters do not just remove ads. They unlock perks that make their cubes more visible and give them a
-              real voice in how the site grows.
-            </p>
-          </Flexbox>
+          <p>Donations go toward hosting costs and the development time it takes to maintain and improve the site.</p>
         </CardBody>
       </Card>
 
-      {/* Membership tiers */}
-      <Flexbox direction="col" gap="2">
-        <Text xxl semibold>
-          Membership tiers
-        </Text>
-        <Text className="text-text-secondary">
-          Pick the tier that fits you. Every tier includes everything from the tiers before it.
-        </Text>
-        <Row className="mt-2">
-          {TIERS.map((tier) => (
-            <Col key={tier.level} xs={12} md={4} className="mb-2">
-              <TierCard tier={tier} />
-            </Col>
-          ))}
-        </Row>
-        <Text md className="text-text-secondary">
-          Pricing is set on Patreon and may change - see the{' '}
-          <Link href={PATREON_URL} target="_blank" rel="noopener noreferrer">
-            Cube Cobra Patreon
-          </Link>{' '}
-          for current tiers and exact prices.
-        </Text>
-      </Flexbox>
+      {/* Supporter perks */}
+      <Card>
+        <CardHeader>
+          <Text semibold lg>
+            Supporter perks
+          </Text>
+        </CardHeader>
+        <CardBody>
+          <Flexbox direction="col" gap="2">
+            {PERKS.map((perk) => (
+              <Flexbox key={perk} direction="row" alignItems="start" gap="2">
+                <span className="text-green-600 mt-1 flex-shrink-0">
+                  <CheckIcon size={14} />
+                </span>
+                <Text md>{perk}</Text>
+              </Flexbox>
+            ))}
+            <Text md className="text-text-secondary">
+              See the{' '}
+              <Link href={PATREON_URL} target="_blank" rel="noopener noreferrer">
+                Cube Cobra Patreon
+              </Link>{' '}
+              for current tiers and pricing.
+            </Text>
+          </Flexbox>
+        </CardBody>
+      </Card>
 
       {/* After joining */}
       <Card>
@@ -200,7 +100,7 @@ const DonatePage: React.FC = () => (
             <p>
               Once you have joined on Patreon, head to your{' '}
               <Link href="/user/account?nav=patreon">account settings</Link> and link your Patreon account. Linking is
-              what unlocks your badge, ad-free browsing, and the rest of your perks across the site.
+              what unlocks your perks across the site.
             </p>
             <p>
               Having trouble with a subscription or a missing perk? Reach the team any time on{' '}

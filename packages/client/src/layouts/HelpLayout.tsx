@@ -38,10 +38,12 @@ interface HelpLayoutProps {
   activeHref?: string;
   /** Set on pages with brief content (e.g. Contact, Donate) where the taper would extend past the content. */
   noTaper?: boolean;
+  /** Hide ads/banner messages. Set on the donate page, where showing ads would be inappropriate. */
+  noBanner?: boolean;
   children: React.ReactNode;
 }
 
-const HelpLayout: React.FC<HelpLayoutProps> = ({ activeHref, noTaper = false, children }) => {
+const HelpLayout: React.FC<HelpLayoutProps> = ({ activeHref, noTaper = false, noBanner = false, children }) => {
   return (
     <MainLayout useContainer={false} transparentNav>
       <div className="relative min-h-screen">
@@ -112,7 +114,7 @@ const HelpLayout: React.FC<HelpLayoutProps> = ({ activeHref, noTaper = false, ch
 
                 <div className="flex-grow min-w-0">
                   <DynamicFlash />
-                  <Banner />
+                  {!noBanner && <Banner />}
                   <div className="mt-3">{children}</div>
                 </div>
               </Flexbox>

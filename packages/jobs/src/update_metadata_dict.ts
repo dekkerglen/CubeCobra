@@ -17,7 +17,7 @@ import { CardMetadata, Related } from '@utils/datatypes/CardCatalog';
 import { downloadModelsFromS3 } from '../../recommenderService/src/mlutils/downloadModel';
 import { encode, initializeMl, oracleInData } from '../../recommenderService/src/mlutils/ml';
 import { updateCombos } from './update_combos';
-import { downloadJson, listFiles, uploadJson } from './utils/s3';
+import { downloadJson, listFiles, uploadJson, uploadJsonStreaming } from './utils/s3';
 const correlationLimit = 36;
 // import { HierarchicalNSW } from 'hnswlib-node';
 
@@ -539,7 +539,12 @@ const taskId = process.env.CARD_METADATA_TASK_ID;
 
   console.log('Finished all oracles, Writing metadatadict.json');
 
-  await Promise.all([uploadJson('metadatadict.json', metadatadict), uploadJson('indexToOracle.json', indexToOracle)]);
+  // metadatadict is large and growing; stream the upload so JSON.stringify
+  // never materializes the full payload as a single string (see s3.ts)
+  await Promise.all([
+    uploadJsonStreaming('metadatadict.json', metadatadict),
+    uploadJson('indexToOracle.json', indexToOracle),
+  ]);
 
   // Note: Manifest timestamp was already updated at the start of the process
   // to claim this run and prevent duplicates
@@ -558,6 +563,7 @@ const taskId = process.env.CARD_METADATA_TASK_ID;
         taskId,
         error instanceof Error ? error.message : 'Failed to update combos',
       );
+      process.exit(1);
     }
     process.exit(1);
   }
