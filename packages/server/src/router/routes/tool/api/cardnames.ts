@@ -1,5 +1,6 @@
 import { normalizeName } from '@utils/cardutil';
 import catalog from 'serverutils/cardCatalog';
+import { normalizeAlpha, substringMatches } from 'serverutils/cardNameSearch';
 import { prefixMatches } from 'serverutils/util';
 
 import { Request, Response } from '../../../../types/express';
@@ -45,6 +46,16 @@ export const cardNamesHandler = async (req: Request, res: Response) => {
     }
 
     const names = prefixMatches(source, query, limit);
+
+    // If the prefix scan didn't fill the page, top up with substring matches
+    // over an alpha-only view of the catalog (punctuation/space/digit
+    // insensitive) so e.g. "moonsage" still surfaces "Tamiyo, the Moon Sage".
+    if (names.length < limit) {
+      const alphaNeedle = normalizeAlpha(raw);
+      if (alphaNeedle.length >= MIN_QUERY_LENGTH) {
+        names.push(...substringMatches(source, alphaNeedle, limit - names.length, new Set(names)));
+      }
+    }
 
     return res.status(200).send({ success: 'true', names });
   } catch (err) {

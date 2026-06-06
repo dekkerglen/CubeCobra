@@ -11,6 +11,7 @@ import RotoDraftContext from 'contexts/RotoDraftContext';
 import TagColorContext from '../../contexts/TagColorContext';
 import UserContext from '../../contexts/UserContext';
 import { ListGroupItem } from '../base/ListGroup';
+import useCubeTrayDrag from '../cubetray/useCubeTrayDrag';
 import withAutocard from '../WithAutocard';
 
 export interface AutocardListItemProps {
@@ -52,6 +53,8 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   const tagColors = useContext(TagColorContext);
   const user = useContext(UserContext);
   const { showInlineTagEmojis } = useContext(DisplayContext);
+  // Auto-enables wherever a CubeTrayProvider is present (cube list pages).
+  const drag = useCubeTrayDrag();
   const [name, cardId] = useMemo(
     () => (card && card.details ? [cardName(card), card.details.scryfall_id] : [CARD_NAME_FALLBACK, CARD_ID_FALLBACK]),
     [card],
@@ -101,11 +104,29 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
 
   return (
     <AutocardDiv
-      className={cx(`flex justify-between bg-card-${colorClassname}`, { 'font-bold': isSelected }, className)}
+      className={cx(
+        `flex justify-between bg-card-${colorClassname}`,
+        { 'font-bold': isSelected, 'cursor-grab active:cursor-grabbing': drag.active },
+        className,
+      )}
       card={card}
       onAuxClick={noCardModal ? noOp : handleAuxClick}
       inModal={inModal}
-      onClick={onClick}
+      onClick={
+        onClick
+          ? (e: React.MouseEvent) => {
+              // Swallow the click a drag leaves behind so it doesn't open the modal.
+              if (drag.active && drag.suppressClick()) {
+                e.preventDefault();
+                e.stopPropagation();
+                return;
+              }
+              onClick(e);
+            }
+          : onClick
+      }
+      onPointerDown={drag.active ? (e: React.PointerEvent) => drag.start(card, e) : undefined}
+      onDragStart={drag.active ? (e: React.DragEvent) => e.preventDefault() : undefined}
       last={last}
       first={first}
     >

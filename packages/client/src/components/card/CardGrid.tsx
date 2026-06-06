@@ -6,6 +6,7 @@ import classNames from 'classnames';
 
 import UserContext from '../../contexts/UserContext';
 import { Col, NumCols, Row } from '../base/Layout';
+import useCubeTrayDrag from '../cubetray/useCubeTrayDrag';
 import FoilCardImage from '../FoilCardImage';
 import { CardImageProps } from './CardImage';
 
@@ -23,6 +24,10 @@ export interface CardGridProps {
   className?: string;
   ratings?: number[];
   selectedIndex?: number;
+  // When set, each card can be dragged onto the floating cube tray to add it to
+  // a saved cube board (requires an enclosing CubeTrayProvider and a logged-in
+  // user). A no-op otherwise.
+  cubeTrayDraggable?: boolean;
 }
 
 const CardGrid: React.FC<CardGridProps> = ({
@@ -39,9 +44,11 @@ const CardGrid: React.FC<CardGridProps> = ({
   className,
   ratings,
   selectedIndex,
+  cubeTrayDraggable,
 }) => {
   const maxRating = ratings ? Math.max(...ratings.filter((r) => r !== undefined)) : null;
   const user = useContext(UserContext);
+  const drag = useCubeTrayDrag(!!cubeTrayDraggable);
 
   return (
     <Row
@@ -68,7 +75,21 @@ const CardGrid: React.FC<CardGridProps> = ({
 
         return (
           <Col key={cardIndex} xs={1} className="relative">
-            <div className="relative">
+            <div
+              className={classNames('relative', { 'cursor-grab active:cursor-grabbing': drag.active })}
+              onPointerDown={drag.active ? (e) => drag.start(card, e) : undefined}
+              onDragStart={drag.active ? (e) => e.preventDefault() : undefined}
+              onClickCapture={
+                drag.active
+                  ? (e) => {
+                      if (drag.suppressClick()) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }
+                    }
+                  : undefined
+              }
+            >
               <div
                 className={classNames('relative', {
                   'ring-[5px] ring-[#007BFF] ring-offset-0 rounded-lg': isHighestRated && !wasSelected,

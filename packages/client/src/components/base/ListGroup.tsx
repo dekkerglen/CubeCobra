@@ -18,6 +18,9 @@ interface ListGroupItemProps {
   heading?: boolean;
   last?: boolean;
   first?: boolean;
+  // Forwarded to the underlying div so items can act as drag sources.
+  onPointerDown?: (event: React.PointerEvent) => void;
+  onDragStart?: (event: React.DragEvent) => void;
 }
 
 export const ListGroup: FC<ListGroupProps> = ({ children }) => {

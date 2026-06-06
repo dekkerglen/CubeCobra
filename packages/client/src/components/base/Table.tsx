@@ -8,9 +8,12 @@ export interface TableProps {
   headers?: string[];
   rows: { [key: string]: ReactNode }[];
   hideOnMobile?: string[];
+  // Extra attributes (handlers, className, etc.) merged onto each <tr>. The
+  // index matches the row's position in `rows`. Used e.g. to make rows draggable.
+  getRowProps?: (rowIndex: number) => React.HTMLAttributes<HTMLTableRowElement>;
 }
 
-const Table: React.FC<TableProps> = ({ headers, rows, hideOnMobile }) => {
+const Table: React.FC<TableProps> = ({ headers, rows, hideOnMobile, getRowProps }) => {
   const hiddenSet = new Set(hideOnMobile ?? []);
   const cellHiddenClass = (header: string) => (hiddenSet.has(header) ? 'hidden md:table-cell' : '');
 
@@ -30,21 +33,28 @@ const Table: React.FC<TableProps> = ({ headers, rows, hideOnMobile }) => {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row, rowIndex) => (
-              <tr
-                className={classNames({
-                  'bg-bg-accent/80': rowIndex % 2 === 0,
-                  'bg-bg-active/80': rowIndex % 2 === 1,
-                })}
-                key={rowIndex}
-              >
-                {headers.map((header) => (
-                  <td key={header} className={classNames('whitespace-nowrap p-2', cellHiddenClass(header))}>
-                    <Text sm>{row[header]}</Text>
-                  </td>
-                ))}
-              </tr>
-            ))}
+            {rows.map((row, rowIndex) => {
+              const { className: rowClassName, ...rowRest } = getRowProps?.(rowIndex) ?? {};
+              return (
+                <tr
+                  className={classNames(
+                    {
+                      'bg-bg-accent/80': rowIndex % 2 === 0,
+                      'bg-bg-active/80': rowIndex % 2 === 1,
+                    },
+                    rowClassName,
+                  )}
+                  key={rowIndex}
+                  {...rowRest}
+                >
+                  {headers.map((header) => (
+                    <td key={header} className={classNames('whitespace-nowrap p-2', cellHiddenClass(header))}>
+                      <Text sm>{row[header]}</Text>
+                    </td>
+                  ))}
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>

@@ -18,11 +18,13 @@ import ScryfallDragDropOverlay from 'components/cube/ScryfallDragDropOverlay';
 import TableView from 'components/cube/TableView';
 import VersionMismatch from 'components/cube/VersionMismatch';
 import VisualSpoiler from 'components/cube/VisualSpoiler';
+import CubeTray from 'components/cubetray/CubeTray';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import RenderToRoot from 'components/RenderToRoot';
 import ChangesContext from 'contexts/ChangesContext';
 import CubeContext from 'contexts/CubeContext';
+import { CubeTrayProvider } from 'contexts/CubeTrayContext';
 import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
 import { RotoDraftContextProvider } from 'contexts/RotoDraftContext';
@@ -39,9 +41,13 @@ interface CubeListPageProps {
 const CubeListPageRaw: React.FC = () => {
   const { versionMismatch } = useContext(ChangesContext);
   const { changedCards, unfilteredChangedCards, filterResult, canEdit, cube, cardsLoading } = useContext(CubeContext);
-  const { showAllBoards, activeView } = useContext(DisplayContext);
+  const { showAllBoards, activeView, cubeSidebarExpanded } = useContext(DisplayContext);
   const { filterInput, setFilterInput } = useContext(FilterContext);
   const user = useContext(UserContext);
+
+  // Keep the floating cube tray clear of the cube sidebar (it sits at the
+  // bottom-left). The sidebar is hidden on mobile, expanded w-52, collapsed w-16.
+  const trayLeftClassName = cubeSidebarExpanded ? 'left-4 sm:left-[14rem]' : 'left-4 sm:left-20';
 
   // Get the current view definition
   const currentView = useMemo(() => getViewByName(cube, activeView), [cube, activeView]);
@@ -130,7 +136,7 @@ const CubeListPageRaw: React.FC = () => {
   const showEmptyState = isCubeOwner && realBoardsEmpty;
 
   return (
-    <>
+    <CubeTrayProvider>
       {canEdit && <ScryfallDragDropOverlay />}
       <Container xl>
         <CubeListBottomCard canEdit={canEdit} />
@@ -262,7 +268,8 @@ const CubeListPageRaw: React.FC = () => {
               );
             });
         })()}
-    </>
+      <CubeTray leftClassName={trayLeftClassName} />
+    </CubeTrayProvider>
   );
 };
 

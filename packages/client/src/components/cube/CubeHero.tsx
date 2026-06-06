@@ -12,6 +12,7 @@ import {
   KebabHorizontalIcon,
   LinkIcon,
   PackageIcon,
+  PencilIcon,
   PinIcon,
   PinSlashIcon,
   QuestionIcon,
@@ -39,6 +40,7 @@ import Link from '../base/Link';
 import Text from '../base/Text';
 import Tooltip from '../base/Tooltip';
 import CubeIdModal from '../cube/CubeIdModal';
+import EditOverviewModal from '../cube/EditOverviewModal';
 import Form from '../Form';
 import { SafeMarkdown } from '../Markdown';
 import ArenaExportModal from '../modals/ArenaExportModal';
@@ -52,6 +54,7 @@ const PrintAndPlayExportModalItem = withModal('button', PrintAndPlayExportModal)
 const CompareModalButton = withModal('button', CubeCompareModal);
 const ShareCubeButton = withModal('button', CubeIdModal);
 const ReportCubeButton = withModal(Link, ConfirmActionModal);
+const EditOverviewButton = withModal('button', EditOverviewModal);
 
 interface CubeHeroProps {
   cube: Cube;
@@ -594,7 +597,18 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
             <div className="flex-1 min-w-0">
               {/* Title row */}
               <div className="flex flex-row items-baseline gap-2 flex-wrap mb-2">
-                <h1 className="text-white font-semibold text-xl">{cube.name}</h1>
+                <div className="flex items-center gap-1">
+                  {isCubeOwner && (
+                    <EditOverviewButton
+                      className="inline-flex items-center border-0 bg-transparent p-0 text-white/80 transition-colors hover:text-white"
+                      aria-label="Edit cube overview"
+                      stopPropagation
+                    >
+                      <PencilIcon size={16} />
+                    </EditOverviewButton>
+                  )}
+                  <h1 className="text-white font-semibold text-xl">{cube.name}</h1>
+                </div>
                 <Text sm className="text-white/80">
                   {getCubeCardCountSnippet(cube, unfilteredChangedCards)} Cube
                 </Text>
@@ -946,7 +960,18 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               <div className="mb-4">
                 <div className="flex flex-col md:flex-row md:items-center gap-4 md:gap-6">
                   <div>
-                    <h1 className="text-white font-semibold text-3xl">{cube.name}</h1>
+                    <div className="flex items-center gap-2">
+                      {isCubeOwner && (
+                        <EditOverviewButton
+                          className="inline-flex items-center border-0 bg-transparent p-0 text-white/80 transition-colors hover:text-white"
+                          aria-label="Edit cube overview"
+                          stopPropagation
+                        >
+                          <PencilIcon size={20} />
+                        </EditOverviewButton>
+                      )}
+                      <h1 className="text-white font-semibold text-3xl">{cube.name}</h1>
+                    </div>
                     <Text md className="text-white/80 mt-1">
                       {getCubeCardCountSnippet(cube, unfilteredChangedCards)} Cube •{' '}
                       <a href={`/cube/followers/${cube.id}`} className="text-white/80 hover:text-white hover:underline">

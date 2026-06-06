@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { detailsToCard } from '@utils/cardutil';
-import CardType from '@utils/datatypes/Card';
+import CardType, { CardDetails } from '@utils/datatypes/Card';
 
 import { Card, CardBody } from '../components/base/Card';
 import { Flexbox } from '../components/base/Layout';
@@ -10,10 +10,13 @@ import ResponsiveDiv from '../components/base/ResponsiveDiv';
 import Spinner from '../components/base/Spinner';
 import Text from '../components/base/Text';
 import CardGrid from '../components/card/CardGrid';
+import CubeTray from '../components/cubetray/CubeTray';
 import FilterCollapse from '../components/FilterCollapse';
 import AddToCubeModal from '../components/modals/AddToCubeModal';
 import { CSRFContext } from '../contexts/CSRFContext';
 import CubeContext from '../contexts/CubeContext';
+import { CubeTrayProvider } from '../contexts/CubeTrayContext';
+import DisplayContext from '../contexts/DisplayContext';
 import FilterContext from '../contexts/FilterContext';
 import { getCardDetails } from '../utils/cardDetailsCache';
 
@@ -33,6 +36,13 @@ const Suggestions: React.FC = () => {
   const { csrfFetch } = useContext(CSRFContext);
   const { filterInput } = useContext(FilterContext);
   const { cube } = useContext(CubeContext);
+  const { cubeSidebarExpanded } = useContext(DisplayContext);
+
+  // An empty cube has no signal for the recommender, so Smart Search degrades to
+  // plain card search sorted by Elo (via /tool/api/searchcards) instead.
+  const isEmptyCube = (cube.cards?.mainboard?.length ?? 0) === 0;
+  // Keep the floating tray clear of the cube sidebar (expanded w-52 / collapsed w-16).
+  const trayLeftClassName = cubeSidebarExpanded ? 'left-4 sm:left-[14rem]' : 'left-4 sm:left-20';
 
   // All results fetched so far, in rank order. A "page" is just a slice of
   // this — navigating to an already-loaded page is instant, no fetch.
@@ -48,7 +58,8 @@ const Suggestions: React.FC = () => {
   // Mutable state for the fill routine. Refs (not state) so the routine sees
   // live values and stays a stable callback that doesn't churn effects.
   const generationRef = useRef(0); // bumps on every new search; cancels stale fetches
-  const skipRef = useRef(0); // next `skip` offset to request from the server
+  const skipRef = useRef(0); // next `skip` offset to request from the server (recommender)
+  const searchPageRef = useRef(0); // next page to request (empty-cube Elo fallback)
   const cardsRef = useRef<CardType[]>([]); // mirror of allCards for the loop
   const exhaustedRef = useRef(false);
   const loadingRef = useRef(false); // a fill loop is currently running
@@ -59,11 +70,13 @@ const Suggestions: React.FC = () => {
     cubeId: cube.id,
     filterText: filterInput,
     printingPreference: cube.defaultPrinting,
+    isEmpty: isEmptyCube,
   });
   paramsRef.current = {
     cubeId: cube.id,
     filterText: filterInput,
     printingPreference: cube.defaultPrinting,
+    isEmpty: isEmptyCube,
   };
 
   // Fetch successive server windows until `allCards` holds enough cards to fill
@@ -95,7 +108,35 @@ const Suggestions: React.FC = () => {
           batches < MAX_BATCHES_PER_FILL
         ) {
           batches += 1;
-          const { cubeId, filterText, printingPreference } = paramsRef.current;
+          const { cubeId, filterText, printingPreference, isEmpty } = paramsRef.current;
+
+          // Empty cube: fall back to plain card search sorted by Elo. The search
+          // endpoint is page-based and returns full details, so no per-id lookup.
+          if (isEmpty) {
+            const params = new URLSearchParams({
+              p: searchPageRef.current.toString(),
+              f: filterText ?? '',
+              s: 'Elo',
+              d: 'descending',
+              di: 'names',
+            });
+            const searchRes = await fetch(`/tool/api/searchcards/?${params.toString()}`);
+            const searchJson = await searchRes.json().catch(() => ({}));
+            if (generationRef.current !== generation) return;
+            if (!searchRes.ok) {
+              exhaustedRef.current = true;
+              setErrorState('generic');
+              break;
+            }
+            searchPageRef.current += 1;
+            const data = (searchJson.data || []) as CardDetails[];
+            cardsRef.current = cardsRef.current.concat(data.map((d) => detailsToCard(d)));
+            const total = Number(searchJson.numResults ?? 0);
+            if (data.length === 0 || cardsRef.current.length >= total) {
+              exhaustedRef.current = true;
+            }
+            continue;
+          }
 
           const res = await csrfFetch('/cube/api/adds', {
             method: 'POST',
@@ -173,6 +214,7 @@ const Suggestions: React.FC = () => {
   useEffect(() => {
     generationRef.current += 1;
     skipRef.current = 0;
+    searchPageRef.current = 0;
     cardsRef.current = [];
     exhaustedRef.current = false;
     loadingRef.current = false;
@@ -187,7 +229,7 @@ const Suggestions: React.FC = () => {
     if (filterInput && filterInput.trim().length > 0) {
       loadThroughPage(0);
     }
-  }, [filterInput, cube.id, cube.defaultPrinting, loadThroughPage]);
+  }, [filterInput, cube.id, cube.defaultPrinting, isEmptyCube, loadThroughPage]);
 
   const goToPage = useCallback(
     (newPage: number) => {
@@ -237,7 +279,11 @@ const Suggestions: React.FC = () => {
             <ResponsiveDiv baseVisible sm>
               {`Page ${page + 1}`}
             </ResponsiveDiv>
-            <ResponsiveDiv md>{`Smart-sorted results for the query: ${filterInput}`}</ResponsiveDiv>
+            <ResponsiveDiv md>
+              {isEmptyCube
+                ? `Elo-sorted results for the query: ${filterInput}`
+                : `Smart-sorted results for the query: ${filterInput}`}
+            </ResponsiveDiv>
           </Text>
           <Paginate count={pageCount} active={page} onClick={goToPage} hasMore={hasMore} loading={loadingMore} />
         </Flexbox>
@@ -251,6 +297,7 @@ const Suggestions: React.FC = () => {
           xxl={8}
           cardProps={{ autocard: true, className: 'clickable' }}
           onClick={(card) => setModalCard(card)}
+          cubeTrayDraggable
         />
         <Flexbox direction="row" justify="end">
           <Paginate count={pageCount} active={page} onClick={goToPage} hasMore={hasMore} loading={loadingMore} />
@@ -306,32 +353,35 @@ const Suggestions: React.FC = () => {
   }
 
   return (
-    <div className="p-2">
-      <Flexbox direction="col" gap="2">
-        <Text xl semibold>
-          Smart Search
-        </Text>
-        <Text>
-          Smart Search is card search with a context-aware sort. It runs your filter against the full card pool and then
-          ranks the results by how well each card fits this specific cube — surfacing relevant additions that a plain
-          alphabetical search would bury. Enter a search filter to begin.
-        </Text>
-        <FilterCollapse isOpen buttonLabel="Search" />
-      </Flexbox>
+    <CubeTrayProvider>
+      <div className="p-2">
+        <Flexbox direction="col" gap="2">
+          <Text xl semibold>
+            Smart Search
+          </Text>
+          <Text>
+            {isEmptyCube
+              ? 'This cube has no cards yet, so there’s nothing to tailor recommendations to — Smart Search runs your filter against the full card pool sorted by Elo. Enter a search filter to begin.'
+              : 'Smart Search is card search with a context-aware sort. It runs your filter against the full card pool and then ranks the results by how well each card fits this specific cube — surfacing relevant additions that a plain alphabetical search would bury. Enter a search filter to begin.'}
+          </Text>
+          <FilterCollapse isOpen buttonLabel="Search" />
+        </Flexbox>
 
-      {body}
+        {body}
 
-      {modalCard && (
-        <AddToCubeModal
-          card={modalCard}
-          isOpen={modalCard !== null}
-          setOpen={(open) => {
-            if (!open) setModalCard(null);
-          }}
-          cubeContext={cube.id}
-        />
-      )}
-    </div>
+        {modalCard && (
+          <AddToCubeModal
+            card={modalCard}
+            isOpen={modalCard !== null}
+            setOpen={(open) => {
+              if (!open) setModalCard(null);
+            }}
+            cubeContext={cube.id}
+          />
+        )}
+        <CubeTray leftClassName={trayLeftClassName} />
+      </div>
+    </CubeTrayProvider>
   );
 };
 

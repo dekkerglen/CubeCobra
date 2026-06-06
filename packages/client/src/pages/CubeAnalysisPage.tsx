@@ -199,7 +199,9 @@ const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, toke
         <div className="flex justify-center py-12">
           <Spinner lg />
         </div>
-      ) : cube.cards.mainboard.length === 0 ? (
+      ) : cube.cards.mainboard.length === 0 && view !== 'recommender' ? (
+        // Smart Search still works on an empty cube — it just becomes plain card
+        // search sorted by Elo — so let it render rather than blocking here.
         <Text lg>This cube doesn't have any cards. Add cards to see analytics.</Text>
       ) : view === 'at-a-glance' ? (
         content
