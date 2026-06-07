@@ -14,7 +14,6 @@
   "CardSearchPage": "/js/CardSearchPage.f3459b20.bundle.js",
   "CardUpdatesPage": "/js/CardUpdatesPage.a0aeba30.bundle.js",
   "CommentPage": "/js/CommentPage.c0e0ca54.bundle.js",
-  "commons": "/js/commons.ac65c6ef.bundle.js",
   "ContactPage": "/js/ContactPage.8b75f692.bundle.js",
   "CreateNewRecordPage": "/js/CreateNewRecordPage.d274070b.bundle.js",
   "CreatePackagePage": "/js/CreatePackagePage.9cf3c581.bundle.js",
@@ -25,10 +24,10 @@
   "CubeBlogPage": "/js/CubeBlogPage.5d6ff7c8.bundle.js",
   "CubeChangelogPage": "/js/CubeChangelogPage.77a68f52.bundle.js",
   "CubeComparePage": "/js/CubeComparePage.467fa572.bundle.js",
-  "CubeDeckbuilderPage": "/js/CubeDeckbuilderPage.00a5298c.bundle.js",
   "CubeDeckPage": "/js/CubeDeckPage.5117a461.bundle.js",
+  "CubeDeckbuilderPage": "/js/CubeDeckbuilderPage.00a5298c.bundle.js",
   "CubeDraftPage": "/js/CubeDraftPage.6fc9decb.bundle.js",
-  "CubeDraftSimulatorPage": "/js/CubeDraftSimulatorPage.b90c6803.bundle.js",
+  "CubeDraftSimulatorPage": "/js/CubeDraftSimulatorPage.22cbb05b.bundle.js",
   "CubeFollowersPage": "/js/CubeFollowersPage.50fbff3d.bundle.js",
   "CubeHistoryPage": "/js/CubeHistoryPage.aae7aae9.bundle.js",
   "CubeListPage": "/js/CubeListPage.9de9dbda.bundle.js",
@@ -89,14 +88,15 @@
   "UserFollowersPage": "/js/UserFollowersPage.0c6529e3.bundle.js",
   "UserFollowingPage": "/js/UserFollowingPage.85c42917.bundle.js",
   "UserPackagesPage": "/js/UserPackagesPage.d235031f.bundle.js",
-  "vendors": "/js/vendors.d4ab002f.bundle.js",
   "VersionPage": "/js/VersionPage.84b873f1.bundle.js",
   "VideoPage": "/js/VideoPage.83c345b2.bundle.js",
   "VideosPage": "/js/VideosPage.f8c87358.bundle.js",
+  "commons": "/js/commons.7e6a2c50.bundle.js",
+  "vendors": "/js/vendors.d4ab002f.bundle.js",
   "css": {
     "autocomplete": "/css/autocomplete.5c556a41.css",
     "editcube": "/css/editcube.ad8a9cfe.css",
-    "stylesheet": "/css/stylesheet.5d992448.css",
+    "stylesheet": "/css/stylesheet.127c9360.css",
     "tags": "/css/tags.c9b1a24b.css"
   }
 }

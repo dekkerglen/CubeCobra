@@ -13,7 +13,8 @@ import type {
 import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
-import { RowColorShare, COLOR_KEYS, MANA_CURVE_BUCKETS, MTG_COLORS } from './SimulatorCharts';
+import ColorMultiselectFilter, { type ColorMatchMode } from './ColorMultiselectFilter';
+import { RowColorShare, MANA_CURVE_BUCKETS, MTG_COLORS } from './SimulatorCharts';
 import { CMC_COLS } from './SimDeckView';
 import { getColorPathAnchorPicks } from '../../utils/draftSimulatorColorPath';
 import { archetypeFullName } from '../../utils/draftSimulatorThemes';
@@ -21,7 +22,21 @@ import { getPoolMainCards, inferDraftThemes } from '../../utils/draftSimulatorTh
 
 const POOL_PAGE_SIZE = 10;
 
-type DraftBreakdownSortKey = 'draft' | 'seat' | 'color' | 'creatures' | 'avgMv' | 'firstColor' | 'secondColor';
+type DraftBreakdownSortKey =
+  | 'draft'
+  | 'seat'
+  | 'color'
+  | 'creatures'
+  | 'avgMv'
+  | 'firstColor'
+  | 'secondColor'
+  | 'pick1'
+  | 'pick2'
+  | 'pick3'
+  | 'pick4'
+  | 'pick5';
+
+const PICK_SORT_KEYS: DraftBreakdownSortKey[] = ['pick1', 'pick2', 'pick3', 'pick4', 'pick5'];
 type DeckLocationFilter = 'all' | 'deck' | 'sideboard';
 type DraftBreakdownViewMode = 'deck' | 'draft';
 
@@ -169,36 +184,96 @@ export const ColorPips: React.FC<{ colors: string }> = React.memo(({ colors }) =
   </span>
 ));
 
-const PickColorSpectrum: React.FC<{ picks: SimulatedPickCard[]; cardMeta: Record<string, CardMeta> }> = ({ picks, cardMeta }) => {
-  const getPickColors = (oracleId: string): string[] => {
-    const identity = (cardMeta[oracleId]?.colorIdentity ?? []).filter((color) => MTG_COLORS[color] !== undefined && color !== 'M');
-    return identity.length > 0 ? identity : ['C'];
-  };
+const getPickColors = (oracleId: string, cardMeta: Record<string, CardMeta>): string[] => {
+  const identity = (cardMeta[oracleId]?.colorIdentity ?? []).filter((color) => MTG_COLORS[color] !== undefined && color !== 'M');
+  return identity.length > 0 ? identity : ['C'];
+};
 
-  const getPickBackground = (oracleId: string): string => {
-    const colors = getPickColors(oracleId).map((color) => MTG_COLORS[color]?.bg ?? MTG_COLORS.C!.bg);
-    if (colors.length === 1) return colors[0]!;
-    const stopStep = colors.length > 1 ? 100 / (colors.length - 1) : 100;
-    const stops = colors.map((color, index) => `${color} ${Math.round(index * stopStep)}%`).join(', ');
-    return `linear-gradient(180deg, ${stops})`;
-  };
+const getPickBackground = (oracleId: string, cardMeta: Record<string, CardMeta>): string => {
+  const colors = getPickColors(oracleId, cardMeta).map((color) => MTG_COLORS[color]?.bg ?? MTG_COLORS.C!.bg);
+  if (colors.length === 1) return colors[0]!;
+  const stopStep = colors.length > 1 ? 100 / (colors.length - 1) : 100;
+  const stops = colors.map((color, index) => `${color} ${Math.round(index * stopStep)}%`).join(', ');
+  return `linear-gradient(180deg, ${stops})`;
+};
 
+const groupPicksByPack = (picks: SimulatedPickCard[]): { packNumber: number; picks: SimulatedPickCard[] }[] => {
+  const map = new Map<number, SimulatedPickCard[]>();
+  for (const pick of picks) {
+    const list = map.get(pick.packNumber) ?? [];
+    list.push(pick);
+    map.set(pick.packNumber, list);
+  }
+  return [...map.entries()].sort((a, b) => a[0] - b[0]).map(([packNumber, ps]) => ({ packNumber, picks: ps }));
+};
+
+const PickColorSpectrum: React.FC<{
+  picks: SimulatedPickCard[];
+  cardMeta: Record<string, CardMeta>;
+  mainboardSet?: Set<string> | null;
+  fadeNonPlayed?: boolean;
+  height?: number;
+  onPackClick?: (packNumber: number) => void;
+  selectedPack?: number | null;
+}> = ({ picks, cardMeta, mainboardSet, fadeNonPlayed, height = 72, onPackClick, selectedPack }) => {
   if (picks.length === 0) return null;
 
+  const packs = groupPicksByPack(picks);
+  const totalPicks = picks.length;
+  const clickable = !!onPackClick;
+
   return (
-    <div className="flex w-full overflow-hidden rounded border border-black/10 bg-bg-accent" style={{ height: 44 }}>
-      {picks.map((pick, index) => (
-        <div
-          key={`${pick.oracle_id}-${pick.packNumber}-${pick.pickNumber}-${index}`}
-          className="h-full"
-          style={{
-            width: `${100 / picks.length}%`,
-            background: getPickBackground(pick.oracle_id),
-            boxShadow: index > 0 ? 'inset 1px 0 0 rgba(15, 23, 42, 0.16)' : undefined,
-          }}
-          title={`P${pick.packNumber + 1}P${pick.pickNumber} · ${pick.name}`}
-        />
-      ))}
+    <div
+      className="flex w-full overflow-hidden rounded border border-black/10 bg-bg-accent"
+      style={{ height }}
+    >
+      {packs.map((pack, packIdx) => {
+        const widthPct = (pack.picks.length / totalPicks) * 100;
+        const isSelected = selectedPack === pack.packNumber;
+        return (
+          <div
+            key={pack.packNumber}
+            className={[
+              'relative flex h-full',
+              clickable ? 'cursor-pointer' : '',
+            ].join(' ')}
+            style={{
+              width: `${widthPct}%`,
+              boxShadow: packIdx > 0 ? 'inset 2px 0 0 rgba(15, 23, 42, 0.35)' : undefined,
+              outline: isSelected ? '2px solid rgb(59, 130, 246)' : undefined,
+              outlineOffset: isSelected ? '-2px' : undefined,
+              zIndex: isSelected ? 1 : 0,
+            }}
+            onClick={
+              clickable
+                ? (e) => {
+                    e.stopPropagation();
+                    onPackClick!(pack.packNumber);
+                  }
+                : undefined
+            }
+            title={clickable ? `Pack ${pack.packNumber + 1} — click to ${isSelected ? 'collapse' : 'expand'}` : undefined}
+          >
+            {pack.picks.map((pick, index) => {
+              const faded = !!(fadeNonPlayed && mainboardSet && !mainboardSet.has(pick.oracle_id));
+              return (
+                <div
+                  key={`${pick.oracle_id}-${pick.packNumber}-${pick.pickNumber}-${index}`}
+                  className="h-full"
+                  style={{
+                    width: `${100 / pack.picks.length}%`,
+                    background: getPickBackground(pick.oracle_id, cardMeta),
+                    boxShadow: index > 0 ? 'inset 1px 0 0 rgba(15, 23, 42, 0.16)' : undefined,
+                    opacity: faded ? 0.2 : 1,
+                    filter: faded ? 'grayscale(0.7)' : undefined,
+                  }}
+                  title={`P${pick.packNumber + 1}P${pick.pickNumber} · ${pick.name}${faded ? ' · not played' : ''}`}
+                />
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 };
@@ -261,6 +336,7 @@ const DraftBreakdownTable: React.FC<{
   focusedPoolIndex?: number | null;
   onSelectPool?: (poolIndex: number | null) => void;
   onInspectPool?: (poolIndex: number) => void;
+  onInspectPoolAtPick?: (poolIndex: number, pickNumberInPool: number) => void;
   poolArchetypeLabels?: Map<number, string> | null;
   poolArchetypeLabelsLoading?: boolean;
   clusterThemes?: Map<number, { tag: string; lift: number }[]>;
@@ -277,6 +353,7 @@ const DraftBreakdownTable: React.FC<{
   focusedPoolIndex = null,
   onSelectPool,
   onInspectPool,
+  onInspectPoolAtPick,
   poolArchetypeLabels,
   poolArchetypeLabelsLoading = false,
   clusterThemes: clusterThemesProp,
@@ -287,12 +364,15 @@ const DraftBreakdownTable: React.FC<{
   const [selectedPool, setSelectedPool] = useState<number | null>(pools[0]?.poolIndex ?? null);
   const [sortKey, setSortKey] = useState<DraftBreakdownSortKey>('draft');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-  const [colorFilter, setColorFilter] = useState('all');
+  const [colorFilter, setColorFilter] = useState<Set<string>>(() => new Set());
+  const [colorMatchMode, setColorMatchMode] = useState<ColorMatchMode>('any');
   const [archetypeFilter, setArchetypeFilter] = useState('');
   const [seatFilter, setSeatFilter] = useState('');
   const [draftFilter, setDraftFilter] = useState('');
   const [locationFilter, setLocationFilter] = useState<DeckLocationFilter>('all');
   const [viewMode, setViewMode] = useState<DraftBreakdownViewMode>('deck');
+  const [fadeNonPlayed, setFadeNonPlayed] = useState(false);
+  const [expandedPack, setExpandedPack] = useState<{ poolIndex: number; packNumber: number } | null>(null);
   const [poolPage, setPoolPage] = useState(1);
 
   // Use parent-provided themes (computed over all pools) when available; avoids filtered-view degradation.
@@ -315,7 +395,14 @@ const DraftBreakdownTable: React.FC<{
       if (locationFilter === 'deck' && !deck.mainboard.includes(highlightOracle)) return false;
       if (locationFilter === 'sideboard' && !deck.sideboard.includes(highlightOracle)) return false;
     }
-    if (colorFilter !== 'all' && !getColorProfileCodes(pool.archetype).includes(colorFilter)) return false;
+    if (colorFilter.size > 0) {
+      const codes = new Set(getColorProfileCodes(pool.archetype));
+      if (colorMatchMode === 'all') {
+        for (const c of colorFilter) if (!codes.has(c)) return false;
+      } else {
+        if (![...colorFilter].some((c) => codes.has(c))) return false;
+      }
+    }
     if (archetypeFilter) {
       const q = archetypeFilter.toLowerCase();
       const themes = summary.themes.map((t) => t.toLowerCase());
@@ -347,6 +434,11 @@ const DraftBreakdownTable: React.FC<{
     } else if (sortKey === 'secondColor') {
       av = a.secondColorBridgePick?.name ?? '￿';
       bv = b.secondColorBridgePick?.name ?? '￿';
+    } else if (PICK_SORT_KEYS.includes(sortKey)) {
+      const idx = PICK_SORT_KEYS.indexOf(sortKey);
+      // Sort by pick name; "￿" pushes missing picks to the bottom on asc sort.
+      av = a.openingPicks[idx]?.name ?? '￿';
+      bv = b.openingPicks[idx]?.name ?? '￿';
     } else {
       av = a.avgMv;
       bv = b.avgMv;
@@ -369,7 +461,7 @@ const DraftBreakdownTable: React.FC<{
   }, [focusedPoolIndex, pools]);
   useEffect(() => {
     setPoolPage(1);
-  }, [colorFilter, archetypeFilter, seatFilter, draftFilter, locationFilter, sortKey, sortDir]);
+  }, [colorFilter, colorMatchMode, archetypeFilter, seatFilter, draftFilter, locationFilter, sortKey, sortDir]);
   useEffect(() => {
     if (poolPage > totalPoolPages) setPoolPage(totalPoolPages);
   }, [poolPage, totalPoolPages]);
@@ -419,6 +511,21 @@ const DraftBreakdownTable: React.FC<{
             </button>
           ))}
         </div>
+        {viewMode === 'draft' && hasDeck && (
+          <button
+            type="button"
+            onClick={() => setFadeNonPlayed((v) => !v)}
+            title="Hide picks that did not end up in the mainboard"
+            className={[
+              'px-2 py-1 rounded text-xs font-medium border mr-2',
+              fadeNonPlayed
+                ? 'bg-link text-white border-link'
+                : 'bg-bg text-text-secondary border-border hover:bg-bg-active',
+            ].join(' ')}
+          >
+            Hide unplayed
+          </button>
+        )}
         {showLocationFilter && hasDeck && (
           <div className="flex items-center gap-1">
             {(['all', 'deck', 'sideboard'] as const).map((v) => (
@@ -438,23 +545,12 @@ const DraftBreakdownTable: React.FC<{
             ))}
           </div>
         )}
-        <div className="flex items-center gap-1">
-          {['all', ...COLOR_KEYS, 'C'].map((color) => (
-            <button
-              key={color}
-              type="button"
-              onClick={() => setColorFilter(color)}
-              className={[
-                'h-7 rounded px-2 text-xs font-semibold border',
-                colorFilter === color
-                  ? 'bg-link text-white border-link'
-                  : 'bg-bg text-text-secondary border-border hover:bg-bg-active',
-              ].join(' ')}
-            >
-              {color === 'all' ? 'All' : color}
-            </button>
-          ))}
-        </div>
+        <ColorMultiselectFilter
+          selected={colorFilter}
+          onChange={setColorFilter}
+          mode={colorMatchMode}
+          onModeChange={setColorMatchMode}
+        />
         <div className="flex items-center gap-2 ml-auto">
           <Input
             type="text"
@@ -595,10 +691,14 @@ const DraftBreakdownTable: React.FC<{
               </>
             ) : (
               <>
-                <col style={{ width: 320 }} />
-                <col style={{ width: 220 }} />
-                <col style={{ width: 220 }} />
-                <col />
+                <col style={{ width: 92 }} />
+                <col style={{ width: 92 }} />
+                <col style={{ width: 92 }} />
+                <col style={{ width: 92 }} />
+                <col style={{ width: 92 }} />
+                <col style={{ minWidth: 520 }} />
+                <col style={{ width: 110 }} />
+                <col style={{ width: 110 }} />
               </>
             )}
           </colgroup>
@@ -624,14 +724,20 @@ const DraftBreakdownTable: React.FC<{
                 </>
               ) : (
                 <>
-                  <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary" style={{ width: '40%' }}>
+                  {PICK_SORT_KEYS.map((key, idx) => (
+                    <React.Fragment key={key}>
+                      {renderSortHeader(`P1P${idx + 1}`, key, 'text-center align-top')}
+                    </React.Fragment>
+                  ))}
+                  <th
+                    scope="col"
+                    className="px-3 py-2 text-left text-xs font-semibold text-text-secondary"
+                    style={{ width: '40%' }}
+                  >
                     Draft colors
                   </th>
                   {renderSortHeader('Color 1 First Pick', 'firstColor', 'text-left align-top')}
                   {renderSortHeader('Color 2 First Pick', 'secondColor', 'text-left align-top')}
-                  <th scope="col" className="px-3 py-2 text-left align-top text-xs font-semibold text-text-secondary">
-                    First picks
-                  </th>
                 </>
               )}
             </tr>
@@ -647,10 +753,16 @@ const DraftBreakdownTable: React.FC<{
                 .filter((c) => c.imageUrl)
                 .map((c) => ({ ...c, imageUrl: c.imageUrl.replace('/normal/', '/art_crop/') }));
               const firstColorAnchorArt = summary.firstColorAnchorPick?.imageUrl?.replace('/normal/', '/art_crop/') ?? '';
+              const mainboardSet = summary.deck ? new Set(summary.deck.mainboard) : null;
+              const wasPlayed = (oracleId: string): boolean => !mainboardSet || mainboardSet.has(oracleId);
               const secondColorBridgeArt = summary.secondColorBridgePick?.imageUrl?.replace('/normal/', '/art_crop/') ?? '';
+              const expanded =
+                viewMode === 'draft' &&
+                expandedPack !== null &&
+                expandedPack.poolIndex === summary.pool.poolIndex;
               return (
+                <React.Fragment key={summary.pool.poolIndex}>
                 <tr
-                  key={summary.pool.poolIndex}
                   className={[
                     'cursor-pointer transition-colors duration-100',
                     isSelected
@@ -740,10 +852,80 @@ const DraftBreakdownTable: React.FC<{
                     </>
                   ) : (
                     <>
-                      <td className="px-3 py-4" style={{ width: '40%' }}>
-                        <PickColorSpectrum picks={summary.pool.picks} cardMeta={cardMeta} />
+                      {[0, 1, 2, 3, 4].map((idx) => {
+                        const pick = openingPickImages[idx];
+                        if (!pick) {
+                          return (
+                            <td key={`pick-${idx}`} className="px-1 py-4 align-top text-center">
+                              <span className="text-xs text-text-secondary">—</span>
+                            </td>
+                          );
+                        }
+                        const faded = fadeNonPlayed && !wasPlayed(pick.oracle_id);
+                        return (
+                          <td key={`pick-${idx}`} className="px-1 py-4 align-top">
+                            <div
+                              className="flex flex-col items-center gap-1 min-w-0 mx-auto"
+                              style={{ width: 64, opacity: faded ? 0.3 : 1, filter: faded ? 'grayscale(0.6)' : undefined }}
+                              title={`P${pick.packNumber + 1}P${pick.pickNumber} · ${pick.name}${faded ? ' · not played' : ''}`}
+                            >
+                              <div
+                                className="flex-shrink-0 overflow-hidden"
+                                style={{
+                                  width: 64,
+                                  height: 64,
+                                  borderRadius: 8,
+                                  border: '1px solid rgba(17,24,39,0.08)',
+                                }}
+                              >
+                                <img
+                                  src={pick.imageUrl}
+                                  alt=""
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                              </div>
+                              <div
+                                className="w-full flex items-start justify-center overflow-hidden"
+                                style={{ height: 28 }}
+                              >
+                                <span
+                                  className="text-[11px] font-medium text-text leading-tight text-center w-full overflow-hidden"
+                                  style={{
+                                    display: '-webkit-box',
+                                    WebkitLineClamp: 2,
+                                    WebkitBoxOrient: 'vertical',
+                                  }}
+                                >
+                                  {renderAutocardNameLink
+                                    ? renderAutocardNameLink(pick.oracle_id, pick.name, pick.imageUrl)
+                                    : pick.name}
+                                </span>
+                              </div>
+                            </div>
+                          </td>
+                        );
+                      })}
+                      <td className="px-3 py-4 align-top" style={{ width: '40%' }}>
+                        <PickColorSpectrum
+                          picks={summary.pool.picks}
+                          cardMeta={cardMeta}
+                          mainboardSet={mainboardSet}
+                          fadeNonPlayed={fadeNonPlayed}
+                          onPackClick={(packNumber) =>
+                            setExpandedPack((prev) =>
+                              prev && prev.poolIndex === summary.pool.poolIndex && prev.packNumber === packNumber
+                                ? null
+                                : { poolIndex: summary.pool.poolIndex, packNumber },
+                            )
+                          }
+                          selectedPack={
+                            expandedPack && expandedPack.poolIndex === summary.pool.poolIndex
+                              ? expandedPack.packNumber
+                              : null
+                          }
+                        />
                       </td>
-                      <td className="px-3 py-4">
+                      <td className="px-3 py-4 align-top">
                         {summary.firstColorAnchorPick ? (
                           <div
                             className="flex items-center gap-2 min-w-0"
@@ -752,7 +934,7 @@ const DraftBreakdownTable: React.FC<{
                             {firstColorAnchorArt && (
                               <div
                                 className="flex-shrink-0 overflow-hidden"
-                                style={{ width: 52, height: 52, borderRadius: 7, border: '1px solid rgba(17,24,39,0.08)' }}
+                                style={{ width: 64, height: 64, borderRadius: 8, border: '1px solid rgba(17,24,39,0.08)' }}
                               >
                                 <img src={firstColorAnchorArt} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               </div>
@@ -776,7 +958,7 @@ const DraftBreakdownTable: React.FC<{
                           <span className="text-xs text-text-secondary">—</span>
                         )}
                       </td>
-                      <td className="px-3 py-4">
+                      <td className="px-3 py-4 align-top">
                         {summary.secondColorBridgePick ? (
                           <div
                             className="flex items-center gap-2 min-w-0"
@@ -785,7 +967,7 @@ const DraftBreakdownTable: React.FC<{
                             {secondColorBridgeArt && (
                               <div
                                 className="flex-shrink-0 overflow-hidden"
-                                style={{ width: 52, height: 52, borderRadius: 7, border: '1px solid rgba(17,24,39,0.08)' }}
+                                style={{ width: 64, height: 64, borderRadius: 8, border: '1px solid rgba(17,24,39,0.08)' }}
                               >
                                 <img src={secondColorBridgeArt} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                               </div>
@@ -809,28 +991,102 @@ const DraftBreakdownTable: React.FC<{
                           <span className="text-xs text-text-secondary">—</span>
                         )}
                       </td>
-                      <td className="py-1.5 pr-2 pl-3">
-                        <div className="flex gap-0.5">
-                          {openingPickImages.map((c, idx) => (
-                            <div
-                              key={`${c.oracle_id}-${idx}`}
-                              className="flex-shrink-0 overflow-hidden"
-                              style={{
-                                width: 52,
-                                height: 52,
-                                borderRadius: 7,
-                                border: '1px solid rgba(17,24,39,0.08)',
-                              }}
-                              title={`P${c.packNumber + 1}P${c.pickNumber} · ${c.name}`}
-                            >
-                              <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover object-center" />
-                            </div>
-                          ))}
-                        </div>
-                      </td>
                     </>
                   )}
                 </tr>
+                {expanded && (() => {
+                  const sortedAll = [...summary.pool.picks].sort(
+                    (a, b) => a.packNumber - b.packNumber || a.pickNumber - b.pickNumber,
+                  );
+                  const expandedPicks = sortedAll.filter((pk) => pk.packNumber === expandedPack!.packNumber);
+                  return (
+                    <tr className="bg-bg-accent/40">
+                      <td colSpan={10} className="px-3 py-3">
+                        <div className="flex flex-col gap-2">
+                          <div className="flex items-center justify-between">
+                            <Text xs semibold className="uppercase tracking-wide text-text-secondary">
+                              Pack {expandedPack!.packNumber + 1} · Draft {summary.pool.draftIndex + 1} · Seat {summary.pool.seatIndex + 1}
+                            </Text>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setExpandedPack(null);
+                              }}
+                              className="text-xs text-text-secondary hover:text-text"
+                            >
+                              Close
+                            </button>
+                          </div>
+                          <div
+                            className="grid gap-2 w-full"
+                            style={{
+                              gridTemplateColumns: `repeat(${Math.max(1, expandedPicks.length)}, minmax(0, 1fr))`,
+                            }}
+                          >
+                            {expandedPicks.map((pick) => {
+                              const faded = !!(
+                                fadeNonPlayed &&
+                                mainboardSet &&
+                                !mainboardSet.has(pick.oracle_id)
+                              );
+                              const globalPickIndex = sortedAll.indexOf(pick);
+                              const clickable = !!onInspectPoolAtPick;
+                              return (
+                                <div
+                                  key={`${pick.oracle_id}-${pick.pickNumber}`}
+                                  className={[
+                                    'flex flex-col items-center gap-1 min-w-0',
+                                    clickable ? 'cursor-pointer hover:scale-[1.02] transition-transform' : '',
+                                  ].join(' ')}
+                                  style={{
+                                    opacity: faded ? 0.3 : 1,
+                                    filter: faded ? 'grayscale(0.6)' : undefined,
+                                  }}
+                                  title={
+                                    clickable
+                                      ? `P${pick.packNumber + 1}P${pick.pickNumber} · ${pick.name}${faded ? ' · not played' : ''} · click to see what it was taken over`
+                                      : `P${pick.packNumber + 1}P${pick.pickNumber} · ${pick.name}${faded ? ' · not played' : ''}`
+                                  }
+                                  onClick={
+                                    clickable
+                                      ? (e) => {
+                                          e.stopPropagation();
+                                          onInspectPoolAtPick!(summary.pool.poolIndex, globalPickIndex);
+                                        }
+                                      : undefined
+                                  }
+                                >
+                                  <div className="text-[10px] tabular-nums text-text-secondary">
+                                    P{pick.packNumber + 1}P{pick.pickNumber}
+                                  </div>
+                                  <div
+                                    className="w-full"
+                                    style={{
+                                      aspectRatio: '63 / 88',
+                                      borderRadius: 8,
+                                      overflow: 'hidden',
+                                      background: 'rgba(15,23,42,0.05)',
+                                    }}
+                                  >
+                                    {pick.imageUrl && (
+                                      <img
+                                        src={pick.imageUrl}
+                                        alt={pick.name}
+                                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })()}
+                </React.Fragment>
               );
             })}
           </tbody>

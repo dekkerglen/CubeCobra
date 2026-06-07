@@ -15,6 +15,7 @@ import { Col, Flexbox, Row } from '../base/Layout';
 import Text from '../base/Text';
 import ArchetypeChart from './ArchetypeChart';
 import CardStatsTable from './CardStatsTable';
+import ColorPreferencesTable from './ColorPreferencesTable';
 import DraftVsEloTable from './DraftVsEloTable';
 import type { FilterChipItem } from './DraftSimulatorFilterBar';
 import DraftBreakdownTable from './DraftBreakdownTable';
@@ -31,6 +32,7 @@ const BOTTOM_TABS: { key: DraftSimulatorBottomTab; label: string }[] = [
   { key: 'draftBreakdown', label: 'Draft Breakdown' },
   { key: 'sideboardAndPairings', label: 'Sideboard & Pairings' },
   { key: 'overperformers', label: 'Over/Underperformers' },
+  { key: 'colorPreferences', label: 'Color Preferences' },
 ];
 
 export const FilterChipButtons: React.FC<{
@@ -102,12 +104,6 @@ const DraftSimulatorBottomSection: React.FC<{
   selectedSideboardCardOracles: string[];
   handleToggleSelectedP1P1Card: (oracleId: string) => void;
   selectedP1P1CardOracles: string[];
-  handleToggleSelectedFirstColorPick: (oracleId: string) => void;
-  selectedFirstColorPickOracles: string[];
-  firstColorPickCounts: Map<string, number>;
-  handleToggleSelectedSecondColorPick: (oracleId: string) => void;
-  selectedSecondColorPickOracles: string[];
-  secondColorPickCounts: Map<string, number>;
   deckCardPoolIndices: Map<string, number[]>;
   sideboardCardPoolIndices: Map<string, number[]>;
   visibleDeckCounts: Map<string, number>;
@@ -121,11 +117,13 @@ const DraftSimulatorBottomSection: React.FC<{
   downloadDraftBreakdownCsv: (pools: SimulatedPool[], label: string) => void;
   displayedPools: SimulatedPool[];
   activeDecks: BuiltDeck[] | null;
+  numSeats: number;
   simPhase: 'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'cluster' | 'save' | null;
   selectedCard: CardStats | null;
   focusedPoolIndex: number | null;
   setFocusedPoolIndex: React.Dispatch<React.SetStateAction<number | null>>;
   onInspectPool: (poolIndex: number) => void;
+  onInspectPoolAtPick?: (poolIndex: number, pickNumberInPool: number) => void;
   allPoolClusterThemes?: Map<number, { tag: string; lift: number }[]>;
   allPoolTagAllowlist?: Set<string>;
   topSideboardCards: SideboardEntry[];
@@ -173,12 +171,6 @@ const DraftSimulatorBottomSection: React.FC<{
   selectedSideboardCardOracles,
   handleToggleSelectedP1P1Card,
   selectedP1P1CardOracles,
-  handleToggleSelectedFirstColorPick,
-  selectedFirstColorPickOracles,
-  firstColorPickCounts,
-  handleToggleSelectedSecondColorPick,
-  selectedSecondColorPickOracles,
-  secondColorPickCounts,
   deckCardPoolIndices,
   sideboardCardPoolIndices,
   visibleDeckCounts,
@@ -192,11 +184,13 @@ const DraftSimulatorBottomSection: React.FC<{
   downloadDraftBreakdownCsv,
   displayedPools,
   activeDecks,
+  numSeats,
   simPhase,
   selectedCard,
   focusedPoolIndex,
   setFocusedPoolIndex,
   onInspectPool,
+  onInspectPoolAtPick,
   allPoolClusterThemes,
   allPoolTagAllowlist,
   topSideboardCards,
@@ -396,12 +390,6 @@ const DraftSimulatorBottomSection: React.FC<{
               selectedSideboardCardOracles={selectedSideboardCardOracles}
               onSelectP1P1Card={handleToggleSelectedP1P1Card}
               selectedP1P1CardOracles={selectedP1P1CardOracles}
-              onSelectFirstColorPick={handleToggleSelectedFirstColorPick}
-              selectedFirstColorPickOracles={selectedFirstColorPickOracles}
-              firstColorPickCounts={firstColorPickCounts}
-              onSelectSecondColorPick={handleToggleSelectedSecondColorPick}
-              selectedSecondColorPickOracles={selectedSecondColorPickOracles}
-              secondColorPickCounts={secondColorPickCounts}
               visibleDeckCounts={visibleDeckCounts}
               visibleSideboardCounts={visibleSideboardCounts}
               inDeckOracles={inDeckOracles}
@@ -454,6 +442,7 @@ const DraftSimulatorBottomSection: React.FC<{
           focusedPoolIndex={focusedPoolIndex}
           onSelectPool={setFocusedPoolIndex}
           onInspectPool={onInspectPool}
+          onInspectPoolAtPick={onInspectPoolAtPick}
           poolArchetypeLabels={poolArchetypeLabels}
           poolArchetypeLabelsLoading={poolArchetypeLabelsLoading}
           clusterThemes={allPoolClusterThemes}
@@ -611,6 +600,29 @@ const DraftSimulatorBottomSection: React.FC<{
           </div>
         </Col>
       </Row>
+    )}
+    {bottomTab === 'colorPreferences' && (
+      <Card className="border-border">
+        <CardHeader>
+          <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2">
+            <div className="flex flex-col gap-1">
+              <Text semibold>Color Preferences</Text>
+              <Text xs className="text-text-secondary">
+                Per-color rollup of pick, pool, and deck signals — useful for judging which colors are over- or under-picked relative to expectation.
+              </Text>
+            </div>
+          </Flexbox>
+        </CardHeader>
+        <CardBody>
+          <ColorPreferencesTable
+            cardStats={displayRunData.cardStats}
+            cardMeta={displayRunData.cardMeta}
+            displayedPools={displayedPools}
+            activeDecks={activeDecks}
+            numSeats={numSeats}
+          />
+        </CardBody>
+      </Card>
     )}
   <Text xs className="text-text-secondary text-right mt-4">
       Generated {new Date(displayRunData.generatedAt).toLocaleString()}

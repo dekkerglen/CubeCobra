@@ -971,13 +971,17 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const [selectedDeckCardOracles, setSelectedDeckCardOracles] = useState<string[]>([]);
   const [selectedSideboardCardOracles, setSelectedSideboardCardOracles] = useState<string[]>([]);
   const [selectedP1P1CardOracles, setSelectedP1P1CardOracles] = useState<string[]>([]);
-  const [selectedFirstColorPickOracles, setSelectedFirstColorPickOracles] = useState<string[]>([]);
-  const [selectedSecondColorPickOracles, setSelectedSecondColorPickOracles] = useState<string[]>([]);
   const [selectedArchetype, setSelectedArchetype] = useState<string | null>(null);
   const [selectedSkeletonId, setSelectedSkeletonId] = useState<number | null>(null);
   const [focusedPoolIndex, setFocusedPoolIndex] = useState<number | null>(null);
   const [focusedPoolViewMode, setFocusedPoolViewMode] = useState<PoolViewMode>('deck');
   const [inspectingPoolIndex, setInspectingPoolIndex] = useState<number | null>(null);
+  const [inspectingPickFocus, setInspectingPickFocus] = useState<number | undefined>(undefined);
+
+  const handleInspectPoolAtPick = useCallback((poolIndex: number, pickNumberInPool: number) => {
+    setInspectingPickFocus(pickNumberInPool);
+    setInspectingPoolIndex(poolIndex);
+  }, []);
   const detailedViewRef = useRef<HTMLDivElement>(null);
   const cardStatsRef = useRef<HTMLDivElement>(null);
 
@@ -999,8 +1003,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     setSelectedDeckCardOracles([]);
     setSelectedSideboardCardOracles([]);
     setSelectedP1P1CardOracles([]);
-    setSelectedFirstColorPickOracles([]);
-    setSelectedSecondColorPickOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
     setFocusedPoolIndex(null);
@@ -1201,8 +1203,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       selectedDeckCardOracles,
       selectedSideboardCardOracles,
       selectedP1P1CardOracles,
-      selectedFirstColorPickOracles,
-      selectedSecondColorPickOracles,
       selectedSkeletonId,
       selectedArchetype,
       focusedPoolIndex,
@@ -1213,8 +1213,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       selectedDeckCardOracles,
       selectedSideboardCardOracles,
       selectedP1P1CardOracles,
-      selectedFirstColorPickOracles,
-      selectedSecondColorPickOracles,
       selectedSkeletonId,
       selectedArchetype,
       focusedPoolIndex,
@@ -1227,8 +1225,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       setSelectedDeckCardOracles,
       setSelectedSideboardCardOracles,
       setSelectedP1P1CardOracles,
-      setSelectedFirstColorPickOracles,
-      setSelectedSecondColorPickOracles,
       setSelectedArchetype,
       setSelectedSkeletonId,
       setFocusedPoolIndex,
@@ -1238,8 +1234,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       setSelectedDeckCardOracles,
       setSelectedSideboardCardOracles,
       setSelectedP1P1CardOracles,
-      setSelectedFirstColorPickOracles,
-      setSelectedSecondColorPickOracles,
       setSelectedArchetype,
       setSelectedSkeletonId,
       setFocusedPoolIndex,
@@ -1320,10 +1314,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     selectedSideboardCards,
     selectedP1P1Cards,
     selectedCard,
-    selectedFirstColorPickCards,
-    selectedSecondColorPickCards,
-    firstColorPickCounts,
-    secondColorPickCounts,
     activeFilterPoolIndexSet,
     filteredDecks,
     deckInclusionPct,
@@ -1418,8 +1408,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     selectedDeckCards,
     selectedSideboardCards,
     selectedP1P1Cards,
-    selectedFirstColorPickCards,
-    selectedSecondColorPickCards,
     selectedCard,
     activeFilterPoolIndexSet,
     selectedPools,
@@ -1453,22 +1441,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
   const handleToggleSelectedP1P1Card = useCallback((oracleId: string) => {
     setSelectedP1P1CardOracles((current) => {
-      if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
-      if (current.length < 2) return [...current, oracleId];
-      return [current[1]!, oracleId];
-    });
-  }, []);
-
-  const handleToggleSelectedFirstColorPick = useCallback((oracleId: string) => {
-    setSelectedFirstColorPickOracles((current) => {
-      if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
-      if (current.length < 2) return [...current, oracleId];
-      return [current[1]!, oracleId];
-    });
-  }, []);
-
-  const handleToggleSelectedSecondColorPick = useCallback((oracleId: string) => {
-    setSelectedSecondColorPickOracles((current) => {
       if (current.includes(oracleId)) return current.filter((id) => id !== oracleId);
       if (current.length < 2) return [...current, oracleId];
       return [current[1]!, oracleId];
@@ -1556,8 +1528,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       onAddCard={handleToggleSelectedCard}
       onAddDeckCard={handleToggleSelectedDeckCard}
       onAddP1P1Card={handleToggleSelectedP1P1Card}
-      onAddFirstColorPick={handleToggleSelectedFirstColorPick}
-      onAddSecondColorPick={handleToggleSelectedSecondColorPick}
       onSelectArchetype={setSelectedArchetype}
       onSelectSkeleton={setSelectedSkeletonId}
       onClearAll={clearActiveFilter}
@@ -1703,12 +1673,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       selectedSideboardCardOracles={selectedSideboardCardOracles}
       handleToggleSelectedP1P1Card={handleToggleSelectedP1P1Card}
       selectedP1P1CardOracles={selectedP1P1CardOracles}
-      handleToggleSelectedFirstColorPick={handleToggleSelectedFirstColorPick}
-      selectedFirstColorPickOracles={selectedFirstColorPickOracles}
-      firstColorPickCounts={firstColorPickCounts}
-      handleToggleSelectedSecondColorPick={handleToggleSelectedSecondColorPick}
-      selectedSecondColorPickOracles={selectedSecondColorPickOracles}
-      secondColorPickCounts={secondColorPickCounts}
       deckCardPoolIndices={deckCardPoolIndices}
       sideboardCardPoolIndices={sideboardCardPoolIndices}
       visibleDeckCounts={visibleDeckCounts}
@@ -1722,11 +1686,16 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       downloadDraftBreakdownCsv={downloadDraftBreakdownCsv}
       displayedPools={displayedPools}
       activeDecks={activeDecks}
+      numSeats={numSeats}
       simPhase={simPhase}
       selectedCard={selectedCard}
       focusedPoolIndex={focusedPoolIndex}
       setFocusedPoolIndex={setFocusedPoolIndex}
-      onInspectPool={setInspectingPoolIndex}
+      onInspectPool={(poolIndex) => {
+        setInspectingPickFocus(undefined);
+        setInspectingPoolIndex(poolIndex);
+      }}
+      onInspectPoolAtPick={handleInspectPoolAtPick}
       allPoolClusterThemes={allPoolClusterThemes}
       allPoolTagAllowlist={allPoolTagAllowlist}
       topSideboardCards={topSideboardCards}
@@ -2047,7 +2016,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
             {displayRunData && (
               <PoolInspectionModal
                 isOpen={inspectingPoolIndex !== null}
-                setOpen={(open) => { if (!open) setInspectingPoolIndex(null); }}
+                setOpen={(open) => {
+                  if (!open) {
+                    setInspectingPoolIndex(null);
+                    setInspectingPickFocus(undefined);
+                  }
+                }}
+                focusPickNumber={inspectingPickFocus}
                 pool={inspectingPool}
                 deck={inspectingDeck}
                 cardMeta={displayRunData.cardMeta}
@@ -2176,8 +2151,8 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
             that cluster
           </li>
           <li>
-            <span className="font-medium text-text">Distinct</span> — cards that are unusually concentrated in that
-            cluster relative to the rest of the run
+            <span className="font-medium text-text">Identity</span> — cards most representative of that cluster: they
+            appear in &gt;5% of cluster decks, sorted by closeness to the cluster centroid
           </li>
           <li>
             <span className="font-medium text-text">Exemplary Deck</span> — a real simulated deck chosen as the best

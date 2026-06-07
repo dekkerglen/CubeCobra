@@ -1891,6 +1891,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .gap-px {
   gap: 1px;
 }
+.gap-x-3 {
+  column-gap: 0.75rem;
+}
 .gap-x-4 {
   column-gap: 1rem;
 }
@@ -2134,6 +2137,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .border-black\/10 {
   border-color: rgb(0 0 0 / 0.1);
+}
+.border-black\/15 {
+  border-color: rgb(0 0 0 / 0.15);
 }
 .border-blue-200 {
   --tw-border-opacity: 1;
@@ -2911,6 +2917,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .text-right {
   text-align: right;
 }
+.align-top {
+  vertical-align: top;
+}
 .align-middle {
   vertical-align: middle;
 }
@@ -2984,6 +2993,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .capitalize {
   text-transform: capitalize;
+}
+.normal-case {
+  text-transform: none;
 }
 .italic {
   font-style: italic;
@@ -4289,6 +4301,13 @@ img.mana-symbol-sm {
   border-bottom-width: 0px;
 }
 
+.hover\:scale-\[1\.02\]:hover {
+  --tw-scale-x: 1.02;
+  --tw-scale-y: 1.02;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x))
+    skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
 .hover\:cursor-pointer:hover {
   cursor: pointer;
 }
@@ -4321,6 +4340,11 @@ img.mana-symbol-sm {
 .hover\:border-button-text:hover {
   --tw-border-opacity: 1;
   border-color: rgb(var(--button-text) / var(--tw-border-opacity, 1));
+}
+
+.hover\:border-text-secondary:hover {
+  --tw-border-opacity: 1;
+  border-color: rgb(var(--text-secondary) / var(--tw-border-opacity, 1));
 }
 
 .hover\:bg-bg:hover {
