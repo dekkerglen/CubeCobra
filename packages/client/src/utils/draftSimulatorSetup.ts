@@ -228,5 +228,7 @@ export async function buildClientSimulationSetup(
     cardMeta,
     numSeats,
     basics: buildBasicLandInfo(cubeCards, cube.basicsBoard || 'Basics', cube.basics),
+    deckbuildSpells: cube.deckbuildSpells,
+    deckbuildLands: cube.deckbuildLands,
   };
 }
