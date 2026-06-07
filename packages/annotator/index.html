@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#111111" />
+    <meta name="description" content="Name-bar annotator" />
+    <title>Name-bar Annotator</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        font-family: system-ui, -apple-system, sans-serif;
+        background: #1a1a1a;
+        color: #eee;
+      }
+      button {
+        font: inherit;
+        cursor: pointer;
+        background: #333;
+        color: #eee;
+        border: 1px solid #555;
+        border-radius: 4px;
+        padding: 4px 10px;
+      }
+      button:hover {
+        background: #444;
+      }
+      canvas {
+        display: block;
+        cursor: crosshair;
+        user-select: none;
+        touch-action: none;
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+    <script type="module" src="/src/index.tsx"></script>
+  </body>
+</html>

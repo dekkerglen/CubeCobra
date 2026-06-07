@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { GrabberIcon } from '@primer/octicons-react';
 import { PlayerList } from '@utils/datatypes/Record';
@@ -12,6 +12,16 @@ import { Card } from '../components/base/Card';
 import Input from '../components/base/Input';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import { SortableItem, SortableList } from '../components/DND';
+
+// Each entry tracks the seat it originally came from so the server can
+// reorder/insert/drop the associated draft seats in lockstep. originalIndex is
+// -1 for a newly added player (the server gives it a fresh empty seat).
+interface PlayerEntry {
+  uid: string;
+  name: string;
+  userId?: string;
+  originalIndex: number;
+}
 
 const PlayerName: React.FC<{ player: { name: string; userId?: string }; children: React.ReactNode }> = ({
   player,
@@ -28,81 +38,125 @@ const PlayerName: React.FC<{ player: { name: string; userId?: string }; children
 };
 
 interface EditPlayerListProps {
-  players: PlayerList; // List of player names
+  players: PlayerList; // List of player names (seed value; output is pushed via setPlayers)
   setPlayers: (value: PlayerList) => void;
+  // Optional: parallel array describing, for each output seat, the original
+  // seat index it came from (-1 for a new player). Used by the edit route to
+  // keep draft.seats aligned with record.players. Omit when there is no draft
+  // yet (e.g. record creation).
+  setSeatOrder?: (value: number[]) => void;
 }
 
-const EditPlayerList: React.FC<EditPlayerListProps> = ({ players, setPlayers }) => {
+const EditPlayerList: React.FC<EditPlayerListProps> = ({ players, setPlayers, setSeatOrder }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const [newPlayer, setNewPlayer] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(false);
 
-  const handleAddPlayer = useCallback(async () => {
-    if (newPlayer.trim() && !players.map((p) => p.name.toLowerCase()).includes(newPlayer.trim().toLowerCase())) {
-      setLoading(true);
-      try {
-        const response = await csrfFetch(`/api/user/getByUsername/${newPlayer.trim()}`, {
-          method: 'GET',
-        });
-        const { user } = await response.json();
+  const uidRef = useRef<number>(0);
+  const nextUid = useCallback(() => `entry-${uidRef.current++}`, []);
 
-        const updatedPlayers: PlayerList = [
-          ...players,
-          {
-            userId: user?.id || undefined, // Populate userId if user exists, otherwise omit
-            name: user?.username || newPlayer.trim(), // Use the username from the response or the input value
-          },
-        ];
-        setPlayers(updatedPlayers);
-        setNewPlayer('');
-      } catch {
-        const updatedPlayers: PlayerList = [
-          ...players,
-          {
-            name: newPlayer.trim(),
-          },
-        ];
-        setPlayers(updatedPlayers);
-        setNewPlayer('');
-      } finally {
-        setLoading(false);
-      }
-    }
-  }, [csrfFetch, newPlayer, players, setPlayers]);
-
-  const removeLastPlayer = useCallback(() => {
-    const updatedPlayers = [...players];
-    updatedPlayers.pop();
-    setPlayers(updatedPlayers);
-  }, [players, setPlayers]);
-
-  const handleSortEnd = useCallback(
-    (event: any) => {
-      const { active, over } = event;
-
-      // If sort ends without a collision, do nothing
-      if (!over) {
-        return;
-      }
-
-      if (active.id !== over.id) {
-        const oldIndex = players.findIndex((player) => player.name === active.id);
-        const newIndex = players.findIndex((player) => player.name === over.id);
-
-        const updatedPlayers: PlayerList = [...players];
-        const [removed] = updatedPlayers.splice(oldIndex, 1);
-        updatedPlayers.splice(newIndex, 0, removed);
-
-        setPlayers(updatedPlayers);
-      }
-    },
-    [players, setPlayers],
+  // Seed entries once from the initial players. Subsequent player prop changes
+  // are ignored — the editor owns this state and pushes updates outward.
+  const [entries, setEntries] = useState<PlayerEntry[]>(() =>
+    players.map((player, index) => ({
+      uid: `seed-${index}`,
+      name: player.name,
+      userId: player.userId,
+      originalIndex: index,
+    })),
   );
 
+  // Push derived players + seatOrder to the parent whenever entries change.
+  // Keep the parent setters in refs so the effect doesn't refire (and loop)
+  // when a parent passes a freshly-allocated setter on every render.
+  const setPlayersRef = useRef(setPlayers);
+  setPlayersRef.current = setPlayers;
+  const setSeatOrderRef = useRef(setSeatOrder);
+  setSeatOrderRef.current = setSeatOrder;
+
+  useEffect(() => {
+    setPlayersRef.current(entries.map(({ name, userId }) => (userId ? { name, userId } : { name })));
+    setSeatOrderRef.current?.(entries.map((entry) => entry.originalIndex));
+  }, [entries]);
+
+  const handleAddPlayer = useCallback(async () => {
+    const raw = newPlayer.trim();
+    if (!raw) {
+      return;
+    }
+
+    // A leading @ opts in to linking the player to a CubeCobra account.
+    const isHandle = raw.startsWith('@');
+    const lookupName = isHandle ? raw.slice(1).trim() : raw;
+    if (!lookupName) {
+      return;
+    }
+
+    if (entries.some((entry) => entry.name.toLowerCase() === lookupName.toLowerCase())) {
+      return;
+    }
+
+    if (!isHandle) {
+      setEntries((prev) => [...prev, { uid: nextUid(), name: lookupName, originalIndex: -1 }]);
+      setNewPlayer('');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const response = await csrfFetch(`/api/user/getByUsername/${lookupName}`, {
+        method: 'GET',
+      });
+      const { user } = await response.json();
+
+      setEntries((prev) => [
+        ...prev,
+        {
+          uid: nextUid(),
+          name: user?.username || lookupName,
+          userId: user?.id || undefined,
+          originalIndex: -1,
+        },
+      ]);
+      setNewPlayer('');
+    } catch {
+      setEntries((prev) => [...prev, { uid: nextUid(), name: lookupName, originalIndex: -1 }]);
+      setNewPlayer('');
+    } finally {
+      setLoading(false);
+    }
+  }, [csrfFetch, newPlayer, entries, nextUid]);
+
+  const removeLastPlayer = useCallback(() => {
+    setEntries((prev) => prev.slice(0, -1));
+  }, []);
+
+  const handleSortEnd = useCallback((event: any) => {
+    const { active, over } = event;
+
+    // If sort ends without a collision, do nothing
+    if (!over) {
+      return;
+    }
+
+    if (active.id !== over.id) {
+      setEntries((prev) => {
+        const oldIndex = prev.findIndex((entry) => entry.uid === active.id);
+        const newIndex = prev.findIndex((entry) => entry.uid === over.id);
+        if (oldIndex === -1 || newIndex === -1) {
+          return prev;
+        }
+        const updated = [...prev];
+        const [removed] = updated.splice(oldIndex, 1);
+        updated.splice(newIndex, 0, removed);
+        return updated;
+      });
+    }
+  }, []);
+
   const handleShufflePlayers = useCallback(() => {
-    const shuffledPlayers = [...players].sort(() => Math.random() - 0.5);
-    setPlayers(shuffledPlayers);
-  }, [players, setPlayers]);
+    setEntries((prev) => [...prev].sort(() => Math.random() - 0.5));
+  }, []);
 
   return (
     <Flexbox direction="col" gap="2">
@@ -117,7 +171,7 @@ const EditPlayerList: React.FC<EditPlayerListProps> = ({ players, setPlayers }) 
                 handleAddPlayer();
               }
             }}
-            placeholder="Enter player name"
+            placeholder="Enter player name (prefix with @ to link an account)"
           />
         </Col>
         <Col xs={1}>
@@ -131,16 +185,16 @@ const EditPlayerList: React.FC<EditPlayerListProps> = ({ players, setPlayers }) 
           </Button>
         </Col>
       </Row>
-      <SortableList onDragEnd={handleSortEnd} items={players.map((player) => player.name)}>
-        {players.map((player, index) => (
-          <SortableItem key={player.name} id={player.name} className="p-1">
+      <SortableList onDragEnd={handleSortEnd} items={entries.map((entry) => entry.uid)}>
+        {entries.map((entry, index) => (
+          <SortableItem key={entry.uid} id={entry.uid} className="p-1">
             {({ handleProps }) => (
               <Card>
                 <Flexbox direction="row" justify="start" alignItems="center" className="p-2">
                   <div {...handleProps}>
                     <GrabberIcon size={16} className="cursor-grab mr-2" />
                   </div>
-                  <PlayerName player={player}>{`Seat ${index + 1}. ${player.name}`}</PlayerName>
+                  <PlayerName player={entry}>{`Seat ${index + 1}. ${entry.name}`}</PlayerName>
                 </Flexbox>
               </Card>
             )}

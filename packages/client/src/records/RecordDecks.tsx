@@ -1,12 +1,13 @@
 import React, { useContext } from 'react';
 
-import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
+import { ChevronUpIcon, KebabHorizontalIcon, ThreeBarsIcon } from '@primer/octicons-react';
 import Draft from '@utils/datatypes/Draft';
 import Record from '@utils/datatypes/Record';
 
 import Button from 'components/base/Button';
 import { CardBody } from 'components/base/Card';
 import Collapse from 'components/base/Collapse';
+import Dropdown from 'components/base/Dropdown';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
@@ -14,7 +15,12 @@ import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import DeckCard from 'components/DeckCard';
 import DraftExportMenu from 'components/draft/DraftExportMenu';
+import QuickAddRecordModal from 'components/modals/QuickAddRecordModal';
+import RemoveDeckModal from 'components/modals/RemoveDeckModal';
+import SampleHandModal from 'components/modals/SampleHandModal';
+import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
+import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
 import UserContext from 'contexts/UserContext';
 import useToggle from 'hooks/UseToggle';
 
@@ -23,25 +29,36 @@ interface RecordDecksProps {
   draft?: Draft;
 }
 
+const SampleHandLink = withModal(Link, SampleHandModal);
+const RemoveDeckLink = withModal(Link, RemoveDeckModal);
+const QuickAddRecordLink = withModal(Link, QuickAddRecordModal);
+
+const menuLinkClass = '!text-text hover:!text-link-active hover:cursor-pointer font-medium';
+
 const firstPlayerIndexWithDeck = (record: Record, draft: Draft | undefined): number => {
   if (!draft) return -1;
 
   for (let i = 0; i < record.players.length; i++) {
     const seat = draft.seats[i];
-    if (seat.mainboard?.flat(3).length > 0) {
+    if (seat?.mainboard?.flat(3).length > 0) {
       return i;
     }
   }
   return -1;
 };
 
-const RecordDecks: React.FC<RecordDecksProps> = ({ record, draft }) => {
+const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft }) => {
   const { cube } = useContext(CubeContext);
   const user = useContext(UserContext);
-  const [selectedUserIndex, setSelectedUserIndex] = React.useState<number>(firstPlayerIndexWithDeck(record, draft));
+  const { showCustomImages, toggleShowCustomImages } = useContext(DisplayContext);
+  // Default to the first player who actually has a deck; fall back to player 0
+  // so the controls (quick record, etc.) still target a valid player.
+  const firstWithDeck = firstPlayerIndexWithDeck(record, draft);
+  const [selectedUserIndex, setSelectedUserIndex] = React.useState<number>(firstWithDeck >= 0 ? firstWithDeck : 0);
   const [expanded, toggleExpanded] = useToggle(false);
 
   const isOwner = user && cube && user.id === cube.owner.id;
+  const selectedPlayer = record.players[selectedUserIndex];
 
   if (record.players.length === 0) {
     return (
@@ -53,21 +70,74 @@ const RecordDecks: React.FC<RecordDecksProps> = ({ record, draft }) => {
     );
   }
 
+  // Even without a draft, the owner can still log a quick W/L/D for a player.
+  const quickRecordControl = isOwner && selectedPlayer && (
+    <QuickAddRecordLink modalprops={{ record, playerName: selectedPlayer.name }}>Quick Add Record</QuickAddRecordLink>
+  );
+
   if (!draft) {
     return (
       <CardBody>
         <Flexbox direction="col" gap="2">
           <Text sm>{'No draft data available for this record.'}</Text>
+          {isOwner && (
+            <Select
+              value={`${selectedUserIndex}`}
+              setValue={(value) => setSelectedUserIndex(parseInt(value, 10))}
+              dense
+              label="Player"
+              options={record.players.map((player, index) => ({ value: `${index}`, label: player.name }))}
+            />
+          )}
+          {quickRecordControl}
           {isOwner && <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload a deck to this record</Link>}
         </Flexbox>
       </CardBody>
     );
   }
 
+  const selectedSeat = draft.seats[selectedUserIndex];
+  const selectedHasDeck = (selectedSeat?.mainboard?.flat(3).length ?? 0) > 0;
+
   const controls = (
     <>
       {isOwner && <Link href={`/draft/deckbuilder/${draft.id}?seat=${selectedUserIndex}`}>Edit Deck</Link>}
       <DraftExportMenu draft={draft} seatIndex={`${selectedUserIndex}`} />
+      <Dropdown
+        trigger={
+          <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
+            <KebabHorizontalIcon size={16} />
+            More
+          </Link>
+        }
+        align="left"
+        minWidth="16rem"
+      >
+        <Flexbox direction="col" gap="2" className="p-3">
+          <SampleHandLink
+            className={menuLinkClass}
+            modalprops={{ deck: selectedSeat?.mainboard?.flat(3).map((cardIndex) => draft.cards[cardIndex]) }}
+          >
+            Sample Hand
+          </SampleHandLink>
+          {isOwner && (
+            <Link href={`/cube/deck/rebuild/${draft.id}/${selectedUserIndex}`} className={menuLinkClass}>
+              Clone and Rebuild
+            </Link>
+          )}
+          <Link href="#" onClick={toggleShowCustomImages} className={menuLinkClass}>
+            {showCustomImages ? 'Hide' : 'Show'} Custom Images
+          </Link>
+          {isOwner && selectedHasDeck && selectedPlayer && (
+            <RemoveDeckLink
+              className="!text-danger hover:!text-link-active hover:cursor-pointer font-medium"
+              modalprops={{ record, seatIndex: selectedUserIndex, playerName: selectedPlayer.name }}
+            >
+              Remove Deck
+            </RemoveDeckLink>
+          )}
+        </Flexbox>
+      </Dropdown>
     </>
   );
 
@@ -91,6 +161,7 @@ const RecordDecks: React.FC<RecordDecksProps> = ({ record, draft }) => {
                 }))
                 .filter((option) => draft.seats[parseInt(option.value, 10)]?.mainboard?.flat(3).length > 0)}
             />
+            {quickRecordControl}
             {isOwner && <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload another deck to this record</Link>}
           </Flexbox>
           <ResponsiveDiv baseVisible lg>
@@ -120,6 +191,16 @@ const RecordDecks: React.FC<RecordDecksProps> = ({ record, draft }) => {
         />
       </Flexbox>
     </CardBody>
+  );
+};
+
+const RecordDecks: React.FC<RecordDecksProps> = ({ record, draft }) => {
+  const { cube } = useContext(CubeContext);
+
+  return (
+    <DisplayContextProvider cubeID={cube?.id || ''}>
+      <RecordDecksContent record={record} draft={draft} />
+    </DisplayContextProvider>
   );
 };
 

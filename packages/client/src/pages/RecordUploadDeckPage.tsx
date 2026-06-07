@@ -18,6 +18,7 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
 import UploadDeck from '../records/UploadDeck';
+import UploadDeckFromPhoto from '../records/UploadDeckFromPhoto';
 
 interface RecordUploadDeckPageProps {
   cube: Cube;
@@ -61,6 +62,7 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
           </CardHeader>
           <CardBody>
             <Flexbox direction="col" gap="2">
+              <UploadDeckFromPhoto cube={cube} setMainboardCards={setMainboardCards} setAlerts={setAlerts} />
               <UploadDeck
                 selectedUser={selectedUser}
                 setSelectedUser={setSelectedUser}

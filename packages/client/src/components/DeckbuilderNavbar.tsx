@@ -1,15 +1,19 @@
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 
-import { EyeIcon, FileMediaIcon, PencilIcon, TagIcon, ZapIcon } from '@primer/octicons-react';
+import { EyeIcon, FileMediaIcon, PencilIcon, PlusIcon, TagIcon, ZapIcon } from '@primer/octicons-react';
 import { cardOracleId } from '@utils/cardutil';
-import Card from '@utils/datatypes/Card';
+import Card, { CardDetails } from '@utils/datatypes/Card';
 import Draft from '@utils/datatypes/Draft';
 import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
 
 import DisplayContext from 'contexts/DisplayContext';
 import { trackEvent } from 'utils/analytics';
+import { cardNameMatches } from 'utils/cardAutocomplete';
+import { getCard } from 'utils/cards/getCard';
 
 import { CSRFContext } from '../contexts/CSRFContext';
+import AutocompleteInput from './base/AutocompleteInput';
+import Button from './base/Button';
 import Dropdown from './base/Dropdown';
 import { Flexbox } from './base/Layout';
 import Link from './base/Link';
@@ -36,13 +40,20 @@ interface DeckbuilderNavbarProps {
   seat: number;
   maxSpells?: number;
   maxLands?: number;
+  // Adds an arbitrary card to the deck (resolved to a CardDetails). When set,
+  // the Add Card control is shown.
+  onAddCard?: (details: CardDetails) => void;
+  // Default printing to resolve added cards to (the cube's preferred version).
+  defaultPrinting?: string;
+  // Number of cards in the original pool; anything beyond is submitted as new.
+  originalCardCount?: number;
 }
 
 const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   cards,
   basics,
   draft,
-  cubeID: _cubeID,
+  cubeID,
   mainboard,
   sideboard,
   addBasics,
@@ -51,6 +62,9 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   seat,
   maxSpells = 23,
   maxLands = 17,
+  onAddCard,
+  defaultPrinting,
+  originalCardCount,
 }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const { showCustomImages, toggleShowCustomImages, showDeckBuilderStatsPanel, toggleShowDeckBuilderStatsPanel } =
@@ -65,14 +79,37 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   const [autobuildError, setAutobuildError] = useState<string | null>(null);
   const seatData = draft.seats[seat];
   const [deckTitle, setDeckTitle] = useState(seatData?.title || '');
+  const [addCardValue, setAddCardValue] = useState('');
+  const addCardRef = useRef<HTMLInputElement>(null);
   const formData = useMemo<Record<string, string>>(
     () => ({
       main: JSON.stringify(mainboard),
       side: JSON.stringify(sideboard),
       seat: seat.toString(),
       title: deckTitle,
+      // Cards added beyond the original pool are appended server-side so the
+      // mainboard/sideboard indices that reference them resolve correctly.
+      newCards: JSON.stringify(
+        cards.slice(originalCardCount ?? cards.length).map((card) => ({ cardID: card.cardID })),
+      ),
     }),
-    [mainboard, sideboard, seat, deckTitle],
+    [mainboard, sideboard, seat, deckTitle, cards, originalCardCount],
+  );
+
+  const handleAddCard = useCallback(
+    async (name: string) => {
+      const trimmed = (name || '').trim();
+      if (!trimmed || !onAddCard) {
+        return;
+      }
+      const details = await getCard(csrfFetch, defaultPrinting || '', trimmed);
+      if (details) {
+        onAddCard(details);
+        setAddCardValue('');
+        addCardRef.current?.focus();
+      }
+    },
+    [csrfFetch, defaultPrinting, onAddCard],
   );
 
   const autoBuildDeck = useCallback(async () => {
@@ -200,6 +237,31 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
         <FileMediaIcon size={16} />
         Add Basics
       </BasicsModalLink>
+      {onAddCard && (
+        <Flexbox direction="row" gap="1" alignItems="center" className="px-2">
+          <PlusIcon size={16} className="text-text-secondary" />
+          <AutocompleteInput
+            cubeId={cubeID}
+            getMatches={cardNameMatches(false)}
+            type="text"
+            innerRef={addCardRef}
+            name="add-card"
+            value={addCardValue}
+            setValue={setAddCardValue}
+            onSubmit={(e, val) => {
+              e.preventDefault();
+              handleAddCard(val ?? addCardValue);
+            }}
+            placeholder="Add card (e.g. Mox Ruby, or Mox Ruby [vma-263])"
+            autoComplete="off"
+            data-lpignore
+            className="w-56"
+          />
+          <Button color="primary" disabled={addCardValue.length === 0} onClick={() => handleAddCard(addCardValue)}>
+            <span className="text-nowrap">Add</span>
+          </Button>
+        </Flexbox>
+      )}
       {autobuilding ? (
         <Flexbox direction="row" gap="2" alignItems="center" className="px-2 min-w-[12rem]">
           <Spinner sm />

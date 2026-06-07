@@ -1,0 +1,7 @@
+node_modules
+dist
+*.tsbuildinfo
+
+# Local source photos — large, not committed. Annotations under data/ ARE kept.
+images/*
+!images/.gitkeep
