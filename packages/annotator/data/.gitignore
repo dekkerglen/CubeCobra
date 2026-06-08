@@ -1,0 +1,6 @@
+# Generated / cached dataset artifacts — never commit (large).
+# Hand-made annotations under data/annotations/ stay tracked.
+/scryfall/
+/cardpool/
+/synthetic/
+/yolo/

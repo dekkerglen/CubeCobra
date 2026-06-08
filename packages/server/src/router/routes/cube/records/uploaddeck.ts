@@ -262,9 +262,30 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/records/${cube.id}`);
     }
 
-    const userIndex = parseInt(req.body.userIndex, 10);
+    let userIndex = parseInt(req.body.userIndex, 10);
     const mainboard = JSON.parse(req.body.mainboard);
     const sideboard = req.body.sideboard ? JSON.parse(req.body.sideboard) : [];
+
+    // Add a brand-new player inline (so players needn't be set up ahead of time).
+    const newPlayer = `${req.body.newPlayer ?? ''}`.trim();
+    if (newPlayer) {
+      record.players = [...(record.players || []), { name: newPlayer }];
+      userIndex = record.players.length; // the new player's 1-based index
+      await recordDao.update(record);
+      // If a draft already exists, give the new player a seat to match.
+      if (record.draft) {
+        const existingDraft = await draftDao.getById(record.draft);
+        if (existingDraft) {
+          existingDraft.seats.push({
+            owner: undefined,
+            title: newPlayer,
+            mainboard: createPool() as number[][][],
+            sideboard: setupPicks(1, 8) as number[][][],
+          });
+          await draftDao.update(existingDraft);
+        }
+      }
+    }
 
     if (!record.draft) {
       // If the record does not have a draft, create one

@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import Record from '@utils/datatypes/Record';
+import Record, { playerRecord } from '@utils/datatypes/Record';
 
 import { CardBody } from 'components/base/Card';
 import Link from 'components/base/Link';
@@ -24,53 +24,16 @@ const RecordStandings: React.FC<RecordStandingsProps> = ({ record }) => {
   const isOwner = user && cube && user.id === cube.owner.id;
 
   const standings = useMemo(() => {
-    const byPlayer = Object.fromEntries(
-      record.players.map((player) => [
-        player.name,
-        {
-          name: player.name,
-          id: player.userId,
-          wins: 0,
-          losses: 0,
-          draws: 0,
-          trophy: record.trophy.includes(player.name),
-        },
-      ]),
-    );
-
-    for (const round of record.matches) {
-      for (const match of round.matches) {
-        const p1 = byPlayer[match.p1];
-        const p2 = byPlayer[match.p2];
-
-        if (match.results[0] > match.results[1]) {
-          if (p1) {
-            p1.wins += 1;
-          }
-          if (p2) {
-            p2.losses += 1;
-          }
-        } else if (match.results[0] < match.results[1]) {
-          if (p1) {
-            p1.losses += 1;
-          }
-          if (p2) {
-            p2.wins += 1;
-          }
-        } else {
-          // Draw
-          if (p1) {
-            p1.draws += 1;
-          }
-          if (p2) {
-            p2.draws += 1;
-          }
-        }
-      }
-    }
-
-    return Object.values(byPlayer).sort((a, b) => b.wins - a.wins || a.losses - b.losses);
-  }, [record.matches, record.players, record.trophy]);
+    // playerRecord respects a manual override when present, else derives from matches.
+    return record.players
+      .map((player) => ({
+        name: player.name,
+        id: player.userId,
+        trophy: record.trophy.includes(player.name),
+        ...playerRecord(record, player.name),
+      }))
+      .sort((a, b) => b.wins - a.wins || a.losses - b.losses);
+  }, [record]);
 
   return (
     <>

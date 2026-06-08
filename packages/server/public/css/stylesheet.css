@@ -1321,6 +1321,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .h-\[6vh\] {
   height: 6vh;
 }
+.h-auto {
+  height: auto;
+}
 .h-full {
   height: 100%;
 }
@@ -1336,14 +1339,14 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .max-h-40 {
   max-height: 10rem;
 }
-.max-h-48 {
-  max-height: 12rem;
-}
 .max-h-96 {
   max-height: 24rem;
 }
 .max-h-\[60vh\] {
   max-height: 60vh;
+}
+.max-h-\[85vh\] {
+  max-height: 85vh;
 }
 .max-h-fit {
   max-height: -webkit-fit-content;
@@ -1955,6 +1958,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .divide-border\/70 > :not([hidden]) ~ :not([hidden]) {
   border-color: rgb(var(--border) / 0.7);
 }
+.self-start {
+  align-self: flex-start;
+}
 .self-end {
   align-self: flex-end;
 }
@@ -2257,6 +2263,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .border-transparent {
   border-color: transparent;
 }
+.border-yellow-400 {
+  --tw-border-opacity: 1;
+  border-color: rgb(250 204 21 / var(--tw-border-opacity, 1));
+}
 .border-yellow-500 {
   --tw-border-opacity: 1;
   border-color: rgb(234 179 8 / var(--tw-border-opacity, 1));
@@ -2369,6 +2379,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .bg-black\/70 {
   background-color: rgb(0 0 0 / 0.7);
+}
+.bg-black\/75 {
+  background-color: rgb(0 0 0 / 0.75);
 }
 .bg-black\/80 {
   background-color: rgb(0 0 0 / 0.8);
@@ -2580,6 +2593,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .bg-yellow-300 {
   --tw-bg-opacity: 1;
   background-color: rgb(253 224 71 / var(--tw-bg-opacity, 1));
+}
+.bg-yellow-400\/10 {
+  background-color: rgb(250 204 21 / 0.1);
 }
 .bg-yellow-500\/10 {
   background-color: rgb(234 179 8 / 0.1);
@@ -2895,6 +2911,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .text-right {
   text-align: right;
 }
+.align-top {
+  vertical-align: top;
+}
 .align-middle {
   vertical-align: middle;
 }
@@ -3152,6 +3171,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .text-orange-200 {
   --tw-text-opacity: 1;
   color: rgb(254 215 170 / var(--tw-text-opacity, 1));
+}
+.text-orange-600 {
+  --tw-text-opacity: 1;
+  color: rgb(234 88 12 / var(--tw-text-opacity, 1));
 }
 .text-purple-200 {
   --tw-text-opacity: 1;
@@ -4938,6 +4961,10 @@ img.mana-symbol-sm {
     display: none;
   }
 
+  .md\:max-h-\[85vh\] {
+    max-height: 85vh;
+  }
+
   .md\:w-1\/2 {
     width: 50%;
   }
@@ -5036,6 +5063,10 @@ img.mana-symbol-sm {
 
   .md\:gap-6 {
     gap: 1.5rem;
+  }
+
+  .md\:overflow-y-auto {
+    overflow-y: auto;
   }
 
   .md\:border-b {

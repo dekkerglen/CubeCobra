@@ -11,6 +11,7 @@ import Text from 'components/base/Text';
 import { SafeMarkdown } from 'components/Markdown';
 import EditPlayerListModal from 'components/modals/EditPlayerListModal';
 import EditRecordOverviewModal from 'components/modals/EditRecordOverviewModal';
+import ShareRecordModal from 'components/modals/ShareRecordModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import UserContext from 'contexts/UserContext';
@@ -19,6 +20,7 @@ import RecordPlayer from './RecordPlayer';
 
 const EditPlayerListLink = withModal(Link, EditPlayerListModal);
 const EditRecordOverviewLink = withModal(Link, EditRecordOverviewModal);
+const ShareRecordLink = withModal(Link, ShareRecordModal);
 
 interface RecordOverviewProps {
   record: Record;
@@ -53,6 +55,13 @@ const RecordOverview: React.FC<RecordOverviewProps> = ({ record, players }) => {
                   {'Edit Overview'}
                 </Text>
               </EditRecordOverviewLink>
+            )}
+            {isOwner && (
+              <ShareRecordLink modalprops={{ record }}>
+                <Text sm className="text-muted">
+                  {'Share link to collect decks'}
+                </Text>
+              </ShareRecordLink>
             )}
           </Flexbox>
         </Col>

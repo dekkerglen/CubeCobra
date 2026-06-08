@@ -2,7 +2,7 @@ import React, { useContext } from 'react';
 
 import { ChevronUpIcon, KebabHorizontalIcon, ThreeBarsIcon } from '@primer/octicons-react';
 import Draft from '@utils/datatypes/Draft';
-import Record from '@utils/datatypes/Record';
+import Record, { formatRecord, playerRecord } from '@utils/datatypes/Record';
 
 import Button from 'components/base/Button';
 import { CardBody } from 'components/base/Card';
@@ -15,7 +15,7 @@ import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import DeckCard from 'components/DeckCard';
 import DraftExportMenu from 'components/draft/DraftExportMenu';
-import QuickAddRecordModal from 'components/modals/QuickAddRecordModal';
+import RecordOverrideModal from 'components/modals/RecordOverrideModal';
 import RemoveDeckModal from 'components/modals/RemoveDeckModal';
 import SampleHandModal from 'components/modals/SampleHandModal';
 import withModal from 'components/WithModal';
@@ -31,7 +31,7 @@ interface RecordDecksProps {
 
 const SampleHandLink = withModal(Link, SampleHandModal);
 const RemoveDeckLink = withModal(Link, RemoveDeckModal);
-const QuickAddRecordLink = withModal(Link, QuickAddRecordModal);
+const RecordOverrideLink = withModal(Button, RecordOverrideModal);
 
 const menuLinkClass = '!text-text hover:!text-link-active hover:cursor-pointer font-medium';
 
@@ -70,10 +70,17 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft }) => {
     );
   }
 
-  // Even without a draft, the owner can still log a quick W/L/D for a player.
-  const quickRecordControl = isOwner && selectedPlayer && (
-    <QuickAddRecordLink modalprops={{ record, playerName: selectedPlayer.name }}>Quick Add Record</QuickAddRecordLink>
-  );
+  // A player's current record (override or match-derived, default 0-0). Owners
+  // can click to set it; others see it read-only.
+  const recordControl =
+    selectedPlayer &&
+    (isOwner ? (
+      <RecordOverrideLink color="secondary" modalprops={{ record, playerName: selectedPlayer.name }}>
+        {`Record: ${formatRecord(playerRecord(record, selectedPlayer.name))}`}
+      </RecordOverrideLink>
+    ) : (
+      <Text sm>{`Record: ${formatRecord(playerRecord(record, selectedPlayer.name))}`}</Text>
+    ));
 
   if (!draft) {
     return (
@@ -89,7 +96,7 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft }) => {
               options={record.players.map((player, index) => ({ value: `${index}`, label: player.name }))}
             />
           )}
-          {quickRecordControl}
+          {recordControl}
           {isOwner && <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload a deck to this record</Link>}
         </Flexbox>
       </CardBody>
@@ -161,7 +168,7 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft }) => {
                 }))
                 .filter((option) => draft.seats[parseInt(option.value, 10)]?.mainboard?.flat(3).length > 0)}
             />
-            {quickRecordControl}
+            {recordControl}
             {isOwner && <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload another deck to this record</Link>}
           </Flexbox>
           <ResponsiveDiv baseVisible lg>

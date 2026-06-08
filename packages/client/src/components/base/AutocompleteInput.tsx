@@ -6,6 +6,7 @@ import AutocardContext from '../../contexts/AutocardContext';
 import { MatchFetcher } from '../../utils/cardAutocomplete';
 import withAutocard from '../WithAutocard';
 import Input, { InputProps } from './Input';
+import Spinner from './Spinner';
 
 const AutocardDiv = withAutocard('div');
 
@@ -50,6 +51,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   const [matches, setMatches] = useState<string[]>([]);
   const [position, setPosition] = useState(-1);
   const [visible, setVisible] = useState(false);
+  const [loading, setLoading] = useState(false);
   const { hideCard } = useContext(AutocardContext);
 
   // Guards against out-of-order responses: only the newest request may write
@@ -78,22 +80,26 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   useEffect(() => {
     if (!visible || normalizedValue.length < MIN_QUERY_LENGTH) {
       setMatches([]);
+      setLoading(false);
       return;
     }
 
     const cached = cache.current.get(normalizedValue);
     if (cached) {
       setMatches(cached);
+      setLoading(false);
       return;
     }
 
     const seq = ++requestSeq.current;
     const controller = new AbortController();
+    setLoading(true);
     const timer = setTimeout(async () => {
       const result = await getMatchesRef.current(normalizedValue, controller.signal);
       if (seq !== requestSeq.current) return;
       cache.current.set(normalizedValue, result);
       setMatches(result);
+      setLoading(false);
     }, DEBOUNCE_MS);
 
     return () => {
@@ -139,6 +145,10 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
 
   const showMatches =
     visible && !!value && matches.length > 0 && !(matches.length === 1 && matches[0] === normalizedValue);
+  // While a lookup is in flight, keep the dropdown open with a single spinner row
+  // (the user can keep typing). Resolves to the matches once they arrive.
+  const hasQuery = visible && !!value && normalizedValue.length >= MIN_QUERY_LENGTH;
+  const showDropdown = hasQuery && (loading || showMatches);
 
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
@@ -176,13 +186,19 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   return (
     <div className="relative overflow-y-visible w-full">
       <Input value={value} onKeyDown={handleKeyDown} onChange={handleChange} {...props} />
-      {showMatches && (
+      {showDropdown && (
         <div
           className={classNames(
             'absolute border border-border rounded-md top-0 left-0 translate-y-9 w-full flex flex-col overflow-y-visible z-[1050]',
           )}
         >
-          {matches.map((match, index) => {
+          {loading && (
+            <div className="list-none p-2 bg-bg-accent rounded-md flex items-center justify-center">
+              <Spinner sm />
+            </div>
+          )}
+          {!loading &&
+            matches.map((match, index) => {
             return showImages ? (
               <AutocardDiv
                 inModal

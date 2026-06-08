@@ -32,6 +32,7 @@
     "micromark-util-character": "^2.1.0",
     "micromark-util-chunked": "^2.0.0",
     "micromark-util-symbol": "^2.0.0",
+    "onnxruntime-web": "^1.26.0",
     "papaparse": "^5.5.3",
     "react": "^18.3.1",
     "react-audio-player": "^0.17.0",

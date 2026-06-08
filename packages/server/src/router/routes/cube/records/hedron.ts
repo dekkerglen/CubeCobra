@@ -1,6 +1,8 @@
+import { cardColorIdentity } from '@utils/cardutil';
 import DraftRecord from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
-import { cubeDao, recordDao } from 'dynamo/daos';
+import { getColorCombination } from '@utils/sorting/Sort';
+import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { bodyValidation } from 'router/middleware';
@@ -10,6 +12,7 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
+import { associateNewDraft, associateWithExistingDraft } from './uploaddeck';
 
 export const hedronImportPageHandler = async (req: Request, res: Response) => {
   try {
@@ -140,6 +143,52 @@ export const hedronImportHandler = async (req: Request, res: Response) => {
     if (!createdRecordId) {
       req.flash('danger', 'Error creating record');
       return redirect(req, res, `/cube/records/${req.params.id}`);
+    }
+
+    // Attach the auto-annotated decklists (oracle ids, keyed by 1-based player
+    // index). The first deck creates the draft; the rest fill its other seats.
+    const decks: { [playerIndex: string]: string[] } = req.body.decks ? JSON.parse(req.body.decks) : {};
+    const withDecks = Object.entries(decks).filter(([, oracles]) => Array.isArray(oracles) && oracles.length > 0);
+    if (withDecks.length > 0) {
+      const created = await recordDao.getById(createdRecordId);
+      if (created) {
+        for (const [idx, oracles] of withDecks) {
+          const userIndex = parseInt(idx, 10);
+          const existingDraft = created.draft ? await draftDao.getById(created.draft) : undefined;
+          if (existingDraft) {
+            await associateWithExistingDraft(cube, existingDraft, userIndex, oracles, []);
+          } else {
+            // mutates `created` (sets created.draft) so subsequent players reuse it
+            await associateNewDraft(cube, created, userIndex, oracles, []);
+          }
+        }
+
+        // Name each deck by its colour archetype (Azorius, Boros, …) from the
+        // cards we just placed — the player is still tracked in the record's
+        // player list, so the deck heading reads as the archetype.
+        if (created.draft) {
+          const draft = await draftDao.getById(created.draft);
+          if (draft) {
+            let renamed = false;
+            for (const seat of draft.seats) {
+              const indices = (seat.mainboard ?? []).flat(2) as number[];
+              if (indices.length === 0) continue;
+              const colorSet = new Set<string>();
+              for (const cardIndex of indices) {
+                const card = draft.cards[cardIndex];
+                if (card) {
+                  for (const c of cardColorIdentity(card)) colorSet.add(c);
+                }
+              }
+              seat.title = getColorCombination([...'WUBRG'].filter((c) => colorSet.has(c)));
+              renamed = true;
+            }
+            if (renamed) {
+              await draftDao.update(draft);
+            }
+          }
+        }
+      }
     }
 
     req.flash('success', 'Record imported from Hedron Network successfully');
