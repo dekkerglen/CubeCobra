@@ -1175,9 +1175,6 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .mt-6 {
   margin-top: 1.5rem;
 }
-.mt-auto {
-  margin-top: auto;
-}
 .box-border {
   box-sizing: border-box;
 }
@@ -1666,6 +1663,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+.\!cursor-not-allowed {
+  cursor: not-allowed !important;
 }
 .\!cursor-pointer {
   cursor: pointer !important;
@@ -2356,9 +2356,6 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .bg-bg-accent\/50 {
   background-color: rgb(var(--bg-accent) / 0.5);
 }
-.bg-bg-accent\/60 {
-  background-color: rgb(var(--bg-accent) / 0.6);
-}
 .bg-bg-accent\/80 {
   background-color: rgb(var(--bg-accent) / 0.8);
 }
@@ -2368,9 +2365,6 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .bg-bg-active\/80 {
   background-color: rgb(var(--bg-active) / 0.8);
-}
-.bg-bg-active\/95 {
-  background-color: rgb(var(--bg-active) / 0.95);
 }
 .bg-bg-secondary {
   --tw-bg-opacity: 1;
@@ -2426,9 +2420,6 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .bg-button-accent {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--button-accent) / var(--tw-bg-opacity, 1));
-}
-.bg-button-accent\/10 {
-  background-color: rgb(var(--button-accent) / 0.1);
 }
 .bg-button-danger {
   --tw-bg-opacity: 1;
@@ -3073,6 +3064,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .\!text-text {
   --tw-text-opacity: 1 !important;
   color: rgb(var(--text) / var(--tw-text-opacity, 1)) !important;
+}
+.\!text-text-secondary {
+  --tw-text-opacity: 1 !important;
+  color: rgb(var(--text-secondary) / var(--tw-text-opacity, 1)) !important;
 }
 .text-amber-400 {
   --tw-text-opacity: 1;

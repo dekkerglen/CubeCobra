@@ -50,6 +50,7 @@ export const handler = async (req: Request, res: Response) => {
     user.disableAnimations = req.body.disableAnimations === 'true';
     user.useTextOverIcons = req.body.useTextOverIcons === 'true';
     user.disableFollowAlerts = req.body.disableFollowAlerts === 'true';
+    user.disableCubeTray = req.body.disableCubeTray === 'true';
 
     await userDao.update(user as any);
 

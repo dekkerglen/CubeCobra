@@ -25,13 +25,19 @@ export interface AnalysisDeck {
   clusterId: number | null;
   x: number;
   y: number;
-  colors: string[]; // deck colour identity codes (e.g. ['W','U']), >10% threshold
+  colors: string[]; // deck color identity codes (e.g. ['W','U']), >10% threshold
   archetype: string; // ML archetype label (e.g. 'Aggro'), '' if unavailable
 }
 
 // Archetype-vs-archetype matchups, keyed `${aClusterId}|${bClusterId}`: how decks
 // of cluster A fared against decks of cluster B (a's wins/draws over `matches`).
 export type ClusterMatchups = { [key: string]: { matches: number; wins: number; draws: number } };
+
+// Color-vs-color matchups, keyed `${colorA}|${colorB}` (colors W/U/B/R/G, or
+// C for colorless): how decks containing color A fared against decks containing
+// color B. A multicolor deck contributes to every color it plays, so the same
+// match counts toward several cells (a "contains this color" view, not "exactly").
+export type ColorMatchups = { [key: string]: { matches: number; wins: number; draws: number } };
 
 // Per-oracle card info captured from the records' drafts, so decks/charts render
 // even for cards no longer in the live cube. Keyed by oracle id.
@@ -57,6 +63,9 @@ export interface RecordAnalysisRunData {
   decks: AnalysisDeck[];
   skeletons: ArchetypeSkeleton[];
   clusterMatchups: ClusterMatchups;
+  // color-vs-color head-to-head (independent of the ML clustering, so present
+  // even when the archetype map fails to build)
+  colorMatchups: ColorMatchups;
   cardImages: { [oracle: string]: RecordCardInfo };
   clusterMethod: string;
   clustered: boolean; // true once the archetype map (ML model) has been computed

@@ -57,6 +57,8 @@ export interface UnhydratedUser {
   disableAnimations?: boolean;
   useTextOverIcons?: boolean;
   disableFollowAlerts?: boolean;
+  /** Hide the floating cube board tray. The tray is always hidden on mobile regardless of this setting. */
+  disableCubeTray?: boolean;
 }
 
 export interface UserWithSensitiveInformation extends UnhydratedUser {

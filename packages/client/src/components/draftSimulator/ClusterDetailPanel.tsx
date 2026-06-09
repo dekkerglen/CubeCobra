@@ -23,11 +23,10 @@ import withAutocard from '../WithAutocard';
 import {
   CardTypeShareChart,
   CardTypeShareLegend,
-  COLOR_KEYS,
+  computeColorProfileFromDecks,
   DeckColorShareChart,
   DeckColorShareLegend,
   EloDistributionChart,
-  getDeckShareColors,
   ManaCurveShareChart,
   normalizeColorOrder,
 } from './SimulatorCharts';
@@ -163,22 +162,14 @@ const ClusterDetailPanel: React.FC<{
 }) => {
   const { csrfFetch } = useContext(CSRFContext);
 
-  // Compute actual color profile from deck color shares (≥10% threshold)
+  // Actual color profile from the cards the cluster's decks play (driven by the most
+  // common cards, off-color splashes dropped) — see computeColorProfileFromDecks.
   const colorProfile = useMemo(() => {
     if (!clusterDeckBuilds || clusterDeckBuilds.length === 0) return normalizeColorOrder(skeleton.colorProfile);
-    const shares: Record<string, number> = Object.fromEntries(COLOR_KEYS.map((k) => [k, 0]));
-    for (const deck of clusterDeckBuilds) {
-      for (const oracle of deck.mainboard) {
-        const colors = getDeckShareColors(oracle, cardMeta).filter((c) => c !== 'C');
-        if (colors.length === 0) continue;
-        const share = 1 / colors.length;
-        for (const c of colors) shares[c] = (shares[c] ?? 0) + share;
-      }
-    }
-    const total = COLOR_KEYS.reduce((s, k) => s + (shares[k] ?? 0), 0);
-    if (total === 0) return 'C';
-    const significant = COLOR_KEYS.filter((k) => (shares[k] ?? 0) / total >= 0.1);
-    return significant.length > 0 ? significant.join('') : 'C';
+    return computeColorProfileFromDecks(
+      clusterDeckBuilds.map((deck) => deck.mainboard),
+      cardMeta,
+    );
   }, [clusterDeckBuilds, cardMeta, skeleton.colorProfile]);
 
   const CARD_TABS = [

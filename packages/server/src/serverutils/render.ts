@@ -184,6 +184,7 @@ interface ReactProps {
     yourCubesSortOrder?: YourCubesSortOrder;
     disableAnimations?: boolean;
     useTextOverIcons?: boolean;
+    disableCubeTray?: boolean;
   };
   nitroPayEnabled?: boolean;
   baseUrl?: string;
@@ -228,6 +229,7 @@ const render = (
         yourCubesSortOrder: req.user.yourCubesSortOrder,
         disableAnimations: req.user.disableAnimations,
         useTextOverIcons: req.user.useTextOverIcons,
+        disableCubeTray: req.user.disableCubeTray,
       };
     }
 

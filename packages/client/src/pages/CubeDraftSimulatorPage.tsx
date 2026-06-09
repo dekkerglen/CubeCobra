@@ -88,7 +88,7 @@ import {
 } from '../utils/draftSimulatorThemes';
 import { computeFilteredCardStats } from '../utils/draftSimulatorStats';
 import { OTAG_BUCKET_MAP } from '../utils/otagBucketMap';
-import { COLOR_KEYS, getDeckShareColors, MTG_COLORS, normalizeColorOrder } from '../components/draftSimulator/SimulatorCharts';
+import { COLOR_KEYS, computeColorProfileFromDecks, MTG_COLORS, normalizeColorOrder } from '../components/draftSimulator/SimulatorCharts';
 
 
 interface RawStats {
@@ -248,22 +248,8 @@ function computeSkeletonColorProfile(
   cardMeta: Record<string, CardMeta>,
 ): string {
   if (!deckBuilds) return skeleton.colorProfile;
-  const shares: Record<string, number> = Object.fromEntries(COLOR_KEYS.map((k) => [k, 0]));
-  for (const poolIndex of skeleton.poolIndices) {
-    const deck = deckBuilds[poolIndex];
-    if (!deck) continue;
-    for (const oracle of deck.mainboard) {
-      const colors = getDeckShareColors(oracle, cardMeta).filter((c) => c !== 'C');
-      if (colors.length === 0) continue;
-      const share = 1 / colors.length;
-      for (const c of colors) shares[c] = (shares[c] ?? 0) + share;
-    }
-  }
-  const total = COLOR_KEYS.reduce((s, k) => s + (shares[k] ?? 0), 0);
-  if (total === 0) return 'C';
-  const maxShare = Math.max(...COLOR_KEYS.map((k) => shares[k] ?? 0));
-  const significant = COLOR_KEYS.filter((k) => (shares[k] ?? 0) >= maxShare * 0.33);
-  return significant.length > 0 ? significant.join('') : 'C';
+  const mainboards = skeleton.poolIndices.map((pi) => deckBuilds[pi]?.mainboard ?? []);
+  return computeColorProfileFromDecks(mainboards, cardMeta);
 }
 
 function getSkeletonDisplayName(

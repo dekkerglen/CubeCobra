@@ -28,6 +28,7 @@ const UserThemeForm: React.FC = () => {
   const [disableAnimations, setDisableAnimations] = useState(user?.disableAnimations || false);
   const [useTextOverIcons, setUseTextOverIcons] = useState(user?.useTextOverIcons || false);
   const [disableFollowAlerts, setDisableFollowAlerts] = useState(user?.disableFollowAlerts || false);
+  const [disableCubeTray, setDisableCubeTray] = useState(user?.disableCubeTray || false);
   const formRef = React.useRef<HTMLFormElement>(null);
   const formData = useMemo(
     () => ({
@@ -40,6 +41,7 @@ const UserThemeForm: React.FC = () => {
       disableAnimations: `${disableAnimations}`,
       useTextOverIcons: `${useTextOverIcons}`,
       disableFollowAlerts: `${disableFollowAlerts}`,
+      disableCubeTray: `${disableCubeTray}`,
     }),
     [
       selectedTheme,
@@ -51,6 +53,7 @@ const UserThemeForm: React.FC = () => {
       disableAnimations,
       useTextOverIcons,
       disableFollowAlerts,
+      disableCubeTray,
     ],
   );
 
@@ -102,6 +105,11 @@ const UserThemeForm: React.FC = () => {
           label="Disable Follow Notifications"
           checked={disableFollowAlerts}
           setChecked={setDisableFollowAlerts}
+        />
+        <Checkbox
+          label="Disable the cube board tray (always hidden on mobile)"
+          checked={disableCubeTray}
+          setChecked={setDisableCubeTray}
         />
         <Select
           label="Your cubes sort order"

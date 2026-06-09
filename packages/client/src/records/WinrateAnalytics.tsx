@@ -30,6 +30,7 @@ import {
   Tooltip as ChartTooltip,
 } from 'chart.js';
 import { Bar, Bubble } from 'react-chartjs-2';
+import { CSVLink } from 'react-csv';
 
 import Alert from 'components/base/Alert';
 import { Card as CardUI, CardBody, CardHeader } from 'components/base/Card';
@@ -46,13 +47,14 @@ import CubeContext from 'contexts/CubeContext';
 import ClusterDetailPanel from '../components/draftSimulator/ClusterDetailPanel';
 import DraftMapScatter, { type DraftMapPoint } from '../components/draftSimulator/DraftMapScatter';
 import SimDeckView from '../components/draftSimulator/SimDeckView';
+import { computeColorProfileFromDecks } from '../components/draftSimulator/SimulatorCharts';
 import SimulationProgressBar, {
   getOverallSimProgress,
   type SimulationPhase,
 } from '../components/draftSimulator/SimulationProgressBar';
 import useLocalRecordAnalysisHistory from '../hooks/useLocalRecordAnalysisHistory';
 import { runRecordAnalysis } from '../utils/recordAnalysisRun';
-import { AnalysisDeck, ClusterMatchups, RecordAnalysisRunEntry } from '../utils/recordAnalysisStorage';
+import { AnalysisDeck, ClusterMatchups, ColorMatchups, RecordAnalysisRunEntry } from '../utils/recordAnalysisStorage';
 import { buildCardMeta } from '../utils/recordCardMeta';
 import TrophyArchive from './TrophyArchive';
 
@@ -71,7 +73,6 @@ const COLOR_MAP: Record<string, string> = {
   Hybrid: '#BC9B6A',
   Lands: '#8B7355',
 };
-const COLOR_ORDER = ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Hybrid', 'Colorless', 'Lands'];
 
 const TYPE_COLORS: Record<string, string> = {
   Creature: '#6AB572',
@@ -98,10 +99,11 @@ const majorType = (card: Card): string => {
 };
 
 const fmtPct = (v: number): string => `${(v * 100).toFixed(1)}%`;
-// Win rate with draws as half a win (centres the population on a true 50%).
+// Match win rate: wins over all matches played. A draw is not a win, so it counts
+// against the rate (lowering both players) — the population sits at or below 50%.
 const rate = (wins: number, losses: number, draws: number): number => {
   const t = wins + losses + draws;
-  return t ? (wins + 0.5 * draws) / t : 0;
+  return t ? wins / t : 0;
 };
 // Archetype-cluster palette, cycled by cluster index. Matches DraftMapScatter's
 // own palette exactly so the map dots and the list/detail swatches line up.
@@ -135,10 +137,9 @@ const chartTextColor = (): string => {
   return v ? `rgb(${v})` : '#888';
 };
 
-// A card's color identity as standard mana-symbol pips (the cube's design language).
-const renderColorPips = (card: Card) => {
-  const colors = cardColorIdentity(card);
-  const symbols = colors.length > 0 ? colors : ['C'];
+// A set of color codes as standard mana-symbol pips (the cube's design language).
+const renderPips = (codes: string[]) => {
+  const symbols = codes.length > 0 ? codes : ['C'];
   return (
     <span className="flex items-center gap-0.5">
       {symbols.map((c) => (
@@ -147,6 +148,9 @@ const renderColorPips = (card: Card) => {
     </span>
   );
 };
+
+// A card's color identity as standard mana-symbol pips.
+const renderColorPips = (card: Card) => renderPips(cardColorIdentity(card));
 
 // ─── Enriched per-card row ───────────────────────────────────────────────────
 
@@ -167,7 +171,7 @@ interface CardRow {
   gameWinRate: number;
   trophyCount: number;
   trophyRate: number;
-  mWe: number; // match win-equivalent (wins + 0.5 * draws)
+  mWe: number; // match wins (draws are not counted as wins)
   mC: number;
 }
 
@@ -184,12 +188,15 @@ const renderCardLink = (card: Card) => (
 
 // ─── Building blocks ─────────────────────────────────────────────────────────
 
-const Panel: React.FC<{ title: string; tooltip?: string; right?: React.ReactNode; children: React.ReactNode }> = ({
-  title,
-  tooltip,
-  right,
-  children,
-}) => (
+const Panel: React.FC<{
+  title: string;
+  tooltip?: string;
+  right?: React.ReactNode;
+  children: React.ReactNode;
+  // Render children directly into the card (no padded CardBody) so a table can fill
+  // the whole card edge-to-edge instead of sitting in a nested box.
+  flush?: boolean;
+}> = ({ title, tooltip, right, children, flush = false }) => (
   <CardUI className="h-full">
     <CardHeader>
       <Flexbox direction="row" justify="between" alignItems="center">
@@ -204,7 +211,7 @@ const Panel: React.FC<{ title: string; tooltip?: string; right?: React.ReactNode
         {right}
       </Flexbox>
     </CardHeader>
-    <CardBody>{children}</CardBody>
+    {flush ? children : <CardBody>{children}</CardBody>}
   </CardUI>
 );
 
@@ -334,7 +341,7 @@ const WinRateHistogram: React.FC<{ winRates: number[]; baseline: number }> = ({ 
 };
 
 // Every qualifying card by sample size (x) vs. win rate (y) as a chart.js bubble
-// chart — coloured by colour identity, sized by trophies, dashed 50% baseline.
+// chart — colored by color identity, sized by trophies, dashed 50% baseline.
 const recordStr = (d: AnalysisDeck): string =>
   `${d.matchWins}-${d.matchLosses}${d.matchDraws ? `-${d.matchDraws}` : ''}`;
 
@@ -366,7 +373,7 @@ const DeckMap: React.FC<{
   selectedPoolIndex: number | null;
   onSelectPoint: (poolIndex: number, clusterId: number | null) => void;
 }> = ({ decks, skeletons, colorBy, selectedClusterId, selectedPoolIndex, onSelectPoint }) => {
-  // deck index → cluster slot (skeleton position drives the cluster colour).
+  // deck index → cluster slot (skeleton position drives the cluster color).
   const points = useMemo<DraftMapPoint[]>(() => {
     const byDeck = new Map<number, number>();
     skeletons.forEach((s, idx) => {
@@ -381,7 +388,7 @@ const DeckMap: React.FC<{
       clusterId: d.clusterId,
       clusterIndex: byDeck.get(i) ?? null,
       clusterLabel: deckLabel(d),
-      archetype: (d.colors ?? []).join('') || 'C', // drives deck-colour mode
+      archetype: (d.colors ?? []).join('') || 'C', // drives deck-color mode
     }));
   }, [decks, skeletons]);
 
@@ -578,7 +585,7 @@ const ArchetypeMatchupMatrix: React.FC<{
 }> = ({ clusters, matchups, baseline, selectedClusterId, onSelect }) => {
   if (clusters.length < 2 || Object.keys(matchups).length === 0) {
     return (
-      <Text sm className="text-text-secondary">
+      <Text sm className="text-text-secondary p-4 block">
         Not enough cross-archetype matches yet — re-run the analysis on records with more rounds.
       </Text>
     );
@@ -586,7 +593,7 @@ const ArchetypeMatchupMatrix: React.FC<{
   const cellRate = (a: number, b: number): { rate: number; matches: number } | null => {
     const e = matchups[`${a}|${b}`];
     if (!e || e.matches === 0) return null;
-    return { rate: (e.wins + 0.5 * e.draws) / e.matches, matches: e.matches };
+    return { rate: e.wins / e.matches, matches: e.matches };
   };
   const heat = (w: number): string => {
     const t = Math.max(-1, Math.min(1, (w - baseline) / 0.2));
@@ -666,9 +673,217 @@ const ArchetypeMatchupMatrix: React.FC<{
           </tbody>
         </table>
       </div>
-      <Text xs className="text-text-secondary">
+      <Text xs className="text-text-secondary px-3 pb-3">
         Cell = the row archetype's match win rate vs the column archetype, with the sample size. Green beats the cube
         average, red trails it; the diagonal is the mirror.
+      </Text>
+    </Flexbox>
+  );
+};
+
+// ─── Color / archetype performance tables ──────────────────────────────────
+
+const COLOR_KEYS = ['W', 'U', 'B', 'R', 'G'] as const;
+const COLOR_LABEL: Record<string, string> = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green', C: 'Colorless' };
+
+// One aggregated group: its deck count + summed match record + win rate.
+interface PerfRow {
+  group: string; // the sortable / CSV label
+  pips?: string[]; // mana-symbol pips to show beside the label
+  swatch?: string; // solid color swatch instead of pips (archetype clusters)
+  decks: number;
+  wins: number;
+  losses: number;
+  draws: number;
+  winRate: number;
+}
+
+// Sum a set of decks into a single performance row body (match record + rate).
+const aggregateDecks = (members: AnalysisDeck[]): Omit<PerfRow, 'group' | 'pips' | 'swatch'> => {
+  let wins = 0;
+  let losses = 0;
+  let draws = 0;
+  for (const d of members) {
+    wins += d.matchWins;
+    losses += d.matchLosses;
+    draws += d.matchDraws;
+  }
+  return { decks: members.length, wins, losses, draws, winRate: rate(wins, losses, draws) };
+};
+
+// A whole card: group · decks · W · L · D · win% (win% over/under-colored against
+// the cube average). The table fills the card body edge-to-edge (no nested box),
+// with the CSV download in the card header. Reuses the cube's SortableTable for
+// sorting; its inline CSV link is suppressed in favour of the header one.
+const PerformanceTable: React.FC<{
+  title: string;
+  tooltip?: string;
+  rows: PerfRow[];
+  groupTitle: string;
+  baseline: number;
+  emptyText?: string;
+}> = ({ title, tooltip, rows, groupTitle, baseline, emptyText }) => {
+  const renderGroup = (val: string, row: PerfRow) => (
+    <div className="flex items-center gap-2">
+      {row.pips ? (
+        renderPips(row.pips)
+      ) : row.swatch ? (
+        <span className="inline-block h-3 w-3 rounded-sm shrink-0" style={{ background: row.swatch }} />
+      ) : null}
+      <span className="truncate">{val}</span>
+    </div>
+  );
+  const renderWin = (val: number) => (
+    <span className="font-semibold tabular-nums" style={{ color: perfColor(val, baseline) }}>
+      {fmtPct(val)}
+    </span>
+  );
+  const csvData = rows.map((r) => ({
+    [groupTitle]: r.group,
+    Decks: r.decks,
+    Wins: r.wins,
+    Losses: r.losses,
+    Draws: r.draws,
+    'Win %': fmtPct(r.winRate),
+  }));
+  return (
+    <CardUI className="h-full">
+      <CardHeader>
+        <Flexbox direction="row" justify="between" alignItems="center">
+          <Text semibold md>
+            {title}
+            {tooltip && (
+              <Tooltip text={tooltip} wrapperTag="span" position="bottom">
+                <span className="ml-1 text-text-secondary/50">ⓘ</span>
+              </Tooltip>
+            )}
+          </Text>
+          {rows.length > 0 && (
+            <CSVLink
+              data={csvData}
+              filename={`${title}.csv`}
+              className="font-medium text-link hover:text-link-active text-sm whitespace-nowrap"
+            >
+              Download CSV
+            </CSVLink>
+          )}
+        </Flexbox>
+      </CardHeader>
+      {rows.length === 0 ? (
+        <CardBody>
+          <Text sm className="text-text-secondary">
+            {emptyText ?? 'Not enough data.'}
+          </Text>
+        </CardBody>
+      ) : (
+        <SortableTable
+          flush
+          showCsvLink={false}
+          columnProps={[
+            { key: 'group', title: groupTitle, heading: true, sortable: true, renderFn: renderGroup },
+            { key: 'decks', title: 'Decks', sortable: true, heading: false },
+            { key: 'wins', title: 'W', sortable: true, heading: false },
+            { key: 'losses', title: 'L', sortable: true, heading: false },
+            { key: 'draws', title: 'D', sortable: true, heading: false },
+            { key: 'winRate', title: 'Win %', sortable: true, heading: false, renderFn: renderWin },
+          ]}
+          data={rows}
+          defaultSortConfig={{ key: 'decks', direction: 'descending' }}
+        />
+      )}
+    </CardUI>
+  );
+};
+
+// Color-vs-color matchup grid: cell (row A, col B) = the match win rate of decks
+// playing color A against decks playing color B. Mirrors ArchetypeMatchupMatrix.
+const ColorMatchupMatrix: React.FC<{ matchups: ColorMatchups; baseline: number }> = ({ matchups, baseline }) => {
+  const order: string[] = [...COLOR_KEYS, 'C'];
+  const present = order.filter((c) =>
+    Object.entries(matchups).some(([k, v]) => {
+      const [a, b] = k.split('|');
+      return v.matches > 0 && (a === c || b === c);
+    }),
+  );
+  if (present.length < 2) {
+    return (
+      <Text sm className="text-text-secondary p-4 block">
+        Not enough cross-color matches yet — re-run the analysis on records with matches.
+      </Text>
+    );
+  }
+  const cell = (a: string, b: string): { rate: number; matches: number } | null => {
+    const e = matchups[`${a}|${b}`];
+    if (!e || e.matches === 0) return null;
+    return { rate: e.wins / e.matches, matches: e.matches };
+  };
+  const heat = (w: number): string => {
+    const t = Math.max(-1, Math.min(1, (w - baseline) / 0.2));
+    return t >= 0 ? mix('#5b6168', OVER, t) : mix('#5b6168', UNDER, -t);
+  };
+  return (
+    <Flexbox direction="col" gap="2">
+      <div className="overflow-x-auto max-w-full">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr>
+              <th className="sticky left-0 z-10 bg-bg-accent p-2 text-left border-b border-border">
+                <Text xs className="text-text-secondary">
+                  Row beats column →
+                </Text>
+              </th>
+              {present.map((c) => (
+                <th key={c} className="p-2 align-bottom border-b border-border" title={`vs ${COLOR_LABEL[c]}`}>
+                  <div className="flex flex-col items-center gap-1">{renderPips([c])}</div>
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {present.map((a) => (
+              <tr key={a}>
+                <th className="sticky left-0 z-10 bg-bg-accent p-2 text-left border-b border-border" title={COLOR_LABEL[a]}>
+                  <div className="flex items-center gap-2">
+                    {renderPips([a])}
+                    <Text sm semibold>
+                      {COLOR_LABEL[a]}
+                    </Text>
+                  </div>
+                </th>
+                {present.map((b) => {
+                  const v = cell(a, b);
+                  return (
+                    <td
+                      key={b}
+                      className="p-2 text-center align-middle border-b border-l border-border"
+                      style={{ background: v ? heat(v.rate) : undefined }}
+                      title={
+                        v
+                          ? `${COLOR_LABEL[a]} vs ${COLOR_LABEL[b]}: ${fmtPct(v.rate)} over ${v.matches} matches`
+                          : 'No matches'
+                      }
+                    >
+                      {v ? (
+                        <div className="flex flex-col items-center leading-tight text-white">
+                          <span className="text-sm font-semibold tabular-nums">{fmtPct(v.rate)}</span>
+                          <span className="text-[10px] tabular-nums text-white/75">{v.matches} mt</span>
+                        </div>
+                      ) : (
+                        <Text sm className="text-text-secondary">
+                          ·
+                        </Text>
+                      )}
+                    </td>
+                  );
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <Text xs className="text-text-secondary px-3 pb-3">
+        Cell = the row color&apos;s match win rate vs the column color, with the sample size. A deck counts toward
+        every color it plays, so totals overlap. Green beats the cube average, red trails it.
       </Text>
     </Flexbox>
   );
@@ -909,8 +1124,8 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
         const card = cardDict[oracle]!;
         const matchCount = a.matchWins + a.matchLosses + a.matchDraws;
         const gameTotal = a.gameWins + a.gameLosses + a.gameDraws;
-        // Draws count as half a win so the population centres on a true 50%.
-        const mWe = a.matchWins + 0.5 * a.matchDraws;
+        // Draws are not wins (they count against the rate), so win-equivalent = wins.
+        const mWe = a.matchWins;
         return {
           oracle,
           card: { exportValue: cardName(card), ...card },
@@ -925,7 +1140,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           matchCount,
           winRate: matchCount ? mWe / matchCount : 0,
           drawRate: matchCount ? a.matchDraws / matchCount : 0,
-          gameWinRate: gameTotal ? (a.gameWins + 0.5 * a.gameDraws) / gameTotal : 0,
+          gameWinRate: gameTotal ? a.gameWins / gameTotal : 0,
           trophyCount: a.trophies,
           trophyRate: a.decks ? a.trophies / a.decks : 0,
           mWe,
@@ -934,14 +1149,6 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
       });
   }, [analyticsCards, cardDict]);
 
-  const defaultMinDecks = useMemo(() => {
-    for (const t of [3, 2]) {
-      if (allRows.filter((r) => r.decks >= t).length >= 12) return t;
-    }
-    return 1;
-  }, [allRows]);
-
-  const [minDecks, setMinDecks] = useState<number>(0);
   const [mapColorBy, setMapColorBy] = useState<'cluster' | 'deckColor'>('cluster');
   const [selectedClusterId, setSelectedClusterId] = useState<number | null>(null);
   const [selectedPoolIndex, setSelectedPoolIndex] = useState<number | null>(null);
@@ -951,8 +1158,6 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
     setSelectedClusterId(null);
     setSelectedPoolIndex(null);
   }, [displayRun?.ts]);
-  const effectiveMin = minDecks || defaultMinDecks;
-  const rows = useMemo(() => allRows.filter((r) => r.decks >= effectiveMin), [allRows, effectiveMin]);
 
   // ── Synergy + matchups, derived from the selected run (no server calls) ─────
   const byOracle = useMemo(() => fromEntries(allRows.map((r) => [r.oracle, r])) as Record<string, CardRow>, [allRows]);
@@ -1007,18 +1212,27 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [displayRun, activeOracle]);
 
-  // The cube's actual average win rate (appearance-weighted) — the baseline that
-  // over/under-performance is measured against, robust to byes / incomplete data.
-  const totalMWe = allRows.reduce((s, r) => s + r.mWe, 0);
-  const totalMC = allRows.reduce((s, r) => s + r.mC, 0);
-  const baseline = totalMC ? totalMWe / totalMC : 0.5;
-
   // The ML clusters (archetypes): each with its decks, record, staples + identity.
-  // `idx` is the skeleton's position — it drives the map's cluster colour, so the
+  // `idx` is the skeleton's position — it drives the map's cluster color, so the
   // list swatches match the map exactly.
   const runDecks = displayRun?.decks ?? [];
   const skeletons = displayRun?.skeletons ?? [];
   const clusterMatchups = displayRun?.clusterMatchups ?? {};
+  const colorMatchups = displayRun?.colorMatchups ?? {};
+
+  // The cube's average match win rate — the baseline that over/under-performance is
+  // measured against. Computed per deck (each deck weighted equally) as wins over
+  // matches played: every match has a winner and a loser and draws count against
+  // both, so this sits at or below 50% — never above.
+  const baseline = useMemo(() => {
+    let wins = 0;
+    let total = 0;
+    for (const d of runDecks) {
+      wins += d.matchWins;
+      total += d.matchWins + d.matchLosses + d.matchDraws;
+    }
+    return total ? wins / total : 0.5;
+  }, [runDecks]);
 
   // Reconstruct the inputs the reused simulator components expect (cardMeta /
   // deck builds / slim pools / cube oracle set), straight from the run + cube.
@@ -1070,13 +1284,16 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           let trophies = 0;
           const archCounts: Record<string, number> = {};
           for (const d of members) {
-            we += d.matchWins + 0.5 * d.matchDraws;
+            we += d.matchWins;
             tot += d.matchWins + d.matchLosses + d.matchDraws;
             if (d.trophy) trophies += 1;
             if (d.archetype) archCounts[d.archetype] = (archCounts[d.archetype] ?? 0) + 1;
           }
           const dominant = Object.entries(archCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
-          const colorProfile = skel.colorProfile || 'C';
+          // Recompute the color identity from the cards the cluster's decks actually
+          // play (most-common-cards driven, off-color splashes dropped) rather than the
+          // skeleton's lenient unique-card-count profile, which over-labels colors.
+          const colorProfile = computeColorProfileFromDecks(members.map((d) => d.oracles), simCardMeta) || 'C';
           return {
             clusterId: skel.clusterId,
             idx,
@@ -1091,7 +1308,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           };
         })
         .filter((c) => c.count > 0),
-    [skeletons, runDecks],
+    [skeletons, runDecks, simCardMeta],
   );
   const clustersByWinRate = useMemo(() => [...clusters].sort((a, b) => b.winRate - a.winRate), [clusters]);
   const selectedCluster = useMemo(
@@ -1111,6 +1328,51 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
     baseline,
   );
 
+  // ── Color / archetype performance (aggregated deck records) ───────────────
+  // Color performance: every deck PLAYING each color (multicolor decks count in
+  // each of their colors), plus a colorless bucket.
+  const colorPerf = useMemo<PerfRow[]>(() => {
+    const out: PerfRow[] = COLOR_KEYS.map((c) => ({ c, members: runDecks.filter((d) => d.colors.includes(c)) }))
+      .filter((x) => x.members.length > 0)
+      .map(({ c, members }) => ({ group: COLOR_LABEL[c]!, pips: [c as string], ...aggregateDecks(members) }));
+    const colorless = runDecks.filter((d) => d.colors.length === 0);
+    if (colorless.length > 0) out.push({ group: 'Colorless', pips: ['C'], ...aggregateDecks(colorless) });
+    return out;
+  }, [runDecks]);
+
+  // Color-pair performance: every deck PLAYING both colors of each guild pair.
+  const colorPairPerf = useMemo<PerfRow[]>(() => {
+    const out: PerfRow[] = [];
+    for (let i = 0; i < COLOR_KEYS.length; i++) {
+      for (let j = i + 1; j < COLOR_KEYS.length; j++) {
+        const a = COLOR_KEYS[i]!;
+        const b = COLOR_KEYS[j]!;
+        const members = runDecks.filter((d) => d.colors.includes(a) && d.colors.includes(b));
+        if (members.length > 0) out.push({ group: colorComboName([a, b]), pips: [a, b], ...aggregateDecks(members) });
+      }
+    }
+    return out;
+  }, [runDecks]);
+
+  // Exact color-combination performance: decks grouped by their precise identity.
+  const colorComboPerf = useMemo<PerfRow[]>(() => {
+    const groups: Record<string, AnalysisDeck[]> = {};
+    for (const d of runDecks) {
+      const sig = [...'WUBRG'].filter((c) => d.colors.includes(c)).join('') || 'C';
+      (groups[sig] ??= []).push(d);
+    }
+    return Object.entries(groups).map(([sig, members]) => {
+      const codes = sig === 'C' ? [] : sig.split('');
+      return { group: colorComboName(codes), pips: sig === 'C' ? ['C'] : codes, ...aggregateDecks(members) };
+    });
+  }, [runDecks]);
+
+  // Archetype performance: one row per ML cluster (the page's "archetypes").
+  const archetypePerf = useMemo<PerfRow[]>(
+    () => clusters.map((c) => ({ group: c.label, swatch: c.color, ...aggregateDecks(c.members) })),
+    [clusters],
+  );
+
   // ── Aggregations (appearance-weighted win rate per group) ──────────────────
   const aggregate = (keyFn: (r: CardRow) => string, order: string[], colorFor: (k: string) => string) => {
     const groups: Record<string, { mWe: number; mC: number; n: number }> = {};
@@ -1126,9 +1388,30 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
       .map((k) => ({ key: k, label: k, swatch: colorFor(k), winRate: groups[k]!.mWe / groups[k]!.mC, n: groups[k]!.n }));
   };
 
-  const byColor = aggregate((r) => r.colorCategory, COLOR_ORDER, (k) => COLOR_MAP[k] ?? '#888').sort(
-    (a, b) => b.winRate - a.winRate,
-  );
+  // Win rate by color: each card counts toward EVERY color in its identity, so a
+  // gold card lifts all of its colors. (Bucketing gold into a single "Multicolored"
+  // row instead leaves every mono-color looking below average, which is misleading.)
+  // Cards with no colored identity fall into Colorless.
+  const byColor = (() => {
+    const KEYS = ['W', 'U', 'B', 'R', 'G'];
+    const NAME: Record<string, string> = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green', C: 'Colorless' };
+    const groups: Record<string, { mWe: number; mC: number; n: number }> = {};
+    const add = (k: string, r: CardRow) => {
+      const e = (groups[k] ??= { mWe: 0, mC: 0, n: 0 });
+      e.mWe += r.mWe;
+      e.mC += r.mC;
+      e.n += r.decks;
+    };
+    for (const r of allRows) {
+      const ids = cardColorIdentity(r.card).filter((c) => KEYS.includes(c));
+      if (ids.length === 0) add('C', r);
+      else for (const c of ids) add(c, r);
+    }
+    return [...KEYS, 'C']
+      .filter((k) => groups[k] && groups[k]!.mC > 0)
+      .map((k) => ({ key: k, label: NAME[k]!, swatch: COLOR_MAP[NAME[k]!] ?? '#888', winRate: groups[k]!.mWe / groups[k]!.mC, n: groups[k]!.n }))
+      .sort((a, b) => b.winRate - a.winRate);
+  })();
   const byType = aggregate((r) => r.type, TYPE_ORDER, (k) => TYPE_COLORS[k] ?? '#888').sort((a, b) => b.winRate - a.winRate);
   const cmcBuckets = ['0', '1', '2', '3', '4', '5', '6', '7+'];
   const byCmc = aggregate(
@@ -1145,8 +1428,8 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
   const cmcDomain = winrateDomain(byCmc.map((b) => b.winRate), baseline);
 
   // ── Leaderboards (over/under ranked by Match Elo — more robust than raw %) ──
-  const topPerformers = [...rows].sort((a, b) => b.matchElo - a.matchElo || b.winRate - a.winRate).slice(0, 8);
-  const underPerformers = [...rows].sort((a, b) => a.matchElo - b.matchElo || a.winRate - b.winRate).slice(0, 8);
+  const topPerformers = [...allRows].sort((a, b) => b.matchElo - a.matchElo || b.winRate - a.winRate).slice(0, 8);
+  const underPerformers = [...allRows].sort((a, b) => a.matchElo - b.matchElo || a.winRate - b.winRate).slice(0, 8);
   const topPlayed = [...allRows].sort((a, b) => b.decks - a.decks).slice(0, 8);
   const trophyCards = [...allRows]
     .filter((r) => r.trophyCount > 0)
@@ -1154,11 +1437,27 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
 
   const renderPercent = (val: number) => <>{(val * 100).toFixed(1)}%</>;
 
-  const minDeckOptions = [1, 2, 3, 5, 10].map((n) => ({ value: `${n}`, label: `${n}+ decks` }));
   const cardOptions = [...allRows]
     .sort((a, b) => b.decks - a.decks)
     .map((r) => ({ value: r.oracle, label: `${r.name} (${r.decks})` }));
   const selectedRow = byOracle[activeOracle];
+
+  // Clean CSV for the All Cards table, exported from the card header.
+  const allCardsCsv = [...allRows]
+    .sort((a, b) => b.decks - a.decks)
+    .map((r) => ({
+      Card: r.name,
+      Colors: cardColorIdentity(r.card).join('') || 'C',
+      Type: r.type,
+      MV: r.cmc,
+      Decks: r.decks,
+      'Match Win %': fmtPct(r.winRate),
+      Matches: r.matchCount,
+      'Game Win %': fmtPct(r.gameWinRate),
+      Trophies: r.trophyCount,
+      'Match Elo': r.hasMatchElo ? r.matchElo : '',
+      'Draft Elo': r.draftElo,
+    }));
 
   const synergyList = (entries: PartnerEntry[] | undefined, empty: string) => {
     const items = (entries ?? []).map((e) => ({ e, card: cardDict[e.oracle] })).filter((x) => x.card).slice(0, 8);
@@ -1240,28 +1539,19 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           {/* Controls + framing */}
           <CardUI>
             <CardBody className="py-2">
-              <Flexbox direction="row" gap="3" alignItems="center" wrap="wrap" justify="between">
-                <Text sm className="text-text-secondary">
-                  Over/under-performance is measured against this cube&apos;s{' '}
-                  <span className="font-semibold text-text">average win rate ({fmtPct(baseline)})</span> — green beats
-                  the average, red trails it. Draws count as half a win.
-                </Text>
-            <Flexbox direction="row" gap="2" alignItems="center" className="shrink-0">
-              <Text sm className="text-nowrap">
-                Min. sample
+              <Text sm className="text-text-secondary">
+                Over/under-performance is measured against this cube&apos;s{' '}
+                <span className="font-semibold text-text">average win rate ({fmtPct(baseline)})</span> — green beats the
+                average, red trails it. Win rate is wins over matches played; a draw counts against both players, so the
+                average sits at or below 50%.
               </Text>
-              <div className="w-32">
-                <Select dense value={`${effectiveMin}`} setValue={(v) => setMinDecks(parseInt(v, 10))} options={minDeckOptions} />
-              </div>
-            </Flexbox>
-          </Flexbox>
-        </CardBody>
-      </CardUI>
+            </CardBody>
+          </CardUI>
 
       {/* By color / by type */}
       <Row className="g-3">
         <Col xs={12} lg={6}>
-          <Panel title="Win Rate by Color" tooltip="Appearance-weighted match win rate of all cards in each color category, vs the cube average.">
+          <Panel title="Win Rate by Color" tooltip="Match win rate of cards in each color, weighted by how often they're played. Each card counts toward every color in its identity, so a gold card lifts all of its colors. Vs the cube average.">
             <DivergingBars rows={byColor} domain={colorDomain} baseline={baseline} />
           </Panel>
         </Col>
@@ -1280,9 +1570,54 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           </Panel>
         </Col>
         <Col xs={12} lg={6}>
-          <Panel title="Win Rate Distribution" tooltip={`Per-card match win rates (cards with ${effectiveMin}+ decks), 2.5% buckets. Red = below the cube average, green = above.`}>
-            <WinRateHistogram winRates={rows.map((r) => r.winRate)} baseline={baseline} />
+          <Panel title="Win Rate Distribution" tooltip="Per-card match win rates across every tracked card, in 2.5% buckets. Red = below the cube average, green = above.">
+            <WinRateHistogram winRates={allRows.map((r) => r.winRate)} baseline={baseline} />
           </Panel>
+        </Col>
+      </Row>
+
+      {/* Color performance + color-vs-color matchups */}
+      <Row className="g-3">
+        <Col xs={12} lg={6}>
+          <PerformanceTable
+            title="Color Performance"
+            tooltip="Match record of every deck that plays each color. Multicolor decks count toward each of their colors, so the rows overlap."
+            rows={colorPerf}
+            groupTitle="Color"
+            baseline={baseline}
+          />
+        </Col>
+        <Col xs={12} lg={6}>
+          <Panel
+            flush
+            title="Color vs Color"
+            tooltip="Row vs column: how decks playing the row color fared against decks playing the column color. Green beats the cube average, red trails it."
+          >
+            <ColorMatchupMatrix matchups={colorMatchups} baseline={baseline} />
+          </Panel>
+        </Col>
+      </Row>
+
+      {/* Color-pair (contains both) + exact color-combination performance */}
+      <Row className="g-3">
+        <Col xs={12} lg={6}>
+          <PerformanceTable
+            title="Color Pair Performance"
+            tooltip="Match record of every deck that plays both colors of each pair. Three-plus-color decks count toward each pair they contain."
+            rows={colorPairPerf}
+            groupTitle="Pair"
+            baseline={baseline}
+            emptyText="No two-color decks yet."
+          />
+        </Col>
+        <Col xs={12} lg={6}>
+          <PerformanceTable
+            title="Color Combination Performance"
+            tooltip="Match record grouped by each deck's exact color identity — not 'contains', but precisely these colors."
+            rows={colorComboPerf}
+            groupTitle="Combination"
+            baseline={baseline}
+          />
         </Col>
       </Row>
 
@@ -1292,7 +1627,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
         <Col xs={12}>
           <Panel
             title="Archetype Map"
-            tooltip="Every recorded deck projected to 2D by the draft model — decks that play alike sit together. Click a deck on the map, or an archetype in the list below it, to open that archetype on the right. Colour by cluster, or by each deck's colours."
+            tooltip="Every recorded deck projected to 2D by the draft model — decks that play alike sit together. Click a deck on the map, or an archetype in the list below it, to open that archetype on the right. Color by cluster, or by each deck's colors."
             right={
               <div className="flex rounded-md border border-border overflow-hidden text-xs">
                 {(['cluster', 'deckColor'] as const).map((mode) => (
@@ -1302,7 +1637,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
                     onClick={() => setMapColorBy(mode)}
                     className={`px-2 py-1 ${mapColorBy === mode ? 'bg-bg-active font-semibold' : 'text-text-secondary hover:bg-bg-active'}`}
                   >
-                    {mode === 'cluster' ? 'Cluster' : 'Deck colour'}
+                    {mode === 'cluster' ? 'Cluster' : 'Deck color'}
                   </button>
                 ))}
               </div>
@@ -1496,6 +1831,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
         <Row className="g-3">
           <Col xs={12}>
             <Panel
+              flush
               title="Archetype Matchups"
               tooltip="Row vs column: how each archetype's decks fared against each other archetype. Green beats the cube average, red trails it. Click a row to focus that archetype."
             >
@@ -1514,6 +1850,21 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
         </Row>
       )}
 
+      {/* Archetype performance — aggregated match record per cluster */}
+      {archetypePerf.length > 0 && (
+        <Row className="g-3">
+          <Col xs={12}>
+            <PerformanceTable
+              title="Archetype Performance"
+              tooltip="Match record of every deck in each archetype (ML cluster). Win % is over/under-colored against the cube average."
+              rows={archetypePerf}
+              groupTitle="Archetype"
+              baseline={baseline}
+            />
+          </Col>
+        </Row>
+      )}
+
       {/* Reputation vs reality (match Elo × draft Elo) — full width */}
       <Row className="g-3">
         <Col xs={12}>
@@ -1521,7 +1872,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
             title="Reputation vs Reality"
             tooltip="Each card's Cobra draft Elo (how strong the model expects it to be) against its Match Elo (how it actually performed in your records). Above the dashed line = overperforming its draft reputation."
           >
-            <EloScatter rows={rows} />
+            <EloScatter rows={allRows} />
           </Panel>
         </Col>
       </Row>
@@ -1543,7 +1894,8 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
       {/* Leaderboards */}
       <Row className="g-3">
         <Col xs={12} md={6} lg={3}>
-          <Panel title="🔥 Overperformers" tooltip={`Highest Match Elo among cards with ${effectiveMin}+ decks — performance vs the strength of opposition faced.`}>
+          <Panel title="🔥 Overperformers" tooltip="Highest Match Elo — performance vs the strength of opposition faced.">
+
             <Leaderboard
               rows={topPerformers}
               metric={(r) => `${r.matchElo}`}
@@ -1552,7 +1904,8 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           </Panel>
         </Col>
         <Col xs={12} md={6} lg={3}>
-          <Panel title="🧊 Underperformers" tooltip={`Lowest Match Elo among cards with ${effectiveMin}+ decks.`}>
+          <Panel title="🧊 Underperformers" tooltip="Lowest Match Elo — performance vs the strength of opposition faced.">
+
             <Leaderboard
               rows={underPerformers}
               metric={(r) => `${r.matchElo}`}
@@ -1663,52 +2016,62 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
 
       {/* Full table */}
       <Panel
+        flush
         title="All Cards"
-        tooltip={`Every tracked card with ${effectiveMin}+ decks. Click a column to sort; export to CSV from the header.`}
+        tooltip="Every tracked card. Click a column to sort."
         right={
-          <Text xs className="text-text-secondary">
-            {rows.length.toLocaleString()} cards
-          </Text>
+          <Flexbox direction="row" gap="3" alignItems="center" className="shrink-0">
+            <Text xs className="text-text-secondary whitespace-nowrap">
+              {allRows.length.toLocaleString()} cards
+            </Text>
+            <CSVLink
+              data={allCardsCsv}
+              filename="all-cards.csv"
+              className="font-medium text-link hover:text-link-active text-sm whitespace-nowrap"
+            >
+              Download CSV
+            </CSVLink>
+          </Flexbox>
         }
       >
-        <Text xs className="text-text-secondary mb-2">
+        <Text xs className="text-text-secondary px-4 pt-3 block">
           <span className="font-semibold text-text">Draft Elo</span> is CubeCobra&apos;s global pick-based rating (how
           highly the card is drafted everywhere). <span className="font-semibold text-text">Match Elo</span> is computed
           from this cube&apos;s match results — it rises when the card&apos;s decks beat higher-rated opposition.
         </Text>
-        <div className="overflow-x-auto">
-          <SortableTable
-            columnProps={[
-              { key: 'card', title: 'Card', heading: true, sortable: true, renderFn: renderCardLink },
-              { key: 'colorCategory', title: 'Colors', sortable: true, heading: false, renderFn: (_v, row) => renderColorPips(row.card) },
-              { key: 'type', title: 'Type', sortable: true, heading: false },
-              { key: 'cmc', title: 'MV', sortable: true, heading: false },
-              { key: 'decks', title: 'Decks', sortable: true, heading: false },
-              { key: 'winRate', title: 'Match Win %', sortable: true, heading: false, renderFn: renderPercent },
-              { key: 'matchCount', title: 'Matches', sortable: true, heading: false },
-              { key: 'gameWinRate', title: 'Game Win %', sortable: true, heading: false, renderFn: renderPercent },
-              { key: 'trophyCount', title: 'Trophies', sortable: true, heading: false },
-              {
-                key: 'matchElo',
-                title: 'Match Elo',
-                sortable: true,
-                heading: false,
-                tooltip: "Performance Elo from this cube's match results — independent of draft Elo.",
-                renderFn: (_v, row) => (row.hasMatchElo ? row.matchElo : '—'),
-              },
-              {
-                key: 'draftElo',
-                title: 'Draft Elo',
-                sortable: true,
-                heading: false,
-                tooltip: 'CubeCobra global draft Elo — how highly the card is picked across all cubes.',
-              },
-            ]}
-            data={rows}
-            sortFns={{ card: (a: Card, b: Card) => cardNameLower(a).localeCompare(cardNameLower(b)) }}
-            defaultSortConfig={{ key: 'decks', direction: 'descending' }}
-          />
-        </div>
+        <SortableTable
+          flush
+          showCsvLink={false}
+          columnProps={[
+            { key: 'card', title: 'Card', heading: true, sortable: true, renderFn: renderCardLink },
+            { key: 'colorCategory', title: 'Colors', sortable: true, heading: false, renderFn: (_v, row) => renderColorPips(row.card) },
+            { key: 'type', title: 'Type', sortable: true, heading: false },
+            { key: 'cmc', title: 'MV', sortable: true, heading: false },
+            { key: 'decks', title: 'Decks', sortable: true, heading: false },
+            { key: 'winRate', title: 'Match Win %', sortable: true, heading: false, renderFn: renderPercent },
+            { key: 'matchCount', title: 'Matches', sortable: true, heading: false },
+            { key: 'gameWinRate', title: 'Game Win %', sortable: true, heading: false, renderFn: renderPercent },
+            { key: 'trophyCount', title: 'Trophies', sortable: true, heading: false },
+            {
+              key: 'matchElo',
+              title: 'Match Elo',
+              sortable: true,
+              heading: false,
+              tooltip: "Performance Elo from this cube's match results — independent of draft Elo.",
+              renderFn: (_v, row) => (row.hasMatchElo ? row.matchElo : '—'),
+            },
+            {
+              key: 'draftElo',
+              title: 'Draft Elo',
+              sortable: true,
+              heading: false,
+              tooltip: 'CubeCobra global draft Elo — how highly the card is picked across all cubes.',
+            },
+          ]}
+          data={allRows}
+          sortFns={{ card: (a: Card, b: Card) => cardNameLower(a).localeCompare(cardNameLower(b)) }}
+          defaultSortConfig={{ key: 'decks', direction: 'descending' }}
+        />
       </Panel>
         </>
       )}

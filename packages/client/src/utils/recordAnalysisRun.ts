@@ -18,7 +18,7 @@ import {
   loadArchetypeData,
 } from './draftSimulatorClustering';
 import { buildCardMeta } from './recordCardMeta';
-import { AnalysisDeck, ClusterMatchups, RecordAnalysisRunData, RecordCardInfo } from './recordAnalysisStorage';
+import { AnalysisDeck, ClusterMatchups, ColorMatchups, RecordAnalysisRunData, RecordCardInfo } from './recordAnalysisStorage';
 
 type CsrfFetch = (input: RequestInfo, init?: RequestInit) => Promise<Response>;
 
@@ -81,7 +81,7 @@ const addMatchup = (map: { [key: string]: MatchupStat }, x: string, y: string, d
 
 const pairKey = (a: string, b: string): string => (a < b ? `${a}|${b}` : `${b}|${a}`);
 
-// A deck's colour identity: colours on >10% of its non-land cards.
+// A deck's color identity: colors on >10% of its non-land cards.
 const assessDeckColors = (oracles: string[], cardMeta: Record<string, CardMeta>): string[] => {
   const counts: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
   let n = 0;
@@ -270,6 +270,51 @@ export async function runRecordAnalysis(
   const prunedMatchups: { [k: string]: MatchupStat } = {};
   for (const [k, v] of Object.entries(matchups)) if (v.matches >= MIN_MATCHUP_MATCHES) prunedMatchups[k] = v;
 
+  // Deck color identities — computed up front (not inside the ML clustering block)
+  // so the color performance/matchup tables work even when clustering is skipped
+  // or fails. Cube cards drive it; captured card info backfills cards no longer in
+  // the live cube so their colors still count.
+  const colorMeta = buildCardMeta(cubeCards);
+  for (const [oracle, info] of Object.entries(cardImages)) {
+    if (!colorMeta[oracle]) {
+      colorMeta[oracle] = {
+        name: info.name,
+        imageUrl: info.imageUrl,
+        colorIdentity: info.colorIdentity,
+        elo: 1200,
+        cmc: info.cmc,
+        type: info.type,
+        producedMana: [],
+      };
+    }
+  }
+  for (const deck of decks) deck.colors = assessDeckColors(deck.oracles, colorMeta);
+
+  // Color-vs-color head-to-head, from each deck-vs-deck result. A deck plays
+  // every color in its identity (colorless decks bucket into 'C'), so a single
+  // match feeds every (deck-A color) × (deck-B color) cell — a "contains" view.
+  const colorMatchups: ColorMatchups = {};
+  const colorsOf = (d: AnalysisDeck): string[] => (d.colors.length ? d.colors : ['C']);
+  const addColorCell = (a: string, b: string, s: number) => {
+    const e = (colorMatchups[`${a}|${b}`] ??= { matches: 0, wins: 0, draws: 0 });
+    e.matches += 1;
+    if (s === 1) e.wins += 1;
+    else if (s === 0.5) e.draws += 1;
+  };
+  for (const mr of matchResults) {
+    const ai = deckIndexByKey[mr.aKey];
+    const bi = deckIndexByKey[mr.bKey];
+    if (ai === undefined || bi === undefined) continue;
+    const a = decks[ai];
+    const b = decks[bi];
+    if (!a || !b) continue;
+    const sInv = mr.s1 === 1 ? 0 : mr.s1 === 0 ? 1 : 0.5;
+    const ca = colorsOf(a);
+    const cb = colorsOf(b);
+    for (const x of ca) for (const y of cb) addColorCell(x, y, mr.s1);
+    for (const x of cb) for (const y of ca) addColorCell(x, y, sInv);
+  }
+
   // Match Elo (chronological replay; zero-sum; K=24).
   const elo: Record<string, number> = {};
   const getElo = (o: string) => elo[o] ?? 1200;
@@ -335,7 +380,7 @@ export async function runRecordAnalysis(
       skeletons = result.skeletons;
       clusterMethod = result.clusterMethod;
 
-      // Human archetype labels per deck (best-effort; falls back to colours only).
+      // Human archetype labels per deck (best-effort; falls back to colors only).
       let archetypeLabels: Map<number, string> | null = null;
       try {
         const archetypeData = await loadArchetypeData();
@@ -347,7 +392,6 @@ export async function runRecordAnalysis(
       for (let i = 0; i < decks.length; i++) {
         decks[i]!.x = result.umapCoords[i]?.x ?? 0;
         decks[i]!.y = result.umapCoords[i]?.y ?? 0;
-        decks[i]!.colors = assessDeckColors(decks[i]!.oracles, cardMeta);
         decks[i]!.archetype = archetypeLabels?.get(i) ?? '';
       }
       for (const skel of result.skeletons) {
@@ -396,6 +440,7 @@ export async function runRecordAnalysis(
     decks,
     skeletons,
     clusterMatchups,
+    colorMatchups,
     cardImages,
     clusterMethod,
     clustered,
