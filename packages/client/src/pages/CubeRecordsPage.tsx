@@ -3,7 +3,6 @@ import React, { useContext } from 'react';
 import Cube, { CubeCards } from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
 import Record from '@utils/datatypes/Record';
-import { RecordAnalytic } from '@utils/datatypes/RecordAnalytic';
 
 import { Card } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
@@ -18,7 +17,6 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
 import DraftReports from '../records/DraftReports';
-import TrophyArchive from '../records/TrophyArchive';
 import WinrateAnalytics from '../records/WinrateAnalytics';
 
 interface CubeRecordsPageProps {
@@ -27,29 +25,19 @@ interface CubeRecordsPageProps {
   decks: Draft[];
   decksLastKey: any;
   records: Record[];
-  analyticsData?: RecordAnalytic;
   lastKey: any;
 }
 
-const CubeRecordsPage: React.FC<CubeRecordsPageProps> = ({ cube, cards, records, analyticsData, lastKey }) => {
+const CubeRecordsPage: React.FC<CubeRecordsPageProps> = ({ cube, cards, records, lastKey }) => {
   const recordsViewContext = useContext(RecordsViewContext);
   const view = recordsViewContext?.view || 'draft-reports';
 
   let content;
   switch (view) {
-    case 'trophy-archive':
-      content = (
-        <Card>
-          <TrophyArchive records={records} lastKey={lastKey} />
-        </Card>
-      );
-      break;
     case 'winrate-analytics':
-      content = (
-        <Card>
-          <WinrateAnalytics analyticsData={analyticsData} />
-        </Card>
-      );
+      // The dashboard runs its own client-side analyses (stored locally) and
+      // renders its own grid of panels — no outer Card frame, no server data.
+      content = <WinrateAnalytics records={records} lastKey={lastKey} />;
       break;
     case 'draft-reports':
     default:
@@ -100,7 +88,6 @@ const CubeRecordsPageInner: React.FC<CubeRecordsPageProps> = ({
   cube,
   cards,
   records,
-  analyticsData,
   lastKey,
   decks,
   decksLastKey,
@@ -110,7 +97,6 @@ const CubeRecordsPageInner: React.FC<CubeRecordsPageProps> = ({
       cube={cube}
       cards={cards}
       records={records}
-      analyticsData={analyticsData}
       lastKey={lastKey}
       decks={decks}
       decksLastKey={decksLastKey}

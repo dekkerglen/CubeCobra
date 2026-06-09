@@ -5,10 +5,8 @@ import Draft from '@utils/datatypes/Draft';
 import Record from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
 
-import { Card, CardHeader } from 'components/base/Card';
-import FormatttedDate from 'components/base/FormatttedDate';
+import { Card } from 'components/base/Card';
 import { TabbedView } from 'components/base/Tabs';
-import Text from 'components/base/Text';
 import CommentsSection from 'components/comments/CommentsSection';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
@@ -35,12 +33,8 @@ const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players })
 
   const tabs = [
     {
-      name: 'Overview',
-      component: () => <RecordOverview record={record} players={players} />,
-    },
-    {
       name: 'Decks',
-      component: () => <RecordDecks record={record} draft={draft} />,
+      component: () => <RecordDecks record={record} draft={draft} players={players} />,
     },
     {
       name: 'Standings',
@@ -57,12 +51,8 @@ const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players })
       <CubeLayout cube={cube} activeLink="records">
         <DynamicFlash />
         <Card className="my-2">
-          <CardHeader>
-            <Text lg semibold>
-              {`${record.name} - `}
-              <FormatttedDate date={record.date} />
-            </Text>
-          </CardHeader>
+          {/* Overview is no longer a tab — it lives at the top of the page. */}
+          <RecordOverview record={record} />
           <TabbedView
             activeTab={parseInt(activeTab || '0', 10)}
             tabs={tabs.map((tab, index) => ({

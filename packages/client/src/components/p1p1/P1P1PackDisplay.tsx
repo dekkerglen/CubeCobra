@@ -5,7 +5,7 @@ import { P1P1Pack, P1P1VoteSummary } from '@utils/datatypes/P1P1Pack';
 import { detailsToCard } from '../../../../utils/src/cardutil';
 import UserContext from '../../contexts/UserContext';
 import useP1P1Vote from '../../hooks/useP1P1Vote';
-import { modelScoresToProbabilities } from '../../utils/botRatings';
+import { normalizeProbabilities } from '../../utils/botRatings';
 import Alert from '../base/Alert';
 import { Flexbox } from '../base/Layout';
 import Spinner from '../base/Spinner';
@@ -56,7 +56,7 @@ const P1P1PackDisplay: React.FC<P1P1PackDisplayProps> = ({ pack, votes, showBotW
 
   const ratings = useMemo((): number[] | undefined => {
     if (showBotWeights && votes.botWeights && votes.botWeights.length > 0) {
-      return modelScoresToProbabilities(votes.botWeights);
+      return normalizeProbabilities(votes.botWeights);
     } else if (votes.userVote !== undefined) {
       // Show vote percentages after user has voted
       const totalVotesWithBot = votes.totalVotes + (votes.botPick !== undefined ? 1 : 0);

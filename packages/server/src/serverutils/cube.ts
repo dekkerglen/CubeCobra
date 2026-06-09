@@ -14,7 +14,7 @@ import { handleRouteError, redirect, render } from './render';
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
-  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,board,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom,Voucher';
+  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,board,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom,Voucher,Artist';
 
 interface Cube {
   id: string;
@@ -279,7 +279,8 @@ function writeCard(res: Response, card: Card, boardName: string) {
   res.write(`","${cardutil.cardNotes(card)}",`);
   res.write(`${cardutil.cardMtgoId(card)},`);
   res.write(`${cardutil.isCustomCard(card) ? 'true' : 'false'},`);
-  res.write(`${cardutil.isVoucher(card) ? 'true' : 'false'}`);
+  res.write(`${cardutil.isVoucher(card) ? 'true' : 'false'},`);
+  res.write(`"${cardutil.cardArtist(card).replace(/"/g, '""')}"`);
   res.write('\r\n');
 }
 
@@ -347,6 +348,13 @@ const getBasicsFromCube = (
   basicsBoard?: string,
   legacyBasics?: string[],
 ): string[] => {
+  // 'None' is the explicit opt-out: the cube chose to add no basics at all. Treat
+  // it as no basics rather than falling through to the legacy cube.basics array —
+  // otherwise a cube with "None" selected still has basics injected.
+  if (basicsBoard === 'None') {
+    return [];
+  }
+
   // If a basicsBoard is specified and exists in the cube, use cards from that board
   // basicsBoard may be a display name (e.g. "Basics") - normalize via boardNameToKey
   if (basicsBoard) {

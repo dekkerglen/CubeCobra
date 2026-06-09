@@ -9,6 +9,7 @@ import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import Checkbox from 'components/base/Checkbox';
 import Collapse from 'components/base/Collapse';
+import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
@@ -19,9 +20,15 @@ import { CSRFContext } from 'contexts/CSRFContext';
 import { cardNameMatches, cubeCardNameMatches } from 'utils/cardAutocomplete';
 import { getCard } from 'utils/cards/getCard';
 
+// Select sentinel for "add a new player inline" (vs. an existing player index).
+export const NEW_PLAYER = -1;
+
 interface UploadDeckProps {
   selectedUser: number;
   setSelectedUser: (userId: number) => void;
+  // Optional: when provided, an inline "+ Add new player" option is offered.
+  newPlayerName?: string;
+  setNewPlayerName?: (name: string) => void;
   record: Record;
   mainboardCards: CardDetails[];
   setMainboardCards: React.Dispatch<React.SetStateAction<CardDetails[]>>;
@@ -34,6 +41,8 @@ interface UploadDeckProps {
 const UploadDeck: React.FC<UploadDeckProps> = ({
   selectedUser,
   setSelectedUser,
+  newPlayerName,
+  setNewPlayerName,
   record,
   mainboardCards,
   setMainboardCards,
@@ -150,8 +159,18 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
             value: `${index + 1}`,
             label: player.name,
           })),
+          ...(setNewPlayerName ? [{ value: `${NEW_PLAYER}`, label: '+ Add new player' }] : []),
         ]}
       />
+      {selectedUser === NEW_PLAYER && setNewPlayerName && (
+        <Input
+          type="text"
+          value={newPlayerName ?? ''}
+          onChange={(e) => setNewPlayerName(e.target.value)}
+          placeholder="New player name"
+          autoComplete="off"
+        />
+      )}
       <Flexbox direction="row" justify="start" gap="2">
         <Checkbox
           label="Use Cards Outside of Cube"

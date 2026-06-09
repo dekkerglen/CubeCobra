@@ -1,7 +1,9 @@
-import { cubeDao, recordDao } from 'dynamo/daos';
+import { setupPicks } from '@utils/draftutil';
+import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { bodyValidation } from 'router/middleware';
+import { createPool } from 'serverutils/cube';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { redirect } from 'serverutils/render';
 
@@ -44,7 +46,46 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
     }
 
     const players = JSON.parse(req.body.players);
+
+    // seatOrder[i] is the original seat index that the new player at position i
+    // came from, or -1 for a newly added player. Defaults to identity so an
+    // older client (or a no-op edit) keeps the existing seat alignment.
+    let seatOrder: number[];
+    try {
+      const parsed = req.body.seatOrder ? JSON.parse(req.body.seatOrder) : null;
+      seatOrder =
+        Array.isArray(parsed) && parsed.length === players.length
+          ? parsed.map((value: unknown) => parseInt(`${value}`, 10))
+          : players.map((_: unknown, index: number) => index);
+    } catch {
+      seatOrder = players.map((_: unknown, index: number) => index);
+    }
+
     record.players = players;
+
+    // Keep the associated draft's seats positionally aligned with the players.
+    // Reusing the old seat at seatOrder[i] keeps each player's deck attached as
+    // they move; -1 yields a fresh empty seat for a newly added player.
+    if (record.draft) {
+      const draft = await draftDao.getById(record.draft);
+      if (draft) {
+        const oldSeats = draft.seats;
+        draft.seats = players.map((player: { name: string; userId?: string }, index: number) => {
+          const origin = seatOrder[index] ?? -1;
+          const base =
+            origin >= 0 && origin < oldSeats.length
+              ? oldSeats[origin]
+              : { mainboard: createPool(), sideboard: setupPicks(1, 8) };
+          return {
+            ...base,
+            owner: player.userId,
+            title: player.name,
+          };
+        });
+        await draftDao.update(draft);
+      }
+    }
+
     record.dateLastUpdated = Date.now();
     await recordDao.update(record);
 

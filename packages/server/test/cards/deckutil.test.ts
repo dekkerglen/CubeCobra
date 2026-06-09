@@ -314,7 +314,10 @@ describe('reasonableCard', () => {
   });
 
   it('UB cards with source-material promo types are reasonable', async () => {
-    const details = createCardDetails({ ...overridesForNormalDetails, promo_types: ['ffiii', 'sourcematerial', 'universesbeyond'] });
+    const details = createCardDetails({
+      ...overridesForNormalDetails,
+      promo_types: ['ffiii', 'sourcematerial', 'universesbeyond'],
+    });
 
     expect(reasonableCard(details)).toBeTruthy();
   });

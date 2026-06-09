@@ -5,6 +5,8 @@ import _ from 'lodash';
 import fetch from 'node-fetch';
 import path from 'path';
 
+import { SCRYFALL_HEADERS } from './utils/scryfall';
+
 interface ScryfallMigration {
   id: string;
   old_scryfall_id: string;
@@ -28,7 +30,10 @@ const getMigrations = async (lastMigrationDate: string): Promise<ScryfallMigrati
 
   while (hasMore) {
     console.log(`Fetching page ${page}, currently at ${migrations.length} migrations`);
-    const response = await fetch(nextPage);
+    const response = await fetch(nextPage, { headers: SCRYFALL_HEADERS });
+    if (!response.ok) {
+      throw new Error(`Scryfall migrations request to '${nextPage}' failed with status: ${response.status}`);
+    }
     const data = (await response.json()) as MigrationData;
 
     hasMore = data.has_more;

@@ -1,31 +1,29 @@
 import React, { useContext } from 'react';
 
 import Record from '@utils/datatypes/Record';
-import User from '@utils/datatypes/User';
 
 import { CardBody } from 'components/base/Card';
 import FormatttedDate from 'components/base/FormatttedDate';
-import { Col, Flexbox, Row } from 'components/base/Layout';
+import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import { SafeMarkdown } from 'components/Markdown';
-import EditPlayerListModal from 'components/modals/EditPlayerListModal';
 import EditRecordOverviewModal from 'components/modals/EditRecordOverviewModal';
+import ShareRecordModal from 'components/modals/ShareRecordModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import UserContext from 'contexts/UserContext';
 
-import RecordPlayer from './RecordPlayer';
-
-const EditPlayerListLink = withModal(Link, EditPlayerListModal);
 const EditRecordOverviewLink = withModal(Link, EditRecordOverviewModal);
+const ShareRecordLink = withModal(Link, ShareRecordModal);
 
 interface RecordOverviewProps {
   record: Record;
-  players: User[];
 }
 
-const RecordOverview: React.FC<RecordOverviewProps> = ({ record, players }) => {
+// The record's header block, shown at the top of the page (no longer a tab):
+// name, date, description, and owner controls.
+const RecordOverview: React.FC<RecordOverviewProps> = ({ record }) => {
   const { cube } = useContext(CubeContext);
   const user = useContext(UserContext);
 
@@ -33,57 +31,25 @@ const RecordOverview: React.FC<RecordOverviewProps> = ({ record, players }) => {
 
   return (
     <CardBody>
-      <Row xs={2}>
-        <Col xs={2} md={1}>
-          <Flexbox direction="col" gap="1">
-            <Text lg semibold>
-              {record.name}
-            </Text>
-            <Text md className="text-muted">
-              <FormatttedDate date={record.date} />
-            </Text>
+      <Flexbox direction="col" gap="1">
+        <Text xl semibold>
+          {record.name}
+        </Text>
+        <Text md className="text-text-secondary">
+          <FormatttedDate date={record.date} />
+        </Text>
+        {record.description && (
+          <div className="mt-1">
             <SafeMarkdown markdown={record.description} />
-            {isOwner && (
-              <EditRecordOverviewLink
-                modalprops={{
-                  record,
-                }}
-              >
-                <Text sm className="text-muted">
-                  {'Edit Overview'}
-                </Text>
-              </EditRecordOverviewLink>
-            )}
+          </div>
+        )}
+        {isOwner && (
+          <Flexbox direction="row" gap="4" wrap="wrap" className="mt-1">
+            <EditRecordOverviewLink modalprops={{ record }}>Edit overview</EditRecordOverviewLink>
+            <ShareRecordLink modalprops={{ record }}>Share link to collect decks</ShareRecordLink>
           </Flexbox>
-        </Col>
-        <Col xs={2} md={1}>
-          <Flexbox direction="col" gap="2">
-            <Text lg semibold>
-              {'Players'}
-            </Text>
-            {isOwner && (
-              <EditPlayerListLink
-                modalprops={{
-                  record,
-                }}
-              >
-                {'Edit Player List'}
-              </EditPlayerListLink>
-            )}
-            {record.players.map((player, index) => (
-              <Flexbox key={index} direction="row" gap="3" alignItems="center">
-                <Text lg semibold>{`${index + 1}. `}</Text>
-                <RecordPlayer
-                  key={index}
-                  name={player.name}
-                  userId={player.userId}
-                  user={players.find((u) => u.id === player.userId)}
-                />
-              </Flexbox>
-            ))}
-          </Flexbox>
-        </Col>
-      </Row>
+        )}
+      </Flexbox>
     </CardBody>
   );
 };

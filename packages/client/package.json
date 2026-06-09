@@ -32,6 +32,7 @@
     "micromark-util-character": "^2.1.0",
     "micromark-util-chunked": "^2.0.0",
     "micromark-util-symbol": "^2.0.0",
+    "onnxruntime-web": "^1.26.0",
     "papaparse": "^5.5.3",
     "react": "^18.3.1",
     "react-audio-player": "^0.17.0",
@@ -52,6 +53,7 @@
     "remark-parse": "^11.0.0",
     "slugify": "^1.6.6",
     "tailwindcss": "^3.4.3",
+    "tesseract.js": "^6.0.1",
     "unified": "^11.0.5",
     "unist-util-visit": "^5.0.0"
   },

@@ -11,6 +11,7 @@ import type {
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
 
+import { getOverallSimProgress } from '../components/draftSimulator/SimulationProgressBar';
 import {
   buildOracleRemapping,
   countOutOfVocabOracles,
@@ -86,29 +87,6 @@ const RECOMMENDATION_CONCURRENCY = 2;
 function throwIfAborted(signal: AbortSignal): void {
   if (signal.aborted) {
     throw new DOMException('Aborted', 'AbortError');
-  }
-}
-
-function getOverallSimProgress(
-  simPhase: 'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'cluster' | 'save' | null,
-  modelLoadProgress: number,
-  simProgress: number,
-): number {
-  switch (simPhase) {
-    case 'setup':
-      return 5;
-    case 'loadmodel':
-      return 5 + Math.round((modelLoadProgress / 100) * 15);
-    case 'sim':
-      return 20 + Math.round((simProgress / 100) * 70);
-    case 'deckbuild':
-      return 92;
-    case 'cluster':
-      return 96;
-    case 'save':
-      return 98;
-    default:
-      return 0;
   }
 }
 

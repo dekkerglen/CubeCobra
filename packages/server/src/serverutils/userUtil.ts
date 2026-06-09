@@ -1,5 +1,5 @@
 import { getOracleForMl } from 'serverutils/carddb';
-import { draft } from 'serverutils/ml';
+import { cubeContext as encodeCubeContext, draft } from 'serverutils/ml';
 
 /**
  * Utility functions for handling user data in P1P1 packs
@@ -16,9 +16,14 @@ interface BotResult {
 }
 
 /**
- * Get bot prediction for a pack of oracle IDs
+ * Get bot prediction for a pack of oracle IDs.
+ *
+ * Pass the cube's oracle ids via `cubeOracles` so we can compute the 32-dim cube
+ * context the draft decoder needs (it expects pool[128] ⊕ cube_ctx[32] = 160 dims).
+ * Without it the ML service silently returns empty predictions and bot weights
+ * come back as all zeros — chips render uniformly in the P1P1 UI.
  */
-export const getBotPrediction = async (oracleIds: string[]): Promise<BotResult> => {
+export const getBotPrediction = async (oracleIds: string[], cubeOracles?: string[]): Promise<BotResult> => {
   try {
     const validOracleIds = oracleIds.filter(Boolean);
 
@@ -38,8 +43,15 @@ export const getBotPrediction = async (oracleIds: string[]): Promise<BotResult> 
 
     const mlOracleIds = validOracleIds.map((o) => toMl[o] ?? o);
 
+    let cubeCtx: number[] | undefined;
+    if (cubeOracles && cubeOracles.length > 0) {
+      const mlCubeOracles = Array.from(new Set(cubeOracles.map((o) => getOracleForMl(o, null))));
+      const embedding = await encodeCubeContext(mlCubeOracles);
+      if (embedding.length > 0) cubeCtx = embedding;
+    }
+
     // Call the draft function directly instead of making HTTP request
-    const mlPredictions: BotPrediction[] = await draft(mlOracleIds, []); // Empty picks for P1P1
+    const mlPredictions: BotPrediction[] = await draft(mlOracleIds, [], cubeCtx); // Empty picks for P1P1
 
     // Map ML oracles back to originals
     const predictions = mlPredictions.map((p) => ({

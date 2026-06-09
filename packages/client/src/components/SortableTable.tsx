@@ -24,6 +24,11 @@ interface SortableTableProps {
   defaultSortConfig?: SortConfig;
   sortFns?: { [key: string]: (a: any, b: any) => number };
   columnProps: ColumnProps[];
+  // When the table sits flush inside a card body (no surrounding padding), drop the
+  // rounded outer border so it reads as one with the card instead of a nested box.
+  flush?: boolean;
+  // Hide the inline "Download CSV" link (e.g. when it's rendered in the card header).
+  showCsvLink?: boolean;
 }
 
 export const valueRenderer = (value: any): any => {
@@ -42,7 +47,14 @@ export const valueRenderer = (value: any): any => {
 
 export const compareStrings = (a: any, b: any): number => a?.toString?.()?.localeCompare?.(b?.toString?.()) ?? 0;
 
-export const SortableTable: React.FC<SortableTableProps> = ({ data, defaultSortConfig, sortFns, columnProps }) => {
+export const SortableTable: React.FC<SortableTableProps> = ({
+  data,
+  defaultSortConfig,
+  sortFns,
+  columnProps,
+  flush = false,
+  showCsvLink = true,
+}) => {
   const { items, requestSort, sortConfig } = useSortableData(data, defaultSortConfig, sortFns);
 
   //Export CSV data uses same sort as the table shown
@@ -59,11 +71,13 @@ export const SortableTable: React.FC<SortableTableProps> = ({ data, defaultSortC
 
   return (
     <>
-      <CSVLink data={exportData} filename="export.csv" className="font-medium text-link hover:text-link-active">
-        Download CSV
-      </CSVLink>
+      {showCsvLink && (
+        <CSVLink data={exportData} filename="export.csv" className="font-medium text-link hover:text-link-active">
+          Download CSV
+        </CSVLink>
+      )}
       <div className="overflow-x-auto max-w-full">
-        <table className="border border-border rounded-md w-full">
+        <table className={classNames('w-full', { 'border border-border rounded-md': !flush })}>
           <thead>
             <tr>
               {columnProps.map(({ title, key, sortable, heading, tooltip }) => {

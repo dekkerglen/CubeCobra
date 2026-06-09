@@ -34,7 +34,7 @@ export const editTrophyHandler = async (req: Request, res: Response) => {
     const trophy: string[] = JSON.parse(req.body.trophy);
     if (!Array.isArray(trophy) || trophy.length === 0) {
       req.flash('danger', 'Trophy must be a non-empty array');
-      return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=1`);
     }
 
     // Ensure trophy is an array of valid user names from the list of players
@@ -43,7 +43,7 @@ export const editTrophyHandler = async (req: Request, res: Response) => {
     for (const player of trophy) {
       if (typeof player !== 'string') {
         req.flash('danger', `Invalid player name in trophy: ${player}`);
-        return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
+        return redirect(req, res, `/cube/record/${req.params.id}?tab=1`);
       }
       //The trophy names may contain old player names which we will strip, rather than aborting the action
       if (!validPlayers.includes(player)) {
@@ -58,10 +58,10 @@ export const editTrophyHandler = async (req: Request, res: Response) => {
     await recordDao.update(record);
 
     req.flash('success', 'Trophy updated successfully');
-    return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
+    return redirect(req, res, `/cube/record/${req.params.id}?tab=1`);
   } catch {
     req.flash('danger', 'Error updating record');
-    return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
+    return redirect(req, res, `/cube/record/${req.params.id}?tab=1`);
   }
 };
 

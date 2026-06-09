@@ -1,14 +1,17 @@
 import React, { useCallback, useState } from 'react';
 
-import { DndContext, DragEndEvent } from '@dnd-kit/core';
-import { cardType, cmcColumn, makeSubtitle } from '@utils/cardutil';
+import { DndContext, DragEndEvent, useDroppable } from '@dnd-kit/core';
+import { cardType, cmcColumn, detailsToCard, makeSubtitle } from '@utils/cardutil';
+import CardType, { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
+import { getCardDefaultRowColumn } from '@utils/draftutil';
 
 import DeckBuilderStatsPanel from 'components/DeckBuilderStatsPanel';
 
 import { Card } from '../components/base/Card';
 import Container from '../components/base/Container';
+import Text from '../components/base/Text';
 import DeckbuilderNavbar from '../components/DeckbuilderNavbar';
 import DeckStacks from '../components/DeckStacks';
 import DynamicFlash from '../components/DynamicFlash';
@@ -24,9 +27,28 @@ interface CubeDeckbuilderPageProps {
   initialDeck: Draft;
 }
 
+// Drop target for discarding a card out of the deck entirely.
+const RemoveZone: React.FC = () => {
+  const { setNodeRef, isOver } = useDroppable({ id: 'deckbuilder-remove', data: { type: 'remove' } });
+  return (
+    <div
+      ref={setNodeRef}
+      className={`flex items-center justify-center border-2 border-dashed rounded-md py-4 mx-2 mb-3 transition-colors ${
+        isOver ? 'border-danger bg-danger/10' : 'border-border text-text-secondary'
+      }`}
+    >
+      <Text semibold>{isOver ? 'Release to remove card' : 'Drag a card here to remove it from the deck'}</Text>
+    </div>
+  );
+};
+
 const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initialDeck }) => {
   const searchParams = new URLSearchParams(window.location.search);
   const seatIndex = parseInt(searchParams.get('seat') || '0', 10);
+  // The card pool is mutable now: the Add Card control appends new cards beyond
+  // the original pool, which are submitted as `newCards` on save.
+  const [cards, setCards] = useState<CardType[]>(initialDeck.cards);
+  const originalCardCount = initialDeck.cards.length;
   const [mainboard, setMainboard] = useState<number[][][]>(
     initialDeck.seats[seatIndex]?.mainboard || initialDeck.seats[0].mainboard,
   );
@@ -47,9 +69,23 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
       }
 
       const source = active.data.current as DraftLocation;
-      const target = over.data.current as DraftLocation;
+      const target = over.data.current as DraftLocation | { type: string };
 
-      if (source.equals(target)) {
+      // Dropped onto the remove zone: pull the card out of its board and discard.
+      if ((target as { type: string })?.type === 'remove') {
+        if (source.type !== 'deck' && source.type !== 'sideboard') {
+          return;
+        }
+        const sourceLocation = source.type === 'deck' ? mainboard : sideboard;
+        const setSource = source.type === 'deck' ? setMainboard : setSideboard;
+        const [, newSourceLocation] = removeCard(sourceLocation, source);
+        setSource(newSourceLocation);
+        return;
+      }
+
+      const targetLoc = target as DraftLocation;
+
+      if (source.equals(targetLoc)) {
         // player dropped card back in the same location
         const dragTime = Date.now() - (dragStartTime ?? 0);
 
@@ -57,7 +93,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
           // if the drag was too quick, it was a click so we move the card to the other location
           const sourceBoard = source.type === 'deck' ? mainboard : sideboard;
           const cardIndex = sourceBoard[source.row][source.col][source.index];
-          const card = initialDeck.cards[cardIndex];
+          const card = cards[cardIndex];
           const isCreature = cardType(card).toLowerCase().includes('creature');
           const cmc = cmcColumn(card);
 
@@ -82,32 +118,32 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
         return;
       }
 
-      if (source.type === 'pack' || target.type === 'pack') {
+      if (source.type === 'pack' || targetLoc.type === 'pack') {
         // there are no packs in the deckbuilder
         return;
       }
 
-      if (source.type === target.type) {
+      if (source.type === targetLoc.type) {
         // moving cards within the same location
         const location = source.type === 'deck' ? mainboard : sideboard;
         const updateLocation = source.type === 'deck' ? setMainboard : setSideboard;
 
-        updateLocation(moveCard(location, source, target));
+        updateLocation(moveCard(location, source, targetLoc));
       } else {
         // moving cards between mainboard and sideboard
         const sourceLocation = source.type === 'deck' ? mainboard : sideboard;
         const setSource = source.type === 'deck' ? setMainboard : setSideboard;
 
-        const targetLocation = target.type === 'deck' ? mainboard : sideboard;
-        const setTarget = target.type === 'deck' ? setMainboard : setSideboard;
+        const targetLocation = targetLoc.type === 'deck' ? mainboard : sideboard;
+        const setTarget = targetLoc.type === 'deck' ? setMainboard : setSideboard;
 
         const [card, newSourceLocation] = removeCard(sourceLocation, source);
         setSource(newSourceLocation);
 
-        setTarget(addCard(targetLocation, target, card));
+        setTarget(addCard(targetLocation, targetLoc, card));
       }
     },
-    [mainboard, sideboard, setMainboard, setSideboard, initialDeck, dragStartTime],
+    [mainboard, sideboard, setMainboard, setSideboard, cards, dragStartTime],
   );
 
   const addBasics = useCallback(
@@ -120,6 +156,19 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
     [mainboard, basics],
   );
 
+  // Append an arbitrary card to the deck. The card is added to the pool and
+  // placed in its default mainboard cell; on save it's submitted as a newCard.
+  const addCardToDeck = useCallback(
+    (details: CardDetails) => {
+      const card = detailsToCard(details);
+      const newIndex = cards.length;
+      const { row, col } = getCardDefaultRowColumn(card);
+      setCards((prev) => [...prev, card]);
+      setMainboard((prev) => addCard(prev, DraftLocation.deck(row, col, prev[row]?.[col]?.length || 0), newIndex));
+    },
+    [cards],
+  );
+
   // Resolve deckbuild settings from cube
   const maxSpells = cube.deckbuildSpells ?? 23;
   const maxLands = cube.deckbuildLands ?? 17;
@@ -130,7 +179,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
         <CubeLayout cube={cube} activeLink="playtest">
           <Container xl disableCenter>
             <DeckbuilderNavbar
-              cards={initialDeck.cards}
+              cards={cards}
               basics={basics}
               mainboard={mainboard}
               sideboard={sideboard}
@@ -143,43 +192,47 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
               seat={seatIndex}
               maxSpells={maxSpells}
               maxLands={maxLands}
+              onAddCard={addCardToDeck}
+              defaultPrinting={cube.defaultPrinting}
+              originalCardCount={originalCardCount}
             />
             <DeckBuilderStatsPanel
               cards={mainboard
                 .flat()
                 .flat()
-                .map((index) => initialDeck.cards[index])}
+                .map((index) => cards[index])}
             />
             <DynamicFlash />
             <Card className="my-3">
               <DndContext onDragEnd={handleMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
                 <ErrorBoundary>
                   <DeckStacks
-                    cards={mainboard.map((col) => col.map((row) => row.map((index) => initialDeck.cards[index])))}
+                    cards={mainboard.map((col) => col.map((row) => row.map((index) => cards[index])))}
                     title="Deck"
                     subtitle={makeSubtitle(
                       mainboard
                         .flat()
                         .flat()
-                        .map((index) => initialDeck.cards[index]),
+                        .map((index) => cards[index]),
                     )}
                     locationType={locations.deck}
                     xs={4}
                     lg={8}
                   />
                   <DeckStacks
-                    cards={sideboard.map((col) => col.map((row) => row.map((index) => initialDeck.cards[index])))}
+                    cards={sideboard.map((col) => col.map((row) => row.map((index) => cards[index])))}
                     title="Sideboard"
                     locationType={locations.sideboard}
                     subtitle={makeSubtitle(
                       sideboard
                         .flat()
                         .flat()
-                        .map((index) => initialDeck.cards[index]),
+                        .map((index) => cards[index]),
                     )}
                     xs={4}
                     lg={8}
                   />
+                  <RemoveZone />
                 </ErrorBoundary>
               </DndContext>
             </Card>

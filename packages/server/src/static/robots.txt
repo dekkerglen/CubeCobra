@@ -1,0 +1,68 @@
+# robots.txt for cubecobra.com (the main content site)
+#
+# Served by the Express app via an explicit GET /robots.txt route in
+# packages/server/src/index.ts (registered before the static public/ handler
+# so it takes precedence). This is intentionally SEPARATE from the asset-host
+# policy in packages/server/public/robots.txt, which is a deny-all file
+# uploaded to the assets S3 bucket and served from assets.cubecobra.com.
+# Do NOT merge the two: the content site wants to be indexed, the asset host
+# does not.
+#
+# The Disallow list below targets routes that are crawlable (GET) but have no
+# SEO value and/or are expensive to serve. They were selected from a week of
+# production request logs by egress, latency, and payload size:
+#   - data-viz / interactive pages with no standalone SEO value
+#     (/cube/analysis, /cube/playtest, /cube/followers)
+#   - raw JSON / file exports and image proxies/generators
+#     (/cube/api, /api, /tool/api, /tool/imageproxy, /cube/download, /cubeimage)
+#   - combinatorial "crawl trap" URL spaces that explode crawl budget
+#     (/search, /cube/compare, /cube/changelog, /cube/samplepack per-seed)
+#   - ephemeral draft views (/draft)
+# Public content pages -- cube overview/list, card pages, decks, blog,
+# articles, user profiles -- remain indexable.
+
+# --- Crawlers with no SEO value that generate significant load: blocked entirely ---
+# (robots.txt groups are not cumulative: these bots obey only their own group,
+#  not the User-agent: * group below.)
+
+User-agent: Amazonbot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: Bytespider
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
+
+User-agent: DotBot
+Disallow: /
+
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: PulsePoint-Crawler
+Disallow: /
+
+# --- All other crawlers: index content, skip the expensive/no-SEO routes ---
+
+User-agent: *
+Disallow: /api/
+Disallow: /cube/api/
+Disallow: /tool/api/
+Disallow: /tool/imageproxy
+Disallow: /search
+Disallow: /draft/
+Disallow: /cube/analysis/
+Disallow: /cube/playtest/
+Disallow: /cube/followers/
+Disallow: /cube/compare/
+Disallow: /cube/changelog/
+Disallow: /cube/samplepack
+Disallow: /cube/download/
+Disallow: /cubeimage/
+Allow: /
+
+Sitemap: https://cubecobra.com/sitemap.xml

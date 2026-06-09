@@ -22,6 +22,7 @@ import path from 'path';
 import stream, { pipeline } from 'stream';
 
 import { downloadJson, uploadFile } from './utils/s3';
+import { SCRYFALL_HEADERS } from './utils/scryfall';
 import {
   convertName,
   ScryfallCard,
@@ -86,7 +87,7 @@ async function downloadFile(url: string, filePath: string) {
     fs.mkdirSync(folder, { recursive: true });
   }
 
-  const response = await fetch(url);
+  const response = await fetch(url, { headers: SCRYFALL_HEADERS });
   if (!response.ok) {
     throw new Error(`Request to '${url}' failed with status: ${response.statusText}`);
   }
@@ -130,7 +131,7 @@ async function downloadDefaultCards(useS3Cache?: boolean): Promise<{ updatedAt: 
   let allUrl;
   let allCardsMetadata: { updated_at: string; size: number } | undefined;
 
-  const res = await fetch('https://api.scryfall.com/bulk-data');
+  const res = await fetch('https://api.scryfall.com/bulk-data', { headers: SCRYFALL_HEADERS });
   if (!res.ok) throw new Error(`Download of /bulk-data failed with code ${res.status}`);
   const resjson = (await res.json()) as {
     data: Array<{

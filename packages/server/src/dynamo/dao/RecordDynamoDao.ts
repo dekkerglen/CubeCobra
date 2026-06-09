@@ -21,7 +21,12 @@
 import { DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import RecordType from '@utils/datatypes/Record';
-import { RecordAnalytic } from '@utils/datatypes/RecordAnalytic';
+import {
+  RecordAnalytic,
+  RecordMatchupAnalytic,
+  RecordPairAnalytic,
+  RecordPlayerAnalytic,
+} from '@utils/datatypes/RecordAnalytic';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getObject, putObject } from '../s3client';
@@ -297,5 +302,44 @@ export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecor
    */
   public async putAnalytics(cubeId: string, analytic: RecordAnalytic): Promise<void> {
     await putObject(process.env.DATA_BUCKET as string, `record_analytic/${cubeId}.json`, analytic);
+  }
+
+  /** Synergy-pair analytics (cards appearing together), keyed by `oracleA|oracleB`. */
+  public async getPairAnalytics(cubeId: string): Promise<RecordPairAnalytic> {
+    try {
+      return await getObject(process.env.DATA_BUCKET as string, `record_pair_analytic/${cubeId}.json`);
+    } catch {
+      return {};
+    }
+  }
+
+  public async putPairAnalytics(cubeId: string, pairs: RecordPairAnalytic): Promise<void> {
+    await putObject(process.env.DATA_BUCKET as string, `record_pair_analytic/${cubeId}.json`, pairs);
+  }
+
+  /** Directed matchup analytics (one card's deck vs another's), keyed by `oracle|opponentOracle`. */
+  public async getMatchupAnalytics(cubeId: string): Promise<RecordMatchupAnalytic> {
+    try {
+      return await getObject(process.env.DATA_BUCKET as string, `record_matchup_analytic/${cubeId}.json`);
+    } catch {
+      return {};
+    }
+  }
+
+  public async putMatchupAnalytics(cubeId: string, matchups: RecordMatchupAnalytic): Promise<void> {
+    await putObject(process.env.DATA_BUCKET as string, `record_matchup_analytic/${cubeId}.json`, matchups);
+  }
+
+  /** Per-player aggregates (the trophy case / champions). */
+  public async getPlayerAnalytics(cubeId: string): Promise<RecordPlayerAnalytic> {
+    try {
+      return await getObject(process.env.DATA_BUCKET as string, `record_player_analytic/${cubeId}.json`);
+    } catch {
+      return [];
+    }
+  }
+
+  public async putPlayerAnalytics(cubeId: string, players: RecordPlayerAnalytic): Promise<void> {
+    await putObject(process.env.DATA_BUCKET as string, `record_player_analytic/${cubeId}.json`, players);
   }
 }

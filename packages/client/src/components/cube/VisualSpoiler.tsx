@@ -42,6 +42,7 @@ const VisualSpoiler: React.FC<VisualSpoilerProps> = ({ cards }) => {
           setModalOpen(true);
         }}
         xs={cardsPerRow}
+        cubeTrayDraggable
       />
     </div>
   );

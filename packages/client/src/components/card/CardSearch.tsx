@@ -20,6 +20,7 @@ import Spinner from 'components/base/Spinner';
 import Table from 'components/base/Table';
 import Text from 'components/base/Text';
 import CardGrid from 'components/card/CardGrid';
+import useCubeTrayDrag from 'components/cubetray/useCubeTrayDrag';
 import DynamicFlash from 'components/DynamicFlash';
 import LoadingButton from 'components/LoadingButton';
 import AdvancedFilterModal from 'components/modals/AdvancedFilterModal';
@@ -36,6 +37,7 @@ const PICK_COUNT_BASELINE = 'pickcount>=100';
 
 const CardSearch: React.FC = () => {
   const { filterInput, setFilterInput, filterValid } = useContext(FilterContext);
+  const drag = useCubeTrayDrag();
   const [cards, setCards] = useState<CardDetails[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(parseInt(Query.get('p', '0'), 0));
@@ -141,12 +143,8 @@ const CardSearch: React.FC = () => {
   const pageCount = Math.ceil(parseInt(count || '0', 10) / 96);
   // Top pager sits on the dark splash; bottom pager sits past the splash on
   // the regular page bg. Pass inverted only for the top one.
-  const topPager = (
-    <Paginate count={pageCount} active={page} onClick={(i: number) => updatePage(i)} inverted />
-  );
-  const bottomPager = (
-    <Paginate count={pageCount} active={page} onClick={(i: number) => updatePage(i)} />
-  );
+  const topPager = <Paginate count={pageCount} active={page} onClick={(i: number) => updatePage(i)} inverted />;
+  const bottomPager = <Paginate count={pageCount} active={page} onClick={(i: number) => updatePage(i)} />;
 
   const tableHeaders = ['Name', 'Cost', 'Type', 'Elo', 'Total Picks', 'Cube Count'];
   const tableRows = cards.map((card) => ({
@@ -175,6 +173,22 @@ const CardSearch: React.FC = () => {
     'Total Picks': card.pickCount === null ? '' : Number(card.pickCount).toLocaleString(),
     'Cube Count': card.cubeCount === null ? '' : Number(card.cubeCount).toLocaleString(),
   }));
+
+  // Make each table row a cube-tray drag source (mirrors the grid view).
+  const getRowProps = drag.active
+    ? (rowIndex: number) => ({
+        className: 'cursor-grab active:cursor-grabbing',
+        onPointerDown: (e: React.PointerEvent<HTMLTableRowElement>) => drag.start(detailsToCard(cards[rowIndex]), e),
+        onDragStart: (e: React.DragEvent<HTMLTableRowElement>) => e.preventDefault(),
+        // Capture so a drag's trailing click doesn't follow the Name link.
+        onClickCapture: (e: React.MouseEvent<HTMLTableRowElement>) => {
+          if (drag.suppressClick()) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        },
+      })
+    : undefined;
 
   const emptyMessage = view === 'cards' && !filterInput ? 'Enter a filter above to begin searching.' : 'No cards found';
   const formattedCount = Number(count || '0').toLocaleString();
@@ -430,7 +444,12 @@ const CardSearch: React.FC = () => {
                         <Spinner xl />
                       </div>
                     ) : view === 'rows' ? (
-                      <Table headers={tableHeaders} rows={tableRows} hideOnMobile={['Cost', 'Type']} />
+                      <Table
+                        headers={tableHeaders}
+                        rows={tableRows}
+                        hideOnMobile={['Cost', 'Type']}
+                        getRowProps={getRowProps}
+                      />
                     ) : (
                       <CardGrid
                         cards={cards.map(detailsToCard)}
@@ -442,6 +461,7 @@ const CardSearch: React.FC = () => {
                         xxl={8}
                         cardProps={{ autocard: true, className: 'clickable' }}
                         hrefFn={(card) => `/tool/card/${cardId(card)}`}
+                        cubeTrayDraggable
                       />
                     )}
                     <Flexbox direction="row" justify="center" alignItems="center" className="w-full px-2">

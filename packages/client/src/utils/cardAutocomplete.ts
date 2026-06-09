@@ -38,6 +38,20 @@ export const cubeCardNameMatches =
     return json?.success === 'true' ? json.cardnames : [];
   };
 
+// Card names prioritizing one cube/board, then falling back to the full catalog
+// (cube matches first, de-duped). Use where a card may have been cut from the
+// cube but still needs to be matchable (e.g. scanning a deck photo).
+export const cubeThenAllCardNameMatches =
+  (cubeId: string, board: string): MatchFetcher =>
+  async (query, signal) => {
+    const [cube, all] = await Promise.all([
+      cubeCardNameMatches(cubeId, board)(query, signal),
+      cardNameMatches()(query, signal),
+    ]);
+    const seen = new Set(cube.map((n) => n.toLowerCase()));
+    return [...cube, ...all.filter((n) => !seen.has(n.toLowerCase()))];
+  };
+
 // Tag autocomplete scoped to a cube.
 export const cubeCardTagMatches =
   (cubeId: string): MatchFetcher =>

@@ -61,6 +61,22 @@ const calculateBasics = (mainboard: any[], basics: any[], deckSize: number = 40)
     mainboard.map((card: any) => card.oracle_id),
     basics,
   );
+  // Map each mainboard card to a stable lookup key and ensure it has color metadata.
+  // The card database (via buildLandMetaLookup) is authoritative when the card
+  // resolves there; otherwise fall back to the card object's own fields so cards
+  // without an oracle id / not in the database still drive the color demand.
+  const mainboardKeys = mainboard.map((card: any, index: number) => {
+    const key = card.oracle_id ?? `__mainboard_${index}`;
+    if (!cardMeta[key]) {
+      cardMeta[key] = {
+        name: card.name ?? key,
+        type: card.type ?? '',
+        colorIdentity: card.color_identity ?? [],
+        producedMana: card.produced_mana ?? [],
+      };
+    }
+    return key;
+  });
   const basicCards: Array<BasicCardLike & { card: any }> = basics.map((card: any) => ({
     card,
     oracleId: card.oracle_id,
@@ -68,12 +84,7 @@ const calculateBasics = (mainboard: any[], basics: any[], deckSize: number = 40)
     colorIdentity: card.color_identity ?? [],
     producedMana: card.produced_mana ?? [],
   }));
-  return pickAddedBasics(
-    mainboard.map((card: any) => card.oracle_id),
-    cardMeta,
-    basicCards,
-    deckSize,
-  ).map((basic) => basic.card);
+  return pickAddedBasics(mainboardKeys, cardMeta, basicCards, deckSize).map((basic) => basic.card);
 };
 
 export const deckbuild = async (

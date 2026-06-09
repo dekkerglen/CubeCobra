@@ -2,6 +2,7 @@ import { migrationTaskDao } from '@server/dynamo/daos';
 import { MigrationTaskStatus } from '@utils/datatypes/MigrationTask';
 
 import { checkEcsTaskHealth, isTaskRunning, startEcsTask } from './utils/ecs';
+import { SCRYFALL_HEADERS } from './utils/scryfall';
 
 interface ScryfallMigrationsData {
   has_more: boolean;
@@ -16,7 +17,7 @@ interface ScryfallMigrationsData {
  */
 async function checkForNewMigrations(lastMigrationDate: string): Promise<boolean> {
   try {
-    const response = await fetch('https://api.scryfall.com/migrations?page=1');
+    const response = await fetch('https://api.scryfall.com/migrations?page=1', { headers: SCRYFALL_HEADERS });
     if (!response.ok) {
       console.error(`Failed to fetch Scryfall migrations: ${response.status}`);
       return false;

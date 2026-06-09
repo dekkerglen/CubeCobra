@@ -1,5 +1,7 @@
 import { GetObjectCommand, ListObjectsV2Command, PutObjectCommand, S3 } from '@aws-sdk/client-s3';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
+// @ts-ignore - jsonparse doesn't have proper types
+import Parser from 'jsonparse';
 import { Readable } from 'stream';
 
 // Initialize S3 client
@@ -185,8 +187,8 @@ export const downloadJsonFromBucket = async (key: string, bucket: string): Promi
       return null;
     }
 
-    const bodyContents = await streamToString(response.Body as Readable);
-    return JSON.parse(bodyContents);
+    const { chunks, totalBytes } = await streamToChunks(response.Body as Readable);
+    return parseJsonFromChunks(chunks, totalBytes);
   } catch (error: any) {
     if (error.name === 'NoSuchKey' || error.$metadata?.httpStatusCode === 404) {
       return null;
@@ -291,13 +293,75 @@ export const getMostRecentFile = async (prefix: string): Promise<string | null> 
 };
 
 /**
- * Helper function to convert a stream to a string
+ * V8 cannot create strings longer than ~512MB (0x1fffffe8 chars). Stay well
+ * below that and stream-parse anything larger to avoid ERR_STRING_TOO_LONG.
  */
-async function streamToString(stream: Readable): Promise<string> {
+const MAX_JSON_STRING_BYTES = 256 * 1024 * 1024;
+
+/**
+ * Helper function to collect a stream into an array of buffers
+ */
+async function streamToChunks(stream: Readable): Promise<{ chunks: Buffer[]; totalBytes: number }> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
-    stream.on('data', (chunk) => chunks.push(chunk));
+    let totalBytes = 0;
+    stream.on('data', (chunk) => {
+      const buffer = typeof chunk === 'string' ? Buffer.from(chunk) : chunk;
+      chunks.push(buffer);
+      totalBytes += buffer.length;
+    });
     stream.on('error', reject);
-    stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+    stream.on('end', () => resolve({ chunks, totalBytes }));
+  });
+}
+
+/**
+ * Parse JSON from buffered chunks. Small payloads use JSON.parse directly.
+ * Payloads that would exceed V8's max string length are parsed incrementally
+ * with jsonparse (the tokenizer underneath JSONStream), which builds the
+ * result object token by token so the full JSON text is never materialized
+ * as a single string (avoids ERR_STRING_TOO_LONG). Mirrors
+ * uploadJsonStreaming, which does the same on the write side.
+ *
+ * Note: jsonparse is used directly instead of JSONStream because JSONStream
+ * silently drops null values, which would not be faithful to JSON.parse.
+ */
+async function parseJsonFromChunks(chunks: Buffer[], totalBytes: number): Promise<any> {
+  if (totalBytes <= MAX_JSON_STRING_BYTES) {
+    return JSON.parse(Buffer.concat(chunks).toString('utf-8'));
+  }
+
+  return new Promise((resolve, reject) => {
+    const parser = new Parser();
+    let result: any;
+    let done = false;
+
+    parser.onValue = function (this: any, value: any) {
+      // stack is empty once the root value is complete
+      if (this.stack.length === 0) {
+        result = value;
+        done = true;
+      }
+    };
+    parser.onError = (err: Error) => reject(err);
+
+    try {
+      for (const chunk of chunks) {
+        parser.write(chunk);
+      }
+      if (!done) {
+        // flush a trailing number token (e.g. a bare `42` root)
+        parser.write(' ');
+      }
+    } catch (err) {
+      reject(err);
+      return;
+    }
+
+    if (!done) {
+      reject(new Error('Unexpected end of JSON input'));
+      return;
+    }
+    resolve(result);
   });
 }

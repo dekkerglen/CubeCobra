@@ -10,6 +10,7 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
+import { associateDecksWithNewDraft } from './uploaddeck';
 
 export const hedronImportPageHandler = async (req: Request, res: Response) => {
   try {
@@ -140,6 +141,29 @@ export const hedronImportHandler = async (req: Request, res: Response) => {
     if (!createdRecordId) {
       req.flash('danger', 'Error creating record');
       return redirect(req, res, `/cube/records/${req.params.id}`);
+    }
+
+    // Attach the auto-annotated decklists (oracle ids, keyed by 1-based player
+    // index). Each entry is a built mainboard + its leftover sideboard. We build
+    // ONE draft with every seat filled in a single createDraft call — the same
+    // pattern the regular draft workflow uses — so every seat is named from its
+    // mainboard archetype (assessColors). (An incremental per-seat approach
+    // doesn't work: draftDao.update skips seat-name recomputation once a title is
+    // set, so only the first seat would get a name.)
+    const decks: { [playerIndex: string]: { mainboard: string[]; sideboard?: string[] } } = req.body.decks
+      ? JSON.parse(req.body.decks)
+      : {};
+    const decksByIndex: { [userIndex: number]: { mainboard: string[]; sideboard?: string[] } } = {};
+    for (const [idx, deck] of Object.entries(decks)) {
+      if (Array.isArray(deck?.mainboard) && deck.mainboard.length > 0) {
+        decksByIndex[parseInt(idx, 10)] = { mainboard: deck.mainboard, sideboard: deck.sideboard ?? [] };
+      }
+    }
+    if (Object.keys(decksByIndex).length > 0) {
+      const created = await recordDao.getById(createdRecordId);
+      if (created) {
+        await associateDecksWithNewDraft(cube, created, decksByIndex);
+      }
     }
 
     req.flash('success', 'Record imported from Hedron Network successfully');

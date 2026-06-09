@@ -12,6 +12,7 @@ import express from 'express';
 import fileUpload from 'express-fileupload';
 import expressMessages from 'express-messages';
 import session from 'express-session';
+import fs from 'fs';
 import http from 'http';
 import schedule from 'node-schedule';
 import passport from 'passport';
@@ -123,6 +124,19 @@ app.locals.cdnUrl = cdnUrl;
 // GA4 Measurement ID (G-XXXXXXXXXX). Only loaded in production; unset disables
 // analytics entirely (dev/staging never report).
 app.locals.gaMeasurementId = process.env.GA_MEASUREMENT_ID;
+
+// Main-site robots.txt. Served explicitly (and registered before the static
+// public/ handler below so it wins) because public/robots.txt is the deny-all
+// ASSET-host policy that gets uploaded to the assets S3 bucket -- the content
+// site needs its own indexable policy. Read once at startup; see the file for
+// rationale on the disallow list. Lives under src/static/ because the build
+// only copies src/static/** (and *.pug) into dist alongside the compiled app.
+const mainRobotsTxt = fs.readFileSync(path.join(__dirname, '../src/static/robots.txt'), 'utf8');
+app.get('/robots.txt', (_req: express.Request, res: express.Response) => {
+  res.type('text/plain');
+  res.set('Cache-Control', 'public, max-age=86400');
+  res.send(mainRobotsTxt);
+});
 
 // Static asset serving from the Express server.
 // In production this is a fallback only — assets are served from CloudFront

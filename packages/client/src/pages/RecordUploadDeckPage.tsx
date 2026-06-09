@@ -1,4 +1,4 @@
-import React, { createRef, useMemo, useState } from 'react';
+import React, { createRef, useContext, useMemo, useState } from 'react';
 
 import { cardOracleId, detailsToCard } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
@@ -14,10 +14,12 @@ import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
 import LoadingButton from 'components/LoadingButton';
 import RenderToRoot from 'components/RenderToRoot';
+import UserContext from 'contexts/UserContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
-import UploadDeck from '../records/UploadDeck';
+import UploadDeck, { NEW_PLAYER } from '../records/UploadDeck';
+import UploadDeckFromPhoto from '../records/UploadDeckFromPhoto';
 
 interface RecordUploadDeckPageProps {
   cube: Cube;
@@ -26,19 +28,27 @@ interface RecordUploadDeckPageProps {
 }
 
 const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, record, draft }) => {
+  const user = useContext(UserContext);
   const formRef = createRef<HTMLFormElement>();
   const [selectedUser, setSelectedUser] = useState<number>(0);
+  // Default a new player to the uploader's linked account (a leading @ links it
+  // to their CubeCobra account server-side).
+  const [newPlayerName, setNewPlayerName] = useState<string>(user?.username ? `@${user.username}` : '');
   const [mainboardCards, setMainboardCards] = useState<CardDetails[]>([]);
   const [sideboardCards, setSideboardCards] = useState<CardDetails[]>([]);
   const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
 
-  const { submitDisabled, disabledExplanation } = useMemo(() => {
-    if (selectedUser <= 0 || selectedUser > record.players.length) {
-      return { submitDisabled: true, disabledExplanation: 'No player selected' };
-    }
+  const isNewPlayer = selectedUser === NEW_PLAYER;
 
-    // player already has a deck in the draft
-    if (draft && draft.seats[selectedUser - 1]?.mainboard?.flat(3).length > 0) {
+  const { submitDisabled, disabledExplanation } = useMemo(() => {
+    if (isNewPlayer) {
+      if (!newPlayerName.trim()) {
+        return { submitDisabled: true, disabledExplanation: 'Enter a name for the new player' };
+      }
+    } else if (selectedUser <= 0 || selectedUser > record.players.length) {
+      return { submitDisabled: true, disabledExplanation: 'No player selected' };
+    } else if (draft && draft.seats[selectedUser - 1]?.mainboard?.flat(3).length > 0) {
+      // existing player already has a deck in the draft
       return { submitDisabled: true, disabledExplanation: 'Selected player already has a deck in the draft' };
     }
 
@@ -47,7 +57,7 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
     }
 
     return { submitDisabled: false, disabledExplanation: '' };
-  }, [selectedUser, record.players.length, draft, mainboardCards.length]);
+  }, [isNewPlayer, newPlayerName, selectedUser, record.players.length, draft, mainboardCards.length]);
 
   return (
     <MainLayout useContainer={false}>
@@ -61,9 +71,12 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
           </CardHeader>
           <CardBody>
             <Flexbox direction="col" gap="2">
+              <UploadDeckFromPhoto cube={cube} setMainboardCards={setMainboardCards} setAlerts={setAlerts} />
               <UploadDeck
                 selectedUser={selectedUser}
                 setSelectedUser={setSelectedUser}
+                newPlayerName={newPlayerName}
+                setNewPlayerName={setNewPlayerName}
                 record={record}
                 mainboardCards={mainboardCards}
                 setMainboardCards={setMainboardCards}
@@ -87,6 +100,7 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
                 action={`/cube/records/uploaddeck/${record.id}`}
                 formData={{
                   userIndex: `${selectedUser}`,
+                  newPlayer: isNewPlayer ? newPlayerName.trim() : '',
                   mainboard: JSON.stringify(mainboardCards.map(detailsToCard).map(cardOracleId)),
                   sideboard: JSON.stringify(sideboardCards.map(detailsToCard).map(cardOracleId)),
                 }}

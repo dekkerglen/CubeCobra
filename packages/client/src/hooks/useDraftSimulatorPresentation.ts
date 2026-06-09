@@ -1,8 +1,6 @@
 import { useCallback, useMemo } from 'react';
 
-import type {
-  CardStats,
-} from '@utils/datatypes/SimulationReport';
+import type { CardStats } from '@utils/datatypes/SimulationReport';
 
 import { archetypeFullName } from '../utils/draftSimulatorThemes';
 import type {
@@ -29,7 +27,11 @@ interface UseDraftSimulatorPresentationArgs {
   selectedCard: CardStats | null;
   activeFilterPoolIndexSet: Set<number> | null;
   selectedPools: DraftSimulatorDerivedData['displayedPools'];
-  getSkeletonDisplayName: (skeleton: DraftSimulatorDerivedData['skeletons'][number], poolArchetypeLabels?: Map<number, string> | null, skeletonColorProfiles?: Map<number, string>) => string;
+  getSkeletonDisplayName: (
+    skeleton: DraftSimulatorDerivedData['skeletons'][number],
+    poolArchetypeLabels?: Map<number, string> | null,
+    skeletonColorProfiles?: Map<number, string>,
+  ) => string;
   buildDraftBreakdownRowSummary: (
     pool: DraftSimulatorDerivedData['displayedPools'][number],
     deck: NonNullable<DraftSimulatorDerivedData['activeDecks']>[number] | null,
@@ -123,7 +125,9 @@ export default function useDraftSimulatorPresentation({
         label: selectedCardEntry.name,
         detail: 'In Deck',
         onClear: () =>
-          setSelectedDeckCardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
+          setSelectedDeckCardOracles((current) =>
+            current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id),
+          ),
       });
     }
     for (const selectedCardEntry of selectedSideboardCards) {
@@ -132,7 +136,9 @@ export default function useDraftSimulatorPresentation({
         label: selectedCardEntry.name,
         detail: 'In Sideboard',
         onClear: () =>
-          setSelectedSideboardCardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
+          setSelectedSideboardCardOracles((current) =>
+            current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id),
+          ),
       });
     }
     for (const selectedCardEntry of selectedP1P1Cards) {
@@ -206,7 +212,15 @@ export default function useDraftSimulatorPresentation({
     }
     if (selectedArchetype) scopeParts.push(archetypeFullName(selectedArchetype));
     return scopeParts.length > 0 ? scopeParts.join(' · ') : null;
-  }, [selectedCards.length, selectedSkeletonId, selectedArchetype, skeletons, poolArchetypeLabels, skeletonColorProfiles, getSkeletonDisplayName]);
+  }, [
+    selectedCards.length,
+    selectedSkeletonId,
+    selectedArchetype,
+    skeletons,
+    poolArchetypeLabels,
+    skeletonColorProfiles,
+    getSkeletonDisplayName,
+  ]);
 
   const detailedViewTitle = useMemo(() => {
     if (selectedCards.length === 1 && selectedCard)
@@ -234,11 +248,19 @@ export default function useDraftSimulatorPresentation({
 
   const detailedViewSubtitle = useMemo(() => {
     const matchingPools = activeFilterPoolIndexSet?.size ?? displayRunData?.slimPools.length ?? 0;
-    if (selectedCards.length > 0) return `In ${selectedPools.length} draft pool${selectedPools.length !== 1 ? 's' : ''}`;
+    if (selectedCards.length > 0)
+      return `In ${selectedPools.length} draft pool${selectedPools.length !== 1 ? 's' : ''}`;
     if (selectedSkeletonId !== null || selectedArchetype)
       return `${matchingPools} matching draft pool${matchingPools !== 1 ? 's' : ''}`;
     return 'Select a color profile, archetype cluster, or card above to narrow the view.';
-  }, [activeFilterPoolIndexSet, displayRunData, selectedCards.length, selectedPools.length, selectedSkeletonId, selectedArchetype]);
+  }, [
+    activeFilterPoolIndexSet,
+    displayRunData,
+    selectedCards.length,
+    selectedPools.length,
+    selectedSkeletonId,
+    selectedArchetype,
+  ]);
 
   const clearActiveFilter = useCallback(() => {
     setSelectedCardOracles([]);
@@ -258,63 +280,98 @@ export default function useDraftSimulatorPresentation({
     setSelectedSkeletonId,
   ]);
 
-  const downloadDraftBreakdownCsv = useCallback((pools: DraftSimulatorDerivedData['displayedPools'], label: string) => {
-    if (!displayRunData) return;
-    const { cardMeta } = displayRunData;
-    const hasDeckBuilds = !!activeDecks && activeDecks.length === displayRunData.slimPools.length;
-    const header = ['Draft', 'Seat', 'Colors', 'Themes', 'Creatures', 'Noncreatures', 'Lands', 'Avg MV', 'Mainboard', 'Sideboard'];
-    const rows = pools.map((pool) => {
-      const deck = hasDeckBuilds ? (activeDecks![pool.poolIndex] ?? null) : null;
-      const summary = buildDraftBreakdownRowSummary(pool, deck, cardMeta);
-      const resolveName = (oracleId: string) => cardMeta[oracleId]?.name ?? oracleId;
-      const mainboard = (deck?.mainboard ?? pool.picks.map((p: DraftSimulatorDerivedData['displayedPools'][number]['picks'][number]) => p.oracle_id)).map(resolveName).join(', ');
-      const sideboard = (deck?.sideboard ?? []).map(resolveName).join(', ');
-      return [
-        pool.draftIndex + 1,
-        pool.seatIndex + 1,
-        archetypeFullName(pool.archetype),
-        summary.themes.join(', '),
-        summary.creatureCount,
-        summary.nonCreatureCount,
-        summary.landCount,
-        summary.avgMv.toFixed(2),
-        mainboard,
-        sideboard,
+  const downloadDraftBreakdownCsv = useCallback(
+    (pools: DraftSimulatorDerivedData['displayedPools'], label: string) => {
+      if (!displayRunData) return;
+      const { cardMeta } = displayRunData;
+      const hasDeckBuilds = !!activeDecks && activeDecks.length === displayRunData.slimPools.length;
+      const header = [
+        'Draft',
+        'Seat',
+        'Colors',
+        'Themes',
+        'Creatures',
+        'Noncreatures',
+        'Lands',
+        'Avg MV',
+        'Mainboard',
+        'Sideboard',
       ];
-    });
-    const csv = [header, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${displayRunData.cubeName}-${displayRunData.numDrafts}drafts-breakdown-${label}.csv`.replace(/\s+/g, '-');
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [displayRunData, activeDecks, buildDraftBreakdownRowSummary]);
+      const rows = pools.map((pool) => {
+        const deck = hasDeckBuilds ? (activeDecks![pool.poolIndex] ?? null) : null;
+        const summary = buildDraftBreakdownRowSummary(pool, deck, cardMeta);
+        const resolveName = (oracleId: string) => cardMeta[oracleId]?.name ?? oracleId;
+        const mainboard = (
+          deck?.mainboard ??
+          pool.picks.map((p: DraftSimulatorDerivedData['displayedPools'][number]['picks'][number]) => p.oracle_id)
+        )
+          .map(resolveName)
+          .join(', ');
+        const sideboard = (deck?.sideboard ?? []).map(resolveName).join(', ');
+        return [
+          pool.draftIndex + 1,
+          pool.seatIndex + 1,
+          archetypeFullName(pool.archetype),
+          summary.themes.join(', '),
+          summary.creatureCount,
+          summary.nonCreatureCount,
+          summary.landCount,
+          summary.avgMv.toFixed(2),
+          mainboard,
+          sideboard,
+        ];
+      });
+      const csv = [header, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${displayRunData.cubeName}-${displayRunData.numDrafts}drafts-breakdown-${label}.csv`.replace(
+        /\s+/g,
+        '-',
+      );
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+    [displayRunData, activeDecks, buildDraftBreakdownRowSummary],
+  );
 
-  const downloadCardStatsCsv = useCallback((stats: CardStats[], label: string) => {
-    if (!displayRunData) return;
-    const header = ['Name', 'Color Identity', 'Times Seen', 'Times Picked', 'Pick Rate', 'Avg Pick Position', 'Wheel Count', 'P1P1 Count', 'Elo'];
-    const rows = stats.map((c) => [
-      c.name,
-      c.colorIdentity.join(''),
-      c.timesSeen,
-      c.timesPicked,
-      c.pickRate.toFixed(3),
-      c.avgPickPosition.toFixed(2),
-      c.wheelCount,
-      c.p1p1Count,
-      c.elo,
-    ]);
-    const csv = [header, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
-    const blob = new Blob([csv], { type: 'text/csv' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${displayRunData.cubeName}-${displayRunData.numDrafts}drafts-${label}.csv`.replace(/\s+/g, '-');
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [displayRunData]);
+  const downloadCardStatsCsv = useCallback(
+    (stats: CardStats[], label: string) => {
+      if (!displayRunData) return;
+      const header = [
+        'Name',
+        'Color Identity',
+        'Times Seen',
+        'Times Picked',
+        'Pick Rate',
+        'Avg Pick Position',
+        'Wheel Count',
+        'P1P1 Count',
+        'Elo',
+      ];
+      const rows = stats.map((c) => [
+        c.name,
+        c.colorIdentity.join(''),
+        c.timesSeen,
+        c.timesPicked,
+        c.pickRate.toFixed(3),
+        c.avgPickPosition.toFixed(2),
+        c.wheelCount,
+        c.p1p1Count,
+        c.elo,
+      ]);
+      const csv = [header, ...rows].map((r) => r.map((v) => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${displayRunData.cubeName}-${displayRunData.numDrafts}drafts-${label}.csv`.replace(/\s+/g, '-');
+      a.click();
+      URL.revokeObjectURL(url);
+    },
+    [displayRunData],
+  );
 
   const cardStatsTitle = useMemo(() => {
     return 'Card Stats';

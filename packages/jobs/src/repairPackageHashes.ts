@@ -8,7 +8,6 @@ dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') })
 
 import { packageDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
-import type CardPackage from '@utils/datatypes/CardPackage';
 
 const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
 
@@ -21,17 +20,15 @@ interface RepairStats {
   errors: number;
 }
 
-const repairPackage = async (pkg: CardPackage, stats: RepairStats): Promise<void> => {
+const repairPackage = async (packageId: string, stats: RepairStats): Promise<void> => {
   try {
-    const result = await packageDao.repairHashes(pkg.id);
+    const result = await packageDao.repairHashes(packageId);
 
     stats.packagesProcessed += 1;
 
     if (result.added > 0 || result.removed > 0) {
       stats.packagesWithChanges += 1;
-      console.log(
-        `Repaired package ${pkg.id} (${pkg.title}): +${result.added} -${result.removed} =${result.unchanged}`,
-      );
+      console.log(`Repaired package ${packageId}: +${result.added} -${result.removed} =${result.unchanged}`);
     }
 
     stats.totalAdded += result.added;
@@ -39,7 +36,7 @@ const repairPackage = async (pkg: CardPackage, stats: RepairStats): Promise<void
     stats.totalUnchanged += result.unchanged;
   } catch (err: any) {
     stats.errors += 1;
-    console.error(`Error repairing package ${pkg.id}: ${err.message}`);
+    console.error(`Error repairing package ${packageId}: ${err.message}`);
   }
 };
 
@@ -63,7 +60,7 @@ const repairSinglePackage = async (packageId: string): Promise<void> => {
       process.exit(1);
     }
 
-    await repairPackage(pkg, stats);
+    await repairPackage(pkg.id, stats);
 
     console.log('\n=== Package Hash Repair Complete ===');
     console.log(`Package: ${pkg.title} (${pkg.id})`);
@@ -103,11 +100,14 @@ const repairAllPackages = async (): Promise<void> => {
       batchNumber += 1;
       const batchStartTime = Date.now();
 
-      const result = await packageDao.queryAllPackages('date', false, lastKey, 100);
+      // Enumerate via a base-table scan rather than queryAllPackages: the latter
+      // reads the 'package:all' hash rows, so it can't see packages whose hash
+      // rows are missing — exactly the ones a repair run needs to fix.
+      const result = await packageDao.scanAllPackageIds(lastKey, 100);
 
-      console.log(`\nProcessing batch ${batchNumber} (${result.items.length} packages)...`);
+      console.log(`\nProcessing batch ${batchNumber} (${result.packageIds.length} packages)...`);
 
-      await Promise.all(result.items.map((pkg) => repairPackage(pkg, stats)));
+      await Promise.all(result.packageIds.map((packageId) => repairPackage(packageId, stats)));
 
       const batchDuration = ((Date.now() - batchStartTime) / 1000).toFixed(2);
       console.log(

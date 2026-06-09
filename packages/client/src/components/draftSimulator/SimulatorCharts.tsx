@@ -75,6 +75,33 @@ export function getDeckShareColors(oracle: string, cardMeta: Record<string, Card
   return identity.length > 0 ? identity : ['C'];
 }
 
+// A cluster/archetype's color identity, derived from the cards its decks actually
+// play. Each nonland card adds 1/(its color count) to each of its colors (so a gold
+// card splits across them) summed over every deck, then a color is kept only if its
+// weighted share is at least `relativeThreshold` of the most-played color's share.
+// Because it's driven by the most common cards, an occasional off-color splash is
+// dropped instead of inflating the profile (e.g. a UR spells deck stays "UR", not
+// "UBRG"). Returns colors in WUBRG order, or 'C' when there's no colored mass.
+export function computeColorProfileFromDecks(
+  decks: string[][],
+  cardMeta: Record<string, CardMeta>,
+  relativeThreshold = 0.33,
+): string {
+  const shares: Record<string, number> = Object.fromEntries(COLOR_KEYS.map((k) => [k, 0]));
+  for (const mainboard of decks) {
+    for (const oracle of mainboard) {
+      const colors = getDeckShareColors(oracle, cardMeta).filter((c) => c !== 'C');
+      if (colors.length === 0) continue;
+      const share = 1 / colors.length;
+      for (const c of colors) shares[c] = (shares[c] ?? 0) + share;
+    }
+  }
+  const maxShare = Math.max(...COLOR_KEYS.map((k) => shares[k] ?? 0));
+  if (maxShare <= 0) return 'C';
+  const significant = COLOR_KEYS.filter((k) => (shares[k] ?? 0) >= maxShare * relativeThreshold);
+  return significant.length > 0 ? significant.join('') : 'C';
+}
+
 /** Reads the --text CSS variable as an rgb() string, reacting to theme changes. */
 export function useChartTextColor(): string {
   const read = () => {

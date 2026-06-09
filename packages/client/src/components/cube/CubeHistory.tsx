@@ -4,8 +4,8 @@ import { EyeIcon } from '@primer/octicons-react';
 
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import { Col, Flexbox, Row } from 'components/base/Layout';
 import Input from 'components/base/Input';
+import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
@@ -142,11 +142,7 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
           Jump to a Point in Time
         </Text>
         <div className="max-w-32">
-          <Input
-            type="date"
-            value={dateValue}
-            onChange={(e) => setDateValue(e.target.value)}
-          />
+          <Input type="date" value={dateValue} onChange={(e) => setDateValue(e.target.value)} />
         </div>
         <Button color="accent" type="button" onClick={handleDateJump}>
           Go
@@ -171,7 +167,11 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
                     </Text>
                   </Link>
                   <Tooltip text="View cube at this point in time" wrapperTag="span">
-                    <Button color="accent" type="link" href={`/cube/changelog/${changelog.cubeId}/${changelog.id}/list`}>
+                    <Button
+                      color="accent"
+                      type="link"
+                      href={`/cube/changelog/${changelog.cubeId}/${changelog.id}/list`}
+                    >
                       <EyeIcon size={14} />
                     </Button>
                   </Tooltip>
@@ -202,7 +202,11 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
                         </Text>
                       </Link>
                       <Tooltip text="View cube at this point in time" wrapperTag="span">
-                        <Button color="accent" type="link" href={`/cube/changelog/${changelog.cubeId}/${changelog.id}/list`}>
+                        <Button
+                          color="accent"
+                          type="link"
+                          href={`/cube/changelog/${changelog.cubeId}/${changelog.id}/list`}
+                        >
                           <EyeIcon size={14} />
                         </Button>
                       </Tooltip>
@@ -231,7 +235,11 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
                       </Text>
                     </Link>
                     <Tooltip text="View cube at this point in time" wrapperTag="span">
-                      <Button color="accent" type="link" href={`/cube/changelog/${changelog.cubeId}/${changelog.id}/list`}>
+                      <Button
+                        color="accent"
+                        type="link"
+                        href={`/cube/changelog/${changelog.cubeId}/${changelog.id}/list`}
+                      >
                         <EyeIcon size={14} />
                       </Button>
                     </Tooltip>
