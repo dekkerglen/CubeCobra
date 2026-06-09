@@ -20,9 +20,13 @@ import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import { buildDeckFromPool } from 'utils/buildDeckFromPool';
-import { getCard } from 'utils/cards/getCard';
+import { BuiltPoolDeck, buildDecksFromPools } from 'utils/buildDeckFromPool';
+import { getCards } from 'utils/cards/getCards';
 
+import SimulationProgressBar, {
+  getOverallSimProgress,
+  type SimulationPhase,
+} from '../components/draftSimulator/SimulationProgressBar';
 import EditDescription from '../records/EditDescription';
 import UploadDeckFromPhoto, { DeckPhoto } from '../records/UploadDeckFromPhoto';
 
@@ -164,9 +168,14 @@ const ImportHedronRecordPage: React.FC<ImportHedronRecordPageProps> = ({ cube })
   const [autoBuildFlags, setAutoBuildFlags] = useState<{ [playerIndex: number]: boolean }>({});
   const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
   const [submitting, setSubmitting] = useState(false);
-  // While submitting: progress of the per-player deckbuild + name resolution.
-  const [buildProgress, setBuildProgress] = useState<{ step: number; totalSteps: number } | null>(null);
-  const [decksPayload, setDecksPayload] = useState<{ [playerIndex: number]: string[] }>({});
+  // Submit progress, reusing the draft simulator's exact phase + bar. setup =
+  // resolving cards, loadmodel = downloading the draft model (the dominant cost),
+  // deckbuild = the batched approximate-deck pass.
+  const [simPhase, setSimPhase] = useState<SimulationPhase>(null);
+  const [modelLoadProgress, setModelLoadProgress] = useState(0);
+  const [decksPayload, setDecksPayload] = useState<{
+    [playerIndex: number]: { mainboard: string[]; sideboard: string[] };
+  }>({});
   const [submitReady, setSubmitReady] = useState(false);
   const formRef = createRef<HTMLFormElement>();
 
@@ -201,39 +210,77 @@ const ImportHedronRecordPage: React.FC<ImportHedronRecordPageProps> = ({ cube })
     setStep(1);
   };
 
-  // For each player: optionally run the deckbuilder over their pool, then resolve
-  // the card names to oracle ids. Heavy ML work happens here, under one progress
-  // bar, before the record + decks are submitted.
+  // Resolve every player's card names once, batch-approximate decks for any pool
+  // the player flagged (one model load + one batched deckbuild for everyone),
+  // then submit each seat's built mainboard + sideboard. Heavy ML work happens
+  // here, under one progress bar, before the record + decks are submitted.
   const createRecord = async () => {
     setSubmitting(true);
     try {
-      const entries = Object.entries(deckNames)
+      const players = Object.entries(deckNames)
         .map(([idx, names]) => ({ idx: Number(idx), names: names.filter((n) => n.trim()) }))
-        .filter((e) => e.names.length > 0);
-      setBuildProgress({ step: 0, totalSteps: entries.length });
+        .filter((player) => player.names.length > 0);
 
-      const payload: { [playerIndex: number]: string[] } = {};
-      let step = 0;
-      for (const { idx, names } of entries) {
-        // Approximate a deck from the pool first, if the player marked it.
-        const finalNames = autoBuildFlags[idx] ? await buildDeckFromPool(csrfFetch, cube, names) : names;
-        const resolved = await Promise.all(
-          finalNames.map((n) => getCard(csrfFetch, cube.defaultPrinting, n.trim())),
-        );
-        const oracles = resolved
-          .filter((card): card is CardDetails => card !== null)
-          .map((card) => cardOracleId(detailsToCard(card)));
-        if (oracles.length > 0) {
-          payload[idx] = oracles;
-        }
-        step += 1;
-        setBuildProgress({ step, totalSteps: entries.length });
+      if (players.length === 0) {
+        setDecksPayload({});
+        setSubmitReady(true);
+        return;
       }
+
+      // 1. Resolve every player's scanned names to cards in ONE batched request
+      //    (instead of a getCard call per card). We need oracle ids for the
+      //    payload and card details for the deckbuilder's metadata.
+      setSimPhase('setup');
+      const flatNames = players.flatMap((player) => player.names.map((n) => n.trim()));
+      const flatCards = await getCards(csrfFetch, cube.defaultPrinting, flatNames);
+      // Slice the flat result back out per player, dropping unresolved names.
+      let cursor = 0;
+      const resolved = players.map((player) => {
+        const cards = flatCards
+          .slice(cursor, cursor + player.names.length)
+          .filter((card): card is CardDetails => card !== null);
+        cursor += player.names.length;
+        return { idx: player.idx, cards };
+      });
+
+      const oraclesOf = (cards: CardDetails[]): string[] => cards.map((card) => cardOracleId(detailsToCard(card)));
+
+      // 2. Batch-approximate decks for every pool the player asked to auto-build —
+      //    a single model load + one batched deckbuild pass for all of them.
+      const toBuild = resolved
+        .filter((player) => autoBuildFlags[player.idx])
+        .map((player) => ({ key: player.idx, oracles: oraclesOf(player.cards) }));
+      const allDetails = resolved.flatMap((player) => player.cards);
+
+      let built = new Map<number, BuiltPoolDeck>();
+      if (toBuild.length > 0) {
+        setSimPhase('loadmodel');
+        setModelLoadProgress(0);
+        built = await buildDecksFromPools(csrfFetch, cube, toBuild, allDetails, {
+          onModelProgress: (pct) => setModelLoadProgress(pct),
+          onBuildStart: () => setSimPhase('deckbuild'),
+        });
+      }
+
+      // 3. Assemble each seat's payload: an auto-built pool contributes its built
+      //    mainboard plus the rest as a sideboard; any other list is already a
+      //    deck (or a build that fell back to the raw pool).
+      const payload: { [playerIndex: number]: { mainboard: string[]; sideboard: string[] } } = {};
+      for (const { idx, cards } of resolved) {
+        const deck = built.get(idx);
+        const mainboard = deck ? deck.mainboard : oraclesOf(cards);
+        const sideboard = deck ? deck.sideboard : [];
+        if (mainboard.length > 0) {
+          payload[idx] = { mainboard, sideboard };
+        }
+      }
+
+      setSimPhase('save');
       setDecksPayload(payload);
       setSubmitReady(true);
     } catch {
       setSubmitting(false);
-      setBuildProgress(null);
+      setSimPhase(null);
     }
   };
 
@@ -366,19 +413,13 @@ const ImportHedronRecordPage: React.FC<ImportHedronRecordPageProps> = ({ cube })
                   </div>
                 )}
 
-                {submitting && buildProgress && buildProgress.totalSteps > 0 && (
+                {submitting && simPhase && (
                   <div className="mt-2">
-                    <Text semibold>Building decks…</Text>
-                    <div className="w-full bg-bg-secondary rounded-full h-3 overflow-hidden mt-1">
-                      <div
-                        className="bg-bg-active h-full rounded-full transition-all duration-200"
-                        style={{ width: `${Math.round((buildProgress.step / buildProgress.totalSteps) * 100)}%` }}
-                      />
-                    </div>
-                    <Text sm className="text-center mt-1 text-text-secondary">
-                      {Math.round((buildProgress.step / buildProgress.totalSteps) * 100)}% — Deck {buildProgress.step} of{' '}
-                      {buildProgress.totalSteps}
-                    </Text>
+                    <SimulationProgressBar
+                      phase={simPhase}
+                      overallProgress={getOverallSimProgress(simPhase, modelLoadProgress, 0)}
+                      label={simPhase === 'setup' ? 'Resolving cards…' : undefined}
+                    />
                   </div>
                 )}
 

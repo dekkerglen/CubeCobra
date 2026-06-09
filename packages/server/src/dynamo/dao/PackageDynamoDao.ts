@@ -1,4 +1,11 @@
-import { BatchWriteCommand, DynamoDBDocumentClient, QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
+import {
+  BatchWriteCommand,
+  DynamoDBDocumentClient,
+  QueryCommand,
+  QueryCommandInput,
+  ScanCommand,
+  ScanCommandInput,
+} from '@aws-sdk/lib-dynamodb';
 import { normalizeName } from '@utils/cardutil';
 import CardPackage, { UnhydratedCardPackage } from '@utils/datatypes/CardPackage';
 import UserType from '@utils/datatypes/User';
@@ -295,6 +302,51 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
       PK: this.typedKey(id),
       SK: this.itemType(),
     });
+  }
+
+  /**
+   * Scans the base table for every package, returning IDs only.
+   *
+   * Unlike queryAllPackages (which reads the 'package:all' hash rows via a GSI),
+   * this reads the package items directly, so it surfaces packages even when their
+   * hash rows are missing or corrupt. Use this for index-repair tooling — anything
+   * that relies on the hashes can't see broken packages by definition.
+   *
+   * Note: DynamoDB applies Limit before the filter, so a page may contain fewer
+   * than `limit` package IDs while still returning a lastKey. Keep paging until
+   * lastKey is undefined.
+   */
+  public async scanAllPackageIds(
+    lastKey?: Record<string, any>,
+    limit: number = 100,
+  ): Promise<{
+    packageIds: string[];
+    lastKey?: Record<string, any>;
+  }> {
+    const params: ScanCommandInput = {
+      TableName: this.tableName,
+      FilterExpression: 'SK = :sk',
+      ExpressionAttributeValues: {
+        ':sk': this.itemType(),
+      },
+      ExclusiveStartKey: lastKey,
+      Limit: limit,
+    };
+
+    const result = await this.dynamoClient.send(new ScanCommand(params));
+
+    const packageIds = (result.Items || [])
+      .map((item: any) => {
+        const pk = item.PK as string;
+        // Package items use PK = PACKAGE#{id}
+        return pk.split('#')[1];
+      })
+      .filter((id: string | undefined): id is string => id !== undefined && id.length > 0);
+
+    return {
+      packageIds,
+      lastKey: result.LastEvaluatedKey,
+    };
   }
 
   /**
@@ -912,9 +964,11 @@ export class PackageDynamoDao extends BaseDynamoDao<CardPackage, UnhydratedCardP
       dateLastUpdated: now,
     };
 
-    // Hydrate and write to new table
+    // Hydrate and write to new table. Use this.put (not super.put) so the hash rows
+    // get written too — otherwise the package is invisible to every hash-based query
+    // (my packages, all packages, search, liked).
     const hydratedPackage = await this.hydrateItem(unhydratedPackage);
-    await super.put(hydratedPackage);
+    await this.put(hydratedPackage);
 
     return id;
   }

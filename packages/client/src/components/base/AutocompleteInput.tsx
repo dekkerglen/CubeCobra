@@ -1,5 +1,7 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
+import { createPortal } from 'react-dom';
+
 import classNames from 'classnames';
 
 import AutocardContext from '../../contexts/AutocardContext';
@@ -36,6 +38,9 @@ export interface AutocompleteInputProps extends InputProps {
   cubeId?: string;
   defaultPrinting?: string;
   showImages?: boolean;
+  // Render the suggestion dropdown in a body portal (fixed-positioned under the
+  // input) so it escapes any scroll/overflow container the input sits inside.
+  portalDropdown?: boolean;
 }
 
 const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
@@ -46,6 +51,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   cubeId,
   defaultPrinting = null,
   showImages = true,
+  portalDropdown = false,
   ...props
 }) => {
   const [matches, setMatches] = useState<string[]>([]);
@@ -53,6 +59,10 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
   const { hideCard } = useContext(AutocardContext);
+  // For the portal dropdown: the input's on-screen box, so the portalled list
+  // can be fixed-positioned directly under it (kept fresh on scroll/resize).
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [portalRect, setPortalRect] = useState<{ top: number; left: number; width: number } | null>(null);
 
   // Guards against out-of-order responses: only the newest request may write
   // state. Bumped per keystroke; stale resolutions compare unequal and no-op.
@@ -183,59 +193,95 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
     [position, acceptSuggestion, matches, showMatches, onSubmit, normalizedValue],
   );
 
+  // Portal mode: keep the fixed-positioned dropdown glued under the input while
+  // it's open, even as ancestors scroll or the window resizes.
+  useEffect(() => {
+    if (!portalDropdown || !showDropdown) return undefined;
+    const update = () => {
+      const rect = wrapperRef.current?.getBoundingClientRect();
+      if (rect) setPortalRect({ top: rect.bottom, left: rect.left, width: rect.width });
+    };
+    update();
+    window.addEventListener('scroll', update, true);
+    window.addEventListener('resize', update);
+    return () => {
+      window.removeEventListener('scroll', update, true);
+      window.removeEventListener('resize', update);
+    };
+  }, [portalDropdown, showDropdown]);
+
+  const dropdownItems = (
+    <>
+      {loading && (
+        <div className="list-none p-2 bg-bg-accent rounded-md flex items-center justify-center">
+          <Spinner sm />
+        </div>
+      )}
+      {!loading &&
+        matches.map((match, index) => {
+          return showImages ? (
+            <AutocardDiv
+              inModal
+              image={
+                cubeId
+                  ? `/tool/cardimageforcube/${encodeURIComponent(match)}/${cubeId}`
+                  : `/tool/cardimage/${encodeURIComponent(match)}` +
+                    (defaultPrinting !== null ? `?defaultPrinting=${defaultPrinting}` : '')
+              }
+              key={index}
+              onClick={(e) => handleClickSuggestion(e)}
+              className={classNames(
+                'list-none p-2 bg-bg-accent hover:bg-bg-active cursor-pointer',
+                { 'border-t border-border': index !== 0 },
+                { 'bg-bg-active': index === position },
+                { 'rounded-t-md': index === 0 },
+                { 'rounded-b-md': index === matches.length - 1 },
+              )}
+            >
+              {match}
+            </AutocardDiv>
+          ) : (
+            <div
+              key={index}
+              onClick={(e) => handleClickSuggestion(e)}
+              className={classNames(
+                'list-none p-2 bg-bg-accent hover:bg-bg-active cursor-pointer',
+                { 'border-t border-border': index !== 0 },
+                { 'bg-bg-active': index === position },
+                { 'rounded-t-md': index === 0 },
+                { 'rounded-b-md': index === matches.length - 1 },
+              )}
+            >
+              {match}
+            </div>
+          );
+        })}
+    </>
+  );
+
   return (
-    <div className="relative overflow-y-visible w-full">
+    <div ref={wrapperRef} className="relative overflow-y-visible w-full">
       <Input value={value} onKeyDown={handleKeyDown} onChange={handleChange} {...props} />
-      {showDropdown && (
+      {showDropdown &&
+        portalDropdown &&
+        portalRect &&
+        typeof document !== 'undefined' &&
+        createPortal(
+          <div
+            className="fixed border border-border rounded-md flex flex-col z-[1050]"
+            style={{ top: `${portalRect.top}px`, left: `${portalRect.left}px`, width: `${portalRect.width}px` }}
+          >
+            {dropdownItems}
+          </div>,
+          document.body,
+        )}
+      {showDropdown && !portalDropdown && (
         <div
           className={classNames(
             'absolute border border-border rounded-md top-0 left-0 translate-y-9 w-full flex flex-col overflow-y-visible z-[1050]',
           )}
         >
-          {loading && (
-            <div className="list-none p-2 bg-bg-accent rounded-md flex items-center justify-center">
-              <Spinner sm />
-            </div>
-          )}
-          {!loading &&
-            matches.map((match, index) => {
-            return showImages ? (
-              <AutocardDiv
-                inModal
-                image={
-                  cubeId
-                    ? `/tool/cardimageforcube/${encodeURIComponent(match)}/${cubeId}`
-                    : `/tool/cardimage/${encodeURIComponent(match)}` +
-                      (defaultPrinting !== null ? `?defaultPrinting=${defaultPrinting}` : '')
-                }
-                key={index}
-                onClick={(e) => handleClickSuggestion(e)}
-                className={classNames(
-                  'list-none p-2 bg-bg-accent hover:bg-bg-active cursor-pointer',
-                  { 'border-t border-border': index !== 0 },
-                  { 'bg-bg-active': index === position },
-                  { 'rounded-t-md': index === 0 },
-                  { 'rounded-b-md': index === matches.length - 1 },
-                )}
-              >
-                {match}
-              </AutocardDiv>
-            ) : (
-              <div
-                key={index}
-                onClick={(e) => handleClickSuggestion(e)}
-                className={classNames(
-                  'list-none p-2 bg-bg-accent hover:bg-bg-active cursor-pointer',
-                  { 'border-t border-border': index !== 0 },
-                  { 'bg-bg-active': index === position },
-                  { 'rounded-t-md': index === 0 },
-                  { 'rounded-b-md': index === matches.length - 1 },
-                )}
-              >
-                {match}
-              </div>
-            );
-          })}
+          {dropdownItems}
         </div>
       )}
     </div>

@@ -68,7 +68,6 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
     parentKey = 'records';
     subItems = [
       { key: 'draft-reports', label: 'Draft Reports' },
-      { key: 'trophy-archive', label: 'Trophy Archive' },
       { key: 'winrate-analytics', label: 'Winrate Analytics' },
     ];
   } else if (

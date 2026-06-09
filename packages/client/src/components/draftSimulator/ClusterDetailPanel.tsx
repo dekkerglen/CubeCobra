@@ -17,6 +17,7 @@ import { buildOracleRemapping, loadDraftRecommender, localRecommend } from '../.
 import { buildClusterRecommendationInput } from '../../utils/draftSimulatorClustering';
 import { archetypeFullName } from '../../utils/draftSimulatorThemes';
 import Link from '../base/Link';
+import Spinner from '../base/Spinner';
 import Text from '../base/Text';
 import withAutocard from '../WithAutocard';
 import {
@@ -134,6 +135,12 @@ const ClusterDetailPanel: React.FC<{
   onOpenPool: (poolIndex: number) => void;
   onCardClick?: (oracleId: string) => void;
   onClose: () => void;
+  /** Heading for a pool in the Exemplary tab. Defaults to "Draft N · Seat M". */
+  poolLabel?: (poolIndex: number) => string;
+  /** Overrides the computed cluster name in the header (keeps callers consistent). */
+  displayName?: string;
+  /** Replaces the "Exemplary Deck" tab with a caller-supplied list (e.g. all decks). */
+  decksTab?: { label: string; title?: string; content: React.ReactNode };
 }> = ({
   skeleton,
   clusterIndex,
@@ -150,6 +157,9 @@ const ClusterDetailPanel: React.FC<{
   onOpenPool,
   onCardClick,
   onClose,
+  displayName,
+  decksTab,
+  poolLabel,
 }) => {
   const { csrfFetch } = useContext(CSRFContext);
 
@@ -181,9 +191,10 @@ const ClusterDetailPanel: React.FC<{
     },
     {
       key: 'exemplary',
-      label: 'Exemplary Deck',
-      title:
-        'A real deck from this cluster chosen to best match the cluster\u2019s representative high-priority card bucket',
+      label: decksTab ? decksTab.label : 'Exemplary Deck',
+      title: decksTab
+        ? (decksTab.title ?? 'Every deck in this cluster')
+        : 'A real deck from this cluster chosen to best match the cluster\u2019s representative high-priority card bucket',
     },
     {
       key: 'recommendations',
@@ -431,9 +442,10 @@ const ClusterDetailPanel: React.FC<{
           <div>
             <div>
               <Text semibold className="text-lg leading-snug">
-                {clusterArchetypes.length > 0
-                  ? `${colorProfile && colorProfile !== 'C' ? `${colorProfile} ` : ''}${clusterArchetypes[0]![0]}`
-                  : archetypeFullName(colorProfile)}
+                {displayName ??
+                  (clusterArchetypes.length > 0
+                    ? `${colorProfile && colorProfile !== 'C' ? `${colorProfile} ` : ''}${clusterArchetypes[0]![0]}`
+                    : archetypeFullName(colorProfile))}
               </Text>
             </div>
             <div>
@@ -538,13 +550,17 @@ const ClusterDetailPanel: React.FC<{
             )}
           </div>
         )}
-        {cardTab === 'exemplary' && (
+        {cardTab === 'exemplary' && decksTab && <div className="flex flex-col gap-3">{decksTab.content}</div>}
+        {cardTab === 'exemplary' && !decksTab && (
           <div className="flex flex-col gap-3">
             {exemplaryDeck ? (
               <div className="rounded-lg border border-link/30 bg-link/5 px-4 py-4 flex flex-col items-center gap-2 text-center">
                 <Text semibold lg className="text-text">
-                  Draft {slimPools[exemplaryDeck.poolIndex]!.draftIndex + 1} · Seat{' '}
-                  {slimPools[exemplaryDeck.poolIndex]!.seatIndex + 1}
+                  {poolLabel
+                    ? poolLabel(exemplaryDeck.poolIndex)
+                    : `Draft ${slimPools[exemplaryDeck.poolIndex]!.draftIndex + 1} · Seat ${
+                        slimPools[exemplaryDeck.poolIndex]!.seatIndex + 1
+                      }`}
                 </Text>
                 <Text xs className="text-text-secondary">
                   Matches {exemplaryDeck.overlap} representative cards from the cluster bucket.
@@ -590,9 +606,12 @@ const ClusterDetailPanel: React.FC<{
                 Recommended Additions
               </Text>
               {recommendationsLoading ? (
-                <Text sm className="text-text-secondary">
-                  Generating recommendations…
-                </Text>
+                <div className="flex items-center gap-2 py-4">
+                  <Spinner sm />
+                  <Text sm className="text-text-secondary">
+                    Generating recommendations…
+                  </Text>
+                </div>
               ) : recommendationsError ? (
                 <Text sm className="text-text-secondary">
                   {recommendationsError}

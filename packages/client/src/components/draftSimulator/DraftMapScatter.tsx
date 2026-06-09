@@ -93,7 +93,9 @@ const DraftMapScatter: React.FC<{
   activePoolIndexSet: Set<number> | null;
   colorMode: DraftMapColorMode;
   onSelectPoint: (point: DraftMapPoint) => void;
-}> = ({ points, selectedPoolIndex, activePoolIndexSet, colorMode, onSelectPoint }) => {
+  /** Radius of an active dot. Inactive = baseRadius-1, selected = baseRadius+4. Defaults to 4. */
+  baseRadius?: number;
+}> = ({ points, selectedPoolIndex, activePoolIndexSet, colorMode, onSelectPoint, baseRadius = 4 }) => {
   const hasActiveFilter = activePoolIndexSet !== null;
   const isInActiveFilter = (point: DraftMapPoint) => !hasActiveFilter || activePoolIndexSet.has(point.poolIndex);
   const pointBaseColor = (point: DraftMapPoint) => {
@@ -116,8 +118,8 @@ const DraftMapScatter: React.FC<{
           ),
           borderColor: 'transparent',
           borderWidth: 0,
-          pointRadius: points.map((point) => (isInActiveFilter(point) ? 4 : 3)),
-          pointHoverRadius: 7,
+          pointRadius: points.map((point) => (isInActiveFilter(point) ? baseRadius : Math.max(1, baseRadius - 1))),
+          pointHoverRadius: baseRadius + 3,
         },
         ...(selectedPoint
           ? [
@@ -127,8 +129,8 @@ const DraftMapScatter: React.FC<{
                 backgroundColor: '#facc15',
                 borderColor: '#111827',
                 borderWidth: 2,
-                pointRadius: 8,
-                pointHoverRadius: 9,
+                pointRadius: baseRadius + 4,
+                pointHoverRadius: baseRadius + 5,
               },
             ]
           : []),

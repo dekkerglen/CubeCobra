@@ -22,7 +22,12 @@ export const queueHandler = async (req: Request, res: Response) => {
     return redirect(req, res, '/admin/featuredcubes');
   }
 
-  await addNewCubeToQueue(cube.owner.id, cube.id);
+  try {
+    await addNewCubeToQueue(cube.owner.id, cube.id);
+  } catch (err) {
+    req.flash('danger', (err as Error).message);
+    return redirect(req, res, '/admin/featuredcubes');
+  }
 
   if (req.user) {
     await addNotification(

@@ -76,7 +76,6 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const user = req.user as User | undefined;
     const mainboard: string[] = req.body.mainboard ? JSON.parse(req.body.mainboard) : [];
     if (mainboard.length === 0) {
       req.flash('danger', 'No cards to add');

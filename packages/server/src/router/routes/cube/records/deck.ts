@@ -38,14 +38,14 @@ export const removeDeckHandler = async (req: Request, res: Response) => {
 
     if (!record.draft) {
       req.flash('danger', 'This record has no decks to remove');
-      return redirect(req, res, `/cube/record/${req.params.id}?tab=1`);
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=0`);
     }
 
     const draft = await draftDao.getById(record.draft);
     const seat = draft?.seats[seatIndex];
     if (!draft || Number.isNaN(seatIndex) || seatIndex < 0 || seatIndex >= draft.seats.length || !seat) {
       req.flash('danger', 'Invalid seat');
-      return redirect(req, res, `/cube/record/${req.params.id}?tab=1`);
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=0`);
     }
 
     // Clear the boards but keep the seat so record.players[seatIndex] still maps
@@ -56,10 +56,10 @@ export const removeDeckHandler = async (req: Request, res: Response) => {
     await draftDao.update(draft);
 
     req.flash('success', 'Deck removed from this record');
-    return redirect(req, res, `/cube/record/${req.params.id}?tab=1`);
+    return redirect(req, res, `/cube/record/${req.params.id}?tab=0`);
   } catch {
     req.flash('danger', 'Error removing deck');
-    return redirect(req, res, `/cube/record/${req.params.id}?tab=1`);
+    return redirect(req, res, `/cube/record/${req.params.id}?tab=0`);
   }
 };
 

@@ -3,7 +3,7 @@ import React, { useCallback, useContext, useEffect, useRef, useState } from 'rea
 import { ChevronLeftIcon, ChevronRightIcon } from '@primer/octicons-react';
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
-import { bestMatch, normalizeForMatch, PreparedPool, preparePool } from '@utils/fuzzyCardMatch';
+import { bestMatch, normalizeForMatch, PreparedPool, preparePool, topMatches } from '@utils/fuzzyCardMatch';
 
 import { UncontrolledAlertProps } from 'components/base/Alert';
 import AutocompleteInput from 'components/base/AutocompleteInput';
@@ -52,12 +52,17 @@ interface ScanRow {
   notInCube: boolean; // matched against the full catalog, not the cube pool
   quad?: [number, number][]; // detector's oriented box (absent for manually-added cards)
   bbox?: Bbox; // axis-aligned bounds of `quad`, for the hover/spotlight overlay
+  alternatives?: string[]; // close runner-up cube cards, offered as chips on low-confidence rows
 }
 
 type Status = 'idle' | 'preview' | 'working' | 'review';
 
 // Confidence below this is shown but left unchecked for the user to confirm.
 const INCLUDE_THRESHOLD = 0.6;
+// Below this confidence, offer runner-up cube cards as one-click chips.
+const SUGGEST_BELOW = 0.8;
+// A runner-up must score at least this well to be worth suggesting as a chip.
+const SUGGEST_MIN_SCORE = 0.4;
 // A cube match below this is re-checked against the full catalog — the photo may
 // contain a card that has since been cut from the cube.
 const RECHECK_THRESHOLD = 0.85;
@@ -316,7 +321,7 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
   }, [status, rotation, imageTick]);
 
   const matchText = useCallback(
-    async (text: string): Promise<{ name: string; score: number; notInCube: boolean }> => {
+    async (text: string): Promise<{ name: string; score: number; notInCube: boolean; alternatives: string[] }> => {
       const pool = poolRef.current || [];
       const m = bestMatch(text, pool);
       let name = m?.name ?? '';
@@ -330,7 +335,13 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
           score = global.score;
         }
       }
-      return { name, score, notInCube };
+      // Close runner-up cube cards (excluding whatever we chose) to offer as
+      // one-click chips when the pick is low-confidence.
+      const alternatives = topMatches(text, pool, 4)
+        .filter((match) => match.score >= SUGGEST_MIN_SCORE && match.name !== name)
+        .slice(0, 3)
+        .map((match) => match.name);
+      return { name, score, notInCube, alternatives };
     },
     [globalMatch],
   );
@@ -400,7 +411,6 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
     if (!img) {
       return;
     }
-    setAutoBuildPool(false);
 
     const canvas = makeRotatedCanvas(img, rotation, SCAN_MAX_EDGE);
     scanCanvasRef.current = canvas;
@@ -442,13 +452,14 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
         } catch {
           // leave text empty — the row still shows the crop for manual entry
         }
-        const { name, score, notInCube } = await matchText(text);
+        const { name, score, notInCube, alternatives } = await matchText(text);
         scanned.push({
           id: i,
           raw: text,
           name,
           score,
           notInCube,
+          alternatives,
           quad: box.quad,
           bbox: quadAabb(box.quad),
         });
@@ -553,6 +564,18 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
         })()
       : null;
 
+  // Approximating a deck only makes sense from a pool photo. Rendered both above
+  // the photo (preview) and in the review screen so it's prominent and never
+  // disappears once a scan starts — both bind to the same state.
+  const autoBuildCheckbox =
+    deckMode && currentPhoto?.type === 'pool' ? (
+      <Checkbox
+        label="Auto-build this pool into a deck on submit (to approximate what the player built)"
+        checked={autoBuildPool}
+        setChecked={toggleAutoBuild}
+      />
+    ) : null;
+
   return (
     <Flexbox direction="col" gap="2" className="border border-border rounded-md p-3">
       {header}
@@ -587,63 +610,85 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
           resize when scanning starts. */}
       {(status === 'preview' || status === 'working') && (
         <Flexbox direction="col" gap="2" alignItems="start">
-          {status === 'preview' ? (
-            <>
-              <Text sm>
-                Rotate so most card names read left-to-right, then scan. You can fine-tune individual cards afterwards.
+          <Text sm>
+            Rotate so most card names read left-to-right, then scan. You can fine-tune individual cards afterwards.
+          </Text>
+          {/* Controls stay mounted (disabled) while scanning so the area above the
+              photo keeps a constant height instead of collapsing onto the canvas. */}
+          <Flexbox direction="row" gap="2" wrap="wrap" alignItems="center">
+            {deckMode && photos && photos.length > 1 && (
+              <>
+                <Button
+                  color="secondary"
+                  aria-label="Previous photo"
+                  disabled={status === 'working'}
+                  onClick={() => setImageIndex((i) => (i + photos.length - 1) % photos.length)}
+                >
+                  <ChevronLeftIcon size={16} />
+                </Button>
+                <Button
+                  color="secondary"
+                  aria-label="Next photo"
+                  disabled={status === 'working'}
+                  onClick={() => setImageIndex((i) => (i + 1) % photos.length)}
+                >
+                  <ChevronRightIcon size={16} />
+                </Button>
+              </>
+            )}
+            {currentPhoto && (
+              <Text sm className="text-text-secondary text-nowrap">
+                {currentPhoto.type === 'deck' ? 'Deck photo' : 'Pool photo'}
+                {photos && photos.length > 1 ? ` (${imageIndex + 1}/${photos.length})` : ''}
               </Text>
-              {/* Controls above the image for easy reach. */}
-              <Flexbox direction="row" gap="2" wrap="wrap" alignItems="center">
-                {deckMode && photos && photos.length > 1 && (
-                  <>
-                    <Button
-                      color="secondary"
-                      aria-label="Previous photo"
-                      onClick={() => setImageIndex((i) => (i + photos.length - 1) % photos.length)}
-                    >
-                      <ChevronLeftIcon size={16} />
-                    </Button>
-                    <Button
-                      color="secondary"
-                      aria-label="Next photo"
-                      onClick={() => setImageIndex((i) => (i + 1) % photos.length)}
-                    >
-                      <ChevronRightIcon size={16} />
-                    </Button>
-                  </>
-                )}
-                {currentPhoto && (
-                  <Text sm className="text-text-secondary text-nowrap">
-                    {currentPhoto.type === 'deck' ? 'Deck photo' : 'Pool photo'}
-                    {photos && photos.length > 1 ? ` (${imageIndex + 1}/${photos.length})` : ''}
-                  </Text>
-                )}
-                <Button color="secondary" onClick={() => setRotation((r) => (r + 270) % 360)}>
-                  <span className="text-nowrap">⟲ Rotate left</span>
-                </Button>
-                <Button color="secondary" onClick={() => setRotation((r) => (r + 90) % 360)}>
-                  <span className="text-nowrap">⟳ Rotate right</span>
-                </Button>
-                <Button color="primary" onClick={runScan}>
-                  <span className="text-nowrap">Scan deck</span>
-                </Button>
-                {!deckMode && (
-                  <Button color="danger" onClick={reset}>
-                    <span className="text-nowrap">Discard</span>
-                  </Button>
-                )}
+            )}
+            <Button
+              color="secondary"
+              disabled={status === 'working'}
+              onClick={() => setRotation((r) => (r + 270) % 360)}
+            >
+              <span className="text-nowrap">⟲ Rotate left</span>
+            </Button>
+            <Button
+              color="secondary"
+              disabled={status === 'working'}
+              onClick={() => setRotation((r) => (r + 90) % 360)}
+            >
+              <span className="text-nowrap">⟳ Rotate right</span>
+            </Button>
+            <Button color="primary" disabled={status === 'working'} onClick={runScan}>
+              <span className="text-nowrap">Scan deck</span>
+            </Button>
+            {!deckMode && (
+              <Button color="danger" disabled={status === 'working'} onClick={reset}>
+                <span className="text-nowrap">Discard</span>
+              </Button>
+            )}
+          </Flexbox>
+          {/* Auto-build sits directly above the photo, under the controls that
+              disable (but stay) once a scan starts, so a pool can be flagged at a glance. */}
+          {autoBuildCheckbox}
+          {/* Reserved-height status line: shows scan progress, kept present so
+              starting a scan never shifts the photo below it. */}
+          <div className="flex items-center min-h-[1.5rem]">
+            {status === 'working' && (
+              <Flexbox direction="row" gap="2" alignItems="center">
+                <Spinner sm />
+                <Text sm>
+                  {workingMessage}
+                  {progress > 0 ? ` ${Math.round(progress * 100)}%` : ''}
+                </Text>
               </Flexbox>
-            </>
-          ) : (
-            <Flexbox direction="row" gap="2" alignItems="center">
-              <Spinner sm />
-              <Text sm>
-                {workingMessage}
-                {progress > 0 ? ` ${Math.round(progress * 100)}%` : ''}
-              </Text>
-            </Flexbox>
-          )}
-          <canvas ref={previewCanvasRef} className="max-w-full h-auto block rounded border border-border" />
+            )}
+          </div>
+          {/* Fixed-height media area (desktop): matches the review photo+list
+              height so scanning never grows the card and shifts the page. */}
+          <div className="w-full md:h-[75vh] flex items-start justify-center">
+            <canvas
+              ref={previewCanvasRef}
+              className="max-w-full md:max-h-full h-auto w-auto block rounded border border-border"
+            />
+          </div>
         </Flexbox>
       )}
 
@@ -653,14 +698,22 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
             Review matches ({addableCount}) — hover a card to spotlight it on the photo; correct or discard any that are
             wrong.
           </Text>
-          {/* Stacks vertically on mobile; photo beside the list from md up. */}
-          <div className="flex flex-col md:flex-row gap-3 items-start">
-            {/* The scanned photo, pinned + capped to the viewport (from md up) so it
-                stays visible while the card list scrolls. overflow-hidden clips the
-                hover "spotlight" shadow to the image. */}
-            <div className="w-full md:w-1/2 min-w-0 self-start md:sticky md:top-2">
-              <div className="relative inline-block max-w-full align-top overflow-hidden rounded">
-                <img src={scanSrc} alt="Scanned deck" className="block max-w-full max-h-[85vh] w-auto h-auto" />
+          {/* Auto-build stays above the image here too (not buried at the bottom). */}
+          {autoBuildCheckbox}
+          {/* Stacks vertically on mobile; photo beside the list from md up. The
+              row is a fixed height (desktop) that matches the preview media area,
+              so finishing a scan never changes the card's height. The photo fits
+              within it and the card list scrolls inside it. */}
+          <div className="flex flex-col md:flex-row gap-3 items-start md:h-[75vh]">
+            {/* The scanned photo, capped to the row height. overflow-hidden clips
+                the hover "spotlight" shadow to the image. */}
+            <div className="w-full md:w-1/2 min-w-0 md:h-full flex items-start justify-center">
+              <div className="relative inline-block max-w-full max-h-full align-top overflow-hidden rounded">
+                <img
+                  src={scanSrc}
+                  alt="Scanned deck"
+                  className="block max-w-full max-h-[70vh] md:max-h-full w-auto h-auto"
+                />
                 {/* Oriented outline of every detected name bar, hoverable to spotlight it. */}
                 <svg
                   viewBox={`0 0 ${scanDims.w} ${scanDims.h}`}
@@ -687,58 +740,85 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
               </div>
             </div>
 
-            {/* Card list; its own viewport-height scroll container from md up. */}
-            <div className="w-full md:w-1/2 min-w-0 md:max-h-[85vh] md:overflow-y-auto pr-1">
+            {/* Card list; scrolls within the fixed row height from md up so a long
+                list never makes this column taller than the photo beside it. */}
+            <div className="w-full md:w-1/2 min-w-0 md:h-full md:overflow-y-auto pr-1">
               <div className="flex flex-col gap-2">
-                {rows.length === 0 && (
-                  <Text sm>No card names were detected. Try a clearer or more fanned photo.</Text>
-                )}
+                {rows.length === 0 && <Text sm>No card names were detected. Try a clearer or more fanned photo.</Text>}
                 {rows.map((row) => (
                   <div
                     key={row.id}
                     onMouseEnter={() => setHoveredId(row.id)}
                     onMouseLeave={() => setHoveredId(null)}
-                    className={`flex flex-row items-center gap-2 rounded border p-1 transition-colors ${
+                    className={`flex flex-col gap-1 rounded border p-1 transition-colors ${
                       hoveredId === row.id ? 'border-yellow-400 bg-yellow-400/10' : 'border-border'
                     }`}
                   >
-                    {/* The name-bar pixels the OCR read (absent for manually-added cards). */}
-                    {row.quad ? (
-                      <OrientedCrop
-                        source={scanCanvasRef.current}
-                        quad={row.quad}
-                        targetH={28}
-                        className="h-7 w-auto block rounded bg-white border border-border shrink-0"
-                      />
-                    ) : (
-                      <div className="h-7 w-10 rounded bg-bg-active border border-border shrink-0" />
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <AutocompleteInput
-                        cubeId={cube.id}
-                        getMatches={cubeThenAllCardNameMatches(cube.id, 'mainboard')}
-                        type="text"
-                        value={row.name}
-                        setValue={(value) => updateRow(row.id, { name: value })}
-                        placeholder="Card name"
-                        autoComplete="off"
-                        data-lpignore
-                      />
+                    {/* Mobile: name-bar crop stacks on top, controls underneath so the
+                        input isn't squeezed to one character. Side-by-side from md up. */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-2">
+                      {/* The name-bar pixels the OCR read (absent for manually-added cards). */}
+                      {row.quad ? (
+                        <OrientedCrop
+                          source={scanCanvasRef.current}
+                          quad={row.quad}
+                          targetH={28}
+                          className="h-7 w-auto max-w-full block rounded bg-white border border-border shrink-0"
+                        />
+                      ) : (
+                        <div className="h-7 w-10 rounded bg-bg-active border border-border shrink-0" />
+                      )}
+                      <div className="flex flex-row items-center gap-2 flex-1 min-w-0">
+                        <div className="flex-1 min-w-0">
+                          <AutocompleteInput
+                            cubeId={cube.id}
+                            getMatches={cubeThenAllCardNameMatches(cube.id, 'mainboard')}
+                            type="text"
+                            value={row.name}
+                            setValue={(value) => updateRow(row.id, { name: value })}
+                            placeholder="Card name"
+                            autoComplete="off"
+                            data-lpignore
+                            // The card list scrolls inside a fixed-height container; portal the
+                            // suggestion dropdown so it overflows that container instead of clipping.
+                            portalDropdown
+                            // Select the whole field on focus so a click lets you
+                            // immediately retype a wrong match without clearing it first.
+                            otherInputProps={{ onFocus: (event) => event.currentTarget.select() }}
+                          />
+                        </div>
+                        <Text xs className={confidenceColor(row.score)}>
+                          {Math.round(row.score * 100)}%
+                        </Text>
+                        {row.notInCube && (
+                          <span
+                            className="text-orange-600 text-xs text-nowrap"
+                            title="Matched outside the cube — likely a card since removed"
+                          >
+                            not in cube
+                          </span>
+                        )}
+                        <Button color="danger" onClick={() => removeRow(row.id)}>
+                          <span className="text-nowrap">✕</span>
+                        </Button>
+                      </div>
                     </div>
-                    <Text xs className={confidenceColor(row.score)}>
-                      {Math.round(row.score * 100)}%
-                    </Text>
-                    {row.notInCube && (
-                      <span
-                        className="text-orange-600 text-xs text-nowrap"
-                        title="Matched outside the cube — likely a card since removed"
-                      >
-                        not in cube
-                      </span>
+                    {/* Low-confidence rows: one-click chips for close runner-up cube
+                        cards. Picking one fills the field and marks it confirmed. */}
+                    {row.score < SUGGEST_BELOW && (row.alternatives?.length ?? 0) > 0 && (
+                      <div className="flex flex-row flex-wrap items-center gap-1 pl-1">
+                        {row.alternatives!.map((alt) => (
+                          <button
+                            key={alt}
+                            type="button"
+                            onClick={() => updateRow(row.id, { name: alt, score: 1, notInCube: false })}
+                            className="text-xs px-2 py-0.5 rounded-full border border-border bg-bg-active hover:bg-bg-active-hover text-text whitespace-nowrap"
+                          >
+                            {alt}
+                          </button>
+                        ))}
+                      </div>
                     )}
-                    <Button color="danger" onClick={() => removeRow(row.id)}>
-                      <span className="text-nowrap">✕</span>
-                    </Button>
                   </div>
                 ))}
                 <Button color="accent" onClick={addCard}>
@@ -750,13 +830,6 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
 
           {deckMode ? (
             <Flexbox direction="col" gap="2">
-              {currentPhoto?.type === 'pool' && (
-                <Checkbox
-                  label="Auto-build this pool into a deck on submit (approximate)"
-                  checked={autoBuildPool}
-                  setChecked={toggleAutoBuild}
-                />
-              )}
               <Button color="secondary" onClick={() => setStatus('preview')}>
                 <span className="text-nowrap">↺ Pick a different photo / re-scan</span>
               </Button>

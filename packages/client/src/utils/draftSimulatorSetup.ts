@@ -44,6 +44,11 @@ function normalizeBoardCards(cubeCards: CubeCards): Record<string, Card[]> {
 }
 
 function getBasicsFromCubeCards(cubeCards: CubeCards, basicsBoard?: string, legacyBasics?: string[]): string[] {
+  // 'None' is the explicit opt-out: add no basics rather than falling through to
+  // the legacy basics array (otherwise a cube set to "None" still gets basics).
+  if (basicsBoard === 'None') {
+    return [];
+  }
   if (basicsBoard) {
     const boardKey = boardNameToKey(basicsBoard);
     if (cubeCards[boardKey]) {

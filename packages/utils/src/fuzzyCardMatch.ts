@@ -90,3 +90,30 @@ export const bestMatch = (query: string, pool: PreparedPool[]): CardMatch | null
 // short shortlists; for large/repeated pools prepare once with preparePool.
 export const bestMatchFromNames = (query: string, names: string[]): CardMatch | null =>
   bestMatch(query, preparePool(names));
+
+// Top `limit` fuzzy matches for one query against a prepared pool, sorted by
+// descending score and de-duplicated by name. Used to surface runner-up
+// suggestions when the best match is low-confidence.
+export const topMatches = (query: string, pool: PreparedPool[], limit: number): CardMatch[] => {
+  const normalized = normalizeForMatch(query);
+  if (!normalized || pool.length === 0 || limit <= 0) {
+    return [];
+  }
+
+  const scored = pool.map((entry) => ({ name: entry.name, score: scoreNormalized(normalized, entry.normalized) }));
+  scored.sort((a, b) => b.score - a.score);
+
+  const seen = new Set<string>();
+  const result: CardMatch[] = [];
+  for (const match of scored) {
+    if (seen.has(match.name)) {
+      continue;
+    }
+    seen.add(match.name);
+    result.push(match);
+    if (result.length >= limit) {
+      break;
+    }
+  }
+  return result;
+};

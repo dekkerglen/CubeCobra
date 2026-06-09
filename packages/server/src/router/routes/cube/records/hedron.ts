@@ -1,8 +1,6 @@
-import { cardColorIdentity } from '@utils/cardutil';
 import DraftRecord from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
-import { getColorCombination } from '@utils/sorting/Sort';
-import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
+import { cubeDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { bodyValidation } from 'router/middleware';
@@ -12,7 +10,7 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
-import { associateNewDraft, associateWithExistingDraft } from './uploaddeck';
+import { associateDecksWithNewDraft } from './uploaddeck';
 
 export const hedronImportPageHandler = async (req: Request, res: Response) => {
   try {
@@ -146,48 +144,25 @@ export const hedronImportHandler = async (req: Request, res: Response) => {
     }
 
     // Attach the auto-annotated decklists (oracle ids, keyed by 1-based player
-    // index). The first deck creates the draft; the rest fill its other seats.
-    const decks: { [playerIndex: string]: string[] } = req.body.decks ? JSON.parse(req.body.decks) : {};
-    const withDecks = Object.entries(decks).filter(([, oracles]) => Array.isArray(oracles) && oracles.length > 0);
-    if (withDecks.length > 0) {
+    // index). Each entry is a built mainboard + its leftover sideboard. We build
+    // ONE draft with every seat filled in a single createDraft call — the same
+    // pattern the regular draft workflow uses — so every seat is named from its
+    // mainboard archetype (assessColors). (An incremental per-seat approach
+    // doesn't work: draftDao.update skips seat-name recomputation once a title is
+    // set, so only the first seat would get a name.)
+    const decks: { [playerIndex: string]: { mainboard: string[]; sideboard?: string[] } } = req.body.decks
+      ? JSON.parse(req.body.decks)
+      : {};
+    const decksByIndex: { [userIndex: number]: { mainboard: string[]; sideboard?: string[] } } = {};
+    for (const [idx, deck] of Object.entries(decks)) {
+      if (Array.isArray(deck?.mainboard) && deck.mainboard.length > 0) {
+        decksByIndex[parseInt(idx, 10)] = { mainboard: deck.mainboard, sideboard: deck.sideboard ?? [] };
+      }
+    }
+    if (Object.keys(decksByIndex).length > 0) {
       const created = await recordDao.getById(createdRecordId);
       if (created) {
-        for (const [idx, oracles] of withDecks) {
-          const userIndex = parseInt(idx, 10);
-          const existingDraft = created.draft ? await draftDao.getById(created.draft) : undefined;
-          if (existingDraft) {
-            await associateWithExistingDraft(cube, existingDraft, userIndex, oracles, []);
-          } else {
-            // mutates `created` (sets created.draft) so subsequent players reuse it
-            await associateNewDraft(cube, created, userIndex, oracles, []);
-          }
-        }
-
-        // Name each deck by its colour archetype (Azorius, Boros, …) from the
-        // cards we just placed — the player is still tracked in the record's
-        // player list, so the deck heading reads as the archetype.
-        if (created.draft) {
-          const draft = await draftDao.getById(created.draft);
-          if (draft) {
-            let renamed = false;
-            for (const seat of draft.seats) {
-              const indices = (seat.mainboard ?? []).flat(2) as number[];
-              if (indices.length === 0) continue;
-              const colorSet = new Set<string>();
-              for (const cardIndex of indices) {
-                const card = draft.cards[cardIndex];
-                if (card) {
-                  for (const c of cardColorIdentity(card)) colorSet.add(c);
-                }
-              }
-              seat.title = getColorCombination([...'WUBRG'].filter((c) => colorSet.has(c)));
-              renamed = true;
-            }
-            if (renamed) {
-              await draftDao.update(draft);
-            }
-          }
-        }
+        await associateDecksWithNewDraft(cube, created, decksByIndex);
       }
     }
 

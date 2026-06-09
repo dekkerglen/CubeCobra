@@ -36,6 +36,7 @@ import {
 import { PoolInspectionModal } from '../components/draftSimulator/PoolExpansionContent';
 import DraftBreakdownTable, { buildDraftBreakdownRowSummary } from '../components/draftSimulator/DraftBreakdownTable';
 import ArchetypeSkeletonSection from '../components/draftSimulator/ArchetypeSkeletonSection';
+import SimulationProgressBar from '../components/draftSimulator/SimulationProgressBar';
 import ClusterDetailPanel from '../components/draftSimulator/ClusterDetailPanel';
 import ColorProfileDetailPanel from '../components/draftSimulator/ColorProfileDetailPanel';
 import DraftMapCard, { computeDraftMapPoints, DraftMapScopePanel } from '../components/draftSimulator/DraftMapCard';
@@ -1783,35 +1784,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
             {isRunning && (
               <Card>
                 <CardBody>
-                  <Flexbox direction="col" gap="2">
-                    <Flexbox direction="row" justify="between">
-                      <Text sm>
-                        {simPhase === 'setup'
-                          ? 'Preparing packs…'
-                          : simPhase === 'loadmodel'
-                            ? 'Loading draft model…'
-                            : simPhase === 'sim'
-                              ? 'Running draft simulation…'
-                              : simPhase === 'deckbuild'
-                                ? 'Building decks…'
-                                : simPhase === 'cluster'
-                                  ? 'Clustering decks…'
-                                : 'Storing results locally…'}
-                      </Text>
-                      <Text sm className="text-text-secondary">
-                        {overallSimProgress}%
-                      </Text>
-                    </Flexbox>
-                    <div className="w-full bg-bg rounded-full h-2.5 overflow-hidden">
-                      <div
-                        className={[
-                          'h-2.5 rounded-full bg-green-600 transition-all duration-500',
-                          simPhase !== 'sim' ? 'animate-pulse' : '',
-                        ].join(' ')}
-                        style={{ width: `${Math.max(2, overallSimProgress)}%`, opacity: simPhase === 'sim' ? 1 : 0.8 }}
-                      />
-                    </div>
-                  </Flexbox>
+                  <SimulationProgressBar phase={simPhase} overallProgress={overallSimProgress} />
                 </CardBody>
               </Card>
             )}

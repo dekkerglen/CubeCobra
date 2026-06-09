@@ -90,7 +90,6 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean):
       icon: TrophyIcon,
       subItems: [
         { label: 'Draft Reports', key: 'draft-reports' },
-        { label: 'Trophy Archive', key: 'trophy-archive' },
         { label: 'Winrate Analytics', key: 'winrate-analytics' },
       ],
     },

@@ -1,4 +1,4 @@
-import React, { createRef, useMemo, useState } from 'react';
+import React, { createRef, useContext, useMemo, useState } from 'react';
 
 import { cardOracleId, detailsToCard } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
@@ -14,6 +14,7 @@ import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
 import LoadingButton from 'components/LoadingButton';
 import RenderToRoot from 'components/RenderToRoot';
+import UserContext from 'contexts/UserContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
@@ -27,9 +28,12 @@ interface RecordUploadDeckPageProps {
 }
 
 const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, record, draft }) => {
+  const user = useContext(UserContext);
   const formRef = createRef<HTMLFormElement>();
   const [selectedUser, setSelectedUser] = useState<number>(0);
-  const [newPlayerName, setNewPlayerName] = useState<string>('');
+  // Default a new player to the uploader's linked account (a leading @ links it
+  // to their CubeCobra account server-side).
+  const [newPlayerName, setNewPlayerName] = useState<string>(user?.username ? `@${user.username}` : '');
   const [mainboardCards, setMainboardCards] = useState<CardDetails[]>([]);
   const [sideboardCards, setSideboardCards] = useState<CardDetails[]>([]);
   const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
