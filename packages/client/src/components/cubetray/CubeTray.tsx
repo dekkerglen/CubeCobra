@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 
-import { PackageIcon, PlusIcon, XIcon } from '@primer/octicons-react';
+import { GearIcon, PackageIcon, PlusIcon, XIcon } from '@primer/octicons-react';
 import classNames from 'classnames';
 
 import { comboKey, useCubeTray } from '../../contexts/CubeTrayContext';
@@ -22,18 +22,22 @@ const CubeTray: React.FC<CubeTrayProps> = ({ leftClassName = 'left-4' }) => {
   const user = useContext(UserContext);
   const tray = useCubeTray();
   const [hovered, setHovered] = useState(false);
+  const [pinned, setPinned] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
 
-  if (!user || !tray) return null;
+  // Hidden when logged out, when the user has turned the tray off in their
+  // settings, or (via the `hidden md:flex` class below) on mobile widths.
+  if (!user || !tray || user.disableCubeTray) return null;
 
   const { combos, removeCombo, isDragging, dragCard, getPointer, toast } = tray;
-  const expanded = hovered || isDragging;
+  const expanded = hovered || isDragging || pinned;
 
   return (
     <>
       <div
         className={classNames(
-          'fixed bottom-4 z-50 flex flex-col items-start gap-2 transition-[left] duration-300',
+          // `hidden md:flex` keeps the tray off mobile widths entirely.
+          'fixed bottom-4 z-50 hidden md:flex flex-col items-start gap-2 transition-[left] duration-300',
           leftClassName,
         )}
         onMouseEnter={() => setHovered(true)}
@@ -101,12 +105,20 @@ const CubeTray: React.FC<CubeTrayProps> = ({ leftClassName = 'left-4' }) => {
             >
               <PlusIcon size={14} /> Add cube board
             </button>
+            <a
+              href="/user/account?nav=display"
+              className="mt-1 flex w-full items-center gap-2 rounded-md px-3 py-2 text-xs font-medium text-text-secondary hover:bg-bg-active hover:text-text"
+            >
+              <GearIcon size={14} /> Disable this tray in settings
+            </a>
           </div>
         )}
 
         <button
           type="button"
           aria-label="Cube tray"
+          aria-expanded={expanded}
+          onClick={() => setPinned((p) => !p)}
           className="flex h-12 w-12 items-center justify-center rounded-full bg-button-primary text-button-text shadow-lg transition-colors hover:bg-button-primary-active"
         >
           <PackageIcon size={24} />

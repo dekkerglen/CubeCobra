@@ -54,10 +54,10 @@ export const addRoundHandler = async (req: Request, res: Response) => {
     await recordDao.update(record);
 
     req.flash('success', 'Added new round of matches to record successfully');
-    return redirect(req, res, `/cube/record/${req.params.id}?tab=3`);
+    return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
   } catch {
     req.flash('danger', 'Error updating record');
-    return redirect(req, res, `/cube/record/${req.params.id}?tab=3`);
+    return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
   }
 };
 
@@ -92,7 +92,7 @@ export const editRoundHandler = async (req: Request, res: Response) => {
     record.matches = record.matches || [];
     if (roundIndex < 0 || roundIndex >= record.matches.length) {
       req.flash('danger', 'Invalid round index');
-      return redirect(req, res, `/cube/record/${req.params.id}?tab=3`);
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
     }
 
     record.matches[roundIndex] = JSON.parse(req.body.round);
@@ -101,10 +101,57 @@ export const editRoundHandler = async (req: Request, res: Response) => {
     await recordDao.update(record);
 
     req.flash('success', 'Added new round of matches to record successfully');
-    return redirect(req, res, `/cube/record/${req.params.id}?tab=3`);
+    return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
   } catch {
     req.flash('danger', 'Error updating record');
-    return redirect(req, res, `/cube/record/${req.params.id}?tab=3`);
+    return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
+  }
+};
+
+export const removeRoundHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.params.id) {
+      req.flash('danger', 'Invalid record ID');
+      return redirect(req, res, '/404');
+    }
+
+    const record = await recordDao.getById(req.params.id);
+
+    if (!record) {
+      req.flash('danger', 'Record not found');
+      return redirect(req, res, '/404');
+    }
+
+    const cube = await cubeDao.getById(record.cube);
+
+    if (!isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+
+    if (!isCubeEditable(cube, req.user)) {
+      req.flash('danger', 'You do not have permission to edit a record for this cube');
+      return redirect(req, res, '/404');
+    }
+
+    const roundIndex = parseInt(req.body.roundIndex, 10);
+
+    record.matches = record.matches || [];
+    if (Number.isNaN(roundIndex) || roundIndex < 0 || roundIndex >= record.matches.length) {
+      req.flash('danger', 'Invalid round index');
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
+    }
+
+    record.matches.splice(roundIndex, 1);
+    record.dateLastUpdated = Date.now();
+
+    await recordDao.update(record);
+
+    req.flash('success', 'Removed round from record successfully');
+    return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
+  } catch {
+    req.flash('danger', 'Error updating record');
+    return redirect(req, res, `/cube/record/${req.params.id}?tab=2`);
   }
 };
 
@@ -115,7 +162,7 @@ export const routes = [
     handler: [
       csrfProtection,
       ensureAuth,
-      bodyValidation(roundSchema, (req) => `/cube/record/${req.params.id}?tab=3`, 'round'),
+      bodyValidation(roundSchema, (req) => `/cube/record/${req.params.id}?tab=2`, 'round'),
       addRoundHandler,
     ],
   },
@@ -125,8 +172,13 @@ export const routes = [
     handler: [
       csrfProtection,
       ensureAuth,
-      bodyValidation(roundSchema, (req) => `/cube/record/${req.params.id}?tab=3`, 'round'),
+      bodyValidation(roundSchema, (req) => `/cube/record/${req.params.id}?tab=2`, 'round'),
       editRoundHandler,
     ],
+  },
+  {
+    method: 'post',
+    path: '/remove/:id',
+    handler: [csrfProtection, ensureAuth, removeRoundHandler],
   },
 ];

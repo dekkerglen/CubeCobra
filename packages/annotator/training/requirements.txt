@@ -1,0 +1,3 @@
+# Install torch matching your CUDA first if the default wheel doesn't fit your
+# driver:  https://pytorch.org/get-started/locally/
+ultralytics>=8.3.0

@@ -21,7 +21,6 @@ export const recordsPageHandler = async (req: Request, res: Response) => {
     }
 
     const result = await recordDao.getByCube(cube.id, 20);
-    const analytics = await recordDao.getAnalytics(cube.id);
     const cards = await cubeDao.getCards(cube.id, undefined, { populate: false });
 
     const baseUrl = getBaseUrl();
@@ -34,7 +33,6 @@ export const recordsPageHandler = async (req: Request, res: Response) => {
         cards,
         records: result.items,
         lastKey: result.lastKey,
-        analyticsData: analytics,
       },
       {
         title: `${abbreviate(cube.name)} - Records`,

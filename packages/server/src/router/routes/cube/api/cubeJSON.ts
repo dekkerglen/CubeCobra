@@ -48,15 +48,7 @@ export const cubeJSONHandler = async (req: Request, res: Response) => {
     for (const boardName of Object.keys(cubeCards)) {
       const board = cubeCards[boardName];
       if (Array.isArray(board)) {
-        cubeCards[boardName] = sortForDownload(
-          board as Card[],
-          primary,
-          secondary,
-          tertiary,
-          quaternary,
-          false,
-          cube,
-        );
+        cubeCards[boardName] = sortForDownload(board as Card[], primary, secondary, tertiary, quaternary, false, cube);
       }
     }
 

@@ -146,6 +146,20 @@ export async function replaceForUser(userid: string, cubeid: string) {
     throw new Error('Cannot replace cube that is currently featured');
   }
 
+  // Queue rows are keyed by cube id, so adding a cube that already has a row
+  // would fail the conditional put (ConditionalCheckFailedException). Detect
+  // that up front: surface a clear error if someone else holds the slot, and
+  // clear a stale self-owned duplicate so the create below can succeed.
+  if (cubeid !== item.cube) {
+    const existing = await featuredQueueDao.getByCube(cubeid);
+    if (existing) {
+      if (existing.owner !== userid) {
+        throw new Error('That cube is already in the featured queue');
+      }
+      await featuredQueueDao.delete(existing);
+    }
+  }
+
   // remove cube from queue
   await featuredQueueDao.delete(item);
 
@@ -159,6 +173,13 @@ export async function replaceForUser(userid: string, cubeid: string) {
 }
 
 export async function addNewCubeToQueue(userid: string, cubeid: string) {
+  // Rows are keyed by cube id; a conditional put on an existing cube would throw
+  // a raw ConditionalCheckFailedException. Fail with a clear message instead.
+  const existing = await featuredQueueDao.getByCube(cubeid);
+  if (existing) {
+    throw new Error('That cube is already in the featured queue');
+  }
+
   await featuredQueueDao.createFeaturedQueueItem({
     cube: cubeid,
     date: Date.now().valueOf(),

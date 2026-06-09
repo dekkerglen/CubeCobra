@@ -131,6 +131,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       disableAnimations: item.disableAnimations,
       useTextOverIcons: item.useTextOverIcons,
       disableFollowAlerts: item.disableFollowAlerts,
+      disableCubeTray: item.disableCubeTray,
     };
 
     // Preserve sensitive data if it exists
@@ -192,6 +193,10 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
 
     if (typeof hydrated.disableFollowAlerts === 'undefined') {
       hydrated.disableFollowAlerts = false;
+    }
+
+    if (typeof hydrated.disableCubeTray === 'undefined') {
+      hydrated.disableCubeTray = false;
     }
 
     return hydrated;

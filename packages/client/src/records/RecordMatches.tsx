@@ -10,6 +10,7 @@ import Text from 'components/base/Text';
 import AddRoundModal from 'components/modals/AddRoundModal';
 import EditMatchResultsModal from 'components/modals/EditMatchResultsModal';
 import EditRoundModal from 'components/modals/EditRoundModal';
+import RemoveRoundModal from 'components/modals/RemoveRoundModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import UserContext from 'contexts/UserContext';
@@ -17,6 +18,7 @@ import UserContext from 'contexts/UserContext';
 const AddRoundLink = withModal(Link, AddRoundModal);
 const EditRoundLink = withModal(Link, EditRoundModal);
 const EditMatchResultsLink = withModal(Link, EditMatchResultsModal);
+const RemoveRoundLink = withModal(Link, RemoveRoundModal);
 
 interface RecordMatchesProps {
   record: RecordType;
@@ -68,6 +70,15 @@ const RecordMatches: React.FC<RecordMatchesProps> = ({ record }) => {
                     >
                       {'Edit Match Results'}
                     </EditMatchResultsLink>
+                    <RemoveRoundLink
+                      className="text-danger"
+                      modalprops={{
+                        record,
+                        roundIndex: index,
+                      }}
+                    >
+                      {'Remove Round'}
+                    </RemoveRoundLink>
                   </Flexbox>
                 )}
               </Flexbox>

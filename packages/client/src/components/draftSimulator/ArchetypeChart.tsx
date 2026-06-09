@@ -15,7 +15,9 @@ const MTG_COLORS: Record<string, { bg: string }> = {
 };
 
 function getColorProfileCodes(colorPair: string): string[] {
-  const letters = colorPair.split('').filter((c) => c in MTG_COLORS && c !== 'C' && c !== 'M');
+  const letters = colorPair
+    .split('')
+    .filter((c) => Object.prototype.hasOwnProperty.call(MTG_COLORS, c) && c !== 'C' && c !== 'M');
   return letters.length === 0 ? ['C'] : letters;
 }
 
@@ -76,10 +78,15 @@ const ArchetypeChart: React.FC<{
               </div>
               <div className="flex items-baseline gap-2 flex-shrink-0">
                 <span className="text-sm font-bold text-text">{entry.count}</span>
-                <span className="text-xs font-semibold text-text-secondary">{(entry.percentage * 100).toFixed(1)}%</span>
+                <span className="text-xs font-semibold text-text-secondary">
+                  {(entry.percentage * 100).toFixed(1)}%
+                </span>
               </div>
             </div>
-            <div className="rounded-full overflow-hidden" style={{ height: 10, background: 'rgb(var(--bg-accent) / 1)' }}>
+            <div
+              className="rounded-full overflow-hidden"
+              style={{ height: 10, background: 'rgb(var(--bg-accent) / 1)' }}
+            >
               <div
                 className="h-full rounded-full"
                 style={{
@@ -91,7 +98,10 @@ const ArchetypeChart: React.FC<{
             {topArchetypesByColor?.get(entry.colorPair)?.length ? (
               <div className="mt-1.5 flex flex-wrap gap-1">
                 {topArchetypesByColor.get(entry.colorPair)!.map((label) => (
-                  <span key={label} className="text-xs text-text-secondary bg-bg-accent border border-border/60 rounded px-2 py-1">
+                  <span
+                    key={label}
+                    className="text-xs text-text-secondary bg-bg-accent border border-border/60 rounded px-2 py-1"
+                  >
                     {label}
                   </span>
                 ))}

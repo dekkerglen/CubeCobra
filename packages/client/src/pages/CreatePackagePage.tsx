@@ -114,7 +114,7 @@ const CreatePackagePage: React.FC = () => {
                 />
 
                 <AutocompleteInput
-                  getMatches={cardNameMatches(true)}
+                  getMatches={cardNameMatches(true, true)}
                   type="text"
                   className="me-2"
                   name="add-card"

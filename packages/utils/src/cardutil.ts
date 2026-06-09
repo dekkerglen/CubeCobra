@@ -639,9 +639,20 @@ export const isManaFixingLand = (details: CardDetailsType): boolean => {
 };
 
 const UNREASONABLE_PROMO_TYPES = [
-  'surgefoil', 'galaxyfoil', 'textured', 'serialized', 'gilded',
-  'neonink', 'oilslick', 'rainbowfoil', 'confettifoil', 'embossed',
-  'boosterfun', 'promopack', 'prerelease', 'datestamped',
+  'surgefoil',
+  'galaxyfoil',
+  'textured',
+  'serialized',
+  'gilded',
+  'neonink',
+  'oilslick',
+  'rainbowfoil',
+  'confettifoil',
+  'embossed',
+  'boosterfun',
+  'promopack',
+  'prerelease',
+  'datestamped',
 ];
 
 const arePromoTypesReasonable = (card: CardDetailsType): boolean => {

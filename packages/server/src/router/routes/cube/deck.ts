@@ -594,7 +594,7 @@ export const editDeckHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const { main, side, title, description, seat } = req.body;
+    const { main, side, title, description, seat, newCards } = req.body;
 
     const seatIndex = parseInt(seat || '0', 10);
     const targetSeat = deck.seats[seatIndex];
@@ -603,8 +603,30 @@ export const editDeckHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    targetSeat.mainboard = JSON.parse(main);
-    targetSeat.sideboard = JSON.parse(side);
+    // Append any brand-new cards (added via the deckbuilder's Add Card control)
+    // to the draft's card pool before the seat's index grids reference them.
+    // The client placed them at indices starting at the original pool length,
+    // and we append in the same order so the indices line up.
+    const parsedNewCards = newCards ? JSON.parse(newCards) : [];
+    for (const newCard of parsedNewCards) {
+      if (!newCard?.cardID) {
+        continue;
+      }
+      const details = cardFromId(newCard.cardID);
+      deck.cards.push({
+        cardID: newCard.cardID,
+        index: deck.cards.length,
+        type_line: details?.type || '',
+        details,
+      } as any);
+    }
+
+    // Drop indices that don't resolve to a card (defensive against a stale
+    // client view of the pool) so we never persist orphaned references.
+    const sanitize = (grid: number[][][]): number[][][] =>
+      grid.map((row) => row.map((col) => col.filter((idx) => idx >= 0 && idx < deck.cards.length)));
+    targetSeat.mainboard = sanitize(JSON.parse(main));
+    targetSeat.sideboard = sanitize(JSON.parse(side));
     const trimmedTitle = (title || '').trim().substring(0, 100);
     targetSeat.title = trimmedTitle;
     (targetSeat as any).body = (description || '').substring(0, 1000);

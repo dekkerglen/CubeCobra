@@ -146,7 +146,13 @@ interface UseDraftSimulatorSelectionArgs {
 
 export default function useDraftSimulatorSelection({
   data: { displayRunData, currentRunSetup, displayedPools, activeDecks, skeletons },
-  state: { selectedCardOracles, selectedDeckCardOracles, selectedSideboardCardOracles, selectedSkeletonId, selectedArchetype },
+  state: {
+    selectedCardOracles,
+    selectedDeckCardOracles,
+    selectedSideboardCardOracles,
+    selectedSkeletonId,
+    selectedArchetype,
+  },
   filteredCardStatsCache,
   computeFilteredCardStats,
   bottomTab,

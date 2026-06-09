@@ -1,0 +1,13 @@
+node_modules
+dist
+*.tsbuildinfo
+
+# Python training env (huge — torch etc.); never tracked.
+.venv/
+__pycache__/
+yolo11*.pt
+
+# Local source photos — large, not committed. Annotations under data/ ARE kept.
+images/*
+!images/.gitkeep
+public/models/

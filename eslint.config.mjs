@@ -20,6 +20,7 @@ export default [
       'packages/recommenderService/model/**/*',
       'packages/recommenderService/private/**/*',
       'packages/utils/src/generated/**/*',
+      'packages/annotator/**/*',
       '**/*.js',
       '**/*.jsx',
       '**/*.mjs',

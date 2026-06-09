@@ -80,13 +80,17 @@ const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ dat
                 Back to changelog entry
               </Text>
             </Link>
-            <Text sm className="text-text-secondary">|</Text>
+            <Text sm className="text-text-secondary">
+              |
+            </Text>
             <Link href={`/cube/changelog/${cube.id}/${changelogId}/compare`}>
               <Text sm className="text-link underline">
                 Compare with Present
               </Text>
             </Link>
-            <Text sm className="text-text-secondary">|</Text>
+            <Text sm className="text-text-secondary">
+              |
+            </Text>
             <Link href={`/cube/changelog/${cube.id}/${changelogId}/download`}>
               <Text sm className="text-link underline">
                 Download Cube
@@ -98,11 +102,7 @@ const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ dat
               Jump to a Point in Time
             </Text>
             <div className="max-w-32">
-              <Input
-                type="date"
-                value={dateValue}
-                onChange={(e) => setDateValue(e.target.value)}
-              />
+              <Input type="date" value={dateValue} onChange={(e) => setDateValue(e.target.value)} />
             </div>
             <Button color="accent" type="button" onClick={handleDateJump}>
               Go

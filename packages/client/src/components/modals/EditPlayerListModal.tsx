@@ -16,13 +16,14 @@ interface EditPlayerListModalProps {
 
 const EditPlayerListModal: React.FC<EditPlayerListModalProps> = ({ isOpen, setOpen, record }) => {
   const [playerList, setPlayerList] = React.useState<Record['players']>(record.players);
+  const [seatOrder, setSeatOrder] = React.useState<number[]>(record.players.map((_, index) => index));
   const formRef = React.createRef<HTMLFormElement>();
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} xl>
       <ModalHeader setOpen={setOpen}>{`Edit player list for ${record.name}`}</ModalHeader>
       <ModalBody className="flex flex-col gap-2">
-        <EditPlayerList players={playerList} setPlayers={setPlayerList} />
+        <EditPlayerList players={playerList} setPlayers={setPlayerList} setSeatOrder={setSeatOrder} />
       </ModalBody>
       <ModalFooter>
         <LoadingButton onClick={() => formRef.current?.submit()} color="primary" block>
@@ -31,7 +32,7 @@ const EditPlayerListModal: React.FC<EditPlayerListModalProps> = ({ isOpen, setOp
         <CSRFForm
           method="POST"
           action={`/cube/records/edit/players/${record.id}`}
-          formData={{ players: JSON.stringify(playerList) }}
+          formData={{ players: JSON.stringify(playerList), seatOrder: JSON.stringify(seatOrder) }}
           ref={formRef}
         ></CSRFForm>
       </ModalFooter>

@@ -10,13 +10,13 @@ import type {
   SimulationRunData,
 } from '@utils/datatypes/SimulationReport';
 
+import { archetypeFullName } from '../../utils/draftSimulatorThemes';
+import { getPoolMainCards, inferDraftThemes } from '../../utils/draftSimulatorThemes';
 import Input from '../base/Input';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
-import { RowColorShare, COLOR_KEYS, MANA_CURVE_BUCKETS, MTG_COLORS } from './SimulatorCharts';
 import { CMC_COLS } from './SimDeckView';
-import { archetypeFullName } from '../../utils/draftSimulatorThemes';
-import { getPoolMainCards, inferDraftThemes } from '../../utils/draftSimulatorThemes';
+import { COLOR_KEYS, MANA_CURVE_BUCKETS, MTG_COLORS, RowColorShare } from './SimulatorCharts';
 
 const POOL_PAGE_SIZE = 10;
 
@@ -38,7 +38,9 @@ interface DraftBreakdownRowSummary {
 }
 
 function getColorProfileCodes(colorPair: string): string[] {
-  const letters = colorPair.split('').filter((c) => c in MTG_COLORS && c !== 'C' && c !== 'M');
+  const letters = colorPair
+    .split('')
+    .filter((c) => Object.prototype.hasOwnProperty.call(MTG_COLORS, c) && c !== 'C' && c !== 'M');
   return letters.length === 0 ? ['C'] : letters;
 }
 
@@ -206,7 +208,6 @@ export const TinyCurve: React.FC<{ creatureCounts: number[]; nonCreatureCounts: 
   );
 };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const DraftBreakdownTable: React.FC<{
   pools: SimulatedPool[];
   deckBuilds: BuiltDeck[] | null;
@@ -226,8 +227,6 @@ const DraftBreakdownTable: React.FC<{
   pools,
   deckBuilds,
   cardMeta,
-  runData,
-  skeletons,
   highlightOracle,
   showLocationFilter = false,
   focusedPoolIndex = null,
@@ -256,7 +255,13 @@ const DraftBreakdownTable: React.FC<{
   const summaries = useMemo(
     () =>
       pools.map((pool) =>
-        buildDraftBreakdownRowSummary(pool, deckBuilds?.[pool.poolIndex] ?? null, cardMeta, clusterThemes, clusterTagAllowlist),
+        buildDraftBreakdownRowSummary(
+          pool,
+          deckBuilds?.[pool.poolIndex] ?? null,
+          cardMeta,
+          clusterThemes,
+          clusterTagAllowlist,
+        ),
       ),
     [pools, deckBuilds, cardMeta, clusterThemes, clusterTagAllowlist],
   );
@@ -345,267 +350,305 @@ const DraftBreakdownTable: React.FC<{
   return (
     <Flexbox direction="col" gap="3">
       <div>
-      {/* Toolbar — visually attached to the table */}
-      <div className="flex flex-wrap items-center gap-2 rounded-t-lg border border-border bg-bg-accent px-3 py-2">
-        {showLocationFilter && hasDeck && (
+        {/* Toolbar — visually attached to the table */}
+        <div className="flex flex-wrap items-center gap-2 rounded-t-lg border border-border bg-bg-accent px-3 py-2">
+          {showLocationFilter && hasDeck && (
+            <div className="flex items-center gap-1">
+              {(['all', 'deck', 'sideboard'] as const).map((v) => (
+                <button
+                  key={v}
+                  type="button"
+                  onClick={() => setLocationFilter(v)}
+                  className={[
+                    'px-2 py-1 rounded text-xs font-medium border',
+                    locationFilter === v
+                      ? 'bg-link text-white border-link'
+                      : 'bg-bg text-text-secondary border-border hover:bg-bg-active',
+                  ].join(' ')}
+                >
+                  {v === 'all' ? 'In pool' : v === 'deck' ? 'In deck' : 'In sideboard'}
+                </button>
+              ))}
+            </div>
+          )}
           <div className="flex items-center gap-1">
-            {(['all', 'deck', 'sideboard'] as const).map((v) => (
+            {['all', ...COLOR_KEYS, 'C'].map((color) => (
               <button
-                key={v}
+                key={color}
                 type="button"
-                onClick={() => setLocationFilter(v)}
+                onClick={() => setColorFilter(color)}
                 className={[
-                  'px-2 py-1 rounded text-xs font-medium border',
-                  locationFilter === v
+                  'h-7 rounded px-2 text-xs font-semibold border',
+                  colorFilter === color
                     ? 'bg-link text-white border-link'
                     : 'bg-bg text-text-secondary border-border hover:bg-bg-active',
                 ].join(' ')}
               >
-                {v === 'all' ? 'In pool' : v === 'deck' ? 'In deck' : 'In sideboard'}
+                {color === 'all' ? 'All' : color}
               </button>
             ))}
           </div>
-        )}
-        <div className="flex items-center gap-1">
-          {['all', ...COLOR_KEYS, 'C'].map((color) => (
-            <button
-              key={color}
-              type="button"
-              onClick={() => setColorFilter(color)}
-              className={[
-                'h-7 rounded px-2 text-xs font-semibold border',
-                colorFilter === color
-                  ? 'bg-link text-white border-link'
-                  : 'bg-bg text-text-secondary border-border hover:bg-bg-active',
-              ].join(' ')}
-            >
-              {color === 'all' ? 'All' : color}
-            </button>
-          ))}
+          <div className="flex items-center gap-2 ml-auto">
+            <Input
+              type="text"
+              placeholder="Theme"
+              value={archetypeFilter}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setArchetypeFilter(e.target.value)}
+              className="w-32"
+            />
+            <Input
+              type="number"
+              placeholder="Seat"
+              value={seatFilter}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSeatFilter(e.target.value)}
+              className="w-20"
+            />
+            <Input
+              type="number"
+              placeholder="Draft"
+              value={draftFilter}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDraftFilter(e.target.value)}
+              className="w-20"
+            />
+          </div>
         </div>
-        <div className="flex items-center gap-2 ml-auto">
-          <Input
-            type="text"
-            placeholder="Theme"
-            value={archetypeFilter}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setArchetypeFilter(e.target.value)}
-            className="w-32"
-          />
-          <Input
-            type="number"
-            placeholder="Seat"
-            value={seatFilter}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setSeatFilter(e.target.value)}
-            className="w-20"
-          />
-          <Input
-            type="number"
-            placeholder="Draft"
-            value={draftFilter}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setDraftFilter(e.target.value)}
-            className="w-20"
-          />
-        </div>
-      </div>
 
-      {/* Mobile list */}
-      <div className="divide-y divide-border rounded-b border border-t-0 border-border bg-bg md:hidden">
-        {pagedPools.map((summary) => {
-          const isSelected = selectedPool === summary.pool.poolIndex;
-          const artImages = summary.highlights
-            .slice(0, 5)
-            .filter((c) => c.imageUrl)
-            .map((c) => ({ ...c, imageUrl: c.imageUrl.replace('/normal/', '/art_crop/') }));
-          return (
-            <button
-              key={summary.pool.poolIndex}
-              type="button"
-              className={[
-                'block w-full px-3 py-3 text-left hover:bg-bg-active border-l-2',
-                isSelected ? 'bg-link/5 border-link' : 'border-transparent',
-              ].join(' ')}
-              onClick={() => { setSelectedPool(summary.pool.poolIndex); onSelectPool?.(summary.pool.poolIndex); onInspectPool?.(summary.pool.poolIndex); }}
-            >
-              <div className="flex flex-col gap-2">
-                <Flexbox direction="row" justify="between" alignItems="start" className="gap-2">
-                  <div className="min-w-0 flex-1">
-                    <Text sm semibold className="block">
-                      Draft {summary.pool.draftIndex + 1} · Seat {summary.pool.seatIndex + 1}
-                    </Text>
-                    <div className="mt-0.5">
-                      {poolArchetypeLabels ? (
-                        <span className="text-[11px] font-medium">
-                          {summary.colors && summary.colors !== 'C' && (
-                            <span className="text-text-secondary mr-1">{summary.colors}</span>
-                          )}
-                          <span className="text-link">{poolArchetypeLabels.get(summary.pool.poolIndex) ?? '—'}</span>
-                        </span>
-                      ) : poolArchetypeLabelsLoading ? (
-                        <span className="inline-block h-3 w-24 animate-pulse rounded bg-bg-accent" />
-                      ) : null}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-1 flex-shrink-0">
-                    {poolArchetypeLabelsLoading && <span className="inline-block h-3 w-16 animate-pulse rounded bg-bg-accent" />}
-                    {artImages.length > 0 && (
-                      <div className="flex gap-0.5 ml-1">
-                        {artImages.map((c) => (
-                          <div key={c.oracle_id} className="flex-shrink-0 overflow-hidden rounded" style={{ width: 48, height: 48 }} title={c.name}>
-                            <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover object-center" />
-                          </div>
-                        ))}
+        {/* Mobile list */}
+        <div className="divide-y divide-border rounded-b border border-t-0 border-border bg-bg md:hidden">
+          {pagedPools.map((summary) => {
+            const isSelected = selectedPool === summary.pool.poolIndex;
+            const artImages = summary.highlights
+              .slice(0, 5)
+              .filter((c) => c.imageUrl)
+              .map((c) => ({ ...c, imageUrl: c.imageUrl.replace('/normal/', '/art_crop/') }));
+            return (
+              <button
+                key={summary.pool.poolIndex}
+                type="button"
+                className={[
+                  'block w-full px-3 py-3 text-left hover:bg-bg-active border-l-2',
+                  isSelected ? 'bg-link/5 border-link' : 'border-transparent',
+                ].join(' ')}
+                onClick={() => {
+                  setSelectedPool(summary.pool.poolIndex);
+                  onSelectPool?.(summary.pool.poolIndex);
+                  onInspectPool?.(summary.pool.poolIndex);
+                }}
+              >
+                <div className="flex flex-col gap-2">
+                  <Flexbox direction="row" justify="between" alignItems="start" className="gap-2">
+                    <div className="min-w-0 flex-1">
+                      <Text sm semibold className="block">
+                        Draft {summary.pool.draftIndex + 1} · Seat {summary.pool.seatIndex + 1}
+                      </Text>
+                      <div className="mt-0.5">
+                        {poolArchetypeLabels ? (
+                          <span className="text-[11px] font-medium">
+                            {summary.colors && summary.colors !== 'C' && (
+                              <span className="text-text-secondary mr-1">{summary.colors}</span>
+                            )}
+                            <span className="text-link">{poolArchetypeLabels.get(summary.pool.poolIndex) ?? '—'}</span>
+                          </span>
+                        ) : poolArchetypeLabelsLoading ? (
+                          <span className="inline-block h-3 w-24 animate-pulse rounded bg-bg-accent" />
+                        ) : null}
                       </div>
-                    )}
-                  </div>
-                </Flexbox>
-                {summary.themes.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {summary.themes.map((theme) => (
-                      <span key={theme} className="rounded bg-bg-accent px-1.5 py-0.5 text-[11px] text-text-secondary">
-                        {theme}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* Desktop table */}
-      <div className="hidden overflow-x-auto rounded-b border border-t-0 border-border bg-bg md:block">
-        <table className="min-w-full text-base" style={{ tableLayout: 'fixed' }}>
-          <colgroup>
-            <col style={{ width: 150 }} />
-            <col style={{ width: 200 }} />
-            <col style={{ width: 180 }} />
-            <col style={{ width: 340 }} />
-
-            <col style={{ width: 200 }} />
-            <col style={{ width: 160 }} />
-            <col />
-          </colgroup>
-          <thead className="sticky top-0 z-10">
-            <tr className="border-b-2 border-border bg-bg-accent">
-              {renderSortHeader('Draft · Seat', 'draft')}
-              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
-                Archetype
-              </th>
-              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
-                Color share
-              </th>
-              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
-                Theme
-              </th>
-              {renderSortHeader('Composition', 'creatures')}
-              {renderSortHeader('Curve', 'avgMv')}
-              <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
-                Key cards
-              </th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border/50">
-            {pagedPools.map((summary) => {
-              const isSelected = selectedPool === summary.pool.poolIndex;
-              const artImages = summary.highlights
-                .slice(0, 8)
-                .filter((c) => c.imageUrl)
-                .map((c) => ({ ...c, imageUrl: c.imageUrl.replace('/normal/', '/art_crop/') }));
-              return (
-                <tr
-                  key={summary.pool.poolIndex}
-                  className={[
-                    'cursor-pointer transition-colors duration-100',
-                    isSelected
-                      ? 'border-l-[3px] border-l-link'
-                      : 'border-l-[3px] border-l-transparent hover:bg-bg-active',
-                  ].join(' ')}
-                  style={isSelected ? { background: 'rgb(var(--link) / 0.07)', boxShadow: 'inset 3px 0 0 rgb(var(--link))' } : undefined}
-                  onClick={() => { setSelectedPool(summary.pool.poolIndex); onSelectPool?.(summary.pool.poolIndex); onInspectPool?.(summary.pool.poolIndex); }}
-                >
-                  <td className="px-3 py-4 tabular-nums">
-                    <span className={isSelected ? 'font-bold text-text' : 'font-semibold text-text'}>
-                      D{summary.pool.draftIndex + 1}
-                    </span>
-                    <span className="text-text-secondary"> · S{summary.pool.seatIndex + 1}</span>
-                  </td>
-                  <td className="px-3 py-4">
-                    {poolArchetypeLabels ? (
-                      <span className="text-xs font-medium text-link">
-                        {summary.colors && summary.colors !== 'C' && `${summary.colors} `}
-                        {poolArchetypeLabels.get(summary.pool.poolIndex) ?? '—'}
-                      </span>
-                    ) : poolArchetypeLabelsLoading ? (
-                      <span className="inline-block h-3 w-28 animate-pulse rounded bg-bg-accent" />
-                    ) : null}
-                  </td>
-                  <td className="px-3 py-4">
-                    <RowColorShare deck={summary.deck} cardMeta={cardMeta} />
-                  </td>
-                  <td className="px-3 py-4">
+                    </div>
+                    <div className="flex items-center gap-1 flex-shrink-0">
+                      {poolArchetypeLabelsLoading && (
+                        <span className="inline-block h-3 w-16 animate-pulse rounded bg-bg-accent" />
+                      )}
+                      {artImages.length > 0 && (
+                        <div className="flex gap-0.5 ml-1">
+                          {artImages.map((c) => (
+                            <div
+                              key={c.oracle_id}
+                              className="flex-shrink-0 overflow-hidden rounded"
+                              style={{ width: 48, height: 48 }}
+                              title={c.name}
+                            >
+                              <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover object-center" />
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </Flexbox>
+                  {summary.themes.length > 0 && (
                     <div className="flex flex-wrap gap-1">
                       {summary.themes.map((theme) => (
                         <span
                           key={theme}
-                          className="inline-flex items-center rounded bg-bg-accent px-2 text-xs font-semibold text-text-secondary"
-                          style={{ height: 22 }}
+                          className="rounded bg-bg-accent px-1.5 py-0.5 text-[11px] text-text-secondary"
                         >
                           {theme}
                         </span>
                       ))}
                     </div>
-                  </td>
-                  <td className="px-3 py-4">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums" style={{ height: 22, fontSize: 12, background: '#dbeafe', color: '#3b82f6' }}>
-                        <span className="font-bold" style={{ color: '#1d4ed8' }}>{summary.creatureCount}</span>
-                        <span style={{ opacity: 0.75 }}>C</span>
+                  )}
+                </div>
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Desktop table */}
+        <div className="hidden overflow-x-auto rounded-b border border-t-0 border-border bg-bg md:block">
+          <table className="min-w-full text-base" style={{ tableLayout: 'fixed' }}>
+            <colgroup>
+              <col style={{ width: 150 }} />
+              <col style={{ width: 200 }} />
+              <col style={{ width: 180 }} />
+              <col style={{ width: 340 }} />
+
+              <col style={{ width: 200 }} />
+              <col style={{ width: 160 }} />
+              <col />
+            </colgroup>
+            <thead className="sticky top-0 z-10">
+              <tr className="border-b-2 border-border bg-bg-accent">
+                {renderSortHeader('Draft · Seat', 'draft')}
+                <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
+                  Archetype
+                </th>
+                <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
+                  Color share
+                </th>
+                <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
+                  Theme
+                </th>
+                {renderSortHeader('Composition', 'creatures')}
+                {renderSortHeader('Curve', 'avgMv')}
+                <th scope="col" className="px-3 py-2 text-left text-xs font-semibold text-text-secondary">
+                  Key cards
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border/50">
+              {pagedPools.map((summary) => {
+                const isSelected = selectedPool === summary.pool.poolIndex;
+                const artImages = summary.highlights
+                  .slice(0, 8)
+                  .filter((c) => c.imageUrl)
+                  .map((c) => ({ ...c, imageUrl: c.imageUrl.replace('/normal/', '/art_crop/') }));
+                return (
+                  <tr
+                    key={summary.pool.poolIndex}
+                    className={[
+                      'cursor-pointer transition-colors duration-100',
+                      isSelected
+                        ? 'border-l-[3px] border-l-link'
+                        : 'border-l-[3px] border-l-transparent hover:bg-bg-active',
+                    ].join(' ')}
+                    style={
+                      isSelected
+                        ? { background: 'rgb(var(--link) / 0.07)', boxShadow: 'inset 3px 0 0 rgb(var(--link))' }
+                        : undefined
+                    }
+                    onClick={() => {
+                      setSelectedPool(summary.pool.poolIndex);
+                      onSelectPool?.(summary.pool.poolIndex);
+                      onInspectPool?.(summary.pool.poolIndex);
+                    }}
+                  >
+                    <td className="px-3 py-4 tabular-nums">
+                      <span className={isSelected ? 'font-bold text-text' : 'font-semibold text-text'}>
+                        D{summary.pool.draftIndex + 1}
                       </span>
-                      <span className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums" style={{ height: 22, fontSize: 12, background: '#f1f5f9', color: '#64748b' }}>
-                        <span className="font-bold" style={{ color: '#334155' }}>{summary.nonCreatureCount}</span>
-                        <span style={{ opacity: 0.75 }}>NC</span>
-                      </span>
-                      {summary.landCount > 0 && (
-                        <span className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums" style={{ height: 22, fontSize: 12, background: '#fef3c7', color: '#92400e' }}>
-                          <span className="font-bold" style={{ color: '#78350f' }}>{summary.landCount}</span>
-                          <span style={{ opacity: 0.75 }}>L</span>
+                      <span className="text-text-secondary"> · S{summary.pool.seatIndex + 1}</span>
+                    </td>
+                    <td className="px-3 py-4">
+                      {poolArchetypeLabels ? (
+                        <span className="text-xs font-medium text-link">
+                          {summary.colors && summary.colors !== 'C' && `${summary.colors} `}
+                          {poolArchetypeLabels.get(summary.pool.poolIndex) ?? '—'}
                         </span>
-                      )}
-                    </div>
-                  </td>
-                  <td className="px-3 py-4">
-                    <TinyCurve
-                      creatureCounts={summary.creatureCurveCounts}
-                      nonCreatureCounts={summary.nonCreatureCurveCounts}
-                    />
-                  </td>
-                  <td className="py-1.5 pr-2 pl-6">
-                    <div className="flex gap-0.5">
-                      {artImages.slice(0, 6).map((c) => (
-                        <div
-                          key={c.oracle_id}
-                          className="flex-shrink-0 overflow-hidden"
-                          style={{
-                            width: 52,
-                            height: 52,
-                            borderRadius: 7,
-                            border: '1px solid rgba(17,24,39,0.08)',
-                          }}
-                          title={c.name}
+                      ) : poolArchetypeLabelsLoading ? (
+                        <span className="inline-block h-3 w-28 animate-pulse rounded bg-bg-accent" />
+                      ) : null}
+                    </td>
+                    <td className="px-3 py-4">
+                      <RowColorShare deck={summary.deck} cardMeta={cardMeta} />
+                    </td>
+                    <td className="px-3 py-4">
+                      <div className="flex flex-wrap gap-1">
+                        {summary.themes.map((theme) => (
+                          <span
+                            key={theme}
+                            className="inline-flex items-center rounded bg-bg-accent px-2 text-xs font-semibold text-text-secondary"
+                            style={{ height: 22 }}
+                          >
+                            {theme}
+                          </span>
+                        ))}
+                      </div>
+                    </td>
+                    <td className="px-3 py-4">
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums"
+                          style={{ height: 22, fontSize: 12, background: '#dbeafe', color: '#3b82f6' }}
                         >
-                          <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover object-center" />
-                        </div>
-                      ))}
-                    </div>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
+                          <span className="font-bold" style={{ color: '#1d4ed8' }}>
+                            {summary.creatureCount}
+                          </span>
+                          <span style={{ opacity: 0.75 }}>C</span>
+                        </span>
+                        <span
+                          className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums"
+                          style={{ height: 22, fontSize: 12, background: '#f1f5f9', color: '#64748b' }}
+                        >
+                          <span className="font-bold" style={{ color: '#334155' }}>
+                            {summary.nonCreatureCount}
+                          </span>
+                          <span style={{ opacity: 0.75 }}>NC</span>
+                        </span>
+                        {summary.landCount > 0 && (
+                          <span
+                            className="inline-flex items-center gap-1 rounded-full px-2 tabular-nums"
+                            style={{ height: 22, fontSize: 12, background: '#fef3c7', color: '#92400e' }}
+                          >
+                            <span className="font-bold" style={{ color: '#78350f' }}>
+                              {summary.landCount}
+                            </span>
+                            <span style={{ opacity: 0.75 }}>L</span>
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    <td className="px-3 py-4">
+                      <TinyCurve
+                        creatureCounts={summary.creatureCurveCounts}
+                        nonCreatureCounts={summary.nonCreatureCurveCounts}
+                      />
+                    </td>
+                    <td className="py-1.5 pr-2 pl-6">
+                      <div className="flex gap-0.5">
+                        {artImages.slice(0, 6).map((c) => (
+                          <div
+                            key={c.oracle_id}
+                            className="flex-shrink-0 overflow-hidden"
+                            style={{
+                              width: 52,
+                              height: 52,
+                              borderRadius: 7,
+                              border: '1px solid rgba(17,24,39,0.08)',
+                            }}
+                            title={c.name}
+                          >
+                            <img src={c.imageUrl} alt={c.name} className="w-full h-full object-cover object-center" />
+                          </div>
+                        ))}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
-      </div>{/* end toolbar+table wrapper */}
+      {/* end toolbar+table wrapper */}
 
       {sorted.length === 0 && (
         <Text sm className="text-text-secondary">
@@ -636,7 +679,6 @@ const DraftBreakdownTable: React.FC<{
           </button>
         </div>
       </div>
-
     </Flexbox>
   );
 };

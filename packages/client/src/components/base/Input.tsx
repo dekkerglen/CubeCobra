@@ -12,10 +12,7 @@ import { Flexbox } from './Layout';
  * name:"Yawgmoth's Will". Applying this to every shared Input keeps
  * the user's typed value clean wherever it lands.
  */
-export const normalizeQuotes = (value: string): string =>
-  value
-    .replace(/[‘’‚‛′❛❜]/g, "'")
-    .replace(/[“”„‟″❝❞]/g, '"');
+export const normalizeQuotes = (value: string): string => value.replace(/[‘’‚‛′❛❜]/g, "'").replace(/[“”„‟″❝❞]/g, '"');
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   className?: string;

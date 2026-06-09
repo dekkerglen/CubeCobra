@@ -347,6 +347,13 @@ const getBasicsFromCube = (
   basicsBoard?: string,
   legacyBasics?: string[],
 ): string[] => {
+  // 'None' is the explicit opt-out: the cube chose to add no basics at all. Treat
+  // it as no basics rather than falling through to the legacy cube.basics array —
+  // otherwise a cube with "None" selected still has basics injected.
+  if (basicsBoard === 'None') {
+    return [];
+  }
+
   // If a basicsBoard is specified and exists in the cube, use cards from that board
   // basicsBoard may be a display name (e.g. "Basics") - normalize via boardNameToKey
   if (basicsBoard) {
