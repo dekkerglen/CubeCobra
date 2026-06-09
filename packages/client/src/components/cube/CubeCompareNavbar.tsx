@@ -42,6 +42,7 @@ const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
   cubeBID,
   openCollapse,
   setOpenCollapse,
+  //Cards, both/onlyA/onlyB are already filtered
   cards,
   both,
   onlyA,
