@@ -35,6 +35,13 @@ import { getCard } from 'utils/cards/getCard';
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated – Automatic Post';
 
+const TOOLTIP_SPECIFY_VERSIONS =
+  'When enabled, searches include set codes and collector numbers in addition to card names (all lowercase). eg "lightning bolt [lea-161]"';
+const TOOLTIP_SHOW_EXTRAS =
+  "When enabled, search includes promos, tokens, digital versions, non-standard layouts, non-English cards, 'flavour' names, special editions, and more.";
+const TOOLTIP_CREATE_BLOG_POST =
+  "The last checked status for 'Create Blog Post' will be remembered per Cube. The default can be set in your display preferences now.";
+
 const PasteBulkButton = withModal(Button, PasteBulkModal);
 const UploadBulkButton = withModal(Button, UploadBulkModal);
 const UploadBulkReplaceButton = withModal(Button, UploadBulkReplaceModal);
@@ -308,15 +315,25 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
           </Flexbox>
 
           <Flexbox direction="col" gap="2">
-            <Checkbox
-              label="Specify Versions"
-              checked={specifyEdition}
-              setChecked={(value) => setSpecifyEdition(value)}
-            />
-            <Checkbox label="Show Extras" checked={showExtras} setChecked={(value) => setShowExtras(value)} />
+            <Flexbox direction="row" gap="2" alignItems="center">
+              <Checkbox
+                label="Specify Versions"
+                checked={specifyEdition}
+                setChecked={(value) => setSpecifyEdition(value)}
+              />
+              <Tooltip text={TOOLTIP_SPECIFY_VERSIONS}>
+                <QuestionIcon size={16} className="hidden md:inline" />
+              </Tooltip>
+            </Flexbox>
+            <Flexbox direction="row" gap="2" alignItems="center">
+              <Checkbox label="Show Extras" checked={showExtras} setChecked={(value) => setShowExtras(value)} />
+              <Tooltip text={TOOLTIP_SHOW_EXTRAS}>
+                <QuestionIcon size={16} className="hidden md:inline" />
+              </Tooltip>
+            </Flexbox>
             <Flexbox direction="row" gap="2" alignItems="center">
               <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
-              <Tooltip text="The last checked status for 'Create Blog Post' will be remembered per Cube. The default can be set in your display preferences now.">
+              <Tooltip text={TOOLTIP_CREATE_BLOG_POST}>
                 <QuestionIcon size={16} className="hidden md:inline" />
               </Tooltip>
             </Flexbox>
@@ -468,18 +485,28 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {/* Specify Versions */}
             <div className="flex items-center gap-4">
-              <Checkbox
-                label="Specify Versions"
-                checked={specifyEdition}
-                setChecked={(value) => setSpecifyEdition(value)}
-              />
-              <Checkbox label="Show Extras" checked={showExtras} setChecked={(value) => setShowExtras(value)} />
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  label="Specify Versions"
+                  checked={specifyEdition}
+                  setChecked={(value) => setSpecifyEdition(value)}
+                />
+                <Tooltip text={TOOLTIP_SPECIFY_VERSIONS}>
+                  <QuestionIcon size={16} />
+                </Tooltip>
+              </div>
+              <div className="flex items-center gap-2">
+                <Checkbox label="Show Extras" checked={showExtras} setChecked={(value) => setShowExtras(value)} />
+                <Tooltip text={TOOLTIP_SHOW_EXTRAS}>
+                  <QuestionIcon size={16} />
+                </Tooltip>
+              </div>
             </div>
 
             {/* Create Blog Post */}
             <div className="flex items-center gap-2">
               <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
-              <Tooltip text="The last checked status for 'Create Blog Post' will be remembered per Cube. The default can be set in your display preferences now.">
+              <Tooltip text={TOOLTIP_CREATE_BLOG_POST}>
                 <QuestionIcon size={16} />
               </Tooltip>
             </div>
