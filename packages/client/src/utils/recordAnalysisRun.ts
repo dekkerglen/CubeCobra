@@ -4,8 +4,8 @@
 // cluster the decks into archetypes (encode → k-NN + Leiden + UMAP).
 
 import Card from '@utils/datatypes/Card';
-import { Analytic, MatchupStat, PlayerAnalytic } from '@utils/datatypes/RecordAnalytic';
 import type Cube from '@utils/datatypes/Cube';
+import { Analytic, MatchupStat, PlayerAnalytic } from '@utils/datatypes/RecordAnalytic';
 import type { CardMeta, SlimPool } from '@utils/datatypes/SimulationReport';
 
 import { buildOracleRemapping, encodePools, loadDraftBot, reshapeEmbeddings } from './draftBot';
@@ -17,8 +17,14 @@ import {
   LEIDEN_RES_DIVISOR,
   loadArchetypeData,
 } from './draftSimulatorClustering';
+import {
+  AnalysisDeck,
+  ClusterMatchups,
+  ColorMatchups,
+  RecordAnalysisRunData,
+  RecordCardInfo,
+} from './recordAnalysisStorage';
 import { buildCardMeta } from './recordCardMeta';
-import { AnalysisDeck, ClusterMatchups, ColorMatchups, RecordAnalysisRunData, RecordCardInfo } from './recordAnalysisStorage';
 
 type CsrfFetch = (input: RequestInfo, init?: RequestInit) => Promise<Response>;
 
@@ -70,7 +76,14 @@ const addStanding = (map: { [key: string]: Analytic }, key: string, s: Standing)
 };
 
 const addMatchup = (map: { [key: string]: MatchupStat }, x: string, y: string, d: MatchupStat): void => {
-  const e = (map[`${x}|${y}`] ??= { matches: 0, matchWins: 0, matchLosses: 0, matchDraws: 0, gameWins: 0, gameLosses: 0 });
+  const e = (map[`${x}|${y}`] ??= {
+    matches: 0,
+    matchWins: 0,
+    matchLosses: 0,
+    matchDraws: 0,
+    gameWins: 0,
+    gameLosses: 0,
+  });
   e.matches += d.matches;
   e.matchWins += d.matchWins;
   e.matchLosses += d.matchLosses;
@@ -89,7 +102,7 @@ const assessDeckColors = (oracles: string[], cardMeta: Record<string, CardMeta>)
     const m = cardMeta[o];
     if (!m || (m.type ?? '').toLowerCase().includes('land')) continue;
     n += 1;
-    for (const c of m.colorIdentity ?? []) if (c in counts) counts[c] += 1;
+    for (const c of m.colorIdentity ?? []) if (Object.prototype.hasOwnProperty.call(counts, c)) counts[c] += 1;
   }
   if (n === 0) return [];
   return (['W', 'U', 'B', 'R', 'G'] as const).filter((c) => counts[c]! / n > 0.1);
@@ -256,8 +269,22 @@ export async function runRecordAnalysis(
         for (const x of d1) {
           for (const y of d2) {
             if (x === y) continue;
-            addMatchup(matchups, x, y, { matches: 1, matchWins: win, matchLosses: loss, matchDraws: draw, gameWins: g1, gameLosses: g2 });
-            addMatchup(matchups, y, x, { matches: 1, matchWins: loss, matchLosses: win, matchDraws: draw, gameWins: g2, gameLosses: g1 });
+            addMatchup(matchups, x, y, {
+              matches: 1,
+              matchWins: win,
+              matchLosses: loss,
+              matchDraws: draw,
+              gameWins: g1,
+              gameLosses: g2,
+            });
+            addMatchup(matchups, y, x, {
+              matches: 1,
+              matchWins: loss,
+              matchLosses: win,
+              matchDraws: draw,
+              gameWins: g2,
+              gameLosses: g1,
+            });
           }
         }
       }
@@ -339,7 +366,7 @@ export async function runRecordAnalysis(
   let skeletons: RecordAnalysisRunData['skeletons'] = [];
   let clusterMethod = '';
   let clustered = false;
-  let clusterMatchups: ClusterMatchups = {};
+  const clusterMatchups: ClusterMatchups = {};
 
   if (decks.length >= 3) {
     try {
@@ -376,7 +403,15 @@ export async function runRecordAnalysis(
       const knnK = Math.min(50, Math.max(5, Math.round(n / KNN_K_DIVISOR)));
       const resolution = parseFloat(Math.min(2.0, Math.max(0.5, n / LEIDEN_RES_DIVISOR)).toFixed(2));
 
-      const result = computeSkeletons(slimPools, cardMeta, embeddings, deckBuilds, knnK, CLUSTER_NEG_SAMPLES, resolution);
+      const result = computeSkeletons(
+        slimPools,
+        cardMeta,
+        embeddings,
+        deckBuilds,
+        knnK,
+        CLUSTER_NEG_SAMPLES,
+        resolution,
+      );
       skeletons = result.skeletons;
       clusterMethod = result.clusterMethod;
 
@@ -411,9 +446,9 @@ export async function runRecordAnalysis(
         const ai = deckIndexByKey[mr.aKey];
         const bi = deckIndexByKey[mr.bKey];
         if (ai === undefined || bi === undefined) continue;
-        const ca = decks[ai]?.clusterId;
-        const cb = decks[bi]?.clusterId;
-        if (ca == null || cb == null) continue;
+        const ca = decks[ai]?.clusterId ?? null;
+        const cb = decks[bi]?.clusterId ?? null;
+        if (ca === null || cb === null) continue;
         addCell(ca, cb, mr.s1);
         addCell(cb, ca, mr.s1 === 1 ? 0 : mr.s1 === 0 ? 1 : 0.5);
       }
@@ -422,7 +457,7 @@ export async function runRecordAnalysis(
       if (err instanceof Error && err.name === 'AbortError') throw err;
       // Clustering is best-effort: keep the aggregate analysis even if the model
       // or encoding fails, just without the archetype map.
-      // eslint-disable-next-line no-console
+
       console.error('Record-analysis clustering failed', err);
     }
   }

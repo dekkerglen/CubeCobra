@@ -75,7 +75,10 @@ const ShareRecordModal: React.FC<ShareRecordModalProps> = ({ isOpen, setOpen, re
                 type="text"
                 value={link}
                 onChange={() => {}}
-                otherInputProps={{ readOnly: true, onFocus: (e: React.FocusEvent<HTMLInputElement>) => e.target.select() }}
+                otherInputProps={{
+                  readOnly: true,
+                  onFocus: (e: React.FocusEvent<HTMLInputElement>) => e.target.select(),
+                }}
               />
               <Button color="primary" onClick={copy}>
                 <span className="text-nowrap">{copied ? 'Copied' : 'Copy'}</span>

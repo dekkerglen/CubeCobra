@@ -1,5 +1,5 @@
-import { setupPicks } from '@utils/draftutil';
 import User from '@utils/datatypes/User';
+import { setupPicks } from '@utils/draftutil';
 import { cubeDao, draftDao, recordDao, userDao } from 'dynamo/daos';
 import { csrfProtection } from 'router/middleware';
 import { createPool } from 'serverutils/cube';
@@ -120,7 +120,11 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
 
     // Their self-reported record (override), keyed by player name.
     record.overrides = record.overrides || {};
-    record.overrides[target.name] = { wins: num(req.body.wins), losses: num(req.body.losses), draws: num(req.body.draws) };
+    record.overrides[target.name] = {
+      wins: num(req.body.wins),
+      losses: num(req.body.losses),
+      draws: num(req.body.draws),
+    };
     record.dateLastUpdated = Date.now();
     await recordDao.update(record);
 

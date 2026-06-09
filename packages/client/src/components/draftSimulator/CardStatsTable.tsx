@@ -52,7 +52,8 @@ const CardStatsTable: React.FC<{
   renderCardLink,
 }) => {
   const PAGE_SIZE = 20;
-  const defaultSortDir = (key: SortKey): 'asc' | 'desc' => (key === 'name' || key === 'avgPickPosition' ? 'asc' : 'desc');
+  const defaultSortDir = (key: SortKey): 'asc' | 'desc' =>
+    key === 'name' || key === 'avgPickPosition' ? 'asc' : 'desc';
   const [sortKey, setSortKey] = useState<SortKey>('avgPickPosition');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const [filter, setFilter] = useState('');
@@ -207,8 +208,16 @@ const CardStatsTable: React.FC<{
                 'deckInclusion',
                 'Of pools that drafted this card, how often it made the main deck vs. sideboard',
               )}
-              {renderSortHeader('Pool', 'poolPct', 'How often this card appeared in a drafted pool within the current scope')}
-              {renderSortHeader('Deck', 'deckFilterCount', 'How many pools put this card in the mainboard within the current scope')}
+              {renderSortHeader(
+                'Pool',
+                'poolPct',
+                'How often this card appeared in a drafted pool within the current scope',
+              )}
+              {renderSortHeader(
+                'Deck',
+                'deckFilterCount',
+                'How many pools put this card in the mainboard within the current scope',
+              )}
               {renderSortHeader(
                 'Sideboard',
                 'sideboardFilterCount',
@@ -222,19 +231,29 @@ const CardStatsTable: React.FC<{
               const isFilteredCard = selectedCardOracles.includes(cardStatsEntry.oracle_id);
               const isFilteredDeckCard = selectedDeckCardOracles.includes(cardStatsEntry.oracle_id);
               const isFilteredSideboardCard = selectedSideboardCardOracles.includes(cardStatsEntry.oracle_id);
-              const visiblePoolCount = visiblePoolCounts.get(cardStatsEntry.oracle_id) ?? cardStatsEntry.poolIndices.length;
+              const visiblePoolCount =
+                visiblePoolCounts.get(cardStatsEntry.oracle_id) ?? cardStatsEntry.poolIndices.length;
               const deckPoolCount = visibleDeckCounts.get(cardStatsEntry.oracle_id) ?? 0;
               const sideboardPoolCount = visibleSideboardCounts.get(cardStatsEntry.oracle_id) ?? 0;
               const poolPct = totalScopedPools > 0 ? visiblePoolCount / totalScopedPools : null;
-              const openerTakeRate = cardStatsEntry.p1p1Seen > 0 ? cardStatsEntry.p1p1Count / cardStatsEntry.p1p1Seen : 0;
+              const openerTakeRate =
+                cardStatsEntry.p1p1Seen > 0 ? cardStatsEntry.p1p1Count / cardStatsEntry.p1p1Seen : 0;
               return (
                 <tr key={cardStatsEntry.oracle_id} className={isFilteredCard ? 'bg-bg-active' : 'hover:bg-bg-active'}>
                   <td className="px-3 py-2 font-medium">
-                    {renderCardLink(cardStatsEntry.oracle_id, cardStatsEntry.name, cardMeta?.[cardStatsEntry.oracle_id]?.imageUrl)}
+                    {renderCardLink(
+                      cardStatsEntry.oracle_id,
+                      cardStatsEntry.name,
+                      cardMeta?.[cardStatsEntry.oracle_id]?.imageUrl,
+                    )}
                   </td>
-                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{Math.round(cardStatsEntry.elo)}</td>
+                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">
+                    {Math.round(cardStatsEntry.elo)}
+                  </td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{cardStatsEntry.timesSeen}</td>
-                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{cardStatsEntry.timesPicked}</td>
+                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">
+                    {cardStatsEntry.timesPicked}
+                  </td>
                   <td className="px-3 py-2 text-right tabular-nums">{(cardStatsEntry.pickRate * 100).toFixed(1)}%</td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">
                     {cardStatsEntry.avgPickPosition > 0 ? cardStatsEntry.avgPickPosition.toFixed(1) : '—'}
@@ -255,11 +274,19 @@ const CardStatsTable: React.FC<{
                       type="button"
                       className={[
                         'px-2 py-0.5 rounded text-xs font-medium border',
-                        isFilteredCard ? 'bg-link text-white border-link' : 'bg-link/10 text-link border-link/30 hover:bg-link/20',
+                        isFilteredCard
+                          ? 'bg-link text-white border-link'
+                          : 'bg-link/10 text-link border-link/30 hover:bg-link/20',
                       ].join(' ')}
                       onClick={() => onSelectCard(cardStatsEntry.oracle_id)}
                     >
-                      {isFilteredCard ? <>✕ <span className="tabular-nums">{visiblePoolCount}</span></> : <span className="tabular-nums">{visiblePoolCount}</span>}
+                      {isFilteredCard ? (
+                        <>
+                          ✕ <span className="tabular-nums">{visiblePoolCount}</span>
+                        </>
+                      ) : (
+                        <span className="tabular-nums">{visiblePoolCount}</span>
+                      )}
                     </button>
                   </td>
                   <td className="px-3 py-2 text-right">
@@ -267,13 +294,21 @@ const CardStatsTable: React.FC<{
                       type="button"
                       className={[
                         'px-2 py-0.5 rounded text-xs font-medium border',
-                        isFilteredDeckCard ? 'bg-link text-white border-link' : 'bg-link/10 text-link border-link/30 hover:bg-link/20',
+                        isFilteredDeckCard
+                          ? 'bg-link text-white border-link'
+                          : 'bg-link/10 text-link border-link/30 hover:bg-link/20',
                         !inDeckOracles ? 'opacity-40 cursor-not-allowed' : '',
                       ].join(' ')}
                       disabled={!inDeckOracles}
                       onClick={() => onSelectDeckCard(cardStatsEntry.oracle_id)}
                     >
-                      {isFilteredDeckCard ? <>✕ <span className="tabular-nums">{deckPoolCount}</span></> : <span className="tabular-nums">{deckPoolCount}</span>}
+                      {isFilteredDeckCard ? (
+                        <>
+                          ✕ <span className="tabular-nums">{deckPoolCount}</span>
+                        </>
+                      ) : (
+                        <span className="tabular-nums">{deckPoolCount}</span>
+                      )}
                     </button>
                   </td>
                   <td className="px-3 py-2 text-right">
@@ -281,7 +316,9 @@ const CardStatsTable: React.FC<{
                       type="button"
                       className={[
                         'px-2 py-0.5 rounded text-xs font-medium border',
-                        isFilteredSideboardCard ? 'bg-link text-white border-link' : 'bg-link/10 text-link border-link/30 hover:bg-link/20',
+                        isFilteredSideboardCard
+                          ? 'bg-link text-white border-link'
+                          : 'bg-link/10 text-link border-link/30 hover:bg-link/20',
                         !inSideboardOracles ? 'opacity-40 cursor-not-allowed' : '',
                       ].join(' ')}
                       disabled={!inSideboardOracles}

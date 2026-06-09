@@ -89,9 +89,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
       title: deckTitle,
       // Cards added beyond the original pool are appended server-side so the
       // mainboard/sideboard indices that reference them resolve correctly.
-      newCards: JSON.stringify(
-        cards.slice(originalCardCount ?? cards.length).map((card) => ({ cardID: card.cardID })),
-      ),
+      newCards: JSON.stringify(cards.slice(originalCardCount ?? cards.length).map((card) => ({ cardID: card.cardID }))),
     }),
     [mainboard, sideboard, seat, deckTitle, cards, originalCardCount],
   );

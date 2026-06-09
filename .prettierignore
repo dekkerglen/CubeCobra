@@ -10,3 +10,4 @@ packages/recommenderService/model/**/*
 packages/recommenderService/private/**/*
 packages/utils/src/generated/**/*
 packages/server/public/css/stylesheet.css
+packages/annotator/**/*

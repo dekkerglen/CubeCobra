@@ -52,8 +52,7 @@ const RecordOverrideModal: React.FC<RecordOverrideModalProps> = ({ isOpen, setOp
         <Flexbox direction="col" gap="2">
           <Text sm>
             Set {playerName}&apos;s win/loss/draw directly. This overrides the total from match results. For detailed
-            per-match results, use the{' '}
-            <Link href={`/cube/record/${record.id}?tab=2`}>Matches tab</Link> instead.
+            per-match results, use the <Link href={`/cube/record/${record.id}?tab=2`}>Matches tab</Link> instead.
           </Text>
           <Row>
             {numberField('Wins', wins, setWins)}

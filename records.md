@@ -19,11 +19,11 @@ transitions**. For a paper draft with 8 players, the owner faces dozens of
 clicks and a lot of manual transcription before a single record is complete.
 
 [cube-wizard.com](https://cube-wizard.com/) — a single-purpose competitor that
-does *only* this — wins on exactly the dimension we're weakest: **friction**.
+does _only_ this — wins on exactly the dimension we're weakest: **friction**.
 Its entire submission is one screen: pick cube → pilot name → **photo of the
 deck (OCR'd automatically)** → match record → submit. Critically, **each player
 self-submits their own deck**, so the work is distributed across the table
-instead of landing on the organizer. It even pulls cube data *from CubeCobra*.
+instead of landing on the organizer. It even pulls cube data _from CubeCobra_.
 
 The strategic takeaway: CubeCobra already owns the cube list, the draft engine,
 the card database, user accounts, and decklists — everything Cube Wizard has to
@@ -61,8 +61,8 @@ export default interface Record {
   name: string;
   description: string;
   players: PlayerList;
-  matches: Round[];     // array of rounds
-  draft?: string;       // Draft ID; absent => no decklist data yet
+  matches: Round[]; // array of rounds
+  draft?: string; // Draft ID; absent => no decklist data yet
   trophy: string[];
 }
 ```
@@ -83,22 +83,22 @@ derived later by walking that draft's seats and cross-referencing match results.
 
 ### 2.3 Server routes
 
-| Method | Path | Purpose |
-|---|---|---|
-| GET | `/cube/records/:id` | List records for a cube (paginated) |
-| GET | `/cube/record/:id` | View one record (overview/decks/standings/matches) |
-| GET/POST | `/cube/records/create/:id` | 2-step: name/desc → manual player list |
-| GET/POST | `/cube/records/create/fromDraft/:id` | 2-step: name/desc → pick existing draft (auto-fills players) |
-| GET/POST | `/cube/records/hedron/:id` | Import a Hedron Network JSON export |
-| GET/POST | `/cube/records/uploaddeck/:id` | Upload one player's deck |
-| GET/POST | `/import/record` + `/import/record/:id` | Generic 6-step import |
-| POST | `/cube/records/edit/overview/:id` | Edit name/date/description |
-| POST | `/cube/records/edit/players/:id` | Replace player list |
-| POST | `/cube/records/edit/round/add/:id` `/edit/round/edit/:id` | Add / replace a round |
-| POST | `/cube/records/edit/trophy/:id` | Set trophy winners |
-| POST | `/cube/records/list/:id` | Paginated fetch (lastKey) |
-| GET | `/cube/records/analytics/:id` | Recompile analytics (scans all records + drafts) |
-| DELETE | `/cube/records/remove/:id` | Delete a record |
+| Method   | Path                                                      | Purpose                                                      |
+| -------- | --------------------------------------------------------- | ------------------------------------------------------------ |
+| GET      | `/cube/records/:id`                                       | List records for a cube (paginated)                          |
+| GET      | `/cube/record/:id`                                        | View one record (overview/decks/standings/matches)           |
+| GET/POST | `/cube/records/create/:id`                                | 2-step: name/desc → manual player list                       |
+| GET/POST | `/cube/records/create/fromDraft/:id`                      | 2-step: name/desc → pick existing draft (auto-fills players) |
+| GET/POST | `/cube/records/hedron/:id`                                | Import a Hedron Network JSON export                          |
+| GET/POST | `/cube/records/uploaddeck/:id`                            | Upload one player's deck                                     |
+| GET/POST | `/import/record` + `/import/record/:id`                   | Generic 6-step import                                        |
+| POST     | `/cube/records/edit/overview/:id`                         | Edit name/date/description                                   |
+| POST     | `/cube/records/edit/players/:id`                          | Replace player list                                          |
+| POST     | `/cube/records/edit/round/add/:id` `/edit/round/edit/:id` | Add / replace a round                                        |
+| POST     | `/cube/records/edit/trophy/:id`                           | Set trophy winners                                           |
+| POST     | `/cube/records/list/:id`                                  | Paginated fetch (lastKey)                                    |
+| GET      | `/cube/records/analytics/:id`                             | Recompile analytics (scans all records + drafts)             |
+| DELETE   | `/cube/records/remove/:id`                                | Delete a record                                              |
 
 Relevant files under
 `packages/server/src/router/routes/cube/records/{create,edit/*,uploaddeck,import,hedron,list,analytics,remove}.ts`
@@ -118,7 +118,7 @@ and the DAO at `packages/server/src/dynamo/dao/RecordDynamoDao.ts`.
 ### 2.5 Current upload flows (click count)
 
 - **Blank record:** name/date/desc → manually add each player → submit. Then,
-  *per player*, a separate "upload deck" page (select player → paste/auto-enter
+  _per player_, a separate "upload deck" page (select player → paste/auto-enter
   list → submit). Then matches entered round-by-round. Then trophies.
 - **From draft:** name/date/desc → choose a draft → players auto-fill. Decks come
   from the draft. Still must enter all matches and trophies by hand.
@@ -134,7 +134,7 @@ and the DAO at `packages/server/src/dynamo/dao/RecordDynamoDao.ts`.
 1. **Owner-only, fully centralized data entry.** Every write route requires
    `isCubeEditable(cube, user)` (effectively owner-only). Players at the table
    cannot submit their own deck or results. All transcription burden lands on one
-   person, usually *after* the event when memory has faded.
+   person, usually _after_ the event when memory has faded.
 
 2. **Manual deck transcription.** `UploadDeck` supports a pasted list or
    card-by-card autocomplete only. For **paper** drafts there is no fast path —
@@ -151,7 +151,7 @@ and the DAO at `packages/server/src/dynamo/dao/RecordDynamoDao.ts`.
    bind a deck to the wrong seat.
 
 5. **Manual, expensive analytics.** `/cube/records/analytics/:id` is a manual GET
-   that scans *all* records and *all* their drafts (O(n·m)) and writes S3. Nothing
+   that scans _all_ records and _all_ their drafts (O(n·m)) and writes S3. Nothing
    recompiles on save, so analytics silently go stale.
 
 6. **Manual match entry with no scaffolding.** Every match (p1, p2, results) is
@@ -179,21 +179,21 @@ One screen, three-to-four fields (`/submit`):
 
 1. **Cube** — dropdown of registered cubes.
 2. **Pilot Name** — free text (the player themselves).
-3. **Deck Photo** — *"Tap to take a photo or choose a file"*, "JPEG, PNG, WebP,
+3. **Deck Photo** — _"Tap to take a photo or choose a file"_, "JPEG, PNG, WebP,
    or HEIC — max 10 MB."
 4. **Match Record** — W/L/D for that pilot.
    → **Upload Deck**.
 
-Then: *"the system runs an OCR (Optical Character Recognition) process to
-determine the list of cards included in each deck"* and analytics are computed
+Then: _"the system runs an OCR (Optical Character Recognition) process to
+determine the list of cards included in each deck"_ and analytics are computed
 from there. **Players self-submit**; the organizer doesn't transcribe anything.
 
 ### 4.2 Cube registration pulls from CubeCobra
 
-`/addcube` asks for the **CubeCobra ID** (*"The short ID from your CubeCobra
-URL, e.g. proxybacon"*), pre-fills the name from CubeCobra, optional description,
-and a toggle to *"Automatically Sync Hedron Network Data."* They are literally a
-thin analytics layer on top of *our* data.
+`/addcube` asks for the **CubeCobra ID** (_"The short ID from your CubeCobra
+URL, e.g. proxybacon"_), pre-fills the name from CubeCobra, optional description,
+and a toggle to _"Automatically Sync Hedron Network Data."_ They are literally a
+thin analytics layer on top of _our_ data.
 
 ### 4.3 Analytics
 
@@ -210,14 +210,14 @@ thin analytics layer on top of *our* data.
 - Pages: Dashboard, Deck data, Card data, Color data, Synergy data, Submit, Add
   cube, Resources/overview.
 
-### 4.5 What they *don't* have (our advantages)
+### 4.5 What they _don't_ have (our advantages)
 
 - No real draft engine, no card database of record, no accounts, no decklist
   editor — they bootstrap all of it from CubeCobra and a photo.
 - No rounds/pairings model — just an aggregate W/L/D per submitted deck.
 - Deck fidelity depends entirely on OCR of a phone photo.
 
-**Conclusion:** their moat is *frictionless capture*, not data. If we add
+**Conclusion:** their moat is _frictionless capture_, not data. If we add
 photo/OCR capture + player self-service and collapse our flows, we are strictly
 better.
 

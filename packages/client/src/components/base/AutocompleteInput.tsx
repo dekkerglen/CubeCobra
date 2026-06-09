@@ -1,8 +1,7 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
-import { createPortal } from 'react-dom';
-
 import classNames from 'classnames';
+import { createPortal } from 'react-dom';
 
 import AutocardContext from '../../contexts/AutocardContext';
 import { MatchFetcher } from '../../utils/cardAutocomplete';
@@ -101,7 +100,8 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
       return;
     }
 
-    const seq = ++requestSeq.current;
+    requestSeq.current += 1;
+    const seq = requestSeq.current;
     const controller = new AbortController();
     setLoading(true);
     const timer = setTimeout(async () => {

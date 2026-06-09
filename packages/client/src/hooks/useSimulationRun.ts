@@ -11,6 +11,7 @@ import type {
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
 
+import { getOverallSimProgress } from '../components/draftSimulator/SimulationProgressBar';
 import {
   buildOracleRemapping,
   countOutOfVocabOracles,
@@ -36,7 +37,6 @@ import {
   patchClusteringCache,
   SCORING_ALGORITHM_VERSION,
 } from '../utils/draftSimulatorLocalStorage';
-import { getOverallSimProgress } from '../components/draftSimulator/SimulationProgressBar';
 import {
   buildClientSimulationSetup,
   ClientSimulationSetupError,

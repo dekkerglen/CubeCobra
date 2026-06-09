@@ -24,8 +24,8 @@ const RemoveDeckModal: React.FC<RemoveDeckModalProps> = ({ isOpen, setOpen, reco
       <ModalHeader setOpen={setOpen}>Remove Deck?</ModalHeader>
       <ModalBody>
         <Text>
-          Are you sure you want to remove {playerName}&apos;s deck from this record? {playerName} will stay in the record
-          (and keep their standings), but their decklist will be cleared. This cannot be undone.
+          Are you sure you want to remove {playerName}&apos;s deck from this record? {playerName} will stay in the
+          record (and keep their standings), but their decklist will be cleared. This cannot be undone.
         </Text>
       </ModalBody>
       <ModalFooter>

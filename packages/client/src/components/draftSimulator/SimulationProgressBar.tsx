@@ -59,9 +59,10 @@ const SimulationProgressBar: React.FC<SimulationProgressBarProps> = ({ phase, ov
     </Flexbox>
     <div className="w-full bg-bg rounded-full h-2.5 overflow-hidden">
       <div
-        className={['h-2.5 rounded-full bg-green-600 transition-all duration-500', phase !== 'sim' ? 'animate-pulse' : ''].join(
-          ' ',
-        )}
+        className={[
+          'h-2.5 rounded-full bg-green-600 transition-all duration-500',
+          phase !== 'sim' ? 'animate-pulse' : '',
+        ].join(' ')}
         style={{ width: `${Math.max(2, overallProgress)}%`, opacity: phase === 'sim' ? 1 : 0.8 }}
       />
     </div>

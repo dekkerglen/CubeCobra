@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from 'react';
 
-import { createPortal } from 'react-dom';
-
 import { cardImageUrl } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
+import { createPortal } from 'react-dom';
 
 interface DragGhostProps {
   card: Card;

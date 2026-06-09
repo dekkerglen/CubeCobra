@@ -93,9 +93,14 @@ function corners(d: Det): [number, number][] {
   const s = Math.sin(d.angle);
   const hw = d.w / 2;
   const hh = d.h / 2;
-  return ([[-hw, -hh], [hw, -hh], [hw, hh], [-hw, hh]] as [number, number][]).map(
-    ([dx, dy]) => [d.cx + dx * c - dy * s, d.cy + dx * s + dy * c],
-  );
+  return (
+    [
+      [-hw, -hh],
+      [hw, -hh],
+      [hw, hh],
+      [-hw, hh],
+    ] as [number, number][]
+  ).map(([dx, dy]) => [d.cx + dx * c - dy * s, d.cy + dx * s + dy * c]);
 }
 
 // Deskew an oriented quad from `source` into an upright crop canvas of height

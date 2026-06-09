@@ -103,7 +103,9 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
         <Flexbox direction="col" gap="2" className="p-3">
           <SampleHandLink
             className={menuLinkClass}
-            modalprops={{ deck: draft.seats[selectedUserIndex]?.mainboard?.flat(3).map((cardIndex) => draft.cards[cardIndex]) }}
+            modalprops={{
+              deck: draft.seats[selectedUserIndex]?.mainboard?.flat(3).map((cardIndex) => draft.cards[cardIndex]),
+            }}
           >
             Sample Hand
           </SampleHandLink>
@@ -204,9 +206,7 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
               <Text sm className="text-text-secondary">
                 {draft ? 'No deck has been uploaded for this player yet.' : 'No draft data available for this record.'}
               </Text>
-              {isOwner && (
-                <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload a deck to this record</Link>
-              )}
+              {isOwner && <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload a deck to this record</Link>}
             </Flexbox>
           )}
         </Flexbox>

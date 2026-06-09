@@ -53,7 +53,10 @@ const EditPlayerList: React.FC<EditPlayerListProps> = ({ players, setPlayers, se
   const [loading, setLoading] = useState<boolean>(false);
 
   const uidRef = useRef<number>(0);
-  const nextUid = useCallback(() => `entry-${uidRef.current++}`, []);
+  const nextUid = useCallback(() => {
+    uidRef.current += 1;
+    return `entry-${uidRef.current}`;
+  }, []);
 
   // Seed entries once from the initial players. Subsequent player prop changes
   // are ignored — the editor owns this state and pushes updates outward.

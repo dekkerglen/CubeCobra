@@ -8,11 +8,11 @@ import { bestMatch, normalizeForMatch, PreparedPool, preparePool, topMatches } f
 import { UncontrolledAlertProps } from 'components/base/Alert';
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
+import Checkbox from 'components/base/Checkbox';
 import { Flexbox } from 'components/base/Layout';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import { CSRFContext } from 'contexts/CSRFContext';
-import Checkbox from 'components/base/Checkbox';
 import { cubeThenAllCardNameMatches } from 'utils/cardAutocomplete';
 import { getCard } from 'utils/cards/getCard';
 import { detectNameBars } from 'utils/nameBarDetector';
@@ -468,7 +468,6 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
       setRows(scanned.sort((a, b) => b.score - a.score));
       setStatus('review');
     } catch (err) {
-      // eslint-disable-next-line no-console
       console.error('Photo scan failed', err);
       setAlerts((prev) => [...prev, { color: 'danger', message: 'Could not read that photo. Try a clearer image.' }]);
       setStatus('preview');

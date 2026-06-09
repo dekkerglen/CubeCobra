@@ -5,8 +5,8 @@ import {
   deleteRun,
   persistRun,
   readRuns,
-  recordAnalysisEntryOf,
   RECORD_ANALYSIS_HISTORY_LIMIT,
+  recordAnalysisEntryOf,
   RecordAnalysisRunData,
   RecordAnalysisRunEntry,
 } from '../utils/recordAnalysisStorage';

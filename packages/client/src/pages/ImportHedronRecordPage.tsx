@@ -20,7 +20,7 @@ import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
-import { BuiltPoolDeck, buildDecksFromPools } from 'utils/buildDeckFromPool';
+import { buildDecksFromPools, BuiltPoolDeck } from 'utils/buildDeckFromPool';
 import { getCards } from 'utils/cards/getCards';
 
 import SimulationProgressBar, {
@@ -69,9 +69,7 @@ interface ImportHedronRecordPageProps {
   cube: Cube;
 }
 
-const parseHedronExport = (
-  jsonStr: string,
-): { record: Partial<Record>; photos: PhotosByPlayer; error?: string } => {
+const parseHedronExport = (jsonStr: string): { record: Partial<Record>; photos: PhotosByPlayer; error?: string } => {
   try {
     const data: HedronExport = JSON.parse(jsonStr);
 
@@ -179,13 +177,10 @@ const ImportHedronRecordPage: React.FC<ImportHedronRecordPageProps> = ({ cube })
   const [submitReady, setSubmitReady] = useState(false);
   const formRef = createRef<HTMLFormElement>();
 
-  const setPlayerCards = useCallback(
-    (playerIndex: number, names: string[], autoBuild: boolean) => {
-      setDeckNames((prev) => ({ ...prev, [playerIndex]: names }));
-      setAutoBuildFlags((prev) => ({ ...prev, [playerIndex]: autoBuild }));
-    },
-    [],
-  );
+  const setPlayerCards = useCallback((playerIndex: number, names: string[], autoBuild: boolean) => {
+    setDeckNames((prev) => ({ ...prev, [playerIndex]: names }));
+    setAutoBuildFlags((prev) => ({ ...prev, [playerIndex]: autoBuild }));
+  }, []);
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];

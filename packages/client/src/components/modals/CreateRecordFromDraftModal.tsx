@@ -129,12 +129,7 @@ const CreateRecordFromDraftModal: React.FC<CreateRecordFromDraftModalProps> = ({
         )}
       </ModalBody>
       <ModalFooter>
-        <LoadingButton
-          onClick={() => formRef.current?.submit()}
-          color="primary"
-          block
-          disabled={!selectedId}
-        >
+        <LoadingButton onClick={() => formRef.current?.submit()} color="primary" block disabled={!selectedId}>
           Create Record
         </LoadingButton>
         <CSRFForm

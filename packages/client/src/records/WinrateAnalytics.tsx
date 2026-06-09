@@ -1,7 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { TrophyIcon } from '@primer/octicons-react';
-import { cdnUrl } from '@utils/cdnUrl';
 import {
   cardCmc,
   cardColorCategory,
@@ -13,6 +12,7 @@ import {
   cardType,
   encodeName,
 } from '@utils/cardutil';
+import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 import type DraftRecord from '@utils/datatypes/Record';
 import type { ArchetypeSkeleton, BuiltDeck, SlimPool } from '@utils/datatypes/SimulationReport';
@@ -47,11 +47,11 @@ import CubeContext from 'contexts/CubeContext';
 import ClusterDetailPanel from '../components/draftSimulator/ClusterDetailPanel';
 import DraftMapScatter, { type DraftMapPoint } from '../components/draftSimulator/DraftMapScatter';
 import SimDeckView from '../components/draftSimulator/SimDeckView';
-import { computeColorProfileFromDecks } from '../components/draftSimulator/SimulatorCharts';
 import SimulationProgressBar, {
   getOverallSimProgress,
   type SimulationPhase,
 } from '../components/draftSimulator/SimulationProgressBar';
+import { computeColorProfileFromDecks } from '../components/draftSimulator/SimulatorCharts';
 import useLocalRecordAnalysisHistory from '../hooks/useLocalRecordAnalysisHistory';
 import { runRecordAnalysis } from '../utils/recordAnalysisRun';
 import { AnalysisDeck, ClusterMatchups, ColorMatchups, RecordAnalysisRunEntry } from '../utils/recordAnalysisStorage';
@@ -85,7 +85,17 @@ const TYPE_COLORS: Record<string, string> = {
   Battle: '#E8883A',
   Other: '#555555',
 };
-const TYPE_ORDER = ['Creature', 'Instant', 'Sorcery', 'Enchantment', 'Artifact', 'Planeswalker', 'Land', 'Battle', 'Other'];
+const TYPE_ORDER = [
+  'Creature',
+  'Instant',
+  'Sorcery',
+  'Enchantment',
+  'Artifact',
+  'Planeswalker',
+  'Land',
+  'Battle',
+  'Other',
+];
 
 const OVER = '#5DAE68'; // above the 50% baseline
 const UNDER = '#D85F69'; // below the 50% baseline
@@ -108,7 +118,16 @@ const rate = (wins: number, losses: number, draws: number): number => {
 // Archetype-cluster palette, cycled by cluster index. Matches DraftMapScatter's
 // own palette exactly so the map dots and the list/detail swatches line up.
 const CLUSTER_COLORS = [
-  '#2563eb', '#dc2626', '#16a34a', '#ca8a04', '#9333ea', '#0891b2', '#db2777', '#65a30d', '#ea580c', '#4f46e5',
+  '#2563eb',
+  '#dc2626',
+  '#16a34a',
+  '#ca8a04',
+  '#9333ea',
+  '#0891b2',
+  '#db2777',
+  '#65a30d',
+  '#ea580c',
+  '#4f46e5',
 ];
 // Over/under is measured against the cube's actual average win rate (the baseline),
 // not a theoretical 50% — byes and incomplete results shift the real average.
@@ -327,7 +346,8 @@ const WinRateHistogram: React.FC<{ winRates: number[]; baseline: number }> = ({ 
       legend: { display: false },
       tooltip: {
         callbacks: {
-          title: (items) => `${Math.round(edges[items[0]!.dataIndex]! * 100)}–${Math.round(edges[items[0]!.dataIndex + 1]! * 100)}% win rate`,
+          title: (items) =>
+            `${Math.round(edges[items[0]!.dataIndex]! * 100)}–${Math.round(edges[items[0]!.dataIndex + 1]! * 100)}% win rate`,
           label: (ctx) => `${ctx.parsed.y} card${ctx.parsed.y === 1 ? '' : 's'}`,
         },
       },
@@ -353,7 +373,10 @@ const hexToRgb = (h: string): [number, number, number] => [
 const mix = (a: string, b: string, t: number): string => {
   const [ar, ag, ab] = hexToRgb(a);
   const [br, bg, bb] = hexToRgb(b);
-  const c = (x: number, y: number) => Math.round(x + (y - x) * t).toString(16).padStart(2, '0');
+  const c = (x: number, y: number) =>
+    Math.round(x + (y - x) * t)
+      .toString(16)
+      .padStart(2, '0');
   return `#${c(ar, br)}${c(ag, bg)}${c(ab, bb)}`;
 };
 
@@ -541,7 +564,10 @@ const Leaderboard: React.FC<{
           <Text xs className="text-text-secondary w-4 text-right tabular-nums shrink-0">
             {i + 1}
           </Text>
-          <span className="inline-block h-2.5 w-2.5 rounded-sm shrink-0" style={{ background: COLOR_MAP[r.colorCategory] ?? '#888' }} />
+          <span
+            className="inline-block h-2.5 w-2.5 rounded-sm shrink-0"
+            style={{ background: COLOR_MAP[r.colorCategory] ?? '#888' }}
+          />
           <div className="flex-1 min-w-0 truncate text-sm">{renderCardLink(r.card)}</div>
           <Flexbox direction="col" gap="0" className="items-end shrink-0">
             <Text sm semibold className="tabular-nums">
@@ -842,7 +868,10 @@ const ColorMatchupMatrix: React.FC<{ matchups: ColorMatchups; baseline: number }
           <tbody>
             {present.map((a) => (
               <tr key={a}>
-                <th className="sticky left-0 z-10 bg-bg-accent p-2 text-left border-b border-border" title={COLOR_LABEL[a]}>
+                <th
+                  className="sticky left-0 z-10 bg-bg-accent p-2 text-left border-b border-border"
+                  title={COLOR_LABEL[a]}
+                >
                   <div className="flex items-center gap-2">
                     {renderPips([a])}
                     <Text sm semibold>
@@ -882,8 +911,8 @@ const ColorMatchupMatrix: React.FC<{ matchups: ColorMatchups; baseline: number }
         </table>
       </div>
       <Text xs className="text-text-secondary px-3 pb-3">
-        Cell = the row color&apos;s match win rate vs the column color, with the sample size. A deck counts toward
-        every color it plays, so totals overlap. Green beats the cube average, red trails it.
+        Cell = the row color&apos;s match win rate vs the column color, with the sample size. A deck counts toward every
+        color it plays, so totals overlap. Green beats the cube average, red trails it.
       </Text>
     </Flexbox>
   );
@@ -956,7 +985,20 @@ const RunControls: React.FC<{
   onLoad: (ts: number) => void;
   onDelete: (ts: number) => void;
   onClear: () => void;
-}> = ({ runs, selectedTs, isRunning, loadingRun, runError, simPhase, overallProgress, onRun, onCancel, onLoad, onDelete, onClear }) => (
+}> = ({
+  runs,
+  selectedTs,
+  isRunning,
+  loadingRun,
+  runError,
+  simPhase,
+  overallProgress,
+  onRun,
+  onCancel,
+  onLoad,
+  onDelete,
+  onClear,
+}) => (
   <CardUI>
     <CardBody>
       <Flexbox direction="row" gap="3" justify="between" alignItems="start" wrap="wrap">
@@ -991,7 +1033,11 @@ const RunControls: React.FC<{
       </Flexbox>
       {isRunning && (
         <div className="mt-3">
-          <SimulationProgressBar phase={simPhase} overallProgress={overallProgress} label={simPhase ? RECORD_PHASE_LABELS[simPhase] : undefined} />
+          <SimulationProgressBar
+            phase={simPhase}
+            overallProgress={overallProgress}
+            label={simPhase ? RECORD_PHASE_LABELS[simPhase] : undefined}
+          />
         </div>
       )}
       {runError && (
@@ -1064,7 +1110,7 @@ interface WinrateAnalyticsProps {
 
 const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey }) => {
   const { cube, changedCards } = useContext(CubeContext);
-  const cards = changedCards.mainboard || [];
+  const cards = useMemo(() => changedCards.mainboard || [], [changedCards]);
   const { csrfFetch } = useContext(CSRFContext);
 
   const {
@@ -1111,7 +1157,11 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
   }, [cube, csrfFetch, cards, handlePersistCompletedRun]);
 
   const cardDict = useMemo(
-    () => fromEntries(cards.filter((card) => cardOracleId(card)).map((card) => [cardOracleId(card), card])) as Record<string, Card>,
+    () =>
+      fromEntries(cards.filter((card) => cardOracleId(card)).map((card) => [cardOracleId(card), card])) as Record<
+        string,
+        Card
+      >,
     [cards],
   );
 
@@ -1179,7 +1229,13 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
       .filter(([, v]) => v.decks >= minD)
       .map(([k, v]) => {
         const [a, b] = k.split('|');
-        return { a: a!, b: b!, decks: v.decks, trophies: v.trophies, winRate: rate(v.matchWins, v.matchLosses, v.matchDraws) };
+        return {
+          a: a!,
+          b: b!,
+          decks: v.decks,
+          trophies: v.trophies,
+          winRate: rate(v.matchWins, v.matchLosses, v.matchDraws),
+        };
       })
       .sort((x, y) => y.winRate - x.winRate || y.decks - x.decks)
       .slice(0, 24);
@@ -1193,7 +1249,12 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
       const [a, b] = k.split('|');
       const other = a === activeOracle ? b : b === activeOracle ? a : undefined;
       if (!other) continue;
-      partners.push({ oracle: other, decks: v.decks, trophies: v.trophies, winRate: rate(v.matchWins, v.matchLosses, v.matchDraws) });
+      partners.push({
+        oracle: other,
+        decks: v.decks,
+        trophies: v.trophies,
+        winRate: rate(v.matchWins, v.matchLosses, v.matchDraws),
+      });
     }
     partners.sort((x, y) => y.winRate - x.winRate || y.decks - x.decks);
     const rivals: RivalEntry[] = [];
@@ -1215,8 +1276,8 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
   // The ML clusters (archetypes): each with its decks, record, staples + identity.
   // `idx` is the skeleton's position — it drives the map's cluster color, so the
   // list swatches match the map exactly.
-  const runDecks = displayRun?.decks ?? [];
-  const skeletons = displayRun?.skeletons ?? [];
+  const runDecks = useMemo(() => displayRun?.decks ?? [], [displayRun]);
+  const skeletons = useMemo(() => displayRun?.skeletons ?? [], [displayRun]);
   const clusterMatchups = displayRun?.clusterMatchups ?? {};
   const colorMatchups = displayRun?.colorMatchups ?? {};
 
@@ -1293,7 +1354,11 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           // Recompute the color identity from the cards the cluster's decks actually
           // play (most-common-cards driven, off-color splashes dropped) rather than the
           // skeleton's lenient unique-card-count profile, which over-labels colors.
-          const colorProfile = computeColorProfileFromDecks(members.map((d) => d.oracles), simCardMeta) || 'C';
+          const colorProfile =
+            computeColorProfileFromDecks(
+              members.map((d) => d.oracles),
+              simCardMeta,
+            ) || 'C';
           return {
             clusterId: skel.clusterId,
             idx,
@@ -1315,7 +1380,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
     () => clusters.find((c) => c.clusterId === selectedClusterId) ?? null,
     [clusters, selectedClusterId],
   );
-  const selectedDeck = selectedPoolIndex != null ? (runDecks[selectedPoolIndex] ?? null) : null;
+  const selectedDeck = selectedPoolIndex !== null ? (runDecks[selectedPoolIndex] ?? null) : null;
   const selectedClusterDeckBuilds = useMemo<BuiltDeck[] | null>(
     () =>
       selectedCluster
@@ -1385,7 +1450,13 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
     }
     return order
       .filter((k) => groups[k] && groups[k]!.mC > 0)
-      .map((k) => ({ key: k, label: k, swatch: colorFor(k), winRate: groups[k]!.mWe / groups[k]!.mC, n: groups[k]!.n }));
+      .map((k) => ({
+        key: k,
+        label: k,
+        swatch: colorFor(k),
+        winRate: groups[k]!.mWe / groups[k]!.mC,
+        n: groups[k]!.n,
+      }));
   };
 
   // Win rate by color: each card counts toward EVERY color in its identity, so a
@@ -1409,10 +1480,20 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
     }
     return [...KEYS, 'C']
       .filter((k) => groups[k] && groups[k]!.mC > 0)
-      .map((k) => ({ key: k, label: NAME[k]!, swatch: COLOR_MAP[NAME[k]!] ?? '#888', winRate: groups[k]!.mWe / groups[k]!.mC, n: groups[k]!.n }))
+      .map((k) => ({
+        key: k,
+        label: NAME[k]!,
+        swatch: COLOR_MAP[NAME[k]!] ?? '#888',
+        winRate: groups[k]!.mWe / groups[k]!.mC,
+        n: groups[k]!.n,
+      }))
       .sort((a, b) => b.winRate - a.winRate);
   })();
-  const byType = aggregate((r) => r.type, TYPE_ORDER, (k) => TYPE_COLORS[k] ?? '#888').sort((a, b) => b.winRate - a.winRate);
+  const byType = aggregate(
+    (r) => r.type,
+    TYPE_ORDER,
+    (k) => TYPE_COLORS[k] ?? '#888',
+  ).sort((a, b) => b.winRate - a.winRate);
   const cmcBuckets = ['0', '1', '2', '3', '4', '5', '6', '7+'];
   const byCmc = aggregate(
     (r) => {
@@ -1423,9 +1504,18 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
     () => '#67A6D3',
   ); // keep mana-value order (no re-sort)
 
-  const colorDomain = winrateDomain(byColor.map((b) => b.winRate), baseline);
-  const typeDomain = winrateDomain(byType.map((b) => b.winRate), baseline);
-  const cmcDomain = winrateDomain(byCmc.map((b) => b.winRate), baseline);
+  const colorDomain = winrateDomain(
+    byColor.map((b) => b.winRate),
+    baseline,
+  );
+  const typeDomain = winrateDomain(
+    byType.map((b) => b.winRate),
+    baseline,
+  );
+  const cmcDomain = winrateDomain(
+    byCmc.map((b) => b.winRate),
+    baseline,
+  );
 
   // ── Leaderboards (over/under ranked by Match Elo — more robust than raw %) ──
   const topPerformers = [...allRows].sort((a, b) => b.matchElo - a.matchElo || b.winRate - a.winRate).slice(0, 8);
@@ -1460,8 +1550,16 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
     }));
 
   const synergyList = (entries: PartnerEntry[] | undefined, empty: string) => {
-    const items = (entries ?? []).map((e) => ({ e, card: cardDict[e.oracle] })).filter((x) => x.card).slice(0, 8);
-    if (items.length === 0) return <Text sm className="text-text-secondary">{empty}</Text>;
+    const items = (entries ?? [])
+      .map((e) => ({ e, card: cardDict[e.oracle] }))
+      .filter((x) => x.card)
+      .slice(0, 8);
+    if (items.length === 0)
+      return (
+        <Text sm className="text-text-secondary">
+          {empty}
+        </Text>
+      );
     return (
       <Flexbox direction="col" gap="0">
         {items.map(({ e, card }) => (
@@ -1477,8 +1575,16 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
     );
   };
   const matchupList = (entries: RivalEntry[] | undefined, empty: string) => {
-    const items = (entries ?? []).map((e) => ({ e, card: cardDict[e.oracle] })).filter((x) => x.card).slice(0, 8);
-    if (items.length === 0) return <Text sm className="text-text-secondary">{empty}</Text>;
+    const items = (entries ?? [])
+      .map((e) => ({ e, card: cardDict[e.oracle] }))
+      .filter((x) => x.card)
+      .slice(0, 8);
+    if (items.length === 0)
+      return (
+        <Text sm className="text-text-secondary">
+          {empty}
+        </Text>
+      );
     return (
       <Flexbox direction="col" gap="0">
         {items.map(({ e, card }) => (
@@ -1548,531 +1654,595 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
             </CardBody>
           </CardUI>
 
-      {/* By color / by type */}
-      <Row className="g-3">
-        <Col xs={12} lg={6}>
-          <Panel title="Win Rate by Color" tooltip="Match win rate of cards in each color, weighted by how often they're played. Each card counts toward every color in its identity, so a gold card lifts all of its colors. Vs the cube average.">
-            <DivergingBars rows={byColor} domain={colorDomain} baseline={baseline} />
-          </Panel>
-        </Col>
-        <Col xs={12} lg={6}>
-          <Panel title="Win Rate by Card Type" tooltip="Appearance-weighted match win rate by primary card type, vs the cube average.">
-            <DivergingBars rows={byType} domain={typeDomain} baseline={baseline} showSwatch={false} />
-          </Panel>
-        </Col>
-      </Row>
+          {/* By color / by type */}
+          <Row className="g-3">
+            <Col xs={12} lg={6}>
+              <Panel
+                title="Win Rate by Color"
+                tooltip="Match win rate of cards in each color, weighted by how often they're played. Each card counts toward every color in its identity, so a gold card lifts all of its colors. Vs the cube average."
+              >
+                <DivergingBars rows={byColor} domain={colorDomain} baseline={baseline} />
+              </Panel>
+            </Col>
+            <Col xs={12} lg={6}>
+              <Panel
+                title="Win Rate by Card Type"
+                tooltip="Appearance-weighted match win rate by primary card type, vs the cube average."
+              >
+                <DivergingBars rows={byType} domain={typeDomain} baseline={baseline} showSwatch={false} />
+              </Panel>
+            </Col>
+          </Row>
 
-      {/* By mana value / distribution */}
-      <Row className="g-3">
-        <Col xs={12} lg={6}>
-          <Panel title="Win Rate by Mana Value" tooltip="Appearance-weighted match win rate grouped by mana value, vs the cube average.">
-            <DivergingBars rows={byCmc} domain={cmcDomain} baseline={baseline} showSwatch={false} />
-          </Panel>
-        </Col>
-        <Col xs={12} lg={6}>
-          <Panel title="Win Rate Distribution" tooltip="Per-card match win rates across every tracked card, in 2.5% buckets. Red = below the cube average, green = above.">
-            <WinRateHistogram winRates={allRows.map((r) => r.winRate)} baseline={baseline} />
-          </Panel>
-        </Col>
-      </Row>
+          {/* By mana value / distribution */}
+          <Row className="g-3">
+            <Col xs={12} lg={6}>
+              <Panel
+                title="Win Rate by Mana Value"
+                tooltip="Appearance-weighted match win rate grouped by mana value, vs the cube average."
+              >
+                <DivergingBars rows={byCmc} domain={cmcDomain} baseline={baseline} showSwatch={false} />
+              </Panel>
+            </Col>
+            <Col xs={12} lg={6}>
+              <Panel
+                title="Win Rate Distribution"
+                tooltip="Per-card match win rates across every tracked card, in 2.5% buckets. Red = below the cube average, green = above."
+              >
+                <WinRateHistogram winRates={allRows.map((r) => r.winRate)} baseline={baseline} />
+              </Panel>
+            </Col>
+          </Row>
 
-      {/* Color performance + color-vs-color matchups */}
-      <Row className="g-3">
-        <Col xs={12} lg={6}>
-          <PerformanceTable
-            title="Color Performance"
-            tooltip="Match record of every deck that plays each color. Multicolor decks count toward each of their colors, so the rows overlap."
-            rows={colorPerf}
-            groupTitle="Color"
-            baseline={baseline}
-          />
-        </Col>
-        <Col xs={12} lg={6}>
-          <Panel
-            flush
-            title="Color vs Color"
-            tooltip="Row vs column: how decks playing the row color fared against decks playing the column color. Green beats the cube average, red trails it."
-          >
-            <ColorMatchupMatrix matchups={colorMatchups} baseline={baseline} />
-          </Panel>
-        </Col>
-      </Row>
+          {/* Color performance + color-vs-color matchups */}
+          <Row className="g-3">
+            <Col xs={12} lg={6}>
+              <PerformanceTable
+                title="Color Performance"
+                tooltip="Match record of every deck that plays each color. Multicolor decks count toward each of their colors, so the rows overlap."
+                rows={colorPerf}
+                groupTitle="Color"
+                baseline={baseline}
+              />
+            </Col>
+            <Col xs={12} lg={6}>
+              <Panel
+                flush
+                title="Color vs Color"
+                tooltip="Row vs column: how decks playing the row color fared against decks playing the column color. Green beats the cube average, red trails it."
+              >
+                <ColorMatchupMatrix matchups={colorMatchups} baseline={baseline} />
+              </Panel>
+            </Col>
+          </Row>
 
-      {/* Color-pair (contains both) + exact color-combination performance */}
-      <Row className="g-3">
-        <Col xs={12} lg={6}>
-          <PerformanceTable
-            title="Color Pair Performance"
-            tooltip="Match record of every deck that plays both colors of each pair. Three-plus-color decks count toward each pair they contain."
-            rows={colorPairPerf}
-            groupTitle="Pair"
-            baseline={baseline}
-            emptyText="No two-color decks yet."
-          />
-        </Col>
-        <Col xs={12} lg={6}>
-          <PerformanceTable
-            title="Color Combination Performance"
-            tooltip="Match record grouped by each deck's exact color identity — not 'contains', but precisely these colors."
-            rows={colorComboPerf}
-            groupTitle="Combination"
-            baseline={baseline}
-          />
-        </Col>
-      </Row>
+          {/* Color-pair (contains both) + exact color-combination performance */}
+          <Row className="g-3">
+            <Col xs={12} lg={6}>
+              <PerformanceTable
+                title="Color Pair Performance"
+                tooltip="Match record of every deck that plays both colors of each pair. Three-plus-color decks count toward each pair they contain."
+                rows={colorPairPerf}
+                groupTitle="Pair"
+                baseline={baseline}
+                emptyText="No two-color decks yet."
+              />
+            </Col>
+            <Col xs={12} lg={6}>
+              <PerformanceTable
+                title="Color Combination Performance"
+                tooltip="Match record grouped by each deck's exact color identity — not 'contains', but precisely these colors."
+                rows={colorComboPerf}
+                groupTitle="Combination"
+                baseline={baseline}
+              />
+            </Col>
+          </Row>
 
-      {/* Archetype map (left, with the win-rate list beneath it) + the selected
+          {/* Archetype map (left, with the win-rate list beneath it) + the selected
           archetype's detail card on its right. */}
-      <Row className="g-3">
-        <Col xs={12}>
-          <Panel
-            title="Archetype Map"
-            tooltip="Every recorded deck projected to 2D by the draft model — decks that play alike sit together. Click a deck on the map, or an archetype in the list below it, to open that archetype on the right. Color by cluster, or by each deck's colors."
-            right={
-              <div className="flex rounded-md border border-border overflow-hidden text-xs">
-                {(['cluster', 'deckColor'] as const).map((mode) => (
-                  <button
-                    key={mode}
-                    type="button"
-                    onClick={() => setMapColorBy(mode)}
-                    className={`px-2 py-1 ${mapColorBy === mode ? 'bg-bg-active font-semibold' : 'text-text-secondary hover:bg-bg-active'}`}
-                  >
-                    {mode === 'cluster' ? 'Cluster' : 'Deck color'}
-                  </button>
-                ))}
-              </div>
-            }
-          >
-            {clusters.length === 0 ? (
-              <Text sm className="text-text-secondary">
-                Run the analysis to cluster decks into archetypes.
-              </Text>
-            ) : (
-              <div className={`grid grid-cols-1 gap-5 ${selectedCluster ? 'lg:grid-cols-12' : ''}`}>
-                {/* LEFT: the archetype list, then the map, then the selected deck. */}
-                <div className={selectedCluster ? 'lg:col-span-5 min-w-0' : 'min-w-0'}>
-                  <Flexbox direction="col" gap="1">
-                    {clustersByWinRate.map((c: ClusterInfo) => {
-                      const lo = archetypeDomain[0];
-                      const hi = archetypeDomain[1];
-                      const pos = (w: number) => ((Math.min(hi, Math.max(lo, w)) - lo) / (hi - lo)) * 100;
-                      const center = pos(baseline);
-                      const p = pos(c.winRate);
-                      return (
-                        <button
-                          key={c.clusterId}
-                          type="button"
-                          onClick={() => {
-                            setSelectedClusterId(c.clusterId);
-                            setSelectedPoolIndex(null);
-                          }}
-                          className={`flex items-center gap-2 w-full text-left rounded px-1 py-0.5 ${c.clusterId === selectedClusterId ? 'bg-bg-active' : 'hover:bg-bg-active'}`}
-                        >
-                          <span className="inline-block h-3 w-3 rounded-sm shrink-0" style={{ background: c.color }} />
-                          <Text sm semibold className="w-28 shrink-0 truncate">
-                            {c.label}
-                          </Text>
-                          <div className="flex-1 min-w-0">
-                            <svg viewBox="0 0 100 14" preserveAspectRatio="none" width="100%" height="14" className="block">
-                              <rect x={0} y={3} width={100} height={8} rx={2} style={{ fill: 'rgb(var(--bg-active))' }} />
-                              <rect
-                                x={Math.min(center, p)}
-                                y={3}
-                                width={Math.max(0.8, Math.abs(p - center))}
-                                height={8}
-                                rx={1.5}
-                                fill={perfColor(c.winRate, baseline)}
-                              />
-                              <rect x={center - 0.2} y={0} width={0.4} height={14} style={{ fill: 'rgb(var(--text-secondary))' }} />
-                            </svg>
-                          </div>
-                          <Text xs semibold className="w-11 text-right tabular-nums">
-                            <span style={{ color: perfColor(c.winRate, baseline) }}>{fmtPct(c.winRate)}</span>
-                          </Text>
-                          <Text xs className="w-12 text-right text-text-secondary tabular-nums">
-                            {c.count}
-                            {c.trophies > 0 ? ` ·${c.trophies}🏆` : ''}
-                          </Text>
-                        </button>
-                      );
-                    })}
-                  </Flexbox>
-                  <div className="mt-4">
-                    <DeckMap
-                      decks={runDecks}
-                      skeletons={skeletons}
-                      colorBy={mapColorBy}
-                      selectedClusterId={selectedCluster ? selectedClusterId : null}
-                      selectedPoolIndex={selectedPoolIndex}
-                      onSelectPoint={(pi, cid) => {
-                        setSelectedPoolIndex(pi);
-                        setSelectedClusterId(cid);
-                      }}
-                    />
+          <Row className="g-3">
+            <Col xs={12}>
+              <Panel
+                title="Archetype Map"
+                tooltip="Every recorded deck projected to 2D by the draft model — decks that play alike sit together. Click a deck on the map, or an archetype in the list below it, to open that archetype on the right. Color by cluster, or by each deck's colors."
+                right={
+                  <div className="flex rounded-md border border-border overflow-hidden text-xs">
+                    {(['cluster', 'deckColor'] as const).map((mode) => (
+                      <button
+                        key={mode}
+                        type="button"
+                        onClick={() => setMapColorBy(mode)}
+                        className={`px-2 py-1 ${mapColorBy === mode ? 'bg-bg-active font-semibold' : 'text-text-secondary hover:bg-bg-active'}`}
+                      >
+                        {mode === 'cluster' ? 'Cluster' : 'Deck color'}
+                      </button>
+                    ))}
                   </div>
-                  {selectedDeck && (
-                    <div className="mt-4 rounded-lg border border-border bg-bg-accent/30 overflow-hidden">
-                      <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border bg-bg-accent/50">
-                        <Flexbox direction="col" gap="0" className="min-w-0">
-                          <Text sm semibold className="truncate">
-                            {selectedDeck.playerName}
-                            {selectedDeck.trophy ? ' 🏆' : ''}
-                          </Text>
-                          <Text xs className="text-text-secondary truncate">
-                            {deckLabel(selectedDeck)} · {recordStr(selectedDeck)}
-                          </Text>
-                        </Flexbox>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <a href={`/cube/record/${selectedDeck.recordId}`} className="text-link text-xs hover:underline">
-                            view record
-                          </a>
-                          <button
-                            type="button"
-                            onClick={() => setSelectedPoolIndex(null)}
-                            className="text-text-secondary hover:bg-bg-active rounded px-1"
-                            title="Clear selected deck"
-                          >
-                            ✕
-                          </button>
-                        </div>
+                }
+              >
+                {clusters.length === 0 ? (
+                  <Text sm className="text-text-secondary">
+                    Run the analysis to cluster decks into archetypes.
+                  </Text>
+                ) : (
+                  <div className={`grid grid-cols-1 gap-5 ${selectedCluster ? 'lg:grid-cols-12' : ''}`}>
+                    {/* LEFT: the archetype list, then the map, then the selected deck. */}
+                    <div className={selectedCluster ? 'lg:col-span-5 min-w-0' : 'min-w-0'}>
+                      <Flexbox direction="col" gap="1">
+                        {clustersByWinRate.map((c: ClusterInfo) => {
+                          const lo = archetypeDomain[0];
+                          const hi = archetypeDomain[1];
+                          const pos = (w: number) => ((Math.min(hi, Math.max(lo, w)) - lo) / (hi - lo)) * 100;
+                          const center = pos(baseline);
+                          const p = pos(c.winRate);
+                          return (
+                            <button
+                              key={c.clusterId}
+                              type="button"
+                              onClick={() => {
+                                setSelectedClusterId(c.clusterId);
+                                setSelectedPoolIndex(null);
+                              }}
+                              className={`flex items-center gap-2 w-full text-left rounded px-1 py-0.5 ${c.clusterId === selectedClusterId ? 'bg-bg-active' : 'hover:bg-bg-active'}`}
+                            >
+                              <span
+                                className="inline-block h-3 w-3 rounded-sm shrink-0"
+                                style={{ background: c.color }}
+                              />
+                              <Text sm semibold className="w-28 shrink-0 truncate">
+                                {c.label}
+                              </Text>
+                              <div className="flex-1 min-w-0">
+                                <svg
+                                  viewBox="0 0 100 14"
+                                  preserveAspectRatio="none"
+                                  width="100%"
+                                  height="14"
+                                  className="block"
+                                >
+                                  <rect
+                                    x={0}
+                                    y={3}
+                                    width={100}
+                                    height={8}
+                                    rx={2}
+                                    style={{ fill: 'rgb(var(--bg-active))' }}
+                                  />
+                                  <rect
+                                    x={Math.min(center, p)}
+                                    y={3}
+                                    width={Math.max(0.8, Math.abs(p - center))}
+                                    height={8}
+                                    rx={1.5}
+                                    fill={perfColor(c.winRate, baseline)}
+                                  />
+                                  <rect
+                                    x={center - 0.2}
+                                    y={0}
+                                    width={0.4}
+                                    height={14}
+                                    style={{ fill: 'rgb(var(--text-secondary))' }}
+                                  />
+                                </svg>
+                              </div>
+                              <Text xs semibold className="w-11 text-right tabular-nums">
+                                <span style={{ color: perfColor(c.winRate, baseline) }}>{fmtPct(c.winRate)}</span>
+                              </Text>
+                              <Text xs className="w-12 text-right text-text-secondary tabular-nums">
+                                {c.count}
+                                {c.trophies > 0 ? ` ·${c.trophies}🏆` : ''}
+                              </Text>
+                            </button>
+                          );
+                        })}
+                      </Flexbox>
+                      <div className="mt-4">
+                        <DeckMap
+                          decks={runDecks}
+                          skeletons={skeletons}
+                          colorBy={mapColorBy}
+                          selectedClusterId={selectedCluster ? selectedClusterId : null}
+                          selectedPoolIndex={selectedPoolIndex}
+                          onSelectPoint={(pi, cid) => {
+                            setSelectedPoolIndex(pi);
+                            setSelectedClusterId(cid);
+                          }}
+                        />
                       </div>
-                      <SimDeckView deck={{ mainboard: selectedDeck.oracles, sideboard: [] }} cardMeta={simCardMeta} />
-                    </div>
-                  )}
-                </div>
-
-                {/* RIGHT: the selected archetype's card — tabbed view + stat charts. */}
-                {selectedCluster && (
-                  <div className="lg:col-span-7 min-w-0">
-                    <Flexbox direction="col" gap="4">
-                      <ClusterDetailPanel
-                        skeleton={selectedCluster.skel}
-                        clusterIndex={selectedCluster.idx}
-                        displayName={selectedCluster.label}
-                        decksTab={{
-                          label: 'Decks',
-                          title: 'Every deck in this cluster, by win rate. Click one to select it on the map.',
-                          content: (
-                            <Flexbox direction="col" gap="0">
-                              {selectedCluster.skel.poolIndices
-                                .map((i) => ({ i, d: runDecks[i] }))
-                                .filter((x): x is { i: number; d: AnalysisDeck } => !!x.d)
-                                .sort(
-                                  (a, b) =>
-                                    rate(b.d.matchWins, b.d.matchLosses, b.d.matchDraws) -
-                                    rate(a.d.matchWins, a.d.matchLosses, a.d.matchDraws),
-                                )
-                                .map(({ i, d }) => {
-                                  const wr = rate(d.matchWins, d.matchLosses, d.matchDraws);
-                                  return (
-                                    <button
-                                      key={i}
-                                      type="button"
-                                      onClick={() => setSelectedPoolIndex(i)}
-                                      className={`flex items-center gap-2 w-full text-left px-2 py-1.5 border-b border-border last:border-b-0 ${
-                                        i === selectedPoolIndex ? 'bg-bg-active' : 'hover:bg-bg-active'
-                                      }`}
-                                    >
-                                      <span className="w-4 shrink-0 flex justify-center text-yellow-500">
-                                        {d.trophy ? <TrophyIcon size={14} /> : null}
-                                      </span>
-                                      <Flexbox direction="col" gap="0" className="min-w-0 flex-1">
-                                        <Text sm semibold className="truncate">
-                                          {d.playerName}
-                                        </Text>
-                                        <Text xs className="text-text-secondary truncate">
-                                          {deckLabel(d)} · {d.recordName}
-                                        </Text>
-                                      </Flexbox>
-                                      <Text xs semibold className="tabular-nums w-12 text-right shrink-0">
-                                        {recordStr(d)}
-                                      </Text>
-                                      <Text sm semibold className="tabular-nums w-14 text-right shrink-0">
-                                        <span style={{ color: perfColor(wr, baseline) }}>{fmtPct(wr)}</span>
-                                      </Text>
-                                    </button>
-                                  );
-                                })}
+                      {selectedDeck && (
+                        <div className="mt-4 rounded-lg border border-border bg-bg-accent/30 overflow-hidden">
+                          <div className="flex items-center justify-between gap-2 px-3 py-2 border-b border-border bg-bg-accent/50">
+                            <Flexbox direction="col" gap="0" className="min-w-0">
+                              <Text sm semibold className="truncate">
+                                {selectedDeck.playerName}
+                                {selectedDeck.trophy ? ' 🏆' : ''}
+                              </Text>
+                              <Text xs className="text-text-secondary truncate">
+                                {deckLabel(selectedDeck)} · {recordStr(selectedDeck)}
+                              </Text>
                             </Flexbox>
-                          ),
-                        }}
-                        totalPools={runDecks.length}
-                        clusterDeckBuilds={selectedClusterDeckBuilds}
-                        cubeOracleSet={cubeOracleSet}
-                        cardMeta={simCardMeta}
-                        slimPools={allSlimPools}
-                        deckBuilds={allDeckBuilds}
-                        excludeManaFixingLands={excludeManaFixingLands}
-                        setExcludeManaFixingLands={setExcludeManaFixingLands}
-                        onOpenPool={(pi) => {
-                          const d = runDecks[pi];
-                          if (d) window.open(`/cube/record/${d.recordId}`, '_blank', 'noopener');
-                        }}
-                        poolLabel={(pi) => {
-                          const d = runDecks[pi];
-                          return d ? `${d.playerName} · ${recordStr(d)}${d.trophy ? ' 🏆' : ''}` : '';
-                        }}
-                        onClose={() => {
-                          setSelectedClusterId(null);
-                          setSelectedPoolIndex(null);
-                        }}
-                      />
-                    </Flexbox>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <a
+                                href={`/cube/record/${selectedDeck.recordId}`}
+                                className="text-link text-xs hover:underline"
+                              >
+                                view record
+                              </a>
+                              <button
+                                type="button"
+                                onClick={() => setSelectedPoolIndex(null)}
+                                className="text-text-secondary hover:bg-bg-active rounded px-1"
+                                title="Clear selected deck"
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          </div>
+                          <SimDeckView
+                            deck={{ mainboard: selectedDeck.oracles, sideboard: [] }}
+                            cardMeta={simCardMeta}
+                          />
+                        </div>
+                      )}
+                    </div>
+
+                    {/* RIGHT: the selected archetype's card — tabbed view + stat charts. */}
+                    {selectedCluster && (
+                      <div className="lg:col-span-7 min-w-0">
+                        <Flexbox direction="col" gap="4">
+                          <ClusterDetailPanel
+                            skeleton={selectedCluster.skel}
+                            clusterIndex={selectedCluster.idx}
+                            displayName={selectedCluster.label}
+                            decksTab={{
+                              label: 'Decks',
+                              title: 'Every deck in this cluster, by win rate. Click one to select it on the map.',
+                              content: (
+                                <Flexbox direction="col" gap="0">
+                                  {selectedCluster.skel.poolIndices
+                                    .map((i) => ({ i, d: runDecks[i] }))
+                                    .filter((x): x is { i: number; d: AnalysisDeck } => !!x.d)
+                                    .sort(
+                                      (a, b) =>
+                                        rate(b.d.matchWins, b.d.matchLosses, b.d.matchDraws) -
+                                        rate(a.d.matchWins, a.d.matchLosses, a.d.matchDraws),
+                                    )
+                                    .map(({ i, d }) => {
+                                      const wr = rate(d.matchWins, d.matchLosses, d.matchDraws);
+                                      return (
+                                        <button
+                                          key={i}
+                                          type="button"
+                                          onClick={() => setSelectedPoolIndex(i)}
+                                          className={`flex items-center gap-2 w-full text-left px-2 py-1.5 border-b border-border last:border-b-0 ${
+                                            i === selectedPoolIndex ? 'bg-bg-active' : 'hover:bg-bg-active'
+                                          }`}
+                                        >
+                                          <span className="w-4 shrink-0 flex justify-center text-yellow-500">
+                                            {d.trophy ? <TrophyIcon size={14} /> : null}
+                                          </span>
+                                          <Flexbox direction="col" gap="0" className="min-w-0 flex-1">
+                                            <Text sm semibold className="truncate">
+                                              {d.playerName}
+                                            </Text>
+                                            <Text xs className="text-text-secondary truncate">
+                                              {deckLabel(d)} · {d.recordName}
+                                            </Text>
+                                          </Flexbox>
+                                          <Text xs semibold className="tabular-nums w-12 text-right shrink-0">
+                                            {recordStr(d)}
+                                          </Text>
+                                          <Text sm semibold className="tabular-nums w-14 text-right shrink-0">
+                                            <span style={{ color: perfColor(wr, baseline) }}>{fmtPct(wr)}</span>
+                                          </Text>
+                                        </button>
+                                      );
+                                    })}
+                                </Flexbox>
+                              ),
+                            }}
+                            totalPools={runDecks.length}
+                            clusterDeckBuilds={selectedClusterDeckBuilds}
+                            cubeOracleSet={cubeOracleSet}
+                            cardMeta={simCardMeta}
+                            slimPools={allSlimPools}
+                            deckBuilds={allDeckBuilds}
+                            excludeManaFixingLands={excludeManaFixingLands}
+                            setExcludeManaFixingLands={setExcludeManaFixingLands}
+                            onOpenPool={(pi) => {
+                              const d = runDecks[pi];
+                              if (d) window.open(`/cube/record/${d.recordId}`, '_blank', 'noopener');
+                            }}
+                            poolLabel={(pi) => {
+                              const d = runDecks[pi];
+                              return d ? `${d.playerName} · ${recordStr(d)}${d.trophy ? ' 🏆' : ''}` : '';
+                            }}
+                            onClose={() => {
+                              setSelectedClusterId(null);
+                              setSelectedPoolIndex(null);
+                            }}
+                          />
+                        </Flexbox>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
-            )}
-          </Panel>
-        </Col>
-      </Row>
+              </Panel>
+            </Col>
+          </Row>
 
-      {/* Archetype-vs-archetype matchup matrix (win rates already live on the map). */}
-      {clusters.length > 0 && (
-        <Row className="g-3">
-          <Col xs={12}>
-            <Panel
-              flush
-              title="Archetype Matchups"
-              tooltip="Row vs column: how each archetype's decks fared against each other archetype. Green beats the cube average, red trails it. Click a row to focus that archetype."
-            >
-              <ArchetypeMatchupMatrix
-                clusters={clustersByWinRate}
-                matchups={clusterMatchups}
-                baseline={baseline}
-                selectedClusterId={selectedClusterId}
-                onSelect={(id) => {
-                  setSelectedClusterId(id);
-                  setSelectedPoolIndex(null);
-                }}
-              />
-            </Panel>
-          </Col>
-        </Row>
-      )}
-
-      {/* Archetype performance — aggregated match record per cluster */}
-      {archetypePerf.length > 0 && (
-        <Row className="g-3">
-          <Col xs={12}>
-            <PerformanceTable
-              title="Archetype Performance"
-              tooltip="Match record of every deck in each archetype (ML cluster). Win % is over/under-colored against the cube average."
-              rows={archetypePerf}
-              groupTitle="Archetype"
-              baseline={baseline}
-            />
-          </Col>
-        </Row>
-      )}
-
-      {/* Reputation vs reality (match Elo × draft Elo) — full width */}
-      <Row className="g-3">
-        <Col xs={12}>
-          <Panel
-            title="Reputation vs Reality"
-            tooltip="Each card's Cobra draft Elo (how strong the model expects it to be) against its Match Elo (how it actually performed in your records). Above the dashed line = overperforming its draft reputation."
-          >
-            <EloScatter rows={allRows} />
-          </Panel>
-        </Col>
-      </Row>
-
-      {/* Trophy case — full width */}
-      <Row className="g-3">
-        <Col xs={12}>
-          <CardUI>
-            <CardHeader>
-              <Text semibold md>
-                🏆 Trophy Case
-              </Text>
-            </CardHeader>
-            <TrophyArchive records={records} lastKey={lastKey} />
-          </CardUI>
-        </Col>
-      </Row>
-
-      {/* Leaderboards */}
-      <Row className="g-3">
-        <Col xs={12} md={6} lg={3}>
-          <Panel title="🔥 Overperformers" tooltip="Highest Match Elo — performance vs the strength of opposition faced.">
-
-            <Leaderboard
-              rows={topPerformers}
-              metric={(r) => `${r.matchElo}`}
-              sub={(r) => `${fmtPct(r.winRate)} · ${r.decks}d`}
-            />
-          </Panel>
-        </Col>
-        <Col xs={12} md={6} lg={3}>
-          <Panel title="🧊 Underperformers" tooltip="Lowest Match Elo — performance vs the strength of opposition faced.">
-
-            <Leaderboard
-              rows={underPerformers}
-              metric={(r) => `${r.matchElo}`}
-              sub={(r) => `${fmtPct(r.winRate)} · ${r.decks}d`}
-            />
-          </Panel>
-        </Col>
-        <Col xs={12} md={6} lg={3}>
-          <Panel title="📈 Most Played" tooltip="Cards appearing in the most decks across all records.">
-            <Leaderboard rows={topPlayed} metric={(r) => `${r.decks}`} sub={(r) => `${fmtPct(r.winRate)} win`} />
-          </Panel>
-        </Col>
-        <Col xs={12} md={6} lg={3}>
-          <Panel title="🏅 Trophy Leaders" tooltip="Cards in the most trophy-winning decks.">
-            <Leaderboard rows={trophyCards.slice(0, 8)} metric={(r) => `${r.trophyCount} 🏆`} sub={(r) => `${fmtPct(r.trophyRate)} of decks`} />
-          </Panel>
-        </Col>
-      </Row>
-
-      {/* Synergy: top pairs + card deep-dive */}
-      <Row className="g-3">
-        <Col xs={12} lg={4}>
-          <Panel title="🤝 Top Synergies" tooltip="Card pairs that, when played in the same deck, win the most — the strongest two-card combos in your records.">
-            {topSynergies === null ? (
-              <Flexbox direction="row" gap="2" alignItems="center">
-                <Spinner sm />
-                <Text sm className="text-text-secondary">
-                  Loading…
-                </Text>
-              </Flexbox>
-            ) : topSynergies.length === 0 ? (
-              <Text sm className="text-text-secondary">
-                Not enough co-occurrence data yet. Recompile analytics after more records.
-              </Text>
-            ) : (
-              <Flexbox direction="col" gap="0">
-                {topSynergies
-                  .map((s) => ({ s, a: cardDict[s.a], b: cardDict[s.b] }))
-                  .filter((x) => x.a && x.b)
-                  .slice(0, 12)
-                  .map(({ s, a, b }) => (
-                    <div key={`${s.a}|${s.b}`} className="flex items-center gap-2 py-1 border-b border-border last:border-b-0">
-                      <div className="flex-1 min-w-0 text-sm truncate">
-                        {renderCardLink(a!)} <span className="text-text-secondary">+</span> {renderCardLink(b!)}
-                      </div>
-                      <Flexbox direction="col" gap="0" className="items-end shrink-0">
-                        <Text sm semibold className="tabular-nums">
-                          <span style={{ color: perfColor(s.winRate, baseline) }}>{fmtPct(s.winRate)}</span>
-                        </Text>
-                        <Text xs className="text-text-secondary tabular-nums">
-                          {s.decks} decks
-                        </Text>
-                      </Flexbox>
-                    </div>
-                  ))}
-              </Flexbox>
-            )}
-          </Panel>
-        </Col>
-        <Col xs={12} lg={8}>
-          <Panel
-            title="Card Deep-Dive"
-            tooltip="Pick a card to see which cards it wins WITH (synergies) and how it fares AGAINST opposing decks (matchups)."
-            right={
-              <div className="w-64 max-w-[50vw]">
-                <Select dense value={activeOracle} setValue={setSelectedOracle} options={cardOptions} />
-              </div>
-            }
-          >
-            {selectedRow && (
-              <Flexbox direction="row" gap="3" alignItems="center" className="mb-2">
-                <span className="inline-block h-3 w-3 rounded-sm shrink-0" style={{ background: COLOR_MAP[selectedRow.colorCategory] ?? '#888' }} />
-                <Text semibold>{selectedRow.name}</Text>
-                <Text sm className="text-text-secondary">
-                  {fmtPct(selectedRow.winRate)} win · {selectedRow.decks} decks · {selectedRow.trophyCount} 🏆
-                </Text>
-              </Flexbox>
-            )}
+          {/* Archetype-vs-archetype matchup matrix (win rates already live on the map). */}
+          {clusters.length > 0 && (
             <Row className="g-3">
-              <Col xs={12} md={6}>
-                <Text xs semibold className="text-text-secondary uppercase tracking-wide">
-                  Best partners
-                </Text>
-                {synergyList(synergy?.partners?.top, 'No shared-deck data yet.')}
-              </Col>
-              <Col xs={12} md={6}>
-                <Text xs semibold className="text-text-secondary uppercase tracking-wide">
-                  Worst partners
-                </Text>
-                {synergyList(synergy?.partners?.bottom, 'No shared-deck data yet.')}
-              </Col>
-              <Col xs={12} md={6}>
-                <Text xs semibold className="text-text-secondary uppercase tracking-wide">
-                  Dominates (vs opposing decks)
-                </Text>
-                {matchupList(synergy?.matchups?.beats, 'No matchup data yet.')}
-              </Col>
-              <Col xs={12} md={6}>
-                <Text xs semibold className="text-text-secondary uppercase tracking-wide">
-                  Struggles against
-                </Text>
-                {matchupList(synergy?.matchups?.losesTo, 'No matchup data yet.')}
+              <Col xs={12}>
+                <Panel
+                  flush
+                  title="Archetype Matchups"
+                  tooltip="Row vs column: how each archetype's decks fared against each other archetype. Green beats the cube average, red trails it. Click a row to focus that archetype."
+                >
+                  <ArchetypeMatchupMatrix
+                    clusters={clustersByWinRate}
+                    matchups={clusterMatchups}
+                    baseline={baseline}
+                    selectedClusterId={selectedClusterId}
+                    onSelect={(id) => {
+                      setSelectedClusterId(id);
+                      setSelectedPoolIndex(null);
+                    }}
+                  />
+                </Panel>
               </Col>
             </Row>
-          </Panel>
-        </Col>
-      </Row>
+          )}
 
-      {/* Full table */}
-      <Panel
-        flush
-        title="All Cards"
-        tooltip="Every tracked card. Click a column to sort."
-        right={
-          <Flexbox direction="row" gap="3" alignItems="center" className="shrink-0">
-            <Text xs className="text-text-secondary whitespace-nowrap">
-              {allRows.length.toLocaleString()} cards
+          {/* Archetype performance — aggregated match record per cluster */}
+          {archetypePerf.length > 0 && (
+            <Row className="g-3">
+              <Col xs={12}>
+                <PerformanceTable
+                  title="Archetype Performance"
+                  tooltip="Match record of every deck in each archetype (ML cluster). Win % is over/under-colored against the cube average."
+                  rows={archetypePerf}
+                  groupTitle="Archetype"
+                  baseline={baseline}
+                />
+              </Col>
+            </Row>
+          )}
+
+          {/* Reputation vs reality (match Elo × draft Elo) — full width */}
+          <Row className="g-3">
+            <Col xs={12}>
+              <Panel
+                title="Reputation vs Reality"
+                tooltip="Each card's Cobra draft Elo (how strong the model expects it to be) against its Match Elo (how it actually performed in your records). Above the dashed line = overperforming its draft reputation."
+              >
+                <EloScatter rows={allRows} />
+              </Panel>
+            </Col>
+          </Row>
+
+          {/* Trophy case — full width */}
+          <Row className="g-3">
+            <Col xs={12}>
+              <CardUI>
+                <CardHeader>
+                  <Text semibold md>
+                    🏆 Trophy Case
+                  </Text>
+                </CardHeader>
+                <TrophyArchive records={records} lastKey={lastKey} />
+              </CardUI>
+            </Col>
+          </Row>
+
+          {/* Leaderboards */}
+          <Row className="g-3">
+            <Col xs={12} md={6} lg={3}>
+              <Panel
+                title="🔥 Overperformers"
+                tooltip="Highest Match Elo — performance vs the strength of opposition faced."
+              >
+                <Leaderboard
+                  rows={topPerformers}
+                  metric={(r) => `${r.matchElo}`}
+                  sub={(r) => `${fmtPct(r.winRate)} · ${r.decks}d`}
+                />
+              </Panel>
+            </Col>
+            <Col xs={12} md={6} lg={3}>
+              <Panel
+                title="🧊 Underperformers"
+                tooltip="Lowest Match Elo — performance vs the strength of opposition faced."
+              >
+                <Leaderboard
+                  rows={underPerformers}
+                  metric={(r) => `${r.matchElo}`}
+                  sub={(r) => `${fmtPct(r.winRate)} · ${r.decks}d`}
+                />
+              </Panel>
+            </Col>
+            <Col xs={12} md={6} lg={3}>
+              <Panel title="📈 Most Played" tooltip="Cards appearing in the most decks across all records.">
+                <Leaderboard rows={topPlayed} metric={(r) => `${r.decks}`} sub={(r) => `${fmtPct(r.winRate)} win`} />
+              </Panel>
+            </Col>
+            <Col xs={12} md={6} lg={3}>
+              <Panel title="🏅 Trophy Leaders" tooltip="Cards in the most trophy-winning decks.">
+                <Leaderboard
+                  rows={trophyCards.slice(0, 8)}
+                  metric={(r) => `${r.trophyCount} 🏆`}
+                  sub={(r) => `${fmtPct(r.trophyRate)} of decks`}
+                />
+              </Panel>
+            </Col>
+          </Row>
+
+          {/* Synergy: top pairs + card deep-dive */}
+          <Row className="g-3">
+            <Col xs={12} lg={4}>
+              <Panel
+                title="🤝 Top Synergies"
+                tooltip="Card pairs that, when played in the same deck, win the most — the strongest two-card combos in your records."
+              >
+                {topSynergies === null ? (
+                  <Flexbox direction="row" gap="2" alignItems="center">
+                    <Spinner sm />
+                    <Text sm className="text-text-secondary">
+                      Loading…
+                    </Text>
+                  </Flexbox>
+                ) : topSynergies.length === 0 ? (
+                  <Text sm className="text-text-secondary">
+                    Not enough co-occurrence data yet. Recompile analytics after more records.
+                  </Text>
+                ) : (
+                  <Flexbox direction="col" gap="0">
+                    {topSynergies
+                      .map((s) => ({ s, a: cardDict[s.a], b: cardDict[s.b] }))
+                      .filter((x) => x.a && x.b)
+                      .slice(0, 12)
+                      .map(({ s, a, b }) => (
+                        <div
+                          key={`${s.a}|${s.b}`}
+                          className="flex items-center gap-2 py-1 border-b border-border last:border-b-0"
+                        >
+                          <div className="flex-1 min-w-0 text-sm truncate">
+                            {renderCardLink(a!)} <span className="text-text-secondary">+</span> {renderCardLink(b!)}
+                          </div>
+                          <Flexbox direction="col" gap="0" className="items-end shrink-0">
+                            <Text sm semibold className="tabular-nums">
+                              <span style={{ color: perfColor(s.winRate, baseline) }}>{fmtPct(s.winRate)}</span>
+                            </Text>
+                            <Text xs className="text-text-secondary tabular-nums">
+                              {s.decks} decks
+                            </Text>
+                          </Flexbox>
+                        </div>
+                      ))}
+                  </Flexbox>
+                )}
+              </Panel>
+            </Col>
+            <Col xs={12} lg={8}>
+              <Panel
+                title="Card Deep-Dive"
+                tooltip="Pick a card to see which cards it wins WITH (synergies) and how it fares AGAINST opposing decks (matchups)."
+                right={
+                  <div className="w-64 max-w-[50vw]">
+                    <Select dense value={activeOracle} setValue={setSelectedOracle} options={cardOptions} />
+                  </div>
+                }
+              >
+                {selectedRow && (
+                  <Flexbox direction="row" gap="3" alignItems="center" className="mb-2">
+                    <span
+                      className="inline-block h-3 w-3 rounded-sm shrink-0"
+                      style={{ background: COLOR_MAP[selectedRow.colorCategory] ?? '#888' }}
+                    />
+                    <Text semibold>{selectedRow.name}</Text>
+                    <Text sm className="text-text-secondary">
+                      {fmtPct(selectedRow.winRate)} win · {selectedRow.decks} decks · {selectedRow.trophyCount} 🏆
+                    </Text>
+                  </Flexbox>
+                )}
+                <Row className="g-3">
+                  <Col xs={12} md={6}>
+                    <Text xs semibold className="text-text-secondary uppercase tracking-wide">
+                      Best partners
+                    </Text>
+                    {synergyList(synergy?.partners?.top, 'No shared-deck data yet.')}
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <Text xs semibold className="text-text-secondary uppercase tracking-wide">
+                      Worst partners
+                    </Text>
+                    {synergyList(synergy?.partners?.bottom, 'No shared-deck data yet.')}
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <Text xs semibold className="text-text-secondary uppercase tracking-wide">
+                      Dominates (vs opposing decks)
+                    </Text>
+                    {matchupList(synergy?.matchups?.beats, 'No matchup data yet.')}
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <Text xs semibold className="text-text-secondary uppercase tracking-wide">
+                      Struggles against
+                    </Text>
+                    {matchupList(synergy?.matchups?.losesTo, 'No matchup data yet.')}
+                  </Col>
+                </Row>
+              </Panel>
+            </Col>
+          </Row>
+
+          {/* Full table */}
+          <Panel
+            flush
+            title="All Cards"
+            tooltip="Every tracked card. Click a column to sort."
+            right={
+              <Flexbox direction="row" gap="3" alignItems="center" className="shrink-0">
+                <Text xs className="text-text-secondary whitespace-nowrap">
+                  {allRows.length.toLocaleString()} cards
+                </Text>
+                <CSVLink
+                  data={allCardsCsv}
+                  filename="all-cards.csv"
+                  className="font-medium text-link hover:text-link-active text-sm whitespace-nowrap"
+                >
+                  Download CSV
+                </CSVLink>
+              </Flexbox>
+            }
+          >
+            <Text xs className="text-text-secondary px-4 pt-3 block">
+              <span className="font-semibold text-text">Draft Elo</span> is CubeCobra&apos;s global pick-based rating
+              (how highly the card is drafted everywhere). <span className="font-semibold text-text">Match Elo</span> is
+              computed from this cube&apos;s match results — it rises when the card&apos;s decks beat higher-rated
+              opposition.
             </Text>
-            <CSVLink
-              data={allCardsCsv}
-              filename="all-cards.csv"
-              className="font-medium text-link hover:text-link-active text-sm whitespace-nowrap"
-            >
-              Download CSV
-            </CSVLink>
-          </Flexbox>
-        }
-      >
-        <Text xs className="text-text-secondary px-4 pt-3 block">
-          <span className="font-semibold text-text">Draft Elo</span> is CubeCobra&apos;s global pick-based rating (how
-          highly the card is drafted everywhere). <span className="font-semibold text-text">Match Elo</span> is computed
-          from this cube&apos;s match results — it rises when the card&apos;s decks beat higher-rated opposition.
-        </Text>
-        <SortableTable
-          flush
-          showCsvLink={false}
-          columnProps={[
-            { key: 'card', title: 'Card', heading: true, sortable: true, renderFn: renderCardLink },
-            { key: 'colorCategory', title: 'Colors', sortable: true, heading: false, renderFn: (_v, row) => renderColorPips(row.card) },
-            { key: 'type', title: 'Type', sortable: true, heading: false },
-            { key: 'cmc', title: 'MV', sortable: true, heading: false },
-            { key: 'decks', title: 'Decks', sortable: true, heading: false },
-            { key: 'winRate', title: 'Match Win %', sortable: true, heading: false, renderFn: renderPercent },
-            { key: 'matchCount', title: 'Matches', sortable: true, heading: false },
-            { key: 'gameWinRate', title: 'Game Win %', sortable: true, heading: false, renderFn: renderPercent },
-            { key: 'trophyCount', title: 'Trophies', sortable: true, heading: false },
-            {
-              key: 'matchElo',
-              title: 'Match Elo',
-              sortable: true,
-              heading: false,
-              tooltip: "Performance Elo from this cube's match results — independent of draft Elo.",
-              renderFn: (_v, row) => (row.hasMatchElo ? row.matchElo : '—'),
-            },
-            {
-              key: 'draftElo',
-              title: 'Draft Elo',
-              sortable: true,
-              heading: false,
-              tooltip: 'CubeCobra global draft Elo — how highly the card is picked across all cubes.',
-            },
-          ]}
-          data={allRows}
-          sortFns={{ card: (a: Card, b: Card) => cardNameLower(a).localeCompare(cardNameLower(b)) }}
-          defaultSortConfig={{ key: 'decks', direction: 'descending' }}
-        />
-      </Panel>
+            <SortableTable
+              flush
+              showCsvLink={false}
+              columnProps={[
+                { key: 'card', title: 'Card', heading: true, sortable: true, renderFn: renderCardLink },
+                {
+                  key: 'colorCategory',
+                  title: 'Colors',
+                  sortable: true,
+                  heading: false,
+                  renderFn: (_v, row) => renderColorPips(row.card),
+                },
+                { key: 'type', title: 'Type', sortable: true, heading: false },
+                { key: 'cmc', title: 'MV', sortable: true, heading: false },
+                { key: 'decks', title: 'Decks', sortable: true, heading: false },
+                { key: 'winRate', title: 'Match Win %', sortable: true, heading: false, renderFn: renderPercent },
+                { key: 'matchCount', title: 'Matches', sortable: true, heading: false },
+                { key: 'gameWinRate', title: 'Game Win %', sortable: true, heading: false, renderFn: renderPercent },
+                { key: 'trophyCount', title: 'Trophies', sortable: true, heading: false },
+                {
+                  key: 'matchElo',
+                  title: 'Match Elo',
+                  sortable: true,
+                  heading: false,
+                  tooltip: "Performance Elo from this cube's match results — independent of draft Elo.",
+                  renderFn: (_v, row) => (row.hasMatchElo ? row.matchElo : '—'),
+                },
+                {
+                  key: 'draftElo',
+                  title: 'Draft Elo',
+                  sortable: true,
+                  heading: false,
+                  tooltip: 'CubeCobra global draft Elo — how highly the card is picked across all cubes.',
+                },
+              ]}
+              data={allRows}
+              sortFns={{ card: (a: Card, b: Card) => cardNameLower(a).localeCompare(cardNameLower(b)) }}
+              defaultSortConfig={{ key: 'decks', direction: 'descending' }}
+            />
+          </Panel>
         </>
       )}
     </Flexbox>
