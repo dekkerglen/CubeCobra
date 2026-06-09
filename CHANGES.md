@@ -13,5 +13,8 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Share a link to a record so the players in your event can submit their own decks and results, without needing edit access to your cube.
 - Import a whole event straight from a Hedron Network export — players, rounds, results, and deck photos all come in together.
 - Cube owners can now manually set a player's win/loss/draw record on an event when the logged matches don't capture it.
+- Add Artist to the CSV export of Cube cards and Tokens
 
 ## Bug Fixes
+
+- Fix Cube comparison export not bucketing cards by in both, only A, or only B when there is a filter set
