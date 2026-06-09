@@ -13,6 +13,8 @@ import { Response } from 'express';
 import { CSV_HEADER, writeCard } from 'serverutils/cube';
 import { CSVtoCards } from 'serverutils/cubefn';
 
+import { createCardDetails } from '../test-utils/data';
+
 jest.mock('serverutils/carddb', () => {
   const placeholder = {
     name: 'placeholder',
@@ -56,6 +58,35 @@ function makeResStub() {
     body: () => chunks.join(''),
   };
 }
+
+describe('CSVtoCards — writing details fields (not importable)', () => {
+  it('preserves artist field through writeCard + CSVtoCards round-trip', () => {
+    const cardWithArtist = {
+      cardID: 'custom-card',
+      name: 'custom-card',
+      custom_name: 'Test Card',
+      cmc: 3,
+      type_line: 'Creature',
+      colors: ['W'],
+      colorCategory: 'White',
+      status: 'Not Owned',
+      finish: 'Non-foil',
+      tags: [],
+      notes: '',
+      details: createCardDetails({ artist: 'Jackson Pollock' }),
+    };
+
+    const { res, body } = makeResStub();
+    res.write(`${CSV_HEADER}\r\n`);
+    writeCard(res, cardWithArtist as any, 'mainboard');
+
+    const output = body();
+    const lines = output.split('\n').filter((l) => l.length > 0);
+
+    expect(lines.length).toBe(2);
+    expect(lines[1]).toContain('"Jackson Pollock"');
+  });
+});
 
 describe('CSVtoCards — custom cards', () => {
   it('imports multiple custom cards, each with its own attributes', () => {

@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useMemo } from 'react';
 
 import { CopyIcon, DownloadIcon } from '@primer/octicons-react';
 import {
+  cardArtist,
   cardCmc,
   cardCollectorNumber,
   cardColorCategory,
@@ -32,7 +33,7 @@ import CubeContext from '../contexts/CubeContext';
 import useAlerts, { Alerts } from '../hooks/UseAlerts';
 
 const CSV_HEADER =
-  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,board,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom';
+  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,board,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom,Artist';
 
 function escapeCSV(value: string): string {
   return `"${value.replace(/"/g, '""')}"`;
@@ -58,6 +59,7 @@ function tokenToCSVRow(token: CardType, creatorNames: string[]): string {
     '""', // Notes
     String(cardMtgoId(token)),
     isCustomCard(token) ? 'true' : 'false',
+    escapeCSV(cardArtist(token)),
   ];
   return cols.join(',');
 }
