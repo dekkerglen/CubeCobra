@@ -35,11 +35,12 @@ const ArchetypeChart: React.FC<{
   onSelect: (colorPair: string | null) => void;
   topArchetypesByColor?: Map<string, string[]>;
 }> = ({ archetypeDistribution, selectedArchetype, onSelect, topArchetypesByColor }) => {
-  const maxCount = Math.max(...archetypeDistribution.map((entry) => entry.count), 1);
+  const visibleEntries = archetypeDistribution.filter((entry) => entry.count > 0);
+  const maxCount = Math.max(...visibleEntries.map((entry) => entry.count), 1);
 
   return (
     <div className="flex flex-col gap-2">
-      {archetypeDistribution.map((entry) => {
+      {visibleEntries.map((entry) => {
         const colorCodes = getColorProfileCodes(entry.colorPair);
         const isSelected = entry.colorPair === selectedArchetype;
         const pct = maxCount > 0 ? (entry.count / maxCount) * 100 : 0;

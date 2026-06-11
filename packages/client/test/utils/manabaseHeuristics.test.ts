@@ -10,6 +10,7 @@ import {
   oracleIsForceCutDual,
   oracleIsForceCutLand,
   oracleIsMustKeepNonbasicLand,
+  oracleIsOffColorAbilityLand,
   oracleIsSuspectNonbasicLand,
   oracleIsUnderusedMultiColorLand,
   oracleIsUnderusedSingleColorLand,
@@ -666,6 +667,77 @@ describe('oracleIsAllOffColorLand', () => {
       'oracle-wasteland': meta({ name: 'Wasteland', type: 'Land', producedMana: [], colorIdentity: [] }),
     };
     expect(oracleIsAllOffColorLand('oracle-wasteland', new Set(['W']), cardMeta)).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// Colored-ability lands (Goblin Burrows, Daru Encampment, Starlit Sanctum…)
+// ---------------------------------------------------------------------------
+
+describe('oracleIsOffColorAbilityLand', () => {
+  test('flags Goblin Burrows in a non-R deck', () => {
+    // Produces {C}, has an {R} activated ability → colorIdentity carries R.
+    const cardMeta: LandMetaLookup = {
+      'oracle-burrows': meta({ name: 'Goblin Burrows', type: 'Land', producedMana: ['C'], colorIdentity: ['R'] }),
+    };
+    expect(oracleIsOffColorAbilityLand('oracle-burrows', new Set(['W', 'U']), cardMeta)).toBe(true);
+  });
+
+  test('does not flag Goblin Burrows in a R deck', () => {
+    const cardMeta: LandMetaLookup = {
+      'oracle-burrows': meta({ name: 'Goblin Burrows', type: 'Land', producedMana: ['C'], colorIdentity: ['R'] }),
+    };
+    expect(oracleIsOffColorAbilityLand('oracle-burrows', new Set(['R']), cardMeta)).toBe(false);
+  });
+
+  test('flags Daru Encampment in a non-W deck', () => {
+    const cardMeta: LandMetaLookup = {
+      'oracle-daru': meta({ name: 'Daru Encampment', type: 'Land', producedMana: ['C'], colorIdentity: ['W'] }),
+    };
+    expect(oracleIsOffColorAbilityLand('oracle-daru', new Set(['B', 'R']), cardMeta)).toBe(true);
+  });
+
+  test('flags Starlit Sanctum in a W-only deck (B ability is dead)', () => {
+    // Produces {C}, has both {W} and {B} activated abilities → colorIdentity = [W, B].
+    const cardMeta: LandMetaLookup = {
+      'oracle-starlit': meta({ name: 'Starlit Sanctum', type: 'Land', producedMana: ['C'], colorIdentity: ['W', 'B'] }),
+    };
+    expect(oracleIsOffColorAbilityLand('oracle-starlit', new Set(['W']), cardMeta)).toBe(true);
+  });
+
+  test('does not flag Starlit Sanctum in a WB deck (both abilities live)', () => {
+    const cardMeta: LandMetaLookup = {
+      'oracle-starlit': meta({ name: 'Starlit Sanctum', type: 'Land', producedMana: ['C'], colorIdentity: ['W', 'B'] }),
+    };
+    expect(oracleIsOffColorAbilityLand('oracle-starlit', new Set(['W', 'B']), cardMeta)).toBe(false);
+  });
+
+  test('skips lands whose entire colorIdentity is produced (shockland in non-WU deck)', () => {
+    // Hallowed Fountain produces both W and U directly. The standard produced-mana rules
+    // handle these; this rule should not double-fire.
+    const cardMeta: LandMetaLookup = {
+      'oracle-fountain': meta({
+        name: 'Hallowed Fountain',
+        type: 'Land',
+        producedMana: ['W', 'U'],
+        colorIdentity: ['W', 'U'],
+      }),
+    };
+    expect(oracleIsOffColorAbilityLand('oracle-fountain', new Set(['B', 'R']), cardMeta)).toBe(false);
+  });
+
+  test('does not flag pure colorless utility lands (Wasteland)', () => {
+    const cardMeta: LandMetaLookup = {
+      'oracle-wasteland': meta({ name: 'Wasteland', type: 'Land', producedMana: [], colorIdentity: [] }),
+    };
+    expect(oracleIsOffColorAbilityLand('oracle-wasteland', new Set(['W']), cardMeta)).toBe(false);
+  });
+
+  test('does not flag basics', () => {
+    const cardMeta: LandMetaLookup = {
+      'basic-r': meta({ name: 'Mountain', type: 'Basic Land — Mountain', producedMana: ['R'], colorIdentity: ['R'] }),
+    };
+    expect(oracleIsOffColorAbilityLand('basic-r', new Set(['W']), cardMeta)).toBe(false);
   });
 });
 

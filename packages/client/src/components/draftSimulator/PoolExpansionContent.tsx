@@ -55,12 +55,13 @@ export const PoolExpansionContent: React.FC<{
   cardMeta: Record<string, CardMeta>;
   runData: SimulationRunData;
   highlightOracle?: string;
-}> = ({ pool, mode, deck, cardMeta, runData, highlightOracle }) => {
+  initialPickNumber?: number;
+}> = ({ pool, mode, deck, cardMeta, runData, highlightOracle, initialPickNumber }) => {
   if (mode === 'deck' && deck && (deck.mainboard.length > 0 || deck.sideboard.length > 0)) {
     return <SimDeckView deck={deck} cardMeta={cardMeta} />;
   }
   if (mode === 'fullPickOrder') {
-    return <SimulatorPickBreakdown pool={pool} runData={runData} />;
+    return <SimulatorPickBreakdown pool={pool} runData={runData} initialPickNumber={initialPickNumber} />;
   }
   const orderedPicks = [...pool.picks].sort((a, b) => a.packNumber - b.packNumber || a.pickNumber - b.pickNumber);
   return (
@@ -103,6 +104,7 @@ export const PoolInspectionModal: React.FC<{
   highlightOracle?: string;
   deckLoading?: boolean;
   themeBreakdown?: { bucket: string; cards: { name: string; rawTags: string[] }[] }[];
+  focusPickNumber?: number;
 }> = ({
   isOpen,
   setOpen,
@@ -115,6 +117,7 @@ export const PoolInspectionModal: React.FC<{
   highlightOracle,
   deckLoading,
   themeBreakdown,
+  focusPickNumber,
 }) => {
   // Keep last opened pool around so the leave transition has data to render against.
   const lastPoolRef = useRef<{
@@ -144,9 +147,13 @@ export const PoolInspectionModal: React.FC<{
   // Reset internal state each time the modal opens for a new pool.
   useEffect(() => {
     if (!isOpen) return;
-    setViewMode(hasDeck ? 'deck' : hasFullPickOrder ? 'fullPickOrder' : 'pool');
+    if (focusPickNumber !== undefined && hasFullPickOrder) {
+      setViewMode('fullPickOrder');
+    } else {
+      setViewMode(hasDeck ? 'deck' : hasFullPickOrder ? 'fullPickOrder' : 'pool');
+    }
     setBreakdownOpen(false);
-  }, [isOpen, renderPool?.poolIndex, hasDeck, hasFullPickOrder]);
+  }, [isOpen, renderPool?.poolIndex, hasDeck, hasFullPickOrder, focusPickNumber]);
 
   if (!renderPool) return null;
 
@@ -240,6 +247,7 @@ export const PoolInspectionModal: React.FC<{
           cardMeta={cardMeta}
           runData={runData}
           highlightOracle={highlightOracle}
+          initialPickNumber={focusPickNumber}
         />
       </ModalBody>
     </Modal>

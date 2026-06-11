@@ -7,7 +7,7 @@ import type { CardDetails } from '@utils/datatypes/Card';
 import type { CardMeta, SimulatedPickCard, SimulatedPool, SimulationRunData } from '@utils/datatypes/SimulationReport';
 
 import { modelScoresToProbabilities } from '../../utils/botRatings';
-import { buildOracleRemapping, loadDraftBot, localBatchDraftRanked } from '../../utils/draftBot';
+import { buildOracleRemapping, computeCubeContext, loadDraftBot, localBatchDraftRanked } from '../../utils/draftBot';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
 import DraftBreakdownDisplay from '../draft/DraftBreakdownDisplay';
@@ -197,11 +197,18 @@ export const PickCard: React.FC<{ pick: SimulatedPickCard; isSelected: boolean }
   ),
 );
 
-const SimulatorPickBreakdown: React.FC<{ pool: SimulatedPool; runData: SimulationRunData }> = ({ pool, runData }) => {
-  const [pickNumber, setPickNumber] = useState('0');
+const SimulatorPickBreakdown: React.FC<{
+  pool: SimulatedPool;
+  runData: SimulationRunData;
+  initialPickNumber?: number;
+}> = ({ pool, runData, initialPickNumber }) => {
+  const [pickNumber, setPickNumber] = useState(String(initialPickNumber ?? 0));
   const [selectedSeatIndex, setSelectedSeatIndex] = useState(pool.seatIndex);
   const [showRatings, setShowRatings] = useState(true);
   const [ratings, setRatings] = useState<number[]>([]);
+  const [ratingsLoading, setRatingsLoading] = useState(false);
+  const [ratingsError, setRatingsError] = useState<string | null>(null);
+  const cubeCtxRef = React.useRef<Float32Array | null>(null);
   const seatPools = useMemo(
     () =>
       runData.slimPools
@@ -226,9 +233,14 @@ const SimulatorPickBreakdown: React.FC<{ pool: SimulatedPool; runData: Simulatio
 
   useEffect(() => {
     setSelectedSeatIndex(pool.seatIndex);
-    setPickNumber('0');
+    setPickNumber(String(initialPickNumber ?? 0));
     setRatings([]);
-  }, [pool.poolIndex, pool.seatIndex]);
+  }, [pool.poolIndex, pool.seatIndex, initialPickNumber]);
+
+  // Invalidate the cached cube context if the run (and thus the cube) changes.
+  useEffect(() => {
+    cubeCtxRef.current = null;
+  }, [runData.cardMeta]);
 
   useEffect(() => {
     if (!breakdown) return undefined;
@@ -245,27 +257,58 @@ const SimulatorPickBreakdown: React.FC<{ pool: SimulatedPool; runData: Simulatio
 
   useEffect(() => {
     let cancelled = false;
-    if (!showRatings || !current || current.packOracleIds.length === 0) {
+    if (!showRatings) {
       setRatings([]);
+      setRatingsLoading(false);
+      setRatingsError(null);
+      return () => {
+        cancelled = true;
+      };
+    }
+    if (!current || current.packOracleIds.length === 0) {
+      setRatings([]);
+      setRatingsLoading(false);
+      setRatingsError(current ? 'No cards in pack at this pick' : 'Pick state unavailable');
       return () => {
         cancelled = true;
       };
     }
 
+    setRatingsLoading(true);
+    setRatingsError(null);
     (async () => {
       try {
         await loadDraftBot();
+        const remapping = buildOracleRemapping(runData.cardMeta);
+        // Compute the 32-dim cube context once per run — the draft decoder concatenates it
+        // with the encoded pool. Without it the model gets a 128-dim input where it expects
+        // 160 dims and the predict call fails silently.
+        if (!cubeCtxRef.current) {
+          cubeCtxRef.current = await computeCubeContext(Object.keys(runData.cardMeta), remapping);
+        }
+        if (cancelled) return;
         const ranked = await localBatchDraftRanked(
           [{ pack: current.packOracleIds, pool: current.previousPickOracleIds }],
-          buildOracleRemapping(runData.cardMeta),
+          remapping,
+          undefined,
+          cubeCtxRef.current,
         );
         if (cancelled) return;
-        const rawByOracle = new Map((ranked[0] ?? []).map((entry) => [entry.oracle, entry.rating]));
+        if (!ranked[0] || ranked[0].length === 0) {
+          setRatings([]);
+          setRatingsLoading(false);
+          setRatingsError('Model returned no ratings — oracle ids may be missing from the bot vocabulary');
+          return;
+        }
+        const rawByOracle = new Map(ranked[0].map((entry) => [entry.oracle, entry.rating]));
         setRatings(modelScoresToProbabilities(current.packOracleIds.map((oracleId) => rawByOracle.get(oracleId) ?? 0)));
+        setRatingsLoading(false);
       } catch (err) {
         if (!cancelled) {
           console.error('Failed to load simulator pick recommendations:', err);
           setRatings([]);
+          setRatingsLoading(false);
+          setRatingsError(err instanceof Error ? err.message : 'Failed to load recommendations');
         }
       }
     })();
@@ -306,9 +349,26 @@ const SimulatorPickBreakdown: React.FC<{ pool: SimulatedPool; runData: Simulatio
         alignItems="center"
         className="mb-3 flex-wrap gap-2 rounded border border-border bg-bg-accent/50 px-3 py-2"
       >
-        <Text sm semibold>
-          Draft {pool.draftIndex + 1} · Seat {selectedSeatIndex + 1}
-        </Text>
+        <Flexbox direction="row" alignItems="center" gap="2">
+          <Text sm semibold>
+            Draft {pool.draftIndex + 1} · Seat {selectedSeatIndex + 1}
+          </Text>
+          {ratingsLoading && (
+            <Text xs className="text-text-secondary italic">
+              Computing bot recommendations…
+            </Text>
+          )}
+          {!ratingsLoading && ratingsError && (
+            <Text xs className="text-red-500 italic">
+              Bot ratings unavailable — {ratingsError}
+            </Text>
+          )}
+          {!ratingsLoading && !ratingsError && ratings.length > 0 && (
+            <Text xs className="text-text-secondary italic">
+              Bot ratings loaded
+            </Text>
+          )}
+        </Flexbox>
         <Flexbox direction="row" gap="1" className="flex-wrap">
           <button
             type="button"
@@ -353,7 +413,6 @@ const SimulatorPickBreakdown: React.FC<{ pool: SimulatedPool; runData: Simulatio
         cards={breakdown.cards}
         onPickClick={onPickClick}
         cardUrlPrefix="/tool/card"
-        hideRatingsToggle
         hideHelpText
       />
     </div>

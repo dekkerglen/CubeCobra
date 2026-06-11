@@ -17,7 +17,8 @@ export type DraftSimulatorBottomTab =
   | 'cardStats'
   | 'draftBreakdown'
   | 'overperformers'
-  | 'sideboardAndPairings';
+  | 'sideboardAndPairings'
+  | 'colorPreferences';
 
 export type DraftSimulatorPoolViewMode = 'pool' | 'deck' | 'fullPickOrder';
 
@@ -35,6 +36,7 @@ export interface DraftSimulatorSelectionState {
   selectedCardOracles: string[];
   selectedDeckCardOracles: string[];
   selectedSideboardCardOracles: string[];
+  selectedP1P1CardOracles: string[];
   selectedSkeletonId: number | null;
   selectedArchetype: string | null;
   focusedPoolIndex: number | null;
@@ -45,6 +47,7 @@ export interface DraftSimulatorSelectionSetters {
   setSelectedCardOracles: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedDeckCardOracles: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedSideboardCardOracles: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedP1P1CardOracles: React.Dispatch<React.SetStateAction<string[]>>;
   setSelectedArchetype: React.Dispatch<React.SetStateAction<string | null>>;
   setSelectedSkeletonId: React.Dispatch<React.SetStateAction<number | null>>;
   setFocusedPoolIndex: React.Dispatch<React.SetStateAction<number | null>>;
