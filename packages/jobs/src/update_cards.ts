@@ -522,7 +522,12 @@ function convertCard(
   newcard.popularity = 0;
   newcard.cubeCount = 0;
   newcard.pickCount = 0;
-  newcard.isExtra = !!preflipped;
+
+  // Mark component=meld_result as extra.
+  const isMeldResult =
+    card.layout === 'meld' && card.all_parts?.some((part) => part.id === card.id && part.component === 'meld_result');
+  newcard.isExtra = !!preflipped || !!isMeldResult;
+
   if (metadata) {
     newcard.elo = metadata.elo;
     newcard.popularity = metadata.popularity;
@@ -542,16 +547,7 @@ function convertCard(
   newcard.released_at = card.released_at;
   newcard.reprint = card.reprint;
 
-  newcard.promo =
-    card.promo ||
-    (card.frame_effects && card.frame_effects.includes('extendedart')) ||
-    (card.frame_effects && card.frame_effects.includes('showcase')) ||
-    card.textless ||
-    card.frame === 'art_series' ||
-    card.set.toLowerCase() === 'mps' || // kaladesh masterpieces
-    card.set.toLowerCase() === 'mp2' || // invocations
-    card.set.toLowerCase() === 'exp' || // expeditions
-    card.set.toLowerCase() === 'amh1'; // mh1 art cards
+  newcard.promo = card.promo;
   newcard.prices = {
     usd: card.prices.usd ? parseFloat(card.prices.usd) : undefined,
     usd_foil: card.prices.usd_foil ? parseFloat(card.prices.usd_foil) : undefined,
