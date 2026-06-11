@@ -522,11 +522,12 @@ function convertCard(
   newcard.popularity = 0;
   newcard.cubeCount = 0;
   newcard.pickCount = 0;
-  
+
   // Mark component=meld_result as extra.
-  const isMeldResult = card.layout === 'meld' && card.all_parts?.some((part) => part.id === card.id && part.component === 'meld_result');
+  const isMeldResult =
+    card.layout === 'meld' && card.all_parts?.some((part) => part.id === card.id && part.component === 'meld_result');
   newcard.isExtra = !!preflipped || !!isMeldResult;
-  
+
   if (metadata) {
     newcard.elo = metadata.elo;
     newcard.popularity = metadata.popularity;

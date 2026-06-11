@@ -641,15 +641,7 @@ export const isManaFixingLand = (details: CardDetailsType): boolean => {
 const UNREASONABLE_PROMO_TYPES = ['promopack', 'prerelease', 'datestamped', 'firstplacefoil', 'serialized'];
 const UNREASONABLE_SET_TYPES = ['masterpiece', 'memorabilia', 'token', 'promo'];
 const UNREASONABLE_SETS = ['plst'];
-const UNREASONABLE_LAYOUTS = [
-  'scheme',
-  'planar',
-  'vanguard',
-  'token',
-  'double_faced_token',
-  'art_series',
-  'emblem',
-];
+const UNREASONABLE_LAYOUTS = ['scheme', 'planar', 'vanguard', 'token', 'double_faced_token', 'art_series', 'emblem'];
 
 const arePromoTypesReasonable = (card: CardDetailsType): boolean => {
   if (!card.promo_types || card.promo_types.length === 0) return true;

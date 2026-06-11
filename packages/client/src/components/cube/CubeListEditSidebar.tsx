@@ -473,11 +473,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
                 checked={specifyEdition}
                 setChecked={(value) => setSpecifyEdition(value)}
               />
-              <Checkbox
-                label="Show Extras"
-                checked={showExtras}
-                setChecked={(value) => setShowExtras(value)}
-              />
+              <Checkbox label="Show Extras" checked={showExtras} setChecked={(value) => setShowExtras(value)} />
             </div>
 
             {/* Create Blog Post */}
