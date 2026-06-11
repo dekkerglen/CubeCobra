@@ -638,21 +638,17 @@ export const isManaFixingLand = (details: CardDetailsType): boolean => {
   return BASIC_LAND_TYPE_NAMES.some((name) => text.includes(name));
 };
 
-const UNREASONABLE_PROMO_TYPES = [
-  'surgefoil',
-  'galaxyfoil',
-  'textured',
-  'serialized',
-  'gilded',
-  'neonink',
-  'oilslick',
-  'rainbowfoil',
-  'confettifoil',
-  'embossed',
-  'boosterfun',
-  'promopack',
-  'prerelease',
-  'datestamped',
+const UNREASONABLE_PROMO_TYPES = ['promopack', 'prerelease', 'datestamped', 'firstplacefoil', 'serialized'];
+const UNREASONABLE_SET_TYPES = ['masterpiece', 'memorabilia', 'token', 'promo'];
+const UNREASONABLE_SETS = ['plst'];
+const UNREASONABLE_LAYOUTS = [
+  'scheme',
+  'planar',
+  'vanguard',
+  'token',
+  'double_faced_token',
+  'art_series',
+  'emblem',
 ];
 
 const arePromoTypesReasonable = (card: CardDetailsType): boolean => {
@@ -660,20 +656,20 @@ const arePromoTypesReasonable = (card: CardDetailsType): boolean => {
   return !card.promo_types.some((type) => UNREASONABLE_PROMO_TYPES.includes(type));
 };
 
+// This is fairly arbitrary. Some of the foilings could be considered okay.
+// I think ultimately the goal here should be to filter down to cards/printings that people are reasonably likely to put in a cube.
 export function reasonableCard(card: CardDetailsType): boolean {
   return (
-    !card.isExtra &&
-    !card.promo &&
     !card.digital &&
-    !card.isToken &&
-    card.border_color !== 'gold' &&
+    !card.isExtra &&
+    !UNREASONABLE_SET_TYPES.includes(card.set_type ?? '') &&
+    !UNREASONABLE_LAYOUTS.includes(card.layout) &&
+    !UNREASONABLE_SETS.includes(card.set) &&
     arePromoTypesReasonable(card) &&
     card.language === 'en' &&
-    card.tcgplayer_id !== undefined &&
     card.collector_number.indexOf('★') === -1 &&
-    card.layout !== 'art_series' &&
-    card.layout !== 'double_faced_token' &&
-    !card?.hasFlavorName
+    !card?.hasFlavorName &&
+    !card.isToken
   );
 }
 
