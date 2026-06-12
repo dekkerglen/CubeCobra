@@ -23,6 +23,7 @@ interface UseDraftSimulatorPresentationArgs {
   selectedCards: CardStats[];
   selectedDeckCards: CardStats[];
   selectedSideboardCards: CardStats[];
+  selectedP1P1Cards: CardStats[];
   selectedCard: CardStats | null;
   activeFilterPoolIndexSet: Set<number> | null;
   selectedPools: DraftSimulatorDerivedData['displayedPools'];
@@ -51,6 +52,7 @@ export default function useDraftSimulatorPresentation({
     setSelectedCardOracles,
     setSelectedDeckCardOracles,
     setSelectedSideboardCardOracles,
+    setSelectedP1P1CardOracles,
     setSelectedArchetype,
     setSelectedSkeletonId,
     setFocusedPoolIndex,
@@ -58,6 +60,7 @@ export default function useDraftSimulatorPresentation({
   selectedCards,
   selectedDeckCards,
   selectedSideboardCards,
+  selectedP1P1Cards,
   selectedCard,
   activeFilterPoolIndexSet,
   selectedPools,
@@ -77,8 +80,17 @@ export default function useDraftSimulatorPresentation({
     for (const c of selectedCards) chips.push(`In Pool: ${c.name}`);
     for (const c of selectedDeckCards) chips.push(`In Deck: ${c.name}`);
     for (const c of selectedSideboardCards) chips.push(`In Sideboard: ${c.name}`);
+    for (const c of selectedP1P1Cards) chips.push(`P1P1: ${c.name}`);
     return chips;
-  }, [selectedSkeletonId, selectedArchetype, selectedCards, selectedDeckCards, selectedSideboardCards, skeletons]);
+  }, [
+    selectedSkeletonId,
+    selectedArchetype,
+    selectedCards,
+    selectedDeckCards,
+    selectedSideboardCards,
+    selectedP1P1Cards,
+    skeletons,
+  ]);
 
   const activeFilterSummary = useMemo(
     () => (activeFilterChips.length > 0 ? activeFilterChips.join(' · ') : null),
@@ -87,7 +99,11 @@ export default function useDraftSimulatorPresentation({
 
   const scopeOnlySummary = useMemo(() => {
     const nonCard = activeFilterChips.filter(
-      (c) => !c.startsWith('In Pool:') && !c.startsWith('In Deck:') && !c.startsWith('In Sideboard:'),
+      (c) =>
+        !c.startsWith('In Pool:') &&
+        !c.startsWith('In Deck:') &&
+        !c.startsWith('In Sideboard:') &&
+        !c.startsWith('P1P1:'),
     );
     return nonCard.length > 0 ? nonCard.join(' · ') : null;
   }, [activeFilterChips]);
@@ -125,6 +141,15 @@ export default function useDraftSimulatorPresentation({
           ),
       });
     }
+    for (const selectedCardEntry of selectedP1P1Cards) {
+      chips.push({
+        key: `p1p1-${selectedCardEntry.oracle_id}`,
+        label: selectedCardEntry.name,
+        detail: 'P1P1',
+        onClear: () =>
+          setSelectedP1P1CardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
+      });
+    }
     if (selectedSkeletonId !== null) {
       const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
       if (sk) {
@@ -160,6 +185,7 @@ export default function useDraftSimulatorPresentation({
     selectedCards,
     selectedDeckCards,
     selectedSideboardCards,
+    selectedP1P1Cards,
     selectedSkeletonId,
     selectedArchetype,
     focusedPoolIndex,
@@ -171,6 +197,7 @@ export default function useDraftSimulatorPresentation({
     setSelectedCardOracles,
     setSelectedDeckCardOracles,
     setSelectedSideboardCardOracles,
+    setSelectedP1P1CardOracles,
     setSelectedSkeletonId,
     setFocusedPoolIndex,
     getSkeletonDisplayName,
@@ -239,6 +266,7 @@ export default function useDraftSimulatorPresentation({
     setSelectedCardOracles([]);
     setSelectedDeckCardOracles([]);
     setSelectedSideboardCardOracles([]);
+    setSelectedP1P1CardOracles([]);
     setSelectedArchetype(null);
     setSelectedSkeletonId(null);
     setFocusedPoolIndex(null);
@@ -248,6 +276,7 @@ export default function useDraftSimulatorPresentation({
     setSelectedCardOracles,
     setSelectedDeckCardOracles,
     setSelectedSideboardCardOracles,
+    setSelectedP1P1CardOracles,
     setSelectedSkeletonId,
   ]);
 
@@ -367,23 +396,30 @@ export default function useDraftSimulatorPresentation({
 
     const poolNames = joinNames(selectedCards.map((c) => c.name));
     const deckNames = joinNames(selectedDeckCards.map((c) => c.name));
+    const sideboardNames = joinNames(selectedSideboardCards.map((c) => c.name));
+    const p1p1Names = joinNames(selectedP1P1Cards.map((c) => c.name));
 
-    if (!scopeLabel && !poolNames && !deckNames) return null;
-    if (!poolNames && !deckNames) return `for ${scopeLabel ? `${scopeLabel} Draft Pools` : 'Draft Pools'}`;
+    if (!scopeLabel && !poolNames && !deckNames && !sideboardNames && !p1p1Names) return null;
+    if (!poolNames && !deckNames && !sideboardNames && !p1p1Names)
+      return `for ${scopeLabel ? `${scopeLabel} Draft Pools` : 'Draft Pools'}`;
 
-    // When only deck filters are active use "Draft Decks", otherwise "Draft Pools"
-    const poolsWord = poolNames ? 'Pools' : 'Decks';
+    // When only deck/sideboard filters are active use "Draft Decks", otherwise "Draft Pools"
+    const poolsWord = poolNames || p1p1Names ? 'Pools' : 'Decks';
     const base = scopeLabel ? `${scopeLabel} Draft ${poolsWord}` : `Draft ${poolsWord}`;
 
     const parts: string[] = [];
     if (poolNames) parts.push(`that include ${poolNames}`);
     if (deckNames) parts.push(`${poolNames ? 'Decks ' : ''}that include ${deckNames}`);
+    if (sideboardNames) parts.push(`${poolNames ? 'Decks ' : ''}that sideboarded ${sideboardNames}`);
+    if (p1p1Names) parts.push(`that first picked ${p1p1Names}`);
     return `for ${base} ${parts.join(' and ')}`;
   }, [
     selectedSkeletonId,
     selectedArchetype,
     selectedCards,
     selectedDeckCards,
+    selectedSideboardCards,
+    selectedP1P1Cards,
     skeletons,
     poolArchetypeLabels,
     skeletonColorProfiles,
@@ -396,6 +432,14 @@ export default function useDraftSimulatorPresentation({
   );
   const draftBreakdownTitle = useMemo(
     () => `Draft Breakdown${filteredPoolScopeSuffix ? ` ${filteredPoolScopeSuffix}` : ''}`,
+    [filteredPoolScopeSuffix],
+  );
+  const archetypesTitle = useMemo(
+    () => `Archetypes${filteredPoolScopeSuffix ? ` ${filteredPoolScopeSuffix}` : ''}`,
+    [filteredPoolScopeSuffix],
+  );
+  const deckColorTitle = useMemo(
+    () => `Deck Color Distribution${filteredPoolScopeSuffix ? ` ${filteredPoolScopeSuffix}` : ''}`,
     [filteredPoolScopeSuffix],
   );
   const sideboardTitle = useMemo(
@@ -420,6 +464,8 @@ export default function useDraftSimulatorPresentation({
     downloadCardStatsCsv,
     cardStatsTitle,
     scopedCardStatsTitle,
+    archetypesTitle,
+    deckColorTitle,
     draftBreakdownTitle,
     sideboardTitle,
     pairingsTitle,

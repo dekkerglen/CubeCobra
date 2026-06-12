@@ -257,10 +257,11 @@ describe('reasonableCard', () => {
     promo: false,
     digital: false,
     isToken: false,
+    set: 'dom',
+    set_type: 'expansion',
     border_color: 'black',
     promo_types: undefined,
     language: 'en',
-    tcgplayer_id: '12345',
     collector_number: '270',
     layout: 'normal',
   };
@@ -277,10 +278,10 @@ describe('reasonableCard', () => {
     expect(reasonableCard(details)).toBeFalsy();
   });
 
-  it('Promos are not reasonable', async () => {
+  it('Promos are reasonable if not excluded by set_type', async () => {
     const details = createCardDetails({ ...overridesForNormalDetails, promo: true });
 
-    expect(reasonableCard(details)).toBeFalsy();
+    expect(reasonableCard(details)).toBeTruthy();
   });
 
   it('Digital cards are not reasonable', async () => {
@@ -295,47 +296,8 @@ describe('reasonableCard', () => {
     expect(reasonableCard(details)).toBeFalsy();
   });
 
-  it('Gold borders are not reasonable', async () => {
-    const details = createCardDetails({ ...overridesForNormalDetails, border_color: 'gold' });
-
-    expect(reasonableCard(details)).toBeFalsy();
-  });
-
-  it('Promo variants are not reasonable', async () => {
-    const details = createCardDetails({ ...overridesForNormalDetails, promo_types: ['boosterfun'] });
-
-    expect(reasonableCard(details)).toBeFalsy();
-  });
-
-  it('Universes beyond promo type is reasonable', async () => {
-    const details = createCardDetails({ ...overridesForNormalDetails, promo_types: ['universesbeyond'] });
-
-    expect(reasonableCard(details)).toBeTruthy();
-  });
-
-  it('UB cards with source-material promo types are reasonable', async () => {
-    const details = createCardDetails({
-      ...overridesForNormalDetails,
-      promo_types: ['ffiii', 'sourcematerial', 'universesbeyond'],
-    });
-
-    expect(reasonableCard(details)).toBeTruthy();
-  });
-
-  it('UB cards with unreasonable promo types are not reasonable', async () => {
-    const details = createCardDetails({ ...overridesForNormalDetails, promo_types: ['universesbeyond', 'surgefoil'] });
-
-    expect(reasonableCard(details)).toBeFalsy();
-  });
-
   it('Non-english cards are not reasonable', async () => {
     const details = createCardDetails({ ...overridesForNormalDetails, language: 'fr' });
-
-    expect(reasonableCard(details)).toBeFalsy();
-  });
-
-  it('Must have TGC player ID to be reasonable', async () => {
-    const details = createCardDetails({ ...overridesForNormalDetails, tcgplayer_id: undefined });
 
     expect(reasonableCard(details)).toBeFalsy();
   });
@@ -346,10 +308,144 @@ describe('reasonableCard', () => {
     expect(reasonableCard(details)).toBeFalsy();
   });
 
-  it('Must not be an art series card to be reasonable', async () => {
-    const details = createCardDetails({ ...overridesForNormalDetails, layout: 'art_series' });
+  it('Cards with flavor name are not reasonable', async () => {
+    const details = createCardDetails({ ...overridesForNormalDetails, hasFlavorName: true });
 
     expect(reasonableCard(details)).toBeFalsy();
+  });
+
+  describe('set_type', () => {
+    it('Masterpiece is not reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, set_type: 'masterpiece' });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
+
+    it('Memorabilia is not reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, set_type: 'memorabilia' });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
+
+    it('Undefined is reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, set_type: undefined });
+
+      expect(reasonableCard(details)).toBeTruthy();
+    });
+
+    it('Token is not reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, set_type: 'token' });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
+
+    it('Promo set_type is not reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, set_type: 'promo' });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
+
+    it('Funny is reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, set_type: 'funny' });
+
+      expect(reasonableCard(details)).toBeTruthy();
+    });
+  });
+
+  describe('set', () => {
+    it('The List (plst) is not reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, set: 'plst' });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
+  });
+
+  describe('promo_types', () => {
+    it('Boosterfun is reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, promo_types: ['boosterfun'] });
+
+      expect(reasonableCard(details)).toBeTruthy();
+    });
+
+    it('Promopack is not reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, promo_types: ['promopack'] });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
+
+    it('Universes beyond is reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, promo_types: ['universesbeyond'] });
+
+      expect(reasonableCard(details)).toBeTruthy();
+    });
+
+    it('UB with source-material promo types is reasonable', async () => {
+      const details = createCardDetails({
+        ...overridesForNormalDetails,
+        promo_types: ['ffiii', 'sourcematerial', 'universesbeyond'],
+      });
+
+      expect(reasonableCard(details)).toBeTruthy();
+    });
+
+    it('UB with unreasonable promo types is not reasonable', async () => {
+      const details = createCardDetails({
+        ...overridesForNormalDetails,
+        promo_types: ['universesbeyond', 'prerelease'],
+      });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
+
+    it('Surgefoil is reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, promo_types: ['surgefoil'] });
+
+      expect(reasonableCard(details)).toBeTruthy();
+    });
+  });
+
+  describe('layout', () => {
+    it('Art series is not reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, layout: 'art_series' });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
+
+    it('Double faced tokens are not reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, layout: 'double_faced_token' });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
+
+    it('Scheme is not reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, layout: 'scheme' });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
+
+    it('Planar is not reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, layout: 'planar' });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
+
+    it('Vanguard is not reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, layout: 'vanguard' });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
+
+    it('Token is not reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, layout: 'token' });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
+
+    it('Emblem is not reasonable', async () => {
+      const details = createCardDetails({ ...overridesForNormalDetails, layout: 'emblem' });
+
+      expect(reasonableCard(details)).toBeFalsy();
+    });
   });
 });
 

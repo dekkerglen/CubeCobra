@@ -167,6 +167,8 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
       cubeName: cube.name,
       numSeats,
       basics,
+      deckbuildSpells: cube.deckbuildSpells,
+      deckbuildLands: cube.deckbuildLands,
     };
 
     return res.status(200).json({ success: true, ...response });

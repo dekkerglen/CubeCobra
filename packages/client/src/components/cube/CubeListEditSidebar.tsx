@@ -72,11 +72,11 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
   const [postContent, setPostContent] = useLocalStorage(`${cube.id}-blogpost`, '');
   const [postTitle, setPostTitle] = useLocalStorage(`${cube.id}-blogtitle`, DEFAULT_BLOG_TITLE);
   const [specifyEdition, setSpecifyEdition] = useLocalStorage(`${cube.id}-specifyEdition`, false);
-  const [includeExtras, setIncludeExtras] = useLocalStorage(`${cube.id}-includeExtras`, false);
+  const [showExtras, setShowExtras] = useLocalStorage(`${cube.id}-showExtras`, false);
   const [boardToEdit, setBoardToEdit] = useLocalStorage<BoardType>(`${cube.id}-editBoard`, 'mainboard');
 
   // Memoize so AutocompleteInput's cache is only invalidated when options change
-  const addCardMatches = useMemo(() => cardNameMatches(specifyEdition, includeExtras), [specifyEdition, includeExtras]);
+  const addCardMatches = useMemo(() => cardNameMatches(specifyEdition, showExtras), [specifyEdition, showExtras]);
 
   // Get board options from cube's board definitions
   const boardOptions = useMemo(() => {
@@ -313,7 +313,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
               checked={specifyEdition}
               setChecked={(value) => setSpecifyEdition(value)}
             />
-            <Checkbox label="Include Extras" checked={includeExtras} setChecked={(value) => setIncludeExtras(value)} />
+            <Checkbox label="Show Extras" checked={showExtras} setChecked={(value) => setShowExtras(value)} />
             <Flexbox direction="row" gap="2" alignItems="center">
               <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
               <Tooltip text="The last checked status for 'Create Blog Post' will be remembered per Cube. The default can be set in your display preferences now.">
@@ -473,11 +473,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
                 checked={specifyEdition}
                 setChecked={(value) => setSpecifyEdition(value)}
               />
-              <Checkbox
-                label="Include Extras"
-                checked={includeExtras}
-                setChecked={(value) => setIncludeExtras(value)}
-              />
+              <Checkbox label="Show Extras" checked={showExtras} setChecked={(value) => setShowExtras(value)} />
             </div>
 
             {/* Create Blog Post */}

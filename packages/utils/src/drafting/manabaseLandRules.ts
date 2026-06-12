@@ -51,6 +51,28 @@ export function oracleIsAllOffColorLand(
   return landColors.every((color) => !mainDeckColors.has(color));
 }
 
+/** A nonbasic land whose colored requirement comes from an activated ability, not from the
+ *  mana it taps for. Goblin Burrows produces {C} but has an {R} ability; Daru Encampment
+ *  produces {C} but has a {W} ability. The colorIdentity tag carries the ability's color, so
+ *  we use it as the "deck must run this color" gate. If the deck doesn't run every color the
+ *  ability references, the land's only colored value is dead and it's strictly worse than
+ *  a basic. */
+export function oracleIsOffColorAbilityLand(
+  oracle: string,
+  mainDeckColors: Set<string>,
+  cardMeta: LandMetaLookup,
+): boolean {
+  if (!oracleIsNonBasicLand(oracle, cardMeta)) return false;
+  const meta = cardMeta[oracle];
+  const identityColors = (meta?.colorIdentity ?? []).filter((color) => WUBRG.has(color));
+  if (identityColors.length === 0) return false;
+  const producedColors = new Set((meta?.producedMana ?? []).filter((color) => WUBRG.has(color)));
+  // Lands whose entire colored identity is produced (e.g., shocklands) belong to the regular
+  // produced-mana rules. This path is specifically for "ability colored, mana colorless".
+  if (identityColors.every((color) => producedColors.has(color))) return false;
+  return identityColors.some((color) => !mainDeckColors.has(color));
+}
+
 /** Multi-color producer where too much of the fixing is wasted in this deck. */
 export function oracleIsUnderusedMultiColorLand(
   oracle: string,
@@ -98,6 +120,7 @@ export function oracleIsForceCutLand(
     if (fetchEval.quality === 'dead') return true;
   }
   if (oracleIsAllOffColorLand(oracle, mainDeckColors, cardMeta)) return true;
+  if (oracleIsOffColorAbilityLand(oracle, mainDeckColors, cardMeta)) return true;
   if (oracleIsUnderusedMultiColorLand(oracle, mainDeckColors, cardMeta)) return true;
   if (oracleIsUnderusedSingleColorLand(oracle, mainboardOracles, cardMeta)) return true;
   return false;
@@ -213,6 +236,12 @@ export function oracleIsSuspectNonbasicLand(
   if (mainboardOracles && oracleIsUnderusedSingleColorLand(oracle, mainboardOracles, cardMeta)) {
     return true;
   }
+
+  // Same shape, different gate: lands like Goblin Burrows produce only {C}, so the
+  // produced-mana-based `landColors` is empty and they fall through this function's final
+  // off-color test as "harmless colorless utility lands". The activated ability's color
+  // (carried on colorIdentity) is the real on-color requirement, so check that explicitly.
+  if (oracleIsOffColorAbilityLand(oracle, mainDeckColors, cardMeta)) return true;
 
   return landColors.some((color) => !mainDeckColors.has(color));
 }
