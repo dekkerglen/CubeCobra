@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useRef, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 
 import CardType, { Changes } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
@@ -6,6 +6,7 @@ import Cube from '@utils/datatypes/Cube';
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
+import Checkbox from 'components/base/Checkbox';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import Changelist from 'components/Changelist';
@@ -34,6 +35,9 @@ interface BulkUploadPageRawProps {
 const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, addedByBoard, changelog }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const [addValue, setAddValue] = useState('');
+  const [showExtras, setShowExtras] = useState(false);
+
+  const addCardMatches = useMemo(() => cardNameMatches(false, showExtras), [showExtras]);
 
   const { alerts, setAlerts, cube, loading, addCard, commitChanges, clearChanges } = useContext(CubeContext);
   const { changes, setChanges } = useContext(ChangesContext);
@@ -177,7 +181,7 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, addedByB
                   <Row>
                     <Col xs={8}>
                       <AutocompleteInput
-                        getMatches={cardNameMatches(false)}
+                        getMatches={addCardMatches}
                         type="text"
                         innerRef={addInput}
                         value={addValue}
@@ -196,6 +200,9 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, addedByB
                       >
                         Add
                       </LoadingButton>
+                    </Col>
+                    <Col xs={12}>
+                      <Checkbox label="Show Extras" checked={showExtras} setChecked={setShowExtras} />
                     </Col>
                   </Row>
                 )}

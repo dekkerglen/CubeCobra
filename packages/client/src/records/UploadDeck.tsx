@@ -182,7 +182,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
       <Flexbox direction="row" justify="start" gap="2">
         <AutocompleteInput
           cubeId={cubeId}
-          getMatches={allowCardsOutsideOfCube ? cardNameMatches(false) : cubeCardNameMatches(cubeId, 'mainboard')}
+          getMatches={allowCardsOutsideOfCube ? cardNameMatches(false, true) : cubeCardNameMatches(cubeId, 'mainboard')}
           type="text"
           innerRef={removeRef}
           name="remove"

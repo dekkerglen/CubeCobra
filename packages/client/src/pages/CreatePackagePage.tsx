@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { AlertIcon } from '@primer/octicons-react';
 
@@ -6,6 +6,7 @@ import Alert from 'components/base/Alert';
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
+import Checkbox from 'components/base/Checkbox';
 import Container from 'components/base/Container';
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -26,6 +27,9 @@ const CreatePackagePage: React.FC = () => {
   // doesn't resolve. Gates the Add button (replaces the old in-memory imagedict).
   const [resolvedId, setResolvedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showExtras, setShowExtras] = useState(true);
+
+  const addCardMatches = useMemo(() => cardNameMatches(true, showExtras), [showExtras]);
 
   useEffect(() => {
     if (!cardName) {
@@ -114,7 +118,7 @@ const CreatePackagePage: React.FC = () => {
                 />
 
                 <AutocompleteInput
-                  getMatches={cardNameMatches(true, true)}
+                  getMatches={addCardMatches}
                   type="text"
                   className="me-2"
                   name="add-card"
@@ -128,6 +132,7 @@ const CreatePackagePage: React.FC = () => {
                   autoComplete="off"
                   data-lpignore
                 />
+                <Checkbox label="Show Extras" checked={showExtras} setChecked={setShowExtras} />
                 <Button color="primary" block onClick={submitCard} disabled={!resolvedId}>
                   Add Card
                 </Button>
