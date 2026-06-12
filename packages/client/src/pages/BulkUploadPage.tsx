@@ -1,5 +1,7 @@
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 
+import { QuestionIcon } from '@primer/octicons-react';
+
 import CardType, { Changes } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 
@@ -9,6 +11,7 @@ import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Checkbox from 'components/base/Checkbox';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
+import Tooltip from 'components/base/Tooltip';
 import Changelist from 'components/Changelist';
 import DynamicFlash from 'components/DynamicFlash';
 import LoadingButton from 'components/LoadingButton';
@@ -24,6 +27,9 @@ import { cardNameMatches } from 'utils/cardAutocomplete';
 import { getCard } from 'utils/cards/getCard';
 
 const DEFAULT_BLOG_TITLE = 'Cube Updated - Automatic Post';
+
+const TOOLTIP_SHOW_EXTRAS =
+  "When enabled, search includes promos, tokens, digital versions, non-standard layouts, non-English cards, 'flavour' names, special editions, and more.";
 
 interface BulkUploadPageRawProps {
   missing: string[];
@@ -202,7 +208,12 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, addedByB
                       </LoadingButton>
                     </Col>
                     <Col xs={12}>
-                      <Checkbox label="Show Extras" checked={showExtras} setChecked={setShowExtras} />
+                      <Flexbox direction="row" gap="2" alignItems="center">
+                        <Checkbox label="Show Extras" checked={showExtras} setChecked={setShowExtras} />
+                        <Tooltip text={TOOLTIP_SHOW_EXTRAS}>
+                          <QuestionIcon size={16} />
+                        </Tooltip>
+                      </Flexbox>
                     </Col>
                   </Row>
                 )}
