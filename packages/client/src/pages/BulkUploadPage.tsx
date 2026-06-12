@@ -207,7 +207,7 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, addedByB
                         Add
                       </LoadingButton>
                     </Col>
-                    <Col xs={12}>
+                    <Col xs={12} className="mb-2">
                       <Flexbox direction="row" gap="2" alignItems="center">
                         <Checkbox label="Show Extras" checked={showExtras} setChecked={setShowExtras} />
                         <Tooltip text={TOOLTIP_SHOW_EXTRAS}>
