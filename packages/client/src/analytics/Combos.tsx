@@ -34,7 +34,7 @@ const ComboCard: React.FC<ComboCardProps> = ({ combo }) => {
   const { cube } = useContext(CubeContext);
 
   const cards = useMemo(() => {
-    const oracles = combo.uses.map((use: Combo['uses'][number]) => use.card.oracleId);
+    const oracles = (combo.uses ?? []).map((use: Combo['uses'][number]) => use?.card?.oracleId);
     //Match the first copy of the oracle id in the cube list
     const matchedOracles = new Set();
     return cube.cards.mainboard.filter((card) => {
@@ -59,42 +59,44 @@ const ComboCard: React.FC<ComboCardProps> = ({ combo }) => {
           <Text className="mt-2" semibold>
             Initial Card State
           </Text>
-          {combo.uses.map((use: Combo['uses'][number], index) => (
+          {(combo.uses ?? []).map((use: Combo['uses'][number], index) => (
             <Flexbox key={index} direction="col">
               <Text>
-                <strong>{use.quantity > 1 ? `${use.quantity}x ` : ''}</strong>
-                <Link href={`/tool/card/${use.card.oracleId}`}>{use.card.name}</Link>{' '}
-                {use.zoneLocations.map((zone) => zoneLocations[zone]).join(', ')}
+                <strong>{use?.quantity && use.quantity > 1 ? `${use.quantity}x ` : ''}</strong>
+                <Link href={`/tool/card/${use?.card?.oracleId}`}>{use?.card?.name ?? 'Unknown'}</Link>{' '}
+                {(use?.zoneLocations ?? []).map((zone) => zoneLocations[zone]).join(', ')}
                 {'.'}
               </Text>
-              {use.mustBeCommander && <Text className="ml-4">+ Must be a commander</Text>}
-              {use.exileCardState && <Text className="ml-4">+ Exile State: {use.exileCardState}</Text>}
-              {use.libraryCardState && <Text className="ml-4">+ Library State: {use.libraryCardState}</Text>}
-              {use.graveyardCardState && <Text className="ml-4">+ Graveyard State: {use.graveyardCardState}</Text>}
-              {use.battlefieldCardState && (
+              {use?.mustBeCommander && <Text className="ml-4">+ Must be a commander</Text>}
+              {use?.exileCardState && <Text className="ml-4">+ Exile State: {use.exileCardState}</Text>}
+              {use?.libraryCardState && <Text className="ml-4">+ Library State: {use.libraryCardState}</Text>}
+              {use?.graveyardCardState && <Text className="ml-4">+ Graveyard State: {use.graveyardCardState}</Text>}
+              {use?.battlefieldCardState && (
                 <Text className="ml-4">+ Battlefield State: {use.battlefieldCardState}</Text>
               )}
             </Flexbox>
           ))}
-          {combo.requires.map((requirement, index) => (
+          {(combo.requires ?? []).map((requirement, index) => (
             <Flexbox key={index} direction="col">
               <Text>
-                <strong>{requirement.quantity > 1 ? `${requirement.quantity}x ` : ''}</strong>
-                <Link href={`https://scryfall.com/search?q=${encodeURIComponent(requirement.template.scryfallQuery)}`}>
-                  {requirement.template.name}
+                <strong>{requirement?.quantity && requirement.quantity > 1 ? `${requirement.quantity}x ` : ''}</strong>
+                <Link
+                  href={`https://scryfall.com/search?q=${encodeURIComponent(requirement?.template?.scryfallQuery ?? '')}`}
+                >
+                  {requirement?.template?.name ?? 'Unknown requirement'}
                 </Link>{' '}
-                {requirement.zoneLocations.map((zone) => zoneLocations[zone]).join(', ')}
+                {(requirement?.zoneLocations ?? []).map((zone) => zoneLocations[zone]).join(', ')}
                 {'.'}
               </Text>
-              {requirement.mustBeCommander && <Text className="ml-4">+ Must be a commander</Text>}
-              {requirement.exileCardState && <Text className="ml-4">+ Exile State: {requirement.exileCardState}</Text>}
-              {requirement.libraryCardState && (
+              {requirement?.mustBeCommander && <Text className="ml-4">+ Must be a commander</Text>}
+              {requirement?.exileCardState && <Text className="ml-4">+ Exile State: {requirement.exileCardState}</Text>}
+              {requirement?.libraryCardState && (
                 <Text className="ml-4">+ Library State: {requirement.libraryCardState}</Text>
               )}
-              {requirement.graveyardCardState && (
+              {requirement?.graveyardCardState && (
                 <Text className="ml-4">+ Graveyard State: {requirement.graveyardCardState}</Text>
               )}
-              {requirement.battlefieldCardState && (
+              {requirement?.battlefieldCardState && (
                 <Text className="ml-4">+ Battlefield State: {requirement.battlefieldCardState}</Text>
               )}
             </Flexbox>
@@ -114,12 +116,12 @@ const ComboCard: React.FC<ComboCardProps> = ({ combo }) => {
           <Text className="mt-2" semibold>
             Results
           </Text>
-          {combo.produces.map((produce) =>
-            produce.feature.uncountable ? (
-              <Text key={produce.feature.id}>{produce.feature.name}</Text>
+          {(combo.produces ?? []).map((produce, index) =>
+            produce?.feature?.uncountable ? (
+              <Text key={produce?.feature?.id ?? index}>{produce?.feature?.name ?? 'Unknown result'}</Text>
             ) : (
-              <Text key={produce.feature.id}>
-                {produce.quantity} {produce.feature.name}
+              <Text key={produce?.feature?.id ?? index}>
+                {produce?.quantity ?? ''} {produce?.feature?.name ?? 'Unknown result'}
               </Text>
             ),
           )}
@@ -178,7 +180,8 @@ const Combos: React.FC = () => {
       name: string;
     }[] = [];
     for (const combo of comboData) {
-      for (const produce of combo.produces) {
+      for (const produce of combo.produces ?? []) {
+        if (!produce?.feature) continue;
         if (allResults.some((result) => result.id === produce.feature.id)) continue;
         allResults.push({
           id: produce.feature.id,

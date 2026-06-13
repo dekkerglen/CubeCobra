@@ -102,14 +102,17 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
       for (const token of card.details?.tokens || []) {
         //Equivalent tokens from different sets have their own unique id, but share an oracle id.
         //Eg 2 1/1 white bird tokens from different sets have card Ids A and B, but share oracle id C
-        const oracleId = tokenMap[token].details?.oracle_id;
+        //tokenMap is built server-side from the saved cube; locally-staged (unsaved) card
+        //additions can reference tokens that aren't in it yet, so guard against a missing entry.
+        const tokenCard = tokenMap[token];
+        const oracleId = tokenCard?.details?.oracle_id;
         if (oracleId === undefined) {
           continue;
         }
 
         if (!byOracleId[oracleId]) {
           byOracleId[oracleId] = {
-            token: tokenMap[token],
+            token: tokenCard,
             cards: [],
           };
         }
