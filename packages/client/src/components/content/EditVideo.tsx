@@ -92,7 +92,7 @@ const EditVideo: React.FC<EditVideoProps> = ({
                 Thumbnail:
               </Text>
               <AutocompleteInput
-                getMatches={cardNameMatches(true)}
+                getMatches={cardNameMatches(true, true)}
                 type="text"
                 className="me-2"
                 name="remove"
