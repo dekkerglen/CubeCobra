@@ -12,8 +12,8 @@ Environment variables are populated from the `.env` file. There is no `.env` fil
 | AWS_LOG_STREAM          | The name of the AWS CloudWatch log stream to use                                             | No        | -         |
 | AWS_REGION              | The AWS region to use                                                                        | Yes       | us-east-2 |
 | AWS_SECRET_ACCESS_KEY   | The AWS secret access key for your account                                                   | Yes       | -         |
-| CAPTCHA_SITE_KEY        | The reCAPTCHA site key                                                                       | Yes       | -         |
-| CAPTCHA_SECRET_KEY      | The reCAPTCHA secret key                                                                     | Yes       | -         |
+| CAPTCHA_SITE_KEY        | The reCAPTCHA site key                                                                       | No        | -         |
+| CAPTCHA_SECRET_KEY      | The reCAPTCHA secret key                                                                     | No        | -         |
 | CDN_BASE_URL            | Base URL for static assets (e.g. `https://assets.cubecobra.com`). Unset → same-origin.       | No        | -         |
 | CDN_DISTRIBUTION_ID     | CloudFront distribution ID; only required for `npm run invalidate-cdn` after deploy.         | No        | -         |
 | CUBECOBRA_ASSETS_BUCKET | S3 bucket the deploy uploads static assets to. Only required for `npm run upload-assets`.    | No        | -         |
@@ -21,7 +21,7 @@ Environment variables are populated from the `.env` file. There is no `.env` fil
 | DATA_BUCKET             | The name of the AWS S3 bucket to use. You will need to create this bucket in your account    | Yes       | -         |
 | DOMAIN                  | The domain name of the server. Used for external redirects such as emails                    | Yes       | -         |
 | DOWNTIME_ACTIVE         | Whether or not the site is in downtime mode                                                  | No        | false     |
-| DRAFTMANCER_API_KEY     | The Draftmancer API key                                                                      | Yes       | -         |
+| DRAFTMANCER_API_KEY     | The Draftmancer API key                                                                      | Yes       | apikey    |
 | DYNAMO_PREFIX           | The prefix to use for DynamoDB tables. You can leave this as the default value               | Yes       | -         |
 | ENV                     | The environment to run Cube Cobra in                                                         | Yes       | -         |
 | HTTP_ONLY               | If set to exactly "true", generate http:// instead of https:// links                         | No        | false     |
@@ -40,14 +40,6 @@ Environment variables are populated from the `.env` file. There is no `.env` fil
 ## Local Development Setup
 
 For local development, the setup scripts will create a `.env` file based on `.env_EXAMPLE` with appropriate defaults for LocalStack.
-
-### Required Manual Configuration
-
-After running the setup, you'll need to manually add these values to your `packages/server/.env` file:
-
-1. **reCAPTCHA Keys**: Add your `CAPTCHA_SITE_KEY` and `CAPTCHA_SECRET_KEY` from your [reCAPTCHA setup](./prerequisites.md#recaptcha-account)
-
-2. **Draftmancer API Key**: Contact the contributors on Discord for the `DRAFTMANCER_API_KEY`
 
 ## Production Configuration
 
