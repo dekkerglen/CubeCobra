@@ -179,8 +179,8 @@ export class CubeCobraStack extends cdk.Stack {
       cluster: fargateCluster,
       environmentName: params.environmentName,
       environmentVariables: jobsEnvVars,
-      cpu: 4096, // 4 vCPU (required for 30 GB memory)
-      memoryMiB: 30720, // 30 GB to accommodate metadata dict processing
+      cpu: 8192, // 8 vCPU (required for >30 GB; 4 vCPU tier caps at 30 GB)
+      memoryMiB: 61440, // 60 GB (8 vCPU tier max) — update-metadata-dict holds three O(n²) oracle matrices (~16 GB off-heap, invisible to --max_old_space_size) plus the growing metadatadict heap (~36 GB cap). 30 GB was OOM-killed (exit 137) as the oracle count grew; 60 GB leaves runway for the quadratic growth
     });
 
     // Compute ECS networking config (same logic as card-update-monitor-lambda)
