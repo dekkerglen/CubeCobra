@@ -240,7 +240,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
           <PlusIcon size={16} className="text-text-secondary" />
           <AutocompleteInput
             cubeId={cubeID}
-            getMatches={cardNameMatches(false)}
+            getMatches={cardNameMatches(false, true)}
             type="text"
             innerRef={addCardRef}
             name="add-card"

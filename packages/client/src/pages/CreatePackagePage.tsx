@@ -1,21 +1,26 @@
-import React, { useContext, useEffect, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useState } from 'react';
 
-import { AlertIcon } from '@primer/octicons-react';
+import { AlertIcon, QuestionIcon } from '@primer/octicons-react';
 
 import Alert from 'components/base/Alert';
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
+import Checkbox from 'components/base/Checkbox';
 import Container from 'components/base/Container';
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
+import Tooltip from 'components/base/Tooltip';
 import DynamicFlash from 'components/DynamicFlash';
 import LoadingButton from 'components/LoadingButton';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import MainLayout from 'layouts/MainLayout';
 import { cardNameMatches, fetchCardImage } from 'utils/cardAutocomplete';
+
+const TOOLTIP_SHOW_EXTRAS =
+  "When enabled, search includes promos, tokens, digital versions, non-standard layouts, non-English cards, 'flavour' names, special editions, and more.";
 
 const CreatePackagePage: React.FC = () => {
   const { csrfFetch } = useContext(CSRFContext);
@@ -26,6 +31,9 @@ const CreatePackagePage: React.FC = () => {
   // doesn't resolve. Gates the Add button (replaces the old in-memory imagedict).
   const [resolvedId, setResolvedId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [showExtras, setShowExtras] = useState(true);
+
+  const addCardMatches = useMemo(() => cardNameMatches(true, showExtras), [showExtras]);
 
   useEffect(() => {
     if (!cardName) {
@@ -114,7 +122,7 @@ const CreatePackagePage: React.FC = () => {
                 />
 
                 <AutocompleteInput
-                  getMatches={cardNameMatches(true, true)}
+                  getMatches={addCardMatches}
                   type="text"
                   className="me-2"
                   name="add-card"
@@ -128,6 +136,12 @@ const CreatePackagePage: React.FC = () => {
                   autoComplete="off"
                   data-lpignore
                 />
+                <Flexbox direction="row" gap="2" alignItems="center">
+                  <Checkbox label="Show Extras" checked={showExtras} setChecked={setShowExtras} />
+                  <Tooltip text={TOOLTIP_SHOW_EXTRAS}>
+                    <QuestionIcon size={16} />
+                  </Tooltip>
+                </Flexbox>
                 <Button color="primary" block onClick={submitCard} disabled={!resolvedId}>
                   Add Card
                 </Button>

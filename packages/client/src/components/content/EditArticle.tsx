@@ -85,7 +85,7 @@ const EditArticle: React.FC<EditArticleProps> = ({
                 Thumbnail:
               </Text>
               <AutocompleteInput
-                getMatches={cardNameMatches(true)}
+                getMatches={cardNameMatches(true, true)}
                 type="text"
                 className="me-2"
                 name="remove"

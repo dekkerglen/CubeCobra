@@ -46,7 +46,7 @@ export const cubeThenAllCardNameMatches =
   async (query, signal) => {
     const [cube, all] = await Promise.all([
       cubeCardNameMatches(cubeId, board)(query, signal),
-      cardNameMatches()(query, signal),
+      cardNameMatches(false, true)(query, signal),
     ]);
     const seen = new Set(cube.map((n) => n.toLowerCase()));
     return [...cube, ...all.filter((n) => !seen.has(n.toLowerCase()))];
