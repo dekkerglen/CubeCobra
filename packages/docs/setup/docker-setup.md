@@ -135,10 +135,10 @@ With Docker running, you can execute commands within containers using `docker ex
 ### Common Commands
 
 - **Install package**: `docker exec -it cube npm install`
-- **Run npm build**: `docker exec -it cube npm run build`
-- **Update cards script**: `docker exec -it cube npm run update-cards`
+- **Run npm build**: `docker exec -it cube npm run build --workspace=packages/server`
+- **Update cards script**: `docker exec -it cube npm run dev:update-cards --workspace=packages/jobs`
 - **Check S3 bucket contents**: `docker exec -it localstack awslocal s3 ls s3://local`
-- **Query users table**: `docker exec -it localstack awslocal dynamodb execute-statement --statement 'SELECT * FROM LOCAL_USERS'`
+- **Query users table**: `docker exec -it localstack awslocal dynamodb execute-statement --statement 'SELECT * FROM LOCAL_CUBECOBRA WHERE SK = ?' --parameters '[{"S": "USER"}]'`
 
 ## Next Steps
 
