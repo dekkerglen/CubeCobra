@@ -71,7 +71,7 @@ const AnalysisNavbar: React.FC = () => {
             <QuestionIcon size={20} className="hidden md:inline" />
           </button>
           <div className="relative flex items-center" style={{ minWidth: '250px', maxWidth: '400px' }}>
-            <span className="absolute" style={{ left: '12px' }}>
+            <span className="absolute" style={{ left: '12px', lineHeight: '0' }}>
               <SearchIcon size={16} className="text-text-secondary" />
             </span>
             <Input
