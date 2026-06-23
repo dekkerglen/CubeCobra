@@ -15,6 +15,10 @@ echo "Building the client"
 npm run build --workspace=packages/client
 echo "Doing first time env setup"
 npm run setup:local:env --workspace=packages/scripts
+echo "Symlinking .env everywhere"
+cp -n packages/recommenderService/.env_EXAMPLE packages/recommenderService/.env
+cp -n packages/jobs/.env_EXAMPLE packages/jobs/.env
+cp -n packages/server/.env_EXAMPLE packages/server/.env
 echo "Building the server"
 npm run build --workspace=packages/server
 # Given the time it takes to do npm install/build, we assume localstack has started and completed its init to setup the S3 bucket

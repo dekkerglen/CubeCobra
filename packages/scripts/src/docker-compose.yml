@@ -46,7 +46,8 @@ services:
       - AWS_ENDPOINT=http://localstack:4566
       - NODE_OPTIONS=--max-old-space-size=8192
     env_file:
-      - ../../recommenderService/.env
+      - path: ../../recommenderService/.env
+        required: false
     command: ['npm', 'run', 'dev']
     init: true
     networks:
