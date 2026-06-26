@@ -227,7 +227,17 @@ export async function monitorCardUpdates(): Promise<void> {
   console.log(`Created task: ${newTask.id}`);
 
   // Start the ECS task
-  const { taskArn, success } = await startEcsTask(newTask.id, ['npm', 'run', 'update-all'], 'CARD_UPDATE_TASK_ID');
+  // Daily card refresh only: prices + Scryfall card data. Draft/cube history and the metadata
+  // dict are computed weekly by the card-metadata task (update-metadata-weekly), since the history
+  // is only consumed by the weekly metadata dict — recomputing it daily wasted ~6h of compute.
+  const { taskArn, success } = await startEcsTask(
+    newTask.id,
+    ['npm', 'run', 'update-cards-daily'],
+    'CARD_UPDATE_TASK_ID',
+    // 2 vCPU / 16 GB — the daily refresh is I/O-bound (Scryfall download + catalog build).
+    // The weekly metadata job keeps the task-def default (8 vCPU / 60 GB).
+    { cpu: '2048', memory: '16384' },
+  );
 
   if (!success) {
     console.error('Failed to start ECS task, marking task as failed');

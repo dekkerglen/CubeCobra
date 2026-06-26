@@ -12,6 +12,9 @@ import { Request, Response } from '../../../types/express';
 interface JobConfig {
   command: string[];
   envVarName: string;
+  // Optional Fargate task-level size override. Omitted => task-def default (8 vCPU / 60 GB,
+  // sized for the heavy metadata/export/migration jobs). The light daily card refresh runs smaller.
+  taskOverride?: { cpu: string; memory: string };
   createTask: () => Promise<{ id: string; taskArn?: string; step?: string; dateLastUpdated?: number }>;
   saveTaskArn: (
     task: { id: string; taskArn?: string; step?: string; dateLastUpdated?: number },
@@ -21,8 +24,10 @@ interface JobConfig {
 
 const JOB_CONFIGS: Record<string, JobConfig> = {
   'card-update': {
-    command: ['npm', 'run', 'update-all'],
+    command: ['npm', 'run', 'update-cards-daily'],
     envVarName: 'CARD_UPDATE_TASK_ID',
+    taskOverride: { cpu: '2048', memory: '16384' }, // 2 vCPU / 16 GB — light daily refresh
+
     createTask: () =>
       cardUpdateTaskDao.create({
         status: CardUpdateTaskStatus.IN_PROGRESS,
@@ -41,7 +46,7 @@ const JOB_CONFIGS: Record<string, JobConfig> = {
     },
   },
   'card-metadata': {
-    command: ['npm', 'run', 'update-metadata-dict'],
+    command: ['npm', 'run', 'update-metadata-weekly'],
     envVarName: 'CARD_METADATA_TASK_ID',
     createTask: () =>
       cardMetadataTaskDao.create({
@@ -162,6 +167,8 @@ const triggerJobHandler = async (req: Request, res: Response) => {
           },
         },
         overrides: {
+          // Task-level cpu/memory override (Fargate honors these per-run). Omitted => task-def default.
+          ...(config.taskOverride ? { cpu: config.taskOverride.cpu, memory: config.taskOverride.memory } : {}),
           containerOverrides: [
             {
               name: 'JobsContainer',

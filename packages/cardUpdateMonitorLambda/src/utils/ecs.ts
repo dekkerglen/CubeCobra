@@ -91,6 +91,10 @@ export async function startEcsTask(
   taskId: string,
   command: string[],
   envVarName: string,
+  // Optional Fargate task-level size override. Defaults to the task definition's size
+  // (8 vCPU / 60 GB, sized for the weekly metadata job). Lighter jobs (the daily card
+  // refresh) pass a smaller size so they aren't billed at the heavy job's rate.
+  taskSize?: { cpu: string; memory: string },
 ): Promise<{ taskArn: string; success: boolean }> {
   const clusterName = process.env.ECS_CLUSTER_NAME;
   const taskDefinitionArn = process.env.ECS_TASK_DEFINITION_ARN;
@@ -115,6 +119,8 @@ export async function startEcsTask(
         },
       },
       overrides: {
+        // Task-level cpu/memory override (Fargate honors these per-run). Omitted => task-def default.
+        ...(taskSize ? { cpu: taskSize.cpu, memory: taskSize.memory } : {}),
         containerOverrides: [
           {
             name: 'JobsContainer',

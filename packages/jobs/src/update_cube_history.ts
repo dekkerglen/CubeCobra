@@ -6,7 +6,7 @@ import 'module-alias/register';
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
-import { cardHistoryDao, cardUpdateTaskDao, changelogDao } from '@server/dynamo/daos';
+import { cardHistoryDao, cardMetadataTaskDao, cardUpdateTaskDao, changelogDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { cardFromId } from '@server/serverutils/carddb';
 import { getCubeTypes } from '@server/serverutils/cubefn';
@@ -19,7 +19,17 @@ import { downloadJson, listFiles, uploadJsonStreaming } from './utils/s3';
 type CubeDict = Record<string, string[]>;
 
 const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
-const taskId = process.env.CARD_UPDATE_TASK_ID;
+// Runs in both the daily card-update task (CARD_UPDATE_TASK_ID) and the weekly card-metadata
+// task (CARD_METADATA_TASK_ID); report progress to whichever one invoked this job.
+const cardUpdateTaskId = process.env.CARD_UPDATE_TASK_ID;
+const metadataTaskId = process.env.CARD_METADATA_TASK_ID;
+const reportStep = async (step: string) => {
+  if (cardUpdateTaskId) {
+    await cardUpdateTaskDao.updateStep(cardUpdateTaskId, step);
+  } else if (metadataTaskId) {
+    await cardMetadataTaskDao.updateStep(metadataTaskId, step);
+  }
+};
 
 interface CubeHistory {
   cubes: Record<string, number[]>;
@@ -111,9 +121,7 @@ const mapTotalsToCardHistory = (
 };
 
 (async () => {
-  if (taskId) {
-    await cardUpdateTaskDao.updateStep(taskId, 'Processing Cube History');
-  }
+  await reportStep('Processing Cube History');
 
   console.log('Loading card database');
   await initializeCardDb(privateDir);

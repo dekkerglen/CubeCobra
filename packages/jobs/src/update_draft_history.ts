@@ -5,7 +5,7 @@ import 'module-alias/register';
 // Configure dotenv with explicit path to jobs package .env
 dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') });
 
-import { cardUpdateTaskDao, cubeDao, draftDao } from '@server/dynamo/daos';
+import { cardMetadataTaskDao, cardUpdateTaskDao, cubeDao, draftDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { DefaultElo } from '@utils/datatypes/Card';
 import type { CardAnalytic } from '@utils/datatypes/CubeAnalytic';
@@ -24,7 +24,17 @@ process.on('unhandledRejection', (reason, p) => {
 const ELO_SPEED = 1;
 const CUBE_ELO_SPEED = 10;
 const privateDir = path.join(__dirname, '..', '..', 'server', 'private');
-const taskId = process.env.CARD_UPDATE_TASK_ID;
+// Runs in both the daily card-update task (CARD_UPDATE_TASK_ID) and the weekly card-metadata
+// task (CARD_METADATA_TASK_ID); report progress to whichever one invoked this job.
+const cardUpdateTaskId = process.env.CARD_UPDATE_TASK_ID;
+const metadataTaskId = process.env.CARD_METADATA_TASK_ID;
+const reportStep = async (step: string) => {
+  if (cardUpdateTaskId) {
+    await cardUpdateTaskDao.updateStep(cardUpdateTaskId, step);
+  } else if (metadataTaskId) {
+    await cardMetadataTaskDao.updateStep(metadataTaskId, step);
+  }
+};
 
 export const adjustElo = (winnerElo: number, loserElo: number, kFactor: number): [number, number] => {
   // Expected score for winner = 1 / (1 + 10^((loserElo - winnerElo) / 400))
@@ -118,9 +128,7 @@ const loadAndProcessCubeDraftAnalytics = async (cube: string): Promise<CubeAnaly
 // Only run the main script if this file is executed directly (not imported for tests)
 if (require.main === module) {
   (async () => {
-    if (taskId) {
-      await cardUpdateTaskDao.updateStep(taskId, 'Processing Draft History');
-    }
+    await reportStep('Processing Draft History');
 
     await initializeCardDb(privateDir);
 

@@ -115,6 +115,6 @@ export const routes = [
   {
     path: '/',
     method: 'post',
-    handler: [csrfProtection, ensureAuth, recaptcha, addHandler],
+    handler: [csrfProtection, ensureAuth, recaptcha(), addHandler],
   },
 ];

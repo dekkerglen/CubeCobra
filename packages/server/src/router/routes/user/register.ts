@@ -177,7 +177,9 @@ export const routes = [
         return value === req.body.password;
       }),
       ...usernameValid,
-      recaptcha,
+      // Return failures to the register form (renders <DynamicFlash />) so the user sees the
+      // error and their entry, instead of being silently dropped on the landing page.
+      recaptcha('/user/register'),
       flashValidationErrors,
       postHandler,
     ],

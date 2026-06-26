@@ -162,9 +162,11 @@ export async function monitorCardMetadataTasks(): Promise<void> {
   console.log(`Created card metadata task: ${newTask.id}`);
 
   // Start the ECS task
+  // Weekly run computes draft + cube history fresh, then the metadata dict that consumes them.
+  // (History used to run in the daily card-update task but is only needed here, weekly.)
   const { taskArn, success } = await startEcsTask(
     newTask.id,
-    ['npm', 'run', 'update-metadata-dict'],
+    ['npm', 'run', 'update-metadata-weekly'],
     'CARD_METADATA_TASK_ID',
   );
 

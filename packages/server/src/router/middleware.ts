@@ -88,47 +88,54 @@ const answers = [
   'forest', // 'What is the name of the basic land that produces green mana?'
 ];
 
-export async function recaptcha(req: Request, res: Response, next: NextFunction): Promise<void> {
-  // Skip bot security checks if disabled (for testing)
-  if (process.env.ENABLE_BOT_SECURITY === 'false') {
-    return next();
-  }
+// Bot-security gate (security question + reCAPTCHA) for public form posts.
+// On failure it flashes the reason and redirects to `redirectTo` — which must be a page
+// that renders <DynamicFlash />, otherwise the message is set but never shown. That gap
+// previously sent failed registrations to the landing page (no DynamicFlash), so users saw
+// no error and assumed signup succeeded. Callers pass the originating form's path.
+export function recaptcha(redirectTo = '/') {
+  return async function recaptchaMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
+    // Skip bot security checks if disabled (for testing)
+    if (process.env.ENABLE_BOT_SECURITY === 'false') {
+      return next();
+    }
 
-  const { captcha, question, answer } = req.body;
+    const { captcha, question, answer } = req.body;
 
-  if (!question || !answer) {
-    req.flash('danger', 'Please answer the security question');
-    return redirect(req, res, '/');
-  }
+    if (!question || !answer) {
+      req.flash('danger', 'Please answer the security question');
+      return redirect(req, res, redirectTo);
+    }
 
-  const index = questions.indexOf(question);
+    const index = questions.indexOf(question);
 
-  if (index === -1 || !answer || !answers[index] || answers[index].toLowerCase() !== answer.toLowerCase()) {
-    req.flash('danger', 'Incorrect answer to security question');
-    return redirect(req, res, '/');
-  }
+    if (index === -1 || !answer || !answers[index] || answers[index].toLowerCase() !== answer.toLowerCase()) {
+      req.flash('danger', 'Incorrect answer to security question');
+      return redirect(req, res, redirectTo);
+    }
 
-  if (!captcha) {
-    req.flash('danger', 'Please complete the reCAPTCHA');
-    return redirect(req, res, '/');
-  }
+    if (!captcha) {
+      req.flash('danger', 'Please complete the reCAPTCHA');
+      return redirect(req, res, redirectTo);
+    }
 
-  const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body: `secret=${process.env.CAPTCHA_SECRET_KEY}&response=${captcha}`,
-  });
+    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: `secret=${process.env.CAPTCHA_SECRET_KEY}&response=${captcha}`,
+    });
 
-  const data = await response.json();
+    const data = await response.json();
 
-  if (!data.success) {
-    req.flash('danger', 'Failed reCAPTCHA verification');
-    return redirect(req, res, '/');
-  }
+    if (!data.success) {
+      req.flash('danger', 'Failed reCAPTCHA verification');
+      return redirect(req, res, redirectTo);
+    }
 
-  next();
+    next();
+  };
 }
 
 export function flashValidationErrors(req: Request, _res: Response, next: NextFunction): void {
