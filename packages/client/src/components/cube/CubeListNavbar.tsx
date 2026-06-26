@@ -222,7 +222,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             </button>
           </Tooltip>
           <div className="relative flex items-center flex-grow" style={{ minWidth: '150px' }}>
-            <span className="absolute" style={{ left: '12px' }}>
+            <span className="absolute" style={{ left: '12px', lineHeight: '0' }}>
               <SearchIcon size={16} className="text-text-secondary" />
             </span>
             <Input
@@ -242,7 +242,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
                 onBlur: () => setFilterInput(localFilterInput),
               }}
             />
-            <span className="absolute" style={{ right: '16px' }} onClick={() => setFilterInput('')}>
+            <span className="absolute" style={{ right: '16px', lineHeight: '0' }} onClick={() => setFilterInput('')}>
               <XCircleIcon size={16} className="text-text-secondary cursor-pointer" />
             </span>
           </div>
@@ -424,7 +424,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             <QuestionIcon size={20} className="hidden md:inline" />
           </button>
           <div className="relative flex items-center flex-grow">
-            <span className="absolute" style={{ left: '12px' }}>
+            <span className="absolute" style={{ left: '12px', lineHeight: '0' }}>
               <SearchIcon size={16} className="text-text-secondary" />
             </span>
             <Input
