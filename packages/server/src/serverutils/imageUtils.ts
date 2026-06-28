@@ -74,6 +74,13 @@ export const generateSamplepackImage = async (
               //Imgur returns a 429 error using the default node-fetch useragent, but it is happy with curl!
               'User-Agent': 'curl/8.5.0',
             },
+          },
+        : source.src.includes('scryfall')
+        ? {
+            headers: {
+              // Scryfall image CDN rejects requests without a User-Agent (same policy as their API)
+              'User-Agent': 'CubeCobra/1.0.0 (+https://cubecobra.com)',
+            },
           }
         : {};
 
