@@ -46,11 +46,15 @@ const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
       const response = await csrfFetch(`/cube/records/list/${cube.id}`, {
         method: 'POST',
         body: JSON.stringify({ lastKey: lastKeyState }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
       });
       const data = await response.json();
       if (data.records) {
         setItems((prevItems) => [...prevItems, ...data.records]);
         setLastKeyState(data.lastKey);
+        setPage(page + 1);
       }
     } finally {
       setLoading(false);
