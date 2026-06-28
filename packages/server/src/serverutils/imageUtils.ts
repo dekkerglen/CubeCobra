@@ -61,6 +61,24 @@ export const generatePackImage = async (pack: Card[]): Promise<Buffer> => {
   return generateSamplepackImage(sources, width * CARD_WIDTH, height * CARD_HEIGHT);
 };
 
+// Scryfall (and other well-behaved hosts) now reject requests that send a
+// default HTTP-library User-Agent, responding with a 400 JSON error body
+// instead of the image. Feeding that JSON to sharp throws the cryptic
+// "Input buffer contains unsupported image format". Always identify ourselves.
+const DEFAULT_USER_AGENT = 'CubeCobra/1.0 (+https://cubecobra.com)';
+
+const blankTile = (width: number, height: number): Promise<Buffer> =>
+  sharp({
+    create: {
+      width,
+      height,
+      channels: 3,
+      background: { r: 255, g: 255, b: 255 },
+    },
+  })
+    .png()
+    .toBuffer();
+
 export const generateSamplepackImage = async (
   sources: Array<{ src: string; x: number; y: number; width: number; height: number }> = [],
   width: number,
@@ -68,25 +86,27 @@ export const generateSamplepackImage = async (
 ): Promise<Buffer> => {
   const images = await Promise.all(
     sources.map(async (source) => {
-      const fetchOptions = source.src.includes('imgur')
-        ? {
-            headers: {
-              //Imgur returns a 429 error using the default node-fetch useragent, but it is happy with curl!
-              'User-Agent': 'curl/8.5.0',
-            },
-          }
-        : {};
+      // Imgur returns 429 for the default node-fetch user agent but is happy
+      // with curl; every other host gets our descriptive application UA.
+      const userAgent = source.src.includes('imgur') ? 'curl/8.5.0' : DEFAULT_USER_AGENT;
 
-      const res = await fetch(source.src, fetchOptions);
-
-      if (!res.ok) {
-        console.log(`Failed to fetch image: ${source.src}. Response statuses: ${res.status}, ${res.statusText}`);
+      let input: Buffer;
+      try {
+        const res = await fetch(source.src, { headers: { 'User-Agent': userAgent } });
+        if (!res.ok) {
+          throw new Error(`${res.status} ${res.statusText}`);
+        }
+        input = await sharp(Buffer.from(await res.arrayBuffer()))
+          .resize({ width: source.width, height: source.height })
+          .toBuffer();
+      } catch (err) {
+        // Fall back to a blank tile so one bad image can't fail the whole pack.
+        console.log(`Failed to fetch image: ${source.src}. ${err instanceof Error ? err.message : err}`);
+        input = await blankTile(source.width, source.height);
       }
 
       return {
-        input: await sharp(Buffer.from(await res.arrayBuffer()))
-          .resize({ width: source.width, height: source.height })
-          .toBuffer(),
+        input,
         top: source.y,
         left: source.x,
       };
