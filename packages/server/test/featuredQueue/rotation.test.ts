@@ -122,9 +122,9 @@ describe('Featured Queue Rotation', () => {
     expect(result.removed.find((c: any) => c.cube === 'cube5')).toBeTruthy();
     expect(result.messages).toContain('Removed 2 cubes due to patron status');
 
-    // Verify ineligible cubes were deleted
-    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube3');
-    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube5');
+    // Verify ineligible cubes were deleted (delete() keys off the item object)
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith(expect.objectContaining({ cube: 'cube3' }));
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith(expect.objectContaining({ cube: 'cube5' }));
 
     // Verify rotation happened with remaining eligible cubes
     expect(result.added).toHaveLength(2);
@@ -160,7 +160,7 @@ describe('Featured Queue Rotation', () => {
     expect(result.success).toBe('true');
     expect(result.removed).toHaveLength(1);
     expect(result.removed[0].cube).toBe('cube1');
-    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube1');
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith(expect.objectContaining({ cube: 'cube1' }));
 
     // Verify rotation still happened with remaining cubes
     // After removing cube1, the queue is [cube2, cube3, cube4, cube5]
@@ -214,10 +214,10 @@ describe('Featured Queue Rotation', () => {
     expect(result.messages).toContain('Not enough cubes in queue after patron check (need 4, have 2)');
     expect(result.removed).toHaveLength(3);
 
-    // Verify ineligible cubes were still removed
-    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube3');
-    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube4');
-    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube5');
+    // Verify ineligible cubes were still removed (delete() keys off the item object)
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith(expect.objectContaining({ cube: 'cube3' }));
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith(expect.objectContaining({ cube: 'cube4' }));
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith(expect.objectContaining({ cube: 'cube5' }));
   });
 
   it('should handle large queue with multiple user cubes and mixed patron statuses', async () => {
@@ -254,10 +254,10 @@ describe('Featured Queue Rotation', () => {
     expect(result.removed).toHaveLength(3);
     expect(result.messages).toContain('Removed 3 cubes due to patron status');
 
-    // Verify ineligible cubes were deleted
-    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube3');
-    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube6');
-    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube7');
+    // Verify ineligible cubes were deleted (delete() keys off the item object)
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith(expect.objectContaining({ cube: 'cube3' }));
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith(expect.objectContaining({ cube: 'cube6' }));
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith(expect.objectContaining({ cube: 'cube7' }));
 
     // Verify patron data was fetched only once per unique owner
     const uniqueOwners = ['alice', 'bob', 'charlie', 'diana', 'eve', 'frank', 'grace'];
@@ -308,7 +308,7 @@ describe('Featured Queue Rotation', () => {
     expect(result.success).toBe('true');
     expect(result.removed).toHaveLength(1);
     expect(result.removed[0].cube).toBe('cube3');
-    expect(featuredQueueDao.delete).toHaveBeenCalledWith('cube3');
+    expect(featuredQueueDao.delete).toHaveBeenCalledWith(expect.objectContaining({ cube: 'cube3' }));
   });
 
   it('should correctly handle pagination when fetching queue', async () => {
