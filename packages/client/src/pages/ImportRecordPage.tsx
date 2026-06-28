@@ -132,6 +132,9 @@ const SelectRecordStep: React.FC<SelectRecordStepProps> = ({ cubeId, selectedRec
   const [page, setPage] = React.useState(0);
   const { callApi } = useContext(CSRFContext);
 
+  const pageCount = Math.ceil(records.length / PAGE_SIZE);
+  const hasMore = !!lastKey;
+
   useEffect(() => {
     const fetchInitial = async () => {
       try {
@@ -146,27 +149,35 @@ const SelectRecordStep: React.FC<SelectRecordStepProps> = ({ cubeId, selectedRec
       }
     };
     fetchInitial();
-  }, [callApi, cubeId]);
+  }, [callApi, cubeId, setRecords, setLastKey, setLoading]);
 
   const fetchMore = useCallback(async () => {
     if (loading || !lastKey) return;
     setLoading(true);
     try {
       const response = await callApi(`/cube/records/list/${cubeId}`, {
-        lastKey,
+        lastKey: lastKey,
       });
-      const data = await response.json();
-      if (data.records) {
-        setRecords((prevItems) => [...prevItems, ...data.records]);
-        setLastKey(data.lastKey);
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.success === 'true') {
+          const responseItems = json.records;
+          const newItems = [...records, ...responseItems];
+          setRecords(newItems);
+
+          const numItemsShowOnLastPage = records.length % PAGE_SIZE;
+          //If current page is full and we just fetched more items, then move to next page
+          if (numItemsShowOnLastPage === 0 && responseItems.length > 0) {
+            setPage(page + 1);
+          }
+          setLastKey(json.lastKey);
+        }
       }
     } finally {
       setLoading(false);
     }
-  }, [loading, lastKey, callApi, cubeId]);
-
-  const pageCount = Math.ceil(records.length / PAGE_SIZE);
-  const hasMore = !!lastKey;
+  }, [loading, lastKey, callApi, cubeId, records, setRecords, page, setPage, setLastKey, setLoading]);
 
   const pager = (
     <Pagination
@@ -176,8 +187,9 @@ const SelectRecordStep: React.FC<SelectRecordStepProps> = ({ cubeId, selectedRec
       onClick={async (newPage) => {
         if (newPage >= pageCount) {
           await fetchMore();
+        } else {
+          setPage(newPage);
         }
-        setPage(newPage);
       }}
       loading={loading}
     />

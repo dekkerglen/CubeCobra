@@ -46,16 +46,26 @@ const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
       const response = await callApi(`/cube/records/list/${cube.id}`, {
         lastKey: lastKeyState,
       });
-      const data = await response.json();
-      if (data.records) {
-        setItems((prevItems) => [...prevItems, ...data.records]);
-        setLastKeyState(data.lastKey);
-        setPage(page + 1);
+
+      if (response.ok) {
+        const json = await response.json();
+        if (json.success === 'true') {
+          const responseItems = json.records;
+          const newItems = [...items, ...responseItems];
+          setItems(newItems);
+
+          const numItemsShowOnLastPage = items.length % PAGE_SIZE;
+          //If current page is full and we just fetched more items, then move to next page
+          if (numItemsShowOnLastPage === 0 && responseItems.length > 0) {
+            setPage(page + 1);
+          }
+          setLastKeyState(json.lastKey);
+        }
       }
     } finally {
       setLoading(false);
     }
-  }, [loading, lastKeyState, callApi, cube.id]);
+  }, [loading, lastKeyState, callApi, cube.id, items, setItems, page, setPage, setLastKeyState]);
 
   const pager = (
     <Pagination
