@@ -1,19 +1,16 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import { XIcon } from '@primer/octicons-react';
 import Record from '@utils/datatypes/Record';
 
 import Button from 'components/base/Button';
-import { CardBody } from 'components/base/Card';
 import FormatttedDate from 'components/base/FormatttedDate';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
-import Pagination from 'components/base/Pagination';
-import Table from 'components/base/Table';
 import Text from 'components/base/Text';
+import IndefinitePaginatedTable from 'components/IndefinitePaginatedTable';
 import RecordDeleteModal from 'components/modals/RecordDeleteModal';
 import withModal from 'components/WithModal';
-import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
 import UserContext from 'contexts/UserContext';
 
@@ -28,117 +25,59 @@ const PAGE_SIZE = 20;
 const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
   const [items, setItems] = useState<Record[]>(records);
   const [lastKeyState, setLastKeyState] = useState<any>(lastKey);
-  const [loading, setLoading] = useState<boolean>(false);
-  const { callApi } = useContext(CSRFContext);
-  const [page, setPage] = React.useState(0);
   const { cube } = useContext(CubeContext);
   const user = useContext(UserContext);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!lastKeyState;
-
   const isOwner = user && cube && user.id === cube.owner.id;
 
-  const fetchMore = useCallback(async () => {
-    if (loading || !lastKeyState) return;
-    setLoading(true);
-    try {
-      const response = await callApi(`/cube/records/list/${cube.id}`, {
-        lastKey: lastKeyState,
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        if (json.success === 'true') {
-          const responseItems = json.records;
-          const newItems = [...items, ...responseItems];
-          setItems(newItems);
-
-          const numItemsShowOnLastPage = items.length % PAGE_SIZE;
-          //If current page is full and we just fetched more items, then move to next page
-          if (numItemsShowOnLastPage === 0 && responseItems.length > 0) {
-            setPage(page + 1);
+  const renderItem = (record: Record) => ({
+    Name: <Link href={`/cube/record/${record.id}`}>{record.name}</Link>,
+    Date: <FormatttedDate date={record.date} />,
+    Players: (
+      <Flexbox direction="row" gap="1">
+        {record.players.map((player, index) => {
+          if (player.userId) {
+            return (
+              <React.Fragment key={player.userId}>
+                <Link href={`/user/view/${player.userId}`}>
+                  <Text sm>{player.name}asdasd</Text>
+                </Link>
+                {index < record.players.length - 1 && <Text sm>, </Text>}
+              </React.Fragment>
+            );
           }
-          setLastKeyState(json.lastKey);
-        }
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [loading, lastKeyState, callApi, cube.id, items, setItems, page, setPage, setLastKeyState]);
 
-  const pager = (
-    <Pagination
-      count={pageCount}
-      active={page}
-      hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMore();
-        } else {
-          setPage(newPage);
-        }
-      }}
-      loading={loading}
-    />
-  );
+          return (
+            <Text key={player.name} sm>
+              {player.name}
+              {index < record.players.length - 1 && <Text sm>, </Text>}
+            </Text>
+          );
+        })}
+      </Flexbox>
+    ),
+    '': isOwner && (
+      <RecordDeleteModalButton modalprops={{ recordId: record.id }} color="secondary">
+        <XIcon size={16} className="mx-1" />
+      </RecordDeleteModalButton>
+    ),
+  });
 
   return (
-    <>
-      {items.length > 0 ? (
-        <Flexbox direction="col" gap="2">
-          <Flexbox direction="row" justify="between" alignItems="center" className="w-full p-4">
-            <Text lg semibold>
-              Draft Reports ({items.length}
-              {hasMore ? '+' : ''})
-            </Text>
-            {pager}
-          </Flexbox>
-          <Table
-            headers={['Name', 'Date', 'Players', '']}
-            rows={items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((record) => ({
-              Name: <Link href={`/cube/record/${record.id}`}>{record.name}</Link>,
-              Date: <FormatttedDate date={record.date} />,
-              Players: (
-                <Flexbox direction="row" gap="1">
-                  {record.players.map((player, index) => {
-                    if (player.userId) {
-                      return (
-                        <>
-                          <Link key={player.userId} href={`/user/view/${player.userId}`}>
-                            <Text sm>{player.name}</Text>
-                          </Link>
-                          {index < record.players.length - 1 && <Text sm>, </Text>}
-                        </>
-                      );
-                    }
-
-                    return (
-                      <Text key={player.name} sm>
-                        {player.name}
-                        {index < record.players.length - 1 && <Text sm>, </Text>}
-                      </Text>
-                    );
-                  })}
-                </Flexbox>
-              ),
-              '': isOwner && (
-                <RecordDeleteModalButton modalprops={{ recordId: record.id }} color="secondary">
-                  <XIcon size={16} className="mx-1" />
-                </RecordDeleteModalButton>
-              ),
-            }))}
-          />
-          <Flexbox direction="row" justify="end" alignItems="center" className="w-full p-4">
-            {pager}
-          </Flexbox>
-        </Flexbox>
-      ) : (
-        <CardBody>
-          <Text md>No draft reports to show, create a new report to get started!</Text>
-        </CardBody>
-      )}
-    </>
+    <IndefinitePaginatedTable
+      items={items}
+      setItems={setItems}
+      itemsKey="records"
+      lastKey={lastKeyState}
+      setLastKey={setLastKeyState}
+      pageSize={PAGE_SIZE}
+      header="Draft Reports"
+      fetchMoreRoute={`/cube/records/list/${cube.id}`}
+      renderItem={renderItem}
+      noneMessage="No draft reports to show, create a new report to get started!"
+      headers={['Name', 'Date', 'Players', '']}
+      inCard
+    />
   );
 };
 
