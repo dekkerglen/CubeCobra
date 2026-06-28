@@ -74,7 +74,7 @@ export const generateSamplepackImage = async (
               //Imgur returns a 429 error using the default node-fetch useragent, but it is happy with curl!
               'User-Agent': 'curl/8.5.0',
             },
-          },
+          }
         : source.src.includes('scryfall')
         ? {
             headers: {
