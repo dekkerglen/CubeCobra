@@ -299,10 +299,10 @@ Suggested policy knobs:
 
 ```ts
 type DeckbuildPolicy = {
-  duplicatePenaltyBase?: number;       // current behavior effectively 0.9^copies
-  phaseOneSeedCount?: number;          // current behavior 10
+  duplicatePenaltyBase?: number; // current behavior effectively 0.9^copies
+  phaseOneSeedCount?: number; // current behavior 10
   draftFillStopAtNonPositive?: boolean;
-  shortlistTopN?: number | null;       // optional if we add top-N constrained fills
+  shortlistTopN?: number | null; // optional if we add top-N constrained fills
   maxSpells?: number;
   maxLands?: number;
   allowBasicFill?: boolean;

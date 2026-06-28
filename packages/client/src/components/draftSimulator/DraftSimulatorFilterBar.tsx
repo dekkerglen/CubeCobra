@@ -214,11 +214,7 @@ const DraftSimulatorFilterBar: React.FC<{
               cardStats={cardStats}
               selectedCardOracles={selectedCardOracles}
               onAddCard={
-                cardFilterMode === 'deck'
-                  ? onAddDeckCard
-                  : cardFilterMode === 'p1p1'
-                    ? onAddP1P1Card
-                    : onAddCard
+                cardFilterMode === 'deck' ? onAddDeckCard : cardFilterMode === 'p1p1' ? onAddP1P1Card : onAddCard
               }
             />
             <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1">

@@ -87,8 +87,12 @@ import {
 } from '../utils/draftSimulatorThemes';
 import { computeFilteredCardStats } from '../utils/draftSimulatorStats';
 import { OTAG_BUCKET_MAP } from '../utils/otagBucketMap';
-import { COLOR_KEYS, getDeckShareColors, MTG_COLORS, normalizeColorOrder } from '../components/draftSimulator/SimulatorCharts';
-
+import {
+  COLOR_KEYS,
+  getDeckShareColors,
+  MTG_COLORS,
+  normalizeColorOrder,
+} from '../components/draftSimulator/SimulatorCharts';
 
 interface RawStats {
   name: string;
@@ -133,7 +137,9 @@ const renderAutocardNameLink = (oracleId: string, name: string, imageUrl?: strin
 };
 
 function useIsMobileLayout(breakpoint = 768): boolean {
-  const [isMobile, setIsMobile] = useState(() => (typeof window !== 'undefined' ? window.innerWidth < breakpoint : false));
+  const [isMobile, setIsMobile] = useState(() =>
+    typeof window !== 'undefined' ? window.innerWidth < breakpoint : false,
+  );
 
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
@@ -655,7 +661,10 @@ const ArchetypeChart: React.FC<{
         {topArchetypesByColor?.get(entry.colorPair)?.length ? (
           <div className="mt-1.5 flex flex-wrap gap-1">
             {topArchetypesByColor.get(entry.colorPair)!.map((label) => (
-              <span key={label} className="text-xs text-text-secondary bg-bg-accent border border-border/60 rounded px-2 py-1">
+              <span
+                key={label}
+                className="text-xs text-text-secondary bg-bg-accent border border-border/60 rounded px-2 py-1"
+              >
                 {label}
               </span>
             ))}
@@ -665,11 +674,7 @@ const ArchetypeChart: React.FC<{
     );
   };
 
-  return (
-    <div className="flex flex-col gap-2">
-      {archetypeDistribution.map(renderEntry)}
-    </div>
-  );
+  return <div className="flex flex-col gap-2">{archetypeDistribution.map(renderEntry)}</div>;
 };
 
 type SortKey = keyof CardStats | 'deckInclusion' | 'openerTakeRate';
@@ -857,17 +862,14 @@ const CardStatsTable: React.FC<{
               const visiblePoolCount = visiblePoolCounts.get(c.oracle_id) ?? c.poolIndices.length;
               const openerTakeRate = c.p1p1Seen > 0 ? c.p1p1Count / c.p1p1Seen : 0;
               return (
-                <tr
-                  key={c.oracle_id}
-                  className={isFilteredCard ? 'bg-bg-active' : 'hover:bg-bg-active'}
-                >
-                  <td className="px-3 py-2 font-medium">{renderAutocardNameLink(c.oracle_id, c.name, cardMetaProp?.[c.oracle_id]?.imageUrl)}</td>
+                <tr key={c.oracle_id} className={isFilteredCard ? 'bg-bg-active' : 'hover:bg-bg-active'}>
+                  <td className="px-3 py-2 font-medium">
+                    {renderAutocardNameLink(c.oracle_id, c.name, cardMetaProp?.[c.oracle_id]?.imageUrl)}
+                  </td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{Math.round(c.elo)}</td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesSeen}</td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesPicked}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">
-                    {(c.pickRate * 100).toFixed(1)}%
-                  </td>
+                  <td className="px-3 py-2 text-right tabular-nums">{(c.pickRate * 100).toFixed(1)}%</td>
                   <td className="px-3 py-2 text-text-secondary text-right tabular-nums">
                     {c.avgPickPosition > 0 ? c.avgPickPosition.toFixed(1) : '—'}
                   </td>
@@ -1137,7 +1139,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     onPersistCompletedRun: handlePersistCompletedRun,
   });
 
-
   const activeDecks = displayRunData?.deckBuilds ?? null;
   const displayedPools = useMemo(() => {
     if (!displayRunData) return [];
@@ -1183,7 +1184,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   // Deck-based color profiles for each skeleton (same logic as ArchetypeSkeletonCard's useMemo)
   const skeletonColorProfiles = useMemo<Map<number, string>>(() => {
     if (!displayRunData?.deckBuilds || skeletons.length === 0) return new Map();
-    return new Map(skeletons.map((sk) => [sk.clusterId, computeSkeletonColorProfile(sk, displayRunData.deckBuilds, displayRunData.cardMeta)]));
+    return new Map(
+      skeletons.map((sk) => [
+        sk.clusterId,
+        computeSkeletonColorProfile(sk, displayRunData.deckBuilds, displayRunData.cardMeta),
+      ]),
+    );
   }, [skeletons, displayRunData?.deckBuilds, displayRunData?.cardMeta]);
   const derivedData = useMemo<DraftSimulatorDerivedData>(
     () => ({
@@ -1195,7 +1201,15 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       poolArchetypeLabels,
       skeletonColorProfiles,
     }),
-    [displayRunData, currentRunSetup, displayedPools, activeDecks, skeletons, poolArchetypeLabels, skeletonColorProfiles],
+    [
+      displayRunData,
+      currentRunSetup,
+      displayedPools,
+      activeDecks,
+      skeletons,
+      poolArchetypeLabels,
+      skeletonColorProfiles,
+    ],
   );
   const selectionState = useMemo<DraftSimulatorSelectionState>(
     () => ({
@@ -1253,7 +1267,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     }
     const result = new Map<string, string[]>();
     for (const [colorPair, counts] of buckets) {
-      result.set(colorPair, [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([l]) => l));
+      result.set(
+        colorPair,
+        [...counts.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([l]) => l),
+      );
     }
     return result;
   }, [poolArchetypeLabels, displayedPools]);
@@ -1283,7 +1303,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
         allPoolTagAllowlist: undefined,
       };
     }
-    const { poolThemes, tagAllowlist } = computeClusterThemes(skeletons, displayedPools, activeDecks, displayRunData.cardMeta);
+    const { poolThemes, tagAllowlist } = computeClusterThemes(
+      skeletons,
+      displayedPools,
+      activeDecks,
+      displayRunData.cardMeta,
+    );
     const byClusterId = new Map<number, string[]>();
     for (const skeleton of skeletons) {
       // Merge ranked tags from all pools in the cluster (union by tag, keep highest lift)
@@ -1359,7 +1384,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     }
     const result = new Map<string, string[]>();
     for (const [colorPair, counts] of buckets) {
-      result.set(colorPair, [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 3).map(([label]) => label));
+      result.set(
+        colorPair,
+        [...counts.entries()]
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 3)
+          .map(([label]) => label),
+      );
     }
     return result;
   }, [poolArchetypeLabels, scopedPools]);
@@ -1448,17 +1479,24 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   }, []);
 
   const inspectingPool = useMemo(
-    () => (inspectingPoolIndex === null ? null : displayedPools.find((p) => p.poolIndex === inspectingPoolIndex) ?? null),
+    () =>
+      inspectingPoolIndex === null ? null : (displayedPools.find((p) => p.poolIndex === inspectingPoolIndex) ?? null),
     [inspectingPoolIndex, displayedPools],
   );
   const inspectingDeck = useMemo(
-    () => (inspectingPool ? activeDecks?.[inspectingPool.poolIndex] ?? null : null),
+    () => (inspectingPool ? (activeDecks?.[inspectingPool.poolIndex] ?? null) : null),
     [inspectingPool, activeDecks],
   );
   const inspectingThemes = useMemo(
     () =>
       inspectingPool && displayRunData
-        ? inferDraftThemes(inspectingPool, inspectingDeck, displayRunData.cardMeta, allPoolClusterThemes, allPoolTagAllowlist)
+        ? inferDraftThemes(
+            inspectingPool,
+            inspectingDeck,
+            displayRunData.cardMeta,
+            allPoolClusterThemes,
+            allPoolTagAllowlist,
+          )
         : [],
     [inspectingPool, inspectingDeck, displayRunData, allPoolClusterThemes, allPoolTagAllowlist],
   );
@@ -1490,9 +1528,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   // Derived values needed by DraftMapCard for the color-profile panel
   const selectedColorPoolIndices = useMemo<number[]>(
     () =>
-      selectedArchetype
-        ? displayedPools.filter((p) => p.archetype === selectedArchetype).map((p) => p.poolIndex)
-        : [],
+      selectedArchetype ? displayedPools.filter((p) => p.archetype === selectedArchetype).map((p) => p.poolIndex) : [],
     [selectedArchetype, displayedPools],
   );
   const selectedColorDeckBuilds = useMemo<BuiltDeck[] | null>(
@@ -1596,7 +1632,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
     const sk = skeletons.find((s) => s.clusterId === selectedSkeletonId);
     if (!sk) return null;
     const skIdx = skeletons.indexOf(sk);
-    const clusterDecks = activeDecks ? sk.poolIndices.map((i) => activeDecks[i]).filter((d): d is BuiltDeck => !!d) : null;
+    const clusterDecks = activeDecks
+      ? sk.poolIndices.map((i) => activeDecks[i]).filter((d): d is BuiltDeck => !!d)
+      : null;
     return (
       <ClusterDetailPanel
         skeleton={sk}
@@ -1744,13 +1782,17 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                     <div className="flex items-baseline gap-1.5">
                       <label className="text-xs font-medium text-text-secondary">Drafts</label>
                       {numDrafts > 300 && (
-                        <span className="text-[11px] text-amber-600 dark:text-amber-400">Large run — may be slow or time out.</span>
+                        <span className="text-[11px] text-amber-600 dark:text-amber-400">
+                          Large run — may be slow or time out.
+                        </span>
                       )}
                     </div>
                     <NumericInput min={1} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} />
                   </div>
                   <div className="flex flex-col gap-0.5">
-                    <label className="text-xs font-medium text-text-secondary" htmlFor="draftSimulatorFormat">Format</label>
+                    <label className="text-xs font-medium text-text-secondary" htmlFor="draftSimulatorFormat">
+                      Format
+                    </label>
                     <Select
                       id="draftSimulatorFormat"
                       options={availableFormats}
@@ -1788,7 +1830,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                 {runs.length > 0 && (
                   <div className="mt-3 pt-3 border-t border-border">
                     <div className="flex items-center gap-3 mb-2">
-                      <Text xs className="font-medium text-text-secondary/60 uppercase tracking-wide">Recent runs</Text>
+                      <Text xs className="font-medium text-text-secondary/60 uppercase tracking-wide">
+                        Recent runs
+                      </Text>
                       <button
                         type="button"
                         className="text-xs text-text-secondary hover:text-text"
@@ -1840,7 +1884,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                         </div>
                       ))}
                       {loadingRun && (
-                        <Text xs className="text-text-secondary self-center flex-shrink-0">Loading…</Text>
+                        <Text xs className="text-text-secondary self-center flex-shrink-0">
+                          Loading…
+                        </Text>
                       )}
                     </div>
                   </div>
@@ -1865,7 +1911,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                                 ? 'Building decks…'
                                 : simPhase === 'cluster'
                                   ? 'Clustering decks…'
-                                : 'Storing results locally…'}
+                                  : 'Storing results locally…'}
                       </Text>
                       <Text sm className="text-text-secondary">
                         {overallSimProgress}%
@@ -1977,8 +2023,12 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                 className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-bg-active"
                 onClick={() => setShowAdvancedOptions((v) => !v)}
               >
-                <Text sm semibold>Advanced Options</Text>
-                <span className="text-text-secondary text-sm ml-4 flex-shrink-0">{showAdvancedOptions ? '▲' : '▼'}</span>
+                <Text sm semibold>
+                  Advanced Options
+                </Text>
+                <span className="text-text-secondary text-sm ml-4 flex-shrink-0">
+                  {showAdvancedOptions ? '▲' : '▼'}
+                </span>
               </button>
               <Collapse isOpen={showAdvancedOptions}>
                 <div className="px-4 pb-4 flex flex-col gap-4">
@@ -2028,7 +2078,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                 cardMeta={displayRunData.cardMeta}
                 runData={displayRunData}
                 themes={inspectingThemes}
-                archetypeLabel={inspectingPool ? poolArchetypeLabels?.get(inspectingPool.poolIndex) ?? null : null}
+                archetypeLabel={inspectingPool ? (poolArchetypeLabels?.get(inspectingPool.poolIndex) ?? null) : null}
                 highlightOracle={selectedCard?.oracle_id}
                 deckLoading={simPhase === 'deckbuild'}
                 themeBreakdown={inspectingThemeBreakdown}
@@ -2047,7 +2097,9 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
             />
             <LeaveSimulationModal
               isOpen={leaveModalOpen}
-              setOpen={(open) => { if (!open) handleCancelLeave(); }}
+              setOpen={(open) => {
+                if (!open) handleCancelLeave();
+              }}
               onLeave={handleConfirmedLeave}
             />
           </Flexbox>
@@ -2118,31 +2170,31 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
           <li>
             <span className="font-medium text-text">ML embeddings</span> — each main deck is encoded into a
             128-dimensional vector by the same neural-network draft model that powers bot picks. These vectors capture
-            card synergies and strategic signals learned from real drafts. If the model cannot be used, the system
-            falls back to simpler card-presence vectors.
+            card synergies and strategic signals learned from real drafts. If the model cannot be used, the system falls
+            back to simpler card-presence vectors.
           </li>
           <li>
-            <span className="font-medium text-text">k-NN graph</span> — a k-nearest-neighbor graph connects each deck
-            to its most similar neighbors using cosine distance. This shared graph drives both clustering and the Draft
-            Map layout.
+            <span className="font-medium text-text">k-NN graph</span> — a k-nearest-neighbor graph connects each deck to
+            its most similar neighbors using cosine distance. This shared graph drives both clustering and the Draft Map
+            layout.
           </li>
           <li>
-            <span className="font-medium text-text">Leiden clustering</span> — the simulator treats the k-NN graph as
-            a network and finds communities of decks that are denser internally than they are to the rest of the run.
-            The two exposed controls are <span className="font-medium text-text">Neighbors (k)</span>, which changes
-            graph connectivity, and <span className="font-medium text-text">Resolution</span>, which changes how coarse
-            or fine the resulting clusters are.
+            <span className="font-medium text-text">Leiden clustering</span> — the simulator treats the k-NN graph as a
+            network and finds communities of decks that are denser internally than they are to the rest of the run. The
+            two exposed controls are <span className="font-medium text-text">Neighbors (k)</span>, which changes graph
+            connectivity, and <span className="font-medium text-text">Resolution</span>, which changes how coarse or
+            fine the resulting clusters are.
           </li>
           <li>
-            <span className="font-medium text-text">UMAP layout</span> — the k-NN graph is projected to 2D for the
-            Draft Map scatter plot. Nearby points share similar deck structure, so clusters appear as visible groups of
-            points even though the map itself is only a visualization layer.
+            <span className="font-medium text-text">UMAP layout</span> — the k-NN graph is projected to 2D for the Draft
+            Map scatter plot. Nearby points share similar deck structure, so clusters appear as visible groups of points
+            even though the map itself is only a visualization layer.
           </li>
         </ol>
         <p>
           Each cluster is labeled from the actual decks inside it. CubeCobra compares those decks to a library of known
-          archetype embeddings, then combines that archetype signal with the cluster&apos;s real color profile to produce
-          names like <span className="font-medium text-text">UR Artifact Midrange</span>.
+          archetype embeddings, then combines that archetype signal with the cluster&apos;s real color profile to
+          produce names like <span className="font-medium text-text">UR Artifact Midrange</span>.
         </p>
         <p>The current cluster detail panel shows:</p>
         <ul className="list-disc list-inside space-y-1 ml-2">
@@ -2163,13 +2215,15 @@ const FAQ_ITEMS: { q: string; answer: React.ReactNode }[] = [
             model using the cluster as the seed set
           </li>
           <li>
-            <span className="font-medium text-text">Deck-color share, card types, mana curve, and Elo distribution</span>{' '}
+            <span className="font-medium text-text">
+              Deck-color share, card types, mana curve, and Elo distribution
+            </span>{' '}
             — summary views over the main decks in that cluster
           </li>
         </ul>
         <p>
-          The related <span className="font-medium text-text">Deck Color Distribution</span> view uses the same
-          pattern for broader color buckets. Those views are usually noisier than clusters, because a color pair like
+          The related <span className="font-medium text-text">Deck Color Distribution</span> view uses the same pattern
+          for broader color buckets. Those views are usually noisier than clusters, because a color pair like
           <span className="font-medium text-text"> UG</span> can still contain several different strategies.
         </p>
       </div>

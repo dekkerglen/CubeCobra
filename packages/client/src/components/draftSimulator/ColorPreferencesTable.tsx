@@ -289,7 +289,8 @@ const ColorPreferencesTable: React.FC<{
               title={`Average number of drafters at the table classified into this color by deck archetype (out of ${numSeats} seats). Uses the deck-naming logic (pool.archetype, e.g. "WU" or "BRG") — a WU deck contributes to both the W and U rows.`}
               onClick={() => handleSort('completionRate')}
             >
-              Drafters /{numSeats}{sortIndicator('completionRate')}
+              Drafters /{numSeats}
+              {sortIndicator('completionRate')}
             </th>
             <th
               className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider cursor-pointer select-none hover:text-text"
@@ -340,9 +341,13 @@ const ColorPreferencesTable: React.FC<{
               <td className="px-3 py-2 text-right tabular-nums">{fmt(row.avgPickPosition)}</td>
               <td className="px-3 py-2 text-right tabular-nums">{fmtPct(row.p1p1Rate)}</td>
               <td className="px-3 py-2 text-right tabular-nums">{fmtPct(row.pxp1Rate)}</td>
-              <td className="px-3 py-2 text-right tabular-nums">{(row.completionRate * numSeats).toFixed(1)} / {numSeats}</td>
+              <td className="px-3 py-2 text-right tabular-nums">
+                {(row.completionRate * numSeats).toFixed(1)} / {numSeats}
+              </td>
               <td className="px-3 py-2 text-right tabular-nums">{fmtPct(row.firstColorAnchorRate)}</td>
-              <td className="px-3 py-2 text-right tabular-nums">{row.avgElo === null ? '—' : Math.round(row.avgElo)}</td>
+              <td className="px-3 py-2 text-right tabular-nums">
+                {row.avgElo === null ? '—' : Math.round(row.avgElo)}
+              </td>
               <td className="px-3 py-2 text-right tabular-nums">{fmtPct(row.cubeShare)}</td>
               <td className="px-3 py-2 text-right tabular-nums">{fmtPct(row.deckShare)}</td>
             </tr>
