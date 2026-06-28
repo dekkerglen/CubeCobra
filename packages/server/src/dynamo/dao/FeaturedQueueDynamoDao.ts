@@ -155,8 +155,14 @@ export class FeaturedQueueDynamoDao extends BaseDynamoDao<FeaturedQueueItem, Unh
       TableName: this.tableName,
       IndexName: 'GSI1',
       KeyConditionExpression: 'GSI1PK = :status',
-      FilterExpression: '#owner = :owner',
+      // Stored items nest their fields under the top-level `item` map (see
+      // BaseDynamoDao.toDynamoItem), so the owner attribute lives at
+      // `item.owner`, not top-level `owner`. Filtering on the bare `owner`
+      // attribute always matched nothing, so owner-scoped lookups silently
+      // returned an empty list.
+      FilterExpression: '#item.#owner = :owner',
       ExpressionAttributeNames: {
+        '#item': 'item',
         '#owner': 'owner',
       },
       ExpressionAttributeValues: {

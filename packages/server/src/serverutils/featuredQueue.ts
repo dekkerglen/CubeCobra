@@ -44,7 +44,9 @@ export async function rotateFeatured(): Promise<RotateResult> {
     const patron = patronMap[cube.owner];
     if (!canBeFeatured(patron)) {
       removedCubes.push(cube);
-      cleanupOperations.push(featuredQueueDao.delete(cube.cube));
+      // delete() keys off the item object (item.cube); passing the bare id
+      // string would derive PK `FEATURED_QUEUE#undefined` and silently no-op.
+      cleanupOperations.push(featuredQueueDao.delete(cube));
     }
   }
 
@@ -125,48 +127,48 @@ export async function doesUserHaveFeaturedCube(userid: string) {
 }
 
 export async function replaceForUser(userid: string, cubeid: string) {
-  // Use the owner-filtered query instead of fetching entire queue
+  // Use the owner-filtered query instead of fetching entire queue. Items come
+  // back ascending by date, so cubes[0] holds the user's earliest (current)
+  // queue slot. A user is only supposed to have one row, but earlier bugs could
+  // leave several behind — handle all of them so the queue self-heals.
   const cubes = await getFeaturedQueueForUser(userid);
 
   if (cubes.length === 0) {
     throw new Error('Cannot replace cube that is not in queue');
   }
 
-  const item = cubes[0]; // User should only have one cube in queue
-
-  if (!item) {
-    throw new Error('Cannot replace cube that is not in queue');
-  }
-
-  // Check if cube is currently featured (in first 2 positions)
+  // Check if any of the user's cubes is currently featured (first 2 positions);
+  // a live-featured cube can't be replaced out from under the rotation.
   const queueResult = await featuredQueueDao.querySortedByDate(undefined, 2);
-  const isFeatured = queueResult.items?.some((queueItem) => queueItem.cube === item?.cube);
-
-  if (isFeatured) {
+  const featuredCubeIds = new Set((queueResult.items ?? []).map((queueItem) => queueItem.cube));
+  if (cubes.some((cube) => featuredCubeIds.has(cube.cube))) {
     throw new Error('Cannot replace cube that is currently featured');
   }
 
+  // Preserve the user's existing spot by reusing their earliest queue date.
+  const date = cubes[0]!.date;
+
   // Queue rows are keyed by cube id, so adding a cube that already has a row
-  // would fail the conditional put (ConditionalCheckFailedException). Detect
-  // that up front: surface a clear error if someone else holds the slot, and
-  // clear a stale self-owned duplicate so the create below can succeed.
-  if (cubeid !== item.cube) {
-    const existing = await featuredQueueDao.getByCube(cubeid);
-    if (existing) {
-      if (existing.owner !== userid) {
-        throw new Error('That cube is already in the featured queue');
-      }
-      await featuredQueueDao.delete(existing);
-    }
+  // would fail the conditional put (ConditionalCheckFailedException). If the
+  // target cube already sits in the queue under another owner, refuse; if it's
+  // one of this user's own rows it'll be cleared by the cleanup below.
+  const existing = await featuredQueueDao.getByCube(cubeid);
+  if (existing && existing.owner !== userid) {
+    throw new Error('That cube is already in the featured queue');
   }
 
-  // remove cube from queue
-  await featuredQueueDao.delete(item);
+  // Remove every row this user currently holds (collapses any stale duplicates),
+  // plus the target cube's own row if it wasn't already one of them.
+  const toDelete = [...cubes];
+  if (existing && !toDelete.some((cube) => cube.cube === existing.cube)) {
+    toDelete.push(existing);
+  }
+  await Promise.all(toDelete.map((cube) => featuredQueueDao.delete(cube)));
 
   // add new cube to queue
   await featuredQueueDao.createFeaturedQueueItem({
     cube: cubeid,
-    date: item.date,
+    date,
     owner: userid,
     featuredOn: null,
   });
