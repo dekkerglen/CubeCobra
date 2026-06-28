@@ -8,31 +8,27 @@ import {
   hasIndefiniteMore,
 } from '../utils/indefinitePagination';
 import { Card, CardBody, CardHeader } from './base/Card';
-import { Col, Flexbox, Row } from './base/Layout';
+import { Flexbox } from './base/Layout';
 import Pagination from './base/Pagination';
+import Table from './base/Table';
 import Text from './base/Text';
 
-interface IndefinitePaginatedListProps<T> {
+interface IndefinitePaginatedTableProps<T> {
   items?: T[];
   setItems: (items: T[]) => void;
   fetchMoreRoute: string;
-  renderItem: (item: T) => React.ReactNode;
+  renderItem: (item: T) => { [key: string]: React.ReactNode };
   lastKey: any;
   setLastKey: (lastKey: any) => void;
   pageSize: number;
   noneMessage?: string;
   itemsKey?: string;
   header: string;
-  xs?: number;
-  sm?: number;
-  md?: number;
-  lg?: number;
-  xl?: number;
-  xxl?: number;
+  headers: string[];
   inCard?: boolean;
 }
 
-const IndefinitePaginatedList = <T,>({
+const IndefinitePaginatedTable = <T,>({
   items,
   setItems,
   fetchMoreRoute,
@@ -43,24 +39,19 @@ const IndefinitePaginatedList = <T,>({
   pageSize,
   noneMessage = 'No items found.',
   itemsKey = 'items',
-  xs,
-  sm,
-  md,
-  lg,
-  xl,
-  xxl,
+  headers,
   inCard = false,
-}: IndefinitePaginatedListProps<T>) => {
+}: IndefinitePaginatedTableProps<T>) => {
   const { callApi } = useContext(CSRFContext);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = React.useState(0);
+  const [page, setPage] = useState(0);
 
   const safeItems = useMemo(() => items ?? [], [items]);
   const pageCount = getIndefinitePageCount(safeItems, pageSize);
   const hasMore = hasIndefiniteMore(lastKey);
 
   const fetchMoreData = useCallback(async () => {
-    await fetchIndefiniteMoreData({
+    await fetchIndefiniteMoreData<T>({
       callApi,
       fetchMoreRoute,
       items: safeItems,
@@ -73,7 +64,7 @@ const IndefinitePaginatedList = <T,>({
       itemsKey,
       setLoading,
     });
-  }, [callApi, fetchMoreRoute, lastKey, safeItems, setItems, pageSize, setLastKey, page, setLoading, itemsKey]);
+  }, [callApi, fetchMoreRoute, safeItems, setItems, lastKey, setLastKey, page, setPage, pageSize, itemsKey]);
 
   const pager = (
     <Pagination
@@ -92,6 +83,20 @@ const IndefinitePaginatedList = <T,>({
     />
   );
 
+  const body =
+    safeItems.length > 0 ? (
+      <Flexbox direction="col" gap="2">
+        <Table headers={headers} rows={safeItems.slice(page * pageSize, (page + 1) * pageSize).map(renderItem)} />
+        <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
+          {pager}
+        </Flexbox>
+      </Flexbox>
+    ) : (
+      <Text semibold lg>
+        {noneMessage}
+      </Text>
+    );
+
   if (!inCard) {
     return (
       <Flexbox direction="col" gap="2">
@@ -102,24 +107,7 @@ const IndefinitePaginatedList = <T,>({
           </Text>
           {safeItems.length > 0 && pager}
         </Flexbox>
-        {safeItems.length > 0 ? (
-          <Flexbox direction="col" gap="2">
-            <Row xs={12}>
-              {safeItems.slice(page * pageSize, (page + 1) * pageSize).map((item, index) => (
-                <Col key={index + page * pageSize} xs={xs} sm={sm} md={md} lg={lg} xl={xl} xxl={xxl}>
-                  {renderItem(item)}
-                </Col>
-              ))}
-            </Row>
-            <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
-              {pager}
-            </Flexbox>
-          </Flexbox>
-        ) : (
-          <Text semibold lg>
-            {noneMessage}
-          </Text>
-        )}
+        {body}
       </Flexbox>
     );
   }
@@ -135,28 +123,9 @@ const IndefinitePaginatedList = <T,>({
           {safeItems.length > 0 && pager}
         </Flexbox>
       </CardHeader>
-      <CardBody>
-        {safeItems.length > 0 ? (
-          <Flexbox direction="col" gap="2">
-            <Row xs={12}>
-              {safeItems.slice(page * pageSize, (page + 1) * pageSize).map((item, index) => (
-                <Col key={index + page * pageSize} xs={xs} sm={sm} md={md} lg={lg} xl={xl} xxl={xxl}>
-                  {renderItem(item)}
-                </Col>
-              ))}
-            </Row>
-            <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
-              {pager}
-            </Flexbox>
-          </Flexbox>
-        ) : (
-          <Text semibold lg>
-            {noneMessage}
-          </Text>
-        )}
-      </CardBody>
+      <CardBody>{body}</CardBody>
     </Card>
   );
 };
 
-export default IndefinitePaginatedList;
+export default IndefinitePaginatedTable;
