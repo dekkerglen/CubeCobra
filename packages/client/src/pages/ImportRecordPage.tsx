@@ -1,4 +1,4 @@
-import React, { createRef, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { createRef, useContext, useEffect, useMemo, useState } from 'react';
 
 import { ArrowLeftIcon } from '@primer/octicons-react';
 import { cardOracleId, detailsToCard } from '@utils/cardutil';
@@ -15,13 +15,12 @@ import Checkbox from 'components/base/Checkbox';
 import FormatttedDate from 'components/base/FormatttedDate';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
-import Pagination from 'components/base/Pagination';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
-import Table from 'components/base/Table';
 import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
 import DynamicFlash from 'components/DynamicFlash';
+import IndefinitePaginatedTable from 'components/IndefinitePaginatedTable';
 import LoadingButton from 'components/LoadingButton';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
@@ -129,130 +128,75 @@ const SelectRecordStep: React.FC<SelectRecordStepProps> = ({ cubeId, selectedRec
   const [records, setRecords] = useState<Record[]>([]);
   const [lastKey, setLastKey] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const [page, setPage] = React.useState(0);
   const { callApi } = useContext(CSRFContext);
-
-  const pageCount = Math.ceil(records.length / PAGE_SIZE);
-  const hasMore = !!lastKey;
 
   useEffect(() => {
     const fetchInitial = async () => {
       try {
         const response = await callApi(`/cube/records/list/${cubeId}`, {});
-        const data = await response.json();
-        if (data.records) {
-          setRecords((prevItems) => [...prevItems, ...data.records]);
-          setLastKey(data.lastKey);
+
+        if (response.ok) {
+          const data = await response.json();
+          if (data.records) {
+            setRecords(data.records);
+            setLastKey(data.lastKey);
+          }
         }
       } finally {
         setLoading(false);
       }
     };
-    fetchInitial();
-  }, [callApi, cubeId, setRecords, setLastKey, setLoading]);
 
-  const fetchMore = useCallback(async () => {
-    if (loading || !lastKey) return;
-    setLoading(true);
-    try {
-      const response = await callApi(`/cube/records/list/${cubeId}`, {
-        lastKey: lastKey,
-      });
-
-      if (response.ok) {
-        const json = await response.json();
-        if (json.success === 'true') {
-          const responseItems = json.records;
-          const newItems = [...records, ...responseItems];
-          setRecords(newItems);
-
-          const numItemsShowOnLastPage = records.length % PAGE_SIZE;
-          //If current page is full and we just fetched more items, then move to next page
-          if (numItemsShowOnLastPage === 0 && responseItems.length > 0) {
-            setPage(page + 1);
-          }
-          setLastKey(json.lastKey);
-        }
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [loading, lastKey, callApi, cubeId, records, setRecords, page, setPage, setLastKey, setLoading]);
-
-  const pager = (
-    <Pagination
-      count={pageCount}
-      active={page}
-      hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMore();
-        } else {
-          setPage(newPage);
-        }
-      }}
-      loading={loading}
-    />
-  );
+    void fetchInitial();
+  }, [callApi, cubeId]);
 
   if (loading) {
     return <Spinner lg />;
   }
 
   return (
-    <>
-      {records.length > 0 ? (
-        <Flexbox direction="col" gap="2">
-          <Flexbox direction="row" justify="end" alignItems="center" className="w-full p-4">
-            {pager}
-          </Flexbox>
-          <Table
-            headers={['', 'Name', 'Date', 'Players']}
-            rows={records.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((record) => ({
-              '': (
-                <Checkbox
-                  checked={record.id === selectedRecord.id}
-                  setChecked={() => setSelectedRecord(record)}
-                  label={''}
-                />
-              ),
-              Name: <Link href={`/cube/record/${record.id}`}>{record.name}</Link>,
-              Date: <FormatttedDate date={record.date} />,
-              Players: (
-                <Flexbox direction="row" gap="1">
-                  {record.players.map((player, index) => {
-                    if (player.userId) {
-                      return (
-                        <>
-                          <Link key={player.userId} href={`/user/view/${player.userId}`}>
-                            <Text sm>{player.name}</Text>
-                          </Link>
-                          {index < record.players.length - 1 && <Text sm>, </Text>}
-                        </>
-                      );
-                    }
+    <IndefinitePaginatedTable
+      items={records}
+      setItems={setRecords}
+      fetchMoreRoute={`/cube/records/list/${cubeId}`}
+      renderItem={(record) => ({
+        '': (
+          <Checkbox checked={record.id === selectedRecord.id} setChecked={() => setSelectedRecord(record)} label={''} />
+        ),
+        Name: <Link href={`/cube/record/${record.id}`}>{record.name}</Link>,
+        Date: <FormatttedDate date={record.date} />,
+        Players: (
+          <Flexbox direction="row" gap="1">
+            {record.players.map((player, index) => {
+              if (player.userId) {
+                return (
+                  <React.Fragment key={player.userId}>
+                    <Link href={`/user/view/${player.userId}`}>
+                      <Text sm>{player.name}</Text>
+                    </Link>
+                    {index < record.players.length - 1 && <Text sm>, </Text>}
+                  </React.Fragment>
+                );
+              }
 
-                    return (
-                      <Text key={player.name} sm>
-                        {player.name}
-                        {index < record.players.length - 1 && <Text sm>, </Text>}
-                      </Text>
-                    );
-                  })}
-                </Flexbox>
-              ),
-            }))}
-          />
-          <Flexbox direction="row" justify="end" alignItems="center" className="w-full p-4">
-            {pager}
+              return (
+                <Text key={player.name} sm>
+                  {player.name}
+                  {index < record.players.length - 1 && <Text sm>, </Text>}
+                </Text>
+              );
+            })}
           </Flexbox>
-        </Flexbox>
-      ) : (
-        <CardBody>
-          <Text md>No draft reports to show, create a new report to get started!</Text>
-        </CardBody>
-      )}
-    </>
+        ),
+      })}
+      lastKey={lastKey}
+      setLastKey={setLastKey}
+      pageSize={PAGE_SIZE}
+      noneMessage="No draft reports to show, create a new report to get started!"
+      itemsKey="records"
+      header="Records"
+      headers={['', 'Name', 'Date', 'Players']}
+    />
   );
 };
 
