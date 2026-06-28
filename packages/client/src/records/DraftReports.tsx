@@ -29,7 +29,7 @@ const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
   const [items, setItems] = useState<Record[]>(records);
   const [lastKeyState, setLastKeyState] = useState<any>(lastKey);
   const [loading, setLoading] = useState<boolean>(false);
-  const { csrfFetch } = useContext(CSRFContext);
+  const { callApi } = useContext(CSRFContext);
   const [page, setPage] = React.useState(0);
   const { cube } = useContext(CubeContext);
   const user = useContext(UserContext);
@@ -43,12 +43,8 @@ const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
     if (loading || !lastKeyState) return;
     setLoading(true);
     try {
-      const response = await csrfFetch(`/cube/records/list/${cube.id}`, {
-        method: 'POST',
-        body: JSON.stringify({ lastKey: lastKeyState }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
+      const response = await callApi(`/cube/records/list/${cube.id}`, {
+        lastKey: lastKeyState,
       });
       const data = await response.json();
       if (data.records) {
@@ -59,7 +55,7 @@ const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
     } finally {
       setLoading(false);
     }
-  }, [loading, lastKeyState, csrfFetch, cube.id]);
+  }, [loading, lastKeyState, callApi, cube.id]);
 
   const pager = (
     <Pagination

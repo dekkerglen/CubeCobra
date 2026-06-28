@@ -130,15 +130,12 @@ const SelectRecordStep: React.FC<SelectRecordStepProps> = ({ cubeId, selectedRec
   const [lastKey, setLastKey] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [page, setPage] = React.useState(0);
-  const { csrfFetch } = useContext(CSRFContext);
+  const { callApi } = useContext(CSRFContext);
 
   useEffect(() => {
     const fetchInitial = async () => {
       try {
-        const response = await csrfFetch(`/cube/records/list/${cubeId}`, {
-          method: 'POST',
-          body: JSON.stringify({}),
-        });
+        const response = await callApi(`/cube/records/list/${cubeId}`, {});
         const data = await response.json();
         if (data.records) {
           setRecords((prevItems) => [...prevItems, ...data.records]);
@@ -149,15 +146,14 @@ const SelectRecordStep: React.FC<SelectRecordStepProps> = ({ cubeId, selectedRec
       }
     };
     fetchInitial();
-  }, [csrfFetch, cubeId]);
+  }, [callApi, cubeId]);
 
   const fetchMore = useCallback(async () => {
     if (loading || !lastKey) return;
     setLoading(true);
     try {
-      const response = await csrfFetch(`/cube/records/list/${cubeId}`, {
-        method: 'POST',
-        body: JSON.stringify({ lastKey }),
+      const response = await callApi(`/cube/records/list/${cubeId}`, {
+        lastKey,
       });
       const data = await response.json();
       if (data.records) {
@@ -167,7 +163,7 @@ const SelectRecordStep: React.FC<SelectRecordStepProps> = ({ cubeId, selectedRec
     } finally {
       setLoading(false);
     }
-  }, [loading, lastKey, csrfFetch, cubeId]);
+  }, [loading, lastKey, callApi, cubeId]);
 
   const pageCount = Math.ceil(records.length / PAGE_SIZE);
   const hasMore = !!lastKey;
@@ -180,9 +176,8 @@ const SelectRecordStep: React.FC<SelectRecordStepProps> = ({ cubeId, selectedRec
       onClick={async (newPage) => {
         if (newPage >= pageCount) {
           await fetchMore();
-        } else {
-          setPage(newPage);
         }
+        setPage(newPage);
       }}
       loading={loading}
     />
