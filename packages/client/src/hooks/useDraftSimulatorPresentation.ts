@@ -147,7 +147,9 @@ export default function useDraftSimulatorPresentation({
         label: selectedCardEntry.name,
         detail: 'P1P1',
         onClear: () =>
-          setSelectedP1P1CardOracles((current) => current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id)),
+          setSelectedP1P1CardOracles((current) =>
+            current.filter((oracleId) => oracleId !== selectedCardEntry.oracle_id),
+          ),
       });
     }
     if (selectedSkeletonId !== null) {
