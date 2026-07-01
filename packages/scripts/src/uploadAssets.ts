@@ -26,16 +26,36 @@ const NO_CACHE = 'public, max-age=60, must-revalidate';
 // packages/cdk/app/infra.ts). CodeBuild sets AWS_DEFAULT_REGION to us-east-2
 // for the main stack, so we can't fall back to that here or S3 returns a
 // PermanentRedirect.
-const s3 = new S3Client({
-  endpoint: process.env.AWS_ENDPOINT || undefined,
-  forcePathStyle: !!process.env.AWS_ENDPOINT,
-  credentials: fromNodeProviderChain(),
-  region: process.env.CUBECOBRA_ASSETS_REGION || 'us-east-1',
-});
+// When R2_ENDPOINT is set we upload to Cloudflare R2 (S3-compatible) instead of
+// AWS S3 — the target for the Cloudflare cutover. R2 uses its own access keys
+// (not the AWS provider chain) and path-style addressing. CUBECOBRA_ASSETS_BUCKET
+// is then the R2 bucket name. Leaving R2_ENDPOINT unset keeps the AWS S3 path.
+const useR2 = !!process.env.R2_ENDPOINT;
 
-const bucket = process.env.CUBECOBRA_ASSETS_BUCKET;
+const s3 = new S3Client(
+  useR2
+    ? {
+        endpoint: process.env.R2_ENDPOINT,
+        region: 'auto',
+        forcePathStyle: true,
+        credentials: {
+          accessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+          secretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+        },
+      }
+    : {
+        endpoint: process.env.AWS_ENDPOINT || undefined,
+        forcePathStyle: !!process.env.AWS_ENDPOINT,
+        credentials: fromNodeProviderChain(),
+        region: process.env.CUBECOBRA_ASSETS_REGION || 'us-east-1',
+      },
+);
+
+// In R2 mode target R2_BUCKET so we don't disturb CUBECOBRA_ASSETS_BUCKET, which
+// the jobs still use to write the card catalog to the S3 assets bucket.
+const bucket = (useR2 && process.env.R2_BUCKET) || process.env.CUBECOBRA_ASSETS_BUCKET;
 if (!bucket) {
-  console.error('CUBECOBRA_ASSETS_BUCKET is required');
+  console.error('Set R2_BUCKET (R2 mode) or CUBECOBRA_ASSETS_BUCKET');
   process.exit(1);
 }
 

@@ -84,6 +84,11 @@ if (bootstrap && bootstrap === 'true') {
       stripePublicKey: process.env.STRIPE_PUBLIC_KEY || '',
       enableBotSecurity: environment === 'production',
       maintainCubeCardHashes: config.maintainCubeCardHashes,
+      r2Endpoint: process.env.R2_ENDPOINT || '',
+      r2AccessKeyId: process.env.R2_ACCESS_KEY_ID || '',
+      r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+      r2Bucket: process.env.R2_BUCKET || '',
+      cardImageBaseUrl: process.env.CARD_IMAGE_BASE_URL || '',
     },
     {
       env: { account: config.account, region: config.region },

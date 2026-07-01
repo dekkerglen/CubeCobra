@@ -7,6 +7,7 @@
     "update-cube-history": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/update_cube_history.js",
     "update-metadata-dict": "NODE_OPTIONS=--max_old_space_size=36864 node dist/jobs/src/update_metadata_dict.js",
     "update-cards": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/update_cards.js",
+    "sync-card-images": "node dist/jobs/src/sync_card_images.js",
     "update-combos": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/update_combos.js",
     "repair-cube-hashes": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/repairCubeHashes.js --",
     "repair-package-hashes": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/repairPackageHashes.js --",
@@ -19,11 +20,12 @@
     "dev:update-cube-history": "NODE_OPTIONS=--max_old_space_size=28672 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_cube_history.ts",
     "dev:update-metadata-dict": "NODE_OPTIONS=--max_old_space_size=36864 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_metadata_dict.ts",
     "dev:update-cards": "NODE_OPTIONS=--max_old_space_size=28672 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_cards.ts",
+    "dev:sync-card-images": "ts-node -r tsconfig-paths/register --project tsconfig.json src/sync_card_images.ts",
     "dev:update-combos": "NODE_OPTIONS=--max_old_space_size=28672 ts-node -r tsconfig-paths/register --project tsconfig.json src/update_combos.ts",
     "dev:repair-cube-hashes": "NODE_OPTIONS=--max_old_space_size=28672 ts-node -r tsconfig-paths/register --project tsconfig.json src/repairCubeHashes.ts --",
     "dev:repair-package-hashes": "NODE_OPTIONS=--max_old_space_size=28672 ts-node -r tsconfig-paths/register --project tsconfig.json src/repairPackageHashes.ts --",
     "update-all": "npm run init-data && npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-cards",
-    "update-cards-daily": "npm run init-data && npm run update-cards",
+    "update-cards-daily": "npm run init-data && npm run update-cards && npm run sync-card-images",
     "update-metadata-weekly": "npm run init-data && npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict",
     "fix-external-paths": "npx resolve-tspaths --out dist && node scripts/fixExternalPaths.js",
     "build": "npx tsc && npm run fix-external-paths",
@@ -42,7 +44,8 @@
     "hnswlib-node": "^3.0.0",
     "lodash": "^4.17.21",
     "module-alias": "^2.2.3",
-    "node-fetch": "^2.7.0"
+    "node-fetch": "^2.7.0",
+    "sharp": "^0.34.5"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",

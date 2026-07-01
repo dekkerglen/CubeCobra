@@ -214,6 +214,28 @@ export class DeploymentPipeline extends Construct {
           type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
           value: '/cubecobra/beta/draftmancer-api-key',
         },
+        // Cloudflare R2 — read by uploadAssets (deploy) and injected into the
+        // jobs env at synth (sync_card_images + update_cards image URLs).
+        R2_ENDPOINT: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/r2-endpoint',
+        },
+        R2_ACCESS_KEY_ID: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/r2-access-key-id',
+        },
+        R2_SECRET_ACCESS_KEY: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/r2-secret-access-key',
+        },
+        R2_BUCKET: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/r2-bucket',
+        },
+        CARD_IMAGE_BASE_URL: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/card-image-base-url',
+        },
       },
     });
 

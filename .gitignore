@@ -90,3 +90,7 @@ packages/archetypeAnnotater/.venv/
 
 # clinic profiling output
 .clinic
+
+# local Scryfall card image snapshot (seeded into R2; never committed)
+/cardimages/
+/beta-assets/

@@ -51,6 +51,13 @@ interface CubeCobraStackParams {
   stripePublicKey: string;
   enableBotSecurity: boolean;
   maintainCubeCardHashes: boolean;
+  // Cloudflare R2 (S3-compatible) for self-hosted card images + static assets.
+  // Empty on stages not yet cut over to R2.
+  r2Endpoint: string;
+  r2AccessKeyId: string;
+  r2SecretAccessKey: string;
+  r2Bucket: string;
+  cardImageBaseUrl: string;
 }
 
 export type Environment = 'production' | 'development';
@@ -414,6 +421,15 @@ function createJobsEnvironmentVariables(
   if (stage === 'BETA' || stage === 'PROD') {
     envVars.CUBECOBRA_ASSETS_BUCKET = `cubecobra-assets-${params.environmentName}`;
   }
+
+  // R2 config for sync_card_images and the self-hosted image URLs emitted by
+  // update_cards. Only set when the stage has been cut over to R2 (params are
+  // empty otherwise), so unconfigured stages keep their existing behavior.
+  if (params.r2Endpoint) envVars.R2_ENDPOINT = params.r2Endpoint;
+  if (params.r2AccessKeyId) envVars.R2_ACCESS_KEY_ID = params.r2AccessKeyId;
+  if (params.r2SecretAccessKey) envVars.R2_SECRET_ACCESS_KEY = params.r2SecretAccessKey;
+  if (params.r2Bucket) envVars.R2_BUCKET = params.r2Bucket;
+  if (params.cardImageBaseUrl) envVars.CARD_IMAGE_BASE_URL = params.cardImageBaseUrl;
 
   return envVars;
 }

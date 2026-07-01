@@ -32,6 +32,13 @@ export interface CubeCobraStackParams {
   stripePublicKey: string;
   enableBotSecurity: boolean;
   maintainCubeCardHashes: boolean;
+  // Cloudflare R2 (S3-compatible) for self-hosted card images + static assets.
+  // Empty on stages not yet cut over to R2.
+  r2Endpoint: string;
+  r2AccessKeyId: string;
+  r2SecretAccessKey: string;
+  r2Bucket: string;
+  cardImageBaseUrl: string;
 }
 
 export type Environment = 'production' | 'development' | 'local';

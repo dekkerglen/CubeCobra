@@ -608,7 +608,22 @@ function convertCard(
   if (faceAttributeSource.toughness) {
     newcard.toughness = faceAttributeSource.toughness;
   }
-  if (faceAttributeSource.image_uris) {
+  // When CARD_IMAGE_BASE_URL is set, emit URLs for our self-hosted webp images
+  // (R2 via Cloudflare) instead of hotlinking Scryfall. Layout is
+  // {base}/{scryfall_id}/{normal|small|art_crop}[_back].webp — see
+  // packages/jobs/src/sync_card_images.ts and packages/scripts/seed-cardimages.mjs.
+  // Reversible "preflipped" entries get id `${card.id}2` (convertId), but their
+  // art lives under the real card.id's back face, so we use card.id + _back.
+  const cardImageBase = process.env.CARD_IMAGE_BASE_URL?.replace(/\/$/, '');
+  if (cardImageBase) {
+    const face = preflipped ? '_back' : '';
+    newcard.image_small = `${cardImageBase}/${card.id}/small${face}.webp`;
+    newcard.image_normal = `${cardImageBase}/${card.id}/normal${face}.webp`;
+    newcard.art_crop = `${cardImageBase}/${card.id}/art_crop${face}.webp`;
+    if (!preflipped && card.card_faces && card.card_faces.length >= 2 && card.card_faces[1]?.image_uris) {
+      newcard.image_flip = `${cardImageBase}/${card.id}/normal_back.webp`;
+    }
+  } else if (faceAttributeSource.image_uris) {
     newcard.image_small = faceAttributeSource.image_uris.small;
     newcard.image_normal = faceAttributeSource.image_uris.normal;
     newcard.art_crop = faceAttributeSource.image_uris.art_crop;
@@ -617,7 +632,7 @@ function convertCard(
     newcard.image_normal = card.image_uris.normal;
     newcard.art_crop = card.image_uris.art_crop;
   }
-  if (card.card_faces && card.card_faces.length >= 2 && card.card_faces[1]?.image_uris) {
+  if (!cardImageBase && card.card_faces && card.card_faces.length >= 2 && card.card_faces[1]?.image_uris) {
     newcard.image_flip = card.card_faces[1].image_uris.normal;
   }
   if (newcard.type.toLowerCase().includes('land')) {
