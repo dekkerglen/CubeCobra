@@ -16,6 +16,7 @@ export const getRecordsHandler = async (req: Request, res: Response) => {
   try {
     const results = await recordDao.getByCube(cubeId, 20, lastKey || undefined);
     return res.status(200).json({
+      success: 'true',
       records: results.items,
       lastKey: results.lastKey,
     });

@@ -24,7 +24,7 @@ const TrophyArchive: React.FC<TrophyArchiveProps> = ({ records, lastKey }) => {
   const [items, setItems] = useState<Record[]>(records);
   const [lastKeyState, setLastKeyState] = useState<any>(lastKey);
   const [loading, setLoading] = useState<boolean>(false);
-  const { csrfFetch } = useContext(CSRFContext);
+  const { callApi } = useContext(CSRFContext);
   const [page, setPage] = React.useState(0);
 
   const pageCount = Math.ceil(items.length / PAGE_SIZE);
@@ -34,9 +34,8 @@ const TrophyArchive: React.FC<TrophyArchiveProps> = ({ records, lastKey }) => {
     if (loading || !lastKeyState) return;
     setLoading(true);
     try {
-      const response = await csrfFetch('/api/draftreports', {
-        method: 'POST',
-        body: JSON.stringify({ lastKey: lastKeyState }),
+      const response = await callApi('/api/draftreports', {
+        lastKey: lastKeyState,
       });
       const data = await response.json();
       if (data.reports) {
@@ -46,7 +45,7 @@ const TrophyArchive: React.FC<TrophyArchiveProps> = ({ records, lastKey }) => {
     } finally {
       setLoading(false);
     }
-  }, [loading, lastKeyState, csrfFetch]);
+  }, [loading, lastKeyState, callApi]);
 
   const trophyCount = useMemo(() => {
     return items.reduce((count, item) => count + item.trophy.length, 0);
