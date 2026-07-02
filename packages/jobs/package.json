@@ -25,7 +25,7 @@
     "dev:repair-cube-hashes": "NODE_OPTIONS=--max_old_space_size=28672 ts-node -r tsconfig-paths/register --project tsconfig.json src/repairCubeHashes.ts --",
     "dev:repair-package-hashes": "NODE_OPTIONS=--max_old_space_size=28672 ts-node -r tsconfig-paths/register --project tsconfig.json src/repairPackageHashes.ts --",
     "update-all": "npm run init-data && npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict && npm run update-cards",
-    "update-cards-daily": "npm run init-data && npm run update-cards && npm run sync-card-images",
+    "update-cards-daily": "npm run init-data && npm run update-cards",
     "update-metadata-weekly": "npm run init-data && npm run update-draft-history && npm run update-cube-history && npm run update-metadata-dict",
     "fix-external-paths": "npx resolve-tspaths --out dist && node scripts/fixExternalPaths.js",
     "build": "npx tsc && npm run fix-external-paths",

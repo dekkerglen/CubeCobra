@@ -29,9 +29,11 @@ const SYNC_STATE_KEY = 'cardimages/_sync-state.json';
 const DEFAULT_WATERMARK = '2026-06-29T00:00:00Z';
 const WEBP_QUALITY = 80;
 const CONCURRENCY = 16;
-// Card images can change in place when Scryfall re-renders art, so they aren't
-// truly immutable — a 14-day edge TTL bounds how long a stale render can live.
-const IMAGE_CACHE_CONTROL = 'public, max-age=1209600';
+// Long-lived cache to match the static assets (1 year). Card images can change
+// in place when Scryfall re-renders art, so a re-render won't reach clients who
+// already cached it until this expires — acceptable since re-renders are rare and
+// cosmetic. For instant propagation you'd move to versioned URLs (see notes).
+const IMAGE_CACHE_CONTROL = 'public, max-age=31536000, immutable';
 const IMAGE_HEADERS = { 'User-Agent': SCRYFALL_HEADERS['User-Agent'] };
 
 interface ManifestEntry {
@@ -122,10 +124,13 @@ async function runPool<T>(items: T[], n: number, worker: (item: T) => Promise<vo
   await Promise.all(runners);
 }
 
-(async () => {
+// Sync images updated since the stored watermark into R2. Returns the counts so
+// callers (e.g. update_cards) can record them on the card-update task. No-ops
+// (returns zeros) when R2 isn't configured, so stages not cut over to R2 are safe.
+export async function syncCardImages(): Promise<{ cardsUpserted: number; imagesReplaced: number }> {
   if (!r2Configured()) {
-    console.error('R2 not configured (need R2_ENDPOINT, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET)');
-    process.exit(1);
+    console.log('R2 not configured — skipping card image sync.');
+    return { cardsUpserted: 0, imagesReplaced: 0 };
   }
 
   const state = (await getJson<SyncState>(SYNC_STATE_KEY)) ?? {
@@ -141,7 +146,7 @@ async function runPool<T>(items: T[], n: number, worker: (item: T) => Promise<vo
 
   if (changed.length === 0) {
     console.log('Nothing to do.');
-    process.exit(0);
+    return { cardsUpserted: 0, imagesReplaced: 0 };
   }
 
   // Descending order means the newest is first, but max defensively regardless.
@@ -165,5 +170,15 @@ async function runPool<T>(items: T[], n: number, worker: (item: T) => Promise<vo
   });
 
   console.log(`DONE. upserted ${changed.length} cards, ${totalWritten} files. New watermark ${newWatermark}`);
-  process.exit(0);
-})();
+  return { cardsUpserted: changed.length, imagesReplaced: totalWritten };
+}
+
+// Standalone entry point: `npm run sync-card-images`.
+if (require.main === module) {
+  syncCardImages()
+    .then(() => process.exit(0))
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    });
+}

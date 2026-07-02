@@ -60,6 +60,7 @@ export class CardUpdateTaskDynamoDao extends BaseDynamoDao<CardUpdateTask, CardU
       scryfallFileSize: item.scryfallFileSize,
       cardsAdded: item.cardsAdded,
       totalCards: item.totalCards,
+      imagesReplaced: item.imagesReplaced,
       step: item.step,
       completedSteps: item.completedSteps || [],
       stepTimestamps: item.stepTimestamps || {},

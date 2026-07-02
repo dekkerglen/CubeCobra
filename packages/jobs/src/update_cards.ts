@@ -8,6 +8,8 @@ import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { cardUpdateTaskDao } from '@server/dynamo/daos';
 import { s3 } from '@server/dynamo/s3client';
+
+import { syncCardImages } from './sync_card_images';
 import { binaryInsert } from '@server/serverutils/util';
 import * as cardutil from '@utils/cardutil';
 import { CardDetails, ColorCategory, DefaultElo, Game, Legality } from '@utils/datatypes/Card';
@@ -1358,6 +1360,27 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
     }
 
     await uploadCardDb(scryfallMetadata, taskId);
+
+    // Sync any card images Scryfall re-rendered since our last run into R2, and
+    // record how many image files were replaced on the task for the admin view.
+    // Non-fatal: a sync hiccup shouldn't fail an otherwise-successful catalog update.
+    if (taskId) {
+      await cardUpdateTaskDao.updateStep(taskId, 'Syncing card images');
+    }
+    let imagesReplaced = 0;
+    try {
+      const syncResult = await syncCardImages();
+      imagesReplaced = syncResult.imagesReplaced;
+    } catch (err) {
+      console.error('Card image sync failed (non-fatal):', err);
+    }
+    if (taskId) {
+      const task = await cardUpdateTaskDao.getById(taskId);
+      if (task) {
+        task.imagesReplaced = imagesReplaced;
+        await cardUpdateTaskDao.update(task);
+      }
+    }
 
     if (taskId) {
       await cardUpdateTaskDao.markAsCompleted(taskId);

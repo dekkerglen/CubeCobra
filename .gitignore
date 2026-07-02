@@ -94,3 +94,5 @@ packages/archetypeAnnotater/.venv/
 # local Scryfall card image snapshot (seeded into R2; never committed)
 /cardimages/
 /beta-assets/
+/prod-assets/
+packages/docs/maintenance/r2-production-migration.md
