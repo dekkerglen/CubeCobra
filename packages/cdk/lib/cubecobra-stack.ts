@@ -355,6 +355,10 @@ function createLambdaEnvironmentVariables(
     ENV: params.env,
     NODE_ENV: params.environmentName === 'local' ? 'development' : 'production',
     USE_S3: 'true',
+    // Stage discriminator so the monitor lambda can gate prod-only jobs off on
+    // beta/local — exports write to the shared cubecobra-public bucket, which the
+    // beta jobs role has no access to, so they must not run outside production.
+    STAGE: params.environmentName === 'production' ? 'PROD' : params.environmentName === 'beta' ? 'BETA' : 'LOCAL',
     DRAFTMANCER_API_KEY: params.draftmancerApiKey,
     ENABLE_BOT_SECURITY: params.enableBotSecurity ? 'true' : 'false',
     MAINTAIN_CUBE_CARD_HASHES: params.maintainCubeCardHashes ? 'true' : 'false',

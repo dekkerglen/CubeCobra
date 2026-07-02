@@ -9,6 +9,14 @@ import { checkEcsTaskHealth, isTaskRunning, startEcsTask } from './utils/ecs';
 export async function monitorExportTasks(): Promise<void> {
   console.log('Starting export task monitoring...');
 
+  // Exports write to the shared cubecobra-public bucket and only the prod jobs
+  // role has access. On any other stage the export can never succeed, so the
+  // "needed" check below would relaunch it every 5 minutes forever. Skip it.
+  if (process.env.STAGE !== 'PROD') {
+    console.log(`Export monitoring skipped on non-production stage (STAGE=${process.env.STAGE ?? 'unset'}).`);
+    return;
+  }
+
   // Get the most recent task
   const mostRecentTask = await exportTaskDao.getMostRecent();
 
