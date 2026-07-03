@@ -88,7 +88,7 @@ const taskId = process.env.CARD_METADATA_TASK_ID;
   // Use the same directory structure as the recommenderService
   const mlModelDir = path.join(__dirname, '..', '..', 'ml');
   const modelDir = path.join(mlModelDir, 'model');
-  const requiredModels = ['encoder', 'cube_decoder', 'deck_build_decoder', 'draft_decoder', 'cube_context_encoder'];
+  const requiredModels = ['encoder', 'cube_decoder', 'deck_build_decoder', 'draft_decoder'];
 
   const modelDirExists = fs.existsSync(modelDir);
   const modelsExist =

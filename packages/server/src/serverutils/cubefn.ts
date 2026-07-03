@@ -9,7 +9,7 @@ import Papa from 'papaparse';
 import sanitizeHtml from 'sanitize-html';
 
 import { cardFromId, getAllVersionIds, reasonableId } from './carddb';
-import { batchDraft, cubeContext as encodeCubeContext } from './ml';
+import { batchDraft } from './ml';
 import * as util from './util';
 
 interface CubeCard {
@@ -649,24 +649,10 @@ async function generateBalancedPack(
     candidates.push({ packResult, oracleIds });
   }
 
-  // Compute the cube's 32-dim context embedding once and pass it to every batch input.
-  // Without it the draft decoder receives a 128-dim input where it expects 160 and the
-  // ML service returns empty predictions — bot weights all come back as zeros.
-  const cubeOraclesForContext: string[] = Array.from(
-    new Set<string>(
-      (cards.mainboard ?? [])
-        .map((card: any) => card.details?.oracle_id as string | undefined)
-        .filter((id: string | undefined): id is string => Boolean(id)),
-    ),
-  );
-  const cubeCtxEmbedding = await encodeCubeContext(cubeOraclesForContext);
-  const cubeCtx = cubeCtxEmbedding.length > 0 ? cubeCtxEmbedding : undefined;
-
   // Single batched ML call for all candidates (P1P1: pack=oracleIds, pool=[])
   const batchInputs = candidates.map((c) => ({
     pack: c.oracleIds,
     pool: [] as string[],
-    cubeContext: cubeCtx,
   }));
   const batchResults = await batchDraft(batchInputs);
 

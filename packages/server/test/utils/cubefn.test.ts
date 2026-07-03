@@ -9,7 +9,6 @@ import { createCardDetails, createChangelogCardAdd, createCube, createCustomCard
 // Mock dependencies
 jest.mock('serverutils/ml', () => ({
   batchDraft: jest.fn(),
-  cubeContext: jest.fn().mockResolvedValue([]),
 }));
 jest.mock('@utils/drafting/createdraft');
 jest.mock('serverutils/carddb');

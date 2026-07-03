@@ -100,3 +100,6 @@ packages/archetypeAnnotater/.venv/
 /beta-assets/
 /prod-assets/
 packages/docs/maintenance/r2-production-migration.md
+
+# Local ML model export artifacts (downloaded, multi-hundred-MB; not for git)
+cubecobra_ml_*/

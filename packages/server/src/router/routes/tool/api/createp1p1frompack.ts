@@ -112,21 +112,8 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
       return res.status(400).json({ error: 'No valid cards found' });
     }
 
-    // Collect the cube's mainboard oracle ids so the bot prediction can include the
-    // 32-dim cube context (draft decoder needs pool[128] ⊕ cube_ctx[32]). Without it
-    // the ML service silently returns empty predictions and botWeights end up zeros.
-    const cubeOracleIds: string[] = [];
-    const seenCubeOracles = new Set<string>();
-    for (const cubeCard of cubeCards.mainboard ?? []) {
-      const oid = cubeCard.details?.oracle_id;
-      if (oid && !seenCubeOracles.has(oid)) {
-        seenCubeOracles.add(oid);
-        cubeOracleIds.push(oid);
-      }
-    }
-
     // Get bot prediction for this pack using actual bot logic
-    const botResult = await getBotPrediction(oracleIds, cubeOracleIds);
+    const botResult = await getBotPrediction(oracleIds);
 
     // Create S3 data
     const s3Data = {
