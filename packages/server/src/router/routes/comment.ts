@@ -60,22 +60,54 @@ export const getHandler = async (req: Request, res: Response) => {
   }
 };
 
+// The set of reasons the report form offers. Reports must use one of these
+// exact values — free-form reason text was being abused to inject spam and
+// SQL-injection payloads into the moderation queue.
+const REPORT_REASONS = [
+  'This is spam or phishing',
+  'This is offensive or abusive',
+  'It expresses intentions of self-harm or suicide',
+];
+
+const MAX_INFO_LENGTH = 1000;
+
 export const reportHandler = async (req: Request, res: Response) => {
   try {
     const { commentid, info, reason } = req.body;
+
+    // This route is auth-gated (see routes below), so req.user is always set here.
+    const successFlash = () => {
+      req.flash(
+        'success',
+        'Thank you for the report! Our moderators will review the report and decide whether to take action.',
+      );
+    };
 
     // Only allow valid UUID or MongoID
     const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
     const MONGO_ID_RE = /^[0-9a-f]{24}$/i;
     function isValidId(id: string) {
-      return UUID_RE.test(id) || MONGO_ID_RE.test(id);
+      return typeof id === 'string' && (UUID_RE.test(id) || MONGO_ID_RE.test(id));
     }
     if (!isValidId(commentid)) {
       // Silently ignore invalid IDs
-      req.flash(
-        'success',
-        'Thank you for the report! Our moderators will review the report can decide whether to take action.',
-      );
+      successFlash();
+      return redirect(req, res, '/404');
+    }
+
+    // Only accept a reason from the known allowlist. Anything else is spam/abuse.
+    if (typeof reason !== 'string' || !REPORT_REASONS.includes(reason)) {
+      req.flash('danger', 'Invalid report reason.');
+      return redirect(req, res, `/comment/${commentid}`);
+    }
+
+    // Optional free-text info: bound the length and never let it carry markup weight.
+    const safeInfo = typeof info === 'string' ? info.slice(0, MAX_INFO_LENGTH) : '';
+
+    // The comment must actually exist before we file a report against it.
+    const comment = await commentDao.getById(commentid);
+    if (!comment) {
+      successFlash();
       return redirect(req, res, `/comment/${commentid}`);
     }
 
@@ -85,30 +117,24 @@ export const reportHandler = async (req: Request, res: Response) => {
       (n) =>
         n.type === NoticeType.COMMENT_REPORT &&
         n.subject === commentid &&
-        String(n.user?.id || n.user) === String(req.user?.id || null),
+        String(n.user?.id || n.user) === String(req.user?.id),
     );
     if (alreadyReported) {
-      req.flash(
-        'success',
-        'Thank you for the report! Our moderators will review the report can decide whether to take action.',
-      );
+      successFlash();
       return redirect(req, res, `/comment/${commentid}`);
     }
 
     const report = {
       subject: commentid,
-      body: `${reason}\n\n${info}`,
-      user: req.user ? req.user.id : null,
+      body: `${reason}\n\n${safeInfo}`,
+      user: req.user!.id,
       date: Date.now().valueOf(),
       type: NoticeType.COMMENT_REPORT,
     };
 
     await noticeDao.put(report);
 
-    req.flash(
-      'success',
-      'Thank you for the report! Our moderators will review the report can decide whether to take action.',
-    );
+    successFlash();
 
     return redirect(req, res, `/comment/${commentid}`);
   } catch (err) {
@@ -277,7 +303,7 @@ export const routes = [
   {
     path: '/report',
     method: 'post',
-    handler: [csrfProtection, reportHandler],
+    handler: [ensureAuth, csrfProtection, reportHandler],
   },
   {
     path: '/getcomments',
