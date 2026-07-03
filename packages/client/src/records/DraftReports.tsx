@@ -40,7 +40,7 @@ const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
             return (
               <React.Fragment key={player.userId}>
                 <Link href={`/user/view/${player.userId}`}>
-                  <Text sm>{player.name}asdasd</Text>
+                  <Text sm>{player.name}</Text>
                 </Link>
                 {index < record.players.length - 1 && <Text sm>, </Text>}
               </React.Fragment>
