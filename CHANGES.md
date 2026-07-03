@@ -9,13 +9,22 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - When pinning a board to the cube tray, you can set default tags, a status, and a note that get applied to every card you drop onto it.
 - Card name autocomplete now matches anywhere in a card's name and ignores punctuation and spacing, so partial searches like "moonsage" find "Tamiyo, the Moon Sage".
 - Refactored winrate analytics for records with a much more comprehensive dashboard
-- You can now add a deck to a record by snapping a photo of it — card names are read right in your browser and matched to your cube.
+- Snap or upload a photo of a physical deck and Cube Cobra reads every card name straight from the image, right in your browser, and matches each one to your cube — no more typing out a decklist by hand.
+- The photo scanner flags any card it isn't sure about for a quick review, offers one-click suggestions for the most likely match, and even catches cards that have since been cut from your cube, so the final decklist is accurate before you add it.
 - Share a link to a record so the players in your event can submit their own decks and results, without needing edit access to your cube.
 - Import a whole event straight from a Hedron Network export — players, rounds, results, and deck photos all come in together.
 - Cube owners can now manually set a player's win/loss/draw record on an event when the logged matches don't capture it.
 - Add Artist to the CSV export of Cube cards and Tokens
 - Add tooltips to better describe what "Specify Versions" and "Include Extras" do in Cube Edit card search
+- Browse a new Sets page that lists every Magic set with its set symbol — sort by release date, name, or card count, and click through to see all of a set's cards.
+- Lotus Cobra patrons (and admins) can now upload and host their own images on Cube Cobra and use them as custom card art, profile pictures, and cube images, all managed from a new image library in your account settings.
+- Card name search fields now include "Specify Versions" and "Include Extras" toggles, so you control which printings show up when adding cards on the bulk upload and package pages.
 
 ## Bug Fixes
 
 - Fix Cube comparison export not bucketing cards by in both, only A, or only B when there is a filter set
+- Fixed sample pack, Pack 1 Pick 1, and daily homepage pack images sometimes failing to load.
+- Fixed Draft Reports and Import Records only showing the first page of results.
+- Fixed the wrong player name appearing on draft reports.
+- Fixed manually-set win/loss/draw records on events not saving or loading correctly.
+- Fixed replacing your cube in the Featured Cubes queue creating duplicate entries.
