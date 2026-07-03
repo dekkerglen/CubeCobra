@@ -298,7 +298,7 @@ const SetsPage: React.FC<SetsPageProps> = ({ sets }) => {
               <ResponsiveDiv xxl className="pl-2 py-2 min-w-fit">
                 <SideBanner placementId="left-rail" />
               </ResponsiveDiv>
-              <div className="flex-grow px-2 w-full max-w-3xl mx-auto min-w-0">
+              <div className="flex-grow px-2 w-full max-w-5xl mx-auto min-w-0">
                 <Flexbox direction="col" gap="3" className="pt-3 md:pt-4 pb-3">
                   <Flexbox direction="row" alignItems="center" justify="between" gap="3" wrap="wrap" className="w-full">
                     <Text lg semibold className="!text-button-text">
@@ -312,7 +312,13 @@ const SetsPage: React.FC<SetsPageProps> = ({ sets }) => {
                 <Flexbox direction="col" gap="3" className="mt-3">
                   {displayRows.length > 0 ? (
                     <Flexbox direction="col" gap="2">
-                      <Table headers={headers} rows={rows} getRowProps={getRowProps} hideOnMobile={['Code', 'Type']} />
+                      <Table
+                        headers={headers}
+                        rows={rows}
+                        getRowProps={getRowProps}
+                        hideOnMobile={['Code', 'Type']}
+                        wrapCells
+                      />
                       <Flexbox direction="row" justify="center" alignItems="center" className="w-full px-2">
                         {renderPager(false)}
                       </Flexbox>

@@ -11,15 +11,21 @@ export interface TableProps {
   // Extra attributes (handlers, className, etc.) merged onto each <tr>. The
   // index matches the row's position in `rows`. Used e.g. to make rows draggable.
   getRowProps?: (rowIndex: number) => React.HTMLAttributes<HTMLTableRowElement>;
+  // When true, cells wrap their content instead of forcing the table wider than its
+  // container, so the table never introduces horizontal scroll. Off by default to keep
+  // the single-line layout every existing table relies on.
+  wrapCells?: boolean;
 }
 
-const Table: React.FC<TableProps> = ({ headers, rows, hideOnMobile, getRowProps }) => {
+const Table: React.FC<TableProps> = ({ headers, rows, hideOnMobile, getRowProps, wrapCells }) => {
   const hiddenSet = new Set(hideOnMobile ?? []);
   const cellHiddenClass = (header: string) => (hiddenSet.has(header) ? 'hidden md:table-cell' : '');
+  const wrapClass = wrapCells ? 'whitespace-normal break-words' : 'whitespace-nowrap';
+  const wrapperClass = classNames('max-w-full', { 'overflow-x-auto': !wrapCells });
 
   if (headers) {
     return (
-      <div className="overflow-x-auto max-w-full">
+      <div className={wrapperClass}>
         <table className="border border-border w-full">
           <thead className="bg-bg-active/80">
             <tr>
@@ -48,7 +54,7 @@ const Table: React.FC<TableProps> = ({ headers, rows, hideOnMobile, getRowProps 
                   {...rowRest}
                 >
                   {headers.map((header) => (
-                    <td key={header} className={classNames('whitespace-nowrap p-2', cellHiddenClass(header))}>
+                    <td key={header} className={classNames(wrapClass, 'p-2', cellHiddenClass(header))}>
                       <Text sm>{row[header]}</Text>
                     </td>
                   ))}
