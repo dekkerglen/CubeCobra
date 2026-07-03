@@ -66,12 +66,14 @@ import {
   QueryCommandInput,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
+import { cdnUrl } from '@utils/cdnUrl';
 import { CardStatus } from '@utils/datatypes/Card';
-import Cube, { ViewDefinition } from '@utils/datatypes/Cube';
+import Cube, { CubeImage, ViewDefinition } from '@utils/datatypes/Cube';
 import { CubeCards } from '@utils/datatypes/Cube';
 import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 import User from '@utils/datatypes/User';
 import { normalizeDraftFormatSteps } from '@utils/draftutil';
+import { hostedImageToImageData } from '@utils/hostedImagesUtil';
 import { cardFromId, getPlaceholderCard } from 'serverutils/carddb';
 import cloudwatch from 'serverutils/cloudwatch';
 import { getImageData } from 'serverutils/imageutil';
@@ -101,6 +103,9 @@ export interface UnhydratedCube {
   description: string;
   brief?: string;
   imageName: string;
+  // Lotus Cobra perk: uploaded custom cube image. See utils Cube.ts for semantics.
+  imgHostedImageId?: string;
+  imgHostedImageUrl?: string;
   date: number; // Legacy field - this is dateLastUpdated, kept for backwards compatibility
   dateCreated: number;
   dateLastUpdated: number;
@@ -137,6 +142,17 @@ interface QueryResult {
   items: Cube[];
   lastKey?: Record<string, any>;
 }
+
+/**
+ * Resolves the cube's display image. Prefers an uploaded custom image (Lotus Cobra perk) when set,
+ * otherwise falls back to the card art derived from imageName.
+ */
+const resolveCubeImage = (item: UnhydratedCube): CubeImage => {
+  if (item.imgHostedImageUrl) {
+    return hostedImageToImageData(cdnUrl(item.imgHostedImageUrl), item.imgHostedImageId);
+  }
+  return getImageData(item.imageName);
+};
 
 export type SortOrder = 'popularity' | 'alphabetical' | 'cards' | 'date';
 
@@ -237,6 +253,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       description: item.description,
       brief: item.brief,
       imageName: item.imageName,
+      imgHostedImageId: item.imgHostedImageId,
+      imgHostedImageUrl: item.imgHostedImageUrl,
       date: item.date,
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
@@ -277,7 +295,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     if (!item.owner) {
       cloudwatch.error(`Cube ${item.id} has null or undefined owner - using deleted user placeholder`);
       const deletedUser = createDeletedUserPlaceholder('deleted');
-      const image = getImageData(item.imageName);
+      const image = resolveCubeImage(item);
 
       const draftFormats = item.formats || [];
       for (let format of draftFormats) {
@@ -322,7 +340,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         `Cube ${item.id} has owner ${item.owner} that doesn't exist in database - using deleted user placeholder`,
       );
       const deletedUser = createDeletedUserPlaceholder(item.owner);
-      const image = getImageData(item.imageName);
+      const image = resolveCubeImage(item);
 
       const draftFormats = item.formats || [];
       for (let format of draftFormats) {
@@ -359,7 +377,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       } as Cube;
     }
 
-    const image = getImageData(item.imageName);
+    const image = resolveCubeImage(item);
 
     const draftFormats = item.formats || [];
     // Correct bad custom draft formats on load
@@ -442,7 +460,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
           return createDeletedUserPlaceholder(item.owner);
         })();
 
-      const image = getImageData(item.imageName);
+      const image = resolveCubeImage(item);
 
       const draftFormats = item.formats || [];
       for (let format of draftFormats) {
@@ -459,7 +477,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     // Hydrate items without owners
     const cubesWithoutOwners = itemsWithoutOwners.map((item) => {
       const deletedUser = createDeletedUserPlaceholder('deleted');
-      const image = getImageData(item.imageName);
+      const image = resolveCubeImage(item);
 
       const draftFormats = item.formats || [];
       for (let format of draftFormats) {

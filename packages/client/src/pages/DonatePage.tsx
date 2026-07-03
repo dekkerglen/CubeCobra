@@ -20,6 +20,13 @@ const PERKS = [
   'Higher tiers can queue their cube for the rotating Featured Cubes list',
 ];
 
+// Perks exclusive to the top (Lotus Cobra) tier.
+const LOTUS_COBRA_PERKS = [
+  'Host your own images on Cube Cobra and use them as custom card art',
+  'Upload a custom profile picture',
+  'Upload a custom cube image',
+];
+
 const DonatePage: React.FC = () => (
   <HelpLayout activeHref="/help/donate" noBanner>
     <Flexbox direction="col" gap="4">
@@ -70,6 +77,17 @@ const DonatePage: React.FC = () => (
         <CardBody>
           <Flexbox direction="col" gap="2">
             {PERKS.map((perk) => (
+              <Flexbox key={perk} direction="row" alignItems="start" gap="2">
+                <span className="text-green-600 mt-1 flex-shrink-0">
+                  <CheckIcon size={14} />
+                </span>
+                <Text md>{perk}</Text>
+              </Flexbox>
+            ))}
+            <Text semibold md className="mt-2">
+              Lotus Cobra tier also includes:
+            </Text>
+            {LOTUS_COBRA_PERKS.map((perk) => (
               <Flexbox key={perk} direction="row" alignItems="start" gap="2">
                 <span className="text-green-600 mt-1 flex-shrink-0">
                   <CheckIcon size={14} />

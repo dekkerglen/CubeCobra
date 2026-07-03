@@ -1,4 +1,4 @@
-import { userDao } from 'dynamo/daos';
+import { hostedImageDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
 import { handleRouteError, redirect } from 'serverutils/render';
@@ -62,6 +62,23 @@ export const handler = async (req: Request, res: Response) => {
     if (req.body.image) {
       userToUpdate.imageName = req.body.image;
     }
+
+    // Custom uploaded avatar (Lotus Cobra perk). An empty value clears it back to card art.
+    // The field is only present when the profile form includes it, so untouched forms are unaffected.
+    if (typeof req.body.profileHostedImageId !== 'undefined') {
+      const hostedImageId = req.body.profileHostedImageId;
+      if (hostedImageId) {
+        const hostedImage = await hostedImageDao.getById(hostedImageId);
+        if (hostedImage && hostedImage.owner === user.id) {
+          userToUpdate.profileHostedImageId = hostedImage.id;
+          userToUpdate.profileImageUrl = hostedImage.url;
+        }
+      } else {
+        userToUpdate.profileHostedImageId = undefined;
+        userToUpdate.profileImageUrl = undefined;
+      }
+    }
+
     await userDao.update(userToUpdate as any);
 
     req.flash('success', 'User information updated.');

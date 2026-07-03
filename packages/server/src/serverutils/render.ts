@@ -10,7 +10,7 @@ import serialize from 'serialize-javascript';
 import 'dotenv/config';
 
 import { SortOrder } from '../dynamo/dao/CubeDynamoDao';
-import { collaboratorIndexDao, cubeDao, notificationDao } from '../dynamo/daos';
+import { collaboratorIndexDao, cubeDao, notificationDao, patronDao } from '../dynamo/daos';
 import { Request, Response } from '../types/express';
 import { GIT_COMMIT } from './git';
 import { getBaseUrl } from './util';
@@ -170,6 +170,11 @@ interface ReactProps {
     about?: string;
     image?: Image;
     roles?: UserRoles[];
+    // Patreon tier info, so the client can gate tier-locked features (e.g. image hosting).
+    patronLevel?: number;
+    patronStatus?: string;
+    profileHostedImageId?: string;
+    profileImageUrl?: string;
     theme?: string;
     hideFeatured?: boolean;
     hideTagColors?: boolean;
@@ -202,9 +207,12 @@ const render = (
 ): void => {
   getCubes(req, async (cubes) => {
     if (req.user) {
-      const [notifications, collaboratingCubeIds] = await Promise.all([
+      const [notifications, collaboratingCubeIds, patron] = await Promise.all([
         notificationDao.getByToAndStatus(req.user.id, NotificationStatus.UNREAD),
         collaboratorIndexDao.getCubeIdsForUser(req.user.id),
+        // Patron level is only needed to gate optional perks. A Patron-table hiccup must not
+        // take down every authenticated page render, so degrade to "no patron" on failure.
+        patronDao.getById(req.user.id).catch(() => undefined),
       ]);
       const collaboratingCubes = collaboratingCubeIds.length > 0 ? await cubeDao.batchGet(collaboratingCubeIds) : [];
 
@@ -215,6 +223,11 @@ const render = (
         about: req.user.about,
         image: req.user.image,
         roles: req.user.roles,
+        patronLevel: patron?.level,
+        patronStatus: patron?.status,
+        // Sent so the profile form can round-trip a custom avatar without clearing it.
+        profileHostedImageId: req.user.profileHostedImageId,
+        profileImageUrl: req.user.profileImageUrl,
         theme: req.user.theme,
         hideFeatured: req.user.hideFeatured,
         hideTagColors: req.user.hideTagColors,

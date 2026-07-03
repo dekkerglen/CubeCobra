@@ -1,6 +1,7 @@
 import { UserRoles } from '@utils/datatypes/User';
+import { canUseImageHosting } from '@utils/hostedImagesUtil';
 // import csurf from 'csurf';
-import { userDao } from 'dynamo/daos';
+import { patronDao, userDao } from 'dynamo/daos';
 import { validationResult } from 'express-validator';
 import Joi from 'joi';
 import { redirect } from 'serverutils/render';
@@ -40,6 +41,22 @@ export const ensureRole =
     }
     return redirect(req, res, '/404');
   };
+
+// Gates a JSON route behind the image-hosting perk (active Lotus Cobra patron, or Admin).
+export const ensureImageHosting = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+  if (!req.isAuthenticated() || !req.user) {
+    res.status(403).json({ success: 'false', message: 'You must be logged in.' });
+    return;
+  }
+
+  const patron = await patronDao.getById(req.user.id);
+  if (!canUseImageHosting(patron, req.user.roles)) {
+    res.status(403).json({ success: 'false', message: 'Image hosting is a Lotus Cobra Patreon perk.' });
+    return;
+  }
+
+  return next();
+};
 
 export const csrfProtection = [
   // csurf(),

@@ -1,15 +1,20 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
+import { hostedImageToImageData } from '@utils/hostedImagesUtil';
+
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import { Card, CardHeader } from 'components/base/Card';
+import Collapse from 'components/base/Collapse';
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
+import ImageUploadWidget from 'components/ImageUploadWidget';
 import MtgImage from 'components/MtgImage';
 import TextEntry from 'components/TextEntry';
 import UserContext from 'contexts/UserContext';
+import useCanUploadImages from 'hooks/useCanUploadImages';
 import { cardNameMatches, fetchCardImage } from 'utils/cardAutocomplete';
 
 interface UserProfileProps {
@@ -18,6 +23,7 @@ interface UserProfileProps {
 
 const UserProfile: React.FC<UserProfileProps> = ({ userEmail }) => {
   const user = useContext(UserContext);
+  const canUploadImages = useCanUploadImages();
   const [markdown, setMarkdown] = useState(user?.about || '');
   const [username, setUsername] = useState(user?.username);
   const [email, setEmail] = useState(userEmail || user?.email);
@@ -29,9 +35,13 @@ const UserProfile: React.FC<UserProfileProps> = ({ userEmail }) => {
       uri: user?.image?.uri || '',
     },
   );
+  // Custom uploaded avatar (Lotus Cobra perk). Empty string means "use card art".
+  const [profileHostedImageId, setProfileHostedImageId] = useState(user?.profileHostedImageId || '');
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   const changeImage = useCallback((img: string) => {
     setImagename(img);
+    setProfileHostedImageId('');
     fetchCardImage(img).then((resolved) => {
       if (resolved) {
         setImage(resolved);
@@ -44,9 +54,10 @@ const UserProfile: React.FC<UserProfileProps> = ({ userEmail }) => {
       username: username || '',
       email: email || '',
       image: imagename || '',
+      profileHostedImageId,
       body: markdown,
     }),
-    [username, email, imagename, markdown],
+    [username, email, imagename, profileHostedImageId, markdown],
   );
 
   return (
@@ -67,16 +78,50 @@ const UserProfile: React.FC<UserProfileProps> = ({ userEmail }) => {
             </Card>
           </Col>
           <Col xs={6}>
-            <AutocompleteInput
-              getMatches={cardNameMatches(true)}
-              type="text"
-              name="remove"
-              value={imagename}
-              setValue={changeImage}
-              onSubmit={(event) => event.preventDefault()}
-              placeholder="Cardname for image"
-              autoComplete="off"
-            />
+            <Flexbox direction="col" gap="2">
+              <AutocompleteInput
+                getMatches={cardNameMatches(true)}
+                type="text"
+                name="remove"
+                value={imagename}
+                setValue={changeImage}
+                onSubmit={(event) => event.preventDefault()}
+                placeholder="Cardname for image"
+                autoComplete="off"
+              />
+              {canUploadImages && (
+                <>
+                  <Button color="secondary" onClick={() => setUploadOpen((o) => !o)}>
+                    {uploadOpen ? 'Cancel Upload' : 'Upload Custom Image'}
+                  </Button>
+                  <Collapse isOpen={uploadOpen}>
+                    <ImageUploadWidget
+                      usage="profile"
+                      label="Choose Image"
+                      onUploaded={(uploaded) => {
+                        setProfileHostedImageId(uploaded.id);
+                        setImage(hostedImageToImageData(uploaded.url, uploaded.id));
+                        setUploadOpen(false);
+                      }}
+                    />
+                  </Collapse>
+                  {profileHostedImageId && (
+                    <Button
+                      color="danger"
+                      outline
+                      onClick={() => {
+                        setProfileHostedImageId('');
+                        if (imagename) {
+                          changeImage(imagename);
+                        }
+                      }}
+                    >
+                      Remove Custom Image
+                    </Button>
+                  )}
+                </>
+              )}
+            </Flexbox>
           </Col>
         </Row>
         <Text semibold>About</Text>
