@@ -1,3 +1,5 @@
+import { MODEL_VERSION } from '@utils/modelVersion';
+
 import { Request, Response } from '../../types/express';
 
 // Bucket is in us-east-2 — do not use AWS_REGION which may differ in dev/prod environments
@@ -7,8 +9,12 @@ const PUBLIC_MODEL_BASE = `https://cubecobra-public.s3.us-east-2.amazonaws.com/m
  * GET /model/*
  *
  * Dev fallback: proxies model files from the public S3 bucket when no CDN
- * base URL is configured. In production the CDN serves /model/* directly and
- * this route is never hit.
+ * base URL is configured. In production the CDN serves /model/<version>/*
+ * directly (versioned R2 mirror) and this route is never hit.
+ *
+ * The client requests the versioned path /model/<MODEL_VERSION>/..., but the
+ * public S3 bucket is laid out flat (model/...). Strip the leading version
+ * segment so dev keeps resolving against that flat source.
  */
 const modelHandler = async (req: Request, res: Response) => {
   const modelPath = (req.params as any)[0] as string | undefined;
@@ -16,7 +22,10 @@ const modelHandler = async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Model path required' });
   }
 
-  const normalized = modelPath.replace(/\.\./g, '').replace(/^\/+/, '');
+  let normalized = modelPath.replace(/\.\./g, '').replace(/^\/+/, '');
+  if (normalized.startsWith(`${MODEL_VERSION}/`)) {
+    normalized = normalized.slice(MODEL_VERSION.length + 1);
+  }
   const url = `${PUBLIC_MODEL_BASE}/${normalized}`;
 
   const contentType = normalized.endsWith('.json') ? 'application/json' : 'application/octet-stream';

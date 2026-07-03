@@ -15,13 +15,16 @@
  * draft simulator path does not pay its download cost unless recommendations
  * are actually requested.
  *
- * Models are fetched from the assets CDN under /model/* (mirrored there by
- * scripts/uploadMLModel.ts during deploy) and cached by the browser via
- * normal HTTP caching. TF.js itself is dynamically imported to keep it out
+ * Models are fetched from the assets CDN under /model/<MODEL_VERSION>/*
+ * (mirrored there by scripts/uploadMLModel.ts during deploy) and cached by the
+ * browser via a 1-year immutable cache. The version segment is what makes a new
+ * model rollout safe: it moves the files to a fresh URL no browser has cached.
+ * See @utils/modelVersion. TF.js itself is dynamically imported to keep it out
  * of the main bundle.
  */
 
 import { cdnUrl } from '@utils/cdnUrl';
+import { MODEL_VERSION } from '@utils/modelVersion';
 import { BasicLandInfo } from '@utils/datatypes/SimulationReport';
 import { type LandTrimDeck, runManabaseTrim } from '@utils/drafting/landTrim';
 import { pickAddedBasics } from '@utils/drafting/manabaseHeuristics';
@@ -29,8 +32,8 @@ import { pickAddedBasics } from '@utils/drafting/manabaseHeuristics';
 // Models are served only from the CDN. We deliberately do NOT fall back to the
 // app origin: the bundle is ~70 MB and proxying it through our server would
 // wreck egress costs. If this 403s, the fix is the model mirror (the assets
-// bucket must actually contain /model/*), not a server-side proxy.
-const modelUrl = (path: string): string => cdnUrl(`/model/${path}`);
+// bucket must actually contain /model/<MODEL_VERSION>/*), not a server-side proxy.
+const modelUrl = (path: string): string => cdnUrl(`/model/${MODEL_VERSION}/${path}`);
 
 let tf: typeof import('@tensorflow/tfjs') | null = null;
 
