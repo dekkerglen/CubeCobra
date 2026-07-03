@@ -79,7 +79,7 @@
     "stripe": "^14.0.0",
     "supertest": "^7.1.4",
     "ts-node": "^10.9.2",
-    "uuid": "^11.0.0"
+    "uuid": "^14.0.0"
   },
   "devDependencies": {
     "@babel/plugin-transform-nullish-coalescing-operator": "^7.27.1",
