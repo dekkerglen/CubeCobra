@@ -8,13 +8,12 @@ import { GetObjectCommand } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import { cardUpdateTaskDao } from '@server/dynamo/daos';
 import { s3 } from '@server/dynamo/s3client';
-
-import { syncCardImages } from './sync_card_images';
 import { binaryInsert } from '@server/serverutils/util';
 import * as cardutil from '@utils/cardutil';
 import { CardDetails, ColorCategory, DefaultElo, Game, Legality } from '@utils/datatypes/Card';
 import { CardMetadata } from '@utils/datatypes/CardCatalog';
 import { ManaSymbol } from '@utils/datatypes/Mana';
+import { SetInfo } from '@utils/datatypes/SetInfo';
 import es from 'event-stream';
 import fs, { createWriteStream } from 'fs';
 // @ts-ignore - JSONStream doesn't have proper types
@@ -23,6 +22,8 @@ import fetch from 'node-fetch';
 import path from 'path';
 import stream, { pipeline } from 'stream';
 
+import { syncCardImages } from './sync_card_images';
+import { syncSetSymbols, toSymbolSources } from './sync_set_symbols';
 import { downloadJson, uploadFile } from './utils/s3';
 import { SCRYFALL_HEADERS } from './utils/scryfall';
 import {
@@ -56,6 +57,18 @@ interface SetRelease {
 
 const sets: SetRelease[] = [];
 let orderedSetCodes: string[] = [];
+
+// Full set metadata keyed by set code, written to setdict.json and served to the
+// Explore -> Sets page. Populated alongside `sets` during processSets.
+const setdict: Record<string, SetInfo> = {};
+
+// Raw Scryfall icon_svg_uri per set code — the source for the R2 symbol sync.
+// Kept separate from setdict.icon, which may already be rewritten to our CDN.
+const scryfallSetIcons: Record<string, string> = {};
+
+// When configured, set symbols are served from our R2 cache at
+// {SET_SYMBOL_BASE_URL}/{code}.svg; otherwise we hotlink Scryfall's icon.
+const setSymbolBase = process.env.SET_SYMBOL_BASE_URL?.replace(/\/$/, '');
 
 // Lookup set_type by set code (populated during processSets)
 const setTypeByCode: Record<string, string> = {};
@@ -715,6 +728,7 @@ async function writeCatalog(basePath = PRIVATE_DIR) {
   await writeFile(path.join(basePath, 'metadatadict.json'), catalog.metadatadict);
   await writeFile(path.join(basePath, 'indexToOracle.json'), catalog.indexToOracleId);
   await writeFile(path.join(basePath, 'illustrationIdToScryfallIds.json'), catalog.illustrationIdToScryfallIds);
+  await writeFile(path.join(basePath, 'setdict.json'), setdict);
 
   const duration = (Date.now() - start) / 1000;
 
@@ -993,6 +1007,20 @@ async function saveSet(set: ScryfallSet) {
     released_at: new Date(`${set.released_at!}T00:00:00-08:00`),
     set_type: set.set_type,
   });
+
+  setdict[set.code] = {
+    code: set.code,
+    name: set.name,
+    setType: set.set_type,
+    releasedAt: set.released_at ?? null,
+    cardCount: set.card_count,
+    parentSetCode: set.parent_set_code,
+    digital: set.digital,
+    icon: setSymbolBase ? `${setSymbolBase}/${set.code}.svg` : set.icon_svg_uri,
+  };
+  if (set.icon_svg_uri) {
+    scryfallSetIcons[set.code] = set.icon_svg_uri;
+  }
 }
 
 async function processSets() {
@@ -1125,6 +1153,7 @@ const CARD_UPDATE_FILES = [
   'illustrationIdToScryfallIds.json',
   'metadatadict.json',
   'indexToOracle.json',
+  'setdict.json',
 ];
 
 const uploadCardDb = async (scryfallMetadata: { updatedAt: string; fileSize: number }, taskId?: string) => {
@@ -1362,28 +1391,33 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
     await uploadCardDb(scryfallMetadata, taskId);
 
     // Sync any card images Scryfall re-rendered since our last run into R2, and
-    // record how many image files were replaced on the task for the admin view.
+    // record how many image files were upserted on the task for the admin view.
     // Non-fatal: a sync hiccup shouldn't fail an otherwise-successful catalog update.
     if (taskId) {
       await cardUpdateTaskDao.updateStep(taskId, 'Syncing card images');
     }
-    let imagesReplaced = 0;
+    let imagesUpserted = 0;
     try {
       const syncResult = await syncCardImages();
-      imagesReplaced = syncResult.imagesReplaced;
+      imagesUpserted = syncResult.imagesUpserted;
     } catch (err) {
       console.error('Card image sync failed (non-fatal):', err);
     }
+
+    // Cache any newly-seen set symbols into R2. Non-fatal, same as image sync.
     if (taskId) {
-      const task = await cardUpdateTaskDao.getById(taskId);
-      if (task) {
-        task.imagesReplaced = imagesReplaced;
-        await cardUpdateTaskDao.update(task);
-      }
+      await cardUpdateTaskDao.updateStep(taskId, 'Syncing set symbols');
+    }
+    try {
+      await syncSetSymbols(toSymbolSources(setdict, scryfallSetIcons));
+    } catch (err) {
+      console.error('Set symbol sync failed (non-fatal):', err);
     }
 
     if (taskId) {
-      await cardUpdateTaskDao.markAsCompleted(taskId);
+      // Pass imagesUpserted so it's written in the completion update itself,
+      // rather than a separate update() that this re-read would clobber.
+      await cardUpdateTaskDao.markAsCompleted(taskId, imagesUpserted);
     }
 
     console.log('Complete');

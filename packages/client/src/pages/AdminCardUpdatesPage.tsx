@@ -359,10 +359,10 @@ const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) =>
                           </Flexbox>
                           <Flexbox direction="col" gap="1" className="flex-1">
                             <Text sm className="text-text-secondary">
-                              Images Replaced
+                              Images Upserted
                             </Text>
                             <Text semibold md>
-                              {(update.imagesReplaced ?? 0).toLocaleString()}
+                              {(update.imagesUpserted ?? 0).toLocaleString()}
                             </Text>
                           </Flexbox>
                         </Flexbox>

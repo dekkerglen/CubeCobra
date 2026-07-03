@@ -127,10 +127,10 @@ async function runPool<T>(items: T[], n: number, worker: (item: T) => Promise<vo
 // Sync images updated since the stored watermark into R2. Returns the counts so
 // callers (e.g. update_cards) can record them on the card-update task. No-ops
 // (returns zeros) when R2 isn't configured, so stages not cut over to R2 are safe.
-export async function syncCardImages(): Promise<{ cardsUpserted: number; imagesReplaced: number }> {
+export async function syncCardImages(): Promise<{ cardsUpserted: number; imagesUpserted: number }> {
   if (!r2Configured()) {
     console.log('R2 not configured — skipping card image sync.');
-    return { cardsUpserted: 0, imagesReplaced: 0 };
+    return { cardsUpserted: 0, imagesUpserted: 0 };
   }
 
   const state = (await getJson<SyncState>(SYNC_STATE_KEY)) ?? {
@@ -146,7 +146,7 @@ export async function syncCardImages(): Promise<{ cardsUpserted: number; imagesR
 
   if (changed.length === 0) {
     console.log('Nothing to do.');
-    return { cardsUpserted: 0, imagesReplaced: 0 };
+    return { cardsUpserted: 0, imagesUpserted: 0 };
   }
 
   // Descending order means the newest is first, but max defensively regardless.
@@ -170,7 +170,7 @@ export async function syncCardImages(): Promise<{ cardsUpserted: number; imagesR
   });
 
   console.log(`DONE. upserted ${changed.length} cards, ${totalWritten} files. New watermark ${newWatermark}`);
-  return { cardsUpserted: changed.length, imagesReplaced: totalWritten };
+  return { cardsUpserted: changed.length, imagesUpserted: totalWritten };
 }
 
 // Standalone entry point: `npm run sync-card-images`.

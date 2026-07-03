@@ -13,6 +13,7 @@ import {
   QuestionIcon,
   SearchIcon,
   SignInIcon,
+  StackIcon,
   StarIcon,
   ToolsIcon,
 } from '@primer/octicons-react';
@@ -74,6 +75,7 @@ const exploreSections: NavSection[] = [
     items: [
       { label: 'Top Cards', href: '/tool/searchcards?v=rows', icon: GraphIcon },
       { label: 'Search Cards', href: '/tool/searchcards', icon: SearchIcon },
+      { label: 'Sets', href: '/tool/sets', icon: StackIcon },
     ],
   },
   {

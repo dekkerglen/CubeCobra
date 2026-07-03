@@ -1,5 +1,11 @@
 # Static Assets via S3 + CloudFront
 
+> **DEPRECATED — superseded by Cloudflare R2.** CubeCobra now serves static assets
+> and card images from R2 at `assets.<domain>`; the CloudFront distribution and S3
+> assets bucket described below have been removed from the CDK. Kept for historical
+> context only. See [maintenance/r2-production-migration.md](maintenance/r2-production-migration.md)
+> for the current setup.
+
 Plan and reference pattern for serving CubeCobra's static assets (images, CSS, JS bundles) from S3 through CloudFront instead of from the Express server on Elastic Beanstalk.
 
 ## 1. Today's setup (what we're moving away from)

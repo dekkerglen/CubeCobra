@@ -17,6 +17,7 @@ const mockCardCatalog: Catalog = {
   comboOracleToIndex: {},
   reasonable_names: ['lightning bolt'],
   reasonable_full_names: ['lightning bolt [2XM-117]'],
+  setdict: {},
 };
 
 jest.mock('serverutils/cardCatalog', () => ({

@@ -16,7 +16,7 @@ export interface CardUpdateTask extends BaseObject {
   scryfallFileSize: number; // File size in bytes from Scryfall API
   cardsAdded: number; // Number of cards added in this update
   totalCards: number; // Total number of cards after this update
-  imagesReplaced?: number; // Number of card image files re-synced to R2 this run
+  imagesUpserted?: number; // Number of card image files upserted to R2 this run
   step: string; // Current step in the update process (e.g., 'Downloading', 'Processing', 'Uploading')
   completedSteps: string[]; // Array of all completed steps in order
   stepTimestamps: Record<string, number>; // Map of step name to Unix timestamp when it started

@@ -201,9 +201,8 @@ export class CubeCobraStack extends cdk.Stack {
     serverEnvVars.ECS_TASK_DEFINITION_ARN = jobsTask.taskDefinition.taskDefinitionArn;
     serverEnvVars.ECS_SUBNET_IDS = cdk.Fn.join(',', subnetIds);
     serverEnvVars.ECS_ASSIGN_PUBLIC_IP = usePublicSubnets ? 'ENABLED' : 'DISABLED';
-    // Static assets are served from the AssetsStack (us-east-1) at this
-    // hostname by convention; the AssetsStack creates the matching cert,
-    // bucket, distribution, and Route53 record.
+    // Static assets + card images are served from Cloudflare R2 at this hostname
+    // (assets.<domain> is an R2 custom domain managed in Cloudflare DNS).
     serverEnvVars.CDN_BASE_URL = `https://assets.${params.domain}`;
 
     const elasticBeanstalk = new ElasticBeanstalk(this, 'ElasticBeanstalk', {
@@ -417,13 +416,6 @@ function createJobsEnvironmentVariables(
   // Add DYNAMO_TABLE if it's provided
   if (dynamoTableName) {
     envVars.DYNAMO_TABLE = dynamoTableName;
-  }
-
-  // Only beta and production have a CloudFront-fronted assets bucket. The bucket
-  // name is deterministic (see AssetsDistribution), so we hard-code it here rather
-  // than importing across regions (assets stack lives in us-east-1).
-  if (stage === 'BETA' || stage === 'PROD') {
-    envVars.CUBECOBRA_ASSETS_BUCKET = `cubecobra-assets-${params.environmentName}`;
   }
 
   // R2 config for sync_card_images and the self-hosted image URLs emitted by

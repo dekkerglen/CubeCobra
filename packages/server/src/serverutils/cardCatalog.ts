@@ -21,6 +21,7 @@ const catalog: Catalog = {
   reasonable_names: [],
   reasonable_full_names: [],
   comboOracleToIndex: {}, // Combo-specific mapping saved with comboTree
+  setdict: {}, // Set metadata keyed by set code, backs the Explore -> Sets page
 };
 
 // names/full_names back the card-name autocomplete (served via /tool/api/cardnames
@@ -39,6 +40,7 @@ export const fileToAttribute: Record<string, keyof Catalog> = {
   'metadatadict.json': 'metadatadict',
   'comboTree.json': 'comboTree',
   'comboOracleToIndex.json': 'comboOracleToIndex',
+  'setdict.json': 'setdict',
 };
 
 async function loadJSONFile(filename: string, attribute: keyof Catalog) {

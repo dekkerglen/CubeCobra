@@ -1,3 +1,5 @@
+import { SetInfo } from './SetInfo';
+
 type OracleIdIndex = number;
 
 export interface Related {
@@ -125,4 +127,7 @@ export interface Catalog {
   oracleToIndex: Record<string, number>;
   // Combo-specific oracle index mapping - saved alongside comboTree to ensure index consistency
   comboOracleToIndex: Record<string, number>;
+  // Set metadata keyed by set code, sourced from Scryfall by the card-update job
+  // and served to the Explore -> Sets page.
+  setdict: Record<string, SetInfo>;
 }

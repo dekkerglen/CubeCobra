@@ -1,8 +1,5 @@
 export interface EnvironmentConfiguration {
   stackName: string;
-  // Assets stack lives in us-east-1 (CloudFront cert region). Separate name
-  // so it can be deployed independently in the pipeline before the main stack.
-  assetsStackName: string;
   account: string;
   region: string;
   dataBucket: string;
@@ -21,7 +18,6 @@ export interface EnvironmentConfiguration {
 export const environments: { [key: string]: EnvironmentConfiguration } = {
   local: {
     stackName: 'CubeCobraLocalStack',
-    assetsStackName: 'CubeCobraAssetsLocalStack',
     account: '000000000000',
     region: 'us-east-1',
     dataBucket: 'local',
@@ -39,7 +35,6 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
 
   development: {
     stackName: 'CubeCobraDevStack',
-    assetsStackName: 'CubeCobraAssetsDevStack',
     account: '816705121310',
     region: 'us-east-2',
     dataBucket: 'cubecobra-data-production',
@@ -57,7 +52,6 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
 
   beta: {
     stackName: 'CubeCobraBetaStack',
-    assetsStackName: 'CubeCobraAssetsBetaStack',
     account: '816705121310',
     region: 'us-east-2',
     dataBucket: 'cubecobra-data-beta',
@@ -75,7 +69,6 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
 
   production: {
     stackName: 'CubeCobraProdStack',
-    assetsStackName: 'CubeCobraAssetsProdStack',
     account: '816705121310',
     region: 'us-east-2',
     dataBucket: 'cubecobra-data-production',

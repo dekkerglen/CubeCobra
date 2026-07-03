@@ -60,7 +60,7 @@ export class CardUpdateTaskDynamoDao extends BaseDynamoDao<CardUpdateTask, CardU
       scryfallFileSize: item.scryfallFileSize,
       cardsAdded: item.cardsAdded,
       totalCards: item.totalCards,
-      imagesReplaced: item.imagesReplaced,
+      imagesUpserted: item.imagesUpserted,
       step: item.step,
       completedSteps: item.completedSteps || [],
       stepTimestamps: item.stepTimestamps || {},
@@ -141,7 +141,7 @@ export class CardUpdateTaskDynamoDao extends BaseDynamoDao<CardUpdateTask, CardU
   /**
    * Marks a task as completed.
    */
-  public async markAsCompleted(id: string): Promise<CardUpdateTask | undefined> {
+  public async markAsCompleted(id: string, imagesUpserted?: number): Promise<CardUpdateTask | undefined> {
     const task = await this.getById(id);
     if (!task) return undefined;
 
@@ -150,6 +150,11 @@ export class CardUpdateTaskDynamoDao extends BaseDynamoDao<CardUpdateTask, CardU
       task.completedSteps.push(task.step);
     }
 
+    // Set in the same read+write as completion; a separate update() beforehand
+    // gets clobbered by this getById (DynamoDB reads are eventually consistent).
+    if (imagesUpserted !== undefined) {
+      task.imagesUpserted = imagesUpserted;
+    }
     task.status = CardUpdateTaskStatus.COMPLETED;
     task.completedAt = Date.now();
     task.dateLastUpdated = Date.now();
