@@ -4,7 +4,7 @@ import { Request, Response } from '../../types/express';
 
 const handler = async (req: Request, res: Response) => {
   try {
-    const { pack, pool, cubeContext } = req.body;
+    const { pack, pool } = req.body;
 
     if (!Array.isArray(pack) || !Array.isArray(pool)) {
       return res.status(400).json({
@@ -13,14 +13,7 @@ const handler = async (req: Request, res: Response) => {
       });
     }
 
-    if (cubeContext !== undefined && !Array.isArray(cubeContext)) {
-      return res.status(400).json({
-        success: false,
-        message: 'cubeContext must be an array of numbers if provided',
-      });
-    }
-
-    const result = draft(pack, pool, cubeContext);
+    const result = draft(pack, pool);
 
     return res.status(200).json({
       success: true,

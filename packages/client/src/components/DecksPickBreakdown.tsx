@@ -27,43 +27,6 @@ interface BreakdownProps {
 const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber, setPickNumber }) => {
   const [ratings, setRatings] = useState<number[]>([]);
   const [showRatings, setShowRatings] = useLocalStorage(`showDraftRatings-${draft.id}`, true);
-  const [cubeContext, setCubeContext] = useState<number[] | null>(null);
-
-  // Fetch the cube's 32-dim context embedding once per mount. The draft decoder needs
-  // pool[128] ⊕ cube_ctx[32] = 160 dims; without the cube context it silently returns
-  // empty predictions and bot ratings render as blank chips.
-  useEffect(() => {
-    let cancelled = false;
-    if (!draft.cube) {
-      setCubeContext(null);
-      return;
-    }
-    (async () => {
-      try {
-        const response = await fetch('/api/draftbots/cubecontext', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ cubeId: draft.cube }),
-        });
-        if (!response.ok) {
-          setCubeContext(null);
-          return;
-        }
-        const data = await response.json();
-        if (cancelled) return;
-        if (Array.isArray(data.embedding) && data.embedding.length > 0) {
-          setCubeContext(data.embedding);
-        } else {
-          setCubeContext(null);
-        }
-      } catch {
-        if (!cancelled) setCubeContext(null);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [draft.cube]);
 
   // Handle both CubeCobra and Draftmancer drafts
   const {
@@ -199,7 +162,6 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
           body: JSON.stringify({
             pack: packOracleIds,
             picks: picksOracleIds,
-            cubeContext: cubeContext ?? undefined,
           }),
         });
 
@@ -229,7 +191,7 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
     };
 
     fetchPredictions();
-  }, [cardsInPack, draft.cards, pack, pick, picksList, getCardOracleIds, cubeContext]);
+  }, [cardsInPack, draft.cards, pack, pick, picksList, getCardOracleIds]);
 
   // Add keyboard navigation
   useEffect(() => {

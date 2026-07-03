@@ -106,7 +106,7 @@ async function startServer() {
     // Check if models already exist locally
     const modelDir = path.join('.', 'model');
     // These are the actual directory names in the model folder
-    const requiredModels = ['encoder', 'cube_decoder', 'deck_build_decoder', 'draft_decoder', 'cube_context_encoder'];
+    const requiredModels = ['encoder', 'cube_decoder', 'deck_build_decoder', 'draft_decoder'];
 
     const modelDirExists = fs.existsSync(modelDir);
     const modelsExist =

@@ -21,12 +21,6 @@ const handler = async (req: Request, res: Response) => {
           message: `inputs[${i}] must have pack and pool arrays`,
         });
       }
-      if (input.cubeContext !== undefined && !Array.isArray(input.cubeContext)) {
-        return res.status(400).json({
-          success: false,
-          message: `inputs[${i}].cubeContext must be an array of numbers if provided`,
-        });
-      }
     }
 
     const results = batchDraft(inputs);

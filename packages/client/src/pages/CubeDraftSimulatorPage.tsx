@@ -68,7 +68,6 @@ import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
 import {
   buildOracleRemapping,
-  computeCubeContext,
   DeckbuildEntry,
   loadDraftRecommender,
   localBatchDeckbuild,
@@ -372,7 +371,6 @@ async function runClientSimulation(
 ): Promise<SimulationReport> {
   const { initialPacks, packSteps, cardMeta, cubeName, numSeats } = setup;
   const oracleRemapping = buildOracleRemapping(cardMeta);
-  const cubeCtx = await computeCubeContext(Object.keys(cardMeta), oracleRemapping);
   const statsMap = new Map<string, RawStats>();
   const archetypeCounts = new Map<string, number>();
 
@@ -456,7 +454,7 @@ async function runClientSimulation(
             const expectedPicks = numDrafts * numSeats;
 
             // Local TF.js inference — no server round-trip
-            picks = await localPickBatch(flatPacks, flatPools, oracleRemapping, gpuBatchSize, cubeCtx);
+            picks = await localPickBatch(flatPacks, flatPools, oracleRemapping, gpuBatchSize);
             if (!Array.isArray(picks) || picks.length !== expectedPicks) {
               throw new Error(`Local draft bot returned ${picks?.length ?? 0} picks, expected ${expectedPicks}`);
             }

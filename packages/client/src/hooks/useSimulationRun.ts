@@ -127,6 +127,7 @@ async function buildClusterCacheForRun(
   decks: BuiltDeck[],
   signal: AbortSignal,
   onSetClusterPhase: () => void,
+  chunkSize?: number,
 ): Promise<{ clusterCache?: ClusteringCache; clusteringNotice: string | null }> {
   onSetClusterPhase();
   throwIfAborted(signal);
@@ -134,7 +135,7 @@ async function buildClusterCacheForRun(
   const oovCount = countOutOfVocabOracles(runData.cardMeta);
   const oovPct = oovCount / Math.max(1, Object.keys(runData.cardMeta).length);
   const pools = runData.slimPools.map((_, i) => decks[i]!.mainboard);
-  const flat = await encodePools(pools, remapping);
+  const flat = await encodePools(pools, remapping, chunkSize);
   throwIfAborted(signal);
   const poolEmbeddings = reshapeEmbeddings(flat, pools.length);
   const n = runData.slimPools.length;
@@ -428,8 +429,8 @@ export default function useSimulationRun({
       let clusterCache: ClusteringCache | undefined;
       let clusteringNotice: string | null = null;
       try {
-        const result = await buildClusterCacheForRun(runData, deckResult.decks, controller.signal, () =>
-          setSimPhase('cluster'),
+        const result = await runWithGpuRetry('Clustering', (bs) =>
+          buildClusterCacheForRun(runData, deckResult.decks, controller.signal, () => setSimPhase('cluster'), bs),
         );
         throwIfAborted(controller.signal);
         clusterCache = result.clusterCache;

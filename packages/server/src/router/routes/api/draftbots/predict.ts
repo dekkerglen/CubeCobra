@@ -7,19 +7,15 @@ import { NextFunction, Request, Response } from '../../../../types/express';
 interface PredictBody {
   pack: string[]; // oracle id
   picks: string[]; // oracle id
-  cubeContext?: number[]; // 32-dim cube context embedding
 }
 
 const OracleIDSchema = Joi.string().uuid();
 const CustomCard = Joi.string().valid('custom-card');
 const VoucherCard = Joi.string().valid('voucher');
 
-const CUBE_CONTEXT_DIM = 32;
-
 const PredictBodySchema = Joi.object({
   pack: Joi.array().items(OracleIDSchema, CustomCard, VoucherCard).required(),
   picks: Joi.array().items(OracleIDSchema, CustomCard, VoucherCard).required(),
-  cubeContext: Joi.array().items(Joi.number()).length(CUBE_CONTEXT_DIM).optional(),
 });
 
 // Sentinel oracle ids that aren't real cards in the ML vocabulary. We strip
@@ -58,7 +54,7 @@ const handler = async (req: Request, res: Response) => {
     const mlPack = predictBody.pack.filter(isMlOracle).map((o) => toMl[o] ?? o);
     const mlPicks = predictBody.picks.filter(isMlOracle).map((o) => toMl[o] ?? o);
 
-    const mlPrediction = await draft(mlPack, mlPicks, predictBody.cubeContext);
+    const mlPrediction = await draft(mlPack, mlPicks);
 
     // Map ML oracles back to ALL original oracle IDs that mapped to them
     const prediction = mlPrediction.flatMap((item) =>

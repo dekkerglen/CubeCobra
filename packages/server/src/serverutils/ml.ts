@@ -140,40 +140,22 @@ export const build = async (oracles: string[]): Promise<{ oracle: string; rating
   }
 };
 
-export const cubeContext = async (oracles: string[]): Promise<number[]> => {
-  try {
-    const response = await mlServiceRequest<{ success: boolean; embedding: number[] }>('cubecontext', { oracles });
-    return response.embedding;
-  } catch {
-    console.warn('Failed to encode cube context, returning empty array');
-    return [];
-  }
-};
-
 // Throwing variant — see buildOrThrow.
 export const draftOrThrow = async (
   pack: string[],
   pool: string[],
-  cubeContextEmbedding?: number[],
 ): Promise<{ oracle: string; rating: number }[]> => {
-  const body: { pack: string[]; pool: string[]; cubeContext?: number[] } = { pack, pool };
-  if (cubeContextEmbedding) body.cubeContext = cubeContextEmbedding;
-
   const response = await mlServiceRequest<{
     success: boolean;
     cards: { oracle: string; rating: number }[];
-  }>('draft', body);
+  }>('draft', { pack, pool });
 
   return response.cards;
 };
 
-export const draft = async (
-  pack: string[],
-  pool: string[],
-  cubeContextEmbedding?: number[],
-): Promise<{ oracle: string; rating: number }[]> => {
+export const draft = async (pack: string[], pool: string[]): Promise<{ oracle: string; rating: number }[]> => {
   try {
-    return await draftOrThrow(pack, pool, cubeContextEmbedding);
+    return await draftOrThrow(pack, pool);
   } catch {
     return [];
   }
@@ -181,7 +163,7 @@ export const draft = async (
 
 // Throwing variant — see buildOrThrow.
 export const batchDraftOrThrow = async (
-  inputs: { pack: string[]; pool: string[]; cubeContext?: number[] }[],
+  inputs: { pack: string[]; pool: string[] }[],
 ): Promise<{ oracle: string; rating: number }[][]> => {
   const response = await mlServiceRequest<{
     success: boolean;
@@ -192,7 +174,7 @@ export const batchDraftOrThrow = async (
 };
 
 export const batchDraft = async (
-  inputs: { pack: string[]; pool: string[]; cubeContext?: number[] }[],
+  inputs: { pack: string[]; pool: string[] }[],
 ): Promise<{ oracle: string; rating: number }[][]> => {
   try {
     return await batchDraftOrThrow(inputs);

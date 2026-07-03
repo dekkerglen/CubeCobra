@@ -7,7 +7,7 @@ import type { CardDetails } from '@utils/datatypes/Card';
 import type { CardMeta, SimulatedPickCard, SimulatedPool, SimulationRunData } from '@utils/datatypes/SimulationReport';
 
 import { modelScoresToProbabilities } from '../../utils/botRatings';
-import { buildOracleRemapping, computeCubeContext, loadDraftBot, localBatchDraftRanked } from '../../utils/draftBot';
+import { buildOracleRemapping, loadDraftBot, localBatchDraftRanked } from '../../utils/draftBot';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
 import DraftBreakdownDisplay from '../draft/DraftBreakdownDisplay';
@@ -208,7 +208,6 @@ const SimulatorPickBreakdown: React.FC<{
   const [ratings, setRatings] = useState<number[]>([]);
   const [ratingsLoading, setRatingsLoading] = useState(false);
   const [ratingsError, setRatingsError] = useState<string | null>(null);
-  const cubeCtxRef = React.useRef<Float32Array | null>(null);
   const seatPools = useMemo(
     () =>
       runData.slimPools
@@ -236,11 +235,6 @@ const SimulatorPickBreakdown: React.FC<{
     setPickNumber(String(initialPickNumber ?? 0));
     setRatings([]);
   }, [pool.poolIndex, pool.seatIndex, initialPickNumber]);
-
-  // Invalidate the cached cube context if the run (and thus the cube) changes.
-  useEffect(() => {
-    cubeCtxRef.current = null;
-  }, [runData.cardMeta]);
 
   useEffect(() => {
     if (!breakdown) return undefined;
@@ -280,18 +274,10 @@ const SimulatorPickBreakdown: React.FC<{
       try {
         await loadDraftBot();
         const remapping = buildOracleRemapping(runData.cardMeta);
-        // Compute the 32-dim cube context once per run — the draft decoder concatenates it
-        // with the encoded pool. Without it the model gets a 128-dim input where it expects
-        // 160 dims and the predict call fails silently.
-        if (!cubeCtxRef.current) {
-          cubeCtxRef.current = await computeCubeContext(Object.keys(runData.cardMeta), remapping);
-        }
         if (cancelled) return;
         const ranked = await localBatchDraftRanked(
           [{ pack: current.packOracleIds, pool: current.previousPickOracleIds }],
           remapping,
-          undefined,
-          cubeCtxRef.current,
         );
         if (cancelled) return;
         if (!ranked[0] || ranked[0].length === 0) {

@@ -18,7 +18,6 @@ describe('loadDraftBot', () => {
       .fn()
       .mockImplementationOnce(() => encoderLoad.promise)
       .mockResolvedValueOnce({})
-      .mockResolvedValueOnce({})
       .mockResolvedValueOnce({});
 
     jest.doMock('@tensorflow/tfjs', () => ({
@@ -47,9 +46,8 @@ describe('loadDraftBot', () => {
     encoderLoad.resolve({});
     await Promise.all([loadA, loadB]);
 
-    // 4 models are loaded inside loadDraftBot: encoder, cubeContextEncoder,
-    // draftDecoder, deckBuildDecoder.
-    expect(loadGraphModel).toHaveBeenCalledTimes(4);
+    // 3 models are loaded inside loadDraftBot: encoder, draftDecoder, deckBuildDecoder.
+    expect(loadGraphModel).toHaveBeenCalledTimes(3);
     expect(draftBot.getLoadProgressListenerCountForTests()).toBe(0);
 
     onProgressA.mockClear();

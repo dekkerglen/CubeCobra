@@ -289,6 +289,7 @@ export default function useDraftSimulatorPresentation({
         'Draft',
         'Seat',
         'Colors',
+        'Archetype',
         'Themes',
         'Creatures',
         'Noncreatures',
@@ -301,6 +302,10 @@ export default function useDraftSimulatorPresentation({
         const deck = hasDeckBuilds ? (activeDecks![pool.poolIndex] ?? null) : null;
         const summary = buildDraftBreakdownRowSummary(pool, deck, cardMeta);
         const resolveName = (oracleId: string) => cardMeta[oracleId]?.name ?? oracleId;
+        const deckArchetypeLabel = poolArchetypeLabels?.get(pool.poolIndex);
+        const deckArchetype = deckArchetypeLabel
+          ? `${pool.archetype && pool.archetype !== 'C' ? `${pool.archetype} ` : ''}${deckArchetypeLabel}`
+          : '';
         const mainboard = (
           deck?.mainboard ??
           pool.picks.map((p: DraftSimulatorDerivedData['displayedPools'][number]['picks'][number]) => p.oracle_id)
@@ -312,6 +317,7 @@ export default function useDraftSimulatorPresentation({
           pool.draftIndex + 1,
           pool.seatIndex + 1,
           archetypeFullName(pool.archetype),
+          deckArchetype,
           summary.themes.join(', '),
           summary.creatureCount,
           summary.nonCreatureCount,
@@ -333,7 +339,7 @@ export default function useDraftSimulatorPresentation({
       a.click();
       URL.revokeObjectURL(url);
     },
-    [displayRunData, activeDecks, buildDraftBreakdownRowSummary],
+    [displayRunData, activeDecks, buildDraftBreakdownRowSummary, poolArchetypeLabels],
   );
 
   const downloadCardStatsCsv = useCallback(

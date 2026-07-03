@@ -48,20 +48,12 @@ interface BatchPredictRequest {
   picks: string[];
 }
 
-const fetchBatchPredict = async (
-  inputs: BatchPredictRequest[],
-  cubeContext: number[] | null,
-): Promise<PredictResponse> => {
-  const body: { inputs: BatchPredictRequest[]; cubeContext?: number[] } = { inputs };
-  if (cubeContext && cubeContext.length > 0) {
-    body.cubeContext = cubeContext;
-  }
-
+const fetchBatchPredict = async (inputs: BatchPredictRequest[]): Promise<PredictResponse> => {
   //Unlike csrfFetch which has a default client time, a fetch like this doesn't.
   const response = await fetch('/api/draftbots/batchpredict', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
+    body: JSON.stringify({ inputs }),
   });
 
   if (!response.ok) {
@@ -69,21 +61,6 @@ const fetchBatchPredict = async (
   }
 
   return response.json();
-};
-
-const fetchCubeContext = async (cubeId: string): Promise<number[] | null> => {
-  try {
-    const response = await fetch('/api/draftbots/cubecontext', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ cubeId }),
-    });
-    if (!response.ok) return null;
-    const data = await response.json();
-    return Array.isArray(data?.embedding) ? (data.embedding as number[]) : null;
-  } catch {
-    return null;
-  }
 };
 
 const processPredictions = (json: PredictResponse, packCards: any[]): number[] => {
@@ -139,17 +116,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
   const [currentPredictions, setCurrentPredictions] = useState<PredictResponse | null>(null);
   const [userPicksInOrder, setUserPicksInOrder] = useLocalStorage<number[]>(`picks-${draft.id}`, []); // Tracks the pick sequencing, managed separately from the mainboard/sideboard state
   const [pendingPick, setPendingPick] = useState<number | null>(null); // Add state to track the pending pick made during predictionsLoading
-  // Cube context embedding (32-dim) — computed once per cube, persisted in localStorage so we don't re-fetch on reload.
-  const [cubeContextEmbedding, setCubeContextEmbedding] = useLocalStorage<number[] | null>(
-    `cube-context-${cube.id}`,
-    null,
-  );
-  // Resolves true once the cube-context fetch has completed (with or without a value).
-  // We gate prediction calls on this so bot picks committed during the live draft
-  // and the post-draft breakdown both see the same context.
-  const [cubeContextReady, setCubeContextReady] = useState<boolean>(
-    Boolean(cubeContextEmbedding && cubeContextEmbedding.length > 0),
-  );
 
   const { alerts, addAlert } = useAlerts();
 
@@ -287,7 +253,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
           picks: seat.picks.flatMap((index: number) => getCardOracleIds(index)),
         }));
 
-        const json = await fetchBatchPredict(inputs, cubeContextEmbedding);
+        const json = await fetchBatchPredict(inputs);
         setCurrentPredictions(json);
         setRatings(processPredictions(json, request.packCards));
         return json;
@@ -299,27 +265,8 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
         setDraftStatus((prev) => ({ ...prev, predictionsLoading: false }));
       }
     },
-    [getCardOracleIds, cubeContextEmbedding],
+    [getCardOracleIds],
   );
-
-  // Fetch the cube context embedding once and cache it. The 32-dim vector is shared
-  // across every batchpredict call for this cube, so we only need to encode it once.
-  useEffect(() => {
-    if (cubeContextEmbedding && cubeContextEmbedding.length > 0) {
-      setCubeContextReady(true);
-      return;
-    }
-
-    let cancelled = false;
-    fetchCubeContext(cube.id).then((embedding) => {
-      if (cancelled) return;
-      if (embedding) setCubeContextEmbedding(embedding);
-      setCubeContextReady(true);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [cube.id, cubeContextEmbedding, setCubeContextEmbedding]);
 
   const handleRetryPredict = useCallback(async () => {
     if (draftStatus.retryInProgress || !state?.seats?.[0]?.pack) {
@@ -881,11 +828,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
   // P1P1 ratings fetch necessary, the rest come via makePick
   // InitialRatings could eventually come along with the initial state, would require some refactoring
   useEffect(() => {
-    // Wait for the cube-context fetch to resolve before firing any prediction.
-    // Otherwise the bots' P1P1 picks get committed with zero context while later
-    // analyses (e.g. the breakdown) re-fire with full context, causing mismatches.
-    if (!cubeContextReady) return;
-
     const fetchInitialRatings = async () => {
       if (state?.seats?.[0]?.pack?.length > 0) {
         const request = {
@@ -908,7 +850,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
     };
 
     fetchInitialRatings();
-  }, [draft.cards, state, getPredictions, cubeContextReady]);
+  }, [draft.cards, state, getPredictions]);
 
   const packTitle: string = useMemo(() => {
     const nextStep = state.stepQueue[0];

@@ -35,9 +35,6 @@ const modelUrl = (path: string): string => cdnUrl(`/model/${path}`);
 let tf: typeof import('@tensorflow/tfjs') | null = null;
 
 let encoder: any = null;
-let cubeContextEncoder: any = null;
-
-const CUBE_CONTEXT_DIM = 32;
 
 let draftDecoder: any = null;
 
@@ -118,11 +115,7 @@ export async function loadDraftBot(onProgress?: (pct: number) => void): Promise<
     encoder = await tf.loadGraphModel(modelUrl('encoder/model.json'));
     emitLoadProgress(40);
 
-    // Cube context encoder: [N, numOracles] → [N, 32]  (small model)
-    cubeContextEncoder = await tf.loadGraphModel(modelUrl('cube_context_encoder/model.json'));
-    emitLoadProgress(55);
-
-    // Draft decoder: [N, 160] → [N, numOracles]  (takes pool[128] ⊕ cube_ctx[32])
+    // Draft decoder: [N, 128] → [N, numOracles]
     draftDecoder = await tf.loadGraphModel(modelUrl('draft_decoder/model.json'));
     emitLoadProgress(80);
 
@@ -246,45 +239,16 @@ function isWebGLError(err: unknown): boolean {
 const WEBGL_CHUNK_SIZE = 32;
 
 /**
- * Encodes the full cube card list through cube_context_encoder to produce a
- * 32-dim context vector. Call once per simulation run; pass the result to
- * localPickBatch so the draft decoder receives pool[128] ⊕ cube_ctx[32] = 160 dims.
- */
-export async function computeCubeContext(
-  cubeOracles: string[],
-  remapping?: Record<string, string>,
-): Promise<Float32Array> {
-  if (!draftBotLoaded || !tf || !cubeContextEncoder) return new Float32Array(CUBE_CONTEXT_DIM);
-  const vec = new Float32Array(numOracles);
-  for (const oracle of cubeOracles) {
-    const idx = oracleToIndex[mlOracle(oracle, remapping)];
-    if (idx !== undefined) vec[idx] = 1;
-  }
-  const inputTensor = tf.tensor2d(vec, [1, numOracles]);
-  try {
-    const result = cubeContextEncoder.predict(inputTensor) as import('@tensorflow/tfjs').Tensor;
-    const data = (await result.data()) as Float32Array;
-    result.dispose();
-    return data;
-  } finally {
-    inputTensor.dispose();
-  }
-}
-
-/**
  * One-hot encode pools, forward pass through encoder + decoder, return raw logits.
  * pools[i] = oracle IDs whose bits are set to 1 in the input row.
  * remapping maps original oracle IDs to their ML-vocab equivalents for unknown cards.
  * chunkSize controls how many rows are processed per WebGL call (default WEBGL_CHUNK_SIZE).
- * cubeCtx (optional) — 32-dim cube context vector from computeCubeContext().
- *   When provided, it is concatenated with the encoder output before the draft decoder.
  */
 async function forwardPass(
   pools: string[][],
   decoder: any,
   remapping?: Record<string, string>,
   chunkSize: number = WEBGL_CHUNK_SIZE,
-  cubeCtx?: Float32Array,
 ): Promise<Float32Array> {
   const N = pools.length;
   if (N === 0) return new Float32Array(0);
@@ -314,28 +278,15 @@ async function forwardPass(
 
     let inputTensor: import('@tensorflow/tfjs').Tensor | null = null;
     let encoded: import('@tensorflow/tfjs').Tensor | null = null;
-    let decoderInput: import('@tensorflow/tfjs').Tensor | null = null;
     let logitsTensor: import('@tensorflow/tfjs').Tensor | null = null;
     try {
       inputTensor = tf!.tensor2d(chunkData, [rows, numOracles]);
       encoded = encoder.predict(inputTensor) as import('@tensorflow/tfjs').Tensor;
       inputTensor.dispose();
       inputTensor = null;
-      if (cubeCtx && cubeCtx.length > 0) {
-        const ctxData = new Float32Array(rows * cubeCtx.length);
-        for (let r = 0; r < rows; r++) ctxData.set(cubeCtx, r * cubeCtx.length);
-        const ctxTensor = tf!.tensor2d(ctxData, [rows, cubeCtx.length]);
-        decoderInput = tf!.concat([encoded, ctxTensor], 1);
-        encoded.dispose();
-        encoded = null;
-        ctxTensor.dispose();
-      } else {
-        decoderInput = encoded;
-        encoded = null;
-      }
-      logitsTensor = decoder.predict(decoderInput) as import('@tensorflow/tfjs').Tensor;
-      decoderInput.dispose();
-      decoderInput = null;
+      logitsTensor = decoder.predict(encoded) as import('@tensorflow/tfjs').Tensor;
+      encoded.dispose();
+      encoded = null;
       const chunkLogits = (await logitsTensor.data()) as Float32Array;
       logitsTensor.dispose();
       logitsTensor = null;
@@ -343,7 +294,6 @@ async function forwardPass(
     } catch (err) {
       inputTensor?.dispose();
       encoded?.dispose();
-      decoderInput?.dispose();
       logitsTensor?.dispose();
       if (isWebGLError(err)) {
         throw new WebGLInferenceError(
@@ -478,7 +428,6 @@ export async function localPickBatch(
   pools: string[][],
   remapping?: Record<string, string>,
   chunkSize?: number,
-  cubeCtx?: Float32Array,
 ): Promise<string[]> {
   if (!draftBotLoaded || !tf || !encoder || !draftDecoder || packs.length === 0) {
     return packs.map(() => '');
@@ -486,7 +435,7 @@ export async function localPickBatch(
   if (numOracles === 0)
     throw new Error('Draft bot loaded but oracle vocabulary is empty — model may have loaded incorrectly.');
 
-  const logits = await forwardPass(pools, draftDecoder, remapping, chunkSize, cubeCtx);
+  const logits = await forwardPass(pools, draftDecoder, remapping, chunkSize);
 
   // Extract top pick per seat via pack-masked argmax.
   // Softmax preserves the same ordering while doing substantially more work.
@@ -545,7 +494,6 @@ export async function localBatchDraftRanked(
   inputs: { pack: string[]; pool: string[] }[],
   remapping?: Record<string, string>,
   chunkSize?: number,
-  cubeCtx?: Float32Array,
 ): Promise<RatedCard[][]> {
   if (!draftBotLoaded || !tf || !encoder || !draftDecoder || inputs.length === 0) {
     return inputs.map(() => []);
@@ -555,7 +503,6 @@ export async function localBatchDraftRanked(
     draftDecoder,
     remapping,
     chunkSize,
-    cubeCtx,
   );
   return inputs.map(({ pack }, i) => {
     const rowBase = i * numOracles;
@@ -791,9 +738,6 @@ export async function localBatchDeckbuild(
     };
   });
 
-  // Cube context for draft_decoder in Phase 2 (pool[128] ⊕ cube_ctx[32] = 160)
-  const cubeCtx = await computeCubeContext(Object.keys(entries[0]!.cardMeta), sharedRemapping);
-
   // Phase 1: seed first 10 cards via deck_build_decoder
   const buildResults = await localBatchBuild(allPoolMlOracles, sharedRemapping, chunkSize);
   throwIfAborted(signal);
@@ -866,7 +810,7 @@ export async function localBatchDeckbuild(
 
     if (batchInputs.length === 0) break;
 
-    const batchResults = await localBatchDraftRanked(batchInputs, sharedRemapping, chunkSize, cubeCtx);
+    const batchResults = await localBatchDraftRanked(batchInputs, sharedRemapping, chunkSize);
     throwIfAborted(signal);
 
     for (let i = 0; i < activeIndices.length; i++) {
@@ -912,7 +856,7 @@ export async function localBatchDeckbuild(
   }));
   await runManabaseTrim(
     trimDecks,
-    (batchInputs) => localBatchDraftRanked(batchInputs, sharedRemapping, chunkSize, cubeCtx),
+    (batchInputs) => localBatchDraftRanked(batchInputs, sharedRemapping, chunkSize),
     { signal },
   );
   // Each cut land that's still in the original pool needs to be reflected in
