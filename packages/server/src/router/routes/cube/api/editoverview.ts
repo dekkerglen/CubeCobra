@@ -1,5 +1,5 @@
 import CubeType, { CUBE_CATEGORIES, CUBE_PREFIXES } from '@utils/datatypes/Cube';
-import { cubeDao } from 'dynamo/daos';
+import { cubeDao, hostedImageDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { getCubeId, isCubeViewable } from 'serverutils/cubefn';
 import { hasProfanity } from 'serverutils/util';
@@ -62,6 +62,20 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
 
     cube.name = updatedCube.name;
     cube.imageName = updatedCube.imageName;
+
+    // Custom uploaded cube image (Lotus Cobra perk). An empty value clears it back to card art.
+    if (typeof updatedCube.imgHostedImageId !== 'undefined') {
+      if (updatedCube.imgHostedImageId) {
+        const hostedImage = await hostedImageDao.getById(updatedCube.imgHostedImageId);
+        if (hostedImage && hostedImage.owner === user?.id) {
+          cube.imgHostedImageId = hostedImage.id;
+          cube.imgHostedImageUrl = hostedImage.url;
+        }
+      } else {
+        cube.imgHostedImageId = undefined;
+        cube.imgHostedImageUrl = undefined;
+      }
+    }
 
     if (updatedCube.brief !== undefined) {
       cube.brief = updatedCube.brief;

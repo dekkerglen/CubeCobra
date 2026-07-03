@@ -14,6 +14,7 @@ import { EpisodeDynamoDao } from './dao/EpisodeDynamoDao';
 import { ExportTaskDynamoDao } from './dao/ExportTaskDynamoDao';
 import { FeaturedQueueDynamoDao } from './dao/FeaturedQueueDynamoDao';
 import { FeedDynamoDao } from './dao/FeedDynamoDao';
+import { HostedImageDynamoDao } from './dao/HostedImageDynamoDao';
 import { MigrationTaskDynamoDao } from './dao/MigrationTaskDynamoDao';
 import { NoticeDynamoDao } from './dao/NoticeDynamoDao';
 import { NotificationDynamoDao } from './dao/NotificationDynamoDao';
@@ -37,6 +38,7 @@ if (!tableName) {
 export const userDao: UserDynamoDao = new UserDynamoDao(documentClient, tableName);
 export const recordDao: RecordDynamoDao = new RecordDynamoDao(documentClient, tableName);
 export const patronDao: PatronDynamoDao = new PatronDynamoDao(documentClient, tableName);
+export const hostedImageDao: HostedImageDynamoDao = new HostedImageDynamoDao(documentClient, tableName);
 export const passwordResetDao: PasswordResetDynamoDao = new PasswordResetDynamoDao(documentClient, tableName);
 export const commentDao: CommentDynamoDao = new CommentDynamoDao(documentClient, userDao, tableName);
 export const changelogDao: ChangelogDynamoDao = new ChangelogDynamoDao(documentClient, tableName);

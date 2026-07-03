@@ -11,7 +11,7 @@ dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') })
 import { cardMetadataTaskDao, comboDao } from '@server/dynamo/daos';
 import { Combo, ComboTree } from '@utils/datatypes/CardCatalog';
 
-import { downloadJson, uploadJson } from './utils/s3';
+import { downloadJson, parseJsonFromChunks, streamToChunks, uploadJson, uploadJsonStreaming } from './utils/s3';
 
 const fetchWithRetries = async (url: string, retries = 5, delay = 60000): Promise<any> => {
   for (let attempt = 1; attempt <= retries; attempt++) {
@@ -21,35 +21,27 @@ const fetchWithRetries = async (url: string, retries = 5, delay = 60000): Promis
 
         const request = https.get(url, (response) => {
           if (response.statusCode !== 200) {
+            response.resume(); // drain so the socket can be reused/closed
             reject(new Error(`Failed to fetch data: ${response.statusCode}`));
             return;
           }
 
+          // The decompressed combo feed is >512MB, which exceeds V8's max
+          // string length (0x1fffffe8 chars). Decompress on the fly and parse
+          // the bytes incrementally with jsonparse (via parseJsonFromChunks) so
+          // the full JSON is never materialized as a single string. Mirrors the
+          // S3 download path in utils/s3.ts.
           const isGzipped = url.endsWith('.gz');
-          const chunks: Buffer[] = [];
+          const source = isGzipped ? response.pipe(zlib.createGunzip()) : response;
 
-          response.on('data', (chunk: Buffer) => {
-            chunks.push(chunk);
-          });
+          // Propagate errors from either the response or the gunzip transform.
+          response.on('error', reject);
+          source.on('error', reject);
 
-          response.on('end', () => {
-            try {
-              const buffer = Buffer.concat(chunks);
-              let rawData: string;
-
-              if (isGzipped) {
-                // Decompress gzip data
-                rawData = zlib.gunzipSync(buffer).toString('utf-8');
-              } else {
-                rawData = buffer.toString('utf-8');
-              }
-
-              const parsedData = JSON.parse(rawData);
-              resolve(parsedData);
-            } catch (err) {
-              reject(err);
-            }
-          });
+          streamToChunks(source)
+            .then(({ chunks, totalBytes }) => parseJsonFromChunks(chunks, totalBytes))
+            .then(resolve)
+            .catch(reject);
         });
 
         request.setTimeout(timeout, () => {
@@ -62,6 +54,12 @@ const fetchWithRetries = async (url: string, retries = 5, delay = 60000): Promis
         });
       });
     } catch (error) {
+      // A RangeError (ERR_STRING_TOO_LONG) or out-of-memory failure is
+      // deterministic — the payload size won't change between attempts, so
+      // retrying just burns ~15 minutes of backoff before failing anyway.
+      if (error instanceof RangeError) {
+        throw new Error(`Failed to fetch data: ${error.message}`);
+      }
       if (error instanceof Error) {
         console.error(`Attempt ${attempt} failed: ${error.message}`);
       } else {
@@ -111,9 +109,10 @@ const fetchBulkData = async (url: string, cacheKey: string, useS3Cache?: boolean
     }
   }
 
-  // Save to S3 cache if enabled
+  // Save to S3 cache if enabled. Stream the write: JSON.stringify on the full
+  // >512MB dict would hit the same ERR_STRING_TOO_LONG limit as the fetch did.
   if (useS3Cache) {
-    await uploadJson(cacheKey, dataById);
+    await uploadJsonStreaming(cacheKey, dataById);
   }
 
   return dataById;

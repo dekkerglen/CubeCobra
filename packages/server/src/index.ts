@@ -5,6 +5,7 @@ dotenv.config();
 
 import { cdnUrl } from '@utils/cdnUrl';
 import { UserRoles } from '@utils/datatypes/User';
+import { MAX_UPLOAD_BYTES } from '@utils/hostedImagesUtil';
 import bodyParser from 'body-parser';
 import compression from 'compression';
 import connectFlash from 'connect-flash';
@@ -99,8 +100,9 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
   next();
 });
 
-// upload file middleware
-app.use(fileUpload());
+// upload file middleware. Cap uploads to the hosted-image input limit and abort oversized
+// requests rather than buffering them.
+app.use(fileUpload({ limits: { fileSize: MAX_UPLOAD_BYTES }, abortOnLimit: true }));
 
 // body parser middleware
 app.use(

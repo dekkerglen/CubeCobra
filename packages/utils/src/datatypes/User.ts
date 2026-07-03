@@ -39,7 +39,16 @@ export interface UnhydratedUser {
   /** @deprecated retained on stored rows for the one-time migration to CUBE_LIKE hash rows. */
   followedCubes?: string[];
   imageName?: string;
+  // Lotus Cobra perk: an uploaded custom avatar. When set, this takes precedence over the
+  // card-art `imageName`. `profileImageUrl` is the stored relative path (cdnUrl applied on read),
+  // `profileHostedImageId` links back to the managed HostedImage record.
+  profileHostedImageId?: string;
+  profileImageUrl?: string;
   roles?: UserRoles[];
+  /** Ephemeral (not persisted): Patreon tier level + status, populated per-request into reactProps
+   * so the client can gate tier-locked features like image hosting. */
+  patronLevel?: number;
+  patronStatus?: string;
   theme?: string;
   email?: string;
   hideFeatured?: boolean;

@@ -78,9 +78,7 @@ const ColorMultiselectFilter: React.FC<{
               onClick={() => onModeChange!(m)}
               className={[
                 'px-2 py-0.5 text-xs font-semibold',
-                mode === m
-                  ? 'bg-link text-white'
-                  : 'bg-bg text-text-secondary hover:bg-bg-active',
+                mode === m ? 'bg-link text-white' : 'bg-bg text-text-secondary hover:bg-bg-active',
               ].join(' ')}
             >
               {m === 'any' ? 'Any' : 'All'}

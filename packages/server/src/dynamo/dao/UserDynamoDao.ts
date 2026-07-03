@@ -28,6 +28,7 @@ import {
   QueryCommandInput,
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
+import { cdnUrl } from '@utils/cdnUrl';
 import { BaseObject } from '@utils/datatypes/BaseObject';
 import { DefaultPrintingPreference } from '@utils/datatypes/Card';
 import User, {
@@ -36,6 +37,7 @@ import User, {
   UnhydratedUser,
   UserWithSensitiveInformation,
 } from '@utils/datatypes/User';
+import { hostedImageToImageData } from '@utils/hostedImagesUtil';
 import { getImageData } from 'serverutils/imageutil';
 
 import { DaoError } from '../../../errors/DaoError';
@@ -115,6 +117,8 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       followingCount: item.followingCount,
       likedCubesCount: item.likedCubesCount,
       imageName: item.imageName,
+      profileHostedImageId: item.profileHostedImageId,
+      profileImageUrl: item.profileImageUrl,
       roles: item.roles,
       theme: item.theme,
       hideFeatured: item.hideFeatured,
@@ -166,7 +170,12 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
     const unhydrated = this.stripSensitiveData(item);
 
     const hydrated = { ...unhydrated } as UserWithBaseFields;
-    hydrated.image = getImageData(hydrated.imageName || 'Ambush Viper');
+    // Prefer an uploaded custom avatar (Lotus Cobra perk) over card art.
+    if (hydrated.profileImageUrl) {
+      hydrated.image = hostedImageToImageData(cdnUrl(hydrated.profileImageUrl), hydrated.profileHostedImageId);
+    } else {
+      hydrated.image = getImageData(hydrated.imageName || 'Ambush Viper');
+    }
 
     if (!hydrated.defaultPrinting) {
       hydrated.defaultPrinting = DefaultPrintingPreference;

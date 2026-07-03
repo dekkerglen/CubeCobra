@@ -673,8 +673,6 @@ const throwIfAborted = (signal?: AbortSignal): void => {
 const oracleIsLand = (oracle: string, meta: DeckbuildEntry['cardMeta']): boolean =>
   /\bLand\b/.test(meta[oracle]?.type ?? '');
 
-
-
 const getDeckCardMeta = (
   oracle: string,
   cardMeta: DeckbuildEntry['cardMeta'],

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import type { Icon as OcticonIcon } from '@primer/octicons-react';
-import { HeartIcon, KeyIcon, MailIcon, PaintbrushIcon, PersonIcon, TrashIcon } from '@primer/octicons-react';
+import { HeartIcon, ImageIcon, KeyIcon, MailIcon, PaintbrushIcon, PersonIcon, TrashIcon } from '@primer/octicons-react';
 import Cube from '@utils/datatypes/Cube';
 import Patron from '@utils/datatypes/Patron';
+import { canUseImageHosting } from '@utils/hostedImagesUtil';
 import classNames from 'classnames';
 
 import Banner from 'components/Banner';
@@ -16,10 +17,12 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import UserAccountDeletion from 'components/user/UserAccountDeletion';
 import UserEmailForm from 'components/user/UserEmailForm';
+import UserHostedImages from 'components/user/UserHostedImages';
 import UserPasswordForm from 'components/user/UserPasswordForm';
 import UserPatreonConfig from 'components/user/UserPatreonConfig';
 import UserProfile from 'components/user/UserProfile';
 import UserThemeForm from 'components/user/UserThemeForm';
+import UserContext from 'contexts/UserContext';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 
@@ -71,6 +74,13 @@ const SECTIONS: AccountSection[] = [
     description: 'Theme, animations, and other interface settings.',
     Icon: PaintbrushIcon,
     render: () => <UserThemeForm />,
+  },
+  {
+    key: 'images',
+    label: 'My Images',
+    description: 'Upload and manage images hosted on Cube Cobra.',
+    Icon: ImageIcon,
+    render: () => <UserHostedImages />,
   },
   {
     key: 'patreon',
@@ -153,10 +163,15 @@ const SectionPill: React.FC<{ section: AccountSection; active: boolean; onClick:
 );
 
 const UserAccountPage: React.FC<UserAccountPageProps> = (props) => {
-  const { defaultNav } = props;
+  const { defaultNav, patron } = props;
+  const user = useContext(UserContext);
   const [active, setActive] = useQueryParam('nav', defaultNav || '');
 
-  const selected = SECTIONS.find((s) => s.key === active);
+  // The "My Images" section is a Lotus Cobra perk (or Admin).
+  const canUploadImages = canUseImageHosting(patron, user?.roles);
+  const sections = canUploadImages ? SECTIONS : SECTIONS.filter((s) => s.key !== 'images');
+
+  const selected = sections.find((s) => s.key === active);
 
   return (
     <MainLayout>
@@ -173,7 +188,7 @@ const UserAccountPage: React.FC<UserAccountPageProps> = (props) => {
               <p className="mt-1 text-base text-text-secondary">Choose a section to manage your account.</p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {SECTIONS.map((section) => (
+              {sections.map((section) => (
                 <SectionTile key={section.key} section={section} onClick={() => setActive(section.key)} />
               ))}
             </div>
@@ -185,7 +200,7 @@ const UserAccountPage: React.FC<UserAccountPageProps> = (props) => {
             <div className="grid grid-cols-1 lg:grid-cols-[20rem_1fr] gap-6">
               <div>
                 <Flexbox direction="col" gap="2">
-                  {SECTIONS.map((section) => (
+                  {sections.map((section) => (
                     <SectionPill
                       key={section.key}
                       section={section}

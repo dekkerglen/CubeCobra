@@ -309,6 +309,11 @@ interface Cube {
   description: string;
   brief?: string;
   imageName: string;
+  // Lotus Cobra perk: an uploaded custom cube image. When set, this takes precedence over the
+  // card-art `imageName`. `imgHostedImageUrl` is the stored relative path (cdnUrl applied on read),
+  // `imgHostedImageId` links back to the managed HostedImage record.
+  imgHostedImageId?: string;
+  imgHostedImageUrl?: string;
   date: number; // Legacy field - this is dateLastUpdated, kept for backwards compatibility
   dateCreated: number;
   dateLastUpdated: number;

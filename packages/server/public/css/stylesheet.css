@@ -2088,6 +2088,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   border-start-start-radius: 0.375rem;
   border-end-start-radius: 0.375rem;
 }
+.rounded-t {
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+}
 .rounded-t-lg {
   border-top-left-radius: 0.5rem;
   border-top-right-radius: 0.5rem;
@@ -2677,6 +2681,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .to-transparent {
   --tw-gradient-to: transparent var(--tw-gradient-to-position);
+}
+.object-contain {
+  object-fit: contain;
 }
 .object-cover {
   object-fit: cover;

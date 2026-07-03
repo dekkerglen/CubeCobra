@@ -36,10 +36,13 @@ import TCGPlayerButton from 'components/purchase/TCGPlayerButton';
 import withModal from 'components/WithModal';
 
 import { cardImageBackUrl, cardImageUrl } from '../../../../utils/src/cardutil';
+import useCanUploadImages from '../../hooks/useCanUploadImages';
 import CubeContext from '../../contexts/CubeContext';
 import DisplayContext from '../../contexts/DisplayContext';
+import ImageUploadWidget from '../ImageUploadWidget';
 import Badge from '../base/Badge';
 import Button from '../base/Button';
+import Collapse from '../base/Collapse';
 import Input from '../base/Input';
 import { Col, Flexbox, Row } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
@@ -101,6 +104,8 @@ const CardModal: React.FC<CardModalProps> = ({
   const fetchedCardsRef = React.useRef<Set<string>>(new Set());
   const { cube, unfilteredChangedCards, addCard } = useContext(CubeContext);
   const { setRightSidebarMode } = useContext(DisplayContext);
+  const canUploadImages = useCanUploadImages();
+  const [uploadTarget, setUploadTarget] = useState<null | 'imgUrl' | 'imgBackUrl'>(null);
 
   // Get available boards from cube
   const availableBoards = useMemo(() => {
@@ -439,6 +444,26 @@ const CardModal: React.FC<CardModalProps> = ({
                   onChange={(event) => updateField('imgUrl', event.target.value)}
                   disabled={disabled}
                 />
+                {canUploadImages && !disabled && (
+                  <>
+                    <Button
+                      color="secondary"
+                      onClick={() => setUploadTarget(uploadTarget === 'imgUrl' ? null : 'imgUrl')}
+                    >
+                      {uploadTarget === 'imgUrl' ? 'Cancel Upload' : 'Upload Front Image'}
+                    </Button>
+                    <Collapse isOpen={uploadTarget === 'imgUrl'}>
+                      <ImageUploadWidget
+                        usage="general"
+                        label="Choose Image"
+                        onUploaded={(image) => {
+                          updateField('imgUrl', image.url);
+                          setUploadTarget(null);
+                        }}
+                      />
+                    </Collapse>
+                  </>
+                )}
                 <Input
                   label="Image Back URL"
                   type="text"
@@ -447,6 +472,26 @@ const CardModal: React.FC<CardModalProps> = ({
                   onChange={(event) => updateField('imgBackUrl', event.target.value)}
                   disabled={disabled}
                 />
+                {canUploadImages && !disabled && (
+                  <>
+                    <Button
+                      color="secondary"
+                      onClick={() => setUploadTarget(uploadTarget === 'imgBackUrl' ? null : 'imgBackUrl')}
+                    >
+                      {uploadTarget === 'imgBackUrl' ? 'Cancel Upload' : 'Upload Back Image'}
+                    </Button>
+                    <Collapse isOpen={uploadTarget === 'imgBackUrl'}>
+                      <ImageUploadWidget
+                        usage="general"
+                        label="Choose Image"
+                        onUploaded={(image) => {
+                          updateField('imgBackUrl', image.url);
+                          setUploadTarget(null);
+                        }}
+                      />
+                    </Collapse>
+                  </>
+                )}
                 <ColorChecksAddon
                   label="Color"
                   values={cardColorIdentity(card)}

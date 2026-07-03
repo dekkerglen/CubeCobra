@@ -301,7 +301,7 @@ const MAX_JSON_STRING_BYTES = 256 * 1024 * 1024;
 /**
  * Helper function to collect a stream into an array of buffers
  */
-async function streamToChunks(stream: Readable): Promise<{ chunks: Buffer[]; totalBytes: number }> {
+export async function streamToChunks(stream: Readable): Promise<{ chunks: Buffer[]; totalBytes: number }> {
   return new Promise((resolve, reject) => {
     const chunks: Buffer[] = [];
     let totalBytes = 0;
@@ -326,7 +326,7 @@ async function streamToChunks(stream: Readable): Promise<{ chunks: Buffer[]; tot
  * Note: jsonparse is used directly instead of JSONStream because JSONStream
  * silently drops null values, which would not be faithful to JSON.parse.
  */
-async function parseJsonFromChunks(chunks: Buffer[], totalBytes: number): Promise<any> {
+export async function parseJsonFromChunks(chunks: Buffer[], totalBytes: number): Promise<any> {
   if (totalBytes <= MAX_JSON_STRING_BYTES) {
     return JSON.parse(Buffer.concat(chunks).toString('utf-8'));
   }

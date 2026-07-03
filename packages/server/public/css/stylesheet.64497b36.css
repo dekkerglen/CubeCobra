@@ -1175,9 +1175,6 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .mt-6 {
   margin-top: 1.5rem;
 }
-.mt-auto {
-  margin-top: auto;
-}
 .box-border {
   box-sizing: border-box;
 }
@@ -1447,6 +1444,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .w-64 {
   width: 16rem;
+}
+.w-7 {
+  width: 1.75rem;
 }
 .w-72 {
   width: 18rem;
@@ -2088,6 +2088,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   border-start-start-radius: 0.375rem;
   border-end-start-radius: 0.375rem;
 }
+.rounded-t {
+  border-top-left-radius: 0.25rem;
+  border-top-right-radius: 0.25rem;
+}
 .rounded-t-lg {
   border-top-left-radius: 0.5rem;
   border-top-right-radius: 0.5rem;
@@ -2121,6 +2125,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .border-b {
   border-bottom-width: 1px;
+}
+.border-b-0 {
+  border-bottom-width: 0px;
 }
 .border-b-2 {
   border-bottom-width: 2px;
@@ -2296,6 +2303,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   --tw-border-opacity: 1;
   border-color: rgb(161 98 7 / var(--tw-border-opacity, 1));
 }
+.border-l-amber-500 {
+  --tw-border-opacity: 1;
+  border-left-color: rgb(245 158 11 / var(--tw-border-opacity, 1));
+}
 .border-l-link {
   --tw-border-opacity: 1;
   border-left-color: rgb(var(--link) / var(--tw-border-opacity, 1));
@@ -2427,9 +2438,6 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--button-accent) / var(--tw-bg-opacity, 1));
 }
-.bg-button-accent\/10 {
-  background-color: rgb(var(--button-accent) / 0.1);
-}
 .bg-button-danger {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--button-danger) / var(--tw-bg-opacity, 1));
@@ -2437,6 +2445,12 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .bg-button-primary {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--button-primary) / var(--tw-bg-opacity, 1));
+}
+.bg-button-primary\/10 {
+  background-color: rgb(var(--button-primary) / 0.1);
+}
+.bg-button-primary\/15 {
+  background-color: rgb(var(--button-primary) / 0.15);
 }
 .bg-button-secondary {
   --tw-bg-opacity: 1;
@@ -2667,6 +2681,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .to-transparent {
   --tw-gradient-to: transparent var(--tw-gradient-to-position);
+}
+.object-contain {
+  object-fit: contain;
 }
 .object-cover {
   object-fit: cover;
@@ -3077,6 +3094,10 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .text-amber-400 {
   --tw-text-opacity: 1;
   color: rgb(251 191 36 / var(--tw-text-opacity, 1));
+}
+.text-amber-500 {
+  --tw-text-opacity: 1;
+  color: rgb(245 158 11 / var(--tw-text-opacity, 1));
 }
 .text-amber-600 {
   --tw-text-opacity: 1;

@@ -75,6 +75,10 @@ yarn-error.log*
 # client builds copied to server package
 /packages/SiteServer/src/client
 
+# locally-uploaded hosted images (dev fallback for R2)
+/packages/server/public/userimages/*
+!/packages/server/public/userimages/.gitkeep
+
 # CDK out
 **/cdk.out/*
 

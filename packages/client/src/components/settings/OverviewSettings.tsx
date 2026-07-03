@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import Cube, { CUBE_CATEGORIES, CUBE_PREFIXES } from '@utils/datatypes/Cube';
+import { hostedImageToImageData } from '@utils/hostedImagesUtil';
 import { getCubeDescription } from '@utils/Util';
 
 import Alert from 'components/base/Alert';
@@ -8,15 +9,18 @@ import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Checkbox from 'components/base/Checkbox';
+import Collapse from 'components/base/Collapse';
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import RadioButtonGroup from 'components/base/RadioButtonGroup';
 import Text from 'components/base/Text';
+import ImageUploadWidget from 'components/ImageUploadWidget';
 import LoadingButton from 'components/LoadingButton';
 import MtgImage from 'components/MtgImage';
 import TextEntry from 'components/TextEntry';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
+import useCanUploadImages from 'hooks/useCanUploadImages';
 import { cardNameMatches, fetchCardImage } from 'utils/cardAutocomplete';
 
 interface AlertProps {
@@ -27,10 +31,12 @@ interface AlertProps {
 const OverviewSettings: React.FC = () => {
   const { cube } = useContext(CubeContext);
   const { csrfFetch } = useContext(CSRFContext);
+  const canUploadImages = useCanUploadImages();
   const [state, setState] = useState<Cube>(JSON.parse(JSON.stringify(cube)));
   const [imagename, setImagename] = useState(cube.imageName);
   const [alerts, setAlerts] = useState<AlertProps[]>([]);
   const [hasChanges, setHasChanges] = useState(false);
+  const [uploadOpen, setUploadOpen] = useState(false);
 
   // Detect changes
   useEffect(() => {
@@ -42,7 +48,13 @@ const OverviewSettings: React.FC = () => {
     setImagename(image);
     fetchCardImage(image).then((resolved) => {
       if (resolved) {
-        setState((prev) => ({ ...prev, imageName: image, image: resolved }));
+        setState((prev) => ({
+          ...prev,
+          imageName: image,
+          image: resolved,
+          imgHostedImageId: undefined,
+          imgHostedImageUrl: undefined,
+        }));
       }
     });
   }, []);
@@ -62,6 +74,7 @@ const OverviewSettings: React.FC = () => {
           shortId: state.shortId,
           imageName: state.imageName,
           image: state.image,
+          imgHostedImageId: state.imgHostedImageId ?? '',
           brief: state.brief,
           categoryOverride: state.categoryOverride,
           categoryPrefixes: state.categoryPrefixes,
@@ -194,6 +207,43 @@ const OverviewSettings: React.FC = () => {
                 placeholder="Cardname for image"
                 autoComplete="off"
               />
+              {canUploadImages && (
+                <Flexbox direction="col" gap="2" className="mt-2">
+                  <Button color="secondary" onClick={() => setUploadOpen((o) => !o)}>
+                    {uploadOpen ? 'Cancel Upload' : 'Upload Custom Image'}
+                  </Button>
+                  <Collapse isOpen={uploadOpen}>
+                    <ImageUploadWidget
+                      usage="cube"
+                      label="Choose Image"
+                      onUploaded={(uploaded) => {
+                        setState((prev) => ({
+                          ...prev,
+                          imgHostedImageId: uploaded.id,
+                          imgHostedImageUrl: uploaded.url,
+                          image: hostedImageToImageData(uploaded.url, uploaded.id),
+                        }));
+                        setUploadOpen(false);
+                      }}
+                    />
+                  </Collapse>
+                  {state.imgHostedImageId && (
+                    <Button
+                      color="danger"
+                      outline
+                      onClick={() =>
+                        setState((prev) => ({
+                          ...prev,
+                          imgHostedImageId: undefined,
+                          imgHostedImageUrl: undefined,
+                        }))
+                      }
+                    >
+                      Remove Custom Image
+                    </Button>
+                  )}
+                </Flexbox>
+              )}
             </div>
 
             <Flexbox direction="col" gap="2">
