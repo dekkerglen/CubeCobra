@@ -20,7 +20,7 @@
 
 import { DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-import RecordType from '@utils/datatypes/Record';
+import RecordType, { WinLossDraw } from '@utils/datatypes/Record';
 import {
   RecordAnalytic,
   RecordMatchupAnalytic,
@@ -57,6 +57,7 @@ export interface UnhydratedRecord {
   draft?: string;
   dateCreated: number;
   dateLastUpdated: number;
+  overrides?: { [playerName: string]: WinLossDraw };
 }
 
 interface QueryResult {
@@ -123,6 +124,7 @@ export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecor
       draft: item.draft,
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
+      overrides: item.overrides,
     };
   }
 
@@ -130,7 +132,7 @@ export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecor
    * Hydrates a single UnhydratedRecord to RecordEntity.
    * Records don't have complex relationships, so this is a straightforward mapping.
    */
-  protected async hydrateItem(item: UnhydratedRecord): Promise<RecordEntity> {
+  protected hydrateItem(item: UnhydratedRecord): RecordEntity {
     return {
       id: item.id,
       cube: item.cube,
@@ -143,6 +145,7 @@ export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecor
       draft: item.draft,
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
+      overrides: item.overrides,
     };
   }
 
@@ -151,19 +154,7 @@ export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecor
    * Records don't have complex relationships, so this is a straightforward mapping.
    */
   protected async hydrateItems(items: UnhydratedRecord[]): Promise<RecordEntity[]> {
-    return items.map((item) => ({
-      id: item.id,
-      cube: item.cube,
-      date: item.date,
-      name: item.name,
-      description: item.description,
-      players: item.players,
-      matches: item.matches,
-      trophy: item.trophy,
-      draft: item.draft,
-      dateCreated: item.dateCreated,
-      dateLastUpdated: item.dateLastUpdated,
-    }));
+    return items.map(this.hydrateItem);
   }
 
   /**
