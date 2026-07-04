@@ -10,8 +10,8 @@ import { UserRoles } from './datatypes/User';
 export const IMAGE_HOSTING_TIER = PatronLevels['Lotus Cobra'];
 
 // Per-user soft quota.
-export const MAX_IMAGES_PER_USER = 100;
-export const MAX_BYTES_PER_USER = 500 * 1024 * 1024; // 500 MB
+export const MAX_IMAGES_PER_USER = 1000;
+export const MAX_BYTES_PER_USER = 1024 * 1024 * 1024; // 1024 MB (1 GB)
 
 // Upload/processing constraints.
 export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024; // 10 MB input cap
