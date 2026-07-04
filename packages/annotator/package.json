@@ -19,9 +19,7 @@
     "@napi-rs/canvas": "^1.0.0",
     "onnxruntime-web": "^1.26.0",
     "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "stream-chain": "^4.2.2",
-    "stream-json": "^3.3.0"
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",

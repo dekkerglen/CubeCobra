@@ -21,6 +21,7 @@ import JSONStream from 'JSONStream';
 import fetch from 'node-fetch';
 import path from 'path';
 import stream, { pipeline } from 'stream';
+import zlib from 'zlib';
 
 import { syncCardImages } from './sync_card_images';
 import { syncSetSymbols, toSymbolSources } from './sync_set_symbols';
@@ -95,7 +96,12 @@ const oracleInExpansion: Set<string> = new Set();
 
 const PRIVATE_DIR = path.resolve(__dirname, '..', '..', 'server', 'private');
 
-async function downloadFile(url: string, filePath: string) {
+// When `gunzip` is true the response is un-gzipped before being written to disk.
+// Scryfall's bulk exports are now served as standalone .jsonl.gz files (a gzipped
+// file on disk, not gzip transfer-encoding), so fetch hands us the raw gzip bytes
+// and we must inflate them ourselves. Other downloads (sets, price lists) are
+// plain JSON and pass gunzip=false.
+async function downloadFile(url: string, filePath: string, gunzip = false) {
   // filePath should be an absolute path
   const folder = filePath.substring(0, filePath.lastIndexOf(path.sep));
   if (!fs.existsSync(folder)) {
@@ -113,23 +119,33 @@ async function downloadFile(url: string, filePath: string) {
 
   return new Promise<void>((resolve, reject) => {
     const fileStream = createWriteStream(filePath);
-    pipeline(response.body!, fileStream, (err) => {
+    const onDone = (err: NodeJS.ErrnoException | null) => {
       if (err) {
         reject(new Error(`Download error for '${url}':\n${err.message}`));
       } else {
         resolve();
       }
-    });
+    };
+    if (gunzip) {
+      pipeline(response.body!, zlib.createGunzip(), fileStream, onDone);
+    } else {
+      pipeline(response.body!, fileStream, onDone);
+    }
   });
 }
 
 // Helper to download file - always fetches fresh data for update jobs
-async function getFileWithCache(url: string, filePath: string, useS3Cache?: boolean): Promise<fs.ReadStream> {
+async function getFileWithCache(
+  url: string,
+  filePath: string,
+  useS3Cache?: boolean,
+  gunzip?: boolean,
+): Promise<fs.ReadStream> {
   // For update jobs, always download fresh data - skip S3 cache check
   // The cache is only useful for non-update operations
 
   // Download file
-  await downloadFile(url, filePath);
+  await downloadFile(url, filePath, gunzip);
 
   if (useS3Cache) {
     // Upload to S3 cache using streaming to avoid memory issues with large files
@@ -151,7 +167,10 @@ async function downloadDefaultCards(useS3Cache?: boolean): Promise<{ updatedAt: 
   const resjson = (await res.json()) as {
     data: Array<{
       type: string;
-      download_uri: string;
+      // Scryfall's newer bulk format: a gzipped JSONL file (one card per line).
+      // download_uri (the deprecated streaming-gzip JSON array) is retired after
+      // 2026-07-20, so we consume jsonl_download_uri exclusively.
+      jsonl_download_uri: string;
       updated_at: string;
       size: number;
     }>;
@@ -159,9 +178,9 @@ async function downloadDefaultCards(useS3Cache?: boolean): Promise<{ updatedAt: 
 
   for (const data of resjson.data) {
     if (data.type === 'default_cards') {
-      defaultUrl = data.download_uri;
+      defaultUrl = data.jsonl_download_uri;
     } else if (data.type === 'all_cards') {
-      allUrl = data.download_uri;
+      allUrl = data.jsonl_download_uri;
       allCardsMetadata = { updated_at: data.updated_at, size: data.size };
     }
   }
@@ -170,10 +189,11 @@ async function downloadDefaultCards(useS3Cache?: boolean): Promise<{ updatedAt: 
   if (!allUrl) throw new Error('URL for All cards not found in /bulk-data response');
   if (!allCardsMetadata) throw new Error('Metadata for All cards not found in /bulk-data response');
 
-  // Use getFileWithCache to download or stream from cache
+  // The bulk files are gzipped JSONL — gunzip on download so the .jsonl files on
+  // disk are plain newline-delimited JSON for saveAllCards to stream line-by-line.
   await Promise.all([
-    getFileWithCache(defaultUrl, `${PRIVATE_DIR}/cards.json`, useS3Cache),
-    getFileWithCache(allUrl, `${PRIVATE_DIR}/all-cards.json`, useS3Cache),
+    getFileWithCache(defaultUrl, `${PRIVATE_DIR}/cards.jsonl`, useS3Cache, true),
+    getFileWithCache(allUrl, `${PRIVATE_DIR}/all-cards.jsonl`, useS3Cache, true),
   ]);
 
   return {
@@ -238,6 +258,26 @@ function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
   catalog.oracleToId[card.oracle_id]!.push(card.scryfall_id);
   binaryInsert(normalizedName, catalog.names);
   binaryInsert(normalizedFullName, catalog.full_names);
+}
+
+// Stream a Scryfall JSONL bulk file, invoking `onItem` for each card. The bulk
+// exports are newline-delimited JSON (one object per line, no wrapping array),
+// so we split on newlines and JSON.parse each line rather than walking array
+// elements the way JSONStream.parse('*') did for the old JSON-array format.
+function processJsonlFile(filePath: string, onItem: (item: any) => void): Promise<void> {
+  return new Promise<void>((resolve, reject) => {
+    fs.createReadStream(filePath)
+      .pipe(es.split())
+      .pipe(
+        es.mapSync((line: string) => {
+          // es.split() yields a trailing empty string for the final newline; skip it.
+          if (line.length === 0) return;
+          onItem(JSON.parse(line));
+        }),
+      )
+      .on('close', resolve)
+      .on('error', reject);
+  });
 }
 
 async function writeFile(filepath: string, data: any) {
@@ -926,15 +966,10 @@ async function saveAllCards(
 
   console.info('Processing cards...');
   const processingCardsStart = Date.now();
-  await new Promise((resolve) =>
-    fs
-      .createReadStream(`${PRIVATE_DIR}/cards.json`)
-      .pipe(JSONStream.parse('*'))
-      .pipe(
-        // @ts-expect-error idk why but this works
-        es.mapSync((item) => saveCard(item, metadatadict[item.oracle_id], ckPrices[item.id], mpPrices[item.id])),
-      )
-      .on('close', resolve),
+  await processJsonlFile(`${PRIVATE_DIR}/cards.jsonl`, (item) =>
+    // ckPrices/mpPrices may not have an entry for every card; passing undefined
+    // through (rather than 0) keeps "no price" distinct from "$0.00", same as before.
+    saveCard(item, metadatadict[item.oracle_id], ckPrices[item.id] as number, mpPrices[item.id] as number),
   );
   const processingCardsDuration = (Date.now() - processingCardsStart) / 1000;
   const cardCount = Object.keys(catalog.dict).length;
@@ -945,13 +980,7 @@ async function saveAllCards(
 
   console.info('Creating language mappings...');
   const languageMappingsStart = Date.now();
-  await new Promise((resolve) =>
-    fs
-      .createReadStream(`${PRIVATE_DIR}/all-cards.json`)
-      .pipe(JSONStream.parse('*'))
-      .pipe(es.mapSync(addLanguageMapping))
-      .on('close', resolve),
-  );
+  await processJsonlFile(`${PRIVATE_DIR}/all-cards.jsonl`, addLanguageMapping);
   const languageMappingCount = Object.keys(catalog.english).length;
   const languageMappingsDuration = (Date.now() - languageMappingsStart) / 1000;
 

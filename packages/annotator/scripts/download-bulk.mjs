@@ -1,6 +1,6 @@
-// Prerequisite step: download Scryfall's "All Cards" bulk export to
-// data/scryfall/all-cards.json. Skips the download if a full copy already
-// exists; pass --force to re-download.
+// Prerequisite step: download Scryfall's "All Cards" bulk export (gzipped JSONL)
+// and un-gzip it to data/scryfall/all-cards.jsonl. Skips the download if a full
+// copy already exists; pass --force to re-download.
 //
 //   node scripts/download-bulk.mjs [--force]
 

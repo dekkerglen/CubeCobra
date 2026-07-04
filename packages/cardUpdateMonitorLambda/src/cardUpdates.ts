@@ -6,10 +6,12 @@ import { CardUpdateTaskStatus } from '@utils/datatypes/CardUpdateTask';
 import { checkEcsTaskHealth, isTaskRunning, startEcsTask } from './utils/ecs';
 import { SCRYFALL_HEADERS } from './utils/scryfall';
 
+// This monitor only reads each bulk entry's metadata (size + updated_at) to
+// detect when Scryfall has published a new export; it never downloads the file
+// itself, so it needs neither download_uri nor jsonl_download_uri.
 interface ScryfallBulkData {
   data: Array<{
     type: string;
-    download_uri: string;
     updated_at: string;
     size: number;
   }>;

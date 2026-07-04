@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useRef, useState } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
-import { cardName } from '@utils/cardutil';
+import { cardName, normalizeName } from '@utils/cardutil';
 import { BoardType } from '@utils/datatypes/Card';
 
 import { trackEvent } from 'utils/analytics';
@@ -100,7 +100,7 @@ const EditCollapse: React.FC<EditCollapseProps> = ({ isOpen }) => {
           if (
             !card.markedForDelete &&
             card.index !== undefined &&
-            cardName(card).toLowerCase() === match.toLowerCase()
+            normalizeName(cardName(card)) === normalizeName(match)
           ) {
             removeIndex = card.index;
           }

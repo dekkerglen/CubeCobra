@@ -76,8 +76,9 @@ npm run dataset:bulk -w @cubecobra/annotator
 npm run dataset:generate -w @cubecobra/annotator
 ```
 
-- **`scripts/download-bulk.mjs`** — fetches the All Cards bulk export to
-  `data/scryfall/all-cards.json` (skips if present; `--force` to refresh).
+- **`scripts/download-bulk.mjs`** — fetches the All Cards bulk export (gzipped
+  JSONL) and un-gzips it to `data/scryfall/all-cards.jsonl` (skips if present;
+  `--force` to refresh).
 - **`scripts/generate-dataset.mjs`** — the main thread streams the bulk into a
   compact in-memory index (only `{id, name, lang, layout}`; image URLs are rebuilt
   from the id) and picks cards uniformly at random; rendering is **fanned out

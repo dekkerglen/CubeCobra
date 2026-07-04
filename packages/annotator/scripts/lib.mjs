@@ -4,15 +4,14 @@
 
 import fs from 'fs';
 import path from 'path';
+import readline from 'readline';
 import { fileURLToPath } from 'url';
-import { chain } from 'stream-chain';
-import { parser } from 'stream-json';
-import { streamArray } from 'stream-json/streamers/stream-array.js';
+import zlib from 'zlib';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 export const ROOT = path.resolve(__dirname, '..');
 export const SCRYFALL_DIR = path.join(ROOT, 'data', 'scryfall');
-export const BULK_PATH = path.join(SCRYFALL_DIR, 'all-cards.json');
+export const BULK_PATH = path.join(SCRYFALL_DIR, 'all-cards.jsonl');
 export const COMPACT_PATH = path.join(SCRYFALL_DIR, 'all-cards.compact.jsonl');
 export const CARDPOOL_DIR = path.join(ROOT, 'data', 'cardpool');
 const SCRYFALL_CDN = 'https://cards.scryfall.io';
@@ -45,13 +44,24 @@ export async function ensureBulk({ force = false } = {}) {
   }).then((r) => r.json());
   const entry = (meta.data || []).find((d) => d.type === 'all_cards');
   if (!entry) throw new Error('could not find all_cards in /bulk-data');
-  console.log(`downloading ${(entry.size / 1e9).toFixed(2)} GB from ${entry.download_uri}`);
-  const res = await fetch(entry.download_uri, { headers: { 'User-Agent': UA } });
+  // jsonl_download_uri points at a gzipped JSONL file (one card per line). The old
+  // download_uri (streaming-gzip JSON array) is retired after 2026-07-20.
+  console.log(`downloading ${(entry.size / 1e9).toFixed(2)} GB from ${entry.jsonl_download_uri}`);
+  const res = await fetch(entry.jsonl_download_uri, { headers: { 'User-Agent': UA } });
   if (!res.ok || !res.body) throw new Error(`bulk download failed: ${res.status}`);
 
-  // Stream straight to disk — the file is far too big to hold in memory.
+  // Stream straight to disk — the file is far too big to hold in memory. The file
+  // is a standalone .gz (not gzip transfer-encoding), so we gunzip the bytes as
+  // they arrive and write the decompressed JSONL to disk.
   const tmp = `${BULK_PATH}.partial`;
   const out = fs.createWriteStream(tmp);
+  const gunzip = zlib.createGunzip();
+  const writeDone = new Promise((resolve, reject) => {
+    gunzip.on('error', reject);
+    out.on('error', reject);
+    out.on('finish', resolve);
+  });
+  gunzip.pipe(out);
   const reader = res.body.getReader();
   let bytes = 0;
   let nextLog = 5e8;
@@ -59,15 +69,16 @@ export async function ensureBulk({ force = false } = {}) {
     const { done, value } = await reader.read();
     if (done) break;
     bytes += value.length;
-    if (!out.write(Buffer.from(value))) await new Promise((r) => out.once('drain', r));
+    if (!gunzip.write(Buffer.from(value))) await new Promise((r) => gunzip.once('drain', r));
     if (bytes >= nextLog) {
-      console.log(`  …${(bytes / 1e9).toFixed(2)} GB`);
+      console.log(`  …${(bytes / 1e9).toFixed(2)} GB (compressed)`);
       nextLog += 5e8;
     }
   }
-  await new Promise((r) => out.end(r));
+  gunzip.end();
+  await writeDone;
   fs.renameSync(tmp, BULK_PATH);
-  console.log(`saved ${BULK_PATH} (${(bytes / 1e9).toFixed(2)} GB)`);
+  console.log(`saved ${BULK_PATH} (${(bytes / 1e9).toFixed(2)} GB compressed on the wire)`);
   return BULK_PATH;
 }
 
@@ -112,11 +123,11 @@ function readCompact(langFilter) {
 
 // Builds (once) and loads the compact card index from the bulk export.
 //
-// The bulk is multi-GB and stream-json hands back sliced strings that pin their
-// source chunks, so we must NOT accumulate parsed records in memory while
-// streaming — that OOMs. Instead we write each minimal record straight to a
-// compact JSONL file (retaining nothing), then read that small file back.
-// `langFilter` (e.g. 'en') is applied at load time, not baked into the cache.
+// The bulk is multi-GB, so we must NOT accumulate parsed records in memory while
+// streaming — that OOMs. Instead we read the JSONL export a line at a time and
+// write each minimal record straight to a compact JSONL file (retaining
+// nothing), then read that small file back. `langFilter` (e.g. 'en') is applied
+// at load time, not baked into the cache.
 export async function loadCardIndex({ langFilter = null } = {}) {
   const fresh =
     fs.existsSync(COMPACT_PATH) &&
@@ -128,23 +139,23 @@ export async function loadCardIndex({ langFilter = null } = {}) {
   const out = fs.createWriteStream(`${COMPACT_PATH}.partial`);
   let seen = 0;
   let kept = 0;
+  // The bulk export is newline-delimited JSON (one card per line), so read it
+  // line-by-line rather than parsing a single giant array. readline handles
+  // backpressure on the input; we await 'drain' when the output buffer fills.
+  const rl = readline.createInterface({ input: fs.createReadStream(BULK_PATH), crlfDelay: Infinity });
+  for await (const line of rl) {
+    if (line.length === 0) continue;
+    seen++;
+    const p = projectCard(JSON.parse(line));
+    if (p) {
+      kept++;
+      if (!out.write(`${JSON.stringify(p)}\n`)) await new Promise((r) => out.once('drain', r));
+    }
+    if (seen % 100000 === 0) console.log(`  scanned ${seen}, kept ${kept}`);
+  }
   await new Promise((resolve, reject) => {
-    // stream-json 3.x components are chain() stages, not classic pipeable streams.
-    const pipeline = chain([fs.createReadStream(BULK_PATH), parser(), streamArray()]);
-    pipeline.on('data', ({ value }) => {
-      seen++;
-      const p = projectCard(value);
-      if (p) {
-        kept++;
-        // Backpressure: pause the parser if the file write buffer fills.
-        if (!out.write(`${JSON.stringify(p)}\n`)) pipeline.pause();
-      }
-      if (seen % 100000 === 0) console.log(`  scanned ${seen}, kept ${kept}`);
-    });
-    out.on('drain', () => pipeline.resume());
-    pipeline.on('end', () => out.end(resolve));
-    pipeline.on('error', reject);
     out.on('error', reject);
+    out.end(resolve);
   });
   fs.renameSync(`${COMPACT_PATH}.partial`, COMPACT_PATH);
   console.log(`  wrote ${kept} cards → ${path.basename(COMPACT_PATH)}`);

@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
-import { cardName } from '@utils/cardutil';
+import { cardName, normalizeName } from '@utils/cardutil';
 import { BoardType } from '@utils/datatypes/Card';
 import { boardNameToKey, getBoardDefinitions, getViewByName } from '@utils/datatypes/Cube';
 
@@ -151,7 +151,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
           if (
             !card.markedForDelete &&
             card.index !== undefined &&
-            cardName(card).toLowerCase() === match.toLowerCase()
+            normalizeName(cardName(card)) === normalizeName(match)
           ) {
             removeIndex = card.index;
           }

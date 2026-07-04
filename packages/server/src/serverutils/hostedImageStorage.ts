@@ -76,6 +76,19 @@ export const storeImage = async (key: string, body: Buffer): Promise<string> => 
   if (r2Configured()) {
     await putObject(key, body, 'image/webp', CACHE_CONTROL);
   } else {
+    // The local-disk fallback is only valid when images are served same-origin by
+    // express.static — i.e. CDN_BASE_URL is unset (local dev). In any deployed environment
+    // CDN_BASE_URL points at the R2-backed CDN, and hostedImageToClient()/cdnUrl() will
+    // prefix the returned path with it. Writing to the instance's ephemeral local disk there
+    // would vend a `${CDN_BASE_URL}/userimages/...` URL that 404s (the bytes never reach R2).
+    // Fail loudly on that misconfiguration instead of silently returning a broken URL.
+    if (process.env.CDN_BASE_URL) {
+      throw new Error(
+        'Hosted image storage is misconfigured: CDN_BASE_URL is set but R2 is not configured ' +
+          '(missing R2_ENDPOINT / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY / R2_BUCKET). ' +
+          'Uploads would be written to ephemeral local disk and served as a 404 CDN URL.',
+      );
+    }
     const filePath = path.join(LOCAL_PUBLIC_DIR, key);
     await fs.mkdir(path.dirname(filePath), { recursive: true });
     await fs.writeFile(filePath, body);
