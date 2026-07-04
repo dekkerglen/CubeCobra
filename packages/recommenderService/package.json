@@ -35,7 +35,7 @@
     "module-alias": "^2.2.3",
     "response-time": "^2.3.4",
     "ts-node": "^10.9.2",
-    "uuid": "^14.0.0"
+    "uuid": "^11.0.0"
   },
   "devDependencies": {
     "@aws-sdk/lib-storage": "^3.927.0",

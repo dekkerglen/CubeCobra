@@ -45,7 +45,8 @@
     "lodash": "^4.17.21",
     "module-alias": "^2.2.3",
     "node-fetch": "^2.7.0",
-    "sharp": "^0.34.5"
+    "sharp": "^0.34.5",
+    "uuid": "^11.0.0"
   },
   "devDependencies": {
     "@types/jest": "^29.5.12",
