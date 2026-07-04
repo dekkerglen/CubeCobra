@@ -14,6 +14,10 @@ declare global {
     interface Request {
       user?: User;
       uuid: string;
+      // Raw request body bytes, captured by the body-parser `verify` hook for routes
+      // (e.g. the Patreon webhook) that must validate an HMAC signature over the exact
+      // bytes the sender signed. Only populated for those routes; undefined otherwise.
+      rawBody?: Buffer;
       logger: {
         error: (...args: any[]) => void;
       };
@@ -34,6 +38,7 @@ declare global {
 export interface Request extends Omit<express.Request, 'isAuthenticated' | 'flash'> {
   user?: Express.User;
   uuid: string;
+  rawBody?: Buffer;
   logger: {
     error: (...args: any[]) => void;
   };

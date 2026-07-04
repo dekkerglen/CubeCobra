@@ -114,6 +114,15 @@ app.use(
 app.use(
   bodyParser.json({
     limit: '50mb',
+    // Capture the raw request bytes for routes that verify an HMAC signature over the
+    // exact payload the sender signed (the Patreon webhook). Re-serializing the parsed
+    // body is not byte-exact, so the signature must be checked against these raw bytes.
+    // Scoped to the webhook path so we don't retain large buffers for every request.
+    verify: (req: express.Request, _res: express.Response, buf: Buffer) => {
+      if (req.originalUrl.startsWith('/patreon/hook')) {
+        (req as any).rawBody = buf;
+      }
+    },
   }),
 );
 

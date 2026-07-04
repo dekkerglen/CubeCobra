@@ -216,26 +216,38 @@ const applyMigrations = async (taskId: string) => {
 if (require.main === module) {
   (async () => {
     try {
-      // Create a new migration task
-      const task = await migrationTaskDao.create({
-        status: MigrationTaskStatus.PENDING,
-        lastMigrationDate: '',
-        migrationsProcessed: 0,
-        cubesAffected: 0,
-        cardsDeleted: 0,
-        cardsMerged: 0,
-        step: 'Initializing',
-      });
-      console.log(`Created migration task ${task.id}`);
+      // In the normal (lambda-driven) flow the monitor lambda has already created the
+      // task record and passes its id via MIGRATION_TASK_ID. Reuse that record rather
+      // than creating a second one — otherwise the lambda's record is orphaned and stuck
+      // at "Initializing" forever, showing up as a ghost IN_PROGRESS task. See
+      // monitorMigrationTasks() in cardUpdateMonitorLambda/src/migrationTasks.ts.
+      let taskId = process.env.MIGRATION_TASK_ID;
 
-      await migrationTaskDao.markAsStarted(task.id);
+      if (taskId) {
+        console.log(`Using migration task ${taskId} from environment`);
+      } else {
+        // Manual/local run without the lambda: create our own task record.
+        const task = await migrationTaskDao.create({
+          status: MigrationTaskStatus.PENDING,
+          lastMigrationDate: '',
+          migrationsProcessed: 0,
+          cubesAffected: 0,
+          cardsDeleted: 0,
+          cardsMerged: 0,
+          step: 'Initializing',
+        });
+        taskId = task.id;
+        console.log(`Created migration task ${taskId}`);
+      }
 
-      const result = await applyMigrations(task.id);
+      await migrationTaskDao.markAsStarted(taskId);
 
-      await migrationTaskDao.markAsCompleted(task.id);
+      const result = await applyMigrations(taskId);
+
+      await migrationTaskDao.markAsCompleted(taskId);
 
       // Update the task with the final stats
-      const updatedTask = await migrationTaskDao.getById(task.id);
+      const updatedTask = await migrationTaskDao.getById(taskId);
       if (updatedTask) {
         updatedTask.lastMigrationDate = result.lastMigrationDate;
         updatedTask.migrationsProcessed = result.migrationsProcessed;
