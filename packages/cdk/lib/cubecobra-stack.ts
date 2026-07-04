@@ -335,6 +335,15 @@ function createEnvironmentVariables(
     envVars.ML_SERVICE_URL = mlServiceUrl;
   }
 
+  // R2 config for the server's hosted-image upload pipeline (packages/server/src/serverutils/
+  // hostedImageStorage.ts -> r2.ts). Without these the server's r2Configured() is false while
+  // CDN_BASE_URL is set, so storeImage() throws "misconfigured" and every upload fails. Only set
+  // when the stage has been cut over to R2 (params are empty otherwise), mirroring the jobs env.
+  if (params.r2Endpoint) envVars.R2_ENDPOINT = params.r2Endpoint;
+  if (params.r2AccessKeyId) envVars.R2_ACCESS_KEY_ID = params.r2AccessKeyId;
+  if (params.r2SecretAccessKey) envVars.R2_SECRET_ACCESS_KEY = params.r2SecretAccessKey;
+  if (params.r2Bucket) envVars.R2_BUCKET = params.r2Bucket;
+
   return envVars;
 }
 
