@@ -19,6 +19,7 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Browse a new Sets page that lists every Magic set with its set symbol — sort by release date, name, or card count, and click through to see all of a set's cards.
 - Lotus Cobra patrons (and admins) can now upload and host their own images on Cube Cobra and use them as custom card art, profile pictures, and cube images, all managed from a new image library in your account settings.
 - Card name search fields now include "Specify Versions" and "Include Extras" toggles, so you control which printings show up when adding cards on the bulk upload and package pages.
+- The draft breakdown export now includes an Archetype column, so you can see each drafter's archetype right alongside their picks.
 
 ## Bug Fixes
 
@@ -28,3 +29,5 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Fixed the wrong player name appearing on draft reports.
 - Fixed manually-set win/loss/draw records on events not saving or loading correctly.
 - Fixed replacing your cube in the Featured Cubes queue creating duplicate entries.
+- Fixed Patreon membership changes not always syncing to your Cube Cobra supporter perks.
+- Fixed a bug where registration errors weren't surfaced to end users.
