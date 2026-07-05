@@ -6,7 +6,6 @@
     "esModuleInterop": true,
     "target": "ES2020",
     "jsx": "react",
-    "baseUrl": "./",
     "paths": {
       "@utils/*": ["../utils/src/*"],
       "@server/*": ["../server/src/*"],
@@ -26,7 +25,8 @@
     "skipLibCheck": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "rootDir": ".."
   },
   "exclude": ["node_modules", "src/client", "dist"],
   "include": ["src/**/*.js", "src/**/*.ts", "src/**/*.tsx"]
