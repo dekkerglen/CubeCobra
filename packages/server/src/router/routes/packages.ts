@@ -73,10 +73,8 @@ const getCardQueries = (tokens: string[], printing: PrintingPreference = Printin
       const card = getMostReasonable(split[1], printing);
 
       if (card) {
-        console.log(`[getCardQueries] Found card: ${card.name}, oracle_id: ${card.oracle_id}`);
         queries.push({ type: 'card', value: card.oracle_id, originalToken: token });
       } else {
-        console.log(`[getCardQueries] Card not found: ${split[1]}`);
         queries.push({ type: 'card', value: '', originalToken: token });
       }
     }
