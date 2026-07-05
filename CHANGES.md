@@ -28,3 +28,4 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Fixed the wrong player name appearing on draft reports.
 - Fixed manually-set win/loss/draw records on events not saving or loading correctly.
 - Fixed replacing your cube in the Featured Cubes queue creating duplicate entries.
+- Fixed autocard getting stuck open in tablet view during a draft.
