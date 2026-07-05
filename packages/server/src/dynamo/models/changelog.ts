@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { getBucketName, getObject, putObject } from '../s3client';
 
-const CARD_LIMIT = 20000;
+const CARD_LIMIT = 10000;
 
 const client = createClient({
   name: 'CUBE_CHANGELOG',

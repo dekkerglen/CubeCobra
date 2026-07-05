@@ -7,7 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getBucketName, getObject, putObject } from '../s3client';
 import { BaseDynamoDao } from './BaseDynamoDao';
 
-const CARD_LIMIT = 20000;
+const CARD_LIMIT = 10000;
 
 /**
  * UnhydratedChangeLog represents the minimal data stored in DynamoDB.

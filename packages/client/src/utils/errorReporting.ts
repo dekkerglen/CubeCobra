@@ -41,16 +41,47 @@ const csrfToken = (): string => {
   }
 };
 
+// The overwhelming majority of what reaches these handlers is not our code: ad SDKs
+// (Nitropay, 33Across, mraid), browser extensions (crypto wallets, userscripts),
+// headless bots without a real canvas, and expected fetch aborts when a user
+// navigates away. We drop all of that so real CubeCobra bugs aren't buried.
+
+// Ad networks, extensions, and injected wallet globals — matched against message,
+// source, and stack (CORS-enabled ad scripts send us full stacks).
+const THIRD_PARTY_RE =
+  /nitropay|33across|mraid\.js|user-script|chrome-extension:|moz-extension:|safari-extension:|window\.ethereum|selectedAddress|web3/i;
+
+// Expected network/abort churn — user navigated away or went offline, not bugs.
+// (Chunk-load failures here are from third-party bundles; ours are on assets.cubecobra.com.)
+const IGNORED_MESSAGE_RE =
+  /^(Load failed|NetworkError when attempting to fetch|Fetch is aborted|The user aborted|The operation was aborted|AbortError|status -> 0|The I\/O read operation failed|NotReadableError|Loading chunk \d+ failed)/i;
+
+// Headless/automation browsers stub out canvas/audio and generate spurious errors.
+const BOT_UA_RE = /Lightpanda|HeadlessChrome|PhantomJS|puppeteer|bot\b|crawler|spider/i;
+
+// Our first-party origin (pages on cubecobra.com, bundles on assets.cubecobra.com).
+const FIRST_PARTY_RE = /cubecobra\.com/;
+
 // Cross-origin script errors surface as an opaque "Script error." with no useful
-// detail; browser-extension noise and the benign ResizeObserver loop warning are
-// not actionable. Drop them so they don't drown out real bugs.
+// detail; the ResizeObserver loop warning is benign. Everything else is filtered
+// by the rules above.
 const shouldIgnore = (payload: ClientErrorPayload): boolean => {
   const msg = payload.message || '';
+  const source = payload.source || '';
+  const stack = payload.stack || '';
+
   if (!msg) return true;
   if (msg === 'Script error.' || msg === 'Script error') return true;
   if (msg.startsWith('ResizeObserver loop')) return true;
-  if ((payload.source || '').startsWith('chrome-extension://')) return true;
-  if ((payload.source || '').startsWith('moz-extension://')) return true;
+  if (IGNORED_MESSAGE_RE.test(msg)) return true;
+  if (THIRD_PARTY_RE.test(msg) || THIRD_PARTY_RE.test(source) || THIRD_PARTY_RE.test(stack)) return true;
+  if (typeof navigator !== 'undefined' && BOT_UA_RE.test(navigator.userAgent)) return true;
+
+  // A stack that references remote scripts but none of ours is third-party code.
+  if (stack && /https?:\/\//.test(stack) && !FIRST_PARTY_RE.test(stack) && !FIRST_PARTY_RE.test(source)) {
+    return true;
+  }
+
   return false;
 };
 
@@ -152,9 +183,27 @@ export const initErrorReporting = (): void => {
 
   window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
     const reason: any = event.reason;
+
+    // Serialize the rejection reason into a useful message. Bare objects would
+    // otherwise stringify to "[object Object]" and lose all detail.
+    let message: string;
+    if (reason instanceof Error) {
+      message = reason.message || reason.name || 'Error';
+    } else if (typeof reason === 'string') {
+      message = reason;
+    } else if (reason == null) {
+      message = 'Unhandled promise rejection';
+    } else {
+      try {
+        message = JSON.stringify(reason);
+      } catch {
+        message = String(reason);
+      }
+    }
+
     reportError({
       kind: 'unhandledrejection',
-      message: (reason && (reason.message || String(reason))) || 'Unhandled promise rejection',
+      message,
       stack: reason && reason.stack,
     });
   });

@@ -78,6 +78,7 @@ import { cardFromId, getPlaceholderCard } from 'serverutils/carddb';
 import cloudwatch from 'serverutils/cloudwatch';
 import { getImageData } from 'serverutils/imageutil';
 
+import { CubeTooLargeError } from '../../errors/CubeTooLargeError';
 import { deleteObject, getObject, putObject } from '../s3client';
 import { getObjectVersion, listObjectVersions } from '../s3client';
 import { BaseDynamoDao, HashRow } from './BaseDynamoDao';
@@ -156,7 +157,7 @@ const resolveCubeImage = (item: UnhydratedCube): CubeImage => {
 
 export type SortOrder = 'popularity' | 'alphabetical' | 'cards' | 'date';
 
-const CARD_LIMIT = 20000;
+const CARD_LIMIT = 10000;
 
 /**
  * Creates a placeholder user for deleted/banned accounts
@@ -678,7 +679,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       }
 
       if (totalCardCount > CARD_LIMIT) {
-        throw new Error(`Cannot load cube: ${id} - too many cards: ${totalCardCount}`);
+        throw new CubeTooLargeError(id, totalCardCount, CARD_LIMIT);
       }
 
       // If we migrated legacy basics, save the updated cards to S3 BEFORE adding details
@@ -712,6 +713,12 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
           mainboard: [],
           maybeboard: [],
         };
+      }
+
+      // Too-large is an expected, terminal condition handled by the route layer; don't log
+      // it as a server error or wrap it, so its type survives for handleRouteError.
+      if (e instanceof CubeTooLargeError) {
+        throw e;
       }
 
       cloudwatch.error(`Failed to load cards for cube: ${id} - ${e.message}`, e.stack);
@@ -772,7 +779,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       }
 
       if (totalCardCount > CARD_LIMIT) {
-        throw new Error(`Cannot load cube: ${id} version: ${versionId} - too many cards: ${totalCardCount}`);
+        throw new CubeTooLargeError(id, totalCardCount, CARD_LIMIT);
       }
 
       // Add details to cards
@@ -794,6 +801,10 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
           mainboard: [],
           maybeboard: [],
         };
+      }
+
+      if (e instanceof CubeTooLargeError) {
+        throw e;
       }
 
       cloudwatch.error(`Failed to load cards for cube: ${id} version: ${versionId} - ${e.message}`, e.stack);

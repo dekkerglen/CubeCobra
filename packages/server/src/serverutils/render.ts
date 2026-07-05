@@ -11,6 +11,7 @@ import 'dotenv/config';
 
 import { SortOrder } from '../dynamo/dao/CubeDynamoDao';
 import { collaboratorIndexDao, cubeDao, notificationDao, patronDao } from '../dynamo/daos';
+import { CubeTooLargeError } from '../errors/CubeTooLargeError';
 import { Request, Response } from '../types/express';
 import { GIT_COMMIT } from './git';
 import { getBaseUrl } from './util';
@@ -299,6 +300,26 @@ const render = (
 const handleRouteError = function (req: Request, res: Response, err: any, reroute: string): void {
   if (err instanceof Error === false) {
     err = new Error('Unknown error');
+  }
+
+  // A too-large cube can't be rendered by ANY card-loading route, so redirecting (the
+  // normal error path) bounces between them (list <-> about) into a redirect storm. Render
+  // a terminal page explaining it instead, and don't log it as a server error — it's a
+  // known, non-actionable condition, not a fault.
+  if (err instanceof CubeTooLargeError) {
+    res.status(413);
+    render(
+      req,
+      res,
+      'ErrorPage',
+      {
+        error: `This cube is too large to display: it has ${err.cardCount.toLocaleString()} cards, which exceeds the maximum of ${err.limit.toLocaleString()}.`,
+        requestId: req.uuid,
+        title: 'Cube too large',
+      },
+      { noindex: true },
+    );
+    return;
   }
 
   req.logger.error(err.message, err.stack);
