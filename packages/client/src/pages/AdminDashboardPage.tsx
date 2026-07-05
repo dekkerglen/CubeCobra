@@ -38,6 +38,18 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ noticeCount, co
             <Button href="/admin/cardupdates" block outline color="primary" type="link">
               Card Updates & Tasks
             </Button>
+            <Button href="/admin/patrons" block outline color="primary" type="link">
+              Patrons
+            </Button>
+            <Button href="/admin/errors" block outline color="primary" type="link">
+              Errors
+            </Button>
+            <Button href="/admin/clienterrors" block outline color="primary" type="link">
+              Client Errors
+            </Button>
+            <Button href="/admin/performance" block outline color="primary" type="link">
+              Performance
+            </Button>
           </Flexbox>
         </CardBody>
       </Card>

@@ -43,6 +43,13 @@ export class ElasticBeanstalk extends Construct {
       retention: RetentionDays.ONE_MONTH,
     });
 
+    // Create CLIENT ERROR log group — browser-reported errors collected via the
+    // /api/clienterror endpoint. Format: /cubecobra/{env}/client/error
+    new LogGroup(this, 'ClientErrorLogGroup', {
+      logGroupName: `/cubecobra/${props.environmentName}/client/error`,
+      retention: RetentionDays.ONE_MONTH,
+    });
+
     this.logGroup = infoLogGroup; // For compatibility
 
     this.application = new CfnApplication(scope, 'Application', {

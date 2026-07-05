@@ -28,19 +28,17 @@ import documentClient from './dynamo/documentClient';
 import { isPatreonHookPath } from './router/routes/patreon';
 import router from './router/router';
 import { initializeCardDb } from './serverutils/cardCatalog';
-import cloudwatch from './serverutils/cloudwatch';
 import DynamoDBStore from './serverutils/dynamo-session-store';
+import { logError } from './serverutils/errorLog';
 import { render } from './serverutils/render';
 import { checkAndUpdateCardbase } from './serverutils/updatecards';
 import { CustomError } from './types/express';
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason: unknown) => {
-  cloudwatch.error(
-    'Unhandled Rejection at: Promise ',
-    reason,
-    reason instanceof Error ? reason.stack : 'Unknown stack',
-  );
+  // No request context is available here (the rejection escaped its handler), but the
+  // structured record still captures the error type + originating app frame.
+  logError([reason], undefined, { unhandledRejection: true });
 });
 
 // Init app
@@ -236,26 +234,16 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
   req.logger = {
     error: (...messages: any[]) => {
       res.locals.isError = true;
-      cloudwatch.error(
-        ...messages,
-        JSON.stringify(
-          {
-            id: req.uuid,
-            method: req.method,
-            path: req.path,
-            query: req.query,
-            originalUrl: req.originalUrl,
-            user: req.user
-              ? {
-                  id: req.user.id,
-                  username: req.user.username,
-                }
-              : null,
-          },
-          null,
-          2,
-        ),
-      );
+      logError(messages, {
+        requestId: req.uuid,
+        method: req.method,
+        path: req.path,
+        originalUrl: req.originalUrl,
+        query: req.query,
+        authenticated: !!req.user,
+        userId: req.user?.id ?? null,
+        username: req.user?.username ?? null,
+      });
     },
   };
 
@@ -307,7 +295,7 @@ app.use((req: express.Request, res: express.Response) =>
 app.use((err: any, req: express.Request, res: express.Response) => {
   // Safely handle logging - fallback if logger middleware hasn't run yet
   if (req.logger && req.logger.error) {
-    req.logger.error(err.message, err.stack);
+    req.logger.error(err);
   } else {
     console.error('Error occurred before logger middleware:', err.message, err.stack);
   }

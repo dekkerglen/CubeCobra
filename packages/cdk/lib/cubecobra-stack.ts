@@ -132,11 +132,22 @@ export class CubeCobraStack extends cdk.Stack {
       }),
     );
 
-    // Grant the instance role permissions to write logs to CloudWatch
+    // Grant the instance role permissions to write logs to CloudWatch, and to run
+    // CloudWatch Logs Insights queries (used by the admin Errors/Performance dashboards).
+    // StartQuery/GetQueryResults/StopQuery are account-level actions, so they are granted
+    // on all log groups.
     role.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
-        actions: ['logs:CreateLogGroup', 'logs:CreateLogStream', 'logs:PutLogEvents', 'logs:DescribeLogStreams'],
+        actions: [
+          'logs:CreateLogGroup',
+          'logs:CreateLogStream',
+          'logs:PutLogEvents',
+          'logs:DescribeLogStreams',
+          'logs:StartQuery',
+          'logs:GetQueryResults',
+          'logs:StopQuery',
+        ],
         resources: [`arn:aws:logs:${props?.env?.region}:${props?.env?.account}:log-group:*`],
       }),
     );
@@ -295,6 +306,7 @@ function createEnvironmentVariables(
     AWS_SECRET_ACCESS_KEY: params.secretKey,
     AWS_LOG_GROUP: `/cubecobra/${params.environmentName}/server`,
     AWS_LOG_STREAM: 'application',
+    AWS_CLIENT_ERROR_LOG_GROUP: `/cubecobra/${params.environmentName}/client/error`,
     AWS_REGION: props?.env?.region || '',
     CLOUDWATCH_ENABLED: params.environmentName === 'local' ? 'false' : 'true',
     CUBECOBRA_VERSION: params.version,

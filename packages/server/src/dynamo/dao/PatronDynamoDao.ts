@@ -114,7 +114,10 @@ export class PatronDynamoDao extends BaseDynamoDao<Patron, Patron> {
    * Enumerates a single page of all patrons via the GSI2 (`PATRON#ALL`) index.
    * Requires the GSI2 keys to have been backfilled onto existing rows.
    */
-  public async getAllPatrons(lastKey?: Record<string, any>): Promise<{ items: Patron[]; lastKey?: Record<string, any> }> {
+  public async getAllPatrons(
+    lastKey?: Record<string, any>,
+    limit: number = 100,
+  ): Promise<{ items: Patron[]; lastKey?: Record<string, any> }> {
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI2',
@@ -122,6 +125,7 @@ export class PatronDynamoDao extends BaseDynamoDao<Patron, Patron> {
       ExpressionAttributeValues: {
         ':all': PatronDynamoDao.allPartitionKey(),
       },
+      Limit: limit,
       ...(lastKey && { ExclusiveStartKey: lastKey }),
     };
 
