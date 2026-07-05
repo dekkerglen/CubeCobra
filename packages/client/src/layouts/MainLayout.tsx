@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import { UserRoles } from '@utils/datatypes/User';
+import { isAdFree } from '@utils/adsUtil';
 import classNames from 'classnames';
 
 import Container from 'components/base/Container';
@@ -37,7 +37,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({
     // if it hasn't been set, we will ask for consent
     if (!Object.prototype.hasOwnProperty.call(user, 'consentToHashedEmail')) {
       // only ask for consent if the user has ads enabled
-      return !(Array.isArray(user.roles) && user.roles.includes(UserRoles.PATRON));
+      return !isAdFree(user.roles);
     } else if (user.consentToHashedEmail === true) {
       // @ts-expect-error: 'nitroAds' may not exist on the 'window' object in some environments
       if (window.nitroAds && window.nitroAds.addUserToken) {

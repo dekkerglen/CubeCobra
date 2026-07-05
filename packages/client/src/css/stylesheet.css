@@ -315,6 +315,19 @@
     0 0 0 1px rgb(251 191 36 / 0.5);
 }
 
+/* Admin — regal amethyst/gold, the fanciest treatment of all with the fastest shimmer. */
+.patron-badge-admin {
+  background-image: linear-gradient(120deg, #7c3aed 0%, #a855f7 25%, #fbbf24 50%, #a855f7 75%, #7c3aed 100%);
+  color: #fff;
+  border-color: rgb(255 255 255 / 0.5);
+  animation-duration: 3s;
+}
+.patron-badge-admin:hover {
+  box-shadow:
+    0 6px 16px -2px rgb(124 58 237 / 0.6),
+    0 0 0 1px rgb(251 191 36 / 0.55);
+}
+
 /* Splash-image bottom gradient that fades into the page background.
    Only shown when the dark theme is active — the light page background is
    the same color as the splash overlay, so the taper would just blur the edge. */

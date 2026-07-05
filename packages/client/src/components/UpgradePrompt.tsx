@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 
 import { HeartFillIcon, XIcon } from '@primer/octicons-react';
-import { UserRoles } from '@utils/datatypes/User';
+import { isAdFree } from '@utils/adsUtil';
 
 import UserContext from '../contexts/UserContext';
 import useLocalStorage from '../hooks/useLocalStorage';
@@ -35,8 +35,8 @@ const UpgradePrompt: React.FC<UpgradePromptProps> = ({ message, storageKey, snoo
   const user = useContext(UserContext);
   const [dismissedAt, setDismissedAt] = useLocalStorage<number>(`upgradePrompt:${storageKey}`, 0);
 
-  // Patrons already support the site - never nag them.
-  if (user && Array.isArray(user.roles) && user.roles.includes(UserRoles.PATRON)) {
+  // Patrons already support the site, and admins get every patron perk - never nag them.
+  if (isAdFree(user?.roles)) {
     return null;
   }
 

@@ -14,6 +14,38 @@ import { Request, Response } from 'types/express';
 const DEFAULT_WINDOW = 1440;
 const MAX_ROWS = 200;
 
+interface ClientErrorGroup {
+  signature: string;
+  count: number;
+  sample: string;
+  kind?: string;
+  url?: string;
+  source?: string;
+  stack?: string;
+  componentStack?: string;
+  userAgent?: string;
+  version?: string;
+  username?: string | null;
+  thirdParty: boolean;
+}
+
+// High-confidence markers that an error comes from a browser extension or injected
+// third-party script rather than our app. These dominate raw client-error volume
+// (reader mode, DarkReader, consent-management platforms, etc.) and are not actionable.
+const THIRD_PARTY = /extension:\/\/|__firefox__|darkreader|__gpp\b|cmp timeout|Can't find variable: (?:__|DarkReader)/i;
+
+const isLikelyThirdParty = (e: Record<string, string>): boolean =>
+  THIRD_PARTY.test(`${e.message ?? ''} ${e.source ?? ''} ${e.stack ?? ''} ${e.url ?? ''}`);
+
+const sourceLocation = (e: Record<string, string>): string | undefined => {
+  if (!e.source) {
+    return undefined;
+  }
+  const line = e.lineno ? `:${e.lineno}` : '';
+  const col = e.colno ? `:${e.colno}` : '';
+  return `${e.source}${line}${col}`;
+};
+
 export const clientErrorsHandler = async (req: Request, res: Response) => {
   return render(req, res, 'AdminClientErrorsPage', {
     defaultWindow: DEFAULT_WINDOW,
@@ -27,34 +59,44 @@ export const clientErrorsQueryHandler = async (req: Request, res: Response) => {
   const logGroupName = logGroupFor('clientError');
 
   try {
-    // Client errors are stored as JSON lines, so `message` and `kind` are queryable fields.
-    const [rawMessages, kinds] = await Promise.all([
-      runInsightsQuery({
-        logGroupName,
-        queryString: 'stats count(*) as count by message | sort count desc | limit 10000',
-        startTimeMs,
-        endTimeMs,
-        limit: 10000,
-      }),
-      runInsightsQuery({
-        logGroupName,
-        queryString: 'stats count(*) as count by kind | sort count desc',
-        startTimeMs,
-        endTimeMs,
-        limit: 50,
-      }),
-    ]);
+    // Client errors are stored as JSON lines; pull the full record for each so we can
+    // surface stack / url / source / browser / version / user, not just the message.
+    const events = await runInsightsQuery({
+      logGroupName,
+      queryString:
+        'fields message, kind, url, source, lineno, colno, stack, componentStack, userAgent, version, username ' +
+        '| sort @timestamp desc | limit 10000',
+      startTimeMs,
+      endTimeMs,
+      limit: 10000,
+    });
 
-    const bySignature = new Map<string, { signature: string; count: number; sample: string }>();
-    for (const row of rawMessages) {
-      const message = row.message ?? '';
-      const count = Number(row.count) || 0;
+    const bySignature = new Map<string, ClientErrorGroup>();
+    const kindCounts = new Map<string, number>();
+    for (const e of events) {
+      const message = e.message ?? '';
       const { signature, readable } = summarizeError(message);
+      kindCounts.set(e.kind || '(none)', (kindCounts.get(e.kind || '(none)') || 0) + 1);
+
       const existing = bySignature.get(signature);
       if (existing) {
-        existing.count += count;
+        existing.count += 1;
       } else {
-        bySignature.set(signature, { signature, count, sample: readable });
+        // The most recent occurrence (events are sorted desc) is the representative shown.
+        bySignature.set(signature, {
+          signature,
+          count: 1,
+          sample: readable,
+          kind: e.kind,
+          url: e.url,
+          source: sourceLocation(e),
+          stack: e.stack,
+          componentStack: e.componentStack,
+          userAgent: e.userAgent,
+          version: e.version,
+          username: e.username ?? null,
+          thirdParty: isLikelyThirdParty(e),
+        });
       }
     }
 
@@ -62,7 +104,9 @@ export const clientErrorsQueryHandler = async (req: Request, res: Response) => {
       .sort((a, b) => b.count - a.count)
       .slice(0, MAX_ROWS);
 
-    const byKind = kinds.map((k) => ({ kind: k.kind || '(none)', count: Number(k.count) || 0 }));
+    const byKind = Array.from(kindCounts.entries())
+      .map(([kind, count]) => ({ kind, count }))
+      .sort((a, b) => b.count - a.count);
 
     return res.status(200).send({ success: 'true', rows, byKind, windowMinutes });
   } catch (err) {
@@ -70,7 +114,7 @@ export const clientErrorsQueryHandler = async (req: Request, res: Response) => {
       // The client-error log group is created lazily on first flush — none reported yet.
       return res.status(200).send({ success: 'true', rows: [], byKind: [], windowMinutes, notReady: true });
     }
-    req.logger.error((err as Error).message, (err as Error).stack);
+    req.logger.error(err);
     return res.status(500).send({ success: 'false', error: (err as Error).message });
   }
 };

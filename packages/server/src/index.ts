@@ -292,22 +292,33 @@ app.use((req: express.Request, res: express.Response) =>
   ),
 );
 
-app.use((err: any, req: express.Request, res: express.Response) => {
+// Error-handling middleware. MUST have four parameters (err, req, res, next) — Express
+// only treats a middleware as an error handler when its arity is 4, so this is what makes
+// next(err) (from async handlers, the request timeout, etc.) actually render our error
+// page and log with request context, instead of falling through to Express's default.
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  // If the response has already started, we can't render an error page over it. This is
+  // typically a follow-on error (e.g. the request timed out and responded, then a slow
+  // handler resolved and tried to send again) — the original cause was already logged, so
+  // don't log this artifact. Delegate to Express's default handler to close the connection.
+  if (res.headersSent) {
+    return next(err);
+  }
+
   // Safely handle logging - fallback if logger middleware hasn't run yet
   if (req.logger && req.logger.error) {
     req.logger.error(err);
   } else {
-    console.error('Error occurred before logger middleware:', err.message, err.stack);
+    console.error('Error occurred before logger middleware:', err?.message, err?.stack);
   }
-  if (!res.statusCode) {
-    res.status(500);
-  }
+
+  res.status(typeof err?.status === 'number' ? err.status : 500);
   return render(
     req,
     res,
     'ErrorPage',
     {
-      error: err.message,
+      error: err?.message,
       requestId: req.uuid,
       title: 'Oops! Something went wrong.',
     },

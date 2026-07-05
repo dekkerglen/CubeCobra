@@ -7,6 +7,7 @@ import { redirect } from 'serverutils/render';
 import cloudwatch from '../serverutils/cloudwatch';
 import { sanitizeHttpBody } from '../serverutils/logging';
 import { Request, Response } from '../types/express';
+import { asyncHandler, wrapHandlers } from './asyncHandler';
 
 const router: Router = express.Router();
 
@@ -48,7 +49,7 @@ const homeHandler = async (req: Request, res: Response) => {
 };
 
 // Register the root route - csrfProtection is an array of middleware
-router.get('/', homeHandler);
+router.get('/', asyncHandler(homeHandler));
 
 export const registerRoutes = (directory: string, base: string) => {
   const fullPath = path.join(__dirname, directory);
@@ -71,12 +72,15 @@ export const registerRoutes = (directory: string, base: string) => {
     for (const route of routes) {
       const path = `${base}/${trimmed}${route.path}`;
 
+      // Wrap the route's handlers so async rejections are forwarded to the error handler.
+      const handlers = wrapHandlers(route.handler);
+
       if (route.method === 'get') {
-        router.get(path, responseTimer, route.handler);
+        router.get(path, responseTimer, handlers);
       } else if (route.method === 'post') {
-        router.post(path, responseTimer, route.handler);
+        router.post(path, responseTimer, handlers);
       } else if (route.method === 'delete') {
-        router.delete(path, responseTimer, route.handler);
+        router.delete(path, responseTimer, handlers);
       }
     }
   }

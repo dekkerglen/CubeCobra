@@ -171,10 +171,20 @@ export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, Unhydrate
    * Gets a pack by ID.
    */
   public async getById(id: string): Promise<P1P1PackExtended | undefined> {
-    return this.get({
-      PK: this.typedKey(id),
-      SK: this.itemType(),
-    });
+    try {
+      return await this.get({
+        PK: this.typedKey(id),
+        SK: this.itemType(),
+      });
+    } catch (err) {
+      // The pack row exists but its S3 payload has expired or been purged (an old pack
+      // link). Treat it as not found — callers already handle undefined with a 404 — rather
+      // than surfacing a server error for what is normal pack expiry.
+      if (err instanceof Error && err.message.startsWith('S3 data not found for pack')) {
+        return undefined;
+      }
+      throw err;
+    }
   }
 
   /**

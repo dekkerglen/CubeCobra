@@ -1,12 +1,11 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { LineChart, StackedBarChart, colorForIndex, formatBucketLabel } from 'components/admin/AdminCharts';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Container from 'components/base/Container';
-import { Col, Flexbox, Row } from 'components/base/Layout';
+import { Flexbox } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
-import Table from 'components/base/Table';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
@@ -17,6 +16,15 @@ interface ErrorRow {
   signature: string;
   count: number;
   sample: string;
+  kind?: string;
+  url?: string;
+  source?: string;
+  stack?: string;
+  componentStack?: string;
+  userAgent?: string;
+  version?: string;
+  username?: string | null;
+  thirdParty: boolean;
 }
 
 interface KindCount {
@@ -42,9 +50,61 @@ const WINDOW_OPTIONS = [
   { value: '10080', label: 'Last 7 days' },
 ];
 
+const FILTER_OPTIONS = [
+  { value: 'app', label: 'Hide extension/third-party noise' },
+  { value: 'all', label: 'All client errors' },
+];
+
+const DetailLine: React.FC<{ label: string; value?: string | null }> = ({ label, value }) =>
+  value ? (
+    <Text xs className="text-text-secondary">
+      <span className="font-semibold">{label}:</span> {value}
+    </Text>
+  ) : null;
+
+const ClientErrorDetail: React.FC<{ row: ErrorRow }> = ({ row }) => (
+  <details className="border-b border-border py-1">
+    <summary className="cursor-pointer">
+      <Flexbox direction="row" gap="2" alignItems="baseline" className="w-full">
+        <Text semibold className="inline-block min-w-[3rem] text-right">
+          {row.count}
+        </Text>
+        {row.kind && (
+          <Text xs className="font-mono text-text-secondary">
+            {row.kind}
+          </Text>
+        )}
+        <Text sm>{row.sample}</Text>
+        {row.thirdParty && (
+          <Text xs className="text-text-secondary">
+            (likely extension)
+          </Text>
+        )}
+      </Flexbox>
+    </summary>
+    <Flexbox direction="col" gap="1" className="pl-12 pt-1">
+      <DetailLine label="URL" value={row.url} />
+      <DetailLine label="Source" value={row.source} />
+      <DetailLine label="User" value={row.username || 'anonymous'} />
+      <DetailLine label="Version" value={row.version} />
+      <DetailLine label="Browser" value={row.userAgent} />
+      {row.stack && <pre className="overflow-x-auto rounded bg-bg-active/40 p-2 text-xs">{row.stack}</pre>}
+      {row.componentStack && (
+        <>
+          <Text xs className="font-semibold text-text-secondary">
+            Component stack
+          </Text>
+          <pre className="overflow-x-auto rounded bg-bg-active/40 p-2 text-xs">{row.componentStack}</pre>
+        </>
+      )}
+    </Flexbox>
+  </details>
+);
+
 const AdminClientErrorsPage: React.FC<AdminClientErrorsPageProps> = ({ defaultWindow }) => {
   const { callApi } = useContext(CSRFContext);
   const [windowMinutes, setWindowMinutes] = useState(String(defaultWindow));
+  const [filter, setFilter] = useState('app');
   const [rows, setRows] = useState<ErrorRow[]>([]);
   const [byKind, setByKind] = useState<KindCount[]>([]);
   const [points, setPoints] = useState<TimePoint[]>([]);
@@ -88,8 +148,11 @@ const AdminClientErrorsPage: React.FC<AdminClientErrorsPageProps> = ({ defaultWi
     runQuery();
   }, [runQuery]);
 
+  const visibleRows = useMemo(() => (filter === 'app' ? rows.filter((r) => !r.thirdParty) : rows), [rows, filter]);
+
   const win = Number(windowMinutes);
-  const totalErrors = rows.reduce((sum, r) => sum + r.count, 0);
+  const totalErrors = visibleRows.reduce((sum, r) => sum + r.count, 0);
+  const hiddenCount = rows.length - visibleRows.length;
   const chartLabels = points.map((p) => formatBucketLabel(p.t, win));
   const kindLabels = kindTimes.map((t) => formatBucketLabel(t, win));
   const kindDatasets = Object.keys(kindSeries)
@@ -106,13 +169,16 @@ const AdminClientErrorsPage: React.FC<AdminClientErrorsPageProps> = ({ defaultWi
               <Text semibold xl>
                 Client Errors
               </Text>
-              <Select
-                label="Time frame"
-                dense
-                options={WINDOW_OPTIONS}
-                value={windowMinutes}
-                setValue={setWindowMinutes}
-              />
+              <Flexbox direction="row" gap="2" alignItems="end">
+                <Select label="Show" dense options={FILTER_OPTIONS} value={filter} setValue={setFilter} />
+                <Select
+                  label="Time frame"
+                  dense
+                  options={WINDOW_OPTIONS}
+                  value={windowMinutes}
+                  setValue={setWindowMinutes}
+                />
+              </Flexbox>
             </Flexbox>
           </CardHeader>
           <CardBody>
@@ -128,8 +194,8 @@ const AdminClientErrorsPage: React.FC<AdminClientErrorsPageProps> = ({ defaultWi
               </Text>
             ) : (
               <Flexbox direction="col" gap="4">
-                <Row>
-                  <Col xs={12} md={6}>
+                <Flexbox direction="row" gap="2" wrap="wrap">
+                  <div className="min-w-[280px] flex-1">
                     <Text sm semibold>
                       Client errors over time
                     </Text>
@@ -137,26 +203,25 @@ const AdminClientErrorsPage: React.FC<AdminClientErrorsPageProps> = ({ defaultWi
                       labels={chartLabels}
                       datasets={[{ label: 'Errors', data: points.map((p) => p.errors), color: '#D85F69' }]}
                     />
-                  </Col>
-                  <Col xs={12} md={6}>
+                  </div>
+                  <div className="min-w-[280px] flex-1">
                     <Text sm semibold>
                       By kind over time
                     </Text>
                     <StackedBarChart labels={kindLabels} datasets={kindDatasets} />
-                  </Col>
-                </Row>
+                  </div>
+                </Flexbox>
                 <Text sm className="text-text-secondary">
-                  {rows.length} distinct errors, {totalErrors} total occurrences
+                  {visibleRows.length} distinct errors, {totalErrors} occurrences
+                  {hiddenCount > 0 && ` — ${hiddenCount} extension/third-party group(s) hidden`}
                   {byKind.length > 0 && ` — ${byKind.map((k) => `${k.kind}: ${k.count}`).join(', ')}`}
+                  {' — click a row for the stack, URL, browser and user'}
                 </Text>
-                <Table
-                  headers={['Count', 'Error']}
-                  rows={rows.map((r) => ({
-                    Count: r.count,
-                    Error: <span title={r.signature}>{r.sample}</span>,
-                  }))}
-                  wrapCells
-                />
+                <Flexbox direction="col" gap="0">
+                  {visibleRows.map((row, i) => (
+                    <ClientErrorDetail key={i} row={row} />
+                  ))}
+                </Flexbox>
               </Flexbox>
             )}
           </CardBody>

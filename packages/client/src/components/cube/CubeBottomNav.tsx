@@ -1,8 +1,8 @@
 import React, { useContext } from 'react';
 
 import { BookIcon, GearIcon, GraphIcon, ListUnorderedIcon, PlayIcon, TrophyIcon } from '@primer/octicons-react';
+import { isAdFree } from '@utils/adsUtil';
 import Cube from '@utils/datatypes/Cube';
-import { UserRoles } from '@utils/datatypes/User';
 import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
@@ -109,7 +109,7 @@ const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
   };
 
   // Check if user is a patron to determine if ads will be shown
-  const shouldShowAds = !(user && Array.isArray(user.roles) && user.roles.includes(UserRoles.PATRON));
+  const shouldShowAds = !isAdFree(user?.roles);
 
   return (
     <>

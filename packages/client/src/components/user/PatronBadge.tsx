@@ -13,14 +13,15 @@ interface PatronTierBadgeProps {
   className?: string;
 }
 
-const BASE_CLASSES =
+// Shared layout + shimmer base for every user badge (patron tiers and admin).
+export const BADGE_BASE_CLASSES =
   'patron-badge inline-flex items-center gap-1 px-2.5 py-0.5 text-xs font-semibold rounded-full border whitespace-nowrap';
 
 // Generic "Patron" badge — shown for anyone with a linked active Patreon account.
 export const PatronBadge: React.FC<PatronBadgeProps> = ({ className }) => (
   <span
     title="Patreon supporter"
-    className={classNames(BASE_CLASSES, 'patron-badge-patron', className)}
+    className={classNames(BADGE_BASE_CLASSES, 'patron-badge-patron', className)}
     aria-label="Patron"
   >
     <HeartFillIcon size={10} />
@@ -42,7 +43,7 @@ export const PatronTierBadge: React.FC<PatronTierBadgeProps> = ({ level, classNa
   if (!tierClass || !label) return null;
 
   return (
-    <span title={`${label} Patreon tier`} className={classNames(BASE_CLASSES, tierClass, className)} aria-label={label}>
+    <span title={`${label} Patreon tier`} className={classNames(BADGE_BASE_CLASSES, tierClass, className)} aria-label={label}>
       <ZapIcon size={10} />
       {label}
     </span>
