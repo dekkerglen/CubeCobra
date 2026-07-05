@@ -156,7 +156,7 @@ const resolveCubeImage = (item: UnhydratedCube): CubeImage => {
 
 export type SortOrder = 'popularity' | 'alphabetical' | 'cards' | 'date';
 
-const CARD_LIMIT = 10000;
+const CARD_LIMIT = 20000;
 
 /**
  * Creates a placeholder user for deleted/banned accounts

@@ -17,7 +17,7 @@ jest.mock('../../src/dynamo/daos', () => ({
 }));
 
 import { patronDao, userDao } from '../../src/dynamo/daos';
-import { hookHandler } from '../../src/router/routes/patreon';
+import { hookHandler, isPatreonHookPath } from '../../src/router/routes/patreon';
 import { call } from '../test-utils/transport';
 
 const EMAIL = 'patron@example.com';
@@ -163,5 +163,27 @@ describe('patreon hookHandler', () => {
 
     expect(status).toBe(200);
     expect(patronDao.update).not.toHaveBeenCalled();
+  });
+});
+
+// Guards the raw-body capture predicate used by the body-parser `verify` hook. Patreon's
+// registered URL is uppercase `/PATREON/HOOK`; if this does not match, rawBody is never
+// captured and every real webhook 401s. This is the case the original fix missed.
+describe('isPatreonHookPath', () => {
+  it('matches the real uppercase Patreon URL', () => {
+    expect(isPatreonHookPath('/PATREON/HOOK')).toBe(true);
+  });
+
+  it('matches the lowercase path', () => {
+    expect(isPatreonHookPath('/patreon/hook')).toBe(true);
+  });
+
+  it('matches mixed case and a trailing query string', () => {
+    expect(isPatreonHookPath('/Patreon/Hook?foo=bar')).toBe(true);
+  });
+
+  it('does not match unrelated paths', () => {
+    expect(isPatreonHookPath('/patreon/redirect')).toBe(false);
+    expect(isPatreonHookPath('/cube/list/foo')).toBe(false);
   });
 });

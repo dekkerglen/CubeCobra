@@ -8,6 +8,7 @@ import BaseUrlContext, { BaseUrlContextValue } from '../contexts/BaseUrlContext'
 import CaptchaContext from '../contexts/CaptchaContext';
 import { CSRFContextProvider } from '../contexts/CSRFContext';
 import UserContext, { UserContextValue } from '../contexts/UserContext';
+import { initErrorReporting } from '../utils/errorReporting';
 import ErrorBoundary from './ErrorBoundary';
 
 declare global {
@@ -48,6 +49,10 @@ const RenderToRoot = <P,>(Element: ComponentType<P>): ComponentType<P> => {
   );
 
   if (typeof document !== 'undefined') {
+    // Install global error handlers (window.onerror / unhandledrejection) before we
+    // render so we capture failures during the initial mount too.
+    initErrorReporting();
+
     const wrapper = document.getElementById('react-root');
     if (wrapper) {
       const root = createRoot(wrapper); // createRoot(wrapper!) if you use TypeScript

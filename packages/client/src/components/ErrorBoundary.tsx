@@ -1,5 +1,7 @@
 import React, { Component, Fragment, ReactNode } from 'react';
 
+import { reportError } from 'utils/errorReporting';
+
 import { Card } from './base/Card';
 import Container from './base/Container';
 import Text from './base/Text';
@@ -26,8 +28,13 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   }
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo): void {
-    // TODO: Set up network error-logging service so we know if there are UI bugs.
     console.error(error, errorInfo);
+    reportError({
+      kind: 'react-boundary',
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack ?? undefined,
+    });
   }
 
   render(): ReactNode {

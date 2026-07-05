@@ -63,7 +63,7 @@ const UserPatreonConfig: React.FC<UserPatreonConfigProps> = ({ patron, featured 
               </RemoveFeaturedButton>
             </Col>
           </Row>
-        ) : canBeFeatured(patron) ? (
+        ) : canBeFeatured(patron, user?.roles) ? (
           <>
             <p>Share your cube with others by adding it to a rotating queue of featured cubes!</p>
             <AddFeaturedButton block outline color="accent" modalprops={{ cubes: user?.cubes || [] }}>

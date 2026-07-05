@@ -54,6 +54,20 @@ export type UserWithBaseFields = User & BaseObject;
  */
 export type StoredUserWithSensitiveInfo = UserWithSensitiveInformation & BaseObject;
 
+/**
+ * Number of shards for the GSI3 "enumerate all users" index. Unlike patrons (which
+ * fit under a single static partition), the user population is large enough that a
+ * single partition would be a write hot key, so writes are spread across N shards —
+ * mirroring the cube sharding strategy. Enumeration queries all shards and unions.
+ */
+export const USER_ENUMERATION_SHARDS = 20;
+
+/**
+ * Computes the enumeration shard (0..USER_ENUMERATION_SHARDS-1) for a user id.
+ * Mirrors the cube approach (last-character char code modulo shard count).
+ */
+export const userEnumerationShard = (id: string): number => id.charCodeAt(id.length - 1) % USER_ENUMERATION_SHARDS;
+
 export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserWithSensitiveInfo> {
   constructor(dynamoClient: DynamoDBDocumentClient, tableName: string) {
     super(dynamoClient, tableName);
@@ -61,6 +75,13 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
 
   protected itemType(): string {
     return 'USER';
+  }
+
+  /**
+   * The GSI3 partition key for an enumeration shard.
+   */
+  public shardPartitionKey(shard: number): string {
+    return `${this.itemType()}#SHARD#${shard}`;
   }
 
   /**
@@ -94,8 +115,9 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       GSI1SK: this.itemType(),
       GSI2PK: email ? `${this.itemType()}#EMAIL#${email}` : undefined,
       GSI2SK: this.itemType(),
-      GSI3PK: undefined,
-      GSI3SK: undefined,
+      // GSI3: sharded enumeration of all users (see USER_ENUMERATION_SHARDS).
+      GSI3PK: item.id ? this.shardPartitionKey(userEnumerationShard(item.id)) : undefined,
+      GSI3SK: item.id,
       GSI4PK: undefined,
       GSI4SK: undefined,
     };
@@ -288,6 +310,46 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
     }
 
     return null;
+  }
+
+  /**
+   * Enumerates a single page of users within one GSI3 shard. Requires the GSI3 keys
+   * to have been backfilled onto existing rows.
+   */
+  public async getUsersInShard(
+    shard: number,
+    lastKey?: Record<string, any>,
+    limit: number = 200,
+  ): Promise<{ items: User[]; lastKey?: Record<string, any> }> {
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI3',
+      KeyConditionExpression: 'GSI3PK = :pk',
+      ExpressionAttributeValues: {
+        ':pk': this.shardPartitionKey(shard),
+      },
+      ExclusiveStartKey: lastKey,
+      Limit: limit,
+    };
+
+    return this.query(params);
+  }
+
+  /**
+   * Enumerates every user across all enumeration shards. Expensive (the entire user
+   * base) — intended for batch jobs only, never the request path.
+   */
+  public async listAllUsers(perShardLimit: number = 200): Promise<User[]> {
+    const users: User[] = [];
+    for (let shard = 0; shard < USER_ENUMERATION_SHARDS; shard += 1) {
+      let lastKey: Record<string, any> | undefined;
+      do {
+        const page = await this.getUsersInShard(shard, lastKey, perShardLimit);
+        users.push(...page.items);
+        lastKey = page.lastKey;
+      } while (lastKey);
+    }
+    return users;
   }
 
   /**

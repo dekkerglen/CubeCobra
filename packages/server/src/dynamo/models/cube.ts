@@ -27,7 +27,7 @@ const DEFAULT_BASICS = [
   '0c4eaecf-dd4c-45ab-9b50-2abe987d35d4',
 ];
 
-const CARD_LIMIT = 10000;
+const CARD_LIMIT = 20000;
 const MILLISECONDS_IN_YEAR = 1000 * 60 * 60 * 24 * 365;
 
 const FIELDS = {

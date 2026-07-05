@@ -1,7 +1,7 @@
 import React, { useContext } from 'react';
 
 import { PencilIcon } from '@primer/octicons-react';
-import User from '@utils/datatypes/User';
+import User, { UserRoles } from '@utils/datatypes/User';
 
 import Button from 'components/base/Button';
 import { Flexbox } from 'components/base/Layout';
@@ -10,6 +10,7 @@ import Text from 'components/base/Text';
 import ErrorBoundary from 'components/ErrorBoundary';
 import { SafeMarkdown } from 'components/Markdown';
 import ConfirmActionModal from 'components/modals/ConfirmActionModal';
+import AdminBadge from 'components/user/AdminBadge';
 import { PatronBadge, PatronTierBadge } from 'components/user/PatronBadge';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
@@ -48,6 +49,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({
 }) => {
   const activeUser = useContext(UserContext);
   const canEdit = !!activeUser && activeUser.id === user.id;
+  const isAdmin = Array.isArray(user.roles) && user.roles.includes(UserRoles.ADMIN);
 
   const userCard = (
     <Flexbox direction="col" gap="3" className="bg-bg-accent border border-border rounded-md overflow-hidden">
@@ -65,10 +67,15 @@ const UserLayout: React.FC<UserLayoutProps> = ({
         <Text semibold lg>
           {user.username}
         </Text>
-        {typeof patronLevel === 'number' && (
+        {(isAdmin || typeof patronLevel === 'number') && (
           <Flexbox direction="row" gap="2" wrap="wrap">
-            <PatronBadge />
-            <PatronTierBadge level={patronLevel} />
+            {isAdmin && <AdminBadge />}
+            {typeof patronLevel === 'number' && (
+              <>
+                <PatronBadge />
+                <PatronTierBadge level={patronLevel} />
+              </>
+            )}
           </Flexbox>
         )}
 

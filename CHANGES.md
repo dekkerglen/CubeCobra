@@ -1,5 +1,8 @@
 The changes here are concise, one liners to be put in a future user facing blogpost. Focus on the effect of the new feature, no technical details.
 
+
+
+
 ## New Features
 
 - Added a quick-access cube tray in the bottom-left corner where you can pin your cubes' boards and add cards to them in one motion.
@@ -20,6 +23,7 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Lotus Cobra patrons (and admins) can now upload and host their own images on Cube Cobra and use them as custom card art, profile pictures, and cube images, all managed from a new image library in your account settings.
 - Card name search fields now include "Specify Versions" and "Include Extras" toggles, so you control which printings show up when adding cards on the bulk upload and package pages.
 - The draft breakdown export now includes an Archetype column, so you can see each drafter's archetype right alongside their picks.
+
 
 ## Bug Fixes
 

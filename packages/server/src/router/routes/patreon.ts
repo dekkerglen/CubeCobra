@@ -10,6 +10,15 @@ import { Request, Response } from '../../types/express';
 
 const patreonOAuthClient = oauth(process.env.PATREON_CLIENT_ID || '', process.env.PATREON_CLIENT_SECRET || '');
 
+// Patreon's registered webhook URL is uppercase (`/PATREON/HOOK`). Express routes
+// case-insensitively so the handler still runs, but `req.originalUrl` preserves the
+// original casing. The body-parser `verify` hook that captures the raw request bytes
+// (needed for HMAC signature verification) must therefore match case-insensitively —
+// otherwise rawBody is never captured for the real (uppercase) requests and every event
+// 401s. Prefix match tolerates a trailing query string.
+export const isPatreonHookPath = (originalUrl: string): boolean =>
+  originalUrl.toLowerCase().startsWith('/patreon/hook');
+
 // Patreon signs the webhook with HMAC-MD5 over the exact raw bytes of the request body.
 // We must verify against those raw bytes (captured by the body-parser `verify` hook) — a
 // re-serialization of the parsed body (JSON.stringify) is not byte-exact and fails to match.

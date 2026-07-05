@@ -35,7 +35,7 @@ export const handler = async (req: Request, res: Response) => {
   }
 
   const patron = await patronDao.getById(req.user.id);
-  if (!fq.canBeFeatured(patron)) {
+  if (!fq.canBeFeatured(patron, req.user.roles)) {
     req.flash('danger', 'Insufficient Patreon status for featuring a cube');
     return redirect(req, res, redirectTo);
   }
