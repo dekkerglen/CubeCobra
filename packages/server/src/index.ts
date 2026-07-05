@@ -25,6 +25,7 @@ import './types/express'; // Import the express type extensions
 import configurePassport from './config/passport';
 import dynamoService from './dynamo/client';
 import documentClient from './dynamo/documentClient';
+import { isPatreonHookPath } from './router/routes/patreon';
 import router from './router/router';
 import { initializeCardDb } from './serverutils/cardCatalog';
 import cloudwatch from './serverutils/cloudwatch';
@@ -119,7 +120,7 @@ app.use(
     // body is not byte-exact, so the signature must be checked against these raw bytes.
     // Scoped to the webhook path so we don't retain large buffers for every request.
     verify: (req: express.Request, _res: express.Response, buf: Buffer) => {
-      if (req.originalUrl.startsWith('/patreon/hook')) {
+      if (isPatreonHookPath(req.originalUrl)) {
         (req as any).rawBody = buf;
       }
     },

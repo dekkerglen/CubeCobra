@@ -22,6 +22,9 @@ export class PatronDynamoDao extends BaseDynamoDao<Patron, Patron> {
   /**
    * Gets the GSI keys for the patron.
    * GSI1: Query by email
+   * GSI2: Enumerate every patron under a single static partition (`PATRON#ALL`).
+   *       Patron volume is low (~1k), so a hot partition is not a concern and no
+   *       sharding is needed (unlike users/cubes). Sorted by owner for stable paging.
    */
   protected GSIKeys(item: Patron): {
     GSI1PK: string | undefined;
@@ -36,13 +39,20 @@ export class PatronDynamoDao extends BaseDynamoDao<Patron, Patron> {
     return {
       GSI1PK: item.email ? `${this.itemType()}#EMAIL#${item.email}` : undefined,
       GSI1SK: this.itemType(),
-      GSI2PK: undefined,
-      GSI2SK: undefined,
+      GSI2PK: PatronDynamoDao.allPartitionKey(),
+      GSI2SK: item.owner,
       GSI3PK: undefined,
       GSI3SK: undefined,
       GSI4PK: undefined,
       GSI4SK: undefined,
     };
+  }
+
+  /**
+   * The static GSI2 partition that holds every patron, used to enumerate them all.
+   */
+  public static allPartitionKey(): string {
+    return 'PATRON#ALL';
   }
 
   /**
@@ -98,6 +108,39 @@ export class PatronDynamoDao extends BaseDynamoDao<Patron, Patron> {
     };
 
     return this.queryOne(params);
+  }
+
+  /**
+   * Enumerates a single page of all patrons via the GSI2 (`PATRON#ALL`) index.
+   * Requires the GSI2 keys to have been backfilled onto existing rows.
+   */
+  public async getAllPatrons(lastKey?: Record<string, any>): Promise<{ items: Patron[]; lastKey?: Record<string, any> }> {
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI2',
+      KeyConditionExpression: 'GSI2PK = :all',
+      ExpressionAttributeValues: {
+        ':all': PatronDynamoDao.allPartitionKey(),
+      },
+      ...(lastKey && { ExclusiveStartKey: lastKey }),
+    };
+
+    return this.query(params);
+  }
+
+  /**
+   * Enumerates every patron by paging through GSI2 internally. Intended for
+   * bounded batch jobs (status reconciliation), not request-path use.
+   */
+  public async listAllPatrons(): Promise<Patron[]> {
+    const all: Patron[] = [];
+    let lastKey: Record<string, any> | undefined;
+    do {
+      const page = await this.getAllPatrons(lastKey);
+      all.push(...page.items);
+      lastKey = page.lastKey;
+    } while (lastKey);
+    return all;
   }
 
   /**
