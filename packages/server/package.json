@@ -131,6 +131,6 @@
     "ts-jest": "^29.1.4",
     "tsconfig-paths": "^4.2.0",
     "tspath": "^2.6.8",
-    "typescript": "^5.4.5"
+    "typescript": "^6.0.3"
   }
 }
