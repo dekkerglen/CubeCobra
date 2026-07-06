@@ -71,7 +71,23 @@ const IGNORED_MESSAGE_RE =
 const BOT_UA_RE = /Lightpanda|HeadlessChrome|PhantomJS|puppeteer|bot\b|crawler|spider/i;
 
 // Our first-party origin (pages on cubecobra.com, bundles on assets.cubecobra.com).
-const FIRST_PARTY_RE = /cubecobra\.com/;
+// Match on the URL's *host*, not a substring: ad wrappers embed our URL in their
+// query (e.g. `https://silo60.p7cloud.net/as1.js?uri=https://cubecobra.com/...`), so a
+// naive substring test would misread third-party scripts as first-party.
+const isFirstPartyHost = (host: string): boolean => /(^|\.)cubecobra\.com$/i.test(host);
+
+const hostOf = (url: string): string => {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return '';
+  }
+};
+
+// Whether a string (a single URL, or a stack full of frame URLs) references any
+// first-party script host. Parsing each URL ignores query/hash that may carry other URLs.
+const referencesFirstParty = (text: string): boolean =>
+  (text.match(/https?:\/\/[^\s)'"]+/g) || []).some((u) => isFirstPartyHost(hostOf(u)));
 
 // Cross-origin script errors surface as an opaque "Script error." with no useful
 // detail; the ResizeObserver loop warning is benign. Everything else is filtered
@@ -105,10 +121,10 @@ const shouldIgnore = (payload: ClientErrorPayload): boolean => {
   // The script that threw is a non-first-party URL — third-party code (ad SDK,
   // prebid, extension). onerror gives us `source`; our own errors are on
   // cubecobra.com / assets.cubecobra.com. (react-boundary errors carry no source.)
-  if (source && /^https?:\/\//.test(source) && !FIRST_PARTY_RE.test(source)) return true;
+  if (source && /^https?:\/\//.test(source) && !isFirstPartyHost(hostOf(source))) return true;
 
   // A stack that references remote scripts but none of ours is third-party code.
-  if (stack && /https?:\/\//.test(stack) && !FIRST_PARTY_RE.test(stack) && !FIRST_PARTY_RE.test(source)) {
+  if (stack && /https?:\/\//.test(stack) && !referencesFirstParty(stack) && !referencesFirstParty(source)) {
     return true;
   }
 

@@ -17,6 +17,15 @@ const BASE_PLUGINS = [cardrow, centering, math, cardlink, [gfm, { singleTilde: f
 // all remark plugins used in the parser
 export const ALL_PLUGINS = [...BASE_PLUGINS, userlink, breaks];
 
+// Fallback plugin set that omits the custom container extensions `centering` (>>> <<<)
+// and `cardrow` (<< >>). Their hand-written tokenizers are O(n^2) and recurse one stack
+// frame per nesting level, so a document with a large number of their fence markers can
+// hang or overflow the stack (notably on mobile Safari). When the complexity guard in
+// Markdown.tsx trips, we parse with this set instead: the `>>>`/`<<<`/`<<`/`>>` markers
+// fall back to plain/blockquote rendering, but every other feature (cards, symbols, math,
+// gfm, ...) still works.
+export const NO_CONTAINER_PLUGINS = [math, cardlink, [gfm, { singleTilde: false }], symbols, userlink, breaks];
+
 // rehype plugins used in all use-cases, including limited Markdown versions (i.e. comments)
 export const LIMITED_REHYPE_PLUGINS = [rehypeKatex];
 
