@@ -121,6 +121,10 @@ export interface Catalog {
   indexToOracle: string[];
   metadatadict: Record<string, CardMetadata>;
   printedCardList: any[];
+  // Like printedCardList but also keeps tokens and other "extra" printings that
+  // are normally hidden from card search — used when browsing a set (whose cards
+  // may all be tokens) or as a fallback when a search would otherwise be empty.
+  printedCardListWithExtras: any[];
   reasonable_names: string[];
   reasonable_full_names: string[];
   comboTree: ComboTree;

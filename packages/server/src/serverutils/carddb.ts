@@ -326,8 +326,12 @@ export function getOracleForMl(oracleId: string, printingPreference: PrintingPre
 export function getAllMostReasonable(
   filter: FilterFunction,
   printing: PrintingPreference = PrintingPreference.RECENT,
+  includeExtras: boolean = false,
 ): CardDetails[] {
-  const cards = filterCardsDetails(catalog.printedCardList, filter);
+  const cards = filterCardsDetails(
+    includeExtras ? catalog.printedCardListWithExtras : catalog.printedCardList,
+    filter,
+  );
 
   const seen = new Set<string>();
   const filtered: CardDetails[] = [];

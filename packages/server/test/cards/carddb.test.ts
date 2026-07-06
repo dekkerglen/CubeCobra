@@ -16,6 +16,7 @@ const mockCardCatalog: Catalog = {
   oracleToIndex: {},
   metadatadict: {},
   printedCardList: [], // for card filters
+  printedCardListWithExtras: [],
   comboOracleToIndex: {}, // for combo lookups
   reasonable_names: [],
   reasonable_full_names: [],

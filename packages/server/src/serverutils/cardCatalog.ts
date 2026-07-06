@@ -18,6 +18,7 @@ const catalog: Catalog = {
   oracleToIndex: {},
   metadatadict: {},
   printedCardList: [], // for card filters
+  printedCardListWithExtras: [], // card filters, including tokens/extras
   reasonable_names: [],
   reasonable_full_names: [],
   comboOracleToIndex: {}, // Combo-specific mapping saved with comboTree
@@ -101,6 +102,9 @@ export async function initializeCardDb(basePath: string = 'private') {
   }
 
   catalog.printedCardList = Object.values(catalog._carddict).filter((card) => !card.digital && !card.isToken);
+  // Same population minus the token exclusion, so set browsing and empty-result
+  // fallbacks can surface token-only sets (e.g. memorabilia/Jumpstart front cards).
+  catalog.printedCardListWithExtras = Object.values(catalog._carddict).filter((card) => !card.digital);
 
   // CubeCobra synthetic cards that should always appear in autocomplete
   const ALWAYS_ALLOW_IDS = new Set(['custom-card', 'voucher']);

@@ -1,5 +1,5 @@
-import { PrintingPreference } from '@utils/datatypes/Card';
-import { filterCardsDetails, FilterFunction } from '@utils/filtering/FilterCards';
+import { CardDetails, PrintingPreference } from '@utils/datatypes/Card';
+import { filterCardsDetails, FilterFunction, filterUses } from '@utils/filtering/FilterCards';
 import { ORDERED_SORTS, OrderedSortsType, SortFunctionsOnDetails } from '@utils/sorting/Sort';
 import { SortDirectionsType } from '@utils/sorting/sortContext';
 
@@ -18,12 +18,23 @@ export const searchCards = (
   distinct: Distinct = 'names',
   printing = PrintingPreference.RECENT,
 ) => {
-  const cards = [];
+  // Collect matching cards, optionally including "extras" — tokens and other
+  // printings normally hidden from card search (they live only in
+  // printedCardListWithExtras / are dropped by getAllMostReasonable otherwise).
+  const collect = (includeExtras: boolean): CardDetails[] => {
+    if (distinct === 'names') {
+      return getAllMostReasonable(filter, printing, includeExtras);
+    }
+    return filterCardsDetails(includeExtras ? carddb.printedCardListWithExtras : carddb.printedCardList, filter);
+  };
 
-  if (distinct === 'names') {
-    cards.push(...getAllMostReasonable(filter, printing));
-  } else {
-    cards.push(...filterCardsDetails(carddb.printedCardList, filter));
+  // A set: query browses a specific set (which may be entirely tokens, e.g.
+  // memorabilia / Jumpstart front cards), so always include extras there. For any
+  // other query, only fall back to including extras if the search comes up empty.
+  const setSearch = filterUses(filter, 'set');
+  const cards: CardDetails[] = collect(setSearch);
+  if (cards.length === 0 && !setSearch) {
+    cards.push(...collect(true));
   }
 
   if (ORDERED_SORTS.includes(sort)) {
