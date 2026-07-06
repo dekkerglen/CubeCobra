@@ -196,6 +196,10 @@ interface ReactProps {
   baseUrl?: string;
   captchaSiteKey?: string;
   csrfToken?: string;
+  // Git commit of the bundle that rendered this page. Baked in at page-load time, so
+  // a long-open (stale) tab keeps the version it was served with — lets error reports
+  // distinguish which frontend build actually threw, independent of the server version.
+  version?: string;
   [key: string]: any;
 }
 
@@ -251,6 +255,7 @@ const render = (
     reactProps.baseUrl = getBaseUrl();
     reactProps.cdnBaseUrl = process.env.CDN_BASE_URL || '';
     reactProps.captchaSiteKey = process.env.CAPTCHA_SITE_KEY;
+    reactProps.version = process.env.CUBECOBRA_VERSION;
     if (res.locals.csrfToken) {
       reactProps.csrfToken = res.locals.csrfToken;
     }

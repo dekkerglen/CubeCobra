@@ -86,12 +86,12 @@ if (process.env?.NODE_ENV !== 'development' && process.env?.HTTP_ONLY !== 'true'
 
 // request timeout middleware
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-  req.setTimeout(30 * 1000, () => {
+  req.setTimeout(60 * 1000, () => {
     const err = new Error('Request Timeout') as CustomError;
     err.status = 408;
     next(err);
   });
-  res.setTimeout(30 * 1000, () => {
+  res.setTimeout(60 * 1000, () => {
     const err = new Error('Service Unavailable') as CustomError;
     err.status = 503;
     next(err);
