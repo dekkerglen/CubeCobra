@@ -15,8 +15,8 @@
       "dynamo/*": ["./src/dynamo/*"],
       "types/*": ["./src/types/*"]
     },
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",
@@ -40,5 +40,8 @@
     "jest.setup.ts",
     "jest.config.ts",
     "test"
-  ]
+  ],
+  "ts-node": {
+    "files": true
+  }
 }
