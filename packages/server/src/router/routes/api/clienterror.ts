@@ -18,6 +18,7 @@ const ReportSchema = Joi.object({
   url: Joi.string().max(2000).allow('').optional(),
   userAgent: Joi.string().max(1000).allow('').optional(),
   clientTimestamp: Joi.number().optional(),
+  clientVersion: Joi.string().max(100).allow('').optional(),
 });
 
 const BodySchema = Joi.object({

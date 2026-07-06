@@ -24,6 +24,9 @@ export interface ClientErrorPayload {
   url?: string;
   userAgent?: string;
   clientTimestamp?: number;
+  // Git commit of the running frontend bundle (from reactProps). May differ from the
+  // server version the endpoint stamps on — that gap identifies stale (cached-tab) bundles.
+  clientVersion?: string;
 }
 
 let queue: ClientErrorPayload[] = [];
@@ -41,6 +44,14 @@ const csrfToken = (): string => {
   }
 };
 
+const clientVersion = (): string | undefined => {
+  try {
+    return (window as any).reactProps?.version;
+  } catch {
+    return undefined;
+  }
+};
+
 // The overwhelming majority of what reaches these handlers is not our code: ad SDKs
 // (Nitropay, 33Across, mraid), browser extensions (crypto wallets, userscripts),
 // headless bots without a real canvas, and expected fetch aborts when a user
@@ -49,12 +60,12 @@ const csrfToken = (): string => {
 // Ad networks, extensions, and injected wallet globals — matched against message,
 // source, and stack (CORS-enabled ad scripts send us full stacks).
 const THIRD_PARTY_RE =
-  /nitropay|33across|mraid\.js|user-script|chrome-extension:|moz-extension:|safari-extension:|window\.ethereum|selectedAddress|web3/i;
+  /nitropay|33across|mraid\.js|user-script|chrome-extension:|moz-extension:|safari-extension:|window\.ethereum|selectedAddress|web3|id5-sync|doubleclick|googlesyndication|securepubads|googletag|gpt\.js|btloader/i;
 
 // Expected network/abort churn — user navigated away or went offline, not bugs.
 // (Chunk-load failures here are from third-party bundles; ours are on assets.cubecobra.com.)
 const IGNORED_MESSAGE_RE =
-  /^(Load failed|NetworkError when attempting to fetch|Fetch is aborted|The user aborted|The operation was aborted|AbortError|status -> 0|The I\/O read operation failed|NotReadableError|Loading chunk \d+ failed)/i;
+  /^(Load failed|Failed to fetch|NetworkError when attempting to fetch|Fetch is aborted|The user aborted|The operation was aborted|AbortError|status -> 0|The I\/O read operation failed|NotReadableError|Loading chunk \d+ failed|The play\(\) request was interrupted)/i;
 
 // Headless/automation browsers stub out canvas/audio and generate spurious errors.
 const BOT_UA_RE = /Lightpanda|HeadlessChrome|PhantomJS|puppeteer|bot\b|crawler|spider/i;
@@ -76,6 +87,15 @@ const shouldIgnore = (payload: ClientErrorPayload): boolean => {
   if (IGNORED_MESSAGE_RE.test(msg)) return true;
   if (THIRD_PARTY_RE.test(msg) || THIRD_PARTY_RE.test(source) || THIRD_PARTY_RE.test(stack)) return true;
   if (typeof navigator !== 'undefined' && BOT_UA_RE.test(navigator.userAgent)) return true;
+
+  // Ad-network iframe getter loops (e.g. GPT overriding HTMLIFrameElement) blow the
+  // stack with frames that carry no source URL — catch them by shape.
+  if (/Maximum call stack/i.test(msg) && /HTMLIFrameElement/.test(stack)) return true;
+
+  // The script that threw is a non-first-party URL — third-party code (ad SDK,
+  // prebid, extension). onerror gives us `source`; our own errors are on
+  // cubecobra.com / assets.cubecobra.com. (react-boundary errors carry no source.)
+  if (source && /^https?:\/\//.test(source) && !FIRST_PARTY_RE.test(source)) return true;
 
   // A stack that references remote scripts but none of ours is third-party code.
   if (stack && /https?:\/\//.test(stack) && !FIRST_PARTY_RE.test(stack) && !FIRST_PARTY_RE.test(source)) {
@@ -143,6 +163,7 @@ const enqueue = (payload: ClientErrorPayload): void => {
     url: payload.url ?? (typeof window !== 'undefined' ? window.location.href : undefined),
     userAgent: payload.userAgent ?? (typeof navigator !== 'undefined' ? navigator.userAgent : undefined),
     clientTimestamp: payload.clientTimestamp ?? Date.now(),
+    clientVersion: payload.clientVersion ?? clientVersion(),
   });
   sent += 1;
 

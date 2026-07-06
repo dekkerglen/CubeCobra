@@ -62,7 +62,7 @@ export const aboutHandler = async (req: Request, res: Response) => {
     let totalPricePurchase = 0;
     for (const card of mainboard) {
       const details = detailsByCardId[card.cardID];
-      if (details) {
+      if (details && card.cardID) {
         if (card.cardID.includes('-') && !details.prices.usd && !details.prices.usd_foil) {
           const allVersionsOfCard = getIdsFromName(details.name) || [];
           allVersionsOfCard.forEach((id: string) => {

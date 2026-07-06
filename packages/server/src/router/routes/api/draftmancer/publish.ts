@@ -183,11 +183,20 @@ export const handler = async (req: Request, res: Response) => {
 
     await sendDraftNotification(draftId, drafterName, cube);
 
+    // The request may have already timed out (see the res.setTimeout handler in index.ts),
+    // in which case a response was already sent — don't try to send again.
+    if (res.headersSent) {
+      return;
+    }
+
     return res.status(200).send({
       draftId,
     });
   } catch (error) {
     req.logger?.error('Error publishing draft', error);
+    if (res.headersSent) {
+      return;
+    }
     return res.status(500).json({ error: 'Error publishing draft' });
   }
 };
