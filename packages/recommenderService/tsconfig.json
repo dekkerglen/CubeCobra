@@ -12,8 +12,8 @@
       "router/*": ["./src/router/*"],
       "types/*": ["./src/types/*"]
     },
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",
