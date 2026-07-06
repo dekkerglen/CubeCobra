@@ -83,7 +83,9 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
       return this.createHydratedCommentWithoutOwner(item);
     }
 
-    return this.createHydratedComment(item, owner, getImageData(owner.imageName));
+    // Prefer the owner's hydrated avatar (which honors an uploaded custom profile image)
+    // over deriving one from the card-art imageName.
+    return this.createHydratedComment(item, owner, owner.image ?? getImageData(owner.imageName));
   }
 
   /**
@@ -110,7 +112,9 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
         return this.createHydratedCommentWithoutOwner(item);
       }
 
-      return this.createHydratedComment(item, owner, getImageData(owner.imageName));
+      // Prefer the owner's hydrated avatar (which honors an uploaded custom profile image)
+      // over deriving one from the card-art imageName.
+      return this.createHydratedComment(item, owner, owner.image ?? getImageData(owner.imageName));
     });
   }
 
