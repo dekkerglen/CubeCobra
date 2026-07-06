@@ -1,4 +1,5 @@
 import CubeType from '@utils/datatypes/Cube';
+import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import UserType from '@utils/datatypes/User';
 import { sanitizeChangelog } from 'dynamo/dao/ChangelogDynamoDao';
@@ -149,7 +150,6 @@ export const createBlogHandler = async (req: Request, res: Response) => {
     // Only publish to follower feeds if the cube is public (not unlisted or private)
     // Private cubes should not have their blog posts visible to anyone except the owner
     // Unlisted cubes should not publish to follower feeds
-    const { CUBE_VISIBILITY } = await import('@utils/datatypes/Cube');
     const shouldPublishToFeed = cube.visibility === CUBE_VISIBILITY.PUBLIC;
 
     if (shouldPublishToFeed) {
@@ -203,7 +203,6 @@ export const getBlogPostHandler = async (req: Request, res: Response) => {
       }
 
       // Private cubes: only owner or collaborators can view blog posts
-      const { CUBE_VISIBILITY } = await import('@utils/datatypes/Cube');
       if (cube && cube.visibility === CUBE_VISIBILITY.PRIVATE) {
         if (!isCubeEditable(cube, req.user)) {
           req.flash('danger', 'Blog post not found');

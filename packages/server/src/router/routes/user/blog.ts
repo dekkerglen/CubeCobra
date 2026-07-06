@@ -1,3 +1,4 @@
+import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { PatronStatuses } from '@utils/datatypes/Patron';
 import { sanitizeChangelog } from 'dynamo/dao/ChangelogDynamoDao';
 import { blogDao, packageDao, patronDao, userDao } from 'dynamo/daos';
@@ -22,7 +23,6 @@ export const handler = async (req: Request, res: Response) => {
     const posts = await blogDao.queryByOwner(req.params.userid, undefined, 10);
 
     // Filter out blog posts from private/unlisted cubes unless the viewer is the owner
-    const { CUBE_VISIBILITY } = await import('@utils/datatypes/Cube');
     const filteredPosts = posts.items.filter((post) => {
       // DEVLOG posts are always visible
       if (post.cube === 'DEVBLOG') {
