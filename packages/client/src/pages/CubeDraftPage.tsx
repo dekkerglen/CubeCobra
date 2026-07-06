@@ -300,6 +300,13 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
       setRatings([]); // Clear ratings
       const newState = { ...state };
       const currentStep = newState.stepQueue[0];
+
+      if (!currentStep) {
+        // The queue is empty — the draft finishing should already be in progress.
+        setDraftStatus((prev) => ({ ...prev, loading: false }));
+        return;
+      }
+
       if (currentStep.action.includes('pick')) {
         // Most recent pick is already in this data at this point
         newState.seats[0].picks = userPicksInOrder;
@@ -312,12 +319,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
       } else {
         // we need to pop the current step
         newState.stepQueue.shift();
-      }
-
-      if (!currentStep) {
-        // This should never happen, but if it does, the draft finishing should be in progress
-        setDraftStatus((prev) => ({ ...prev, loading: false }));
-        return;
       }
 
       if (currentStep.action === 'endpack' || currentStep.action === 'pass') {
@@ -855,6 +856,9 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
   const packTitle: string = useMemo(() => {
     const nextStep = state.stepQueue[0];
 
+    // The queue drains to empty on the final pick; nothing left to describe.
+    if (!nextStep) return draftStatus.loading ? 'Finishing up draft...' : '';
+
     if (draftStatus.loading) {
       if (state.stepQueue.length <= 1) {
         return 'Finishing up draft...';
@@ -879,8 +883,8 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
   }, [state, draftStatus.loading]);
 
   const packDisabled =
-    state.stepQueue[0].action === 'pickrandom' ||
-    state.stepQueue[0].action === 'trashrandom' ||
+    state.stepQueue[0]?.action === 'pickrandom' ||
+    state.stepQueue[0]?.action === 'trashrandom' ||
     draftStatus.predictError ||
     pendingPick !== null;
 

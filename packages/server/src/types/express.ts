@@ -20,6 +20,7 @@ declare global {
       rawBody?: Buffer;
       logger: {
         error: (...args: any[]) => void;
+        info: (...args: any[]) => void;
       };
       flash: {
         (): { [key: string]: string[] };
@@ -41,6 +42,7 @@ export interface Request extends Omit<express.Request, 'isAuthenticated' | 'flas
   rawBody?: Buffer;
   logger: {
     error: (...args: any[]) => void;
+    info: (...args: any[]) => void;
   };
   flash: {
     (): { [key: string]: string[] };

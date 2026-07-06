@@ -9,10 +9,10 @@ import { normalizeErrorMessage } from '../../src/router/routes/admin/errors';
 
 describe('normalizeErrorMessage', () => {
   it('collapses quoted subjects so per-email errors group into one signature', () => {
-    const a = normalizeErrorMessage('Recieved a patreon hook without a found email: "alice@example.com"');
-    const b = normalizeErrorMessage('Recieved a patreon hook without a found email: "bob@example.com"');
+    const a = normalizeErrorMessage('Received a patreon hook without a found email: "alice@example.com"');
+    const b = normalizeErrorMessage('Received a patreon hook without a found email: "bob@example.com"');
     expect(a).toBe(b);
-    expect(a).toBe('Recieved a patreon hook without a found email: "<str>"');
+    expect(a).toBe('Received a patreon hook without a found email: "<str>"');
   });
 
   it('normalizes mongo-style ids and numbers', () => {

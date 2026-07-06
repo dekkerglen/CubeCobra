@@ -46,11 +46,14 @@ export const aboutHandler = async (req: Request, res: Response) => {
         const versions = nameToCards[details.name];
         if (!cheapestDict[details.name] && versions) {
           for (const version of versions) {
+            if (!version) {
+              continue;
+            }
             const currentCheapest = cheapestDict[version.name];
-            if (!currentCheapest || (version.prices?.usd && version.prices.usd < currentCheapest)) {
+            if (version.prices?.usd && (!currentCheapest || version.prices.usd < currentCheapest)) {
               cheapestDict[version.name] = version.prices.usd;
             }
-            if (!currentCheapest || (version.prices?.usd_foil && version.prices.usd_foil < currentCheapest)) {
+            if (version.prices?.usd_foil && (!currentCheapest || version.prices.usd_foil < currentCheapest)) {
               cheapestDict[version.name] = version.prices.usd_foil;
             }
           }
@@ -63,21 +66,21 @@ export const aboutHandler = async (req: Request, res: Response) => {
     for (const card of mainboard) {
       const details = detailsByCardId[card.cardID];
       if (details && card.cardID) {
-        if (card.cardID.includes('-') && !details.prices.usd && !details.prices.usd_foil) {
+        if (card.cardID.includes('-') && !details.prices?.usd && !details.prices?.usd_foil) {
           const allVersionsOfCard = getIdsFromName(details.name) || [];
           allVersionsOfCard.forEach((id: string) => {
             const version = cardFromId(id);
-            if (version.prices.usd) {
+            if (version?.prices?.usd) {
               totalPriceOwned += version.prices.usd;
-            } else if (version.prices.usd_foil) {
+            } else if (version?.prices?.usd_foil) {
               totalPriceOwned += version.prices.usd_foil;
             }
           });
         } else {
           if (card.finish === 'Foil') {
-            totalPriceOwned += details.prices.usd_foil || 0;
+            totalPriceOwned += details.prices?.usd_foil || 0;
           } else {
-            totalPriceOwned += details.prices.usd || details.prices.usd_foil || 0;
+            totalPriceOwned += details.prices?.usd || details.prices?.usd_foil || 0;
           }
         }
 

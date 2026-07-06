@@ -86,6 +86,16 @@ const shouldIgnore = (payload: ClientErrorPayload): boolean => {
   if (msg.startsWith('ResizeObserver loop')) return true;
   if (IGNORED_MESSAGE_RE.test(msg)) return true;
   if (THIRD_PARTY_RE.test(msg) || THIRD_PARTY_RE.test(source) || THIRD_PARTY_RE.test(stack)) return true;
+
+  // Content-free promise rejections — ad SDKs and aborted work commonly reject with
+  // null or a bare {}. With no stack and no real message there's nothing actionable.
+  if (
+    payload.kind === 'unhandledrejection' &&
+    !stack &&
+    (msg === 'Unhandled promise rejection' || msg === '{}' || msg === '[object Object]')
+  ) {
+    return true;
+  }
   if (typeof navigator !== 'undefined' && BOT_UA_RE.test(navigator.userAgent)) return true;
 
   // Ad-network iframe getter loops (e.g. GPT overriding HTMLIFrameElement) blow the

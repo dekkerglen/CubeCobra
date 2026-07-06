@@ -75,6 +75,13 @@ function computeBoardDelta(currentCards: Card[], newCards: Card[]): { adds: any[
 
 export const bulkReplaceFileHandler = async (req: Request, res: Response) => {
   try {
+    // A missing/malformed upload is user error, not a server fault: bail out with a clear
+    // message instead of letting `.split` throw and get logged as an error.
+    if (typeof req.body.file !== 'string' || !req.body.file.includes(',')) {
+      req.flash('danger', 'No file was uploaded. Please choose a CSV file and try again.');
+      return redirect(req, res, `/cube/list/${encodeURIComponent(req.params.id!)}`);
+    }
+
     const split = req.body.file.split(',');
     const encodedFile = split[1];
 
@@ -164,7 +171,10 @@ export const bulkReplaceFileHandler = async (req: Request, res: Response) => {
       });
     }
 
-    throw new Error('Received empty file');
+    // The upload didn't contain a recognizable CSV (empty, or fewer than the expected
+    // columns). This is user error — surface it without logging a server error.
+    req.flash('danger', 'The uploaded file was empty or not a valid cube CSV. Please check the file and try again.');
+    return redirect(req, res, `/cube/list/${encodeURIComponent(req.params.id!)}`);
   } catch (err) {
     return handleRouteError(req, res, err as Error, `/cube/list/${req.params.id}`);
   }

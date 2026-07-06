@@ -160,7 +160,7 @@ export const hookHandler = async (req: Request, res: Response) => {
     }
 
     if (!req.body || !req.body.data) {
-      req.logger.error('Recieved a patreon hook with no data');
+      req.logger.error('Received a patreon hook with no data');
       return res.status(200).send({
         success: 'false',
       });
@@ -175,14 +175,17 @@ export const hookHandler = async (req: Request, res: Response) => {
       state = resolvePledgeV1(action, req.body);
     } else {
       // Acknowledge unrelated events (e.g. posts:*) with a 2xx so Patreon does not retry.
-      req.logger.error(`Recieved an unsupported patreon hook action: "${action}"`);
+      // Not a fault — Patreon fans out every event type to the hook — so log at info.
+      req.logger.info(`Received an unsupported patreon hook action: "${action}"`);
       return res.status(200).send({
         success: 'true',
       });
     }
 
     if (!state) {
-      req.logger.error(`Recieved a patreon hook that could not be parsed: "${action}"`);
+      // Payload didn't resolve to a pledge state (e.g. missing email/member data). Expected
+      // for some event shapes and not actionable on our side — info, not error.
+      req.logger.info(`Received a patreon hook that could not be parsed: "${action}"`);
       return res.status(200).send({
         success: 'false',
       });
@@ -191,7 +194,9 @@ export const hookHandler = async (req: Request, res: Response) => {
     const document = await patronDao.getByEmail(state.email);
 
     if (!document) {
-      req.logger.error(`Recieved a patreon hook without a found email: "${state.email}"`);
+      // The pledging email has no linked Cube Cobra patron record (never linked, or unlinked).
+      // A normal condition, not a server fault — log at info to keep it off the error dashboard.
+      req.logger.info(`Received a patreon hook without a found email: "${state.email}"`);
 
       return res.status(200).send({
         success: 'false',
@@ -201,7 +206,7 @@ export const hookHandler = async (req: Request, res: Response) => {
     const user = await userDao.getByIdWithSensitiveData(document.owner);
 
     if (!user) {
-      req.logger.error(`Recieved a patreon hook without a found user: "${document.owner}"`);
+      req.logger.error(`Received a patreon hook without a found user: "${document.owner}"`);
 
       return res.status(200).send({
         success: 'false',

@@ -32,6 +32,7 @@ export const DeckStacksStatic: React.FC<DeckStacksStaticProps> = ({ piles, cards
             <div className="stack">
               {column.map((cardIndex, index3) => {
                 const card = cards[cardIndex];
+                if (!card) return null;
                 return (
                   <div className="stacked" key={index3}>
                     <a href={card.cardID ? `/tool/card/${card.cardID}` : undefined}>
@@ -96,7 +97,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
 
   const sorted = useMemo(() => {
     const deep = sortDeep(
-      mainboard.flat(3).map((cardIndex) => draft.cards[cardIndex]),
+      mainboard.flat(3).map((cardIndex) => draft.cards[cardIndex]).filter(Boolean),
       true,
       'Unsorted',
       'Color Category',
@@ -182,7 +183,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
               <Text semibold lg>
                 Sideboard ({sbCount})
               </Text>
-              <CardGrid cards={sideboard.flat(2).map((cardIndex) => draft.cards[cardIndex])} xs={8} />
+              <CardGrid cards={sideboard.flat(2).map((cardIndex) => draft.cards[cardIndex]).filter(Boolean)} xs={8} />
             </>
           )}
         </CardBody>

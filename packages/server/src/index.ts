@@ -29,7 +29,7 @@ import { isPatreonHookPath } from './router/routes/patreon';
 import router from './router/router';
 import { initializeCardDb } from './serverutils/cardCatalog';
 import DynamoDBStore from './serverutils/dynamo-session-store';
-import { logError } from './serverutils/errorLog';
+import { logError, logInfo } from './serverutils/errorLog';
 import { render } from './serverutils/render';
 import { checkAndUpdateCardbase } from './serverutils/updatecards';
 import { CustomError } from './types/express';
@@ -231,19 +231,26 @@ app.use(passport.session());
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
   req.uuid = uuid();
 
+  const loggerContext = () => ({
+    requestId: req.uuid,
+    method: req.method,
+    path: req.path,
+    originalUrl: req.originalUrl,
+    query: req.query,
+    authenticated: !!req.user,
+    userId: req.user?.id ?? null,
+    username: req.user?.username ?? null,
+  });
+
   req.logger = {
     error: (...messages: any[]) => {
       res.locals.isError = true;
-      logError(messages, {
-        requestId: req.uuid,
-        method: req.method,
-        path: req.path,
-        originalUrl: req.originalUrl,
-        query: req.query,
-        authenticated: !!req.user,
-        userId: req.user?.id ?? null,
-        username: req.user?.username ?? null,
-      });
+      logError(messages, loggerContext());
+    },
+    // Expected, non-actionable conditions. Emits to the info stream and does NOT flag the
+    // request as an error, so it stays out of the admin Errors dashboard.
+    info: (...messages: any[]) => {
+      logInfo(messages, loggerContext());
     },
   };
 
