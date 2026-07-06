@@ -1,3 +1,4 @@
+import { DefaultPrintingPreference } from '@utils/datatypes/Card';
 import { CUBE_VISIBILITY, PRICE_VISIBILITY } from '@utils/datatypes/Cube';
 import Cube from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
@@ -81,7 +82,7 @@ export const addHandler = async (req: Request, res: Response) => {
       likeCount: 0,
       collaborators: [],
       defaultStatus: 'Not Owned',
-      defaultPrinting: 'recent',
+      defaultPrinting: DefaultPrintingPreference,
       disableAlerts: false,
       disableCloneAlerts: false,
       basics: [

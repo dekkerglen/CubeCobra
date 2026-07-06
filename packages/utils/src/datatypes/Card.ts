@@ -109,6 +109,10 @@ export interface CardDetails {
   isExtra?: boolean;
   wordCount?: number;
   hasFlavorName?: boolean;
+  // True for the single printing per oracle_id that best matches Scryfall's
+  // "default" printing (standard frame, non-promo, current rules text).
+  // Computed at card-ingest time. See update_cards.ts.
+  isDefault?: boolean;
 }
 
 export const allFields = [
@@ -207,8 +211,12 @@ export type BasicLand = (typeof BasicLands)[number];
 export enum PrintingPreference {
   RECENT = 'recent',
   FIRST = 'first',
+  CHEAPEST = 'cheapest',
+  // Scryfall's "default" printing: the most normal representation of a card
+  // (standard frame, non-promo, up-to-date rules text).
+  DEFAULT = 'default',
 }
-export const DefaultPrintingPreference = PrintingPreference.FIRST;
+export const DefaultPrintingPreference = PrintingPreference.DEFAULT;
 
 /**
  * A card contained within a Voucher. When a voucher is drafted,

@@ -1,4 +1,4 @@
-import { PrintingPreference } from '@utils/datatypes/Card';
+import { DefaultPrintingPreference, PrintingPreference } from '@utils/datatypes/Card';
 import { SortOrder as DaoSortOrder } from 'dynamo/dao/CubeDynamoDao';
 import { cubeDao } from 'dynamo/daos';
 import { getMostReasonable, getReasonableCardByOracle } from 'serverutils/carddb';
@@ -70,7 +70,7 @@ const tokenize = (query: string): string[] => {
   return tokens;
 };
 
-const getCardQueries = (tokens: string[], printing: PrintingPreference = PrintingPreference.RECENT): CardQuery[] => {
+const getCardQueries = (tokens: string[], printing: PrintingPreference = DefaultPrintingPreference): CardQuery[] => {
   const queries: CardQuery[] = [];
 
   for (const token of tokens) {

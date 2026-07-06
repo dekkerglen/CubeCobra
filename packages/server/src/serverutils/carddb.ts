@@ -1,5 +1,5 @@
 import { detailsToCard, reasonableCard } from '@utils/cardutil';
-import { CardDetails, PrintingPreference, SUPPORTED_FORMATS } from '@utils/datatypes/Card';
+import { CardDetails, DefaultPrintingPreference, PrintingPreference, SUPPORTED_FORMATS } from '@utils/datatypes/Card';
 import { filterCardsDetails, FilterFunction } from '@utils/filtering/FilterCards';
 import { SortFunctions } from '@utils/sorting/Sort';
 import catalog from 'serverutils/cardCatalog';
@@ -72,6 +72,10 @@ export function reasonableId(id: string): boolean {
   return reasonableCard(cardFromId(id));
 }
 
+export function isDefaultId(id: string): boolean {
+  return cardFromId(id).isDefault === true;
+}
+
 export function getNameForComparison(name: string): string {
   return name
     .trim()
@@ -106,7 +110,7 @@ export function getIdsFromName(name: string): string[] {
 
 export function getMostReasonable(
   cardName: string,
-  printing: PrintingPreference = PrintingPreference.RECENT,
+  printing: PrintingPreference = DefaultPrintingPreference,
   filter?: FilterFunction,
 ): CardDetails | null {
   const ids = getIdsFromName(cardName);
@@ -119,9 +123,14 @@ export function getMostReasonable(
   return getMostReasonableByPrintingPreference(ids, printing, filter);
 }
 
+// The acquisition price of a single printing, preferring non-foil. Mirrors the
+// non-foil branch of cardPrice, but operates directly on CardDetails.
+const detailsPrice = (details: CardDetails): number | undefined =>
+  details.prices?.usd ?? details.prices?.usd_foil ?? details.prices?.usd_etched ?? undefined;
+
 export function getMostReasonableByPrintingPreference(
   ids: string[],
-  printingPreference: PrintingPreference = PrintingPreference.RECENT,
+  printingPreference: PrintingPreference = DefaultPrintingPreference,
   filter?: FilterFunction,
 ): CardDetails | null {
   if (filter) {
@@ -134,6 +143,16 @@ export function getMostReasonableByPrintingPreference(
 
   if (ids.length === 0) {
     return null;
+  }
+
+  // The default printing is precomputed at ingest, so there's nothing to sort:
+  // return the flagged printing directly. Fall through to the chronological pick
+  // if none of the candidates is flagged (e.g. after a restrictive filter).
+  if (printingPreference === PrintingPreference.DEFAULT) {
+    const defaultId = ids.find((id) => cardFromId(id).isDefault);
+    if (defaultId) {
+      return cardFromId(defaultId);
+    }
   }
 
   // sort chronologically by default
@@ -157,19 +176,25 @@ export function getMostReasonableByPrintingPreference(
     return collectorNumberSort(a, b);
   });
 
+  // Cards are now sorted chronologically (oldest to newest), which is the tie-break
+  // order we want for any preference. Apply the preference-specific ordering on top.
+  if (printingPreference === PrintingPreference.RECENT) {
+    // Reverse so the newest printing comes first.
+    cards.reverse();
+  } else if (printingPreference === PrintingPreference.CHEAPEST) {
+    // Stable sort by ascending price; printings without a price fall to the end,
+    // keeping the chronological order as the tie-break.
+    cards.sort((a, b) => (detailsPrice(a.details) ?? Infinity) - (detailsPrice(b.details) ?? Infinity));
+  }
+
   ids = cards.map((card) => card.details.scryfall_id);
 
-  // Ids have been sorted from oldest to newest. So reverse if we want the newest printing.
-  if (printingPreference === PrintingPreference.RECENT) {
-    ids = [...ids];
-    ids.reverse();
-  }
   return cardFromId(ids.find(reasonableId) || ids[0] || '');
 }
 
 export function getMostReasonableById(
   id: string,
-  printing: PrintingPreference = PrintingPreference.RECENT,
+  printing: PrintingPreference = DefaultPrintingPreference,
   filter?: FilterFunction,
 ): CardDetails | null {
   const card = cardFromId(id);
@@ -180,7 +205,8 @@ export function getMostReasonableById(
 }
 
 export function getFirstReasonable(ids: string[]): CardDetails {
-  return cardFromId(ids.find(reasonableId) || ids[0] || '');
+  // Prefer the precomputed default printing, then any reasonable printing.
+  return cardFromId(ids.find(isDefaultId) || ids.find(reasonableId) || ids[0] || '');
 }
 
 export function getEnglishVersion(id: string): string {
@@ -325,13 +351,11 @@ export function getOracleForMl(oracleId: string, printingPreference: PrintingPre
 
 export function getAllMostReasonable(
   filter: FilterFunction,
-  printing: PrintingPreference = PrintingPreference.RECENT,
+  printing: PrintingPreference = DefaultPrintingPreference,
   includeExtras: boolean = false,
+  preferDefault: boolean = false,
 ): CardDetails[] {
-  const cards = filterCardsDetails(
-    includeExtras ? catalog.printedCardListWithExtras : catalog.printedCardList,
-    filter,
-  );
+  const cards = filterCardsDetails(includeExtras ? catalog.printedCardListWithExtras : catalog.printedCardList, filter);
 
   const seen = new Set<string>();
   const filtered: CardDetails[] = [];
@@ -339,7 +363,21 @@ export function getAllMostReasonable(
     if (seen.has(card.oracle_id)) continue;
     seen.add(card.oracle_id);
     const ids = getVersionsByOracleId(card.oracle_id);
-    const best = getMostReasonableByPrintingPreference(ids, printing, filter);
+
+    let best: CardDetails | null = null;
+    if (preferDefault) {
+      // Show the card's default printing when it satisfies the filter. If no
+      // default matches (e.g. a set-scoped search), the DEFAULT lookup falls
+      // back to a non-default printing, which we discard here so the user's
+      // printing preference decides the fallback below.
+      const asDefault = getMostReasonableByPrintingPreference(ids, PrintingPreference.DEFAULT, filter);
+      if (asDefault?.isDefault) {
+        best = asDefault;
+      }
+    }
+    if (!best) {
+      best = getMostReasonableByPrintingPreference(ids, printing, filter);
+    }
     if (best) {
       filtered.push(best);
     }

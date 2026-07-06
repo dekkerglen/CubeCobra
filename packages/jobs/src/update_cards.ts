@@ -94,6 +94,59 @@ const earliestReleaseByOracle: Record<string, string> = {};
 // Track which oracle_ids have appeared in an expansion set
 const oracleInExpansion: Set<string> = new Set();
 
+// Track a "default-ness" score per scryfall_id, used to pick the single default
+// printing per oracle_id (see computeDefaultScore / the pass in saveAllCards).
+const defaultScoreById: Record<string, number> = {};
+
+// Prefer the current standard frame ('2015'); older/special frames rank worse.
+const FRAME_SCORE: Record<string, number> = {
+  '2015': 0,
+  future: 10,
+  '2003': 20,
+  '1997': 30,
+  '1993': 40,
+};
+
+// The "normal" game printing lives in a core set or expansion. Anything else is a
+// supplemental product — Innistrad: Double Feature (draft_innovation), Secret Lair
+// (box), masters/commander reprints, etc. — and should lose to a real expansion
+// printing (e.g. Avabruck Caretaker's VOW printing over its Double Feature one).
+const CORE_SET_TYPES = new Set(['core', 'expansion']);
+
+// Cosmetic ("Booster Fun") frame treatments to avoid. Deliberately excludes the
+// functional double-faced frame markers (sunmoondfc, originpwdfc, mooneldrazidfc,
+// …) that are inherent to a card and appear on its normal printing too.
+const COSMETIC_FRAME_EFFECTS = new Set([
+  'showcase',
+  'extendedart',
+  'inverted',
+  'etched',
+  'shatteredglass',
+  'colorshifted',
+]);
+
+// promo_types that are inherent to a card rather than a cosmetic variant. Any
+// OTHER promo_type (boosterfun, showcase, surgefoil, halofoil, japanshowcase, …)
+// marks a special printing that should lose to the plain one.
+const INHERENT_PROMO_TYPES = new Set(['universesbeyond']);
+
+// Lower score = a more "default" printing, approximating Scryfall's is:default: a
+// standard-frame, black-bordered, non-promo expansion printing without cosmetic
+// treatments. Ties are broken elsewhere by preferring the most recent release.
+function computeDefaultScore(card: ScryfallCard): number {
+  let score = 0;
+  if (card.promo) score += 1000;
+  if (card.variation) score += 500;
+  // set_type isn't on the card object; derive it from the set like convertCard does.
+  if (!CORE_SET_TYPES.has(setTypeByCode[card.set] ?? '')) score += 400;
+  if ((card.promo_types || []).some((type) => !INHERENT_PROMO_TYPES.has(type))) score += 150;
+  if (card.full_art) score += 250;
+  if (card.border_color && card.border_color !== 'black') score += 200;
+  if (card.frame_effects && card.frame_effects.some((effect) => COSMETIC_FRAME_EFFECTS.has(effect))) score += 100;
+  score += FRAME_SCORE[card.frame] ?? 35;
+  return score;
+}
+
 const PRIVATE_DIR = path.resolve(__dirname, '..', '..', 'server', 'private');
 
 // When `gunzip` is true the response is un-gzipped before being written to disk.
@@ -718,6 +771,8 @@ function convertCard(
     newcard.tokens = tokens;
   }
 
+  defaultScoreById[newcard.scryfall_id] = computeDefaultScore(card);
+
   return newcard as CardDetails;
 }
 
@@ -1022,6 +1077,30 @@ async function saveAllCards(
     card.gamesEverAvailable = oracleGames ? Array.from(oracleGames) : card.games || [];
   }
   console.info('Finished computing gamesEverAvailable.');
+
+  // Flag the single default printing per oracle_id: the lowest-scoring (most
+  // standard) reasonable printing, breaking ties toward the most recent release.
+  console.info('Computing default printing for all cards...');
+  for (const ids of Object.values(catalog.oracleToId)) {
+    let bestId: string | undefined;
+    let bestScore = Infinity;
+    let bestReleased = '';
+    for (const id of ids) {
+      const card = catalog.dict[id];
+      if (!card || !cardutil.reasonableCard(card)) continue;
+      const score = defaultScoreById[id] ?? Infinity;
+      const released = card.released_at || '';
+      if (score < bestScore || (score === bestScore && released > bestReleased)) {
+        bestId = id;
+        bestScore = score;
+        bestReleased = released;
+      }
+    }
+    if (bestId) {
+      catalog.dict[bestId]!.isDefault = true;
+    }
+  }
+  console.info('Finished computing default printing.');
 }
 
 async function saveSet(set: ScryfallSet) {
@@ -1382,8 +1461,13 @@ const loadManaPoolPrices = async (useS3Cache?: boolean): Promise<Record<string, 
   return Object.fromEntries(json.data.map((card: any) => [card.scryfall_id, parseFloat(card.price_cents) / 100]));
 };
 
-// Use S3 for caching if DATA_BUCKET is set
-const useS3Cache = !!process.env.DATA_BUCKET;
+// Set SKIP_CARD_UPLOAD=1 for local runs: skips every write to DATA_BUCKET (the
+// S3 download cache and the final catalog upload) without unsetting DATA_BUCKET,
+// which other config still reads. Production never sets it, so behavior there is
+// unchanged. Local files are still written to PRIVATE_DIR either way.
+const skipUpload = !!process.env.SKIP_CARD_UPLOAD;
+// Use S3 for caching if DATA_BUCKET is set — but never during a skip-upload run.
+const useS3Cache = !!process.env.DATA_BUCKET && !skipUpload;
 const taskId = process.env.CARD_UPDATE_TASK_ID;
 
 (async () => {
@@ -1417,7 +1501,11 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
       process.exit(1);
     }
 
-    await uploadCardDb(scryfallMetadata, taskId);
+    if (skipUpload) {
+      console.log('SKIP_CARD_UPLOAD set — skipping catalog upload to DATA_BUCKET (local run).');
+    } else {
+      await uploadCardDb(scryfallMetadata, taskId);
+    }
 
     // Sync any card images Scryfall re-rendered since our last run into R2, and
     // record how many image files were upserted on the task for the admin view.

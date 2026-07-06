@@ -1,5 +1,5 @@
 // import missing types from @utils/datatypes/Catalog
-import { normalizeName, reasonableCard } from '@utils/cardutil';
+import { isExtraCard, normalizeName, reasonableCard } from '@utils/cardutil';
 import { Catalog } from '@utils/datatypes/CardCatalog';
 import json from 'big-json';
 import fs from 'fs';
@@ -101,10 +101,13 @@ export async function initializeCardDb(basePath: string = 'private') {
     ).sort();
   }
 
-  catalog.printedCardList = Object.values(catalog._carddict).filter((card) => !card.digital && !card.isToken);
-  // Same population minus the token exclusion, so set browsing and empty-result
-  // fallbacks can surface token-only sets (e.g. memorabilia/Jumpstart front cards).
-  catalog.printedCardListWithExtras = Object.values(catalog._carddict).filter((card) => !card.digital);
+  // Default card search excludes "extras" — tokens, emblems, art cards, planes/
+  // schemes/vanguards, memorabilia, digital-only, and Unknown Event (unk) joke
+  // cards (see isExtraCard). The WithExtras variant includes everything, so
+  // "include:extras" searches, set browsing, and empty-result fallbacks can
+  // surface them.
+  catalog.printedCardList = Object.values(catalog._carddict).filter((card) => !isExtraCard(card));
+  catalog.printedCardListWithExtras = Object.values(catalog._carddict);
 
   // CubeCobra synthetic cards that should always appear in autocomplete
   const ALWAYS_ALLOW_IDS = new Set(['custom-card', 'voucher']);

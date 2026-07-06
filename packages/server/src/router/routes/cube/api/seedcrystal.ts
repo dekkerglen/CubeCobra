@@ -1,4 +1,4 @@
-import Card, { CardDetails, PrintingPreference } from '@utils/datatypes/Card';
+import Card, { CardDetails, DefaultPrintingPreference, PrintingPreference } from '@utils/datatypes/Card';
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { blogDao, changelogDao, cubeDao, feedDao, userDao } from 'dynamo/daos';
@@ -24,7 +24,7 @@ const ALL_COLORS: ColorCode[] = ['W', 'U', 'B', 'R', 'G'];
 type Bucket = ColorCode | 'C' | 'M' | 'L';
 
 const isValidPrinting = (value: unknown): value is PrintingPreference =>
-  value === PrintingPreference.RECENT || value === PrintingPreference.FIRST;
+  Object.values(PrintingPreference).includes(value as PrintingPreference);
 
 const sanitizeIncludeColors = (raw: unknown): ColorCode[] => {
   if (!Array.isArray(raw)) {
@@ -161,7 +161,7 @@ export const seedCrystalHandler = async (req: Request, res: Response) => {
 
     const printing: PrintingPreference = isValidPrinting(printingPreference)
       ? printingPreference
-      : ((req.user?.defaultPrinting as PrintingPreference) ?? PrintingPreference.RECENT);
+      : ((req.user?.defaultPrinting as PrintingPreference) ?? DefaultPrintingPreference);
 
     // Resolve the seed card name → oracle id
     const seedCard = getMostReasonable(cardName.trim(), printing);

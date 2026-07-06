@@ -36,7 +36,7 @@ export const updateSettingsHandler = async (req: Request, res: Response) => {
     if (!CARD_STATUSES.includes(defaultStatus)) {
       errors.push({ msg: 'Status must be valid.' });
     }
-    if (![PrintingPreference.RECENT, PrintingPreference.FIRST].includes(defaultPrinting)) {
+    if (!Object.values(PrintingPreference).includes(defaultPrinting)) {
       errors.push({ msg: 'Printing must be valid.' });
     }
     if (!Object.values(CUBE_VISIBILITY).includes(visibility)) {

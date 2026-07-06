@@ -399,7 +399,7 @@ const SECTIONS: Section[] = [
         <p>
           You can use <code>a:</code>, <code>art:</code>, or <code>artist:</code> to search for cards illustrated by a
           specific artist. Also <code>is:reprint</code>, <code>is:firstprint</code>, <code>is:promo</code>,
-          <code>is:digital</code>, and <code>is:voucher</code>
+          <code>is:digital</code>, <code>is:default</code>, and <code>is:voucher</code>
         </p>
         <Text semibold>Examples:</Text>
         <Table
@@ -709,6 +709,11 @@ const SECTIONS: Section[] = [
           You can use <code>elo:</code> to filter cards by their elo rating.
         </p>
         <p>
+          Card search hides <Text semibold>extras</Text> by default — tokens, emblems, art cards, planes/schemes,
+          memorabilia, digital-only cards, and Unknown Event cards. Add <code>include:extras</code> to your search (or
+          check &quot;Include extras&quot;) to show them.
+        </p>
+        <p>
           <Text semibold>Filters for individual cubes:</Text>
         </p>
         <p>
@@ -729,6 +734,10 @@ const SECTIONS: Section[] = [
             { query: <code>is:historic</code>, description: 'All cards that are historic.' },
             { query: <code>is:vanilla</code>, description: 'All cards with no oracle text.' },
             { query: <code>is:modal</code>, description: 'All cards with modal options.' },
+            {
+              query: <code>t:token include:extras</code>,
+              description: 'Include extras (tokens, art cards, etc.) that are hidden by default.',
+            },
           ]}
         />
       </>
