@@ -1916,12 +1916,13 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
    * @param cubeId - The ID of the cube to get analytics for
    * @returns The cube analytics, or an empty object if not found
    */
-  public async getAnalytics(cubeId: string): Promise<CubeAnalytic | Record<string, never>> {
+  public async getAnalytics(cubeId: string): Promise<CubeAnalytic> {
     try {
       return await getObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`);
     } catch {
-      // Return empty object if analytics don't exist
-      return {};
+      // Analytics don't exist yet (e.g. a cube that's never been drafted). Return a
+      // valid empty CubeAnalytic so callers can rely on `.cards` always being an array.
+      return { cube: cubeId, cards: [] };
     }
   }
 

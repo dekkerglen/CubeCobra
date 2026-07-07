@@ -237,6 +237,19 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
       );
     } catch (e) {
       const error = e instanceof Error ? e : new Error(String(e));
+
+      // A ConditionalCheckFailedException here means a concurrent writer bumped the
+      // DynamoVersion between our read and this conditional put — optimistic locking working
+      // as intended. Surface it as a typed conflict so update() can retry (and callers can
+      // translate it to a 409) instead of it looking like an unexpected 500.
+      if (error.name === 'ConditionalCheckFailedException') {
+        throw new DaoError(
+          `Optimistic lock failed for ${this.itemType()}: version was not ${expectedDynamoVersion}`,
+          ErrorCode.OPTIMISTIC_LOCKING_VERSION_MISMATCH,
+          { cause: error },
+        );
+      }
+
       const code = error instanceof DaoError ? error.code : ErrorCode.INTERNAL_SERVER_ERROR;
 
       throw new DaoError(`Error putting item: ${error}`, code, {
@@ -428,16 +441,35 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
   }
 
   public async update(item: T): Promise<void> {
-    const dynamoItem = await this.getRaw({
-      PK: this.partitionKey(item),
-      SK: this.sortKey(item),
-    });
+    // Read-modify-write under optimistic locking. Concurrent writers can bump the version
+    // between our read and conditional put; when that happens we re-read the latest version
+    // and retry a few times (last-write-wins) so a transient race resolves silently instead
+    // of bubbling up as a server error.
+    const MAX_RETRIES = 5;
+    for (let attempt = 0; ; attempt++) {
+      const dynamoItem = await this.getRaw({
+        PK: this.partitionKey(item),
+        SK: this.sortKey(item),
+      });
 
-    if (!dynamoItem) {
-      throw new DaoError('Item not found', ErrorCode.NOT_FOUND);
+      if (!dynamoItem) {
+        throw new DaoError('Item not found', ErrorCode.NOT_FOUND);
+      }
+
+      try {
+        return await this.updateWithOptimisticLocking(item, dynamoItem.DynamoVersion);
+      } catch (e) {
+        const isConflict = e instanceof DaoError && e.code === ErrorCode.OPTIMISTIC_LOCKING_VERSION_MISMATCH;
+
+        if (!isConflict || attempt >= MAX_RETRIES - 1) {
+          throw e;
+        }
+
+        // Exponential backoff with jitter to spread out contending writers: ~50ms, 100ms, ...
+        const backoffMs = Math.pow(2, attempt) * 50 + Math.floor(Math.random() * 50);
+        await new Promise((resolve) => setTimeout(resolve, backoffMs));
+      }
     }
-
-    return this.updateWithOptimisticLocking(item, dynamoItem.DynamoVersion);
   }
 
   /**

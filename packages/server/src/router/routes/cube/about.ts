@@ -66,7 +66,9 @@ export const aboutHandler = async (req: Request, res: Response) => {
     for (const card of mainboard) {
       const details = detailsByCardId[card.cardID];
       if (details && card.cardID) {
-        if (card.cardID.includes('-') && !details.prices?.usd && !details.prices?.usd_foil) {
+        // cardID is typed as string, but legacy/bad S3 data can carry a non-string here;
+        // guard before calling String methods so the page doesn't 500.
+        if (typeof card.cardID === 'string' && card.cardID.includes('-') && !details.prices?.usd && !details.prices?.usd_foil) {
           const allVersionsOfCard = getIdsFromName(details.name) || [];
           allVersionsOfCard.forEach((id: string) => {
             const version = cardFromId(id);

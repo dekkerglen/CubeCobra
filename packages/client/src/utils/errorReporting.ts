@@ -62,14 +62,14 @@ const clientVersion = (): string | undefined => {
 // `webkit-masked-url:` is how Safari masks the URL of an injected content script /
 // extension, so any stack referencing it is third-party code, not ours.
 const THIRD_PARTY_RE =
-  /nitropay|33across|mraid\.js|user-script|chrome-extension:|moz-extension:|safari-extension:|webkit-masked-url:|window\.ethereum|selectedAddress|web3|id5-sync|doubleclick|googlesyndication|securepubads|googletag|gpt\.js|btloader/i;
+  /nitropay|33across|mraid\.js|user-script|chrome-extension:|moz-extension:|safari-extension:|webkit-masked-url:|window\.ethereum|selectedAddress|web3|id5-sync|doubleclick|googlesyndication|securepubads|googletag|gpt\.js|btloader|ad\.gt|p7cloud|setupInPageTaxonomy|amazon-adsystem|adnxs|adsystem|prebid|pubmatic|rubiconproject|criteo|sonobi|openx|sharethrough|confiant/i;
 
 // Expected network/abort churn — user navigated away or went offline, not bugs.
 // (Chunk-load failures here are from third-party bundles; ours are on assets.cubecobra.com.)
 // "Unexpected token '<'" is a stale-tab artifact: after a deploy an old chunk path
 // 404s, the server returns the HTML 404 page, and the browser parses `<` as JS.
 const IGNORED_MESSAGE_RE =
-  /^(Load failed|Failed to fetch|NetworkError when attempting to fetch|Fetch is aborted|The user aborted|The operation was aborted|AbortError|status -> 0|The I\/O read operation failed|NotReadableError|Loading chunk \d+ failed|The play\(\) request was interrupted|(Uncaught )?SyntaxError: (Unexpected token '<'|expected expression, got '<'))/i;
+  /^(Load failed|Failed to fetch|NetworkError when attempting to fetch|Fetch is aborted|The user aborted|The operation was aborted|AbortError|status -> 0|The I\/O read operation failed|NotReadableError|Loading chunk \d+ failed|The play\(\) request was interrupted|(Uncaught )?(SyntaxError: )?(Unexpected token '<'|expected expression, got '<'))/i;
 
 // Headless/automation browsers stub out canvas/audio and generate spurious errors.
 const BOT_UA_RE = /Lightpanda|HeadlessChrome|PhantomJS|puppeteer|bot\b|crawler|spider/i;
@@ -83,6 +83,14 @@ const isFirstPartyHost = (host: string): boolean => /(^|\.)cubecobra\.com$/i.tes
 const hostOf = (url: string): string => {
   try {
     return new URL(url).hostname;
+  } catch {
+    return '';
+  }
+};
+
+const pathOf = (url: string): string => {
+  try {
+    return new URL(url).pathname;
   } catch {
     return '';
   }
@@ -108,11 +116,13 @@ const shouldIgnore = (payload: ClientErrorPayload): boolean => {
   if (THIRD_PARTY_RE.test(msg) || THIRD_PARTY_RE.test(source) || THIRD_PARTY_RE.test(stack)) return true;
 
   // Content-free promise rejections — ad SDKs and aborted work commonly reject with
-  // null or a bare {}. With no stack and no real message there's nothing actionable.
+  // null or a bare {}. With no message and no first-party frame there's nothing
+  // actionable. (Some come with a minified stack that carries no URL at all, e.g.
+  // `Ti@` — still third-party, so we only keep these if the stack points at our code.)
   if (
     payload.kind === 'unhandledrejection' &&
-    !stack &&
-    (msg === 'Unhandled promise rejection' || msg === '{}' || msg === '[object Object]')
+    (msg === 'Unhandled promise rejection' || msg === '{}' || msg === '[object Object]') &&
+    !referencesFirstParty(stack)
   ) {
     return true;
   }
@@ -126,6 +136,21 @@ const shouldIgnore = (payload: ClientErrorPayload): boolean => {
   // prebid, extension). onerror gives us `source`; our own errors are on
   // cubecobra.com / assets.cubecobra.com. (react-boundary errors carry no source.)
   if (source && /^https?:\/\//.test(source) && !isFirstPartyHost(hostOf(source))) return true;
+
+  // Ad/consent partners inject inline <script>s into our HTML, so their errors report
+  // the *page* URL as their source (e.g. `https://cubecobra.com/cube/list/foo:1:135`,
+  // or a taxonomy/og:type snippet at line 1). All of our real client code ships in
+  // `.js` bundles, so a first-party onerror whose source isn't a .js file is an
+  // injected third-party snippet, not ours. (react-boundary errors have no source.)
+  if (
+    payload.kind === 'onerror' &&
+    source &&
+    /^https?:\/\//.test(source) &&
+    isFirstPartyHost(hostOf(source)) &&
+    !/\.js(\?|#|$)/i.test(pathOf(source))
+  ) {
+    return true;
+  }
 
   // A stack that references remote scripts but none of ours is third-party code.
   if (stack && /https?:\/\//.test(stack) && !referencesFirstParty(stack) && !referencesFirstParty(source)) {
