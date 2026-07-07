@@ -59,13 +59,17 @@ const clientVersion = (): string | undefined => {
 
 // Ad networks, extensions, and injected wallet globals — matched against message,
 // source, and stack (CORS-enabled ad scripts send us full stacks).
+// `webkit-masked-url:` is how Safari masks the URL of an injected content script /
+// extension, so any stack referencing it is third-party code, not ours.
 const THIRD_PARTY_RE =
-  /nitropay|33across|mraid\.js|user-script|chrome-extension:|moz-extension:|safari-extension:|window\.ethereum|selectedAddress|web3|id5-sync|doubleclick|googlesyndication|securepubads|googletag|gpt\.js|btloader/i;
+  /nitropay|33across|mraid\.js|user-script|chrome-extension:|moz-extension:|safari-extension:|webkit-masked-url:|window\.ethereum|selectedAddress|web3|id5-sync|doubleclick|googlesyndication|securepubads|googletag|gpt\.js|btloader/i;
 
 // Expected network/abort churn — user navigated away or went offline, not bugs.
 // (Chunk-load failures here are from third-party bundles; ours are on assets.cubecobra.com.)
+// "Unexpected token '<'" is a stale-tab artifact: after a deploy an old chunk path
+// 404s, the server returns the HTML 404 page, and the browser parses `<` as JS.
 const IGNORED_MESSAGE_RE =
-  /^(Load failed|Failed to fetch|NetworkError when attempting to fetch|Fetch is aborted|The user aborted|The operation was aborted|AbortError|status -> 0|The I\/O read operation failed|NotReadableError|Loading chunk \d+ failed|The play\(\) request was interrupted)/i;
+  /^(Load failed|Failed to fetch|NetworkError when attempting to fetch|Fetch is aborted|The user aborted|The operation was aborted|AbortError|status -> 0|The I\/O read operation failed|NotReadableError|Loading chunk \d+ failed|The play\(\) request was interrupted|(Uncaught )?SyntaxError: (Unexpected token '<'|expected expression, got '<'))/i;
 
 // Headless/automation browsers stub out canvas/audio and generate spurious errors.
 const BOT_UA_RE = /Lightpanda|HeadlessChrome|PhantomJS|puppeteer|bot\b|crawler|spider/i;

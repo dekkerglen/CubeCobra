@@ -263,6 +263,12 @@ const render = (
     if (!options.metadata) {
       options.metadata = [];
     }
+    // Every page is an Open Graph "website" unless a route said otherwise. Beyond
+    // spec correctness, some in-app browsers / link-preview scrapers inject a script
+    // that reads meta[property='og:type'].content and throws when it's absent.
+    if (!options.metadata.some((data) => data.property === 'og:type')) {
+      options.metadata.push({ property: 'og:type', content: 'website' });
+    }
     // og:image must be an absolute URL for crawlers; baseUrl + cdnUrl handles
     // both cases (CloudFront when CDN_BASE_URL is set, otherwise same-origin).
     const stickerPath = cdnUrl('/content/sticker.png');
