@@ -37,5 +37,7 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Fixed the wrong player name appearing on draft reports.
 - Fixed manually-set win/loss/draw records on events not saving or loading correctly.
 - Fixed replacing your cube in the Featured Cubes queue creating duplicate entries.
+- Fixed autocard getting stuck open in tablet view during a draft.
+- Fixed Pack height jumping between picks which was a janky UI.
 - Fixed Patreon membership changes not always syncing to your Cube Cobra supporter perks.
 - Fixed a bug where registration errors weren't surfaced to end users.

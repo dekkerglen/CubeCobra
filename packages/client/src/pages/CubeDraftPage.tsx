@@ -884,6 +884,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
                     <Pack
                       // Just use state.seats[0].pack directly
                       pack={state.seats[0].pack.map((index) => draft.cards[index])}
+                      packSize={state.seats[0].pack.length}
                       loading={draftStatus.loading}
                       title={packTitle}
                       disabled={packDisabled || draftStatus.retryInProgress}

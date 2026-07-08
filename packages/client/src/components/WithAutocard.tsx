@@ -21,19 +21,36 @@ const withAutocard = <T extends ElementType>(Tag: T) => {
       const { showCard, hideCard } = useContext(AutocardContext);
       const tagColors = useContext(TagColorContext);
 
+      const isTouchDevice = typeof window !== 'undefined' && window.matchMedia('(pointer: coarse)').matches;
+
+      const handleMouseEnter = () => {
+        if (typeof window !== 'undefined' && window.innerWidth >= 768 && !isTouchDevice) {
+          showCard(image ? { details: { image_normal: image } } : card, inModal, showCustomImages, tagColors);
+        }
+      };
+
+      const handleMouseLeave = () => {
+        if (typeof window !== 'undefined' && window.innerWidth >= 768 && !isTouchDevice) {
+          hideCard();
+        }
+      };
+
+      const handleClick = (event: React.MouseEvent<any> | React.PointerEvent<any>) => {
+        if (isTouchDevice) {
+          hideCard();
+        }
+        const originalOnClick = (props as any).onClick;
+        if (typeof originalOnClick === 'function') {
+          originalOnClick(event);
+        }
+      };
+
       return (
         <Tag
           ref={ref}
-          onMouseEnter={() => {
-            if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-              showCard(image ? { details: { image_normal: image } } : card, inModal, showCustomImages, tagColors);
-            }
-          }}
-          onMouseLeave={() => {
-            if (typeof window !== 'undefined' && window.innerWidth >= 768) {
-              hideCard();
-            }
-          }}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onClick={handleClick}
           {...(props as any)}
         />
       );
