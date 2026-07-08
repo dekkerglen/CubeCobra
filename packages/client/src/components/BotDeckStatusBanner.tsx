@@ -16,10 +16,10 @@ export interface BotDeckStatusBannerProps {
 }
 
 /**
- * Shows a banner for the async bot-deckbuild pipeline: while this draft's bot (AI opponent)
- * decks are still building it polls /draft/botstatus/:id every 30s, then prompts a refresh
- * once they're ready or shows a terminal failure. Renders nothing if the decks were never
- * pending and didn't fail.
+ * Shows a banner for the async bot-deckbuild pipeline: while this draft's playtest-bot decks
+ * are still building it polls /draft/botstatus/:id every 30s, then prompts a refresh once
+ * they're ready or shows a terminal failure. Renders nothing if the decks were never pending
+ * and didn't fail.
  */
 const BotDeckStatusBanner: React.FC<BotDeckStatusBannerProps> = ({ draftId, initiallyPending, initiallyFailed }) => {
   const { csrfFetch } = useContext(CSRFContext);
@@ -66,17 +66,15 @@ const BotDeckStatusBanner: React.FC<BotDeckStatusBannerProps> = ({ draftId, init
   }, [csrfFetch, draftId, initiallyPending]);
 
   if (failed) {
-    return (
-      <Alert color="danger">Bot decks couldn't be built — the opponents' decks are shown in a basic layout.</Alert>
-    );
+    return <Alert color="danger">Bot decks couldn't be built — they're shown in a basic layout.</Alert>;
   }
 
   if (becameReady) {
-    return <Alert color="success">Bot decks are ready — please refresh to view the opponents' decks.</Alert>;
+    return <Alert color="success">Bot decks are ready — please refresh to view them.</Alert>;
   }
 
   if (pending) {
-    return <Alert color="info">Bot decks are building… the opponents' decks will be ready shortly.</Alert>;
+    return <Alert color="info">Bot decks are building… they'll be ready shortly.</Alert>;
   }
 
   return null;
