@@ -26,6 +26,7 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Choose "Cheapest" as your default printing so cards get added in their least expensive version.
 - New "Default" printing option picks the most normal version of each card — standard frame with up-to-date rules text — and you can find those printings in search with `is:default`.
 - Card search now hides "extras" — tokens, art cards, emblems, planes, memorabilia, digital-only, and Unknown Event cards — by default, so results are cleaner. Check "Include extras" or add `include:extras` to your search to bring them back.
+- Finishing a draft is now instant — you go straight to building your own deck instead of waiting on the bots, and their decks fill in behind the scenes with a banner that lets you know when they're ready to view.
 
 
 ## Bug Fixes
