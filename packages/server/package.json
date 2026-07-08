@@ -63,7 +63,7 @@
     "nearley": "^2.20.1",
     "node-cache": "^5.1.2",
     "node-schedule": "^2.1.1",
-    "nodemailer": "^8.0.5",
+    "nodemailer": "^9.0.1",
     "papaparse": "^5.5.3",
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
