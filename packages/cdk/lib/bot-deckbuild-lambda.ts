@@ -107,7 +107,10 @@ export class BotDeckbuildLambda extends Construct {
     });
 
     const codeBucket = s3.Bucket.fromBucketName(this, 'CodeBucket', props.codeArtifactsBucket);
-    const subnets = props.vpc.privateSubnets.length > 0 ? props.vpc.privateSubnets : props.vpc.publicSubnets;
+    // The default VPC has no private subnets, so the lambda runs in public subnets. That's
+    // fine here — see allowPublicSubnet below.
+    const usePublicSubnets = props.vpc.privateSubnets.length === 0;
+    const subnets = usePublicSubnets ? props.vpc.publicSubnets : props.vpc.privateSubnets;
 
     this.lambdaFunction = new lambda.Function(this, 'BotDeckbuildLambda', {
       functionName: `BotDeckbuild-${props.subdomain}-${props.stage}`,
@@ -127,6 +130,10 @@ export class BotDeckbuildLambda extends Construct {
       vpc: props.vpc,
       vpcSubnets: { subnets },
       securityGroups: [securityGroup],
+      // Public-subnet ENIs can't reach the public internet, which CDK guards against — but
+      // this lambda only needs the internal ML ALB (same-VPC route) and S3/DynamoDB (gateway
+      // endpoints), never the internet, so acknowledge the guard.
+      allowPublicSubnet: usePublicSubnets,
     });
 
     this.lambdaFunction.addEventSource(
