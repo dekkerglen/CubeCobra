@@ -59,6 +59,8 @@ interface CubeCobraStackParams {
   r2SecretAccessKey: string;
   r2Bucket: string;
   cardImageBaseUrl: string;
+  // Whether this environment owns the shared default VPC's gateway endpoints (see config.ts).
+  manageSharedVpcEndpoints: boolean;
 }
 
 export type Environment = 'production' | 'development';
@@ -188,6 +190,7 @@ export class CubeCobraStack extends cdk.Stack {
       environmentVariables: createLambdaEnvironmentVariables(params, props, dynamoTables.table.tableName),
       mlServiceUrl,
       vpc,
+      manageSharedVpcEndpoints: params.manageSharedVpcEndpoints,
     });
 
     // Let the web server (EC2 instance role) publish draft ids to the bot-deckbuild topic.

@@ -39,6 +39,8 @@ export interface CubeCobraStackParams {
   r2SecretAccessKey: string;
   r2Bucket: string;
   cardImageBaseUrl: string;
+  // Whether this environment owns the shared default VPC's gateway endpoints (see config.ts).
+  manageSharedVpcEndpoints: boolean;
 }
 
 export type Environment = 'production' | 'development' | 'local';

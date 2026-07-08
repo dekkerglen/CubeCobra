@@ -20,6 +20,11 @@ export interface BotDeckbuildLambdaProps extends StackProps {
   // Internal ALB URL for the ML recommender — the lambda calls it directly from the VPC.
   mlServiceUrl: string;
   vpc: ec2.IVpc;
+  // Whether THIS environment owns the shared default VPC's S3/DynamoDB gateway endpoints.
+  // dev/beta/production share one default VPC (same account + region) and a gateway endpoint
+  // adds a route to that VPC's shared main route table, so exactly one environment may create
+  // them; the rest just use them (see config.manageSharedVpcEndpoints).
+  manageSharedVpcEndpoints: boolean;
 }
 
 /**
@@ -91,20 +96,25 @@ export class BotDeckbuildLambda extends Construct {
     }
 
     // Default egress (allow-all) lets the lambda reach the internal ML ALB (same-VPC route)
-    // and, via the gateway endpoints below, S3/DynamoDB.
+    // and, via the VPC's S3/DynamoDB gateway endpoints, those services.
     const securityGroup = new ec2.SecurityGroup(this, 'BotDeckbuildLambdaSg', {
       vpc: props.vpc,
       description: 'Bot-deckbuild lambda: reaches the internal ML ALB and AWS gateway endpoints',
       allowAllOutbound: true,
     });
 
-    // VPC lambda ENIs get no public IP, so add free gateway endpoints for S3 + DynamoDB.
-    // NOTE: verify these don't already exist on the (shared, default) VPC before deploying —
-    // a duplicate gateway endpoint for the same service on the same route table will fail.
-    props.vpc.addGatewayEndpoint('BotDeckbuildS3Endpoint', { service: ec2.GatewayVpcEndpointAwsService.S3 });
-    props.vpc.addGatewayEndpoint('BotDeckbuildDynamoEndpoint', {
-      service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
-    });
+    // A VPC lambda ENI has no public IP, so it reaches S3/DynamoDB via the VPC's gateway
+    // endpoints. These are VPC-wide, shared infrastructure: dev/beta/production share one
+    // default VPC, and a gateway endpoint adds a route to that VPC's shared main route table,
+    // so ONLY the single owning environment creates them (else the others collide on that
+    // route table). The non-owning environments' lambdas use the owner's endpoints. Keep the
+    // construct ids stable — they back the logical ids CloudFormation already tracks.
+    if (props.manageSharedVpcEndpoints) {
+      props.vpc.addGatewayEndpoint('BotDeckbuildS3Endpoint', { service: ec2.GatewayVpcEndpointAwsService.S3 });
+      props.vpc.addGatewayEndpoint('BotDeckbuildDynamoEndpoint', {
+        service: ec2.GatewayVpcEndpointAwsService.DYNAMODB,
+      });
+    }
 
     const codeBucket = s3.Bucket.fromBucketName(this, 'CodeBucket', props.codeArtifactsBucket);
     // The default VPC has no private subnets, so the lambda runs in public subnets. That's
