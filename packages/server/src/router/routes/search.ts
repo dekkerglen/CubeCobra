@@ -1,4 +1,4 @@
-import { PrintingPreference } from '@utils/datatypes/Card';
+import { DefaultPrintingPreference, PrintingPreference } from '@utils/datatypes/Card';
 import { SortOrder as DaoSortOrder } from 'dynamo/dao/CubeDynamoDao';
 import { cubeDao } from 'dynamo/daos';
 import { getMostReasonable, getReasonableCardByOracle } from 'serverutils/carddb';
@@ -70,7 +70,7 @@ const tokenize = (query: string): string[] => {
   return tokens;
 };
 
-const getCardQueries = (tokens: string[], printing: PrintingPreference = PrintingPreference.RECENT): CardQuery[] => {
+const getCardQueries = (tokens: string[], printing: PrintingPreference = DefaultPrintingPreference): CardQuery[] => {
   const queries: CardQuery[] = [];
 
   for (const token of tokens) {
@@ -529,6 +529,13 @@ export const getmoresearchitemsHandler = async (req: Request, res: Response) => 
   const { lastKey, query, order, ascending } = req.body;
 
   const result = await searchCubes(query, order, lastKey, ascending, req.user);
+
+  // A slow search can exceed the 30s request-timeout middleware, which already sent a
+  // response; sending again here would throw ERR_HTTP_HEADERS_SENT (surfacing as an
+  // unhandled rejection). Bail out if the response is already committed.
+  if (res.headersSent) {
+    return undefined;
+  }
 
   return res.status(200).send({
     success: 'true',

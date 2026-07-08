@@ -24,7 +24,7 @@ export const handler = async (req: Request, res: Response) => {
       errors.push({ msg: 'Theme must be valid.' });
     }
 
-    if (![PrintingPreference.RECENT, PrintingPreference.FIRST].includes(req.body.defaultPrinting)) {
+    if (!Object.values(PrintingPreference).includes(req.body.defaultPrinting)) {
       errors.push({ msg: 'Printing must be valid.' });
     }
 

@@ -19,6 +19,7 @@ export const searchCardsHandler = async (req: Request, res: Response) => {
       return;
     }
     const page = typeof req.query.p === 'string' ? parseInt(req.query.p, 10) : 0;
+    const includeExtras = req.query.ie === '1' || req.query.ie === 'true';
     const { data, numResults } = searchCards(
       filter!,
       req.query.s as OrderedSortsType,
@@ -26,6 +27,7 @@ export const searchCardsHandler = async (req: Request, res: Response) => {
       req.query.d as SortDirectionsType,
       req.query.di as Distinct | undefined,
       req?.user?.defaultPrinting,
+      includeExtras,
     );
     res.status(200).send({
       success: 'true',

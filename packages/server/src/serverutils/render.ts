@@ -11,6 +11,7 @@ import 'dotenv/config';
 
 import { SortOrder } from '../dynamo/dao/CubeDynamoDao';
 import { collaboratorIndexDao, cubeDao, notificationDao, patronDao } from '../dynamo/daos';
+import { CubeTooLargeError } from '../errors/CubeTooLargeError';
 import { Request, Response } from '../types/express';
 import { GIT_COMMIT } from './git';
 import { getBaseUrl } from './util';
@@ -195,6 +196,10 @@ interface ReactProps {
   baseUrl?: string;
   captchaSiteKey?: string;
   csrfToken?: string;
+  // Git commit of the bundle that rendered this page. Baked in at page-load time, so
+  // a long-open (stale) tab keeps the version it was served with — lets error reports
+  // distinguish which frontend build actually threw, independent of the server version.
+  version?: string;
   [key: string]: any;
 }
 
@@ -250,12 +255,19 @@ const render = (
     reactProps.baseUrl = getBaseUrl();
     reactProps.cdnBaseUrl = process.env.CDN_BASE_URL || '';
     reactProps.captchaSiteKey = process.env.CAPTCHA_SITE_KEY;
+    reactProps.version = process.env.CUBECOBRA_VERSION;
     if (res.locals.csrfToken) {
       reactProps.csrfToken = res.locals.csrfToken;
     }
 
     if (!options.metadata) {
       options.metadata = [];
+    }
+    // Every page is an Open Graph "website" unless a route said otherwise. Beyond
+    // spec correctness, some in-app browsers / link-preview scrapers inject a script
+    // that reads meta[property='og:type'].content and throws when it's absent.
+    if (!options.metadata.some((data) => data.property === 'og:type')) {
+      options.metadata.push({ property: 'og:type', content: 'website' });
     }
     // og:image must be an absolute URL for crawlers; baseUrl + cdnUrl handles
     // both cases (CloudFront when CDN_BASE_URL is set, otherwise same-origin).
@@ -299,6 +311,26 @@ const render = (
 const handleRouteError = function (req: Request, res: Response, err: any, reroute: string): void {
   if (err instanceof Error === false) {
     err = new Error('Unknown error');
+  }
+
+  // A too-large cube can't be rendered by ANY card-loading route, so redirecting (the
+  // normal error path) bounces between them (list <-> about) into a redirect storm. Render
+  // a terminal page explaining it instead, and don't log it as a server error — it's a
+  // known, non-actionable condition, not a fault.
+  if (err instanceof CubeTooLargeError) {
+    res.status(413);
+    render(
+      req,
+      res,
+      'ErrorPage',
+      {
+        error: `This cube is too large to display: it has ${err.cardCount.toLocaleString()} cards, which exceeds the maximum of ${err.limit.toLocaleString()}.`,
+        requestId: req.uuid,
+        title: 'Cube too large',
+      },
+      { noindex: true },
+    );
+    return;
   }
 
   req.logger.error(err.message, err.stack);

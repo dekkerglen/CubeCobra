@@ -1,5 +1,5 @@
-import { PrintingPreference } from '@utils/datatypes/Card';
-import { filterCardsDetails, FilterFunction } from '@utils/filtering/FilterCards';
+import { CardDetails, DefaultPrintingPreference } from '@utils/datatypes/Card';
+import { filterCardsDetails, FilterFunction, filterIncludesExtras, filterUses } from '@utils/filtering/FilterCards';
 import { ORDERED_SORTS, OrderedSortsType, SortFunctionsOnDetails } from '@utils/sorting/Sort';
 import { SortDirectionsType } from '@utils/sorting/sortContext';
 
@@ -16,14 +16,30 @@ export const searchCards = (
   page: number = 0,
   direction: SortDirectionsType = 'descending',
   distinct: Distinct = 'names',
-  printing = PrintingPreference.RECENT,
+  printing = DefaultPrintingPreference,
+  includeExtras = false,
 ) => {
-  const cards = [];
+  // Collect matching cards, optionally including "extras" — tokens and other
+  // printings normally hidden from card search (they live only in
+  // printedCardListWithExtras / are dropped by getAllMostReasonable otherwise).
+  const collect = (includeExtras: boolean): CardDetails[] => {
+    if (distinct === 'names') {
+      // One row per card: show its default printing, falling back to the user's
+      // printing preference when the card has no default (or it's filtered out).
+      return getAllMostReasonable(filter, printing, includeExtras, true);
+    }
+    // One row per printing: every printing is its own result, so leave them as-is.
+    return filterCardsDetails(includeExtras ? carddb.printedCardListWithExtras : carddb.printedCardList, filter);
+  };
 
-  if (distinct === 'names') {
-    cards.push(...getAllMostReasonable(filter, printing));
-  } else {
-    cards.push(...filterCardsDetails(carddb.printedCardList, filter));
+  // Extras (tokens, planes, digital, Unknown Event, etc.) are hidden by default.
+  // Include them when: the caller asked (checkbox), the query has "include:extras",
+  // or it's a set-scoped browse (a set may be entirely extras, e.g. memorabilia /
+  // Jumpstart front cards). Otherwise only fall back to extras if nothing matched.
+  const includeExtrasNow = includeExtras || filterIncludesExtras(filter) || filterUses(filter, 'set');
+  const cards: CardDetails[] = collect(includeExtrasNow);
+  if (cards.length === 0 && !includeExtrasNow) {
+    cards.push(...collect(true));
   }
 
   if (ORDERED_SORTS.includes(sort)) {

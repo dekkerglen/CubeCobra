@@ -1,4 +1,4 @@
-import { PrintingPreference } from '@utils/datatypes/Card';
+import { DefaultPrintingPreference } from '@utils/datatypes/Card';
 import { getReasonableCardByOracle, getRelatedCards } from 'serverutils/carddb';
 
 import { Request, Response } from '../../../types/express';
@@ -11,7 +11,7 @@ export const handler = async (req: Request, res: Response) => {
   const result = [];
 
   for (const card of cards) {
-    const related = getRelatedCards(card.oracle_id, PrintingPreference.FIRST);
+    const related = getRelatedCards(card.oracle_id, DefaultPrintingPreference);
     const synergistic = related.synergistic?.top?.map((oracle) => getReasonableCardByOracle(oracle.oracle_id)) || [];
 
     result.push({

@@ -76,8 +76,10 @@ const UserThemeForm: React.FC = () => {
           value={formData.defaultPrinting}
           setValue={(value) => setDefaultPrinting(value as PrintingPreference)}
           options={[
+            { value: PrintingPreference.DEFAULT, label: 'Default' },
             { value: PrintingPreference.RECENT, label: 'Most Recent' },
             { value: PrintingPreference.FIRST, label: 'First' },
+            { value: PrintingPreference.CHEAPEST, label: 'Cheapest' },
           ]}
         />
         <Select

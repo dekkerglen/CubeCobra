@@ -1,5 +1,5 @@
 import cardutil from '@utils/cardutil';
-import { CardDetails, PrintingPreference } from '@utils/datatypes/Card';
+import { CardDetails, DefaultPrintingPreference, PrintingPreference } from '@utils/datatypes/Card';
 import { Period } from '@utils/datatypes/History';
 import { cardHistoryDao } from 'dynamo/daos';
 import carddb, {
@@ -88,7 +88,7 @@ export const getCardHandler = async (req: Request, res: Response) => {
       history.items.push({} as any);
     }
 
-    const printingPreference = (req?.user?.defaultPrinting || PrintingPreference.RECENT) as PrintingPreference;
+    const printingPreference = (req?.user?.defaultPrinting || DefaultPrintingPreference) as PrintingPreference;
     const related = getRelatedCards(card.oracle_id, printingPreference);
 
     const baseUrl = getBaseUrl();

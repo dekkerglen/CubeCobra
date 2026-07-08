@@ -16,6 +16,7 @@ const mockCardCatalog: Catalog = {
   oracleToIndex: {},
   metadatadict: {},
   printedCardList: [], // for card filters
+  printedCardListWithExtras: [],
   comboOracleToIndex: {}, // for combo lookups
   reasonable_names: [],
   reasonable_full_names: [],
@@ -31,7 +32,7 @@ jest.mock('serverutils/cardCatalog', () => {
 
 import Card, { CardDetails, PrintingPreference } from '@utils/datatypes/Card';
 import { FilterFunction } from '@utils/filtering/FilterCards';
-import { getMostReasonable } from 'serverutils/carddb';
+import { getAllMostReasonable, getMostReasonable } from 'serverutils/carddb';
 
 import { createCard, createCardDetails } from '../test-utils/data';
 
@@ -331,5 +332,84 @@ describe('getMostReasonable', () => {
 
     fillCatalogWithCards([cardOne, cardTwo, cardThree]);
     expect(getMostReasonable('Giant Spider', PrintingPreference.FIRST, filter)).toEqual(cardOne.details);
+  });
+});
+
+describe('getAllMostReasonable prefers the default printing', () => {
+  const passthrough = (): FilterFunction => {
+    const filter: FilterFunction = (): boolean => true;
+    filter.stringify = 'all';
+    filter.fieldsUsed = [];
+    return filter;
+  };
+
+  const fillCatalog = (cards: Card[]) => {
+    mockCardCatalog._carddict = {};
+    mockCardCatalog.oracleToId = {};
+    mockCardCatalog.printedCardList = [];
+    cards.forEach((card) => {
+      const id = card.details?.scryfall_id || '';
+      const oracleId = card.details?.oracle_id || '';
+      mockCardCatalog._carddict[id] = card.details;
+      if (!mockCardCatalog.oracleToId[oracleId]) {
+        mockCardCatalog.oracleToId[oracleId] = [];
+      }
+      mockCardCatalog.oracleToId[oracleId]?.push(id);
+      mockCardCatalog.printedCardList.push(card.details);
+    });
+  };
+
+  const defaultPrinting = createCard({
+    details: createCardDetails({
+      ...overridesForNormalDetails,
+      name: 'Llanowar Elves',
+      name_lower: 'llanowar elves',
+      oracle_id: 'llanowar',
+      scryfall_id: 'llan-default',
+      collector_number: '100',
+      released_at: '2018/07/13',
+      set: 'M19',
+      isDefault: true,
+    }),
+  });
+
+  const recentPrinting = createCard({
+    details: createCardDetails({
+      ...overridesForNormalDetails,
+      name: 'Llanowar Elves',
+      name_lower: 'llanowar elves',
+      oracle_id: 'llanowar',
+      scryfall_id: 'llan-recent',
+      collector_number: '200',
+      released_at: '2023/01/01',
+      set: 'DMU',
+      isDefault: false,
+    }),
+  });
+
+  it('shows the default printing even when a newer printing exists', () => {
+    fillCatalog([defaultPrinting, recentPrinting]);
+
+    // Without preferDefault, the RECENT preference wins.
+    expect(getAllMostReasonable(passthrough(), PrintingPreference.RECENT, false, false)).toEqual([
+      recentPrinting.details,
+    ]);
+
+    // With preferDefault (card search "names" granularity), the default wins.
+    expect(getAllMostReasonable(passthrough(), PrintingPreference.RECENT, false, true)).toEqual([
+      defaultPrinting.details,
+    ]);
+  });
+
+  it('falls back to the printing preference when the default is filtered out', () => {
+    fillCatalog([defaultPrinting, recentPrinting]);
+
+    // Restrict to a set the default printing is not in; fall back to the
+    // preference among the remaining (non-default) printings.
+    const setFilter: FilterFunction = (card): boolean => card.details?.set === 'DMU';
+    setFilter.stringify = 'set:dmu';
+    setFilter.fieldsUsed = ['set'];
+
+    expect(getAllMostReasonable(setFilter, PrintingPreference.RECENT, false, true)).toEqual([recentPrinting.details]);
   });
 });

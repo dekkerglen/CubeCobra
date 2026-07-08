@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useState } from 'react';
 
-import { PrintingPreference } from '@utils/datatypes/Card';
+import { DefaultPrintingPreference, PrintingPreference } from '@utils/datatypes/Card';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
 import { cardNameMatches } from '../../utils/cardAutocomplete';
@@ -36,7 +36,7 @@ const SeedCrystalModal: React.FC<SeedCrystalModalProps> = ({
   const [cardName, setCardName] = useState('');
   const [cardCount, setCardCount] = useState<string>(String(defaultCardCount));
   const [printingPreference, setPrintingPreference] = useState<string>(
-    (defaultPrinting as string) || PrintingPreference.RECENT,
+    (defaultPrinting as string) || DefaultPrintingPreference,
   );
   const [includeColors, setIncludeColors] = useState<string[]>(['W', 'U', 'B', 'R', 'G']);
   const [balanced, setBalanced] = useState<boolean>(true);
@@ -116,8 +116,10 @@ const SeedCrystalModal: React.FC<SeedCrystalModalProps> = ({
             value={printingPreference}
             setValue={setPrintingPreference}
             options={[
+              { value: PrintingPreference.DEFAULT, label: 'Default printing' },
               { value: PrintingPreference.RECENT, label: 'Most recent printing' },
               { value: PrintingPreference.FIRST, label: 'First printing' },
+              { value: PrintingPreference.CHEAPEST, label: 'Cheapest printing' },
             ]}
           />
 

@@ -665,9 +665,31 @@ export function reasonableCard(card: CardDetailsType): boolean {
   );
 }
 
+// "Extra" cards are things that aren't a normal deckable game piece: tokens,
+// emblems, art cards, planes/schemes/vanguards, memorabilia (World Championship
+// gold-border decks, oversized cards), digital-only cards, and Gavin's Unknown
+// Event (unk) joke cards. These mirror Scryfall's is:extra plus our own additions
+// and are hidden from card search unless "include:extras" is used. The lists are
+// intentionally broader than reasonableCard's (which also filters printings by
+// promo/language/etc.) — this is a card-level "is this a real game piece" check.
+const EXTRA_LAYOUTS = ['token', 'double_faced_token', 'emblem', 'art_series', 'planar', 'scheme', 'vanguard'];
+const EXTRA_SET_TYPES = ['token', 'memorabilia', 'minigame'];
+const EXTRA_SETS = ['unk'];
+
+export function isExtraCard(card: CardDetailsType): boolean {
+  return (
+    card.digital === true ||
+    card.isExtra === true ||
+    card.isToken === true ||
+    EXTRA_LAYOUTS.includes(card.layout) ||
+    EXTRA_SET_TYPES.includes(card.set_type ?? '') ||
+    EXTRA_SETS.includes(card.set)
+  );
+}
+
 const isUniversesBeyond = (details: CardDetailsType) => (details.promo_types || []).includes('universesbeyond');
 
-export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> = {
+const RAW_CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> = {
   gold: (details) => details.colors.length > 1 && details.parsed_cost.every((symbol) => !symbol.includes('-')),
   twobrid: (details) => details.parsed_cost.some((symbol) => symbol.includes('-') && symbol.includes('2')),
   hybrid: (details) =>
@@ -679,6 +701,7 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, 
   firstprinting: (details) => !details.reprint,
   digital: (details) => details.digital,
   reasonable: reasonableCard,
+  default: (details) => details.isDefault === true,
   dfc: (details) => ['transform', 'modal_dfc', 'meld', 'double_faced_token', 'double_sided'].includes(details.layout),
   mdfc: (details) => details.layout === 'modal_dfc',
   meld: (details) => details.layout === 'meld',
@@ -746,6 +769,18 @@ export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, 
   //   booster, datestamped, prerelease, planeswalker_deck,
   //   league, buyabox, giftbox, intro_pack, gameday, release,
 };
+
+// A card whose DB entry failed to resolve has `details === undefined`. The detectors
+// above dereference `details` directly (e.g. `details.colors`), so a single unresolved
+// card in a `is:...` filter would throw and blank the entire card list. Guard here so
+// an unresolved card simply matches no category instead of crashing.
+export const CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> =
+  Object.fromEntries(
+    Object.entries(RAW_CARD_CATEGORY_DETECTORS).map(([key, detector]) => [
+      key,
+      (details: CardDetailsType, card?: Card) => (details ? detector(details, card) : false),
+    ]),
+  );
 
 export const CARD_CATEGORIES: string[] = Object.keys(CARD_CATEGORY_DETECTORS);
 

@@ -35,7 +35,7 @@ const compareCardNames = (a: Card, b: Card): number => {
 
 const PlaytestData: React.FC<PlaytestDataProps> = ({ cubeAnalytics }) => {
   const { changedCards } = useContext(CubeContext);
-  const cards = changedCards.mainboard;
+  const cards = changedCards.mainboard ?? [];
 
   const cardDict = useMemo(
     () => fromEntries(cards.filter((card) => cardOracleId(card)).map((card) => [cardOracleId(card), card])),
@@ -44,7 +44,7 @@ const PlaytestData: React.FC<PlaytestDataProps> = ({ cubeAnalytics }) => {
 
   const data = useMemo(
     () =>
-      cubeAnalytics.cards
+      (cubeAnalytics?.cards ?? [])
         .filter(({ cardName: oracle }) => cardDict[oracle!])
         .map(({ cardName: oracle, elo, mainboards, sideboards, picks, passes }) => ({
           card: {

@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
+import { isAdFree } from '@utils/adsUtil';
 import BlogPostType from '@utils/datatypes/BlogPost';
-import { UserRoles } from '@utils/datatypes/User';
 
 import { CSRFContext } from '../contexts/CSRFContext';
 import UserContext from '../contexts/UserContext';
@@ -18,7 +18,7 @@ const AD_INTERVAL = 10;
 const Feed: React.FC = () => {
   const { csrfFetch } = useContext(CSRFContext);
   const user = useContext(UserContext);
-  const showAds = !(user && Array.isArray(user.roles) && user.roles.includes(UserRoles.PATRON));
+  const showAds = !isAdFree(user?.roles);
 
   const [feedItems, setFeedItems] = useState<BlogPostType[] | undefined>(undefined);
   const [currentLastKey, setCurrentLastKey] = useState<any>(null);

@@ -7,6 +7,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { ParameterValueType } from 'aws-cdk-lib/aws-ssm';
 
+import { BotDeckbuildLambda } from './bot-deckbuild-lambda';
 import { CardUpdateMonitorLambda } from './card-update-monitor-lambda';
 import { Certificates } from './certificates';
 import { DailyJobsLambdaConstruct } from './daily-jobs-lambda';
@@ -58,6 +59,8 @@ interface CubeCobraStackParams {
   r2SecretAccessKey: string;
   r2Bucket: string;
   cardImageBaseUrl: string;
+  // Whether this environment owns the shared default VPC's gateway endpoints (see config.ts).
+  manageSharedVpcEndpoints: boolean;
 }
 
 export type Environment = 'production' | 'development';
@@ -175,6 +178,24 @@ export class CubeCobraStack extends cdk.Stack {
     // Note: No Route53 record for recommender service - it uses internal ALB
     // accessible only within the VPC via the internal ALB DNS name
 
+    // Async bot-deckbuild pipeline (SNS -> SQS -> in-VPC Lambda). Created before the server env
+    // is assembled so we can hand the server the topic ARN to publish to. The server writes a
+    // carddb-free deckbuild job to S3; this Lambda reads it, calls the recommender directly
+    // (hence in-VPC), and writes the built bot decks back to S3/DynamoDB.
+    const botDeckbuildLambda = new BotDeckbuildLambda(this, 'BotDeckbuildLambda', {
+      codeArtifactsBucket: params.appBucket,
+      version: params.version,
+      subdomain: params.domain.split('.')[0],
+      stage: params.env,
+      environmentVariables: createLambdaEnvironmentVariables(params, props, dynamoTables.table.tableName),
+      mlServiceUrl,
+      vpc,
+      manageSharedVpcEndpoints: params.manageSharedVpcEndpoints,
+    });
+
+    // Let the web server (EC2 instance role) publish draft ids to the bot-deckbuild topic.
+    botDeckbuildLambda.topic.grantPublish(role);
+
     // Create the ECS cluster where we'll schedule jobs
     const fargateCluster = new ecs.Cluster(this, 'SharedFargateCluster', { vpc });
 
@@ -215,6 +236,8 @@ export class CubeCobraStack extends cdk.Stack {
     // Static assets + card images are served from Cloudflare R2 at this hostname
     // (assets.<domain> is an R2 custom domain managed in Cloudflare DNS).
     serverEnvVars.CDN_BASE_URL = `https://assets.${params.domain}`;
+    // Where the server publishes draft ids for async bot-deck building.
+    serverEnvVars.BOT_DECKBUILD_TOPIC_ARN = botDeckbuildLambda.topic.topicArn;
 
     const elasticBeanstalk = new ElasticBeanstalk(this, 'ElasticBeanstalk', {
       certificate: cert.consoleCertificate,

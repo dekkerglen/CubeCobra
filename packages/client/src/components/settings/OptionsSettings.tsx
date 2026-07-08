@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useState } from 'react';
 
-import { PrintingPreference } from '@utils/datatypes/Card';
+import { DefaultPrintingPreference, PrintingPreference } from '@utils/datatypes/Card';
 import { getLabels } from '@utils/sorting/Sort';
 
 import Button from 'components/base/Button';
@@ -29,7 +29,7 @@ const OptionsSettings: React.FC = () => {
     disableFollowAlerts: `${cube.disableFollowAlerts ?? false}`,
     visibility: cube.visibility,
     defaultStatus: cube.defaultStatus,
-    defaultPrinting: cube.defaultPrinting,
+    defaultPrinting: cube.defaultPrinting || DefaultPrintingPreference,
   });
   const [hasChanges, setHasChanges] = useState(false);
   const [showDangerZone, setShowDangerZone] = useState(false);
@@ -148,8 +148,10 @@ const OptionsSettings: React.FC = () => {
                 value={formData.defaultPrinting}
                 setValue={(defaultPrinting) => setFormData({ ...formData, defaultPrinting })}
                 options={[
+                  { value: PrintingPreference.DEFAULT, label: 'Default' },
                   { value: PrintingPreference.RECENT, label: 'Most Recent' },
                   { value: PrintingPreference.FIRST, label: 'First' },
+                  { value: PrintingPreference.CHEAPEST, label: 'Cheapest' },
                 ]}
               />
 

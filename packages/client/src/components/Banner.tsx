@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 
-import { UserRoles } from '@utils/datatypes/User';
+import { isAdFree } from '@utils/adsUtil';
 
 import UserContext, { UserContextValue } from '../contexts/UserContext';
 import Advertisment from './Advertisment';
@@ -32,7 +32,7 @@ const Banner: React.FC<BannerProps> = ({ className }) => {
   const user: UserContextValue | null = useContext(UserContext);
   const [option] = useState<number>(Math.floor(Math.random() * options.length * BANNER_RATE));
 
-  if (user && Array.isArray(user.roles) && user.roles.includes(UserRoles.PATRON)) return <></>;
+  if (isAdFree(user?.roles)) return <></>;
 
   if (option < options.length) {
     return <div className={`${className} pt-2 mx-2`}>{options[option]}</div>;

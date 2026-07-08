@@ -1,6 +1,6 @@
 import { FeaturedQueueItem } from '@utils/datatypes/FeaturedQueue';
 import { canBeFeatured } from '@utils/featuredQueueUtil';
-import { cubeDao, featuredQueueDao, patronDao } from 'dynamo/daos';
+import { cubeDao, featuredQueueDao, patronDao, userDao } from 'dynamo/daos';
 
 interface RotateResult {
   success: string;
@@ -29,12 +29,18 @@ export async function rotateFeatured(): Promise<RotateResult> {
     };
   }
 
-  // Step 2: Check patron status for all cubes and remove ineligible ones
+  // Step 2: Check patron status for all cubes and remove ineligible ones. Admins keep
+  // their featured slot regardless of patron status, so we also need each owner's roles.
   const uniqueOwners = [...new Set(cubes.map((c) => c.owner))];
-  const patronData = await Promise.all(uniqueOwners.map((ownerId) => patronDao.getById(ownerId)));
+  const [patronData, ownerData] = await Promise.all([
+    Promise.all(uniqueOwners.map((ownerId) => patronDao.getById(ownerId))),
+    Promise.all(uniqueOwners.map((ownerId) => userDao.getById(ownerId))),
+  ]);
   const patronMap: Record<string, any> = {};
+  const rolesMap: Record<string, any> = {};
   uniqueOwners.forEach((ownerId, index) => {
     patronMap[ownerId] = patronData[index];
+    rolesMap[ownerId] = ownerData[index]?.roles;
   });
 
   const removedCubes: any[] = [];
@@ -42,7 +48,7 @@ export async function rotateFeatured(): Promise<RotateResult> {
 
   for (const cube of cubes) {
     const patron = patronMap[cube.owner];
-    if (!canBeFeatured(patron)) {
+    if (!canBeFeatured(patron, rolesMap[cube.owner])) {
       removedCubes.push(cube);
       // delete() keys off the item object (item.cube); passing the bare id
       // string would derive PK `FEATURED_QUEUE#undefined` and silently no-op.

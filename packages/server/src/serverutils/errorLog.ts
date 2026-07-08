@@ -22,7 +22,7 @@ export interface ErrorRequestContext {
 }
 
 export interface ErrorRecord extends ErrorRequestContext {
-  level: 'error';
+  level: 'error' | 'info';
   message: string;
   errorType?: string;
   handler?: string;
@@ -116,4 +116,14 @@ export const logError = (
   extra?: { unhandledRejection?: boolean },
 ): void => {
   cloudwatch.error(JSON.stringify(buildErrorRecord(args, context, extra)));
+};
+
+/**
+ * Emits a structured record to the CloudWatch info stream. Use for expected, non-actionable
+ * conditions (e.g. a webhook for an unknown email, a rejected user upload) that we want a
+ * record of but which are NOT server faults — keeping them out of the error stream and the
+ * admin Errors dashboard.
+ */
+export const logInfo = (args: any[], context?: ErrorRequestContext): void => {
+  cloudwatch.info(JSON.stringify({ ...buildErrorRecord(args, context), level: 'info' }));
 };

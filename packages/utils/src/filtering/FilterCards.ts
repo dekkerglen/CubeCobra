@@ -18,6 +18,12 @@ export const operatorsRegex: RegExp = new RegExp(`(?:${ALL_OPERATORS.join('|')})
 export const filterUses = (filter: FilterFunction | null, name: AllField): boolean =>
   !!filter?.fieldsUsed.includes(name);
 
+// True when the filter contains the "include:extras" directive. That directive
+// isn't a real field, so it's tracked via the pseudo-field 'extras' rather than
+// AllField; the cast keeps it out of the normal field typing.
+export const filterIncludesExtras = (filter: FilterFunction | null): boolean =>
+  !!filter?.fieldsUsed.includes('extras' as AllField);
+
 export const filterUsedFields = (filter: FilterFunction | null): AllField[] => filter?.fieldsUsed ?? [];
 
 export const filterToString = (filter: FilterFunction | null): string => filter?.stringify ?? 'empty filter';
@@ -73,6 +79,7 @@ export default {
   operators: ALL_OPERATORS,
   operatorsRegex,
   filterUses,
+  filterIncludesExtras,
   filterUsedFields,
   filterToString,
   makeFilter,

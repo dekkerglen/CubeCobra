@@ -25,12 +25,13 @@ export interface ClientErrorReport {
   url?: string;
   userAgent?: string;
   clientTimestamp?: number;
+  clientVersion?: string; // git commit of the running frontend bundle (may be stale/cached)
   // Enriched server-side (never trusted from the client)
   requestId?: string;
   userId?: string | null;
   username?: string | null;
   remoteAddr?: string;
-  version?: string;
+  version?: string; // server version at receive time — compare with clientVersion to spot stale bundles
   receivedAt?: string;
 }
 

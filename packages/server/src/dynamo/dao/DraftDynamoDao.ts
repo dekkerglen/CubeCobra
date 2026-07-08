@@ -19,11 +19,12 @@
  * when dualWriteEnabled flag is set.
  */
 
-import { DynamoDBDocumentClient, QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
+import { DynamoDBDocumentClient, PutCommand, QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import DraftType, { DRAFT_TYPES, DraftmancerLog, REVERSE_TYPES } from '@utils/datatypes/Draft';
 import DraftSeat from '@utils/datatypes/DraftSeat';
 import User from '@utils/datatypes/User';
+import { assessColors as assessDeckColors, type ColorAssessCard } from '@utils/drafting/assessColors';
 import { classifyDeck } from 'serverutils/archetype';
 import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
@@ -58,6 +59,8 @@ export interface UnhydratedDraft {
   name: string;
   seatNames?: string[];
   DraftmancerLog?: DraftmancerLog;
+  botDecksPending?: boolean;
+  botDecksFailed?: boolean;
 }
 
 interface QueryResult {
@@ -135,6 +138,8 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       name: item.name,
       seatNames: item.seatNames,
       DraftmancerLog: item.DraftmancerLog,
+      botDecksPending: item.botDecksPending,
+      botDecksFailed: item.botDecksFailed,
     };
   }
 
@@ -187,6 +192,8 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       basics: seatsData.basics || [],
       InitialState: seatsData.InitialState || {},
       DraftmancerLog: item.DraftmancerLog,
+      botDecksPending: item.botDecksPending,
+      botDecksFailed: item.botDecksFailed,
     };
   }
 
@@ -262,6 +269,8 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         basics: data.basics,
         InitialState: data.InitialState,
         DraftmancerLog: item.DraftmancerLog,
+        botDecksPending: item.botDecksPending,
+        botDecksFailed: item.botDecksFailed,
       };
     });
   }
@@ -743,6 +752,8 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     DraftmancerLog?: DraftmancerLog;
     seed?: string;
     seatNames?: string[];
+    botDecksPending?: boolean;
+    botDecksFailed?: boolean;
   }): Promise<string> {
     const id = draftData.id || uuidv4();
     const now = Date.now();
@@ -798,6 +809,8 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       InitialState: draftData.InitialState,
       DraftmancerLog: draftData.DraftmancerLog,
       seed: draftData.seed,
+      botDecksPending: draftData.botDecksPending,
+      botDecksFailed: draftData.botDecksFailed,
     };
 
     // Add seat names to each seat
@@ -834,6 +847,68 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
    */
   public async put(item: Draft): Promise<void> {
     await super.put(item);
+  }
+
+  /**
+   * Apply asynchronously-built bot decks to a draft, touching ONLY the given bot seats.
+   *
+   * Used by the bot-deckbuild lambda's write-back. It read-modify-writes the current seats
+   * blob so a player's own deck edits (made in the deckbuilder while the build was in flight)
+   * are not clobbered — only the specified bot seats' mainboard/sideboard/name change. On the
+   * metadata item it clears `botDecksPending` and updates just those bot seats' names, leaving
+   * the player-driven draft name and human seat names alone.
+   */
+  public async applyBuiltBotDecks(
+    draftId: string,
+    botSeats: { seatIndex: number; mainboard: number[][][]; sideboard: number[][][]; name: string }[],
+  ): Promise<void> {
+    const bucket = process.env.DATA_BUCKET!;
+
+    // 1. Patch only the bot seats in the current seats blob (preserves player edits).
+    const seatsData = await getObject(bucket, `seats/${draftId}.json`);
+    if (!seatsData || !Array.isArray(seatsData.seats)) {
+      throw new Error(`applyBuiltBotDecks: seats not found for draft ${draftId}`);
+    }
+    for (const bs of botSeats) {
+      const seat = seatsData.seats[bs.seatIndex];
+      if (seat) {
+        seat.mainboard = bs.mainboard;
+        seat.sideboard = bs.sideboard;
+        seat.name = bs.name;
+      }
+    }
+    await putObject(bucket, `seats/${draftId}.json`, seatsData);
+
+    // 2. Clear the pending flag and refresh the bot seats' names on the metadata item.
+    const record = await this.getRaw({ PK: this.typedKey(draftId), SK: this.itemType() });
+    if (!record) {
+      throw new Error(`applyBuiltBotDecks: draft item not found for ${draftId}`);
+    }
+    record.item.botDecksPending = false;
+    record.item.dateLastUpdated = Date.now();
+    const seatNames = Array.isArray(record.item.seatNames) ? [...record.item.seatNames] : [];
+    for (const bs of botSeats) {
+      seatNames[bs.seatIndex] = bs.name;
+    }
+    record.item.seatNames = seatNames;
+
+    await this.dynamoClient.send(new PutCommand({ TableName: this.tableName, Item: record }));
+  }
+
+  /**
+   * Mark a draft's bot-deck build as terminally failed: clears `botDecksPending` and sets
+   * `botDecksFailed` so the client shows a failed state instead of polling forever. No-op if
+   * the draft no longer exists.
+   */
+  public async markBotDecksFailed(draftId: string): Promise<void> {
+    const record = await this.getRaw({ PK: this.typedKey(draftId), SK: this.itemType() });
+    if (!record) {
+      return;
+    }
+    record.item.botDecksPending = false;
+    record.item.botDecksFailed = true;
+    record.item.dateLastUpdated = Date.now();
+    await this.dynamoClient.send(new PutCommand({ TableName: this.tableName, Item: record }));
   }
 
   /**
@@ -1008,41 +1083,16 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
    * Assesses the colors of a deck based on the mainboard cards.
    */
   private assessColors(mainboard: any, cards: any): string[] {
-    const colors: Record<string, number> = {
-      W: 0,
-      U: 0,
-      B: 0,
-      R: 0,
-      G: 0,
-    };
-
-    let count = 0;
-    for (const card of mainboard.flat(3)) {
-      const pickedCard = cards[card];
+    const assessCards: ColorAssessCard[] = [];
+    for (const cardIndex of mainboard.flat(3)) {
+      const pickedCard = cards[cardIndex];
       if (!pickedCard?.cardID) {
         continue;
       }
-
       const details = cardFromId(pickedCard.cardID);
-      if (!details.type.includes('Land')) {
-        count += 1;
-        for (const color of details.color_identity) {
-          if (colors[color] !== undefined) {
-            colors[color] += 1;
-          }
-        }
-      }
+      assessCards.push({ isLand: details.type.includes('Land'), colorIdentity: details.color_identity });
     }
-
-    const threshold = 0.1;
-
-    const colorKeysFiltered = Object.keys(colors).filter((color) => (colors[color] ?? 0) / count > threshold);
-
-    if (colorKeysFiltered.length === 0) {
-      return ['C'];
-    }
-
-    return colorKeysFiltered;
+    return assessDeckColors(assessCards);
   }
 
   private getOracleIds(mainboard: any, cards: any): string[] {

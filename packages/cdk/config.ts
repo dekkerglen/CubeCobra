@@ -13,6 +13,12 @@ export interface EnvironmentConfiguration {
   patreonRedirectUri: string;
   fleetSize: number;
   maintainCubeCardHashes: boolean;
+  // dev/beta/production all share ONE default VPC (same account + region), and gateway
+  // endpoints are per-VPC. Exactly one environment's BootstrapStack owns the shared
+  // S3/DynamoDB gateway endpoints; every environment's in-VPC compute uses them. Only the
+  // owner has this true (beta, which already created them). If beta is ever decommissioned,
+  // flip this to another shared-VPC env.
+  manageSharedVpcEndpoints: boolean;
 }
 
 export const environments: { [key: string]: EnvironmentConfiguration } = {
@@ -31,6 +37,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     patreonRedirectUri: 'http://localhost:8080/patreon/redirect',
     fleetSize: 1,
     maintainCubeCardHashes: true,
+    manageSharedVpcEndpoints: false,
   },
 
   development: {
@@ -48,6 +55,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     patreonRedirectUri: 'https://cubecobradev.com/patreon/redirect',
     fleetSize: 1,
     maintainCubeCardHashes: true,
+    manageSharedVpcEndpoints: false,
   },
 
   beta: {
@@ -65,6 +73,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     patreonRedirectUri: 'https://cubecobradev.com/patreon/redirect',
     fleetSize: 1,
     maintainCubeCardHashes: true,
+    manageSharedVpcEndpoints: true,
   },
 
   production: {
@@ -82,5 +91,6 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     patreonRedirectUri: 'https://cubecobra.com/patreon/redirect',
     fleetSize: 2,
     maintainCubeCardHashes: true,
+    manageSharedVpcEndpoints: false,
   },
 };

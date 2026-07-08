@@ -4,9 +4,25 @@ import { randomUUID } from 'crypto';
 import { buildLandMetaLookup } from 'serverutils/buildLandMetaLookup';
 import carddb, { cardFromId, getOracleForMl, getReasonableCardByOracle } from 'serverutils/carddb';
 import { calculateBasics, deckbuild } from 'serverutils/draftbots';
-import { batchDraftOrThrow, buildOrThrow, draftOrThrow } from 'serverutils/ml';
+import { batchDraftOrThrow, buildOrThrow, draftOrThrow, isMlServiceError } from 'serverutils/ml';
 
 import { Request, Response } from '../../../../types/express';
+
+// The recommender being briefly unavailable is a transient upstream outage, not a bug in this
+// route. Surface it as a 503 (and log at info, off the error dashboard) so it's distinguishable
+// from a genuine 500. Returns true if it handled the error (response sent).
+const handleMlOutage = (req: Request, res: Response, err: unknown, context: string): boolean => {
+  if (!isMlServiceError(err)) {
+    return false;
+  }
+  req.logger.info(`${context}: ML service unavailable`, err instanceof Error ? err.stack : String(err));
+  if (!res.headersSent) {
+    res
+      .status(503)
+      .json({ success: false, message: 'The deck building service is temporarily unavailable. Please try again shortly.' });
+  }
+  return true;
+};
 
 // ---------------------------------------------------------------------------
 // Synchronous endpoint — kept for public API back-compat (documented at
@@ -34,6 +50,7 @@ export const deckbuildHandler = async (req: Request, res: Response) => {
       sideboard,
     });
   } catch (err) {
+    if (handleMlOutage(req, res, err, 'deckbuild (sync)')) return;
     const error = err as Error;
     req.logger.error(error.message, error.stack);
     // The deckbuild path can run long enough that the ELB / client closes the
@@ -306,6 +323,7 @@ export const startHandler = async (req: Request, res: Response) => {
       complete: false,
     });
   } catch (err) {
+    if (handleMlOutage(req, res, err, 'deckbuild start')) return;
     req.logger.error('Error starting deckbuild', err instanceof Error ? err.stack : String(err));
     if (res.headersSent) return;
     return res.status(500).json({ success: false, message: 'Error starting deckbuild' });
@@ -453,6 +471,7 @@ export const stepHandler = async (req: Request, res: Response) => {
       complete: false,
     });
   } catch (err) {
+    if (handleMlOutage(req, res, err, 'deckbuild step')) return;
     req.logger.error('Error in deckbuild step', err instanceof Error ? err.stack : String(err));
     if (res.headersSent) return;
     return res.status(500).json({ success: false, message: 'Error in deckbuild step' });

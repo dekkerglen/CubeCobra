@@ -1,9 +1,17 @@
 import 'dotenv/config';
 
-import { error } from './cloudwatch';
+import { info } from './cloudwatch';
 
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:5002';
 const ML_TIMEOUT_MS = 10_000; // 10 second timeout for ML service calls
+
+// Marker set on any error originating from an ML-service call (timeout, network failure,
+// non-2xx, or a `success: false` body). Lets route handlers distinguish a transient upstream
+// dependency outage — which should surface as a 503, not a 500 — from a genuine bug.
+const ML_SERVICE_ERROR = Symbol('mlServiceError');
+
+export const isMlServiceError = (err: unknown): boolean =>
+  typeof err === 'object' && err !== null && (err as any)[ML_SERVICE_ERROR] === true;
 
 /**
  * Make a request to the ML recommender service
@@ -34,10 +42,17 @@ async function mlServiceRequest<T>(endpoint: string, body: any): Promise<T> {
 
     return data as T;
   } catch (err) {
+    if (typeof err === 'object' && err !== null) {
+      (err as any)[ML_SERVICE_ERROR] = true;
+    }
+    // Not logged at error severity here: the upstream ML service being briefly unavailable is
+    // a transient, non-actionable condition, and callers either fall back gracefully (the
+    // non-throwing wrappers below) or rethrow so the route can log once with request context.
+    // Emitting to the info stream keeps a record without polluting the error dashboard.
     if (process.env?.NODE_ENV === 'development') {
       console.warn(`ML service request to ${endpoint} failed:`, err);
     } else {
-      error(`ML service request to ${endpoint} failed`, err instanceof Error ? err.stack : String(err));
+      info(`ML service request to ${endpoint} failed`, err instanceof Error ? err.stack : String(err));
     }
     throw err;
   } finally {

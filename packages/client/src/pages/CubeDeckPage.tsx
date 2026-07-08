@@ -6,6 +6,7 @@ import Draft from '@utils/datatypes/Draft';
 import { Card, CardBody } from 'components/base/Card';
 import { Col, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
+import BotDeckStatusBanner from 'components/BotDeckStatusBanner';
 import CubeDeckNavbar from 'components/cube/CubeDeckNavbar';
 import DeckCard from 'components/DeckCard';
 import DynamicFlash from 'components/DynamicFlash';
@@ -54,6 +55,11 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft }) => {
       <DisplayContextProvider cubeID={cube.id}>
         <CubeLayout cube={cube} activeLink="playtest">
           <DynamicFlash />
+          <BotDeckStatusBanner
+            draftId={draft.id}
+            initiallyPending={draft.botDecksPending}
+            initiallyFailed={draft.botDecksFailed}
+          />
           {hasData ? (
             <>
               <CubeDeckNavbar

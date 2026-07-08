@@ -77,6 +77,7 @@ if (bootstrap && bootstrap === 'true') {
       r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
       r2Bucket: process.env.R2_BUCKET || '',
       cardImageBaseUrl: process.env.CARD_IMAGE_BASE_URL || '',
+      manageSharedVpcEndpoints: config.manageSharedVpcEndpoints,
     },
     {
       env: { account: config.account, region: config.region },

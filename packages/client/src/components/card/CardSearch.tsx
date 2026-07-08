@@ -8,6 +8,7 @@ import { ORDERED_SORTS } from '@utils/sorting/Sort';
 
 import Banner from 'components/Banner';
 import Button from 'components/base/Button';
+import Checkbox from 'components/base/Checkbox';
 import Container from 'components/base/Container';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
@@ -43,6 +44,7 @@ const CardSearch: React.FC = () => {
   const [page, setPage] = useState(parseInt(Query.get('p', '0'), 0));
   const [count, setCount] = useState(Query.get('m', ''));
   const [distinct, setDistinct] = useState(Query.get('di', 'names'));
+  const [includeExtras, setIncludeExtras] = useState(Query.get('ie', 'false') === 'true');
   const [sort, setSort] = useState(Query.get('s', 'Elo'));
   const [direction, setDirection] = useState(Query.get('d', 'descending'));
   const [view, setView] = useState<ViewMode>((Query.get('v', 'cards') as ViewMode) === 'rows' ? 'rows' : 'cards');
@@ -71,6 +73,7 @@ const CardSearch: React.FC = () => {
       ['s', sort],
       ['d', direction],
       ['di', distinct],
+      ['ie', includeExtras ? '1' : '0'],
     ]);
 
     const response = await fetch(`/tool/api/searchcards/?${params.toString()}`);
@@ -81,6 +84,7 @@ const CardSearch: React.FC = () => {
     Query.set('s', sort);
     Query.set('d', direction);
     Query.set('di', distinct);
+    Query.set('ie', includeExtras ? 'true' : 'false');
     Query.set('v', view);
 
     const json = await response.json();
@@ -88,7 +92,7 @@ const CardSearch: React.FC = () => {
     setCards(json.data);
     setCount(json.numResults.toString());
     setLoading(false);
-  }, [page, filterInput, sort, direction, distinct, view, effectiveFilter]);
+  }, [page, filterInput, sort, direction, distinct, includeExtras, view, effectiveFilter]);
 
   useEffect(() => {
     const shouldFetch = view === 'rows' || (!!filterInput && filterInput !== '');
@@ -99,11 +103,11 @@ const CardSearch: React.FC = () => {
       setLoading(false);
       setCards([]);
     }
-  }, [page, direction, distinct, sort, filterInput, view, fetchData]);
+  }, [page, direction, distinct, includeExtras, sort, filterInput, view, fetchData]);
 
   useEffect(() => {
     setPage(0);
-  }, [filterInput, view]);
+  }, [filterInput, view, includeExtras]);
 
   const updatePage = (index: number) => {
     setLoading(true);
@@ -335,6 +339,14 @@ const CardSearch: React.FC = () => {
                   setDirection(value);
                 }}
               />
+              <Checkbox
+                label="Include extras (tokens, art cards, etc.)"
+                checked={includeExtras}
+                setChecked={(value) => {
+                  setLoading(true);
+                  setIncludeExtras(value);
+                }}
+              />
             </Flexbox>
           </ModalBody>
           <ModalFooter>
@@ -415,6 +427,18 @@ const CardSearch: React.FC = () => {
                       }}
                     />
                   </div>
+                  <label className="flex items-center gap-2 whitespace-nowrap text-sm text-button-text/80 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      className="form-checkbox h-4 w-4 text-primary-button"
+                      checked={includeExtras}
+                      onChange={(e) => {
+                        setLoading(true);
+                        setIncludeExtras(e.target.checked);
+                      }}
+                    />
+                    Include extras
+                  </label>
                 </Flexbox>
 
                 {showSummary && (

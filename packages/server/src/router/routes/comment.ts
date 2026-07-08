@@ -246,7 +246,8 @@ export const addCommentHandler = async (req: Request, res: Response) => {
       ...comment,
       owner: req.user,
       id,
-      image: getImageData(req.user?.imageName),
+      // req.user is hydrated with .image, which honors an uploaded custom profile image.
+      image: req.user?.image ?? getImageData(req.user?.imageName),
     },
   });
 };

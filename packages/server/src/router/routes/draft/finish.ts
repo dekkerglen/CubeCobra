@@ -1,25 +1,18 @@
-import { cardOracleId, isVoucher } from '@utils/cardutil';
 import { State } from '@utils/datatypes/DraftState';
 import User from '@utils/datatypes/User';
-import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
 import { cubeDao, draftDao } from 'dynamo/daos';
 import Joi from 'joi';
-import { batchDeckbuild } from 'serverutils/draftbots';
+import { applyNaiveBotLayout, buildBotDecks } from 'serverutils/botDeckBuilder';
+import { buildDeckbuildJob, writeDeckbuildJob } from 'serverutils/deckbuildJob';
+import { publishBotDeckBuild } from 'serverutils/deckbuildQueue';
 import { addNotification } from 'serverutils/util';
 
 import { NextFunction, Request, Response } from '../../../types/express';
-
-interface BotDeck {
-  seatIndex: number;
-  mainboard: string[];
-  sideboard: string[];
-}
 
 interface FinishDraftBody {
   state: State;
   mainboard: number[][][];
   sideboard: number[][][];
-  botDecks?: BotDeck[];
 }
 
 const FinishDraftBodySchema = Joi.object({
@@ -44,16 +37,7 @@ const FinishDraftBodySchema = Joi.object({
   sideboard: Joi.array()
     .items(Joi.array().items(Joi.array().items(Joi.number())))
     .required(),
-  botDecks: Joi.array()
-    .items(
-      Joi.object({
-        seatIndex: Joi.number().required(),
-        mainboard: Joi.array().items(Joi.string()).required(),
-        sideboard: Joi.array().items(Joi.string()).required(),
-      }),
-    )
-    .optional(),
-}).unknown(true); // allow additional fields
+}).unknown(true); // allow additional fields (e.g. legacy `botDecks` from older clients)
 
 export const validateBody = (req: Request, res: Response, next: NextFunction) => {
   const { error } = FinishDraftBodySchema.validate(req.body);
@@ -99,6 +83,8 @@ export const handler = async (req: Request, res: Response) => {
       });
     }
 
+    // Persist each seat's pick/trash order — the async bot-deckbuild Lambda rebuilds bot
+    // decks from seat.pickorder, so this must be saved before we enqueue the build.
     for (let i = 0; i < body.state.seats.length; i += 1) {
       const seat = draft.seats[i];
       const stateSeat = body.state.seats[i];
@@ -115,146 +101,50 @@ export const handler = async (req: Request, res: Response) => {
     }
     draft.complete = true;
 
-    // Voucher sub-cards are pre-expanded at draft creation time, so we just need to use
-    // the voucher_card_indices to get the expanded picks for bot deckbuilding
-
-    // Get cube config for deckbuilding parameters
     const cube = await cubeDao.getById(draft.cube);
-    const maxSpells = cube?.deckbuildSpells ?? 23;
-    const maxLands = cube?.deckbuildLands ?? 17;
+    const buildOpts = { maxSpells: cube?.deckbuildSpells ?? 23, maxLands: cube?.deckbuildLands ?? 17 };
+    const queueEnabled = !!process.env.BOT_DECKBUILD_TOPIC_ARN;
 
-    // Helper to expand picks - returns voucher sub-card indices for vouchers, or the pick itself
-    const expandPicks = (picks: number[]): number[] => {
-      const expanded: number[] = [];
-      for (const pickIndex of picks) {
-        const card = draft.cards[pickIndex];
-        if (card && isVoucher(card) && card.voucher_card_indices && card.voucher_card_indices.length > 0) {
-          // Use pre-expanded sub-card indices
-          expanded.push(...card.voucher_card_indices);
-        } else {
-          expanded.push(pickIndex);
-        }
-      }
-      return expanded;
-    };
+    // Build the async job from the intact draft BEFORE naive layout / update mutate it.
+    const job = queueEnabled ? buildDeckbuildJob(draft, buildOpts) : null;
 
-    // we need to build the bot decks
-    // Collect all bot seat inputs for a single batched ML call
-    const botSeats: { seatIndex: number; picks: number[]; expandedPicks: number[] }[] = [];
-    for (let i = 1; i < draft.seats.length; i += 1) {
-      const stateSeat = body.state.seats[i];
-      if (!stateSeat) continue;
-      botSeats.push({ seatIndex: i, picks: stateSeat.picks, expandedPicks: expandPicks(stateSeat.picks) });
-    }
+    // Give bot seats a cheap naive layout now so the draft is immediately viewable.
+    applyNaiveBotLayout(draft);
 
-    let batchResults: { mainboard: string[]; sideboard: string[] }[] | null = null;
-
-    if (body.botDecks && body.botDecks.length > 0) {
-      // Use pre-built bot decks from client-side iterative deckbuilding (no ML calls needed)
-      batchResults = botSeats.map((bot) => {
-        const prebuilt = body.botDecks!.find((bd) => bd.seatIndex === bot.seatIndex);
-        return prebuilt
-          ? { mainboard: prebuilt.mainboard, sideboard: prebuilt.sideboard }
-          : { mainboard: [] as string[], sideboard: [] as string[] };
-      });
+    if (queueEnabled) {
+      // Deployed: hand the ML build off to the async bot-deckbuild pipeline (off the request
+      // path). The Lambda replaces the naive decks and clears the flag.
+      draft.botDecksPending = true;
     } else {
-      // Fallback: run full batchDeckbuild on the server (original behavior)
-      const basicsCards = draft.basics.map((index) => draft.cards[index]?.details).filter(Boolean);
-      const batchEntries = botSeats.map((bot) => ({
-        pool: bot.expandedPicks.map((index) => draft.cards[index]?.details).filter(Boolean),
-        basics: basicsCards,
-        maxSpells,
-        maxLands,
-      }));
-
+      // Local dev / self-hosted without the pipeline: build inline so there's no queue to
+      // wait on and no banner that never resolves. ML failures keep the naive layout.
       try {
-        batchResults = await batchDeckbuild(batchEntries);
+        await buildBotDecks(draft, buildOpts);
       } catch (err) {
-        req.logger.error('ML deckbuilding failed, falling back to naive layout for bot seats', err);
+        req.logger.error('Inline bot deckbuild failed; keeping naive layout', err);
       }
+      draft.botDecksPending = false;
     }
 
-    for (let b = 0; b < botSeats.length; b++) {
-      const { seatIndex, expandedPicks } = botSeats[b]!;
-      const mlResult = batchResults?.[b];
-
-      const formattedMainboard = setupPicks(2, 8);
-      const formattedSideboard = setupPicks(1, 8);
-
-      if (mlResult) {
-        const { mainboard } = mlResult;
-        const pool = expandedPicks.slice();
-        const newMainboard = [];
-
-        for (const oracle of mainboard) {
-          const poolIndex = pool.findIndex((cardindex: number) => {
-            const card = draft.cards[cardindex];
-            return card ? cardOracleId(card) === oracle : false;
-          });
-          if (poolIndex === -1) {
-            // try basics
-            const basicsIndex = draft.basics.findIndex((cardindex) => {
-              const card = draft.cards[cardindex];
-              return card ? cardOracleId(card) === oracle : false;
-            });
-            if (basicsIndex !== -1) {
-              newMainboard.push(draft.basics[basicsIndex]);
-            }
-          } else {
-            newMainboard.push(pool[poolIndex]);
-            pool.splice(poolIndex, 1);
-          }
-        }
-
-        for (const index of newMainboard) {
-          if (typeof index === 'number') {
-            const card = draft.cards[index];
-            if (card) {
-              const { row, col } = getCardDefaultRowColumn(card);
-              if (formattedMainboard[row] && formattedMainboard[row][col]) {
-                formattedMainboard[row][col].push(index);
-              }
-            }
-          }
-        }
-
-        for (const index of pool) {
-          if (!draft.basics.includes(index) && typeof index === 'number') {
-            const card = draft.cards[index];
-            if (card) {
-              const { col } = getCardDefaultRowColumn(card);
-              if (formattedSideboard[0] && formattedSideboard[0][col]) {
-                formattedSideboard[0][col].push(index);
-              }
-            }
-          }
-        }
-      } else {
-        // Fallback: put all picks into mainboard by default row/col
-        for (const index of expandedPicks) {
-          const card = draft.cards[index];
-          if (card) {
-            const { row, col } = getCardDefaultRowColumn(card);
-            if (formattedMainboard[row] && formattedMainboard[row][col]) {
-              formattedMainboard[row][col].push(index);
-            }
-          }
-        }
-      }
-
-      const seat = draft.seats[seatIndex];
-      if (seat) {
-        seat.mainboard = formattedMainboard;
-        seat.sideboard = formattedSideboard;
-      }
-    }
-
-    //Draft.put changes the draft object, replacing objects with ids, so store these to use after
+    //Draft.update changes the draft object, replacing objects with ids, so store these to use after
     const cubeOwner = draft.cubeOwner;
     const cubeId = draft.cube;
     const draftOwner = draft.owner;
 
     await draftDao.update(draft);
+
+    if (queueEnabled && job) {
+      // Write the claim-check job to S3, then enqueue just the draft id. If that fails, the
+      // draft would otherwise be stuck pending forever — mark it failed so the client shows a
+      // terminal state instead of polling indefinitely.
+      try {
+        await writeDeckbuildJob(job);
+        await publishBotDeckBuild(draft.id);
+      } catch (err) {
+        req.logger.error('Failed to enqueue bot deckbuild; marking failed', err);
+        await draftDao.markBotDecksFailed(draft.id);
+      }
+    }
 
     //Annoying guard since the values will be objects
     if (typeof cubeOwner !== 'string' && typeof draftOwner !== 'string') {

@@ -22,27 +22,34 @@ interface DeckStacksStaticProps {
 
 export const DeckStacksStatic: React.FC<DeckStacksStaticProps> = ({ piles, cards }) => (
   <CardBody className="pt-0 border-bottom">
-    {piles.map((row, index) => (
+    {/* Guard against malformed/legacy deck data (e.g. old Mongo-ID decks) whose
+        mainboard/sideboard aren't the expected number[][][] — a mis-shaped row or
+        column would otherwise throw `.map is not a function` and blank the page. */}
+    {(Array.isArray(piles) ? piles : []).map((row, index) => (
       <Row key={index} xs={2} md={4} lg={8}>
-        {row.map((column, index2) => (
-          <Col key={index2} xs={1}>
-            <div className="w-full text-center mb-1">
-              <b>{column.length > 0 ? column.length : ''}</b>
-            </div>
-            <div className="stack">
-              {column.map((cardIndex, index3) => {
-                const card = cards[cardIndex];
-                return (
-                  <div className="stacked" key={index3}>
-                    <a href={card.cardID ? `/tool/card/${card.cardID}` : undefined}>
-                      <FoilCardImage card={card} autocard />
-                    </a>
-                  </div>
-                );
-              })}
-            </div>
-          </Col>
-        ))}
+        {(Array.isArray(row) ? row : []).map((column, index2) => {
+          const col = Array.isArray(column) ? column : [];
+          return (
+            <Col key={index2} xs={1}>
+              <div className="w-full text-center mb-1">
+                <b>{col.length > 0 ? col.length : ''}</b>
+              </div>
+              <div className="stack">
+                {col.map((cardIndex, index3) => {
+                  const card = cards[cardIndex];
+                  if (!card) return null;
+                  return (
+                    <div className="stacked" key={index3}>
+                      <a href={card.cardID ? `/tool/card/${card.cardID}` : undefined}>
+                        <FoilCardImage card={card} autocard />
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            </Col>
+          );
+        })}
       </Row>
     ))}
   </CardBody>
@@ -56,10 +63,19 @@ interface DeckCardProps {
   hideComments?: boolean;
 }
 
+// Coerce possibly-legacy/malformed board data into a clean number[][][] so the pile
+// math and rendering below can't throw on unexpected shapes. Old Mongo-ID decks can
+// store mainboard/sideboard at the wrong nesting depth; anything that isn't an array
+// at a given level becomes an empty one rather than crashing the page.
+const asPiles = (board: unknown): number[][][] =>
+  (Array.isArray(board) ? board : []).map((row) =>
+    (Array.isArray(row) ? row : []).map((col) => (Array.isArray(col) ? col : [])),
+  );
+
 const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIndex, hideComments = false }) => {
   const hasSeat = !!seat;
-  const mainboard = useMemo(() => seat?.mainboard ?? [], [seat]);
-  const sideboard = seat?.sideboard ?? [];
+  const mainboard = useMemo(() => asPiles(seat?.mainboard), [seat]);
+  const sideboard = asPiles(seat?.sideboard);
   const stackedDeck = mainboard.slice();
   const stackedSideboard = sideboard.slice();
   let sbCount = 0;
@@ -96,7 +112,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
 
   const sorted = useMemo(() => {
     const deep = sortDeep(
-      mainboard.flat(3).map((cardIndex) => draft.cards[cardIndex]),
+      mainboard.flat(3).map((cardIndex) => draft.cards[cardIndex]).filter(Boolean),
       true,
       'Unsorted',
       'Color Category',
@@ -182,7 +198,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
               <Text semibold lg>
                 Sideboard ({sbCount})
               </Text>
-              <CardGrid cards={sideboard.flat(2).map((cardIndex) => draft.cards[cardIndex])} xs={8} />
+              <CardGrid cards={sideboard.flat(2).map((cardIndex) => draft.cards[cardIndex]).filter(Boolean)} xs={8} />
             </>
           )}
         </CardBody>

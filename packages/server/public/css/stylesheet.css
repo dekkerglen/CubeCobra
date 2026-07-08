@@ -1492,6 +1492,12 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .min-w-\[2\.5rem\] {
   min-width: 2.5rem;
 }
+.min-w-\[280px\] {
+  min-width: 280px;
+}
+.min-w-\[3rem\] {
+  min-width: 3rem;
+}
 .min-w-\[72px\] {
   min-width: 72px;
 }
@@ -2386,6 +2392,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   --tw-bg-opacity: 1;
   background-color: rgb(var(--bg-active) / var(--tw-bg-opacity, 1));
 }
+.bg-bg-active\/40 {
+  background-color: rgb(var(--bg-active) / 0.4);
+}
 .bg-bg-active\/80 {
   background-color: rgb(var(--bg-active) / 0.8);
 }
@@ -2871,6 +2880,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .pl-1 {
   padding-left: 0.25rem;
+}
+.pl-12 {
+  padding-left: 3rem;
 }
 .pl-2 {
   padding-left: 0.5rem;
@@ -3777,6 +3789,19 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
   box-shadow:
     0 6px 14px -2px rgb(251 113 133 / 0.5),
     0 0 0 1px rgb(251 191 36 / 0.5);
+}
+
+/* Admin — regal amethyst/gold, the fanciest treatment of all with the fastest shimmer. */
+.patron-badge-admin {
+  background-image: linear-gradient(120deg, #7c3aed 0%, #a855f7 25%, #fbbf24 50%, #a855f7 75%, #7c3aed 100%);
+  color: #fff;
+  border-color: rgb(255 255 255 / 0.5);
+  animation-duration: 3s;
+}
+.patron-badge-admin:hover {
+  box-shadow:
+    0 6px 16px -2px rgb(124 58 237 / 0.6),
+    0 0 0 1px rgb(251 191 36 / 0.55);
 }
 
 /* Splash-image bottom gradient that fades into the page background.

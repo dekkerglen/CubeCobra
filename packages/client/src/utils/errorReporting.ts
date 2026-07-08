@@ -24,6 +24,9 @@ export interface ClientErrorPayload {
   url?: string;
   userAgent?: string;
   clientTimestamp?: number;
+  // Git commit of the running frontend bundle (from reactProps). May differ from the
+  // server version the endpoint stamps on — that gap identifies stale (cached-tab) bundles.
+  clientVersion?: string;
 }
 
 let queue: ClientErrorPayload[] = [];
@@ -41,16 +44,119 @@ const csrfToken = (): string => {
   }
 };
 
+const clientVersion = (): string | undefined => {
+  try {
+    return (window as any).reactProps?.version;
+  } catch {
+    return undefined;
+  }
+};
+
+// The overwhelming majority of what reaches these handlers is not our code: ad SDKs
+// (Nitropay, 33Across, mraid), browser extensions (crypto wallets, userscripts),
+// headless bots without a real canvas, and expected fetch aborts when a user
+// navigates away. We drop all of that so real CubeCobra bugs aren't buried.
+
+// Ad networks, extensions, and injected wallet globals — matched against message,
+// source, and stack (CORS-enabled ad scripts send us full stacks).
+// `webkit-masked-url:` is how Safari masks the URL of an injected content script /
+// extension, so any stack referencing it is third-party code, not ours.
+const THIRD_PARTY_RE =
+  /nitropay|33across|mraid\.js|user-script|chrome-extension:|moz-extension:|safari-extension:|webkit-masked-url:|window\.ethereum|selectedAddress|web3|id5-sync|doubleclick|googlesyndication|securepubads|googletag|gpt\.js|btloader|ad\.gt|p7cloud|setupInPageTaxonomy|amazon-adsystem|adnxs|adsystem|prebid|pubmatic|rubiconproject|criteo|sonobi|openx|sharethrough|confiant/i;
+
+// Expected network/abort churn — user navigated away or went offline, not bugs.
+// (Chunk-load failures here are from third-party bundles; ours are on assets.cubecobra.com.)
+// "Unexpected token '<'" is a stale-tab artifact: after a deploy an old chunk path
+// 404s, the server returns the HTML 404 page, and the browser parses `<` as JS.
+const IGNORED_MESSAGE_RE =
+  /^(Load failed|Failed to fetch|NetworkError when attempting to fetch|Fetch is aborted|The user aborted|The operation was aborted|AbortError|status -> 0|The I\/O read operation failed|NotReadableError|Loading chunk \d+ failed|The play\(\) request was interrupted|(Uncaught )?(SyntaxError: )?(Unexpected token '<'|expected expression, got '<'))/i;
+
+// Headless/automation browsers stub out canvas/audio and generate spurious errors.
+const BOT_UA_RE = /Lightpanda|HeadlessChrome|PhantomJS|puppeteer|bot\b|crawler|spider/i;
+
+// Our first-party origin (pages on cubecobra.com, bundles on assets.cubecobra.com).
+// Match on the URL's *host*, not a substring: ad wrappers embed our URL in their
+// query (e.g. `https://silo60.p7cloud.net/as1.js?uri=https://cubecobra.com/...`), so a
+// naive substring test would misread third-party scripts as first-party.
+const isFirstPartyHost = (host: string): boolean => /(^|\.)cubecobra\.com$/i.test(host);
+
+const hostOf = (url: string): string => {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return '';
+  }
+};
+
+const pathOf = (url: string): string => {
+  try {
+    return new URL(url).pathname;
+  } catch {
+    return '';
+  }
+};
+
+// Whether a string (a single URL, or a stack full of frame URLs) references any
+// first-party script host. Parsing each URL ignores query/hash that may carry other URLs.
+const referencesFirstParty = (text: string): boolean =>
+  (text.match(/https?:\/\/[^\s)'"]+/g) || []).some((u) => isFirstPartyHost(hostOf(u)));
+
 // Cross-origin script errors surface as an opaque "Script error." with no useful
-// detail; browser-extension noise and the benign ResizeObserver loop warning are
-// not actionable. Drop them so they don't drown out real bugs.
+// detail; the ResizeObserver loop warning is benign. Everything else is filtered
+// by the rules above.
 const shouldIgnore = (payload: ClientErrorPayload): boolean => {
   const msg = payload.message || '';
+  const source = payload.source || '';
+  const stack = payload.stack || '';
+
   if (!msg) return true;
   if (msg === 'Script error.' || msg === 'Script error') return true;
   if (msg.startsWith('ResizeObserver loop')) return true;
-  if ((payload.source || '').startsWith('chrome-extension://')) return true;
-  if ((payload.source || '').startsWith('moz-extension://')) return true;
+  if (IGNORED_MESSAGE_RE.test(msg)) return true;
+  if (THIRD_PARTY_RE.test(msg) || THIRD_PARTY_RE.test(source) || THIRD_PARTY_RE.test(stack)) return true;
+
+  // Content-free promise rejections — ad SDKs and aborted work commonly reject with
+  // null or a bare {}. With no message and no first-party frame there's nothing
+  // actionable. (Some come with a minified stack that carries no URL at all, e.g.
+  // `Ti@` — still third-party, so we only keep these if the stack points at our code.)
+  if (
+    payload.kind === 'unhandledrejection' &&
+    (msg === 'Unhandled promise rejection' || msg === '{}' || msg === '[object Object]') &&
+    !referencesFirstParty(stack)
+  ) {
+    return true;
+  }
+  if (typeof navigator !== 'undefined' && BOT_UA_RE.test(navigator.userAgent)) return true;
+
+  // Ad-network iframe getter loops (e.g. GPT overriding HTMLIFrameElement) blow the
+  // stack with frames that carry no source URL — catch them by shape.
+  if (/Maximum call stack/i.test(msg) && /HTMLIFrameElement/.test(stack)) return true;
+
+  // The script that threw is a non-first-party URL — third-party code (ad SDK,
+  // prebid, extension). onerror gives us `source`; our own errors are on
+  // cubecobra.com / assets.cubecobra.com. (react-boundary errors carry no source.)
+  if (source && /^https?:\/\//.test(source) && !isFirstPartyHost(hostOf(source))) return true;
+
+  // Ad/consent partners inject inline <script>s into our HTML, so their errors report
+  // the *page* URL as their source (e.g. `https://cubecobra.com/cube/list/foo:1:135`,
+  // or a taxonomy/og:type snippet at line 1). All of our real client code ships in
+  // `.js` bundles, so a first-party onerror whose source isn't a .js file is an
+  // injected third-party snippet, not ours. (react-boundary errors have no source.)
+  if (
+    payload.kind === 'onerror' &&
+    source &&
+    /^https?:\/\//.test(source) &&
+    isFirstPartyHost(hostOf(source)) &&
+    !/\.js(\?|#|$)/i.test(pathOf(source))
+  ) {
+    return true;
+  }
+
+  // A stack that references remote scripts but none of ours is third-party code.
+  if (stack && /https?:\/\//.test(stack) && !referencesFirstParty(stack) && !referencesFirstParty(source)) {
+    return true;
+  }
+
   return false;
 };
 
@@ -112,6 +218,7 @@ const enqueue = (payload: ClientErrorPayload): void => {
     url: payload.url ?? (typeof window !== 'undefined' ? window.location.href : undefined),
     userAgent: payload.userAgent ?? (typeof navigator !== 'undefined' ? navigator.userAgent : undefined),
     clientTimestamp: payload.clientTimestamp ?? Date.now(),
+    clientVersion: payload.clientVersion ?? clientVersion(),
   });
   sent += 1;
 
@@ -152,9 +259,27 @@ export const initErrorReporting = (): void => {
 
   window.addEventListener('unhandledrejection', (event: PromiseRejectionEvent) => {
     const reason: any = event.reason;
+
+    // Serialize the rejection reason into a useful message. Bare objects would
+    // otherwise stringify to "[object Object]" and lose all detail.
+    let message: string;
+    if (reason instanceof Error) {
+      message = reason.message || reason.name || 'Error';
+    } else if (typeof reason === 'string') {
+      message = reason;
+    } else if (reason == null) {
+      message = 'Unhandled promise rejection';
+    } else {
+      try {
+        message = JSON.stringify(reason);
+      } catch {
+        message = String(reason);
+      }
+    }
+
     reportError({
       kind: 'unhandledrejection',
-      message: (reason && (reason.message || String(reason))) || 'Unhandled promise rejection',
+      message,
       stack: reason && reason.stack,
     });
   });

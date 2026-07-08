@@ -8,6 +8,8 @@ import { cardFromId } from 'serverutils/carddb';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { newCard } from 'serverutils/util';
 
+import { AppError } from '../../../../../errors/AppError';
+import { ErrorCode } from '../../../../../errors/errorCodes';
 import { Request, Response } from '../../../../types/express';
 
 export const addtocubeHandler = async (req: Request, res: Response) => {
@@ -190,6 +192,16 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       success: 'true',
     });
   } catch (err) {
+    // A concurrent edit to the same cube can exhaust the DAO's optimistic-locking retries.
+    // That's a client-recoverable conflict, not a server fault — return 409 and don't log it
+    // as a backend error so it stays out of the error dashboards.
+    if (err instanceof AppError && err.code === ErrorCode.OPTIMISTIC_LOCKING_VERSION_MISMATCH) {
+      return res.status(409).send({
+        success: 'false',
+        message: 'This cube was modified by another request. Please try again.',
+      });
+    }
+
     const error = err as Error;
     req.logger.error(error.message, error.stack);
     return res.status(500).send({

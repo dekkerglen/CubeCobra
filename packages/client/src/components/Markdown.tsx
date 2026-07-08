@@ -1,4 +1,4 @@
-import React, { ComponentPropsWithoutRef, ReactNode } from 'react';
+import React, { ComponentPropsWithoutRef, ReactNode, useMemo } from 'react';
 
 import { LinkIcon } from '@primer/octicons-react';
 import { cdnUrl } from '@utils/cdnUrl';
@@ -11,7 +11,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yDark, a11yLight } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import reactToText from 'react-to-text';
 
-import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS } from 'markdown/parser';
+import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS, NO_CONTAINER_PLUGINS } from 'markdown/parser';
 
 import { Flexbox } from './base/Layout';
 import Link, { LinkProps } from './base/Link';
@@ -302,12 +302,26 @@ export interface MarkdownProps {
   limited?: boolean;
 }
 
+// The custom `centering` (>>> <<<) construct's tokenizer is O(n^2) and recurses per
+// nesting level, so a document with an excessive number of centering fences can hang or
+// overflow the stack (and a blown-stack RangeError unwinds straight through React's error
+// boundary). This ceiling is far above any legitimate primer/blog/comment; past it we drop
+// the custom container extensions rather than crash the whole page. `>{3,}`/`<{3,}` match
+// centering fence *runs* only — ordinary `>`/`>>` blockquotes don't count.
+const MAX_CENTERING_FENCES = 100;
+const countCenteringFences = (text: string): number =>
+  (text.match(/>{3,}/g)?.length ?? 0) + (text.match(/<{3,}/g)?.length ?? 0);
+
 const Markdown: React.FC<MarkdownProps> = ({ markdown, limited = false }) => {
   const markdownStr = markdown?.toString() ?? '';
+  const remarkPlugins = useMemo(
+    () => (countCenteringFences(markdownStr) > MAX_CENTERING_FENCES ? NO_CONTAINER_PLUGINS : ALL_PLUGINS),
+    [markdownStr],
+  );
   return (
     <Flexbox className="markdown" direction="col" gap="2">
       <ReactMarkdown
-        remarkPlugins={ALL_PLUGINS as any}
+        remarkPlugins={remarkPlugins as any}
         rehypePlugins={limited ? LIMITED_REHYPE_PLUGINS : ALL_REHYPE_PLUGINS}
         components={RENDERERS as any}
       >

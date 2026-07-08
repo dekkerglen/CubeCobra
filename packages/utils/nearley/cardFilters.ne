@@ -103,6 +103,7 @@ condition -> (
   | artistCondition
   | isCondition
   | notCondition
+  | includeExtrasCondition
   | eloCondition
   | popularityCondition
   | cubeCountCondition
@@ -210,6 +211,15 @@ keywordCondition -> ("kw"i | "keyword"i | "keywords"i) stringSetElementOpValue {
 # is fine because non-cube callers don't put board= in their filters anyway.
 boardCondition -> "board"i stringOpValue {% ([, valuePred]) => genericCondition('board', cardBoard, valuePred) %}
 
+# "include:extras" is a search directive (matches everything), not a card
+# predicate. It records the 'extras' field so the search layer knows to widen the
+# candidate list to include tokens/planes/digital/etc. See searchCards.
+includeExtrasCondition -> ("include"i | "in"i) ":" ("extras"i | "extra"i) {% () => {
+  const result = () => true;
+  result.fieldsUsed = ['extras'];
+  return result;
+} %}
+
 isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
 
 notCondition -> "not"i isOpValue {% ([, valuePred]) => negated(genericCondition('details', ({ details }) => details, valuePred)) %}
@@ -217,7 +227,7 @@ notCondition -> "not"i isOpValue {% ([, valuePred]) => negated(genericCondition(
 isOpValue -> ":" isValue {% ([, category]) => CARD_CATEGORY_DETECTORS[category] %}
 
 isValue -> (
-    "gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "reprint"i | "firstprint"i | "firstprinting"i | "digital"i | "reasonable"i 
+    "gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "reprint"i | "firstprint"i | "firstprinting"i | "digital"i | "reasonable"i | "default"i
   | "dfc"i | "mdfc"i | "tdfc"i
   | "meld"i | "transform"i | "split"i | "flip"i | "leveler"i | "commander"i | "spell"i | "permanent"i | "historic"i
   | "vanilla"i | "modal"i | "fullart"i | "foil"i | "nonfoil"i | "etched"i | "altfoil"i

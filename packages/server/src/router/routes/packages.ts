@@ -1,4 +1,4 @@
-import { PrintingPreference } from '@utils/datatypes/Card';
+import { DefaultPrintingPreference, PrintingPreference } from '@utils/datatypes/Card';
 import CardPackage from '@utils/datatypes/CardPackage';
 import { PatronStatuses } from '@utils/datatypes/Patron';
 import { UserRoles } from '@utils/datatypes/User';
@@ -59,7 +59,7 @@ const tokenize = (query: string): string[] => {
   return tokens;
 };
 
-const getCardQueries = (tokens: string[], printing: PrintingPreference = PrintingPreference.RECENT): CardQuery[] => {
+const getCardQueries = (tokens: string[], printing: PrintingPreference = DefaultPrintingPreference): CardQuery[] => {
   const queries: CardQuery[] = [];
 
   for (const token of tokens) {
