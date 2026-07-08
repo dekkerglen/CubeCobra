@@ -1,0 +1,23 @@
+{
+  "name": "@cubecobra/bot-deckbuild-lambda",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"no tests for bot-deckbuild-lambda; core logic covered in packages/server\" && exit 0",
+    "publish": "npm run build && node publish.js",
+    "build": "node esbuild.config.js",
+    "local": "npm run build && node src/local.ts"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "Consumes draft ids from SQS and builds bot (AI opponent) decks off the request path.",
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.927.0",
+    "archiver": "^7.0.1"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.0",
+    "esbuild": "^0.25.5"
+  }
+}

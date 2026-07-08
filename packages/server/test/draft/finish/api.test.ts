@@ -1,6 +1,6 @@
 import { cardOracleId } from '@utils/cardutil';
 import { cardIsLand } from '@utils/cardutil';
-import Card, { CardDetails } from '@utils/datatypes/Card';
+import Card from '@utils/datatypes/Card';
 import DraftType from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
 import * as draftutil from '@utils/draftutil';
@@ -32,6 +32,21 @@ import { cubeDao, draftDao } from '../../../src/dynamo/daos';
 jest.mock('serverutils/draftbots', () => ({
   batchDeckbuild: jest.fn(),
 }));
+
+// Bot decks are built asynchronously now. finish.ts lays out a naive placeholder (the real
+// applyNaiveBotLayout runs, using the mocked getCardDefaultRowColumn below) and enqueues the
+// ML build via publishBotDeckBuild, which we mock.
+jest.mock('serverutils/deckbuildQueue', () => ({
+  publishBotDeckBuild: jest.fn(),
+}));
+
+jest.mock('serverutils/deckbuildJob', () => ({
+  buildDeckbuildJob: jest.fn(() => ({ draftId: 'draft', seats: [], basics: [], facts: {} })),
+  writeDeckbuildJob: jest.fn(),
+}));
+
+import { writeDeckbuildJob } from 'serverutils/deckbuildJob';
+import { publishBotDeckBuild } from 'serverutils/deckbuildQueue';
 
 jest.mock('@utils/cardutil', () => ({
   //Because we want to use cardIsLand in the test
@@ -229,6 +244,11 @@ describe('Finish Draft', () => {
   beforeEach(() => {
     jest.clearAllMocks();
 
+    // With the topic configured, finishing takes the async pipeline path (naive layout +
+    // mark pending + enqueue) instead of building bot decks inline. The inline path has its
+    // own test below.
+    process.env.BOT_DECKBUILD_TOPIC_ARN = 'arn:aws:sns:us-east-2:000000000000:bot-deckbuild-test';
+
     // Mock getCardDefaultRowColumn to return consistent positions for lands vs non-lands
     (draftutil.getCardDefaultRowColumn as jest.Mock).mockImplementation((card: Card) =>
       cardIsLand(card) ? { row: 1, col: 0 } : { row: 0, col: 1 },
@@ -240,16 +260,8 @@ describe('Finish Draft', () => {
 
   afterEach(() => {
     consoleErrorSpy.mockClear();
+    delete process.env.BOT_DECKBUILD_TOPIC_ARN;
   });
-
-  //Helper function to get card details from an array by a set of indices
-  const getCardDetails = (source: Card[], indices: number[]): CardDetails[] => {
-    return source
-      .filter((_, idx) => {
-        return indices.includes(idx);
-      })
-      .map((c) => c.details!);
-  };
 
   // Helper function to set up common mocks
   const setupSuccessReturns = (draft: DraftType) => {
@@ -275,6 +287,8 @@ describe('Finish Draft', () => {
     expect(draftDao.update).toHaveBeenCalledWith(
       expect.objectContaining({
         complete: true,
+        // Bot decks are handed off to the async pipeline, so the persisted draft is pending.
+        botDecksPending: true,
         seats: [
           expect.objectContaining({
             pickorder: validBody.state.seats[0]!.picks,
@@ -291,6 +305,12 @@ describe('Finish Draft', () => {
         ],
       }),
     );
+
+    // The deckbuild job is written to S3 and the build is enqueued off the request path; no
+    // synchronous deckbuild happens.
+    expect(writeDeckbuildJob).toHaveBeenCalled();
+    expect(publishBotDeckBuild).toHaveBeenCalledWith(draft.id);
+    expect(draftbots.batchDeckbuild).not.toHaveBeenCalled();
   };
 
   it('should fail if user is not logged in', async () => {
@@ -350,33 +370,14 @@ describe('Finish Draft', () => {
       disableAlerts: false,
     });
 
-    (draftbots.batchDeckbuild as jest.Mock).mockResolvedValue([
-      {
-        mainboard: [
-          draft.cards[9]!.details?.oracle_id,
-          draft.cards[8]!.details?.oracle_id,
-          draft.cards[10]!.details?.oracle_id,
-        ],
-        sideboard: [],
-      },
-    ]);
-
     setupSuccessReturns(draft);
     (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
 
+    // Naive placeholder layout: bot picks land in their default cell in pick order.
     const expectedMainboard = draftutil.setupPicks(2, 8);
-    expectedMainboard[0]![1]!.push(9, 8, 10);
+    expectedMainboard[0]![1]!.push(8, 9, 10);
 
     await verifySuccessfulDraft(draftOwner, draft, expectedMainboard, draftutil.setupPicks(1, 8));
-
-    expect(draftbots.batchDeckbuild).toHaveBeenCalledWith([
-      {
-        pool: getCardDetails(draft.cards, [8, 9, 10]),
-        basics: getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
-        maxSpells: 23,
-        maxLands: 17,
-      },
-    ]);
 
     // Verify notification was sent
     expect(util.addNotification).toHaveBeenCalledWith(
@@ -397,33 +398,13 @@ describe('Finish Draft', () => {
       disableAlerts: true,
     });
 
-    (draftbots.batchDeckbuild as jest.Mock).mockResolvedValue([
-      {
-        mainboard: [
-          draft.cards[9]!.details?.oracle_id,
-          draft.cards[8]!.details?.oracle_id,
-          draft.cards[10]!.details?.oracle_id,
-        ],
-        sideboard: [],
-      },
-    ]);
-
     setupSuccessReturns(draft);
     (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
 
     const expectedMainboard = draftutil.setupPicks(2, 8);
-    expectedMainboard[0]![1]!.push(9, 8, 10);
+    expectedMainboard[0]![1]!.push(8, 9, 10);
 
     await verifySuccessfulDraft(draftOwner, draft, expectedMainboard, draftutil.setupPicks(1, 8));
-
-    expect(draftbots.batchDeckbuild).toHaveBeenCalledWith([
-      {
-        pool: getCardDetails(draft.cards, [8, 9, 10]),
-        basics: getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
-        maxSpells: 23,
-        maxLands: 17,
-      },
-    ]);
 
     // Verify notification was sent
     expect(util.addNotification).not.toHaveBeenCalled();
@@ -434,102 +415,34 @@ describe('Finish Draft', () => {
     draft.cubeOwner = cubeOwner;
     draft.owner = cubeOwner;
 
-    (draftbots.batchDeckbuild as jest.Mock).mockResolvedValue([
-      {
-        mainboard: [
-          draft.cards[9]!.details?.oracle_id,
-          draft.cards[8]!.details?.oracle_id,
-          draft.cards[10]!.details?.oracle_id,
-        ],
-        sideboard: [],
-      },
-    ]);
-
     setupSuccessReturns(draft);
 
     const expectedMainboard = draftutil.setupPicks(2, 8);
-    expectedMainboard[0]![1]!.push(9, 8, 10);
+    expectedMainboard[0]![1]!.push(8, 9, 10);
 
     await verifySuccessfulDraft(draft.owner, draft, expectedMainboard, draftutil.setupPicks(1, 8));
-
-    expect(draftbots.batchDeckbuild).toHaveBeenCalledWith([
-      {
-        pool: getCardDetails(draft.cards, [8, 9, 10]),
-        basics: getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
-        maxSpells: 23,
-        maxLands: 17,
-      },
-    ]);
 
     expect(util.addNotification).not.toHaveBeenCalled();
   });
 
-  it('should successfully finish a draft with bot decks complete with basics', async () => {
-    //Only the bots have to be deck built.
-    //Aligned with validBody but returning in different order because of ML preferences
-    (draftbots.batchDeckbuild as jest.Mock).mockResolvedValueOnce([
-      {
-        mainboard: [
-          draft.cards[9]!.details?.oracle_id,
-          draft.cards[draft.basics[3]!]!.details?.oracle_id,
-          draft.cards[8]!.details?.oracle_id,
-          draft.cards[10]!.details?.oracle_id,
-          draft.cards[draft.basics[1]!]!.details?.oracle_id,
-        ],
-        sideboard: [],
-      },
-    ]);
+  it('builds bot decks inline when the async pipeline is not configured (local dev)', async () => {
+    delete process.env.BOT_DECKBUILD_TOPIC_ARN;
 
     setupSuccessReturns(draft);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(createCube({ owner, disableAlerts: true }));
+    (draftbots.batchDeckbuild as jest.Mock).mockResolvedValue([{ mainboard: [], sideboard: [] }]);
 
-    const expectedBotMainboard: number[][][] = draftutil.setupPicks(2, 8);
-    expectedBotMainboard[0]![1]!.push(9);
-    expectedBotMainboard[0]![1]!.push(8);
-    expectedBotMainboard[0]![1]!.push(10);
-    //Basics are at the end of the card list and the mock draft is 30 cards plus 5 basics, thus indices.
-    //The deckbuilding added the basics in order to cast the 3 cards ;)
-    expectedBotMainboard[1]![0]!.push(30 + 3);
-    expectedBotMainboard[1]![0]!.push(30 + 1);
+    const res = await call(finishDraftHandler).as(owner).withParams({ id: draft.id }).withBody(validBody).send();
 
-    await verifySuccessfulDraft(owner, draft, expectedBotMainboard, draftutil.setupPicks(1, 8));
+    expect(res.status).toBe(200);
 
-    expect(draftbots.batchDeckbuild).toHaveBeenCalledWith([
-      {
-        pool: getCardDetails(draft.cards, [8, 9, 10]),
-        basics: getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
-        maxSpells: 23,
-        maxLands: 17,
-      },
-    ]);
-  });
-
-  it('should successfully finish a draft with cards in the sideboard', async () => {
-    //Only the bots have to be deck built.
-    //Aligned with validBody but returning in different order because of ML preferences
-    (draftbots.batchDeckbuild as jest.Mock).mockResolvedValueOnce([
-      {
-        mainboard: [draft.cards[9]!.details?.oracle_id, draft.cards[10]!.details?.oracle_id],
-        sideboard: [draft.cards[8]!.details?.oracle_id],
-      },
-    ]);
-
-    const expectedBotMainboard: number[][][] = draftutil.setupPicks(2, 8);
-    expectedBotMainboard[0]![1]!.push(9);
-    expectedBotMainboard[0]![1]!.push(10);
-
-    const expectedSideBoard: number[][][] = draftutil.setupPicks(1, 8);
-    expectedSideBoard[0]![1]!.push(8);
-
-    await verifySuccessfulDraft(owner, draft, expectedBotMainboard, expectedSideBoard);
-
-    expect(draftbots.batchDeckbuild).toHaveBeenCalledWith([
-      {
-        pool: getCardDetails(draft.cards, [8, 9, 10]),
-        basics: getCardDetails(draft.cards, [30, 31, 32, 33, 34]),
-        maxSpells: 23,
-        maxLands: 17,
-      },
-    ]);
+    // Built inline: ML was invoked, the draft is not left pending, and nothing was enqueued
+    // (no job written, no event published).
+    expect(draftbots.batchDeckbuild).toHaveBeenCalled();
+    expect(writeDeckbuildJob).not.toHaveBeenCalled();
+    expect(publishBotDeckBuild).not.toHaveBeenCalled();
+    const updated = (draftDao.update as jest.Mock).mock.calls[0]![0];
+    expect(updated.botDecksPending).toBe(false);
   });
 
   it('should handle server errors gracefully', async () => {

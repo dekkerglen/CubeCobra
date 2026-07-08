@@ -130,7 +130,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
   });
 
   const [dragStartTime, setDragStartTime] = useState<number | null>(null);
-  const [deckbuildProgress, setDeckbuildProgress] = useState<{ step: number; totalSteps: number } | null>(null);
   const { csrfFetch } = useContext(CSRFContext);
 
   const getLocationReferences = useCallback(
@@ -152,7 +151,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
 
   const endDraft = useCallback(async () => {
     setDraftStatus((prev) => ({ ...prev, loading: true }));
-    setDeckbuildProgress(null);
 
     const draftState = {
       ...state,
@@ -160,36 +158,9 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
     };
 
     try {
-      // Phase 1: Start iterative deckbuilding (runs batchBuild — 1 ML call)
-      const startResponse = await csrfFetch(`/draft/deckbuild/start/${draft.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ state: draftState }),
-      });
-
-      if (!startResponse.ok) {
-        throw new Error(`Deckbuild start failed: ${startResponse.status}`);
-      }
-
-      let result = await startResponse.json();
-      setDeckbuildProgress({ step: result.step, totalSteps: result.totalSteps });
-
-      // Phase 2: Step through draft picks one at a time (~30 iterations, 1 ML call each)
-      while (!result.complete) {
-        const stepResponse = await csrfFetch(`/draft/deckbuild/step/${draft.id}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-        });
-
-        if (!stepResponse.ok) {
-          throw new Error(`Deckbuild step failed: ${stepResponse.status}`);
-        }
-
-        result = await stepResponse.json();
-        setDeckbuildProgress({ step: result.step, totalSteps: result.totalSteps });
-      }
-
-      // Phase 3: Submit the finished draft with pre-built bot decks (no ML calls needed)
+      // Bot (AI opponent) decks are now built asynchronously server-side by the
+      // bot-deckbuild pipeline, so finishing is a single fast request — no blocking ML
+      // loop. The deck view shows a "bot decks building" banner until they're ready.
       const finishResponse = await csrfFetch(`/draft/finish/${draft.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -197,7 +168,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
           state: draftState,
           mainboard,
           sideboard,
-          botDecks: result.botDecks,
         }),
         timeout: 60 * 1000,
       });
@@ -217,7 +187,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
         'Error finishing draft, please reach out to the Discord linking the cube, draft, and a screenshot',
       );
       setDraftStatus((prev) => ({ ...prev, loading: false, draftCompleted: false }));
-      setDeckbuildProgress(null);
     }
   }, [csrfFetch, draft.id, mainboard, userPicksInOrder, sideboard, state, setDraftStatus, trashboard, addAlert]);
 
@@ -928,30 +897,13 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
                   <Card className="mt-3">
                     <CardHeader>
                       <Text semibold lg>
-                        Building bot decks...
+                        Finishing draft...
                       </Text>
                     </CardHeader>
                     <CardBody>
-                      {deckbuildProgress ? (
-                        <div>
-                          <div className="w-full bg-bg-secondary rounded-full h-3 overflow-hidden">
-                            <div
-                              className="bg-bg-active h-full rounded-full transition-all duration-200"
-                              style={{
-                                width: `${Math.round((deckbuildProgress.step / deckbuildProgress.totalSteps) * 100)}%`,
-                              }}
-                            />
-                          </div>
-                          <Text sm className="text-center mt-2 text-text-secondary">
-                            {Math.round((deckbuildProgress.step / deckbuildProgress.totalSteps) * 100)}% — Step{' '}
-                            {deckbuildProgress.step} of {deckbuildProgress.totalSteps}
-                          </Text>
-                        </div>
-                      ) : (
-                        <div className="flex justify-center py-3">
-                          <Spinner md />
-                        </div>
-                      )}
+                      <div className="flex justify-center py-3">
+                        <Spinner md />
+                      </div>
                     </CardBody>
                   </Card>
                 ) : (

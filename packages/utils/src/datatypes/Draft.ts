@@ -83,4 +83,13 @@ export default interface Draft {
   name: string;
   complete: boolean;
   seatNames?: string[];
+  // True while bot (AI opponent) decks are still being built asynchronously by the
+  // bot-deckbuild Lambda. Set when a draft is finished/published (bot seats hold a
+  // cheap naive layout until then); cleared by the Lambda once ML-built decks are
+  // written back. The client polls /draft/botstatus/:id on this to show a banner.
+  botDecksPending?: boolean;
+  // True if the async bot-deck build terminally failed (enqueue error, or exhausted retries
+  // into the DLQ). Lets the client show a failed state instead of polling forever; the bot
+  // seats keep their naive layout.
+  botDecksFailed?: boolean;
 }

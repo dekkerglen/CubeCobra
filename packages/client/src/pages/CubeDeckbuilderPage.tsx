@@ -7,6 +7,7 @@ import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
 import { getCardDefaultRowColumn } from '@utils/draftutil';
 
+import BotDeckStatusBanner from 'components/BotDeckStatusBanner';
 import DeckBuilderStatsPanel from 'components/DeckBuilderStatsPanel';
 
 import { Card } from '../components/base/Card';
@@ -195,6 +196,11 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
               onAddCard={addCardToDeck}
               defaultPrinting={cube.defaultPrinting}
               originalCardCount={originalCardCount}
+            />
+            <BotDeckStatusBanner
+              draftId={initialDeck.id}
+              initiallyPending={initialDeck.botDecksPending}
+              initiallyFailed={initialDeck.botDecksFailed}
             />
             <DeckBuilderStatsPanel
               cards={mainboard

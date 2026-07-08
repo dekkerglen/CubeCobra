@@ -7,7 +7,7 @@ import * as draftutil from '@utils/draftutil';
 import express, { Application } from 'express';
 import { cardFromId } from 'serverutils/carddb';
 import { getBasicsFromCube } from 'serverutils/cube';
-import { batchBuildBotDecks, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
+import { formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
 import request from 'supertest';
 
 import { bodyValidation } from '../../src/router/middleware';
@@ -55,6 +55,27 @@ jest.mock('serverutils/draftmancerUtil', () => ({
   getPicksFromPlayer: jest.fn(),
   upsertCardAndGetIndex: jest.fn(),
 }));
+
+// Bot decks are now built asynchronously: the route lays out a cheap placeholder for bot
+// seats (mocked to a no-op here so bot seats keep their empty starting boards) and enqueues
+// the real ML build. The detailed layout is covered in botDeckBuilder.test.ts.
+jest.mock('serverutils/botDeckBuilder', () => ({
+  applyNaiveBotLayout: jest.fn(),
+  buildBotDecks: jest.fn(),
+}));
+
+jest.mock('serverutils/deckbuildQueue', () => ({
+  publishBotDeckBuild: jest.fn(),
+}));
+
+jest.mock('serverutils/deckbuildJob', () => ({
+  buildDeckbuildJob: jest.fn(() => ({ draftId: 'test-draft-id', seats: [], basics: [], facts: {} })),
+  writeDeckbuildJob: jest.fn(),
+}));
+
+import { applyNaiveBotLayout } from 'serverutils/botDeckBuilder';
+import { writeDeckbuildJob } from 'serverutils/deckbuildJob';
+import { publishBotDeckBuild } from 'serverutils/deckbuildQueue';
 
 //Not mocking cardutil because those functions are pretty simple
 //Not mocking draftutil.setupPicks as simple
@@ -208,6 +229,9 @@ describe('Publish', () => {
     app.post('/api/draftmancer/publish', ...(routes[0]!.handler as RequestHandler[]));
 
     process.env.DRAFTMANCER_API_KEY = 'api-key';
+    // With the topic configured, publishing takes the async pipeline path (mark pending +
+    // enqueue) rather than building bot decks inline.
+    process.env.BOT_DECKBUILD_TOPIC_ARN = 'arn:aws:sns:us-east-2:000000000000:bot-deckbuild-test';
   });
 
   beforeEach(() => {
@@ -254,11 +278,17 @@ describe('Publish', () => {
         type: 'd',
         owner: undefined,
         date: expect.any(Number),
+        botDecksPending: true,
         DraftmancerLog: expect.objectContaining({
           sessionID: 'sessionID',
         }),
       }),
     );
+    // Bot seats get a naive placeholder layout, the deckbuild job is written to S3, and the
+    // build is handed off to the async pipeline with the created draft's id.
+    expect(applyNaiveBotLayout).toHaveBeenCalled();
+    expect(writeDeckbuildJob).toHaveBeenCalled();
+    expect(publishBotDeckBuild).toHaveBeenCalledWith('test-draft-id');
   };
 
   const validateHumanDraftSeat = (seat: Record<string, any>, seatInfo: DraftSeatPicks) => {
@@ -381,28 +411,11 @@ describe('Publish', () => {
     (formatMainboard as jest.Mock).mockReturnValueOnce(playerOneDraftSeat.mainboard);
     (formatSideboard as jest.Mock).mockReturnValueOnce(playerOneDraftSeat.sideboard);
 
-    // Player 2 (bot) setup
-    const playerTwoDraftSeat = createDraftSeatPicks(
-      16,
-      [
-        { column: 0, row: 6, cardIds: [17] },
-        { column: 0, row: 7, cardIds: [22] },
-        { column: 1, row: 0, cardIds: [23] },
-        { column: 1, row: 5, cardIds: [25] },
-      ],
-      [
-        { column: 0, row: 0, cardIds: [6] },
-        { column: 0, row: 3, cardIds: [17] },
-      ],
-    );
+    // Player 2 (bot) setup — bot seats start with empty placeholder boards; the async
+    // pipeline fills them in later, so the route persists empty setupPicks boards.
+    const playerTwoDraftSeat = createDraftSeatPicks(16, [], []);
 
     (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerTwoDraftSeat);
-    (batchBuildBotDecks as jest.Mock).mockResolvedValueOnce([
-      {
-        mainboard: playerTwoDraftSeat.mainboard,
-        sideboard: playerTwoDraftSeat.sideboard,
-      },
-    ]);
 
     const response = await call(handler)
       .withBody(
@@ -433,28 +446,10 @@ describe('Publish', () => {
   it('should draft notification users the first human players name', async () => {
     const { cube } = setupTestDependencies();
 
-    // Player 1 (bot) setup
-    const playerOneDraftSeat = createDraftSeatPicks(
-      6,
-      [
-        { column: 0, row: 6, cardIds: [17] },
-        { column: 0, row: 7, cardIds: [22] },
-        { column: 1, row: 0, cardIds: [23] },
-        { column: 1, row: 5, cardIds: [25] },
-      ],
-      [
-        { column: 0, row: 0, cardIds: [6] },
-        { column: 0, row: 3, cardIds: [17] },
-      ],
-    );
+    // Player 1 (bot) setup — bot seats start with empty placeholder boards.
+    const playerOneDraftSeat = createDraftSeatPicks(6, [], []);
 
     (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerOneDraftSeat);
-    (batchBuildBotDecks as jest.Mock).mockResolvedValueOnce([
-      {
-        mainboard: playerOneDraftSeat.mainboard,
-        sideboard: playerOneDraftSeat.sideboard,
-      },
-    ]);
 
     // Player 2 (human) setup
     const playerTwoDraftSeat = createDraftSeatPicks(16, [
@@ -504,25 +499,15 @@ describe('Publish', () => {
   it('should not send notification when all players are bots', async () => {
     const { cube } = setupTestDependencies();
 
-    // Player 1 (bot) setup
-    const playerOneDraftSeat = createDraftSeatPicks(6, [
-      { column: 0, row: 6, cardIds: [17] },
-      { column: 0, row: 7, cardIds: [22] },
-    ]);
+    // Player 1 (bot) setup — bot seats start with empty placeholder boards.
+    const playerOneDraftSeat = createDraftSeatPicks(6, [], []);
 
     (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerOneDraftSeat);
 
     // Player 2 (also bot) setup
-    const playerTwoDraftSeat = createDraftSeatPicks(16, [
-      { column: 1, row: 0, cardIds: [23] },
-      { column: 1, row: 5, cardIds: [25] },
-    ]);
+    const playerTwoDraftSeat = createDraftSeatPicks(16, [], []);
 
     (getPicksFromPlayer as jest.Mock).mockReturnValueOnce(playerTwoDraftSeat);
-    (batchBuildBotDecks as jest.Mock).mockResolvedValueOnce([
-      { mainboard: playerOneDraftSeat.mainboard, sideboard: playerOneDraftSeat.sideboard },
-      { mainboard: playerTwoDraftSeat.mainboard, sideboard: playerTwoDraftSeat.sideboard },
-    ]);
 
     const response = await call(handler)
       .withBody(

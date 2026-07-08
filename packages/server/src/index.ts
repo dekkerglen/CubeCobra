@@ -25,8 +25,8 @@ import './types/express'; // Import the express type extensions
 import configurePassport from './config/passport';
 import dynamoService from './dynamo/client';
 import documentClient from './dynamo/documentClient';
-import { isPatreonHookPath } from './router/routes/patreon';
 import router from './router/router';
+import { isPatreonHookPath } from './router/routes/patreon';
 import { initializeCardDb } from './serverutils/cardCatalog';
 import DynamoDBStore from './serverutils/dynamo-session-store';
 import { logError, logInfo } from './serverutils/errorLog';

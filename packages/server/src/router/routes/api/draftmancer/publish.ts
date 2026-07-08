@@ -4,13 +4,16 @@ import type CubeType from '@utils/datatypes/Cube';
 import DraftType, { DraftmancerLog } from '@utils/datatypes/Draft';
 import { PublishDraftBody } from '@utils/datatypes/Draftmancer';
 import type DraftSeatType from '@utils/datatypes/DraftSeat';
-import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
+import { setupPicks } from '@utils/draftutil';
 import { cubeDao, draftDao, notificationDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
+import { applyNaiveBotLayout, buildBotDecks } from 'serverutils/botDeckBuilder';
 import { cardFromId } from 'serverutils/carddb';
 import { getBasicsFromCube } from 'serverutils/cube';
-import { batchBuildBotDecks, formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
+import { buildDeckbuildJob, writeDeckbuildJob } from 'serverutils/deckbuildJob';
+import { publishBotDeckBuild } from 'serverutils/deckbuildQueue';
+import { formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -82,74 +85,18 @@ export const handler = async (req: Request, res: Response) => {
 
     let drafterName: string = '';
 
-    // First pass: parse picks for all players, collect bot inputs
-    const playerData: {
-      player: (typeof publishDraftBody.players)[number];
-      draftmancerPicks: any;
-      pickorder: number[];
-      trashorder: number[];
-    }[] = [];
-    const botIndices: number[] = [];
-    const botInputs: { pickorder: number[]; basics: number[] }[] = [];
-
-    for (let i = 0; i < publishDraftBody.players.length; i++) {
-      const player = publishDraftBody.players[i]!;
+    // Parse picks for all players. Human seats get their decklist formatted now; bot seats
+    // start empty and are filled with a cheap naive layout below — the real ML build runs
+    // asynchronously in the bot-deckbuild Lambda after we enqueue this draft.
+    for (const player of publishDraftBody.players) {
       const { draftmancerPicks, pickorder, trashorder } = getPicksFromPlayer(player.picks, cards);
-      playerData.push({ player, draftmancerPicks, pickorder, trashorder });
-
-      if (player.isBot) {
-        botIndices.push(i);
-        botInputs.push({ pickorder, basics });
-      } else if (!drafterName) {
-        drafterName = player.userName || 'Unknown Drafter';
-      }
-    }
-
-    // Single batched ML call for all bot decks
-    const maxSpells = cube.deckbuildSpells ?? 23;
-    const maxLands = cube.deckbuildLands ?? 17;
-    let botResults: { mainboard: number[][][]; sideboard: number[][][] }[] | null = null;
-    try {
-      botResults = await batchBuildBotDecks(botInputs, cards, maxSpells, maxLands);
-    } catch (err) {
-      req.logger?.error('ML deckbuilding failed, falling back to naive layout for bot seats', err);
-    }
-
-    // Second pass: assemble seats
-    let botResultIdx = 0;
-    for (const { player, draftmancerPicks, pickorder, trashorder } of playerData) {
-      let mainboard: number[][][] = setupPicks(2, 8);
-      let sideboard: number[][][] = setupPicks(1, 8);
-
-      if (player.isBot) {
-        const result = botResults?.[botResultIdx] ?? null;
-        botResultIdx += 1;
-        if (result) {
-          mainboard = result.mainboard;
-          sideboard = result.sideboard;
-        } else {
-          // Fallback: put all picks into mainboard by default row/col
-          for (const index of pickorder) {
-            const card = cards[index];
-            if (card) {
-              const { row, col } = getCardDefaultRowColumn(detailsToCard(card));
-              if (mainboard[row]?.[col]) {
-                mainboard[row][col].push(index);
-              }
-            }
-          }
-        }
-      } else {
-        mainboard = formatMainboard(player.decklist, cards);
-        sideboard = formatSideboard(player.decklist, cards);
-      }
 
       const seat: DraftSeatType = {
         description: player.isBot
           ? `This deck was drafted by a bot on Draftmancer`
           : `This deck was drafted on Draftmancer by ${player.userName || 'Unknown Drafter'}`,
-        mainboard,
-        sideboard,
+        mainboard: player.isBot ? setupPicks(2, 8) : formatMainboard(player.decklist, cards),
+        sideboard: player.isBot ? setupPicks(1, 8) : formatSideboard(player.decklist, cards),
         pickorder,
         trashorder,
         owner: undefined,
@@ -160,6 +107,10 @@ export const handler = async (req: Request, res: Response) => {
 
       seats.push(seat);
       draftmancerLog.players.push(draftmancerPicks);
+
+      if (!player.isBot && !drafterName) {
+        drafterName = player.userName || 'Unknown Drafter';
+      }
     }
 
     const draft: Omit<DraftType, 'id'> = {
@@ -179,7 +130,39 @@ export const handler = async (req: Request, res: Response) => {
       DraftmancerLog: draftmancerLog,
     };
 
+    const buildOpts = { maxSpells: cube.deckbuildSpells ?? 23, maxLands: cube.deckbuildLands ?? 17 };
+    const queueEnabled = !!process.env.BOT_DECKBUILD_TOPIC_ARN;
+
+    // Give bot seats a viewable naive layout immediately. Mutates draft.seats in place
+    // (id is unused by the layout).
+    applyNaiveBotLayout(draft as unknown as DraftType);
+
+    if (queueEnabled) {
+      // Deployed: hand the ML build off to the async bot-deckbuild pipeline.
+      draft.botDecksPending = true;
+    } else {
+      // Local dev / no pipeline: build inline. ML failures keep the naive layout.
+      try {
+        await buildBotDecks(draft as unknown as DraftType, buildOpts);
+      } catch (err) {
+        req.logger?.error('Inline bot deckbuild failed; keeping naive layout', err);
+      }
+      draft.botDecksPending = false;
+    }
+
     const draftId = await draftDao.createDraft(draft);
+
+    if (queueEnabled) {
+      // Write the claim-check job (needs the created draft id), then enqueue just the id. On
+      // failure, mark the draft failed so the client doesn't poll a stuck pending state.
+      try {
+        await writeDeckbuildJob(buildDeckbuildJob({ ...(draft as unknown as DraftType), id: draftId }, buildOpts));
+        await publishBotDeckBuild(draftId);
+      } catch (err) {
+        req.logger?.error('Failed to enqueue bot deckbuild; marking failed', err);
+        await draftDao.markBotDecksFailed(draftId);
+      }
+    }
 
     await sendDraftNotification(draftId, drafterName, cube);
 
