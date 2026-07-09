@@ -19,18 +19,13 @@ const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    if (!req.user) {
-      return res.status(401).send({
-        success: false,
-        message: 'You must be logged in to finish a draft',
-      });
-    }
-
-    if (typeof deck.owner !== 'string' && deck.owner?.id !== req.user.id) {
-      return res.status(401).send({
-        success: false,
-        message: 'You do not own this draft',
-      });
+    // The deckbuilder is an owner-only editor. Anyone else — logged-out visitors,
+    // crawlers, shared/bookmarked links, or a different user — is sent to the public
+    // read-only deck view instead of a raw JSON 401 (which rendered as a JSON page and
+    // flooded the logs with 401s on /draft/deckbuilder/:id).
+    const deckOwnerId = typeof deck.owner !== 'string' ? deck.owner?.id : deck.owner;
+    if (!req.user || deckOwnerId !== req.user.id) {
+      return redirect(req, res, `/cube/deck/${req.params.id}`);
     }
 
     const cube = await cubeDao.getById(deck.cube);
