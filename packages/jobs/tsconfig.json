@@ -13,8 +13,8 @@
       "routes/*": ["../server/src/routes/*"],
       "dynamo/*": ["../server/src/dynamo/*"]
     },
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",
