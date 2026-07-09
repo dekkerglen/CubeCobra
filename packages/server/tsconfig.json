@@ -6,18 +6,17 @@
     "esModuleInterop": true,
     "target": "ES2020",
     "jsx": "react",
-    "baseUrl": "./",
     "paths": {
       "@client/*": ["../client/src/*"],
       "@jobs/*": ["../jobs/src/*"],
       "@utils/*": ["../utils/src/*"],
-      "serverutils/*": ["src/serverutils/*"],
-      "router/*": ["src/router/*"],
-      "dynamo/*": ["src/dynamo/*"],
-      "types/*": ["src/types/*"]
+      "serverutils/*": ["./src/serverutils/*"],
+      "router/*": ["./src/router/*"],
+      "dynamo/*": ["./src/dynamo/*"],
+      "types/*": ["./src/types/*"]
     },
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",
@@ -28,7 +27,8 @@
     "skipLibCheck": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true
+    "noFallthroughCasesInSwitch": true,
+    "rootDir": ".."
   },
   "exclude": ["node_modules", "src/client"],
   "include": [
@@ -40,5 +40,8 @@
     "jest.setup.ts",
     "jest.config.ts",
     "test"
-  ]
+  ],
+  "ts-node": {
+    "files": true
+  }
 }

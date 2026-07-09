@@ -70,6 +70,8 @@ import { cdnUrl } from '@utils/cdnUrl';
 import { CardStatus } from '@utils/datatypes/Card';
 import Cube, { CubeImage, ViewDefinition } from '@utils/datatypes/Cube';
 import { CubeCards } from '@utils/datatypes/Cube';
+import { getNewCubeViews } from '@utils/datatypes/Cube';
+import { VIEW_DEFAULT_SORTS } from '@utils/datatypes/Cube';
 import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 import User from '@utils/datatypes/User';
 import { normalizeDraftFormatSteps } from '@utils/draftutil';
@@ -307,10 +309,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       let views = item.views;
 
       if (!views || views.length === 0) {
-        const { getNewCubeViews } = await import('@utils/datatypes/Cube');
         views = getNewCubeViews(item.defaultSorts);
       } else {
-        const { VIEW_DEFAULT_SORTS } = await import('@utils/datatypes/Cube');
         views = views.map((view) => {
           if (!view.defaultSorts || view.defaultSorts.length !== 4) {
             const defaultSorts = [...(view.defaultSorts || [])];
@@ -352,10 +352,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       let views = item.views;
 
       if (!views || views.length === 0) {
-        const { getNewCubeViews } = await import('@utils/datatypes/Cube');
         views = getNewCubeViews(item.defaultSorts);
       } else {
-        const { VIEW_DEFAULT_SORTS } = await import('@utils/datatypes/Cube');
         views = views.map((view) => {
           if (!view.defaultSorts || view.defaultSorts.length !== 4) {
             const defaultSorts = [...(view.defaultSorts || [])];
@@ -391,11 +389,9 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     if (!views || views.length === 0) {
       // No views configured - create defaults
-      const { getNewCubeViews } = await import('@utils/datatypes/Cube');
       views = getNewCubeViews(item.defaultSorts);
     } else {
       // Views exist - ensure each has exactly 4 defaultSorts
-      const { VIEW_DEFAULT_SORTS } = await import('@utils/datatypes/Cube');
       views = views.map((view) => {
         if (!view.defaultSorts || view.defaultSorts.length !== 4) {
           // Missing or incomplete defaultSorts - fill with defaults

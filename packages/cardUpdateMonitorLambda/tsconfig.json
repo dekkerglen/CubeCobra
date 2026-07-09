@@ -12,7 +12,6 @@
     "resolveJsonModule": true,
     "moduleResolution": "node",
     "types": ["node"],
-    "baseUrl": ".",
     "paths": {
       "@server/*": ["../server/src/*"],
       "@utils/*": ["../utils/src/*"]
