@@ -37,8 +37,8 @@ export default defineConfig({
   webServer: process.env.CI
     ? undefined
     : {
-        command: 'cd ../server && npm run dev',
-        url: 'http://127.0.0.1:8080/healthcheck',
+        command: 'cd ../.. && npm run dev',
+        url: 'http://127.0.0.1:5000/healthcheck',
         reuseExistingServer: !process.env.CI,
         timeout: 120 * 1000,
         stdout: 'pipe',
