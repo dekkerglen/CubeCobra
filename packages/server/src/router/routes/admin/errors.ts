@@ -101,7 +101,9 @@ export const errorsTimeseriesHandler = async (req: Request, res: Response) => {
     return res.status(200).send({ success: 'true', points, windowMinutes });
   } catch (err) {
     if (isMissingLogGroup(err)) {
-      return res.status(200).send({ success: 'true', points: [], windowMinutes: clampWindow(req.body?.windowMinutes, DEFAULT_WINDOW) });
+      return res
+        .status(200)
+        .send({ success: 'true', points: [], windowMinutes: clampWindow(req.body?.windowMinutes, DEFAULT_WINDOW) });
     }
     req.logger.error((err as Error).message, (err as Error).stack);
     return res.status(500).send({ success: 'false', error: (err as Error).message });

@@ -141,7 +141,9 @@ const main = async (): Promise<void> => {
   }
 
   // eslint-disable-next-line no-console
-  console.log(`\nRe-subscribed (INACTIVE in DB, Active in CSV): ${toReactivate.length}${reactivate ? '' : ' [reporting only — pass --reactivate to act]'}`);
+  console.log(
+    `\nRe-subscribed (INACTIVE in DB, Active in CSV): ${toReactivate.length}${reactivate ? '' : ' [reporting only — pass --reactivate to act]'}`,
+  );
   for (const p of toReactivate) {
     // eslint-disable-next-line no-console
     console.log(`  reactivate  ${p.email}  (owner ${p.owner}, level ${p.level})`);
@@ -149,7 +151,9 @@ const main = async (): Promise<void> => {
 
   if (!apply) {
     // eslint-disable-next-line no-console
-    console.log(`\n*** DRY RUN — no changes written. Re-run with --apply to disable ${toDisable.length} patron(s). ***`);
+    console.log(
+      `\n*** DRY RUN — no changes written. Re-run with --apply to disable ${toDisable.length} patron(s). ***`,
+    );
     return;
   }
 

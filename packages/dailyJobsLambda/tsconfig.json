@@ -8,8 +8,8 @@
       "@utils/*": ["../utils/src/*"],
       "@server/*": ["../server/src/*"]
     },
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",

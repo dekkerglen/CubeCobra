@@ -17,9 +17,10 @@ const handleMlOutage = (req: Request, res: Response, err: unknown, context: stri
   }
   req.logger.info(`${context}: ML service unavailable`, err instanceof Error ? err.stack : String(err));
   if (!res.headersSent) {
-    res
-      .status(503)
-      .json({ success: false, message: 'The deck building service is temporarily unavailable. Please try again shortly.' });
+    res.status(503).json({
+      success: false,
+      message: 'The deck building service is temporarily unavailable. Please try again shortly.',
+    });
   }
   return true;
 };

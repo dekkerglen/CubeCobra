@@ -11,6 +11,7 @@ export const createMockRequest = (partialRequest?: Partial<Request>): Request =>
     headers: {},
     logger: {
       error: jest.fn(),
+      info: jest.fn(),
     },
     ...partialRequest,
   } as Request;

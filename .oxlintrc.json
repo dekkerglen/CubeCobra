@@ -1,0 +1,48 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "typescript", "import"],
+  "categories": {
+    "correctness": "error"
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2024": true
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/node_modules/**",
+    "packages/server/dist/**",
+    "packages/server/src/client/**",
+    "packages/server/public/**",
+    "packages/client/dist/**",
+    "packages/jobs/dist/**",
+    "packages/jobs/temp/**",
+    "packages/recommenderService/model/**",
+    "packages/recommenderService/private/**",
+    "packages/utils/src/generated/**",
+    "packages/annotator/**",
+    "beta-assets/**",
+    "prod-assets/**",
+    "**/*.js",
+    "**/*.jsx",
+    "**/*.mjs",
+    "**/*.cjs"
+  ],
+  "rules": {
+    "no-console": "off",
+    "no-unused-vars": "off",
+    "typescript/no-explicit-any": "off",
+    "eqeqeq": "warn",
+    "no-useless-rename": "warn",
+    "react-hooks/exhaustive-deps": "warn",
+    "typescript/no-unused-vars": [
+      "warn",
+      {
+        "argsIgnorePattern": "^_",
+        "varsIgnorePattern": "^_",
+        "caughtErrorsIgnorePattern": "^_"
+      }
+    ]
+  }
+}

@@ -13,31 +13,87 @@ import { SortOrder } from '../dynamo/dao/CubeDynamoDao';
 import { collaboratorIndexDao, cubeDao, notificationDao, patronDao } from '../dynamo/daos';
 import { CubeTooLargeError } from '../errors/CubeTooLargeError';
 import { Request, Response } from '../types/express';
-import { GIT_COMMIT } from './git';
 import { getBaseUrl } from './util';
 
-interface BundleManifest {
-  [key: string]: string | { [key: string]: string } | undefined;
-  css?: { [key: string]: string };
+// Vite emits a manifest keyed by source path (e.g. "src/pages/DraftPage.tsx"). Each entry lists
+// its own hashed `file` plus the shared chunks it `imports` (React, layout, etc.); CSS hangs off
+// whichever chunk imported it. We walk that graph to gather the entry module, its shared chunks
+// (for modulepreload), and all CSS for the page. Production only — dev loads modules straight
+// from the Vite dev server (see main.pug).
+interface ViteChunk {
+  file: string;
+  name?: string;
+  src?: string;
+  isEntry?: boolean;
+  imports?: string[];
+  dynamicImports?: string[];
+  css?: string[];
 }
+type ViteManifest = Record<string, ViteChunk>;
 
-let bundleManifest: BundleManifest | null = null;
-const loadManifest = (): BundleManifest => {
-  // Only load manifest in production
+// URL prefix the built assets are served under: Express serves packages/server/public, so
+// /app/* maps to public/app/*. Must match `base` in packages/client/vite.config.ts.
+const VITE_BASE = '/app/';
+
+let viteManifest: ViteManifest | null = null;
+const loadManifest = (): ViteManifest => {
   if (process.env.NODE_ENV !== 'production') {
     return {};
   }
-
-  if (!bundleManifest) {
+  if (!viteManifest) {
     try {
-      const manifestPath = path.join(__dirname, '../../public/manifest.json');
-      bundleManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as BundleManifest;
+      const manifestPath = path.join(__dirname, '../../public/app/.vite/manifest.json');
+      viteManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8')) as ViteManifest;
     } catch (err) {
-      console.error('Failed to load bundle manifest, falling back to non-hashed filenames:', (err as Error).message);
-      bundleManifest = {};
+      console.error('Failed to load Vite manifest:', (err as Error).message);
+      viteManifest = {};
     }
   }
-  return bundleManifest || {};
+  return viteManifest || {};
+};
+
+interface PageAssets {
+  entry: string | null;
+  preload: string[];
+  css: string[];
+}
+
+// Walk the manifest from a page entry: collect the entry module, its (recursive) static-import
+// chunks for <link rel=modulepreload>, and every CSS file in the graph. cdnUrl prepends
+// CDN_BASE_URL in prod so these resolve to CloudFront; same-origin otherwise.
+const getPageAssets = (page: string): PageAssets => {
+  const manifest = loadManifest();
+  const entryKey = `src/pages/${page}.tsx`;
+  const entryChunk = manifest[entryKey];
+  if (!entryChunk) {
+    return { entry: null, preload: [], css: [] };
+  }
+
+  const seen = new Set<string>();
+  const preload = new Set<string>();
+  const css = new Set<string>();
+
+  const walk = (key: string): void => {
+    if (seen.has(key)) return;
+    seen.add(key);
+    const chunk = manifest[key];
+    if (!chunk) return;
+    (chunk.css || []).forEach((file) => css.add(file));
+    (chunk.imports || []).forEach((imp) => {
+      const importedChunk = manifest[imp];
+      if (importedChunk) {
+        preload.add(importedChunk.file);
+      }
+      walk(imp);
+    });
+  };
+  walk(entryKey);
+
+  return {
+    entry: cdnUrl(VITE_BASE + entryChunk.file),
+    preload: [...preload].map((file) => cdnUrl(VITE_BASE + file)),
+    css: [...css].map((file) => cdnUrl(VITE_BASE + file)),
+  };
 };
 
 export const getCubesSortValues = (user: User): { sort: SortOrder; ascending: boolean } => {
@@ -114,34 +170,6 @@ const redirect = (req: Request, res: Response, to: string): void => {
   } else {
     res.redirect(to);
   }
-};
-
-const getBundlesForPage = (page: string): string[] => {
-  const manifest = loadManifest();
-
-  // Try to get hashed filenames from manifest, fall back to non-hashed.
-  // cdnUrl prepends CDN_BASE_URL when set (prod with CloudFront), otherwise
-  // returns the same-origin path that Express serves from public/.
-  const vendors = cdnUrl((manifest['vendors'] as string) || `/js/vendors.bundle.js`);
-  const commons = cdnUrl((manifest['commons'] as string) || `/js/commons.bundle.js`);
-  const pageBundleName = cdnUrl((manifest[page] as string) || `/js/${page}.bundle.js`);
-
-  return [vendors, commons, pageBundleName];
-};
-
-const CSS_BUNDLE_NAMES = ['stylesheet', 'autocomplete', 'editcube', 'tags'] as const;
-type CssBundleName = (typeof CSS_BUNDLE_NAMES)[number];
-type CssBundles = Record<CssBundleName, string>;
-
-const getCssBundles = (): CssBundles => {
-  const manifest = loadManifest();
-  const cssMap = manifest.css || {};
-  return CSS_BUNDLE_NAMES.reduce((acc, name) => {
-    // In dev (no manifest), fall back to the un-hashed file with a commit
-    // query string so a browser refresh after a deploy picks up changes.
-    acc[name] = cdnUrl(cssMap[name] || `/css/${name}.css?v=${GIT_COMMIT}`);
-    return acc;
-  }, {} as CssBundles);
 };
 
 const sha256 = async (data: string): Promise<string> => {
@@ -292,8 +320,13 @@ const render = (
       res.render('main', {
         reactHTML: null, // TODO renable ReactDOMServer.renderToString(React.createElement(page, reactProps)),
         reactProps: serialize(reactProps),
-        bundles: getBundlesForPage(page),
-        cssBundles: getCssBundles(),
+        // In dev, main.pug loads the page entry straight from the Vite dev server (HMR); in prod it
+        // uses the manifest-resolved hashed module + shared-chunk preloads + css from pageAssets.
+        viteDev: process.env.NODE_ENV !== 'production',
+        vitePage: page,
+        viteDevOrigin: process.env.VITE_DEV_ORIGIN || 'http://localhost:5173',
+        viteBase: VITE_BASE,
+        pageAssets: getPageAssets(page),
         metadata: options.metadata,
         title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
         patron: req.user && (req.user.roles || []).includes(UserRoles.PATRON),

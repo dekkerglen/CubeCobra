@@ -99,7 +99,7 @@ export const parseErrorEntry = (raw: string): ParsedError => {
         const location = rec.location ? String(rec.location) : undefined;
         const anchor = location || handler || '';
         const signature =
-          (`${errorType ? `${errorType}: ` : ''}${normalizeTokens(message)}${anchor ? ` @ ${anchor}` : ''}`)
+          `${errorType ? `${errorType}: ` : ''}${normalizeTokens(message)}${anchor ? ` @ ${anchor}` : ''}`
             .trim()
             .slice(0, 300) || '(empty)';
         const readable = `${errorType ? `${errorType}: ` : ''}${message}`.slice(0, 500);

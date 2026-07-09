@@ -18,7 +18,9 @@ import sharp from 'sharp';
 
 const args = parseArgs(process.argv.slice(2));
 if (!args.src || !args.dest) {
-  console.error('Usage: node seed-art-crop.mjs --src <art_crop-dir> --dest <cardimages-dir> [--quality 80] [--concurrency N] [--limit N]');
+  console.error(
+    'Usage: node seed-art-crop.mjs --src <art_crop-dir> --dest <cardimages-dir> [--quality 80] [--concurrency N] [--limit N]',
+  );
   process.exit(1);
 }
 
@@ -55,7 +57,9 @@ for (const id of ids) {
   }
 }
 
-console.log(`ids: ${ids.length} | conversions queued: ${tasks.length} | quality: ${quality} | concurrency: ${concurrency}`);
+console.log(
+  `ids: ${ids.length} | conversions queued: ${tasks.length} | quality: ${quality} | concurrency: ${concurrency}`,
+);
 
 let done = 0;
 let failed = 0;

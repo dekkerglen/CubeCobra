@@ -35,12 +35,13 @@ jest.mock('../../src/dynamo/daos', () => ({
 // Import the mocked daos
 import { commentDao, noticeDao, userDao } from '../../src/dynamo/daos';
 
+// The type-guard casts previously here referenced `typeof isCommentType` inside the factory,
+// which babel-plugin-jest-hoist rejects as an out-of-scope reference (it can't tell the ref is
+// type-only). Plain jest.fn()s; tests cast them via `as unknown as jest.Mock` at the call site.
 jest.mock('@utils/datatypes/Comment', () => ({
   ...jest.requireActual('@utils/datatypes/Comment'),
-  isCommentType: jest.fn() as unknown as (value: unknown) => value is ReturnType<typeof isCommentType>,
-  isNotifiableCommentType: jest.fn() as unknown as (
-    value: unknown,
-  ) => value is ReturnType<typeof isNotifiableCommentType>,
+  isCommentType: jest.fn(),
+  isNotifiableCommentType: jest.fn(),
 }));
 
 jest.mock('serverutils/render', () => ({
@@ -124,9 +125,12 @@ describe('Report Comment', () => {
 
   it('handles a report', async () => {
     const reporter = createUser({ username: 'reporter' });
-    (noticeDao.put as jest.Mock).mockResolvedValue(undefined);
-
     const validCommentId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+    (noticeDao.put as jest.Mock).mockResolvedValue(undefined);
+    // The handler bails before noticeDao.put unless the comment exists and the reason is on the
+    // REPORT_REASONS allowlist, so mock the lookup and use a real allowlisted reason.
+    (commentDao.getById as jest.Mock).mockResolvedValue({ id: validCommentId });
+    const reason = 'This is spam or phishing';
 
     await call(reportHandler)
       .as(reporter)
@@ -135,7 +139,7 @@ describe('Report Comment', () => {
         body: {
           commentid: validCommentId,
           info: 'Report info',
-          reason: 'Report reason',
+          reason,
         },
       })
       .send();
@@ -143,7 +147,7 @@ describe('Report Comment', () => {
     expect(noticeDao.put).toHaveBeenCalledWith(
       expect.objectContaining({
         subject: validCommentId,
-        body: 'Report reason\n\nReport info',
+        body: `${reason}\n\nReport info`,
         user: reporter.id,
         type: NoticeType.COMMENT_REPORT,
       }),
@@ -154,17 +158,21 @@ describe('Report Comment', () => {
 
   it('should handle errors gracefully', async () => {
     const error = new Error('Something went wrong');
+    const validCommentId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
+    // Reach noticeDao.put (where the error is thrown): comment must exist and reason be valid.
+    (commentDao.getById as jest.Mock).mockResolvedValue({ id: validCommentId });
     (noticeDao.put as jest.Mock).mockRejectedValue(error);
 
-    const validCommentId = 'a1b2c3d4-e5f6-7890-abcd-ef1234567890';
-
     await call(reportHandler)
+      // The route is auth-gated, so req.user is always set; without it the handler throws a
+      // TypeError building the report (req.user.id) before noticeDao.put ever rejects.
+      .as(createUser({ username: 'reporter' }))
       .withFlash(flashMock)
       .withRequest({
         body: {
           commentid: validCommentId,
           info: 'Report info',
-          reason: 'Report reason',
+          reason: 'This is spam or phishing',
         },
       })
       .send();

@@ -1250,6 +1250,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 .hidden {
   display: none;
 }
+.aspect-\[61\/85\] {
+  aspect-ratio: 61/85;
+}
 .aspect-square {
   aspect-ratio: 1 / 1;
 }
@@ -1372,6 +1375,9 @@ a:not(.block):not([class*='block']):not(.flex):not([class*='flex']) {
 }
 .w-0 {
   width: 0px;
+}
+.w-1 {
+  width: 0.25rem;
 }
 .w-1\/2 {
   width: 50%;

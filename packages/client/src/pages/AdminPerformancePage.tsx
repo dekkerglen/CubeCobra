@@ -193,9 +193,7 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
                     </Text>
                     <LineChart
                       labels={trafficLabels}
-                      datasets={[
-                        { label: 'Egress (MB)', data: traffic.map((p) => p.egress / 1e6), color: '#6AB572' },
-                      ]}
+                      datasets={[{ label: 'Egress (MB)', data: traffic.map((p) => p.egress / 1e6), color: '#6AB572' }]}
                     />
                   </Col>
                   <Col xs={12}>

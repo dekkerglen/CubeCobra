@@ -1,16 +1,11 @@
 module.exports = {
   testEnvironment: 'jsdom',
 
-  // Transform configuration
+  // Transform configuration. TS7 native dropped the JS API ts-jest relied on, so TS/TSX is
+  // handled by babel-jest with @babel/preset-typescript (same stack already used for JS/JSX;
+  // babel type-strips without type-checking). Types are validated separately by tsc.
   transform: {
-    '^.+\\.(ts|tsx)$': [
-      'ts-jest',
-      {
-        tsconfig: '<rootDir>/tsconfig.json',
-        diagnostics: false,
-      },
-    ],
-    '^.+\\.(js|jsx)$': [
+    '^.+\\.(ts|tsx|js|jsx)$': [
       'babel-jest',
       {
         presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript'],

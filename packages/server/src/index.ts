@@ -25,9 +25,8 @@ import './types/express'; // Import the express type extensions
 import configurePassport from './config/passport';
 import dynamoService from './dynamo/client';
 import documentClient from './dynamo/documentClient';
-import router from './router/router';
 import { isPatreonHookPath } from './router/routes/patreon';
-import { initializeCardDb } from './serverutils/cardCatalog';
+import { initializeCardDb, isCardDbReady, whenCardDbReady } from './serverutils/cardCatalog';
 import DynamoDBStore from './serverutils/dynamo-session-store';
 import { logError, logInfo } from './serverutils/errorLog';
 import { render } from './serverutils/render';
@@ -178,9 +177,6 @@ app.use(
   }),
 );
 
-// Serve static files from the React frontend app (legacy support)
-app.use(express.static(path.join(__dirname, 'client')));
-
 // The catalog files (imagedict/full_names/cardimages) are no longer
 // served to the browser at all — card-name autocomplete and image lookups go
 // through /tool/api/cardnames and /tool/api/cardimagedata, which read the
@@ -282,58 +278,104 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
   next();
 });
 
-app.use(router);
-
-app.use((req: express.Request, res: express.Response) =>
-  render(
-    req,
-    res,
-    'ErrorPage',
-    {
-      requestId: req.uuid,
-      title: '404: Page not found',
-    },
-    {
-      noindex: true,
-    },
-  ),
-);
-
-// Error-handling middleware. MUST have four parameters (err, req, res, next) — Express
-// only treats a middleware as an error handler when its arity is 4, so this is what makes
-// next(err) (from async handlers, the request timeout, etc.) actually render our error
-// page and log with request context, instead of falling through to Express's default.
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
-  // If the response has already started, we can't render an error page over it. This is
-  // typically a follow-on error (e.g. the request timed out and responded, then a slow
-  // handler resolved and tried to send again) — the original cause was already logged, so
-  // don't log this artifact. Delegate to Express's default handler to close the connection.
-  if (res.headersSent) {
-    return next(err);
-  }
-
-  // Safely handle logging - fallback if logger middleware hasn't run yet
-  if (req.logger && req.logger.error) {
-    req.logger.error(err);
-  } else {
-    console.error('Error occurred before logger middleware:', err?.message, err?.stack);
-  }
-
-  res.status(typeof err?.status === 'number' ? err.status : 500);
-  return render(
-    req,
-    res,
-    'ErrorPage',
-    {
-      error: err?.message,
-      requestId: req.uuid,
-      title: 'Oops! Something went wrong.',
-    },
-    {
-      noindex: true,
-    },
-  );
+// Startup runs two slow tasks concurrently (see the bottom of this file): loading the card
+// catalog and registering the route tree. In dev the server starts listening before either
+// finishes, so this gate holds app routes until BOTH are ready — early requests wait rather
+// than 404 (routes not mounted yet) or hit an empty catalog. Static assets and /healthcheck
+// are mounted earlier and stay instant. In production we only listen once both are done, so
+// the gate is a no-op and isn't installed.
+let routesReady = false;
+let resolveRoutesReady: () => void;
+const routesReadyPromise = new Promise<void>((resolve) => {
+  resolveRoutesReady = resolve;
 });
+const whenAppReady = (): Promise<unknown> => Promise.all([whenCardDbReady(), routesReadyPromise]);
+
+if (process.env.NODE_ENV !== 'production') {
+  app.use((_req: express.Request, _res: express.Response, next: express.NextFunction) => {
+    if (isCardDbReady() && routesReady) {
+      next();
+    } else {
+      whenAppReady().then(() => next());
+    }
+  });
+}
+
+// Mounts the application router plus the 404 and error-handling middleware. Exported and async
+// so startup can run it concurrently with initializeCardDb(): the route module graph is pulled
+// in here via a dynamic import() rather than a top-of-file static import. A static import would
+// force every route/controller/model module to load and transpile (slow under tsx) before the
+// rest of index.ts — serializing route loading ahead of the catalog load. Registering the
+// router here (after the dev gate above) keeps it, the 404, and the error handler last.
+export async function registerRoutes(expressApp: express.Express): Promise<void> {
+  const routeStart = Date.now();
+  if (process.env.NODE_ENV !== 'production') {
+    console.info('Loading routes...');
+  }
+
+  // `.js` extension (not `.ts`): a dynamic import() is ESM even in this CJS-typed package, and
+  // nodenext requires the output extension here. TS and tsx both resolve it to router.ts. The
+  // named `router` binding (not `.default`) sidesteps the dynamic-import default-interop quirk.
+  const { router } = await import('./router/router.js');
+  expressApp.use(router);
+
+  expressApp.use((req: express.Request, res: express.Response) =>
+    render(
+      req,
+      res,
+      'ErrorPage',
+      {
+        requestId: req.uuid,
+        title: '404: Page not found',
+      },
+      {
+        noindex: true,
+      },
+    ),
+  );
+
+  // Error-handling middleware. MUST have four parameters (err, req, res, next) — Express
+  // only treats a middleware as an error handler when its arity is 4, so this is what makes
+  // next(err) (from async handlers, the request timeout, etc.) actually render our error
+  // page and log with request context, instead of falling through to Express's default.
+  expressApp.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    // If the response has already started, we can't render an error page over it. This is
+    // typically a follow-on error (e.g. the request timed out and responded, then a slow
+    // handler resolved and tried to send again) — the original cause was already logged, so
+    // don't log this artifact. Delegate to Express's default handler to close the connection.
+    if (res.headersSent) {
+      return next(err);
+    }
+
+    // Safely handle logging - fallback if logger middleware hasn't run yet
+    if (req.logger && req.logger.error) {
+      req.logger.error(err);
+    } else {
+      console.error('Error occurred before logger middleware:', err?.message, err?.stack);
+    }
+
+    res.status(typeof err?.status === 'number' ? err.status : 500);
+    return render(
+      req,
+      res,
+      'ErrorPage',
+      {
+        error: err?.message,
+        requestId: req.uuid,
+        title: 'Oops! Something went wrong.',
+      },
+      {
+        noindex: true,
+      },
+    );
+  });
+
+  routesReady = true;
+  resolveRoutesReady();
+  if (process.env.NODE_ENV !== 'production') {
+    console.info(`Routes loaded in ${((Date.now() - routeStart) / 1000).toFixed(2)}s`);
+  }
+}
 
 // Check for card database updates every 30 minutes
 // Update if data is over a week old or if card count has changed
@@ -343,12 +385,26 @@ schedule.scheduleJob('*/30 * * * *', async () => {
   await checkAndUpdateCardbase('private', bucket);
 });
 
-// Start server after carddb is initialized (ML is now in separate service).
-initializeCardDb().then(async () => {
+const startListening = () => {
   const port = process.env.PORT || 5000;
   const host = process.env.LISTEN_ON || '127.0.0.1';
   http.createServer(app).listen(Number(port), host);
 
   console.info(`Server started on port ${port}, listening on ${host}...`);
   console.info(`ML service URL: ${process.env.ML_SERVICE_URL || 'http://localhost:5002'}`);
-});
+};
+
+if (process.env.NODE_ENV === 'production') {
+  // Production: register routes and load the card catalog concurrently, then accept traffic.
+  Promise.all([registerRoutes(app), initializeCardDb()]).then(startListening);
+} else {
+  // Dev: start listening immediately so nodemon restarts are near-instant, then register routes
+  // and load the card catalog concurrently in the background (previously the route module graph
+  // loaded synchronously *before* the catalog even started). The gate middleware above holds app
+  // requests until both finish; static assets and /healthcheck respond right away.
+  startListening();
+  Promise.all([
+    registerRoutes(app).then(() => console.info('Routes ready.')),
+    initializeCardDb().then(() => console.info('Card catalog ready.')),
+  ]).catch((e) => console.error('Startup task failed; some routes may hang:', e));
+}
