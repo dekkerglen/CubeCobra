@@ -11,6 +11,12 @@ jest.mock('../../src/dynamo/daos', () => ({
   patronDao: {
     getById: jest.fn(),
   },
+  // rotateFeatured also looks up each owner via userDao to read their roles (admins keep their
+  // featured slot regardless of patron status). Left unstubbed here → getById resolves undefined
+  // → roles undefined → non-admin, so eligibility falls to patron status as these tests intend.
+  userDao: {
+    getById: jest.fn(),
+  },
 }));
 
 const { rotateFeatured } = require('serverutils/featuredQueue');

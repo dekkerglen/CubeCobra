@@ -5,21 +5,14 @@ export default {
   testEnvironment: 'node',
   roots: ['<rootDir>'],
 
-  // Transform configuration. TS7 is the native (Go) compiler and no longer ships the JS
-  // API `ts-jest` depended on, so TS/TSX is transformed by @swc/jest (fast, type-stripping —
-  // type-checking is handled separately by `npm run type-check`). JS/JSX stays on babel-jest.
+  // Transform configuration. TS7 is the native (Go) compiler and no longer ships the JS API
+  // ts-jest depended on, so TS/TSX/JS/JSX is transformed by babel-jest (type-stripping —
+  // type-checking is a separate `npm run type-check` step). We use babel rather than @swc/jest
+  // because the server suite relies on jest.spyOn'ing module exports and on namespace-import
+  // mocks; swc emits read-only ESM-interop exports that break both, while babel's CommonJS
+  // output (writable exports, tsc-matching interop) supports them.
   transform: {
-    '^.+\\.(ts|tsx)$': [
-      '@swc/jest',
-      {
-        jsc: {
-          parser: { syntax: 'typescript', tsx: true, decorators: false },
-          target: 'es2022',
-        },
-        module: { type: 'commonjs' },
-      },
-    ],
-    '^.+\\.(js|jsx)$': [
+    '^.+\\.(ts|tsx|js|jsx)$': [
       'babel-jest',
       {
         presets: ['@babel/preset-env', '@babel/preset-react', '@babel/preset-typescript'],

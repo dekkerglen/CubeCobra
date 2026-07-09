@@ -86,8 +86,6 @@
     "@rollup/plugin-commonjs": "^25.0.8",
     "@rollup/plugin-json": "^6.1.0",
     "@rollup/plugin-node-resolve": "^15.2.3",
-    "@swc/core": "^1.15.43",
-    "@swc/jest": "^0.2.39",
     "@types/archiver": "^6.0.2",
     "@types/bcryptjs": "^2.4.6",
     "@types/big-json": "^3.2.5",

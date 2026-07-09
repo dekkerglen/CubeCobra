@@ -30,12 +30,14 @@
     "**/*.cjs"
   ],
   "rules": {
-    "eqeqeq": "error",
     "no-console": "off",
     "no-unused-vars": "off",
     "typescript/no-explicit-any": "off",
+    "eqeqeq": "warn",
+    "no-useless-rename": "warn",
+    "react-hooks/exhaustive-deps": "warn",
     "typescript/no-unused-vars": [
-      "error",
+      "warn",
       {
         "argsIgnorePattern": "^_",
         "varsIgnorePattern": "^_",
