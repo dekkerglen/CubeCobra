@@ -29,16 +29,17 @@ account-settings "My Images" manager (delete / rename / copy URL / replace).
 ## 1. Shared datatypes & gating util (`packages/utils`)
 
 ### 1.1 `packages/utils/src/datatypes/HostedImage.ts` (new)
+
 Define the domain type. Extends `BaseObject` (so it carries `dateCreated`/`dateLastUpdated`).
 
 ```ts
 export interface UnhydratedHostedImage extends BaseObject {
   id: string;
-  owner: string;            // user id
-  key: string;              // R2 key, e.g. userimages/{userId}/{id}.webp
-  url: string;              // resolved public URL (relative path; cdnUrl() applied on read)
-  name?: string;            // user-facing label
-  bytes: number;            // stored size, for quota accounting
+  owner: string; // user id
+  key: string; // R2 key, e.g. userimages/{userId}/{id}.webp
+  url: string; // resolved public URL (relative path; cdnUrl() applied on read)
+  name?: string; // user-facing label
+  bytes: number; // stored size, for quota accounting
   width?: number;
   height?: number;
   usage?: 'general' | 'profile' | 'cube'; // origin hint, optional
@@ -47,12 +48,14 @@ export type HostedImage = UnhydratedHostedImage;
 ```
 
 Notes:
+
 - Store `url` as the **relative path** (`/userimages/...`) and apply `cdnUrl()` when reading
   server-side / when handing to the client, mirroring how assets are handled. This keeps the
   record portable if the CDN domain changes.
 - No sensitive fields → no strip step needed.
 
 ### 1.2 `packages/utils/src/hostedImagesUtil.ts` (new)
+
 Follow the `featuredQueueUtil.ts` pattern so client and server share one gate.
 
 ```ts
@@ -63,10 +66,7 @@ export const MAX_UPLOAD_BYTES = 10 * 1024 * 1024;
 export const MAX_IMAGE_DIMENSION = 1600;
 export const ACCEPTED_MIME = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
 
-export const canUseImageHosting = (
-  patron: Patron | undefined | null,
-  roles: UserRoles[] | undefined,
-): boolean => {
+export const canUseImageHosting = (patron: Patron | undefined | null, roles: UserRoles[] | undefined): boolean => {
   if (roles?.includes(UserRoles.ADMIN)) return true;
   return !!patron && patron.status === PatronStatuses.ACTIVE && patron.level >= IMAGE_HOSTING_TIER;
 };
@@ -77,6 +77,7 @@ export const canUseImageHosting = (
 ## 2. DynamoDB DAO (`packages/server/src/dynamo`)
 
 ### 2.1 `packages/server/src/dynamo/dao/HostedImageDynamoDao.ts` (new)
+
 Extend `BaseDynamoDao<HostedImage, UnhydratedHostedImage>` (single-table; no CDK change).
 
 - `itemType() => 'HOSTED_IMAGE'`
@@ -99,7 +100,9 @@ Model this file on `packages/server/src/dynamo/dao/ArticleDynamoDao.ts` (its `qu
 on GSI2 is the closest template).
 
 ### 2.2 `packages/server/src/dynamo/daos.ts`
+
 Register:
+
 ```ts
 export const hostedImageDao = new HostedImageDynamoDao(documentClient, tableName);
 ```
@@ -111,12 +114,14 @@ export const hostedImageDao = new HostedImageDynamoDao(documentClient, tableName
 The server currently has **no** R2 client (only `packages/jobs/src/utils/r2.ts` does). Add one.
 
 ### 3.1 `packages/server/src/serverutils/r2.ts` (new)
+
 Mirror `jobs/src/utils/r2.ts`: `S3Client` (`@aws-sdk/client-s3`, region `auto`,
 `forcePathStyle`, R2 creds), `r2Configured()`, `putObject(key, body, contentType, cacheControl)`,
 `deleteObject(key)`. Uses the same env vars (`R2_ENDPOINT`, `R2_ACCESS_KEY_ID`,
 `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`).
 
 ### 3.2 `packages/server/src/serverutils/hostedImageStorage.ts` (new)
+
 The storage abstraction that picks R2 vs local folder:
 
 - `processImage(buffer): { body: Buffer, width, height, bytes }` — via `sharp`: auto-orient,
@@ -124,7 +129,7 @@ The storage abstraction that picks R2 vs local folder:
   `.webp()`, `.rotate()` and metadata-strip (sharp strips by default on re-encode).
 - `storeImage(userId, imageId, body)`:
   - If `r2Configured()` → `putObject('userimages/${userId}/${imageId}.webp', body, 'image/webp',
-    'public, max-age=31536000, immutable')`.
+'public, max-age=31536000, immutable')`.
   - Else (local dev) → write to `packages/server/public/userimages/${userId}/${imageId}.webp`
     (served by the existing `express.static(public)` handler).
   - Returns the **relative** url path `/userimages/${userId}/${imageId}.webp`.
@@ -133,11 +138,14 @@ The storage abstraction that picks R2 vs local folder:
 Add `sharp` to `packages/server` dependencies (already a `jobs` dep).
 
 ### 3.3 Multipart intake
+
 `express-fileupload` is already mounted globally in `packages/server/src/index.ts`
 (`app.use(fileUpload())`), but with no limits. Tighten it:
+
 ```ts
 app.use(fileUpload({ limits: { fileSize: MAX_UPLOAD_BYTES }, abortOnLimit: true }));
 ```
+
 (Verify no other consumer depends on the current unlimited config — grep found none.)
 
 ---
@@ -187,6 +195,7 @@ are wired — follow existing `queuefeatured.ts` registration):
 Ownership checks use `image.owner === req.user.id || isAdmin(req.user)`.
 
 ### 4.1 Profile & cube image wiring
+
 - **Profile:** add `profileHostedImageId?: string` and derived `profileImageUrl?: string` to
   `User`/`UnhydratedUser` (`packages/utils/src/datatypes/User.ts`). Existing card-art
   `imageName`/`image` stays as the fallback. On profile-image upload, create a `HostedImage`
@@ -232,7 +241,7 @@ button (which is deep in the tree) we need the level client-side.
 > every request. `patronLevel`/`patronStatus` are added to the `reactProps.user` whitelist and to
 > the `User` type as ephemeral (non-persisted) fields. The client hook `useCanUploadImages()`
 > (`hooks/useCanUploadImages.ts`) reads `UserContext` and calls `canUseImageHostingClient(level,
-> status, roles)`. The `UserAccountPage` "My Images" section is gated with the full
+status, roles)`. The `UserAccountPage` "My Images" section is gated with the full
 > `canUseImageHosting(patron, roles)` using the `patron` page prop it already receives.
 
 ---
@@ -240,6 +249,7 @@ button (which is deep in the tree) we need the level client-side.
 ## 6. Client: reusable upload widget
 
 `packages/client/src/components/ImageUploadWidget.tsx` (new)
+
 - Base components: `Input type="file"`, `Button`, `Collapse`, `Card`, plus `@primer/octicons-react`
   (e.g. `UploadIcon`, `CopyIcon`, `TrashIcon` — **no emoji**, per project convention).
 - Uses `csrfFetch` from `CSRFContext` with a `FormData` body (do **not** set `Content-Type`;
@@ -252,6 +262,7 @@ button (which is deep in the tree) we need the level client-side.
 ## 7. Client: card modal integration
 
 `packages/client/src/components/card/CardModal.tsx` (and `VoucherCardModal.tsx`)
+
 - Next to the "Image URL" / "Image Back URL" inputs, add an **Upload** button — rendered only
   when `useCanUploadImages()` is true.
 - Clicking toggles a `Collapse` containing `ImageUploadWidget`.
@@ -268,8 +279,8 @@ button (which is deep in the tree) we need the level client-side.
   - `GET /user/images` on mount (paginated), grid of thumbnails.
   - Per image: **Copy URL** (`navigator.clipboard`, `CopyIcon`), **Rename**, **Replace**
     (`ImageUploadWidget` in replace mode), **Delete**.
-  - Delete opens a confirm modal with the warning: *"Deleting this image may break any cards,
-    cubes, or profiles that link to it. This cannot be undone."*
+  - Delete opens a confirm modal with the warning: _"Deleting this image may break any cards,
+    cubes, or profiles that link to it. This cannot be undone."_
   - Show quota usage (`count / 100`, `MB / 500MB`).
 
 ---
@@ -320,6 +331,7 @@ suffix.) Keep copy user-facing — no file paths / bucket names.
 ## 12. Files touched — quick index
 
 New:
+
 - `packages/utils/src/datatypes/HostedImage.ts`
 - `packages/utils/src/hostedImagesUtil.ts`
 - `packages/server/src/dynamo/dao/HostedImageDynamoDao.ts`
@@ -332,6 +344,7 @@ New:
 - `packages/server/public/userimages/.gitkeep` (local dev fallback dir)
 
 Edited:
+
 - `packages/server/src/dynamo/daos.ts` (register dao)
 - `packages/server/src/index.ts` (fileUpload limits)
 - `packages/server/src/serverutils/render.ts` (expose patron level via existing Promise.all)

@@ -43,7 +43,11 @@ export const PatronTierBadge: React.FC<PatronTierBadgeProps> = ({ level, classNa
   if (!tierClass || !label) return null;
 
   return (
-    <span title={`${label} Patreon tier`} className={classNames(BADGE_BASE_CLASSES, tierClass, className)} aria-label={label}>
+    <span
+      title={`${label} Patreon tier`}
+      className={classNames(BADGE_BASE_CLASSES, tierClass, className)}
+      aria-label={label}
+    >
       <ZapIcon size={10} />
       {label}
     </span>

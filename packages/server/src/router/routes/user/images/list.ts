@@ -1,8 +1,4 @@
-import {
-  hostedImageToClient,
-  MAX_BYTES_PER_USER,
-  MAX_IMAGES_PER_USER,
-} from '@utils/hostedImagesUtil';
+import { hostedImageToClient, MAX_BYTES_PER_USER, MAX_IMAGES_PER_USER } from '@utils/hostedImagesUtil';
 import { hostedImageDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuthJson } from 'router/middleware';
 import cloudwatch from 'serverutils/cloudwatch';

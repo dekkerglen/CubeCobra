@@ -22,10 +22,7 @@ export const ACCEPTED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp', 'im
 export const HOSTED_IMAGE_PREFIX = 'userimages';
 
 // True if the user may upload/host images: an active Lotus Cobra patron, or an Admin.
-export const canUseImageHosting = (
-  patron: Patron | undefined | null,
-  roles: UserRoles[] | undefined,
-): boolean => {
+export const canUseImageHosting = (patron: Patron | undefined | null, roles: UserRoles[] | undefined): boolean => {
   if (roles && roles.includes(UserRoles.ADMIN)) {
     return true;
   }
@@ -65,9 +62,5 @@ export const canUseImageHostingClient = (
   if (roles && roles.includes(UserRoles.ADMIN)) {
     return true;
   }
-  return (
-    patronLevel !== undefined &&
-    patronStatus === PatronStatuses.ACTIVE &&
-    patronLevel >= IMAGE_HOSTING_TIER
-  );
+  return patronLevel !== undefined && patronStatus === PatronStatuses.ACTIVE && patronLevel >= IMAGE_HOSTING_TIER;
 };

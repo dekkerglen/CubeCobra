@@ -855,11 +855,9 @@ export async function localBatchDeckbuild(
     cardMeta: entries[idx]!.cardMeta,
     originalPool: seat.originalPool,
   }));
-  await runManabaseTrim(
-    trimDecks,
-    (batchInputs) => localBatchDraftRanked(batchInputs, sharedRemapping, chunkSize),
-    { signal },
-  );
+  await runManabaseTrim(trimDecks, (batchInputs) => localBatchDraftRanked(batchInputs, sharedRemapping, chunkSize), {
+    signal,
+  });
   // Each cut land that's still in the original pool needs to be reflected in
   // remainingCounts so the sideboard reconstruction below picks it up.
   for (let s = 0; s < seats.length; s += 1) {

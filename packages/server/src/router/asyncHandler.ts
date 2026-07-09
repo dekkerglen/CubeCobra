@@ -27,7 +27,5 @@ export const asyncHandler =
  * each stage individually, so we must flatten first — otherwise asyncHandler would receive an
  * array instead of a function and calling it throws "fn is not a function" at request time.
  */
-export const wrapHandlers = (
-  handler: express.RequestHandler | express.RequestHandler[],
-): express.RequestHandler[] =>
+export const wrapHandlers = (handler: express.RequestHandler | express.RequestHandler[]): express.RequestHandler[] =>
   (Array.isArray(handler) ? handler : [handler]).flat(Infinity).map(asyncHandler);

@@ -437,9 +437,7 @@ export const draft = (pack: string[], pool: string[]) => {
   return res.sort((a, b) => (b.rating ?? 0) - (a.rating ?? 0));
 };
 
-export const batchDraft = (
-  inputs: { pack: string[]; pool: string[] }[],
-): { oracle: string; rating: number }[][] => {
+export const batchDraft = (inputs: { pack: string[]; pool: string[] }[]): { oracle: string; rating: number }[][] => {
   if (!encoder || !draftDecoder || inputs.length === 0) {
     return inputs.map(() => []);
   }

@@ -156,10 +156,7 @@ export const build = async (oracles: string[]): Promise<{ oracle: string; rating
 };
 
 // Throwing variant — see buildOrThrow.
-export const draftOrThrow = async (
-  pack: string[],
-  pool: string[],
-): Promise<{ oracle: string; rating: number }[]> => {
+export const draftOrThrow = async (pack: string[], pool: string[]): Promise<{ oracle: string; rating: number }[]> => {
   const response = await mlServiceRequest<{
     success: boolean;
     cards: { oracle: string; rating: number }[];

@@ -17,7 +17,9 @@ export interface AdminPatronRow {
 
 // Resolves a page of patrons into display rows, batch-fetching the linked users so we can
 // show a username and link to /user/view/{owner}.
-const toRows = async (patrons: { owner: string; email: string; level: number; status: string }[]): Promise<AdminPatronRow[]> => {
+const toRows = async (
+  patrons: { owner: string; email: string; level: number; status: string }[],
+): Promise<AdminPatronRow[]> => {
   const owners = patrons.map((p) => p.owner).filter(Boolean);
   const users = owners.length > 0 ? await userDao.batchGet(owners) : [];
   const usernameById = new Map(users.map((u) => [u.id, u.username]));

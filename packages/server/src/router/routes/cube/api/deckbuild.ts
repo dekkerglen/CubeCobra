@@ -19,7 +19,10 @@ const handleMlOutage = (req: Request, res: Response, err: unknown, context: stri
   if (!res.headersSent) {
     res
       .status(503)
-      .json({ success: false, message: 'The deck building service is temporarily unavailable. Please try again shortly.' });
+      .json({
+        success: false,
+        message: 'The deck building service is temporarily unavailable. Please try again shortly.',
+      });
   }
   return true;
 };

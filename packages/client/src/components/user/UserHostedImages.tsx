@@ -105,7 +105,10 @@ const UserHostedImages: React.FC = () => {
     const body = await response.json();
     if (response.ok && body.success === 'true') {
       setImages((prev) => prev.filter((img) => img.id !== target.id));
-      setUsage((prev) => ({ count: Math.max(0, prev.count - 1), bytes: Math.max(0, prev.bytes - (target.bytes || 0)) }));
+      setUsage((prev) => ({
+        count: Math.max(0, prev.count - 1),
+        bytes: Math.max(0, prev.bytes - (target.bytes || 0)),
+      }));
       setDeleting(null);
     } else {
       setError(body.message || 'Could not delete the image.');
@@ -116,16 +119,16 @@ const UserHostedImages: React.FC = () => {
   return (
     <Flexbox direction="col" gap="3">
       <Text sm className="text-text-secondary">
-        Upload and manage images hosted on Cube Cobra. Use their URLs as custom card art, or set them
-        as your profile or cube image.
+        Upload and manage images hosted on Cube Cobra. Use their URLs as custom card art, or set them as your profile or
+        cube image.
       </Text>
 
       <ImageUploadWidget onUploaded={onUploaded} usage="general" label="Upload New Image" />
 
       {limits.maxImages > 0 && (
         <Text sm className="text-text-secondary">
-          Using {usage.count} / {limits.maxImages} images and {formatMB(usage.bytes)}MB /{' '}
-          {formatMB(limits.maxBytes)}MB of storage.
+          Using {usage.count} / {limits.maxImages} images and {formatMB(usage.bytes)}MB / {formatMB(limits.maxBytes)}MB
+          of storage.
         </Text>
       )}
 
@@ -204,8 +207,7 @@ const UserHostedImages: React.FC = () => {
         <ModalHeader setOpen={(open) => !open && setDeleting(null)}>Delete Image</ModalHeader>
         <ModalBody>
           <Alert color="warning">
-            Deleting this image may break any cards, cubes, or profiles that link to it. This cannot be
-            undone.
+            Deleting this image may break any cards, cubes, or profiles that link to it. This cannot be undone.
           </Alert>
         </ModalBody>
         <ModalFooter>

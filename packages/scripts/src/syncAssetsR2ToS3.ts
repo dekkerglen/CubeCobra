@@ -1,9 +1,4 @@
-import {
-  GetObjectCommand,
-  ListObjectsV2Command,
-  PutObjectCommand,
-  S3Client,
-} from '@aws-sdk/client-s3';
+import { GetObjectCommand, ListObjectsV2Command, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import dotenv from 'dotenv';
 
@@ -70,9 +65,7 @@ const listKeys = async (prefix: string): Promise<string[]> => {
   const keys: string[] = [];
   let ContinuationToken: string | undefined;
   do {
-    const res = await r2.send(
-      new ListObjectsV2Command({ Bucket: R2_BUCKET, Prefix: prefix, ContinuationToken }),
-    );
+    const res = await r2.send(new ListObjectsV2Command({ Bucket: R2_BUCKET, Prefix: prefix, ContinuationToken }));
     for (const obj of res.Contents ?? []) {
       if (obj.Key) keys.push(obj.Key);
     }

@@ -52,9 +52,7 @@ async function main() {
       const items = result.items || [];
       scanned += items.length;
 
-      const anonymousReports = items.filter(
-        (item) => item.type === NoticeType.COMMENT_REPORT && isAnonymous(item),
-      );
+      const anonymousReports = items.filter((item) => item.type === NoticeType.COMMENT_REPORT && isAnonymous(item));
 
       for (const notice of anonymousReports) {
         totalFound += 1;

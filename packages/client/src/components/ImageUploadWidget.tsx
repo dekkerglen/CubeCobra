@@ -22,7 +22,11 @@ interface ImageUploadWidgetProps {
 
 const MAX_MB = Math.round(MAX_UPLOAD_BYTES / (1024 * 1024));
 
-const ImageUploadWidget: React.FC<ImageUploadWidgetProps> = ({ onUploaded, usage = 'general', label = 'Upload Image' }) => {
+const ImageUploadWidget: React.FC<ImageUploadWidgetProps> = ({
+  onUploaded,
+  usage = 'general',
+  label = 'Upload Image',
+}) => {
   const { csrfFetch } = useContext(CSRFContext);
   const fileRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
