@@ -116,7 +116,7 @@
     "typescript": "^6.0.3",
     "webpack": "^5.105.0",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^5.2.6"
+    "webpack-dev-server": "^6.0.0"
   },
   "overrides": {
     "@types/react": "^18.3.3",
