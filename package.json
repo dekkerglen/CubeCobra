@@ -3,7 +3,7 @@
   "version": "1.6.0",
   "description": "",
   "engines": {
-    "node": ">=22.0.0 <23.0.0"
+    "node": ">=22.0.0 <25.0.0"
   },
   "scripts": {
     "dev": "npm-run-all --parallel dev:client dev:server dev:recommender",
