@@ -2,6 +2,15 @@ import React, { ComponentType, ReactElement } from 'react';
 
 import { createRoot } from 'react-dom/client';
 
+// Global stylesheets. Imported here (RenderToRoot is on every page's entry graph) so Vite
+// bundles, hashes, and lists them in its manifest — the server reads that to emit the <link>
+// tags. Order matters for the cascade: the Tailwind stylesheet is imported last so its
+// utilities win over the legacy plain-CSS files.
+import '../css/autocomplete.css';
+import '../css/editcube.css';
+import '../css/tags.css';
+import '../css/stylesheet.css';
+
 import AdsContext from '../contexts/AdsContext';
 import { AutocardContextProvider } from '../contexts/AutocardContext';
 import BaseUrlContext, { BaseUrlContextValue } from '../contexts/BaseUrlContext';

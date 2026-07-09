@@ -3,12 +3,9 @@
   "version": "1.0.0",
   "description": "",
   "scripts": {
-    "copy-prod-client": "mkdir -p dist/server/src/client/ && cp -r ../client/dist/* dist/server/src/client/",
-    "copy-dev-client": "rm -rf src/client && mkdir -p src/client/  && cp -r ../client/dist/* src/client/",
-    "copy-client": "npm run copy-prod-client && npm run copy-dev-client",
     "copy-public": "copyfiles -u 0 -a 'public/**' dist/server/",
     "fix-external-paths": "npx tsc-alias -p tsconfig.json",
-    "build": "npm run write-git-info && npx tsc && npm run fix-external-paths && npm run copy-client && copyfiles -u 1 'src/**/*.pug' dist/server/src && npm run copy-public && copyfiles -u 2 'src/emails/**/*' dist/server/src/emails && copyfiles -u 1 'src/static/**' dist/server/src",
+    "build": "npm run write-git-info && npx tsc && npm run fix-external-paths && copyfiles -u 1 'src/**/*.pug' dist/server/src && npm run copy-public && copyfiles -u 2 'src/emails/**/*' dist/server/src/emails && copyfiles -u 1 'src/static/**' dist/server/src",
     "type-check": "npx tsc --noEmit",
     "start": "node server.js",
     "dev": "npm run write-git-info && tsx watch ./src/index.ts",

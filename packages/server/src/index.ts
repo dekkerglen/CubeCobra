@@ -177,9 +177,6 @@ app.use(
   }),
 );
 
-// Serve static files from the React frontend app (legacy support)
-app.use(express.static(path.join(__dirname, 'client')));
-
 // The catalog files (imagedict/full_names/cardimages) are no longer
 // served to the browser at all — card-name autocomplete and image lookups go
 // through /tool/api/cardnames and /tool/api/cardimagedata, which read the
