@@ -25,6 +25,18 @@ const catalog: Catalog = {
   setdict: {}, // Set metadata keyed by set code, backs the Explore -> Sets page
 };
 
+// Readiness signal for the initial catalog load. In dev the HTTP server starts listening
+// before the (multi-second) catalog load finishes, so request handlers that need card data
+// can await `whenCardDbReady()` instead of operating on an empty catalog. Resolves once the
+// first `initializeCardDb()` completes; stays resolved thereafter.
+let cardDbReady = false;
+let resolveCardDbReady: () => void;
+const cardDbReadyPromise = new Promise<void>((resolve) => {
+  resolveCardDbReady = resolve;
+});
+export const isCardDbReady = (): boolean => cardDbReady;
+export const whenCardDbReady = (): Promise<void> => cardDbReadyPromise;
+
 // names/full_names back the card-name autocomplete (served via /tool/api/cardnames
 // query endpoint); imagedict/cardimages back image lookups (imageutil +
 // /tool/api/cardimagedata). All are kept in memory so nothing ships to the client.
@@ -153,6 +165,9 @@ export async function initializeCardDb(basePath: string = 'private') {
   }
 
   console.info('Finished loading carddb.');
+
+  cardDbReady = true;
+  resolveCardDbReady();
 }
 
 export default catalog;

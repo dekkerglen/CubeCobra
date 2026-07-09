@@ -88,4 +88,7 @@ export const registerRoutes = (directory: string, base: string) => {
 
 registerRoutes('./routes', '');
 
+// Named export in addition to the default: index.ts pulls this in via a dynamic import(), and a
+// named binding avoids the CJS/ESM default-interop ambiguity that `import()` hits under nodenext.
+export { router };
 export default router;
