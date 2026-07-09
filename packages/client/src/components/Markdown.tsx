@@ -302,20 +302,42 @@ export interface MarkdownProps {
   limited?: boolean;
 }
 
-// The custom `centering` (>>> <<<) construct's tokenizer is O(n^2) and recurses per
-// nesting level, so a document with an excessive number of centering fences can hang or
+// The custom `centering` (>>> <<<) construct's tokenizer is O(n^2) and recurses one stack
+// frame per *nesting* level, so a deeply nested (or run-away unclosed) document can hang or
 // overflow the stack (and a blown-stack RangeError unwinds straight through React's error
-// boundary). This ceiling is far above any legitimate primer/blog/comment; past it we drop
-// the custom container extensions rather than crash the whole page. `>{3,}`/`<{3,}` match
-// centering fence *runs* only — ordinary `>`/`>>` blockquotes don't count.
-const MAX_CENTERING_FENCES = 100;
-const countCenteringFences = (text: string): number =>
-  (text.match(/>{3,}/g)?.length ?? 0) + (text.match(/<{3,}/g)?.length ?? 0);
+// boundary). What matters is nesting depth, NOT the number of blocks: a primer with hundreds
+// of flat, self-closing `>>> ... <<<` headers is O(n) and perfectly safe. So we measure the
+// maximum unclosed nesting depth; past this ceiling — far beyond any legitimate primer, which
+// never nests centering more than a couple levels — we drop the custom container extensions
+// rather than crash the whole page.
+const MAX_CENTERING_DEPTH = 25;
+const OPEN_FENCE_RE = /^>{3,}/;
+const CLOSE_FENCE_RE = /^<{3,}\s*$/;
+const CLOSE_FENCE_INLINE_RE = /<{3,}/;
+// Highest nesting depth of unclosed centering fences. A `>>> ... <<<` one-liner opens and
+// closes on the same line, so it never raises the running depth; only a bare `>>>` opening
+// fence (with no closing `<<<` on that line) does.
+const maxCenteringDepth = (text: string): number => {
+  let depth = 0;
+  let max = 0;
+  for (const line of text.split('\n')) {
+    const trimmed = line.trimStart();
+    if (OPEN_FENCE_RE.test(trimmed)) {
+      if (!CLOSE_FENCE_INLINE_RE.test(trimmed)) {
+        depth += 1;
+        if (depth > max) max = depth;
+      }
+    } else if (CLOSE_FENCE_RE.test(trimmed) && depth > 0) {
+      depth -= 1;
+    }
+  }
+  return max;
+};
 
 const Markdown: React.FC<MarkdownProps> = ({ markdown, limited = false }) => {
   const markdownStr = markdown?.toString() ?? '';
   const remarkPlugins = useMemo(
-    () => (countCenteringFences(markdownStr) > MAX_CENTERING_FENCES ? NO_CONTAINER_PLUGINS : ALL_PLUGINS),
+    () => (maxCenteringDepth(markdownStr) > MAX_CENTERING_DEPTH ? NO_CONTAINER_PLUGINS : ALL_PLUGINS),
     [markdownStr],
   );
   return (
