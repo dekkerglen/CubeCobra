@@ -6,15 +6,14 @@
     "rootDir": "..",
     "esModuleInterop": true,
     "target": "ES2020",
-    "baseUrl": "./src",
     "paths": {
-      "@utils/*": ["../../utils/src/*"],
-      "mlutils/*": ["mlutils/*"],
-      "router/*": ["router/*"],
-      "types/*": ["types/*"]
+      "@utils/*": ["../utils/src/*"],
+      "mlutils/*": ["./src/mlutils/*"],
+      "router/*": ["./src/router/*"],
+      "types/*": ["./src/types/*"]
     },
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "nodenext",
+    "moduleResolution": "nodenext",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",

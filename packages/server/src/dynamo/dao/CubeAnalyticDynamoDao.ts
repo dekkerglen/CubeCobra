@@ -19,7 +19,7 @@
 
 import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 
-import { getObject, putObject } from '../s3client';
+import { deleteObject, getObject, putObject } from '../s3client';
 
 export interface CubeAnalyticBatch {
   [cubeId: string]: CubeAnalytic;
@@ -74,7 +74,6 @@ export class CubeAnalyticDynamoDao {
    * @param cubeId - The ID of the cube to delete analytics for
    */
   public async deleteByCube(cubeId: string): Promise<void> {
-    const { deleteObject } = await import('../s3client');
     await deleteObject(process.env.DATA_BUCKET as string, `cube_analytic/${cubeId}.json`);
   }
 

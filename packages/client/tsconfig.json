@@ -11,7 +11,7 @@
     "forceConsistentCasingInFileNames": true,
     "noFallthroughCasesInSwitch": true,
     "module": "esnext",
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": false,
@@ -19,19 +19,19 @@
     "jsx": "react-jsx",
     "jsxImportSource": "react",
     "outDir": "./dist",
-    "baseUrl": "./",
     "paths": {
       "@utils/*": ["../utils/src/*"],
-      "components/*": ["src/components/*"],
-      "utils/*": ["src/utils/*"],
-      "modals/*": ["src/components/modals/*"],
-      "contexts/*": ["src/contexts/*"],
-      "analytics/*": ["src/analytics/*"],
-      "hooks/*": ["src/hooks/*"],
-      "layouts/*": ["src/layouts/*"],
-      "drafting/*": ["src/drafting/*"],
-      "markdown/*": ["src/markdown/*"]
-    }
+      "components/*": ["./src/components/*"],
+      "utils/*": ["./src/utils/*"],
+      "modals/*": ["./src/components/modals/*"],
+      "contexts/*": ["./src/contexts/*"],
+      "analytics/*": ["./src/analytics/*"],
+      "hooks/*": ["./src/hooks/*"],
+      "layouts/*": ["./src/layouts/*"],
+      "drafting/*": ["./src/drafting/*"],
+      "markdown/*": ["./src/markdown/*"]
+    },
+    "rootDir": ".."
   },
   "include": [
     "src",
