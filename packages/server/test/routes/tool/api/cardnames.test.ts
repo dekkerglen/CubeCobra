@@ -1,29 +1,30 @@
 import { Catalog } from '@utils/datatypes/CardCatalog';
 
-const mockCardCatalog: Catalog = {
-  imagedict: {},
-  cardimages: {},
-  cardnames: ['angel token', 'lightning bolt', 'treasure token'],
-  comboTree: {},
-  full_names: ['angel token [TKHM-1]', 'lightning bolt [2XM-117]', 'treasure token [TKHM-2]'],
-  nameToId: {},
-  oracleToId: {},
-  english: {},
-  _carddict: {},
-  indexToOracle: [],
-  oracleToIndex: {},
-  metadatadict: {},
-  printedCardList: [],
-  printedCardListWithExtras: [],
-  comboOracleToIndex: {},
-  reasonable_names: ['lightning bolt'],
-  reasonable_full_names: ['lightning bolt [2XM-117]'],
-  setdict: {},
-};
-
+// Fixture is built inside the factory (not an outer `const`): @swc/jest hoists `jest.mock`
+// above module-scope declarations under the TS7 toolchain, so an outer const would be in the
+// TDZ when the factory runs. The `as Catalog` cast is erased at transform time, so it's safe.
 jest.mock('serverutils/cardCatalog', () => ({
   __esModule: true,
-  default: mockCardCatalog,
+  default: {
+    imagedict: {},
+    cardimages: {},
+    cardnames: ['angel token', 'lightning bolt', 'treasure token'],
+    comboTree: {},
+    full_names: ['angel token [TKHM-1]', 'lightning bolt [2XM-117]', 'treasure token [TKHM-2]'],
+    nameToId: {},
+    oracleToId: {},
+    english: {},
+    _carddict: {},
+    indexToOracle: [],
+    oracleToIndex: {},
+    metadatadict: {},
+    printedCardList: [],
+    printedCardListWithExtras: [],
+    comboOracleToIndex: {},
+    reasonable_names: ['lightning bolt'],
+    reasonable_full_names: ['lightning bolt [2XM-117]'],
+    setdict: {},
+  } as Catalog,
 }));
 
 import { Request, Response } from 'express';

@@ -12,8 +12,8 @@
       "serverutils/*": ["../server/src/serverutils/*"],
       "dynamo/*": ["../server/src/dynamo/*"]
     },
-    "module": "commonjs",
-    "moduleResolution": "node",
+    "module": "preserve",
+    "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
     "moduleDetection": "force",

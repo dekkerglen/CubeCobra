@@ -9,7 +9,6 @@ services:
     working_dir: /home/node/app
     environment:
       - NODE_ENV=development
-      - AWS_ENDPOINT=http://localstack:4566
       - NODE_OPTIONS=--max-old-space-size=8192
     env_file:
       - ../../server/.env_EXAMPLE
@@ -29,11 +28,6 @@ services:
     init: true
     networks:
       - cubecobra
-    depends_on:
-      - localstack
-    # Force DNS via the localstack container
-    dns:
-      - 10.5.0.5
   recommender:
     container_name: recommender
     image: node:22.11.0
@@ -43,7 +37,6 @@ services:
     working_dir: /home/node/app/packages/recommenderService
     environment:
       - NODE_ENV=development
-      - AWS_ENDPOINT=http://localstack:4566
       - NODE_OPTIONS=--max-old-space-size=8192
     env_file:
       - path: ../../recommenderService/.env
@@ -53,44 +46,10 @@ services:
     networks:
       - cubecobra
     depends_on:
-      - localstack
       - node
-    # Force DNS via the localstack container
-    dns:
-      - 10.5.0.5
-  localstack:
-    # Localstack community does not persist anything out of the box, that is available in localstack-pro.
-    # This variant (https://hub.docker.com/r/gresau/localstack-persist) causes the state to be persisted on actions and reloaded when the container starts
-    image: gresau/localstack-persist:4.12
-    container_name: localstack
-    volumes:
-      - localstack:/persisted-data
-      # Provide initialization script run once localstack is ready. Creates the s3 bucket
-      - ./docker/localstack-init.sh:/etc/localstack/init/ready.d/localstack-init.sh
-    networks:
-      cubecobra:
-        # Force the containers internal IP
-        ipv4_address: 10.5.0.5
-    ports:
-      - 4566:4566
-    environment:
-      - DYNAMODB_HEAP_SIZE=2G
-      # New engine from 4.8 onwards has problems, on restart all cloudformation status is lost
-      - PROVIDER_OVERRIDE_CLOUDFORMATION=engine-legacy
-
-volumes:
-  localstack:
-    name: 'localstack'
 
 networks:
   # Rename. by default network is prefixed by folder name
   cubecobra:
     driver: bridge
     name: 'cubecobra'
-    # Setup the internal subnet. Per https://github.com/localstack/aws-cdk-local/issues/110 this makes running localstack
-    # and cdklocal in different containers work, which otherwise would fail since CDK accesses buckets with path style and it
-    # would be impossible to know ahead what the hostname is to alias
-    ipam:
-      config:
-        - subnet: 10.5.0.0/16
-          gateway: 10.5.0.1

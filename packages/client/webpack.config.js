@@ -31,15 +31,16 @@ module.exports = {
   module: {
     rules: [
       {
+        // TS7 is the native compiler and no longer exposes the JS API ts-loader used, so TS/TSX
+        // is transpiled by esbuild-loader (type-stripping — type-checking is a separate `tsc`
+        // step). JSX settings (automatic runtime, jsxImportSource) are read from tsconfig.json.
         test: /\.tsx?$/,
         exclude: [/node_modules/, /\.stories\.tsx?$/, /\.\.\/server/, /packages\/server/],
         use: {
-          loader: 'ts-loader',
+          loader: 'esbuild-loader',
           options: {
-            configFile: path.resolve(__dirname, 'tsconfig.json'),
-            compilerOptions: {
-              sourceMap: process.env.NODE_ENV !== 'production',
-            },
+            target: 'es2020',
+            tsconfig: path.resolve(__dirname, 'tsconfig.json'),
           },
         },
       },

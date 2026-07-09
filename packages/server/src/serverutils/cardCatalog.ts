@@ -44,41 +44,50 @@ export const fileToAttribute: Record<string, keyof Catalog> = {
   'setdict.json': 'setdict',
 };
 
-async function loadJSONFile(filename: string, attribute: keyof Catalog) {
-  return new Promise<void>((resolve, reject) => {
-    // Check if file exists before trying to load it
-    if (!fs.existsSync(filename)) {
-      console.info(`File ${filename} not found, using default value for ${attribute}`);
-      resolve();
-      return;
-    }
+// Native JSON.parse is ~4x faster than big-json's streaming parser (measured on carddict.json:
+// ~1.6s vs ~6s) and, unlike a pool of concurrent streaming parses, doesn't contend on the main
+// thread. It's safe as long as the file — read as a single UTF-8 string — stays under V8's max
+// string length (~512M chars / ~536MB). The largest file the catalog loads is carddict.json
+// (~220MB), comfortably within that. For anything approaching the ceiling we fall back to
+// big-json's streaming parser, which has no such limit.
+const MAX_JSON_PARSE_BYTES = 460 * 1024 * 1024;
 
-    try {
-      const fileStart = Date.now();
-      const readStream = fs.createReadStream(filename);
-      const parseStream = json.createParseStream();
-
-      parseStream.on('data', (parsed) => {
-        catalog[attribute] = parsed;
-      });
-
-      readStream.pipe(parseStream);
-
-      readStream.on('end', () => {
-        const fileDuration = ((Date.now() - fileStart) / 1000).toFixed(2);
-
-        console.info(`Loaded ${filename} into ${attribute} in ${fileDuration}s`);
-        resolve();
-      });
-
-      readStream.on('error', (e) => {
-        console.warn(`Error loading ${filename}, using default value for ${attribute}:`, e.message);
-        resolve();
-      });
-    } catch (e) {
-      reject(e);
-    }
+function streamParseJSON(filename: string): Promise<unknown> {
+  return new Promise((resolve, reject) => {
+    const readStream = fs.createReadStream(filename);
+    const parseStream = json.createParseStream();
+    let parsed: unknown;
+    parseStream.on('data', (data) => {
+      parsed = data;
+    });
+    parseStream.on('error', reject);
+    readStream.on('error', reject);
+    readStream.pipe(parseStream);
+    readStream.on('end', () => resolve(parsed));
   });
+}
+
+async function loadJSONFile(filename: string, attribute: keyof Catalog) {
+  // Check if file exists before trying to load it
+  if (!fs.existsSync(filename)) {
+    console.info(`File ${filename} not found, using default value for ${attribute}`);
+    return;
+  }
+
+  try {
+    const fileStart = Date.now();
+    const { size } = await fs.promises.stat(filename);
+
+    catalog[attribute] =
+      size > MAX_JSON_PARSE_BYTES
+        ? ((await streamParseJSON(filename)) as Catalog[keyof Catalog])
+        : JSON.parse(await fs.promises.readFile(filename, 'utf8'));
+
+    const fileDuration = ((Date.now() - fileStart) / 1000).toFixed(2);
+    console.info(`Loaded ${filename} into ${attribute} in ${fileDuration}s`);
+  } catch (e) {
+    console.warn(`Error loading ${filename}, using default value for ${attribute}:`, (e as Error).message);
+  }
 }
 
 export async function loadAllFiles(basePath: string = 'private') {

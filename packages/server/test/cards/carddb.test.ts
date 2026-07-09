@@ -2,37 +2,41 @@
 
 import { Catalog } from '@utils/datatypes/CardCatalog';
 
-const mockCardCatalog: Catalog = {
-  imagedict: {},
-  cardimages: {},
-  cardnames: [],
-  comboTree: {},
-  full_names: [],
-  nameToId: {},
-  oracleToId: {},
-  english: {},
-  _carddict: {},
-  indexToOracle: [],
-  oracleToIndex: {},
-  metadatadict: {},
-  printedCardList: [], // for card filters
-  printedCardListWithExtras: [],
-  comboOracleToIndex: {}, // for combo lookups
-  reasonable_names: [],
-  reasonable_full_names: [],
-  setdict: {},
-};
-
-jest.mock('serverutils/cardCatalog', () => {
-  return {
-    __esModule: true,
-    default: mockCardCatalog,
-  };
-});
+// The mock fixture is built INSIDE the factory (not referenced from an outer `const`): under
+// the TS7 toolchain, @swc/jest hoists `jest.mock` above module-scope declarations, so an outer
+// `const mockCardCatalog` would be in the TDZ when the factory runs. We alias the mocked
+// module's default back out (below the imports) so the tests can still mutate the same object.
+jest.mock('serverutils/cardCatalog', () => ({
+  __esModule: true,
+  default: {
+    imagedict: {},
+    cardimages: {},
+    cardnames: [],
+    comboTree: {},
+    full_names: [],
+    nameToId: {},
+    oracleToId: {},
+    english: {},
+    _carddict: {},
+    indexToOracle: [],
+    oracleToIndex: {},
+    metadatadict: {},
+    printedCardList: [], // for card filters
+    printedCardListWithExtras: [],
+    comboOracleToIndex: {}, // for combo lookups
+    reasonable_names: [],
+    reasonable_full_names: [],
+    setdict: {},
+  },
+}));
 
 import Card, { CardDetails, PrintingPreference } from '@utils/datatypes/Card';
 import { FilterFunction } from '@utils/filtering/FilterCards';
 import { getAllMostReasonable, getMostReasonable } from 'serverutils/carddb';
+import cardCatalog from 'serverutils/cardCatalog';
+
+// Same object as the mocked module's default, so mutating it in tests is what the code reads.
+const mockCardCatalog = cardCatalog as unknown as Catalog;
 
 import { createCard, createCardDetails } from '../test-utils/data';
 

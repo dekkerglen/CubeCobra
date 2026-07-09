@@ -22,12 +22,10 @@ declare global {
         error: (...args: any[]) => void;
         info: (...args: any[]) => void;
       };
-      flash: {
-        (): { [key: string]: string[] };
-        (message: string): string[];
-        (type: string, message: string | string[]): number;
-        (type: string, format: string, ...args: any[]): number;
-      };
+      // NOTE: `flash` is intentionally NOT declared here — `@types/connect-flash` already
+      // augments Express.Request with an identical signature. TS7's checker (unlike TS<=6)
+      // treats a second identical declaration as a duplicate identifier (TS2300), so we rely
+      // on the @types package for it. The exported `Request` interface below still lists it.
       validated?: boolean;
       isAuthenticated(): boolean;
       csrfToken(): string;

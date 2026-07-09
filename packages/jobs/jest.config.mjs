@@ -1,17 +1,21 @@
-import type { Config } from 'jest';
-
-const jestConfig: Config = {
-  preset: 'ts-jest',
+// Jest config is authored as .mjs (not .ts): TS7 native has no JS API, so Jest can no longer
+// load a TypeScript config file via ts-node. Test files themselves are still TS and are
+// transformed at runtime by @swc/jest (see `transform` below).
+export default {
   testEnvironment: 'node',
   roots: ['<rootDir>'],
 
-  // Transform configuration
+  // Transform configuration. TS7 is the native compiler without the JS API `ts-jest` needs,
+  // so TS/TSX is transformed by @swc/jest (type-stripping; type-checking is a separate step).
   transform: {
     '^.+\\.(ts|tsx)$': [
-      'ts-jest',
+      '@swc/jest',
       {
-        tsconfig: 'tsconfig.json',
-        isolatedModules: true,
+        jsc: {
+          parser: { syntax: 'typescript', tsx: true, decorators: false },
+          target: 'es2022',
+        },
+        module: { type: 'commonjs' },
       },
     ],
   },
@@ -55,5 +59,3 @@ const jestConfig: Config = {
   // Don't collect coverage on untested files to avoid executing them
   collectCoverage: false,
 };
-
-export default jestConfig;
