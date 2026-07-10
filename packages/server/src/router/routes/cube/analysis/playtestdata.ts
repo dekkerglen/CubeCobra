@@ -36,8 +36,7 @@ interface CardInfo {
   colorIdentity: string[];
 }
 
-const ownerId = (owner: DraftType['owner']): string | undefined =>
-  typeof owner === 'string' ? owner : owner?.id;
+const ownerId = (owner: DraftType['owner']): string | undefined => (typeof owner === 'string' ? owner : owner?.id);
 
 // The single human deck we analyze per draft: the draft owner's seat if present,
 // otherwise the first non-bot seat, otherwise seat 0. (Most drafts are 1 human vs

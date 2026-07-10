@@ -57,7 +57,8 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
       <ModalBody scrollable>
         <Flexbox direction="col" gap="2">
           <Text sm className="mb-2">
-            Having trouble using filter syntax? Check out our <Link href="/wiki/reference/filter-syntax">syntax guide</Link>.
+            Having trouble using filter syntax? Check out our{' '}
+            <Link href="/wiki/reference/filter-syntax">syntax guide</Link>.
           </Text>
           <Input
             name="name"

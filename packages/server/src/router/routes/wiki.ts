@@ -50,9 +50,7 @@ const wikiPageHandler = async (req: Request, res: Response) => {
     { tree: getWikiTree(), page, activeSlug: slug },
     {
       title: `${page.title} - Wiki`,
-      metadata: page.description
-        ? [{ property: 'og:description', content: page.description }]
-        : undefined,
+      metadata: page.description ? [{ property: 'og:description', content: page.description }] : undefined,
     },
   );
 };

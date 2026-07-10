@@ -385,6 +385,7 @@ describe('Finish Draft', () => {
       draftOwner,
       `/cube/deck/${draft.id}`,
       `${draftOwner.username} drafted your cube: ${cube.name}`,
+      { type: 'draft', subject: cube.id, subjectName: cube.name },
     );
   });
 

@@ -39,10 +39,10 @@ Tags let you group cards by theme, archetype, or role — for example `aggro`, `
 `fixing`. Add tags from a card's detail panel. You can then color-code tags and use them to filter
 and sort your list.
 
-| Tag       | Example cards                        |
-| --------- | ------------------------------------ |
-| removal   | [[Swords to Plowshares]], [[Doom Blade]] |
-| fixing    | [[Command Tower]], [[Fellwar Stone]] |
+| Tag     | Example cards                            |
+| ------- | ---------------------------------------- |
+| removal | [[Swords to Plowshares]], [[Doom Blade]] |
+| fixing  | [[Command Tower]], [[Fellwar Stone]]     |
 
 ## Saving changes
 

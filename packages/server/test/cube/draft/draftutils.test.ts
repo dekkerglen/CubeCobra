@@ -420,6 +420,7 @@ describe('sanitizeImportedFormat', () => {
       multiples: true,
       markdown: 'hello',
       basicsBoard: 'Basics',
+      defaultSeats: 8,
     });
     expect((format as any).html).toBeUndefined();
     expect((format as any).bogus).toBeUndefined();

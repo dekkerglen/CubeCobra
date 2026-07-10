@@ -108,9 +108,7 @@ const CubeCompareModal: React.FC<CubeCompareModalProps> = ({ isOpen, setOpen }) 
 
   useEffect(() => {
     if (followedCubes.length === 0) return;
-    setSelectedFollowedCube((prev) =>
-      prev && followedCubes.some((c) => c.id === prev) ? prev : followedCubes[0].id,
-    );
+    setSelectedFollowedCube((prev) => (prev && followedCubes.some((c) => c.id === prev) ? prev : followedCubes[0].id));
   }, [followedCubes]);
 
   const handleCompare = (targetId: string) => {

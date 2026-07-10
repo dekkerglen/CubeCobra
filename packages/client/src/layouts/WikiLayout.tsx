@@ -28,9 +28,7 @@ const WikiNavTree: React.FC<WikiNavTreeProps> = ({ nodes, activeSlug, depth = 0 
                 href={node.href}
                 className={classNames(
                   'block px-2 py-1 rounded text-sm font-semibold transition-colors',
-                  activeSlug === node.slug
-                    ? 'bg-button-primary text-white'
-                    : 'text-text hover:bg-bg-active',
+                  activeSlug === node.slug ? 'bg-button-primary text-white' : 'text-text hover:bg-bg-active',
                 )}
               >
                 {node.title}

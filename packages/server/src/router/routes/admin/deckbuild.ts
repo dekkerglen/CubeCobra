@@ -18,11 +18,35 @@ const buildSpecs = (queue: string, dlq: string, fn: string): MetricSpec[] => {
   const sqsDim = (name: string) => [{ Name: 'QueueName', Value: name }];
   const fnDim = [{ Name: 'FunctionName', Value: fn }];
   return [
-    { id: 'queueDepth', namespace: 'AWS/SQS', metricName: 'ApproximateNumberOfMessagesVisible', dimensions: sqsDim(queue), stat: 'Maximum' },
-    { id: 'oldestAge', namespace: 'AWS/SQS', metricName: 'ApproximateAgeOfOldestMessage', dimensions: sqsDim(queue), stat: 'Maximum' },
+    {
+      id: 'queueDepth',
+      namespace: 'AWS/SQS',
+      metricName: 'ApproximateNumberOfMessagesVisible',
+      dimensions: sqsDim(queue),
+      stat: 'Maximum',
+    },
+    {
+      id: 'oldestAge',
+      namespace: 'AWS/SQS',
+      metricName: 'ApproximateAgeOfOldestMessage',
+      dimensions: sqsDim(queue),
+      stat: 'Maximum',
+    },
     { id: 'sent', namespace: 'AWS/SQS', metricName: 'NumberOfMessagesSent', dimensions: sqsDim(queue), stat: 'Sum' },
-    { id: 'deleted', namespace: 'AWS/SQS', metricName: 'NumberOfMessagesDeleted', dimensions: sqsDim(queue), stat: 'Sum' },
-    { id: 'dlqDepth', namespace: 'AWS/SQS', metricName: 'ApproximateNumberOfMessagesVisible', dimensions: sqsDim(dlq), stat: 'Maximum' },
+    {
+      id: 'deleted',
+      namespace: 'AWS/SQS',
+      metricName: 'NumberOfMessagesDeleted',
+      dimensions: sqsDim(queue),
+      stat: 'Sum',
+    },
+    {
+      id: 'dlqDepth',
+      namespace: 'AWS/SQS',
+      metricName: 'ApproximateNumberOfMessagesVisible',
+      dimensions: sqsDim(dlq),
+      stat: 'Maximum',
+    },
     { id: 'invocations', namespace: 'AWS/Lambda', metricName: 'Invocations', dimensions: fnDim, stat: 'Sum' },
     { id: 'errors', namespace: 'AWS/Lambda', metricName: 'Errors', dimensions: fnDim, stat: 'Sum' },
     { id: 'throttles', namespace: 'AWS/Lambda', metricName: 'Throttles', dimensions: fnDim, stat: 'Sum' },

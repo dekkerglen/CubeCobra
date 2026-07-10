@@ -223,9 +223,7 @@ const WordCloudView: React.FC<{ words: CloudInput[]; height?: number }> = ({ wor
     }
     let cancelled = false;
     // Largest words first so d3-cloud prioritizes them if space runs out.
-    const input: PlacedWord[] = [...words]
-      .sort((a, b) => b.size - a.size)
-      .map((w) => ({ ...w, text: w.keyword }));
+    const input: PlacedWord[] = [...words].sort((a, b) => b.size - a.size).map((w) => ({ ...w, text: w.keyword }));
 
     const layout = cloud<PlacedWord>()
       .size([Math.max(300, width), height])
@@ -265,7 +263,9 @@ const WordCloudView: React.FC<{ words: CloudInput[]; height?: number }> = ({ wor
                 cursor: 'default',
               }}
             >
-              <title>{w.reminder ? `${w.keyword}: ${w.reminder} (${w.total})` : `${w.keyword} — ${w.total} cards`}</title>
+              <title>
+                {w.reminder ? `${w.keyword}: ${w.reminder} (${w.total})` : `${w.keyword} — ${w.total} cards`}
+              </title>
               {w.keyword}
             </text>
           ))}
@@ -292,7 +292,10 @@ const KeywordReferenceCard: React.FC<{ stat: KeywordStat; cube: any }> = ({ stat
             </Text>
             <span
               className="rounded-full px-2 py-0.5 text-xs font-semibold"
-              style={{ backgroundColor: PIP_COLOR[stat.dominantColor], color: contrastText(PIP_COLOR[stat.dominantColor]) }}
+              style={{
+                backgroundColor: PIP_COLOR[stat.dominantColor],
+                color: contrastText(PIP_COLOR[stat.dominantColor]),
+              }}
             >
               {stat.total}
             </span>
@@ -482,10 +485,7 @@ const Keywords: React.FC = () => {
               </Tooltip>
             </Text>
             <Flexbox direction="row" gap="1">
-              <Button
-                color={densityMode === 'count' ? 'primary' : 'secondary'}
-                onClick={() => setDensityMode('count')}
-              >
+              <Button color={densityMode === 'count' ? 'primary' : 'secondary'} onClick={() => setDensityMode('count')}>
                 Count
               </Button>
               <Button

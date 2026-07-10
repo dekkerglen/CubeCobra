@@ -53,7 +53,7 @@ const parseFrontmatter = (raw: string): Frontmatter => {
     return { data: {}, body: raw };
   }
   const data: Record<string, string> = {};
-  for (const line of match[1].split(/\r?\n/)) {
+  for (const line of (match[1] ?? '').split(/\r?\n/)) {
     const idx = line.indexOf(':');
     if (idx === -1) continue;
     const key = line.slice(0, idx).trim();
@@ -72,7 +72,7 @@ const parseFrontmatter = (raw: string): Frontmatter => {
 const splitOrderPrefix = (name: string): { order: number; slugPart: string } => {
   const m = /^(\d+)[-_.](.*)$/.exec(name);
   if (m) {
-    return { order: parseInt(m[1], 10), slugPart: m[2] };
+    return { order: parseInt(m[1]!, 10), slugPart: m[2]! };
   }
   return { order: NaN, slugPart: name };
 };

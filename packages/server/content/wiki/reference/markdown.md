@@ -18,10 +18,10 @@ Our Markdown syntax is based on the CommonMark specification, which includes all
 constructs you may already be familiar with.
 [Learn more about CommonMark.](https://commonmark.org/help/)
 
-| Source | Result |
-| --- | --- |
-| `**bold text**` | **bold text** |
-| `*italic text*` | *italic text* |
+| Source                            | Result                          |
+| --------------------------------- | ------------------------------- |
+| `**bold text**`                   | **bold text**                   |
+| `*italic text*`                   | _italic text_                   |
 | `[a link](https://cubecobra.com)` | [a link](https://cubecobra.com) |
 
 ## Linking Cards
@@ -30,9 +30,9 @@ Wrap a card name in double square brackets to link it with autocard. The case do
 always links to the Cube Cobra card page. Add a slash to the beginning of the name to autocard the
 back of a double-faced card.
 
-| Source | Result |
-| --- | --- |
-| `[[Ambush Viper]]` | [[Ambush Viper]] |
+| Source                   | Result                 |
+| ------------------------ | ---------------------- |
+| `[[Ambush Viper]]`       | [[Ambush Viper]]       |
 | `[[/Delver of Secrets]]` | [[/Delver of Secrets]] |
 
 To link a specific version, supply a [Scryfall ID](https://scryfall.com/docs/api/cards/id) after a
@@ -53,10 +53,10 @@ Add an exclamation point before the card name to display its image instead of a 
 scale with the width of the screen. For double-faced cards, add a slash to show the back side in
 autocard, and a double slash to show the back side as the image.
 
-| Source | Result |
-| --- | --- |
-| `[[!Hexdrinker]]` | [[!Hexdrinker]] |
-| `[[!/Delver of Secrets]]` | [[!/Delver of Secrets]] |
+| Source                     | Result                   |
+| -------------------------- | ------------------------ |
+| `[[!Hexdrinker]]`          | [[!Hexdrinker]]          |
+| `[[!/Delver of Secrets]]`  | [[!/Delver of Secrets]]  |
 | `[[!//Delver of Secrets]]` | [[!//Delver of Secrets]] |
 
 To display card images alongside each other in a row, wrap them in double angle brackets. (This
@@ -73,20 +73,20 @@ feature is not available in blog posts.)
 Symbols can be added using curly braces. Most MTG symbols are supported. Create hybrid symbols by
 including a slash, and Phyrexian mana with `/P`.
 
-| Source | Result |
-| --- | --- |
-| `{W}{U}{B}{R}{G}` | {W}{U}{B}{R}{G} |
-| `{W/U}{G/U}{B/R}{R/W}{B/G}` | {W/U}{G/U}{B/R}{R/W}{B/G} |
-| `{2/W}{2/U}{2/B}{2/R}{2/G}` | {2/W}{2/U}{2/B}{2/R}{2/G} |
-| `{W/P}{U/P}{B/P}{R/P}{G/P}` | {W/P}{U/P}{B/P}{R/P}{G/P} |
+| Source                         | Result                       |
+| ------------------------------ | ---------------------------- |
+| `{W}{U}{B}{R}{G}`              | {W}{U}{B}{R}{G}              |
+| `{W/U}{G/U}{B/R}{R/W}{B/G}`    | {W/U}{G/U}{B/R}{R/W}{B/G}    |
+| `{2/W}{2/U}{2/B}{2/R}{2/G}`    | {2/W}{2/U}{2/B}{2/R}{2/G}    |
+| `{W/P}{U/P}{B/P}{R/P}{G/P}`    | {W/P}{U/P}{B/P}{R/P}{G/P}    |
 | `{e}{T}{q}{s}{m}{c}{X}{Y}{15}` | {e}{T}{q}{s}{m}{c}{X}{Y}{15} |
 
 ## Linking Users
 
 You can link to a user by adding an `@` before the username.
 
-| Source | Result |
-| --- | --- |
+| Source                                 | Result                               |
+| -------------------------------------- | ------------------------------------ |
 | `This suggestion was made by @dekkaru` | This suggestion was made by @dekkaru |
 
 ## LaTeX
@@ -94,8 +94,8 @@ You can link to a user by adding an `@` before the username.
 You can add LaTeX math expressions using a single `$` for inline LaTeX, and double `$$` on their own
 lines for block LaTeX. You can also use LaTeX in headers and block quotes.
 
-| Source | Result |
-| --- | --- |
+| Source                                                           | Result                                                         |
+| ---------------------------------------------------------------- | -------------------------------------------------------------- |
 | `Some inline latex here $\frac{\sum_{i=1}^N x_i}{N}$ text after` | Some inline latex here $\frac{\sum_{i=1}^N x_i}{N}$ text after |
 
 ```
@@ -112,8 +112,8 @@ $$
 
 For strikethrough text, wrap the text in double tildes.
 
-| Source | Result |
-| --- | --- |
+| Source                           | Result                         |
+| -------------------------------- | ------------------------------ |
 | `~~This text is strikethrough~~` | ~~This text is strikethrough~~ |
 
 ## Centering
@@ -125,13 +125,13 @@ paragraphs can be centered too, and all other Markdown tags can be used inside a
 >>> This text is centered <<<
 ```
 
->>> This text is centered <<<
+> > > This text is centered <<<
 
 ```
 >>> Centered Card: [[!Hexdrinker]] <<<
 ```
 
->>> Centered Card: [[!Hexdrinker]] <<<
+> > > Centered Card: [[!Hexdrinker]] <<<
 
 ## Tables
 
@@ -144,9 +144,9 @@ columns don't have to be vertically aligned, but it helps readability.
 | 15| 7 | 12| 35| 0 |
 ```
 
-| W | U | B | R | G |
-|---|---|---|---|---|
-| 15| 7 | 12| 35| 0 |
+| W   | U   | B   | R   | G   |
+| --- | --- | --- | --- | --- |
+| 15  | 7   | 12  | 35  | 0   |
 
 The delimiter row can optionally contain colons indicating right, center, or left alignment. Table
 cells also support basic formatting.
@@ -158,10 +158,10 @@ cells also support basic formatting.
 | {W}{U}{B}{R} | [[Hexdrinker]] | *emphasized* |
 ```
 
-| Left align | Center align | Right align |
-| :--------- | :----------: | ----------: |
+| Left align   |  Center align  |   Right align |
+| :----------- | :------------: | ------------: |
 | Aligned left | Aligned center | Aligned right |
-| {W}{U}{B}{R} | [[Hexdrinker]] | *emphasized* |
+| {W}{U}{B}{R} | [[Hexdrinker]] |  _emphasized_ |
 
 To use a card link or image with an ID inside a table, the pipe must be escaped with a backslash.
 
@@ -173,11 +173,11 @@ To use a card link or image with an ID inside a table, the pipe must be escaped 
 | [[Ambush Viper]] | Card link without id |
 ```
 
-| Column A | Column B |
-| - | - |
-| [[!/Delver of Secrets\|28059d09-2c7d-4c61-af55-8942107a7c1f]] | Image |
-| [[Old Border Mystic Snake\|f098a28c-5f9b-4a2c-b109-c342365eb948]] | Card link |
-| [[Ambush Viper]] | Card link without id |
+| Column A                                                          | Column B             |
+| ----------------------------------------------------------------- | -------------------- |
+| [[!/Delver of Secrets\|28059d09-2c7d-4c61-af55-8942107a7c1f]]     | Image                |
+| [[Old Border Mystic Snake\|f098a28c-5f9b-4a2c-b109-c342365eb948]] | Card link            |
+| [[Ambush Viper]]                                                  | Card link without id |
 
 ## Task Lists
 
@@ -212,7 +212,7 @@ console.log(this);
 ````
 
 ```javascript
-const x = { a: b+1 };
+const x = { a: b + 1 };
 console.log(this);
 ```
 

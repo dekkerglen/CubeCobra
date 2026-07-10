@@ -29,9 +29,7 @@ export const handler = async (req: Request, res: Response) => {
     // Only touch notifications that belong to the caller and are still unread.
     const toUpdate = notifications.filter(
       (notification) =>
-        notification &&
-        notification.to === `${req.user!.id}` &&
-        notification.status === NotificationStatus.UNREAD,
+        notification && notification.to === `${req.user!.id}` && notification.status === NotificationStatus.UNREAD,
     );
 
     if (toUpdate.length > 0) {

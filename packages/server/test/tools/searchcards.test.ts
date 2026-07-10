@@ -33,9 +33,14 @@ const createStreamingResponse = () => {
       return this;
     },
   };
-  return { res: res as unknown as Response, headers, chunks, get body() {
-    return chunks.join('');
-  } };
+  return {
+    res: res as unknown as Response,
+    headers,
+    chunks,
+    get body() {
+      return chunks.join('');
+    },
+  };
 };
 
 const createRequest = (query: Record<string, any>): Request =>
@@ -68,13 +73,15 @@ describe('Search cards CSV export', () => {
     ];
     jest.spyOn(tools, 'searchAllCards').mockImplementation(() => cards);
 
-    const { res, headers, body } = createStreamingResponse();
-    await csvHandler(createRequest({ f: '', s: 'Elo', d: 'descending', di: 'names', ie: '0' }), res);
+    // Read stream.body via the live getter after the handler writes; destructuring it here would
+    // freeze it to the empty value captured before csvHandler runs.
+    const stream = createStreamingResponse();
+    await csvHandler(createRequest({ f: '', s: 'Elo', d: 'descending', di: 'names', ie: '0' }), stream.res);
 
-    expect(headers['Content-type']).toEqual('text/csv');
-    expect(headers['Content-disposition']).toEqual('attachment; filename=cardsearch.csv');
+    expect(stream.headers['Content-type']).toEqual('text/csv');
+    expect(stream.headers['Content-disposition']).toEqual('attachment; filename=cardsearch.csv');
 
-    const lines = body.trim().split('\r\n');
+    const lines = stream.body.trim().split('\r\n');
     expect(lines[0]).toEqual('Name,CMC,Type,Color,Set,Collector Number,Rarity,Elo,Total Picks,Cube Count');
     // Type's em dash is normalized to a hyphen so it survives the CSV round-trip.
     expect(lines[1]).toEqual('"Test Card",3,"Creature - Elf",g,"abc","42",mythic,1500,250,99');
@@ -102,10 +109,11 @@ describe('Search cards CSV export', () => {
     ];
     jest.spyOn(tools, 'searchAllCards').mockImplementation(() => cards);
 
-    const { res, body } = createStreamingResponse();
-    await csvHandler(createRequest({ f: '', s: 'Elo', d: 'descending', di: 'names', ie: '0' }), res);
+    const stream = createStreamingResponse();
+    await csvHandler(createRequest({ f: '', s: 'Elo', d: 'descending', di: 'names', ie: '0' }), stream.res);
 
-    const lines = body.trim().split('\r\n');
+    const lines = stream.body.trim().split('\r\n');
+    expect(lines[0]).toEqual('Name,CMC,Type,Color,Set,Collector Number,Rarity,Elo,Total Picks,Cube Count');
     expect(lines[1]).toEqual('"No Stats",1,"Instant",,"xyz","7",common,,,');
   });
 

@@ -457,6 +457,7 @@ describe('Add Comment', () => {
       commenter,
       '/comment/comment-id',
       `${commenter.username} left a comment in response to your comment.`,
+      { type: 'comment_reply', subject: 'comment:parent-id', subjectName: 'comment' },
     );
   });
 
@@ -487,6 +488,7 @@ describe('Add Comment', () => {
       commenter,
       '/comment/comment-id',
       `${commenter.username} left a comment in response to your comment.`,
+      { type: 'comment_reply', subject: 'comment:parent-id', subjectName: 'comment' },
     );
 
     expect(routeUtil.addNotification).toHaveBeenNthCalledWith(
@@ -533,6 +535,7 @@ describe('Add Comment', () => {
       commenter,
       '/comment/comment-id',
       `${commenter.username} left a comment in response to your comment.`,
+      { type: 'comment_reply', subject: 'comment:parent-id', subjectName: 'comment' },
     );
 
     expect(routeUtil.addNotification).toHaveBeenCalledTimes(1);

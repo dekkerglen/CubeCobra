@@ -12,7 +12,7 @@ interface StandardDraftCardProps {
   defaultFormat: number;
 }
 
-const StandardDraftCard: React.FC<StandardDraftCardProps> = ({ defaultFormat: defaultFormat }) => {
+const StandardDraftCard: React.FC<StandardDraftCardProps> = ({ defaultFormat }) => {
   const { cube } = useContext(CubeContext);
   const [packs, setPacks] = useState('3');
   const [cards, setCards] = useState('15');

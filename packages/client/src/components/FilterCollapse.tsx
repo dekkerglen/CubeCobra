@@ -128,7 +128,8 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({
           </ResponsiveDiv>
         </Flexbox>
         <Text sm>
-          Having trouble using filter syntax? Check out our <Link href="/wiki/reference/filter-syntax">syntax guide</Link>.
+          Having trouble using filter syntax? Check out our{' '}
+          <Link href="/wiki/reference/filter-syntax">syntax guide</Link>.
         </Text>
         {filterValid && (filterInput?.trim().length ?? 0) > 0 && (
           <Text italic sm>

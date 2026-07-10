@@ -20,8 +20,8 @@ Your new cube starts empty and is ready for cards.
 Open your cube and go to the **Settings** tab to configure it:
 
 - **Visibility** — whether the cube is public (listed and searchable) or unlisted.
-- **Category and tags** — help others find your cube and describe what it is (e.g. *Legacy*,
-  *Peasant*, *Powered*).
+- **Category and tags** — help others find your cube and describe what it is (e.g. _Legacy_,
+  _Peasant_, _Powered_).
 - **Default draft format** — the format used when someone starts a draft without picking one.
 - **Price visibility** — whether estimated card prices are shown.
 

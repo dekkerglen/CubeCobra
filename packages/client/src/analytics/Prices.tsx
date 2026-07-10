@@ -427,10 +427,7 @@ const Prices: React.FC = () => {
             </CardHeader>
             <div>
               <StatRow label="Average Card Price" value={usd(stats.avgPrice)} />
-              <StatRow
-                label="Most Expensive Card"
-                value={stats.mostExpensive ? usd(stats.mostExpensive.price) : '—'}
-              />
+              <StatRow label="Most Expensive Card" value={stats.mostExpensive ? usd(stats.mostExpensive.price) : '—'} />
               {stats.mostExpensive && <StatRow label="↳ Card" value={stats.mostExpensive.name} />}
               <StatRow
                 label="Cards Priced"
@@ -462,7 +459,10 @@ const Prices: React.FC = () => {
 
       <Row className="g-3">
         <Col xs={12}>
-          <ChartCard title="Foiling Cost" tooltip="Current cube value, extra cost to foil the rest, and the resulting full-foil value.">
+          <ChartCard
+            title="Foiling Cost"
+            tooltip="Current cube value, extra cost to foil the rest, and the resulting full-foil value."
+          >
             <div style={{ maxHeight: 320 }}>
               <Bar data={foilBarData} options={valueBarOptions} />
             </div>

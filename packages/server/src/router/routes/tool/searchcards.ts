@@ -40,7 +40,7 @@ const cardToCsvRow = (card: CardDetails): string => {
     (card.colors ?? []).join(''),
     quote(card.set ?? ''),
     quote(card.collector_number ?? ''),
-    quote(card.rarity ?? ''),
+    card.rarity ?? '',
     elo,
     pickCount,
     cubeCount,

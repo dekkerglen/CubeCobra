@@ -23,8 +23,7 @@ export const isNotificationGroup = (entry: NotificationDisplayEntry): entry is N
   (entry as NotificationGroup).isGroup === true;
 
 // A notification can only participate in grouping if it carries both a type and a subject.
-const groupKeyOf = (n: Notification): string | null =>
-  n.type && n.subject ? `${n.type}:${n.subject}` : null;
+const groupKeyOf = (n: Notification): string | null => (n.type && n.subject ? `${n.type}:${n.subject}` : null);
 
 const mergedBody = (type: NotificationType, count: number, subjectName?: string): string => {
   const name = subjectName || 'your content';

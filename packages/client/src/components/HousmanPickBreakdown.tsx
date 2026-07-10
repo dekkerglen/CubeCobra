@@ -59,84 +59,84 @@ const HousmanPickBreakdown: React.FC<HousmanPickBreakdownProps> = ({ draft, seat
       </Text>
       <Row>
         <Col xs={12} md={4} lg={3}>
-        <div className="max-h-[70vh] overflow-y-auto pe-2">
-          <Flexbox direction="col" gap="1">
-            {seatSteps.map((s, index) => {
-              const isNewRound = index === 0 || seatSteps[index - 1]!.round !== s.round;
-              return (
-                <React.Fragment key={`step-${index}`}>
-                  {isNewRound && (
-                    <Text semibold sm className="mt-2">
-                      Round {s.round + 1}
-                    </Text>
-                  )}
-                  <div
-                    className={classNames('cursor-pointer rounded-md px-2 py-1', {
-                      'bg-bg-active': index === selected,
-                      'hover:bg-bg-accent': index !== selected,
-                    })}
-                    onClick={() => setPickParam(index.toString())}
-                  >
-                    <Text sm>
-                      Exchange {s.seatExchange}: took{' '}
-                      <span className="font-semibold">{cardName(cards[s.taken]!)}</span>
-                    </Text>
-                  </div>
-                </React.Fragment>
-              );
-            })}
-          </Flexbox>
-        </div>
-      </Col>
-      <Col xs={12} md={8} lg={9}>
-        <Card>
-          <CardHeader>
-            <Text semibold lg>
-              Round {step.round + 1}: Exchange {step.seatExchange} of {EXCHANGES}
-            </Text>
-          </CardHeader>
-          <CardBody>
-            <Flexbox direction="col" gap="2">
-              <Text>
-                Took <span className="font-semibold">{cardName(cards[step.taken]!)}</span> from the pool and gave{' '}
-                <span className="font-semibold">{cardName(cards[step.given]!)}</span>.
-              </Text>
-
-              <Text semibold sm className="mt-2">
-                Shared pool — the highlighted card is the one taken
-              </Text>
-              <HousmanCardRow
-                cards={cards}
-                indices={step.poolBefore}
-                isKnown={alwaysKnown}
-                highlight={step.taken}
-                xs={3}
-                md={2}
-                xl={1}
-              />
-
-              <Row className="mt-2">
-                <Col xs={12} md={6}>
-                  <Flexbox direction="col" gap="2">
-                    <Text semibold sm>
-                      Gave to the pool
-                    </Text>
-                    <Row>
-                      <Col xs={4} md={3}>
-                        <FoilCardImage card={cards[step.given]} autocard />
-                      </Col>
-                    </Row>
-                  </Flexbox>
-                </Col>
-              </Row>
-
-              <Text semibold sm className="mt-2">
-                Hand after this exchange
-              </Text>
-              <HousmanCardRow cards={cards} indices={step.handAfter} isKnown={alwaysKnown} xs={3} md={2} xl={2} />
+          <div className="max-h-[70vh] overflow-y-auto pe-2">
+            <Flexbox direction="col" gap="1">
+              {seatSteps.map((s, index) => {
+                const isNewRound = index === 0 || seatSteps[index - 1]!.round !== s.round;
+                return (
+                  <React.Fragment key={`step-${index}`}>
+                    {isNewRound && (
+                      <Text semibold sm className="mt-2">
+                        Round {s.round + 1}
+                      </Text>
+                    )}
+                    <div
+                      className={classNames('cursor-pointer rounded-md px-2 py-1', {
+                        'bg-bg-active': index === selected,
+                        'hover:bg-bg-accent': index !== selected,
+                      })}
+                      onClick={() => setPickParam(index.toString())}
+                    >
+                      <Text sm>
+                        Exchange {s.seatExchange}: took{' '}
+                        <span className="font-semibold">{cardName(cards[s.taken]!)}</span>
+                      </Text>
+                    </div>
+                  </React.Fragment>
+                );
+              })}
             </Flexbox>
-          </CardBody>
-        </Card>
+          </div>
+        </Col>
+        <Col xs={12} md={8} lg={9}>
+          <Card>
+            <CardHeader>
+              <Text semibold lg>
+                Round {step.round + 1}: Exchange {step.seatExchange} of {EXCHANGES}
+              </Text>
+            </CardHeader>
+            <CardBody>
+              <Flexbox direction="col" gap="2">
+                <Text>
+                  Took <span className="font-semibold">{cardName(cards[step.taken]!)}</span> from the pool and gave{' '}
+                  <span className="font-semibold">{cardName(cards[step.given]!)}</span>.
+                </Text>
+
+                <Text semibold sm className="mt-2">
+                  Shared pool — the highlighted card is the one taken
+                </Text>
+                <HousmanCardRow
+                  cards={cards}
+                  indices={step.poolBefore}
+                  isKnown={alwaysKnown}
+                  highlight={step.taken}
+                  xs={3}
+                  md={2}
+                  xl={1}
+                />
+
+                <Row className="mt-2">
+                  <Col xs={12} md={6}>
+                    <Flexbox direction="col" gap="2">
+                      <Text semibold sm>
+                        Gave to the pool
+                      </Text>
+                      <Row>
+                        <Col xs={4} md={3}>
+                          <FoilCardImage card={cards[step.given]} autocard />
+                        </Col>
+                      </Row>
+                    </Flexbox>
+                  </Col>
+                </Row>
+
+                <Text semibold sm className="mt-2">
+                  Hand after this exchange
+                </Text>
+                <HousmanCardRow cards={cards} indices={step.handAfter} isKnown={alwaysKnown} xs={3} md={2} xl={2} />
+              </Flexbox>
+            </CardBody>
+          </Card>
         </Col>
       </Row>
     </Flexbox>

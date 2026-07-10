@@ -117,7 +117,13 @@ const AdminDeckbuildPage: React.FC<AdminDeckbuildPageProps> = ({ defaultWindow, 
   const backlogEmphasis = summary && summary.backlog > 0 ? 'warn' : undefined;
   const dlqEmphasis = summary && summary.dlqDepth > 0 ? 'bad' : undefined;
   const successEmphasis =
-    summary?.successRate == null ? undefined : summary.successRate >= 0.99 ? 'good' : summary.successRate >= 0.9 ? 'warn' : 'bad';
+    summary?.successRate == null
+      ? undefined
+      : summary.successRate >= 0.99
+        ? 'good'
+        : summary.successRate >= 0.9
+          ? 'warn'
+          : 'bad';
 
   return (
     <MainLayout>
@@ -164,19 +170,35 @@ const AdminDeckbuildPage: React.FC<AdminDeckbuildPageProps> = ({ defaultWindow, 
                       />
                     </Col>
                     <Col xs={6} md={3}>
-                      <Stat label="Current backlog" value={summary.backlog.toLocaleString()} emphasis={backlogEmphasis} />
+                      <Stat
+                        label="Current backlog"
+                        value={summary.backlog.toLocaleString()}
+                        emphasis={backlogEmphasis}
+                      />
                     </Col>
                     <Col xs={6} md={3}>
-                      <Stat label="Oldest message" value={formatDuration(summary.oldestAgeSeconds)} emphasis={backlogEmphasis} />
+                      <Stat
+                        label="Oldest message"
+                        value={formatDuration(summary.oldestAgeSeconds)}
+                        emphasis={backlogEmphasis}
+                      />
                     </Col>
                     <Col xs={6} md={3}>
-                      <Stat label="Dead-letter queue" value={summary.dlqDepth.toLocaleString()} emphasis={dlqEmphasis} />
+                      <Stat
+                        label="Dead-letter queue"
+                        value={summary.dlqDepth.toLocaleString()}
+                        emphasis={dlqEmphasis}
+                      />
                     </Col>
                     <Col xs={6} md={3}>
                       <Stat label="Invocations" value={summary.invocations.toLocaleString()} />
                     </Col>
                     <Col xs={6} md={3}>
-                      <Stat label="Errors" value={summary.errors.toLocaleString()} emphasis={summary.errors > 0 ? 'bad' : undefined} />
+                      <Stat
+                        label="Errors"
+                        value={summary.errors.toLocaleString()}
+                        emphasis={summary.errors > 0 ? 'bad' : undefined}
+                      />
                     </Col>
                     <Col xs={6} md={3}>
                       <Stat
@@ -196,7 +218,10 @@ const AdminDeckbuildPage: React.FC<AdminDeckbuildPageProps> = ({ defaultWindow, 
                     <Text sm semibold>
                       Queue depth over time
                     </Text>
-                    <LineChart labels={labels} datasets={[{ label: 'Messages waiting', data: s('queueDepth'), color: '#DBC467' }]} />
+                    <LineChart
+                      labels={labels}
+                      datasets={[{ label: 'Messages waiting', data: s('queueDepth'), color: '#DBC467' }]}
+                    />
                   </Col>
                   <Col xs={12} md={6}>
                     <Text sm semibold>
@@ -247,7 +272,10 @@ const AdminDeckbuildPage: React.FC<AdminDeckbuildPageProps> = ({ defaultWindow, 
                     <Text sm semibold>
                       Dead-letter queue depth
                     </Text>
-                    <LineChart labels={labels} datasets={[{ label: 'DLQ messages', data: s('dlqDepth'), color: '#D85F69' }]} />
+                    <LineChart
+                      labels={labels}
+                      datasets={[{ label: 'DLQ messages', data: s('dlqDepth'), color: '#D85F69' }]}
+                    />
                   </Col>
                 </Row>
               </Flexbox>

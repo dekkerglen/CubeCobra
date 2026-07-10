@@ -139,9 +139,7 @@ const HousmanDraftPage: React.FC<HousmanDraftPageProps> = ({ cube, initialDraft,
   // Newest-first, capped so the log stays readable during long drafts.
   const recentLog = useMemo(() => state.log.slice(-8).reverse(), [state.log]);
 
-  const opponents = state.seats
-    .map((seat, index) => ({ seat, index }))
-    .filter(({ index }) => index !== humanSeat);
+  const opponents = state.seats.map((seat, index) => ({ seat, index })).filter(({ index }) => index !== humanSeat);
 
   return (
     <MainLayout useContainer={false}>
@@ -171,7 +169,9 @@ const HousmanDraftPage: React.FC<HousmanDraftPageProps> = ({ cube, initialDraft,
                 numRounds={state.numRounds}
                 exchangeNumber={Math.min(state.exchangesMade[state.turn]! + 1, EXCHANGES)}
                 totalExchanges={EXCHANGES}
-                statusText={state.done ? 'Draft complete' : isHumanTurn ? 'Your turn' : `${turnSeatName} is exchanging…`}
+                statusText={
+                  state.done ? 'Draft complete' : isHumanTurn ? 'Your turn' : `${turnSeatName} is exchanging…`
+                }
                 statusColor={isHumanTurn ? 'primary' : 'danger'}
               />
             </ErrorBoundary>

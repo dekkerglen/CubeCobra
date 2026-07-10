@@ -384,7 +384,7 @@ export const sortDeckIntoColumns = (board: number[][][], cards: Card[], key: Dec
         if (!card) {
           continue;
         }
-        result[rowIndex][deckSortColumn(card, key)].push(cardIndex);
+        result[rowIndex]![deckSortColumn(card, key)]!.push(cardIndex);
       }
     }
   });
@@ -406,7 +406,7 @@ export const splitDeckByCreature = (board: number[][][], cards: Card[]): number[
           continue;
         }
         const targetRow = cardType(card).toLowerCase().includes('creature') ? 0 : 1;
-        result[targetRow][colIndex].push(cardIndex);
+        result[targetRow]![colIndex]!.push(cardIndex);
       }
     });
   }

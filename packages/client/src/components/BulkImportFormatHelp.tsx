@@ -56,8 +56,8 @@ const BulkImportFormatHelp: React.FC = () => {
       </div>
       <Text xs className="text-text-secondary">
         The set can be written in square brackets (<span className="font-mono">[M20]</span>) or parentheses (
-        <span className="font-mono">(M20)</span>) — this matches exports from tools like Delver Lens and ManaPools. When a
-        set (and optional collector number) is given, that exact printing is added.
+        <span className="font-mono">(M20)</span>) — this matches exports from tools like Delver Lens and ManaPools. When
+        a set (and optional collector number) is given, that exact printing is added.
       </Text>
     </Flexbox>
   );
