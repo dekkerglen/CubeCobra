@@ -362,7 +362,7 @@ Mox Sapphire
               Comma-separated list of boards to include, e.g. <InlineCode>mainboard,maybeboard</InlineCode>
             </Param>
             <Param name="filter" type="query">
-              A <Link href="/help/filters">filter expression</Link> to include only matching cards
+              A <Link href="/wiki/reference/filter-syntax">filter expression</Link> to include only matching cards
             </Param>
             <Param name="primary" type="query">
               Primary sort column (e.g. <InlineCode>Color Category</InlineCode>)

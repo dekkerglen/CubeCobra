@@ -12,6 +12,7 @@ interface ListGroupProps {
 interface ListGroupItemProps {
   children: ReactNode;
   className?: string;
+  style?: React.CSSProperties;
   active?: boolean;
   onClick?: (event: React.MouseEvent) => void;
   onAuxClick?: (event: React.MouseEvent) => void;

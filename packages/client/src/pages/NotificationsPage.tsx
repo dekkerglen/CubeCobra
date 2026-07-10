@@ -1,6 +1,7 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import NotificationType from '@utils/datatypes/Notification';
+import { groupNotifications, isNotificationGroup } from '@utils/notificationGrouping';
 
 import Banner from 'components/Banner';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
@@ -9,6 +10,7 @@ import Pagination from 'components/base/Pagination';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import Notification from 'components/nav/Notification';
+import NotificationGroupRow from 'components/nav/NotificationGroupRow';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import MainLayout from 'layouts/MainLayout';
@@ -27,7 +29,11 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
+  // Collapse runs of same-type/same-subject notifications into single rows for display, then paginate
+  // over the collapsed list so a group counts as one entry.
+  const entries = useMemo(() => groupNotifications(items), [items]);
+
+  const pageCount = Math.ceil(entries.length / PAGE_SIZE);
   const hasMore = !!currentLastKey;
 
   const fetchMoreData = useCallback(async () => {
@@ -45,8 +51,13 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
     if (response.ok) {
       const json = await response.json();
       if (json.success === 'true') {
-        setItems([...items, ...json.notifications]);
-        setPage(page + 1);
+        const newItems = [...items, ...json.notifications];
+        setItems(newItems);
+        // Grouping collapses runs of same-type/same-subject notifications, so a fetch may add fewer
+        // (or zero) new display entries than raw notifications. Clamp the advance to the last valid
+        // page so we never scroll past the end and render a blank list.
+        const newPageCount = Math.ceil(groupNotifications(newItems).length / PAGE_SIZE);
+        setPage(Math.min(page + 1, Math.max(0, newPageCount - 1)));
         setLastKey(json.lastKey);
       }
     }
@@ -82,10 +93,16 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
             {items.length > 0 && pager}
           </Flexbox>
         </CardHeader>
-        {items.length > 0 ? (
-          items
+        {entries.length > 0 ? (
+          entries
             .slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
-            .map((notification) => <Notification key={notification.id} notification={notification} />)
+            .map((entry) =>
+              isNotificationGroup(entry) ? (
+                <NotificationGroupRow key={`${entry.type}:${entry.subject}`} group={entry} />
+              ) : (
+                <Notification key={entry.id} notification={entry} />
+              ),
+            )
         ) : (
           <p className="m-2">
             You don't have any notifications! Why don't you try sharing your cube on the{' '}

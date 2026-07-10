@@ -1,6 +1,6 @@
-import React, { ChangeEvent, useContext } from 'react';
+import React, { ChangeEvent, useContext, useMemo } from 'react';
 
-import { DefaultElo, FilterValues, SUPPORTED_FORMATS } from '@utils/datatypes/Card';
+import Card, { DefaultElo, FilterValues, SUPPORTED_FORMATS } from '@utils/datatypes/Card';
 import { getLabels } from '@utils/sorting/Sort';
 
 import AutocompleteInput from 'components/base/AutocompleteInput';
@@ -12,9 +12,15 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Moda
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import { ColorChecksAddon } from 'components/ColorCheck';
+import EnumFilterField from 'components/EnumFilterField';
 import NumericField from 'components/NumericField';
+import SelectField from 'components/SelectField';
 import CubeContext from 'contexts/CubeContext';
 import { cubeCardTagMatches } from 'utils/cardAutocomplete';
+
+// Build dropdown options from a list of distinct label strings, dropping blanks.
+const toOptions = (labels: string[]): { value: string; label: string }[] =>
+  labels.filter((label) => label && label.trim().length > 0).map((label) => ({ value: label, label }));
 
 export interface AdvancedFilterModalProps {
   isOpen: boolean;
@@ -28,13 +34,30 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
   const { cube } = useContext(CubeContext) ?? {};
   const cubeId = cube ? cube.id : null;
 
+  // Flatten every board of the current cube so we can gather the distinct set,
+  // artist, and rarity values actually present in it. Empty when there is no
+  // cube (e.g. the global card search), in which case the enum fields fall back
+  // to free-text inputs.
+  const cubeCards = useMemo<Card[]>(
+    () => (cube?.cards ? (Object.values(cube.cards).flat().filter(Boolean) as Card[]) : []),
+    [cube?.cards],
+  );
+
+  const setOptions = useMemo(() => toOptions(getLabels(cubeCards, 'Set', false)), [cubeCards]);
+  const artistOptions = useMemo(() => toOptions(getLabels(cubeCards, 'Artist', false)), [cubeCards]);
+  // Rarity is a small fixed enum, so it is always a dropdown, even without a cube.
+  const rarityOptions = useMemo(
+    () => getLabels(cubeCards, 'Rarity', false).map((rarity) => ({ value: rarity.toLowerCase(), label: rarity })),
+    [cubeCards],
+  );
+
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} lg scrollable>
       <ModalHeader setOpen={setOpen}>Advanced Filters</ModalHeader>
       <ModalBody scrollable>
         <Flexbox direction="col" gap="2">
           <Text sm className="mb-2">
-            Having trouble using filter syntax? Check out our <Link href="/help/filters">syntax guide</Link>.
+            Having trouble using filter syntax? Check out our <Link href="/wiki/reference/filter-syntax">syntax guide</Link>.
           </Text>
           <Input
             name="name"
@@ -118,12 +141,13 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
             value={values.type}
             onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'type')}
           />
-          <Input
+          <EnumFilterField
             name="set"
             label="Set"
             placeholder={'Any set code, e.g. "WAR"'}
             value={values.set}
-            onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'set')}
+            options={setOptions}
+            setValue={(v: string) => updateValue(v, 'set')}
           />
           {cubeId && (
             <AutocompleteInput
@@ -251,12 +275,11 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
             setValue={(value: string) => updateValue(value, 'loyalty')}
             setOperator={(operator: string) => updateValue(operator, 'loyaltyOp')}
           />
-          <NumericField
-            name="rarity"
+          <SelectField
             humanName="Rarity"
-            placeholder={'Any rarity, e.g. "common"'}
             value={values.rarity}
             operator={values.rarityOp}
+            options={rarityOptions}
             setValue={(value: string) => updateValue(value, 'rarity')}
             setOperator={(operator: string) => updateValue(operator, 'rarityOp')}
           />
@@ -279,12 +302,13 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
               ]}
             />
           </Flexbox>
-          <Input
+          <EnumFilterField
             name="artist"
             label="Artist"
             placeholder={'Any text, e.g. "seb"'}
             value={values.artist}
-            onChange={(event: ChangeEvent<HTMLInputElement>) => updateValue(event.target.value, 'artist')}
+            options={artistOptions}
+            setValue={(v: string) => updateValue(v, 'artist')}
           />
         </Flexbox>
       </ModalBody>

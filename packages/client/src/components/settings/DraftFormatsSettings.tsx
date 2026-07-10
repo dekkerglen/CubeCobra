@@ -1,9 +1,14 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { PlusIcon, StarFillIcon, StarIcon, TrashIcon } from '@primer/octicons-react';
+import { DownloadIcon, PlusIcon, StarFillIcon, StarIcon, TrashIcon, UploadIcon } from '@primer/octicons-react';
 import { getBoardDefinitions } from '@utils/datatypes/Cube';
 import { CardSlot, DraftFormat, Pack } from '@utils/datatypes/Draft';
-import { createDefaultDraftFormat, getErrorsInFormat } from '@utils/draftutil';
+import {
+  createDefaultDraftFormat,
+  exportDraftFormat,
+  getErrorsInFormat,
+  parseDraftFormatImport,
+} from '@utils/draftutil';
 
 import Alert from 'components/base/Alert';
 import Button from 'components/base/Button';
@@ -180,6 +185,56 @@ const DraftFormatsSettings: React.FC = () => {
       setDefaultFormat(defaultFormat - 1); // Shift index down
     }
     setError('');
+  };
+
+  const importInputRef = React.useRef<HTMLInputElement>(null);
+
+  // Returns a title unique among the existing formats (case-insensitive),
+  // appending a counter when the desired title is already taken.
+  const uniqueTitle = (desired: string, existing: DraftFormat[]): string => {
+    const taken = new Set(existing.map((f) => (f.title || '').trim().toLowerCase()));
+    const base = desired.trim() || 'Imported Format';
+    if (!taken.has(base.toLowerCase())) return base;
+    let n = 2;
+    while (taken.has(`${base} (${n})`.toLowerCase())) n++;
+    return `${base} (${n})`;
+  };
+
+  const exportFormat = (format: DraftFormat) => {
+    const blob = new Blob([exportDraftFormat(format)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${(format.title || 'draft-format').replace(/[^\w-]+/g, '_')}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleImportFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    // Reset so selecting the same file again re-triggers onChange.
+    e.target.value = '';
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      const { formats: imported, error: importError } = parseDraftFormatImport(event.target?.result as string);
+      if (importError) {
+        setError(`Import failed. ${importError}`);
+        return;
+      }
+      setFormats((prev) => {
+        const next = [...prev];
+        for (const format of imported) {
+          next.push({ ...format, title: uniqueTitle(format.title, next) });
+        }
+        return next;
+      });
+      setExpandedIndex(null);
+      setError('');
+    };
+    reader.onerror = () => setError('Import failed. Could not read the file.');
+    reader.readAsText(file);
   };
 
   const updateFormat = (index: number, updates: Partial<DraftFormat>) => {
@@ -398,9 +453,21 @@ const DraftFormatsSettings: React.FC = () => {
                 <Text semibold md>
                   Custom Formats
                 </Text>
-                <Button color="accent" onClick={addFormat}>
-                  <PlusIcon size={16} className="mr-1" /> Add Format
-                </Button>
+                <Flexbox direction="row" gap="2">
+                  <input
+                    ref={importInputRef}
+                    type="file"
+                    accept="application/json,.json"
+                    className="hidden"
+                    onChange={handleImportFile}
+                  />
+                  <Button color="secondary" onClick={() => importInputRef.current?.click()}>
+                    <UploadIcon size={16} className="mr-1" /> Import Format
+                  </Button>
+                  <Button color="accent" onClick={addFormat}>
+                    <PlusIcon size={16} className="mr-1" /> Add Format
+                  </Button>
+                </Flexbox>
               </Flexbox>
               <Text sm className="text-text-secondary mb-3">
                 Create custom draft formats with unique pack structures and rules.
@@ -441,6 +508,9 @@ const DraftFormatsSettings: React.FC = () => {
                           </div>
                           <Button color="secondary" onClick={() => setExpandedIndex(isExpanded ? null : index)}>
                             {isExpanded ? 'Collapse' : 'Configure'}
+                          </Button>
+                          <Button color="secondary" onClick={() => exportFormat(format)} title="Export as JSON">
+                            <DownloadIcon size={16} />
                           </Button>
                           <Button color="danger" onClick={() => removeFormat(index)}>
                             <TrashIcon size={16} />

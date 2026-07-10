@@ -19,7 +19,7 @@ import Card, { BoardType, CARD_STATUSES, FINISHES, VoucherCard } from '@utils/da
 import { getBoardDefinitions, TagColor } from '@utils/datatypes/Cube';
 import TagData from '@utils/datatypes/TagData';
 import { getLabels } from '@utils/sorting/Sort';
-import { getTagColorClass } from '@utils/Util';
+import { getTagColorClass, getTagColorStyle } from '@utils/Util';
 
 import ImageFallback from 'components/ImageFallback';
 
@@ -44,6 +44,7 @@ import BoardMoveControl from '../BoardMoveControl';
 import { ColorChecksAddon } from '../ColorCheck';
 import TagInput from '../TagInput';
 import AutocardListItem from './AutocardListItem';
+import VersionSelect from './VersionSelect';
 
 export interface VoucherCardModalProps {
   isOpen: boolean;
@@ -580,7 +581,12 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
                 ) : (
                   <Flexbox direction="row" gap="2" wrap="wrap">
                     {cardTags(card).map((tag) => (
-                      <Tag key={tag} colorClass={getTagColorClass(tagColors, tag)} text={tag} />
+                      <Tag
+                        key={tag}
+                        colorClass={getTagColorClass(tagColors, tag)}
+                        colorStyle={getTagColorStyle(tagColors, tag)}
+                        text={tag}
+                      />
                     ))}
                   </Flexbox>
                 )}
@@ -594,7 +600,7 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
                   </Text>
                 </div>
 
-                <Select
+                <VersionSelect
                   label="Version"
                   value={selectedSubCard.cardID}
                   setValue={(v) => {
@@ -611,10 +617,7 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
                       });
                     }
                   }}
-                  options={Object.entries(subCardVersions).map(([key, value]) => ({
-                    value: key,
-                    label: value.version,
-                  }))}
+                  versions={Object.values(subCardVersions)}
                   disabled={!canEdit}
                   loading={subCardVersionsLoading}
                 />

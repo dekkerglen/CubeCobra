@@ -1,4 +1,5 @@
 import { State } from '@utils/datatypes/DraftState';
+import { NotificationType } from '@utils/datatypes/Notification';
 import User from '@utils/datatypes/User';
 import { cubeDao, draftDao } from 'dynamo/daos';
 import Joi from 'joi';
@@ -184,6 +185,7 @@ const sendDraftNotification = async (draftId: string, cubeOwner: User, draftOwne
       draftOwner,
       `/cube/deck/${draftId}`,
       `${draftOwner?.username} drafted your cube: ${cube.name}`,
+      { type: NotificationType.DRAFT, subject: cube.id, subjectName: cube.name },
     );
   }
 };

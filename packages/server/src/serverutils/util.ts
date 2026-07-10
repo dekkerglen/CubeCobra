@@ -1,3 +1,4 @@
+import { NotificationType } from '@utils/datatypes/Notification';
 import User, { UserRoles } from '@utils/datatypes/User';
 import { notificationDao } from 'dynamo/daos';
 import shuffleSeed from 'shuffle-seed';
@@ -329,7 +330,21 @@ export function fromEntries(entries: [string, any][]): Record<string, any> {
   return obj;
 }
 
-export async function addNotification(to: User, from: User | null, url: string, text: string) {
+// Optional grouping metadata: when several notifications share the same type and subject, the UI
+// collapses them into one row (e.g. "There are 3 new drafts of My Cube"). Omit for one-off alerts.
+export interface NotificationGrouping {
+  type: NotificationType;
+  subject: string;
+  subjectName?: string;
+}
+
+export async function addNotification(
+  to: User,
+  from: User | null,
+  url: string,
+  text: string,
+  grouping?: NotificationGrouping,
+) {
   if (!from) {
     // system notification
     return await notificationDao.put({
@@ -339,6 +354,7 @@ export async function addNotification(to: User, from: User | null, url: string, 
       fromUsername: 'Dekkaru',
       url,
       body: text,
+      ...grouping,
     });
   }
 
@@ -353,6 +369,7 @@ export async function addNotification(to: User, from: User | null, url: string, 
     fromUsername: from.username,
     url,
     body: text,
+    ...grouping,
   });
 }
 

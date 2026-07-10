@@ -66,7 +66,7 @@ const Footer: React.FC = () => {
                   <FooterLink href="/packages">Packages</FooterLink>
                 </li>
                 <li className="mb-2">
-                  <FooterLink href="/help/filters">Filter Syntax</FooterLink>
+                  <FooterLink href="/wiki/reference/filter-syntax">Filter Syntax</FooterLink>
                 </li>
               </ul>
             </Text>

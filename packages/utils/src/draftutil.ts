@@ -1,6 +1,6 @@
-import { cardCmc, cardType, cmcColumn } from './cardutil';
+import { cardCmc, cardColorCategory, cardRarity, cardType, cmcColumn } from './cardutil';
 import Card from './datatypes/Card';
-import Draft, { CardSlot, DraftFormat, DraftStep, Pack } from './datatypes/Draft';
+import Draft, { CardSlot, DraftAction, DraftFormat, DraftStep, Pack } from './datatypes/Draft';
 import type { State } from './datatypes/DraftState';
 
 interface Step {
@@ -315,6 +315,105 @@ export const getCardCol: (draft: Draft, cardIndex: number) => number = (draft: D
   return card ? Math.max(0, Math.min(7, cardCmc(card))) : 0;
 };
 
+// Quick-sort schemes for the deckbuilder. Each key re-buckets a board's
+// columns by a card attribute; the two rows always stay split into
+// creatures (row 0) and non-creatures (row 1).
+export type DeckSortKey = 'color' | 'cmc' | 'rarity' | 'type';
+
+// Column order for a color sort. cardColorCategory can return 'Hybrid', which
+// is folded into Multicolored below.
+const DECK_COLOR_COLUMNS = ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Colorless', 'Lands'] as const;
+const DECK_RARITY_COLUMNS = ['common', 'uncommon', 'rare', 'mythic', 'special'] as const;
+
+// Number of columns produced by each sort key.
+export const DECK_SORT_COLUMN_COUNT: Record<DeckSortKey, number> = {
+  // Lands, then mana value 0..7+ (cmcColumn caps at 7).
+  cmc: 1 + 8,
+  color: DECK_COLOR_COLUMNS.length,
+  rarity: DECK_RARITY_COLUMNS.length,
+  // Creature, Planeswalker, Instant, Sorcery, Artifact, Enchantment, Land, Other.
+  type: 8,
+};
+
+const deckSortColumn = (card: Card, key: DeckSortKey): number => {
+  const typeLine = cardType(card).toLowerCase();
+
+  switch (key) {
+    case 'cmc':
+      // Lands get their own leading column; everything else follows by mana value.
+      return typeLine.includes('land') ? 0 : 1 + cmcColumn(card);
+    case 'color': {
+      const category = cardColorCategory(card);
+      const index = (DECK_COLOR_COLUMNS as readonly string[]).indexOf(category);
+      // Hybrid (or anything unrecognized) falls into the Multicolored column.
+      return index === -1 ? DECK_COLOR_COLUMNS.indexOf('Multicolored') : index;
+    }
+    case 'rarity': {
+      const index = (DECK_RARITY_COLUMNS as readonly string[]).indexOf(cardRarity(card).toLowerCase());
+      // Unknown rarities (bonus, special, etc.) collect in the final column.
+      return index === -1 ? DECK_RARITY_COLUMNS.length - 1 : index;
+    }
+    case 'type':
+      if (typeLine.includes('creature')) return 0;
+      if (typeLine.includes('planeswalker')) return 1;
+      if (typeLine.includes('instant')) return 2;
+      if (typeLine.includes('sorcery')) return 3;
+      if (typeLine.includes('artifact')) return 4;
+      if (typeLine.includes('enchantment')) return 5;
+      if (typeLine.includes('land')) return 6;
+      return 7;
+    default:
+      return 0;
+  }
+};
+
+const emptyBoard = (rows: number, cols: number): number[][][] =>
+  new Array(rows).fill(null).map(() => new Array(cols).fill(null).map(() => [] as number[]));
+
+// Re-bucket a board's columns by the given card attribute. Each card keeps the
+// row it's currently in — the creature / non-creature split is handled
+// separately by splitDeckByCreature so the two controls are independent.
+export const sortDeckIntoColumns = (board: number[][][], cards: Card[], key: DeckSortKey): number[][][] => {
+  const numColumns = DECK_SORT_COLUMN_COUNT[key];
+  const result = emptyBoard(Math.max(2, board.length), numColumns);
+
+  board.forEach((row, rowIndex) => {
+    for (const column of row) {
+      for (const cardIndex of column) {
+        const card = cards[cardIndex];
+        if (!card) {
+          continue;
+        }
+        result[rowIndex][deckSortColumn(card, key)].push(cardIndex);
+      }
+    }
+  });
+
+  return result;
+};
+
+// Split a board into two rows — creatures (row 0) and non-creatures (row 1) —
+// while keeping every card in the column it's already in.
+export const splitDeckByCreature = (board: number[][][], cards: Card[]): number[][][] => {
+  const numColumns = Math.max(1, ...board.map((row) => row.length));
+  const result = emptyBoard(2, numColumns);
+
+  for (const row of board) {
+    row.forEach((column, colIndex) => {
+      for (const cardIndex of column) {
+        const card = cards[cardIndex];
+        if (!card) {
+          continue;
+        }
+        const targetRow = cardType(card).toLowerCase().includes('creature') ? 0 : 1;
+        result[targetRow][colIndex].push(cardIndex);
+      }
+    });
+  }
+
+  return result;
+};
+
 export const setupPicks: (rows: number, cols: number) => any[][][] = (rows: number, cols: number) => {
   const res = [];
   for (let i = 0; i < rows; i++) {
@@ -430,6 +529,115 @@ export const getErrorsInFormat = (format: DraftFormat) => {
     }
   }
   return errors.length === 0 ? null : errors;
+};
+
+// Current version of the exported draft-format JSON envelope. Bump if the shape
+// of an exported format ever changes in a breaking way.
+export const DRAFT_FORMAT_EXPORT_VERSION = 1;
+
+const DRAFT_ACTIONS: DraftAction[] = ['pick', 'pass', 'trash', 'pickrandom', 'trashrandom', 'endpack'];
+
+// Folds a legacy top-level `board` field on a slot into the filter string as a
+// `board=<name>` clause, mirroring the editor's on-load migration. New exports
+// never carry the field, but hand-written or old JSON might.
+const sanitizeImportedSlot = (raw: any): CardSlot => {
+  const filter = typeof raw?.filter === 'string' ? raw.filter.trim() : '';
+  const legacyBoard = typeof raw?.board === 'string' ? raw.board.trim() : '';
+  if (legacyBoard && !/\bboard\s*[:=]/i.test(filter)) {
+    return { filter: filter === '' || filter === '*' ? `board=${legacyBoard}` : `${filter} board=${legacyBoard}` };
+  }
+  return { filter };
+};
+
+const sanitizeImportedStep = (raw: any): DraftStep | null => {
+  if (!raw || !DRAFT_ACTIONS.includes(raw.action)) return null;
+  const amount = typeof raw.amount === 'number' && Number.isFinite(raw.amount) ? raw.amount : null;
+  return { action: raw.action, amount };
+};
+
+const sanitizeImportedPack = (raw: any): Pack => {
+  const slots = Array.isArray(raw?.slots) ? raw.slots.map(sanitizeImportedSlot) : [];
+  const steps =
+    raw?.steps === null || raw?.steps === undefined
+      ? null
+      : (raw.steps as any[]).map(sanitizeImportedStep).filter((s): s is DraftStep => s !== null);
+  const pack: Pack = { slots, steps };
+  if (raw?.randomizeOrder === true) pack.randomizeOrder = true;
+  return pack;
+};
+
+/**
+ * Produces a clean {@link DraftFormat} from arbitrary parsed JSON, keeping only
+ * known fields and normalizing slots/steps. The derived `html` field is dropped
+ * (it is regenerated from `markdown` on save). Throws if the input can't be
+ * interpreted as a format at all.
+ */
+export const sanitizeImportedFormat = (raw: any): DraftFormat => {
+  if (!raw || typeof raw !== 'object' || !Array.isArray(raw.packs)) {
+    throw new Error('Not a valid draft format.');
+  }
+  const format: DraftFormat = {
+    title: typeof raw.title === 'string' ? raw.title : '',
+    packs: raw.packs.map(sanitizeImportedPack),
+    multiples: raw.multiples === true,
+    defaultSeats: typeof raw.defaultSeats === 'number' && Number.isFinite(raw.defaultSeats) ? raw.defaultSeats : 8,
+  };
+  if (typeof raw.markdown === 'string') format.markdown = raw.markdown;
+  if (typeof raw.basicsBoard === 'string') format.basicsBoard = raw.basicsBoard;
+  return format;
+};
+
+/**
+ * Parses a draft-format JSON export string. Accepts a bare format object, an
+ * array of formats, or an envelope produced by {@link exportDraftFormat}
+ * (`{ format }` or `{ formats }`). Returns the sanitized, validated formats or
+ * an error message describing why the import failed.
+ */
+export const parseDraftFormatImport = (json: string): { formats: DraftFormat[]; error: string | null } => {
+  let parsed: any;
+  try {
+    parsed = JSON.parse(json);
+  } catch {
+    return { formats: [], error: 'File is not valid JSON.' };
+  }
+
+  let candidates: any[];
+  if (Array.isArray(parsed)) candidates = parsed;
+  else if (Array.isArray(parsed?.formats)) candidates = parsed.formats;
+  else if (parsed?.format) candidates = [parsed.format];
+  else candidates = [parsed];
+
+  if (candidates.length === 0) {
+    return { formats: [], error: 'No draft formats found in the file.' };
+  }
+
+  const formats: DraftFormat[] = [];
+  for (let i = 0; i < candidates.length; i++) {
+    let format: DraftFormat;
+    try {
+      format = sanitizeImportedFormat(candidates[i]);
+    } catch (e) {
+      return { formats: [], error: `Format ${i + 1}: ${e instanceof Error ? e.message : 'invalid format'}` };
+    }
+    const errors = getErrorsInFormat(format);
+    if (errors && errors.length > 0) {
+      const label = format.title ? `"${format.title}"` : `${i + 1}`;
+      return { formats: [], error: `Format ${label}: ${errors.join(', ')}` };
+    }
+    formats.push(format);
+  }
+
+  return { formats, error: null };
+};
+
+/**
+ * Serializes a draft format to a pretty-printed JSON export string wrapped in a
+ * versioned envelope. The derived `html` field is stripped so the export stays
+ * portable and hand-editable.
+ */
+export const exportDraftFormat = (format: DraftFormat): string => {
+  const { html: _html, ...rest } = format;
+  return JSON.stringify({ version: DRAFT_FORMAT_EXPORT_VERSION, format: rest }, null, 2);
 };
 
 export const DEFAULT_STEPS: DraftStep[] = [

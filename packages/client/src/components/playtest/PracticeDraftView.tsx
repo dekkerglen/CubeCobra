@@ -8,6 +8,7 @@ import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CustomDraftCard from 'components/CustomDraftCard';
 import GridDraftCard from 'components/GridDraftCard';
+import HousmanDraftCard from 'components/HousmanDraftCard';
 import SealedCard from 'components/SealedCard';
 import StandardDraftCard from 'components/StandardDraftCard';
 
@@ -58,6 +59,8 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
     if (!cube.disableMultiplayer) {
       tiles.push({ type: 'multiplayer', key: 'multiplayer' });
     }
+    tiles.push({ type: 'rotisserie', key: 'rotisserie' });
+    tiles.push({ type: 'housman', key: 'housman' });
     if (!cube.disableSealed) {
       tiles.push({ type: 'sealed', key: 'sealed' });
     }
@@ -111,6 +114,31 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
             </CardFooter>
           </Card>
         );
+      case 'rotisserie':
+        return (
+          <Card key={tile.key}>
+            <CardHeader>
+              <Text semibold lg>
+                Rotisserie Draft
+              </Text>
+            </CardHeader>
+            <CardBody>
+              <Text>
+                A rotisserie draft is a slow, open draft where players take turns picking cards one at a time from a
+                shared pool, usually tracked in a spreadsheet. Learn how to run one on Lucky Paper. Once you have a
+                spreadsheet going, you can connect it back to CubeCobra from the list page under Display &rarr; Setup
+                Rotisserie Draft.
+              </Text>
+            </CardBody>
+            <CardFooter>
+              <Button block type="link" color="primary" href="https://luckypaper.co/resources/formats/rotisserie/">
+                Learn about Rotisserie Draft
+              </Button>
+            </CardFooter>
+          </Card>
+        );
+      case 'housman':
+        return <HousmanDraftCard key={tile.key} />;
       case 'sealed':
         return <SealedCard key={tile.key} />;
       case 'grid':

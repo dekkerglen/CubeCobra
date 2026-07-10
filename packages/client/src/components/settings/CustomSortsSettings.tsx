@@ -187,7 +187,7 @@ const SortRow: React.FC<SortRowProps> = ({
                           <Text xs className="text-text-secondary">
                             Filter Syntax
                           </Text>
-                          <Link href="/help/filters" target="_blank" className="text-link text-xs">
+                          <Link href="/wiki/reference/filter-syntax" target="_blank" className="text-link text-xs">
                             (syntax guide)
                           </Link>
                         </Flexbox>

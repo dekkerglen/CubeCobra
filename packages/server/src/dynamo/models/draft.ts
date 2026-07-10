@@ -33,6 +33,7 @@ const TYPES = {
   DRAFT: 'd',
   UPLOAD: 'u',
   SEALED: 's',
+  HOUSMAN: 'h',
 } as const;
 
 const REVERSE_TYPES: Record<string, string> = {
@@ -40,6 +41,7 @@ const REVERSE_TYPES: Record<string, string> = {
   d: 'Draft',
   u: 'Upload',
   s: 'Sealed',
+  h: 'Housman Draft',
 } as const;
 
 const client = createClient({
@@ -570,7 +572,9 @@ export default {
           };
         }),
       );
-    } else if (type === TYPES.GRID) {
+    } else if (type === TYPES.GRID || type === TYPES.HOUSMAN) {
+      // Grid and Housman both store pickorder as raw card indices into draft.cards, and
+      // InitialState as a flat array-of-index-arrays (packs for grid, rounds for housman).
       pickorders = draft.seats.map((seat: any) => seat.pickorder);
 
       cards = draft.cards;

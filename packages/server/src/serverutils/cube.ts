@@ -9,6 +9,7 @@ import { Request, Response } from '../types/express';
 import { cardFromId, getIdsFromName, getMostReasonable } from './carddb';
 import cloudwatch from './cloudwatch';
 import { CSVtoCards } from './cubefn';
+import { parseNonCSVLine } from './importParsing';
 import { handleRouteError, redirect, render } from './render';
 
 const CARD_HEIGHT = 680;
@@ -177,32 +178,32 @@ async function bulkUpload(req: Request, res: Response, list: string, cube: Cube)
       // upload is in TXT format - all cards go to the selected default board
       for (const itemUntrimmed of lines) {
         const item = itemUntrimmed.trim();
-        // separate counts and sets from the name
-        //                              |    count?   |name|     (set)?         c.num? |
-        const splitLine = item.match(/^(?:([0-9]+)x? )?(.*?)(?: \(([^)(]+)\)(?: (\S+))?)?$/);
-        if (!splitLine) continue;
+        // Separate the count, name, edition (set) and collector number from the line. Handles the
+        // "quantity name set number" shapes emitted by tools like Delver Lens and ManaPools, with
+        // the edition wrapped in either [] or () and the collector number optional.
+        const parsed = parseNonCSVLine(item);
+        if (!parsed) continue;
 
-        const name = splitLine[2];
-        const set = splitLine[3];
-        const collectorNum = splitLine[4];
-        let count = parseInt(splitLine[1] || '1', 10);
-        if (!Number.isInteger(count)) {
-          count = 1;
-        }
+        const { name, set, collectorNumber, count } = parsed;
 
         let selectedId: string | null = null;
         if (set && name) {
           const potentialIds = getIdsFromName(name);
           if (potentialIds && potentialIds.length > 0) {
-            const matchingItem = potentialIds.find((id) => {
-              const card = cardFromId(id);
-              return (
-                card.set.toLowerCase() === set.toLowerCase() &&
-                (!collectorNum || card.collector_number === collectorNum)
-              );
-            });
-            // if no sets match, just take the first ID ¯\_(ツ)_/¯
-            selectedId = matchingItem || potentialIds[0] || null;
+            const lowerSet = set.toLowerCase();
+            // Prefer an exact set + collector number match, then any printing in the set, and only
+            // then fall back to the first printing so the edition is respected as far as possible.
+            const matchingSetAndNumber = collectorNumber
+              ? potentialIds.find((id) => {
+                  const card = cardFromId(id);
+                  return (
+                    card.set.toLowerCase() === lowerSet &&
+                    (card.collector_number || '').toLowerCase() === collectorNumber.toLowerCase()
+                  );
+                })
+              : undefined;
+            const matchingSet = potentialIds.find((id) => cardFromId(id).set.toLowerCase() === lowerSet);
+            selectedId = matchingSetAndNumber || matchingSet || potentialIds[0] || null;
           }
         } else if (name) {
           const selectedCard = getMostReasonable(name, cube.defaultPrinting as any);

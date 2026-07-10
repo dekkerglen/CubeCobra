@@ -317,6 +317,106 @@ describe('Bulk Upload', () => {
       );
     });
 
+    it('should handle text upload with a square-bracket set (Delver Lens / ManaPools style)', async () => {
+      const owner = createUser({ following: ['user1'] });
+      const cube = createCube({ owner });
+      const textContent = '1 Agent of the Fates [THS]';
+
+      setupBasicMocks();
+      (carddb.getIdsFromName as jest.Mock).mockReturnValue(['ths-id', 'other-id']);
+      (carddb.cardFromId as jest.Mock).mockImplementation((id: string) => {
+        if (id === 'ths-id') {
+          return { set: 'ths', collector_number: '85', name: 'Agent of the Fates', scryfall_id: 'ths-id' };
+        }
+        return { set: 'other', collector_number: '1', name: 'Agent of the Fates', scryfall_id: 'other-id' };
+      });
+
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: { board: 'mainboard' } } as any,
+        {} as any,
+        textContent,
+        cube,
+      );
+
+      expect(render.render).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'BulkUploadPage',
+        expect.objectContaining({
+          addedByBoard: expect.objectContaining({
+            mainboard: ['ths-id'],
+          }),
+        }),
+      );
+    });
+
+    it('should prefer the printing matching both set and collector number', async () => {
+      const owner = createUser({ following: ['user1'] });
+      const cube = createCube({ owner });
+      // Two printings from the same set, different collector numbers.
+      const textContent = '1 Nightmare [M14] 111';
+
+      setupBasicMocks();
+      (carddb.getIdsFromName as jest.Mock).mockReturnValue(['m14-108', 'm14-111']);
+      (carddb.cardFromId as jest.Mock).mockImplementation((id: string) => {
+        if (id === 'm14-111') {
+          return { set: 'm14', collector_number: '111', name: 'Nightmare', scryfall_id: 'm14-111' };
+        }
+        return { set: 'm14', collector_number: '108', name: 'Nightmare', scryfall_id: 'm14-108' };
+      });
+
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: { board: 'mainboard' } } as any,
+        {} as any,
+        textContent,
+        cube,
+      );
+
+      expect(render.render).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'BulkUploadPage',
+        expect.objectContaining({
+          addedByBoard: expect.objectContaining({
+            mainboard: ['m14-111'],
+          }),
+        }),
+      );
+    });
+
+    it('should fall back to the first printing when the requested set does not exist', async () => {
+      const owner = createUser({ following: ['user1'] });
+      const cube = createCube({ owner });
+      const textContent = '1 Nightmare [ZZZ]';
+
+      setupBasicMocks();
+      (carddb.getIdsFromName as jest.Mock).mockReturnValue(['first-id', 'second-id']);
+      (carddb.cardFromId as jest.Mock).mockImplementation((id: string) => ({
+        set: 'm14',
+        collector_number: id === 'first-id' ? '108' : '109',
+        name: 'Nightmare',
+        scryfall_id: id,
+      }));
+
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: { board: 'mainboard' } } as any,
+        {} as any,
+        textContent,
+        cube,
+      );
+
+      expect(render.render).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'BulkUploadPage',
+        expect.objectContaining({
+          addedByBoard: expect.objectContaining({
+            mainboard: ['first-id'],
+          }),
+        }),
+      );
+    });
+
     it('should handle text upload with missing cards', async () => {
       const owner = createUser({ following: ['user1'] });
       const cube = createCube({ owner });

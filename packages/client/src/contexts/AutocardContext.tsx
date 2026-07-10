@@ -5,13 +5,14 @@ import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 import { TagColor } from '@utils/datatypes/Cube';
 
-import { getTagColorClass } from '../../../utils/src/Util';
+import { getTagColorClass, getTagColorStyle } from '../../../utils/src/Util';
 import { Flexbox } from '../components/base/Layout';
 import Tag from '../components/base/Tag';
 
 interface Tag {
   value: string;
   colorClass: string;
+  colorStyle?: React.CSSProperties;
 }
 
 interface CardDivProps {
@@ -146,7 +147,7 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
           >
             <Flexbox direction="col" gap="1">
               {tags.map((tag) => (
-                <Tag key={tag.value} text={tag.value} colorClass={tag.colorClass} />
+                <Tag key={tag.value} text={tag.value} colorClass={tag.colorClass} colorStyle={tag.colorStyle} />
               ))}
             </Flexbox>
           </div>
@@ -190,6 +191,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
           cardTags(card).map((tag) => ({
             value: tag,
             colorClass: getTagColorClass(tagColors, tag),
+            colorStyle: getTagColorStyle(tagColors, tag),
           })),
         );
         setZIndex(inModal ? 1500 : 500);

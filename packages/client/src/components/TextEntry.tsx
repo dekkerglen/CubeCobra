@@ -56,7 +56,7 @@ const TextEntry: React.FC<TextEntryProps> = ({ value = '', setValue, maxLength =
       </Card>
       <Text sm italic>
         Having trouble formatting your posts? Check out the{' '}
-        <Link href="/help/markdown" target="_blank">
+        <Link href="/wiki/reference/markdown" target="_blank">
           markdown guide
         </Link>
         .

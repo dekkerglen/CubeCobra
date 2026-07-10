@@ -1,7 +1,15 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { XIcon } from '@primer/octicons-react';
-import { cardEtchedPrice, cardFoilPrice, cardPrice, cardPriceEur, cardTix } from '@utils/cardutil';
+import {
+  cardEtchedPrice,
+  cardFoilPrice,
+  cardPrice,
+  cardPriceEur,
+  cardTix,
+  hasRestorableOverrides,
+  restoreCardToDefault,
+} from '@utils/cardutil';
 import Card, { BoardType, CardStatus, ColorCategory } from '@utils/datatypes/Card';
 import { getBoardDefinitions, TagColor } from '@utils/datatypes/Cube';
 import TagData from '@utils/datatypes/TagData';
@@ -218,6 +226,14 @@ const GroupModal: React.FC<GroupModalProps> = ({
     typeLine,
   ]);
 
+  const restorableCards = useMemo(() => cards.filter(hasRestorableOverrides), [cards]);
+
+  const restoreToDefault = useCallback(() => {
+    bulkEditCard(restorableCards.map((card) => restoreCardToDefault(card)));
+    setModalSelection([]);
+    setOpen(false);
+  }, [restorableCards, bulkEditCard, setModalSelection, setOpen]);
+
   const anyCardChanged = useMemo(() => {
     return cards.some((card) => card.editIndex !== undefined);
   }, [cards]);
@@ -392,7 +408,7 @@ const GroupModal: React.FC<GroupModalProps> = ({
           </Col>
         </Row>
       </ModalBody>
-      <ModalFooter className="flex flex-col gap-2 sm:flex-row">
+      <ModalFooter className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
         <Button color="primary" disabled={!fieldsChanged} onClick={applyChanges} className="sm:whitespace-nowrap">
           Apply all
         </Button>
@@ -431,6 +447,16 @@ const GroupModal: React.FC<GroupModalProps> = ({
             }}
           />
         </div>
+        <Button
+          color="secondary"
+          outline
+          disabled={restorableCards.length === 0}
+          onClick={restoreToDefault}
+          className="sm:whitespace-nowrap"
+          title="Reset type, mana value, rarity, color, color category, and images to each printing's values"
+        >
+          Restore to default
+        </Button>
         {anyCardRemoved && (
           <>
             <Button color="primary" onClick={revertRemoval} className="sm:whitespace-nowrap">

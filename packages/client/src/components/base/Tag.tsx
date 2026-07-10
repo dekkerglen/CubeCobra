@@ -7,11 +7,14 @@ interface TagProps {
   style?: React.CSSProperties;
   text: string;
   colorClass?: string;
+  // Inline background/text color for custom (hex) tag colors; wins over base styles.
+  colorStyle?: React.CSSProperties;
   onDelete?: () => void;
 }
 
-const Tag: React.FC<TagProps> = ({ href, style, text, onDelete, colorClass }) => {
+const Tag: React.FC<TagProps> = ({ href, style, text, onDelete, colorClass, colorStyle }) => {
   const baseClasses = 'text-sm p-2 m-1 inline-block border bg-bg-active border-border transition-all duration-300';
+  const mergedStyle = { ...style, ...colorStyle };
 
   if (href) {
     return (
@@ -22,7 +25,7 @@ const Tag: React.FC<TagProps> = ({ href, style, text, onDelete, colorClass }) =>
           baseClasses,
           'hover:cursor-pointer font-medium text-link hover:text-link-active',
         )}
-        style={style}
+        style={mergedStyle}
       >
         {text}
       </a>
@@ -30,7 +33,7 @@ const Tag: React.FC<TagProps> = ({ href, style, text, onDelete, colorClass }) =>
   }
 
   return (
-    <span className={classNames(colorClass, baseClasses)} style={style}>
+    <span className={classNames(colorClass, baseClasses)} style={mergedStyle}>
       {text}
       {onDelete && (
         <button className="ml-1" onClick={onDelete}>

@@ -24,6 +24,13 @@ export interface CardSlot {
 export interface Pack {
   slots: CardSlot[];
   steps: DraftStep[] | null;
+  /**
+   * When true, the cards in this pack are presented to drafters in a random
+   * order rather than in slot order. The shuffle is baked into the draft's
+   * InitialState at creation time using the draft seed, so it stays
+   * reproducible. Optional and defaults to false for backwards compatibility.
+   */
+  randomizeOrder?: boolean;
 }
 export interface DraftFormat {
   title: string;
@@ -39,6 +46,16 @@ export type DraftState = {
   cards: number[];
   steps: DraftStep[];
 }[][];
+
+// One completed Housman-draft exchange: a seat placed `given` into the shared pool and took
+// `taken` from it. Persisted (in draft order, grouped by round) so the completed draft can
+// render a pick-by-pick breakdown. Both cards are public, so nothing hidden is recorded here.
+export interface HousmanLogEntry {
+  seat: number;
+  round: number; // 0-based
+  given: number; // card index placed into the pool
+  taken: number; // card index taken from the pool
+}
 
 //TODO: Move to Draftmancer types
 export interface DraftmancerPick {
@@ -56,6 +73,7 @@ export const DRAFT_TYPES = {
   DRAFT: 'd',
   UPLOAD: 'u',
   SEALED: 's',
+  HOUSMAN: 'h',
 } as const;
 
 export const REVERSE_TYPES: Record<string, string> = {
@@ -63,6 +81,7 @@ export const REVERSE_TYPES: Record<string, string> = {
   d: 'Draft',
   u: 'Upload',
   s: 'Sealed',
+  h: 'Housman Draft',
 } as const;
 
 export default interface Draft {
@@ -71,12 +90,14 @@ export default interface Draft {
   cube: string;
   InitialState?: DraftState;
   DraftmancerLog?: DraftmancerLog;
+  // Ordered exchange history for Housman drafts, used to render the pick-by-pick breakdown.
+  HousmanLog?: HousmanLogEntry[];
   basics: number[]; // Deprecated - kept for backwards compatibility with old cubes
   basicsBoard?: string; // New: which board basics are pulled from
   id: string;
   seed?: string;
-  // g: grid, d: draft, u: upload, s: sealed
-  type: 'g' | 'd' | 'u' | 's';
+  // g: grid, d: draft, u: upload, s: sealed, h: housman
+  type: 'g' | 'd' | 'u' | 's' | 'h';
   owner?: string | User;
   cubeOwner: string | User;
   date: Date | number;

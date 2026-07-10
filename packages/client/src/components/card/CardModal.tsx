@@ -16,16 +16,18 @@ import {
   cardTags,
   cardTix,
   cardType,
+  hasRestorableOverrides,
   isCardCmcValid,
   isCustomCard,
   normalizeName,
+  restoreCardToDefault,
 } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
 import Card, { BoardType } from '@utils/datatypes/Card';
 import { getBoardDefinitions, TagColor } from '@utils/datatypes/Cube';
 import TagData from '@utils/datatypes/TagData';
 import { getLabels } from '@utils/sorting/Sort';
-import { getTagColorClass } from '@utils/Util';
+import { getTagColorClass, getTagColorStyle } from '@utils/Util';
 
 import ImageFallback, { ImageFallbackProps } from 'components/ImageFallback';
 import AddToCubeModal from 'components/modals/AddToCubeModal';
@@ -57,6 +59,7 @@ import { ColorChecksAddon } from '../ColorCheck';
 import FoilOverlay, { FoilOverlayProps } from '../FoilOverlay';
 import TagInput from '../TagInput';
 import TextBadge from '../TextBadge';
+import VersionSelect from './VersionSelect';
 
 type FoilCardImageProps = FoilOverlayProps & ImageFallbackProps;
 const FoilCardImage: React.FC<FoilCardImageProps> = FoilOverlay(ImageFallback);
@@ -81,6 +84,7 @@ export interface CardModalProps {
 interface CardDetails {
   scryfall_id: string;
   version: string;
+  image_normal?: string;
 }
 
 const CardModal: React.FC<CardModalProps> = ({
@@ -215,6 +219,15 @@ const CardModal: React.FC<CardModalProps> = ({
       revertEdit(card.editIndex, card.board);
     }
   }, [revertEdit, card]);
+
+  const canRestoreToDefault = useMemo(() => hasRestorableOverrides(card), [card]);
+
+  const restoreToDefault = useCallback(() => {
+    editCard(card.index!, restoreCardToDefault(card), card.board!);
+    if (window.innerWidth >= 768) {
+      setRightSidebarMode('edit');
+    }
+  }, [card, editCard, setRightSidebarMode]);
 
   return (
     <Modal lg isOpen={isOpen} setOpen={setOpen} scrollable>
@@ -363,16 +376,11 @@ const CardModal: React.FC<CardModalProps> = ({
                     required
                   />
                 ) : (
-                  <Select
+                  <VersionSelect
                     label="Version"
                     value={card.cardID}
                     setValue={(v) => updateField('cardID', v)}
-                    options={Object.entries(versions!).map(([key, value]) => {
-                      return {
-                        value: key,
-                        label: value.version,
-                      };
-                    })}
+                    versions={Object.values(versions!)}
                     disabled={disabled}
                     loading={versionsLoading}
                   />
@@ -548,9 +556,26 @@ const CardModal: React.FC<CardModalProps> = ({
                 ) : (
                   <Flexbox direction="row" gap="2" wrap="wrap">
                     {cardTags(card).map((tag) => (
-                      <Tag key={tag} colorClass={getTagColorClass(tagColors, tag)} text={tag} />
+                      <Tag
+                        key={tag}
+                        colorClass={getTagColorClass(tagColors, tag)}
+                        colorStyle={getTagColorStyle(tagColors, tag)}
+                        text={tag}
+                      />
                     ))}
                   </Flexbox>
+                )}
+                {!disabled && canRestoreToDefault && (
+                  <Button
+                    color="secondary"
+                    outline
+                    block
+                    className="mt-2 text-sm"
+                    onClick={restoreToDefault}
+                    title="Reset type, mana value, rarity, color, color category, and images to this printing's values"
+                  >
+                    Restore to Default
+                  </Button>
                 )}
               </Flexbox>
             </Col>

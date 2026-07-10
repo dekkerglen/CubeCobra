@@ -26,8 +26,8 @@ export interface HelpLink {
 }
 
 export const HELP_LINKS: HelpLink[] = [
-  { label: 'Filter Syntax', href: '/help/filters', Icon: FilterIcon },
-  { label: 'Markdown Guide', href: '/help/markdown', Icon: MarkdownIcon },
+  { label: 'Filter Syntax', href: '/wiki/reference/filter-syntax', Icon: FilterIcon },
+  { label: 'Markdown Guide', href: '/wiki/reference/markdown', Icon: MarkdownIcon },
   { label: 'API Docs', href: '/help/apidocs', Icon: CodeIcon },
   { label: 'Card Updates', href: '/help/cardupdates', Icon: SyncIcon },
   { label: 'Contact', href: '/help/contact', Icon: MailIcon },

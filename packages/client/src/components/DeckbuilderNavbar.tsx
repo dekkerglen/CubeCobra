@@ -4,7 +4,7 @@ import { EyeIcon, FileMediaIcon, PencilIcon, PlusIcon, TagIcon, ZapIcon } from '
 import { cardOracleId } from '@utils/cardutil';
 import Card, { CardDetails } from '@utils/datatypes/Card';
 import Draft from '@utils/datatypes/Draft';
-import { getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
+import { DeckSortKey, getCardDefaultRowColumn, setupPicks } from '@utils/draftutil';
 
 import DisplayContext from 'contexts/DisplayContext';
 import { trackEvent } from 'utils/analytics';
@@ -19,6 +19,7 @@ import { Flexbox } from './base/Layout';
 import Link from './base/Link';
 import Spinner from './base/Spinner';
 import CSRFForm from './CSRFForm';
+import DeckSortControls from './DeckSortControls';
 import BasicsModal from './modals/BasicsModal';
 import withModal from './WithModal';
 
@@ -47,6 +48,10 @@ interface DeckbuilderNavbarProps {
   defaultPrinting?: string;
   // Number of cards in the original pool; anything beyond is submitted as new.
   originalCardCount?: number;
+  // Re-sorts the deck/sideboard columns by the given attribute.
+  onSort?: (key: DeckSortKey) => void;
+  // Splits the deck/sideboard into creature and non-creature rows.
+  onSplitCreatures?: () => void;
 }
 
 const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
@@ -65,6 +70,8 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   onAddCard,
   defaultPrinting,
   originalCardCount,
+  onSort,
+  onSplitCreatures,
 }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const { showCustomImages, toggleShowCustomImages, showDeckBuilderStatsPanel, toggleShowDeckBuilderStatsPanel } =
@@ -260,6 +267,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
           </Button>
         </Flexbox>
       )}
+      {onSort && onSplitCreatures && <DeckSortControls onSort={onSort} onSplitCreatures={onSplitCreatures} />}
       {autobuilding ? (
         <Flexbox direction="row" gap="2" alignItems="center" className="px-2 min-w-[12rem]">
           <Spinner sm />

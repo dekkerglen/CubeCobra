@@ -24,6 +24,9 @@ interface PackProps {
   retryInProgress?: boolean;
   onEndDraft?: () => void;
   packSize: number;
+  // Extra controls rendered in the pack header toolbar (e.g. the "Share as P1P1"
+  // button shown at pack 1 pick 1). Kept generic so Pack has no draft-specific deps.
+  headerActions?: React.ReactNode;
 }
 
 const PACK_GRID_COLUMNS = {
@@ -44,6 +47,7 @@ const Pack: React.FC<PackProps> = ({
   onRetry,
   retryInProgress = false,
   packSize,
+  headerActions,
 }) => {
   const [showRatings, setShowRatings] = useState(false);
   const [minHeight, setMinHeight] = useState(() =>
@@ -92,19 +96,22 @@ const Pack: React.FC<PackProps> = ({
         <Text semibold lg>
           {title}
         </Text>
-        {error ? (
-          <Button onClick={onRetry} color="danger" disabled={retryInProgress}>
-            {retryInProgress ? 'Retrying...' : 'Bot picks failed. Try again?'}
-          </Button>
-        ) : (
-          <Button
-            className={ratings && ratings.length > 0 && !showRatings ? '' : 'invisible'}
-            onClick={() => setShowRatings(true)}
-            color="primary"
-          >
-            Show CubeCobra Bot Ratings
-          </Button>
-        )}
+        <div className="flex gap-2 items-center">
+          {headerActions}
+          {error ? (
+            <Button onClick={onRetry} color="danger" disabled={retryInProgress}>
+              {retryInProgress ? 'Retrying...' : 'Bot picks failed. Try again?'}
+            </Button>
+          ) : (
+            <Button
+              className={ratings && ratings.length > 0 && !showRatings ? '' : 'invisible'}
+              onClick={() => setShowRatings(true)}
+              color="primary"
+            >
+              Show CubeCobra Bot Ratings
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardBody>
         <div className="flex">

@@ -1,7 +1,7 @@
 import React from 'react';
 
 import type { Icon as OcticonIcon } from '@primer/octicons-react';
-import { CodeIcon, FilterIcon, HeartIcon, MailIcon, MarkdownIcon, SyncIcon } from '@primer/octicons-react';
+import { BookIcon, CodeIcon, FilterIcon, HeartIcon, MailIcon, MarkdownIcon, SyncIcon } from '@primer/octicons-react';
 import { cdnUrl } from '@utils/cdnUrl';
 
 import Text from 'components/base/Text';
@@ -17,14 +17,20 @@ interface HelpLink {
 
 const HELP_LINKS: HelpLink[] = [
   {
+    label: 'Wiki',
+    href: '/wiki',
+    description: 'Guides and how-tos for building cubes, drafting, and using the site.',
+    Icon: BookIcon,
+  },
+  {
     label: 'Filter Syntax',
-    href: '/help/filters',
+    href: '/wiki/reference/filter-syntax',
     description: 'Reference for the search syntax used throughout cube and card search.',
     Icon: FilterIcon,
   },
   {
     label: 'Markdown Guide',
-    href: '/help/markdown',
+    href: '/wiki/reference/markdown',
     description: 'How to format blog posts, comments, and cube descriptions with Markdown.',
     Icon: MarkdownIcon,
   },

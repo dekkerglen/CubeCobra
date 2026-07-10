@@ -10,15 +10,17 @@ const PAGE_SIZE = 96;
 
 type Distinct = 'names' | 'printing';
 
-export const searchCards = (
+// Collect and sort every card matching the filter, without paginating. Used
+// both by the paginated searchCards below and by the CSV export, which needs
+// the full result set.
+export const searchAllCards = (
   filter: FilterFunction,
   sort: OrderedSortsType = 'Elo',
-  page: number = 0,
   direction: SortDirectionsType = 'descending',
   distinct: Distinct = 'names',
   printing = DefaultPrintingPreference,
   includeExtras = false,
-) => {
+): CardDetails[] => {
   // Collect matching cards, optionally including "extras" — tokens and other
   // printings normally hidden from card search (they live only in
   // printedCardListWithExtras / are dropped by getAllMostReasonable otherwise).
@@ -49,6 +51,20 @@ export const searchCards = (
   if (direction === 'descending') {
     cards.reverse();
   }
+
+  return cards;
+};
+
+export const searchCards = (
+  filter: FilterFunction,
+  sort: OrderedSortsType = 'Elo',
+  page: number = 0,
+  direction: SortDirectionsType = 'descending',
+  distinct: Distinct = 'names',
+  printing = DefaultPrintingPreference,
+  includeExtras = false,
+) => {
+  const cards = searchAllCards(filter, sort, direction, distinct, printing, includeExtras);
 
   return {
     numResults: cards.length,

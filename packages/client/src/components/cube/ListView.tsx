@@ -1,10 +1,14 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
+import { GearIcon } from '@primer/octicons-react';
 import {
+  cardColorCategory,
   cardColorIdentity,
   cardFullName,
   cardIndex,
   cardName,
+  cardNotes,
+  cardRarity,
   cardTags,
   cardType,
   isCardCmcValid,
@@ -26,7 +30,9 @@ import PagedTable from 'components/PagedTable';
 import TagInput from 'components/TagInput';
 import withAutocard from 'components/WithAutocard';
 import CubeContext from 'contexts/CubeContext';
+import useLocalStorage from 'hooks/useLocalStorage';
 
+import ListViewSettingsModal, { ListViewColumn } from '../modals/ListViewSettingsModal';
 import withCardModal from '../modals/WithCardModal';
 import withGroupModal from '../modals/WithGroupModal';
 
@@ -34,6 +40,30 @@ const GroupModalButton = withGroupModal(Button);
 
 const AutoCardLink = withAutocard(Link);
 const CardModalLink = withCardModal(AutoCardLink);
+
+// Card fields that can be overridden per-card, exposed as toggleable columns.
+// The Name column is always shown (it holds the selection checkbox and card link),
+// so it is intentionally not part of this list.
+const TOGGLEABLE_COLUMNS: ListViewColumn[] = [
+  { key: 'version', label: 'Version' },
+  { key: 'type', label: 'Type' },
+  { key: 'status', label: 'Status' },
+  { key: 'finish', label: 'Finish' },
+  { key: 'cmc', label: 'CMC' },
+  { key: 'colorIdentity', label: 'Color Identity' },
+  { key: 'colorCategory', label: 'Color Category' },
+  { key: 'rarity', label: 'Rarity' },
+  { key: 'notes', label: 'Notes' },
+  { key: 'tags', label: 'Tags' },
+];
+
+// Preserves the columns that were shown before this setting existed.
+const DEFAULT_VISIBLE_COLUMNS = ['version', 'type', 'status', 'finish', 'cmc', 'colorIdentity', 'tags'];
+
+const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
+// Scryfall rarities, stored lowercase to match card.details.rarity.
+const RARITY_OPTIONS = ['common', 'uncommon', 'rare', 'mythic', 'special', 'bonus'];
 
 const colorCombos = [
   'C',
@@ -87,7 +117,9 @@ interface ListViewProps {
 const ListView: React.FC<ListViewProps> = ({ cards }) => {
   const { versionDict, fetchVersionsForCard, editCard, tagColors, allTags, canEdit } = useContext(CubeContext);
   const [checked, setChecked] = useState<{ [key: string]: boolean }>({});
-  const [pageSize, setPageSize] = useState(50);
+  const [pageSize, setPageSize] = useLocalStorage<number>('listViewPageSize', 50);
+  const [visibleColumns, setVisibleColumns] = useLocalStorage<string[]>('listViewColumns', DEFAULT_VISIBLE_COLUMNS);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const [loadingVersions, setLoadingVersions] = useState<Set<string>>(new Set());
 
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
@@ -189,17 +221,9 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
     [versionDict, loadingVersions, fetchVersionsForCard],
   );
 
-  const headers = ['Name', 'Version', 'Type', 'Status', 'Finish', 'CMC', 'Color Identity', 'Tags'];
-  const rows = sorted.map((card) => ({
-    Name: (
-      <Flexbox direction="row" gap="2">
-        <Checkbox label="" checked={checked[cardIndex(card)]} setChecked={() => handleCheck(card)} />
-        <CardModalLink card={card} modalprops={{ card: { board: card.board || 'mainboard', index: cardIndex(card) } }}>
-          {cardName(card)}
-        </CardModalLink>
-      </Flexbox>
-    ),
-    Version: (
+  // Renders the editable cell for each overridable column, keyed by column id.
+  const columnRenderers: Record<string, (card: CardType) => React.ReactNode> = {
+    version: (card) => (
       <Select
         value={card.cardID}
         setValue={(v) => updateField(card, 'cardID', v)}
@@ -215,7 +239,7 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
         }))}
       />
     ),
-    Type: (
+    type: (card) => (
       <Input
         type="text"
         name="type_line"
@@ -223,7 +247,7 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
         onChange={(event) => updateField(card, 'type_line', event.target.value)}
       />
     ),
-    Status: (
+    status: (card) => (
       <Select
         value={card.status}
         setValue={(v) => updateField(card, 'status', v)}
@@ -233,7 +257,7 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
         }))}
       />
     ),
-    Finish: (
+    finish: (card) => (
       <Select
         value={card.finish}
         setValue={(v) => updateField(card, 'finish', v)}
@@ -243,7 +267,7 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
         }))}
       />
     ),
-    CMC: (
+    cmc: (card) => (
       <Input
         type="text"
         name="cmc"
@@ -258,7 +282,7 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
         style={{ maxWidth: '3rem' }}
       />
     ),
-    'Color Identity': (
+    colorIdentity: (card) => (
       <Select
         value={cardColorIdentity(card).join('')}
         setValue={(v) => updateField(card, 'colors', v)}
@@ -268,7 +292,42 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
         }))}
       />
     ),
-    Tags: (
+    colorCategory: (card) => (
+      <Select
+        value={cardColorCategory(card)}
+        setValue={(v) => updateField(card, 'colorCategory', v)}
+        options={getLabels(null, 'Color Category').map((category) => ({
+          value: category,
+          label: category,
+        }))}
+      />
+    ),
+    rarity: (card) => {
+      const currentRarity = cardRarity(card).toLowerCase();
+      // Include the card's actual rarity as an option if it isn't one of the known
+      // Scryfall rarities (or is missing), so the Select shows the real value rather
+      // than silently defaulting to the first option and overwriting it on interaction.
+      const rarities = RARITY_OPTIONS.includes(currentRarity) ? RARITY_OPTIONS : [currentRarity, ...RARITY_OPTIONS];
+      return (
+        <Select
+          value={currentRarity}
+          setValue={(v) => updateField(card, 'rarity', v)}
+          options={rarities.map((rarity) => ({
+            value: rarity,
+            label: rarity ? `${rarity.charAt(0).toUpperCase()}${rarity.slice(1)}` : '(none)',
+          }))}
+        />
+      );
+    },
+    notes: (card) => (
+      <Input
+        type="text"
+        name="notes"
+        value={cardNotes(card)}
+        onChange={(event) => updateField(card, 'notes', event.target.value)}
+      />
+    ),
+    tags: (card) => (
       <TagInput
         tags={cardTags(card).map((tag) => ({ text: tag, id: tag }))}
         addTag={(tag: TagData) => {
@@ -286,7 +345,29 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
         suggestions={allTags}
       />
     ),
-  }));
+  };
+
+  const orderedVisibleColumns = TOGGLEABLE_COLUMNS.filter((column) => visibleColumns.includes(column.key));
+  const headers = ['Name', ...orderedVisibleColumns.map((column) => column.label)];
+  const rows = sorted.map((card) => {
+    const row: { [key: string]: React.ReactNode } = {
+      Name: (
+        <Flexbox direction="row" gap="2">
+          <Checkbox label="" checked={checked[cardIndex(card)]} setChecked={() => handleCheck(card)} />
+          <CardModalLink
+            card={card}
+            modalprops={{ card: { board: card.board || 'mainboard', index: cardIndex(card) } }}
+          >
+            {cardName(card)}
+          </CardModalLink>
+        </Flexbox>
+      ),
+    };
+    for (const column of orderedVisibleColumns) {
+      row[column.label] = columnRenderers[column.key](card);
+    }
+    return row;
+  });
 
   return (
     <Card className="my-3">
@@ -295,18 +376,18 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
         headers={headers}
         rows={rows}
         paginateClassname="p-2"
+        rightControl={
+          <Button
+            color="secondary"
+            onClick={() => setSettingsOpen(true)}
+            className="inline-flex items-center gap-1 whitespace-nowrap"
+          >
+            <GearIcon size={16} />
+            <span>Columns</span>
+          </Button>
+        }
         sideControl={
           <Flexbox direction="row" justify="between" gap="2" alignItems="end">
-            <Select
-              label="Page Size"
-              value={`${pageSize}`}
-              setValue={(v) => setPageSize(parseInt(v, 10))}
-              options={[10, 25, 50, 100].map((size) => ({
-                value: `${size}`,
-                label: `${size}`,
-              }))}
-              dense
-            />
             {canEdit && (
               <>
                 <Button color="primary" onClick={handleCheckAll}>
@@ -337,6 +418,17 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
             )}
           </Flexbox>
         }
+      />
+      <ListViewSettingsModal
+        isOpen={settingsOpen}
+        setOpen={setSettingsOpen}
+        pageSize={pageSize}
+        setPageSize={setPageSize}
+        pageSizeOptions={PAGE_SIZE_OPTIONS}
+        columns={TOGGLEABLE_COLUMNS}
+        visibleColumns={visibleColumns}
+        setVisibleColumns={setVisibleColumns}
+        defaultVisibleColumns={DEFAULT_VISIBLE_COLUMNS}
       />
     </Card>
   );

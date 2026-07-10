@@ -2,33 +2,33 @@ import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { GrabberIcon } from '@primer/octicons-react';
 import { TagColor } from '@utils/datatypes/Cube';
-import { getTagColorClass } from '@utils/Util';
+import { getTagColorClass, getTagColorStyle } from '@utils/Util';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
-import CubeContext, { TAG_COLORS } from '../../contexts/CubeContext';
+import CubeContext from '../../contexts/CubeContext';
 import { Card } from '../base/Card';
 import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
-import Select from '../base/Select';
 import Tag from '../base/Tag';
 import { SortableItem, SortableList } from '../DND';
 import LoadingButton from '../LoadingButton';
+import TagColorPicker from '../TagColorPicker';
 
 interface TagColorRowProps {
   tag: string;
   tagClass: string;
+  tagStyle?: React.CSSProperties;
   value: string | null;
   onChange: (tagColor: string) => void;
   id: string;
 }
 
-const TagColorRow: React.FC<TagColorRowProps> = ({ tag, tagClass, value, onChange, id }) => {
-  /* In Firefox when the select is clicked it was also triggering the sortable context, such that
-   * while the options are open the whole row is moving around. And once the option is chosen its still
-   * dragging, like a burr you cannot shake off. Stopping the onPointerDown event from propagating is
-   * the solution I found.
+const TagColorRow: React.FC<TagColorRowProps> = ({ tag, tagClass, tagStyle, value, onChange, id }) => {
+  /* In Firefox when the color control is interacted with it was also triggering the sortable context,
+   * such that the whole row moves around. Stopping the onPointerDown event from propagating is the
+   * solution I found.
    */
-  const preventDragStart = (event: React.PointerEvent<HTMLSelectElement>) => {
+  const preventDragStart = (event: React.PointerEvent<HTMLElement>) => {
     event.stopPropagation();
   };
 
@@ -36,21 +36,14 @@ const TagColorRow: React.FC<TagColorRowProps> = ({ tag, tagClass, value, onChang
     <SortableItem id={id} className="p-2 no-touch-action">
       {({ handleProps }) => (
         <Card>
-          <Flexbox direction="row" justify="between" className="cursor-grab">
-            <Flexbox direction="row" justify="start" alignItems="center">
+          <TagColorPicker value={value} onChange={onChange} onPointerDown={preventDragStart}>
+            <Flexbox direction="row" justify="start" alignItems="center" className="cursor-grab min-w-0">
               <div {...handleProps}>
                 <GrabberIcon size={16} className="cursor-grab" />
               </div>
-              <Tag text={tag} colorClass={tagClass} />
+              <Tag text={tag} colorClass={tagClass} colorStyle={tagStyle} />
             </Flexbox>
-            <Select
-              options={TAG_COLORS.map(([name, v]) => ({ value: v || 'none', label: name }))}
-              value={value || 'none'}
-              setValue={onChange}
-              dense
-              onPointerDown={preventDragStart}
-            />
-          </Flexbox>
+          </TagColorPicker>
         </Card>
       )}
     </SortableItem>
@@ -133,7 +126,7 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
       tagColors.map(({ tag }) => {
         const tagClass = `me-2 tag ${getTagColorClass(tagColors, tag)}`;
         return (
-          <span key={tag} className={tagClass}>
+          <span key={tag} className={tagClass} style={getTagColorStyle(tagColors, tag)}>
             {tag}
           </span>
         );
@@ -180,6 +173,7 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
                   key={tag}
                   tag={tag}
                   tagClass={tagClass}
+                  tagStyle={getTagColorStyle(tagColors, tag)}
                   value={color}
                   onChange={(color) => handleChangeColor(color, tag)}
                   id={tag}

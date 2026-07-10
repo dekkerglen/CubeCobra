@@ -5,7 +5,7 @@ import { cardType, cmcColumn, detailsToCard, makeSubtitle } from '@utils/carduti
 import CardType, { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
-import { getCardDefaultRowColumn } from '@utils/draftutil';
+import { DeckSortKey, getCardDefaultRowColumn, sortDeckIntoColumns, splitDeckByCreature } from '@utils/draftutil';
 
 import BotDeckStatusBanner from 'components/BotDeckStatusBanner';
 import DeckBuilderStatsPanel from 'components/DeckBuilderStatsPanel';
@@ -170,6 +170,22 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
     [cards],
   );
 
+  // Re-bucket both boards' columns by a card attribute (color, mana value,
+  // rarity, or type), leaving each card in the row it's already in.
+  const sortDeck = useCallback(
+    (key: DeckSortKey) => {
+      setMainboard((prev) => sortDeckIntoColumns(prev, cards, key));
+      setSideboard((prev) => sortDeckIntoColumns(prev, cards, key));
+    },
+    [cards],
+  );
+
+  // Split both boards into creature / non-creature rows, keeping each card's column.
+  const splitCreatures = useCallback(() => {
+    setMainboard((prev) => splitDeckByCreature(prev, cards));
+    setSideboard((prev) => splitDeckByCreature(prev, cards));
+  }, [cards]);
+
   // Resolve deckbuild settings from cube
   const maxSpells = cube.deckbuildSpells ?? 23;
   const maxLands = cube.deckbuildLands ?? 17;
@@ -196,6 +212,8 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
               onAddCard={addCardToDeck}
               defaultPrinting={cube.defaultPrinting}
               originalCardCount={originalCardCount}
+              onSort={sortDeck}
+              onSplitCreatures={splitCreatures}
             />
             <BotDeckStatusBanner
               draftId={initialDeck.id}

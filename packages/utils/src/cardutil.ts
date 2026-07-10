@@ -17,7 +17,7 @@ import {
 } from './datatypes/Mana';
 import CategoryOverrides from './res/CategoryOverrides.json';
 import LandCategories from './res/LandCategories.json';
-import { arraysEqual } from './Util';
+import { arraysEqual, getContrastingTextColor, isTagHexColor } from './Util';
 
 export const ART_SERIES_CARD_SUFFIX = 'Art Card';
 
@@ -471,6 +471,52 @@ export const detailsToCard = (details: CardDetailsType): Card => {
   };
 };
 
+// Fields that override the card's underlying printing. "Restore to Default"
+// resets these to the printing's real values. User-owned metadata (status,
+// finish, tags, notes) is intentionally left untouched so ownership tracking
+// and tags aren't wiped.
+//
+// These are set to explicit default values rather than deleted: cube edits are
+// applied as `{ ...originalCard, ...newCard }` both in the pending-edit preview
+// and when persisted, so a deleted key would just fall back to the original
+// override instead of the printing default. Setting the value explicitly
+// overrides it correctly.
+const restorableFieldDefaults = (details: CardDetailsType): Partial<Card> => ({
+  type_line: details.type,
+  cmc: details.cmc,
+  rarity: details.rarity,
+  colors: details.color_identity as Card['colors'],
+  colorCategory: details.colorcategory,
+  // Empty string (not undefined) so it overrides an existing image override in
+  // the merge; the image accessors fall back to details when there's no value.
+  imgUrl: details.image_normal ?? '',
+  imgBackUrl: details.image_flip ?? '',
+});
+
+export const restoreCardToDefault = (card: Card): Card => {
+  if (!card.details) {
+    return card;
+  }
+  return { ...card, ...restorableFieldDefaults(card.details) };
+};
+
+// Whether any restorable field differs from the printing's default value.
+export const hasRestorableOverrides = (card: Card): boolean => {
+  if (isCustomCard(card) || !card.details) {
+    return false;
+  }
+  const defaults = restoreCardToDefault(card);
+  return (
+    cardType(card) !== cardType(defaults) ||
+    cardCmc(card) !== cardCmc(defaults) ||
+    cardRarity(card) !== cardRarity(defaults) ||
+    cardColorCategory(card) !== cardColorCategory(defaults) ||
+    cardColorIdentity(card).join('') !== cardColorIdentity(defaults).join('') ||
+    cardImageUrl(card) !== cardImageUrl(defaults) ||
+    cardImageBackUrl(card) !== cardImageBackUrl(defaults)
+  );
+};
+
 export const cardColors = (card: Card): string[] => {
   //Old data may have colors (or details.colors) as a string like WBG instead of [W, B, G]
   if (card.colors) {
@@ -878,14 +924,35 @@ export function getCardColorClass(card: Card): string {
   return colorToColorClass[cardColorIdentityCategory(card)];
 }
 
+// The highest-priority tag color that applies to a card, or undefined if none.
+function getCardTagColor(tagColors: TagColor[], card: Card): string | null | undefined {
+  const tagColor = tagColors?.find(({ tag }) => (card.tags || []).includes(tag));
+  if (tagColor && tagColor.color && tagColor.color !== 'no-color' && tagColor.color !== 'None') {
+    return tagColor.color;
+  }
+  return undefined;
+}
+
 export function getCardTagColorClass(tagColors: TagColor[], card: Card): string {
-  if (tagColors) {
-    const tagColor = tagColors.find(({ tag }) => (card.tags || []).includes(tag));
-    if (tagColor && tagColor.color && tagColor.color !== 'no-color' && tagColor.color !== 'None') {
-      return `tag-color tag-${tagColor.color}`;
-    }
+  const color = getCardTagColor(tagColors, card);
+  // Custom hex colors can't use a predefined CSS class; they're applied via getCardTagColorStyle.
+  if (color && !isTagHexColor(color)) {
+    return `tag-color tag-${color}`;
   }
   return getCardColorClass(card);
+}
+
+// Inline background/text style for a card whose top-priority tag has a custom hex color.
+// Returns undefined for named/absent colors, which are handled by getCardTagColorClass.
+export function getCardTagColorStyle(
+  tagColors: TagColor[],
+  card: Card,
+): { backgroundColor: string; color: string } | undefined {
+  const color = getCardTagColor(tagColors, card);
+  if (isTagHexColor(color)) {
+    return { backgroundColor: color, color: getContrastingTextColor(color) };
+  }
+  return undefined;
 }
 
 export default {
@@ -956,5 +1023,6 @@ export default {
   sortDeck,
   getCardColorClass,
   getCardTagColorClass,
+  getCardTagColorStyle,
   cardWithBaseAttributes,
 };

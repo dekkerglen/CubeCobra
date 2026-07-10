@@ -2,11 +2,13 @@ import React, { useContext, useState } from 'react';
 
 import { BellFillIcon } from '@primer/octicons-react';
 import Notification from '@utils/datatypes/Notification';
+import { groupNotifications, isNotificationGroup } from '@utils/notificationGrouping';
 
 import { CardFooter, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import NavMenu from 'components/base/NavMenu';
+import NotificationGroupRow from 'components/nav/NotificationGroupRow';
 import { CSRFContext } from 'contexts/CSRFContext';
 import UserContext from 'contexts/UserContext';
 
@@ -22,6 +24,9 @@ const NotificationsNav: React.FC<NotificationsNavProps> = ({ transparent = false
   if (!user) {
     return null;
   }
+
+  // Collapse repeats (e.g. several drafts of the same cube) into single rows for the dropdown.
+  const entries = groupNotifications(items);
 
   const clear = async () => {
     await csrfFetch('/user/clearnotifications', {
@@ -58,16 +63,20 @@ const NotificationsNav: React.FC<NotificationsNavProps> = ({ transparent = false
           </Flexbox>
         </CardHeader>
         <Flexbox direction="col" className="max-h-96 overflow-auto">
-          {items.length > 0 ? (
-            items.map((notification) => (
-              <a
-                className="py-3 px-2 hover:bg-bg-active hover:cursor-pointer"
-                href={`/user/notification/${notification.id}`}
-                key={notification.id}
-              >
-                {notification.body}
-              </a>
-            ))
+          {entries.length > 0 ? (
+            entries.map((entry) =>
+              isNotificationGroup(entry) ? (
+                <NotificationGroupRow key={`${entry.type}:${entry.subject}`} group={entry} compact />
+              ) : (
+                <a
+                  className="py-3 px-2 hover:bg-bg-active hover:cursor-pointer"
+                  href={`/user/notification/${entry.id}`}
+                  key={entry.id}
+                >
+                  {entry.body}
+                </a>
+              ),
+            )
           ) : (
             <div className="my-2">
               <em className="mx-4">You don't have any notifications to show.</em>

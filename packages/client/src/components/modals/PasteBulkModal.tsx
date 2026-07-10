@@ -4,6 +4,7 @@ import { AlertIcon } from '@primer/octicons-react';
 
 import ChangesContext from '../../contexts/ChangesContext';
 import { trackEvent } from '../../utils/analytics';
+import BulkImportFormatHelp from '../BulkImportFormatHelp';
 import Alert from '../base/Alert';
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
@@ -57,24 +58,24 @@ const PasteBulkModal: React.FC<PasteBulkModalProps> = ({ isOpen, setOpen, cubeID
               </Flexbox>
             </Alert>
           )}
-          <Text>Paste a list of card names to add to the cube, one per line.</Text>
-          <Text sm className="mt-1 text-text-secondary">
-            For CSV data with a &quot;board&quot; column, the board specified in the file takes precedence.
-          </Text>
-          <Select
-            label="Default Board"
-            value={targetBoard}
-            setValue={setTargetBoard}
-            options={options}
-            className="mt-2"
-          />
-          <TextArea
-            name="body"
-            value={bulkText}
-            onChange={(event) => setBulkText(event.target.value)}
-            rows={10}
-            className="mt-2"
-          />
+          <Flexbox direction="col" gap="2">
+            <Flexbox direction="col" gap="1">
+              <Text>Paste a list of cards to add to the cube, one per line.</Text>
+              <Text sm className="text-text-secondary">
+                You can also paste CSV data — for CSV with a &quot;board&quot; column, the board specified in the file
+                takes precedence over the default below.
+              </Text>
+            </Flexbox>
+            <Select label="Default Board" value={targetBoard} setValue={setTargetBoard} options={options} />
+            <BulkImportFormatHelp />
+            <TextArea
+              name="body"
+              value={bulkText}
+              onChange={(event) => setBulkText(event.target.value)}
+              rows={10}
+              placeholder={'1 Agent of the Fates [ths]\n4 Plains [M20] 261\n2x Lightning Bolt'}
+            />
+          </Flexbox>
         </ModalBody>
         <ModalFooter>
           <Flexbox direction="row" justify="between" gap="2" className="w-full">

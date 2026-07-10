@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
-import { GearIcon, QuestionIcon } from '@primer/octicons-react';
+import { DownloadIcon, GearIcon, QuestionIcon } from '@primer/octicons-react';
 import { cardElo, cardId, detailsToCard } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
 import { allFields, CardDetails, FilterValues, isColorField, isNumField } from '@utils/datatypes/Card';
@@ -151,7 +151,21 @@ const CardSearch: React.FC = () => {
   const topPager = <Paginate count={pageCount} active={page} onClick={(i: number) => updatePage(i)} inverted />;
   const bottomPager = <Paginate count={pageCount} active={page} onClick={(i: number) => updatePage(i)} />;
 
+  // Downloads every result matching the current query (not just the visible
+  // page) as CSV. Mirrors the params sent to the search API so the file matches
+  // what the user is looking at.
+  const csvHref = `/tool/searchcards/csv?${new URLSearchParams([
+    ['f', effectiveFilter()],
+    ['s', sort],
+    ['d', direction],
+    ['di', distinct],
+    ['ie', includeExtras ? '1' : '0'],
+  ]).toString()}`;
+
   const tableHeaders = ['Name', 'Cost', 'Type', 'Elo', 'Total Picks', 'Cube Count'];
+  const tableHeaderTooltips = {
+    Elo: "A card's draft rating, calculated like chess Elo: every time a card is picked over another card in the same pack, it 'wins' against each card left behind and its rating rises while theirs falls, weighted by the gap between their ratings. Cards start at 1200.",
+  };
   const tableRows = cards.map((card) => ({
     Name: (
       <AutocardA href={`/tool/card/${card.scryfall_id}`} card={detailsToCard(card)}>
@@ -454,7 +468,19 @@ const CardSearch: React.FC = () => {
                         </Text>
                       )}
                     </Flexbox>
-                    {cards.length > 0 && topPager}
+                    {cards.length > 0 && (
+                      <Flexbox direction="row" alignItems="center" gap="3" wrap="wrap">
+                        <a
+                          href={csvHref}
+                          download
+                          className="inline-flex items-center gap-1 text-sm font-semibold text-button-text/90 hover:text-button-text underline-offset-2 hover:underline whitespace-nowrap"
+                        >
+                          <DownloadIcon size={16} />
+                          Download CSV
+                        </a>
+                        {topPager}
+                      </Flexbox>
+                    )}
                   </Flexbox>
                 )}
               </Flexbox>
@@ -471,6 +497,7 @@ const CardSearch: React.FC = () => {
                     ) : view === 'rows' ? (
                       <Table
                         headers={tableHeaders}
+                        headerTooltips={tableHeaderTooltips}
                         rows={tableRows}
                         hideOnMobile={['Cost', 'Type']}
                         getRowProps={getRowProps}

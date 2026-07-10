@@ -1,13 +1,18 @@
 import React, { ReactNode } from 'react';
 
+import { InfoIcon } from '@primer/octicons-react';
 import classNames from 'classnames';
 
 import Text from './Text';
+import Tooltip from './Tooltip';
 
 export interface TableProps {
   headers?: string[];
   rows: { [key: string]: ReactNode }[];
   hideOnMobile?: string[];
+  // Optional explanatory tooltips keyed by header. When present, an info icon is
+  // rendered next to that header and shows the text on hover.
+  headerTooltips?: { [key: string]: string };
   // Extra attributes (handlers, className, etc.) merged onto each <tr>. The
   // index matches the row's position in `rows`. Used e.g. to make rows draggable.
   getRowProps?: (rowIndex: number) => React.HTMLAttributes<HTMLTableRowElement>;
@@ -17,7 +22,7 @@ export interface TableProps {
   wrapCells?: boolean;
 }
 
-const Table: React.FC<TableProps> = ({ headers, rows, hideOnMobile, getRowProps, wrapCells }) => {
+const Table: React.FC<TableProps> = ({ headers, rows, hideOnMobile, headerTooltips, getRowProps, wrapCells }) => {
   const hiddenSet = new Set(hideOnMobile ?? []);
   const cellHiddenClass = (header: string) => (hiddenSet.has(header) ? 'hidden md:table-cell' : '');
   const wrapClass = wrapCells ? 'whitespace-normal break-words' : 'whitespace-nowrap';
@@ -29,13 +34,27 @@ const Table: React.FC<TableProps> = ({ headers, rows, hideOnMobile, getRowProps,
         <table className="border border-border w-full">
           <thead className="bg-bg-active/80">
             <tr>
-              {headers.map((header) => (
-                <th key={header} className={classNames('p-2 text-left', cellHiddenClass(header))}>
-                  <Text semibold md>
-                    {header}
-                  </Text>
-                </th>
-              ))}
+              {headers.map((header) => {
+                const tooltip = headerTooltips?.[header];
+                return (
+                  <th key={header} className={classNames('p-2 text-left', cellHiddenClass(header))}>
+                    <span className="inline-flex items-center gap-1">
+                      <Text semibold md>
+                        {header}
+                      </Text>
+                      {tooltip && (
+                        <Tooltip
+                          text={tooltip}
+                          wrapperTag="span"
+                          className="inline-flex items-center text-text-secondary"
+                        >
+                          <InfoIcon size={14} />
+                        </Tooltip>
+                      )}
+                    </span>
+                  </th>
+                );
+              })}
             </tr>
           </thead>
           <tbody>

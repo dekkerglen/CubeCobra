@@ -11,6 +11,7 @@ import Container from 'components/base/Container';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import DeckStacks from 'components/DeckStacks';
+import P1P1FromPackGenerator from 'components/p1p1/P1P1FromPackGenerator';
 import Pack from 'components/Pack';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
@@ -857,6 +858,10 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
     draftStatus.predictError ||
     pendingPick !== null;
 
+  // At pack 1 pick 1 the visible pack is still the full opened pack, so the user
+  // can turn it into a shareable/votable P1P1 instead of screenshotting it.
+  const isFirstPick = state.pack === 1 && state.pick === 1 && !draftStatus.loading;
+
   return (
     <MainLayout useContainer={false}>
       <DisplayContextProvider cubeID={cube.id}>
@@ -892,6 +897,17 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
                       error={draftStatus.predictError}
                       onRetry={handleRetryPredict}
                       retryInProgress={draftStatus.retryInProgress}
+                      headerActions={
+                        isFirstPick ? (
+                          <P1P1FromPackGenerator
+                            cubeId={cube.id}
+                            seed={draft.id}
+                            pack={state.seats[0].pack.map((index) => draft.cards[index])}
+                            label="Share as P1P1"
+                            openInNewTab
+                          />
+                        ) : undefined
+                      }
                     />
                   )
                 ) : draftStatus.loading || draftStatus.draftCompleted ? (

@@ -12,6 +12,7 @@ import CardGrid from './card/CardGrid';
 import CommentsSection from './comments/CommentsSection';
 import DecksPickBreakdown from './DecksPickBreakdown';
 import FoilCardImage from './FoilCardImage';
+import HousmanPickBreakdown from './HousmanPickBreakdown';
 import Markdown from './Markdown';
 import Username from './Username';
 
@@ -169,6 +170,8 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
                 <p>There is no draft log associated with this draft.</p>
               )}
             </>
+          ) : draft.type === 'h' ? (
+            <HousmanPickBreakdown draft={draft} seatNumber={parseInt(seatIndex, 10)} />
           ) : (
             <p>This type of draft does not have a pick breakdown yet.</p>
           )}

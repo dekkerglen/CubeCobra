@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import type { Icon as OcticonIcon } from '@primer/octicons-react';
 import {
   BellFillIcon,
+  BookIcon,
   ClockIcon,
   FeedPlusIcon,
   GraphIcon,
@@ -341,6 +342,15 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
     </a>
   );
 
+  const wikiLink = (
+    <a href="/wiki" className={NAV_ITEM_CLASSES}>
+      <span className="lg:hidden">
+        <BookIcon size={24} />
+      </span>
+      <span className="hidden lg:inline">Wiki</span>
+    </a>
+  );
+
   const helpLink = (
     <a href="/help" className={NAV_ITEM_CLASSES}>
       <span className="lg:hidden">
@@ -355,6 +365,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
       {homeLink}
       {exploreMenu}
       {resourcesLink}
+      {wikiLink}
       {helpLink}
     </>
   );
@@ -400,6 +411,9 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
       {mobileIconButton('explore', SearchIcon)}
       <a href="/resources" className="px-2 py-1 rounded text-white" aria-label="Resources">
         <ToolsIcon size={24} />
+      </a>
+      <a href="/wiki" className="px-2 py-1 rounded text-white" aria-label="Wiki">
+        <BookIcon size={24} />
       </a>
       <a href="/help" className="px-2 py-1 rounded text-white" aria-label="Help">
         <QuestionIcon size={24} />

@@ -21,7 +21,7 @@
 
 import { DynamoDBDocumentClient, PutCommand, QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-import DraftType, { DRAFT_TYPES, DraftmancerLog, REVERSE_TYPES } from '@utils/datatypes/Draft';
+import DraftType, { DRAFT_TYPES, DraftmancerLog, HousmanLogEntry, REVERSE_TYPES } from '@utils/datatypes/Draft';
 import DraftSeat from '@utils/datatypes/DraftSeat';
 import User from '@utils/datatypes/User';
 import { assessColors as assessDeckColors, type ColorAssessCard } from '@utils/drafting/assessColors';
@@ -183,7 +183,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       date: item.date,
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
-      type: item.type as 'g' | 'd' | 'u' | 's',
+      type: item.type as 'g' | 'd' | 'u' | 's' | 'h',
       complete: item.complete,
       name: item.name,
       seatNames: item.seatNames,
@@ -192,6 +192,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       basics: seatsData.basics || [],
       InitialState: seatsData.InitialState || {},
       DraftmancerLog: item.DraftmancerLog,
+      HousmanLog: seatsData.HousmanLog,
       botDecksPending: item.botDecksPending,
       botDecksFailed: item.botDecksFailed,
     };
@@ -233,6 +234,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
           seats: seatsData.seats || [],
           basics: seatsData.basics || [],
           InitialState: seatsData.InitialState || {},
+          HousmanLog: seatsData.HousmanLog,
         };
       }),
     );
@@ -260,7 +262,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         date: item.date,
         dateCreated: item.dateCreated,
         dateLastUpdated: item.dateLastUpdated,
-        type: item.type as 'g' | 'd' | 'u' | 's',
+        type: item.type as 'g' | 'd' | 'u' | 's' | 'h',
         complete: item.complete,
         name: item.name,
         seatNames: item.seatNames,
@@ -269,6 +271,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         basics: data.basics,
         InitialState: data.InitialState,
         DraftmancerLog: item.DraftmancerLog,
+        HousmanLog: data.HousmanLog,
         botDecksPending: item.botDecksPending,
         botDecksFailed: item.botDecksFailed,
       };
@@ -367,7 +370,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         date: item.date,
         dateCreated: item.dateCreated,
         dateLastUpdated: item.dateLastUpdated,
-        type: item.type as 'g' | 'd' | 'u' | 's',
+        type: item.type as 'g' | 'd' | 'u' | 's' | 'h',
         complete: item.complete,
         name: item.name,
         seatNames: item.seatNames,
@@ -475,7 +478,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         date: item.date,
         dateCreated: item.dateCreated,
         dateLastUpdated: item.dateLastUpdated,
-        type: item.type as 'g' | 'd' | 'u' | 's',
+        type: item.type as 'g' | 'd' | 'u' | 's' | 'h',
         complete: item.complete,
         name: item.name,
         seatNames: item.seatNames,
@@ -579,7 +582,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         date: item.date,
         dateCreated: item.dateCreated,
         dateLastUpdated: item.dateLastUpdated,
-        type: item.type as 'g' | 'd' | 'u' | 's',
+        type: item.type as 'g' | 'd' | 'u' | 's' | 'h',
         complete: item.complete,
         name: item.name,
         seatNames: item.seatNames,
@@ -743,7 +746,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     cube: string;
     cubeOwner: string | User;
     owner?: string | User;
-    type: 'g' | 'd' | 'u' | 's';
+    type: 'g' | 'd' | 'u' | 's' | 'h';
     complete: boolean;
     date?: number | Date;
     name?: string;
@@ -957,6 +960,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         seats: item.seats,
         basics: item.basics,
         InitialState: item.InitialState,
+        HousmanLog: item.HousmanLog,
       }),
     ]);
 
@@ -1025,7 +1029,9 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   /**
    * Gets seats data from S3.
    */
-  private async getSeats(id: string): Promise<{ seats: DraftSeat[]; basics: number[]; InitialState: any }> {
+  private async getSeats(
+    id: string,
+  ): Promise<{ seats: DraftSeat[]; basics: number[]; InitialState: any; HousmanLog?: HousmanLogEntry[] }> {
     try {
       const data = await getObject(process.env.DATA_BUCKET!, `seats/${id}.json`);
       return data || { seats: [], basics: [], InitialState: {} };

@@ -102,7 +102,7 @@ const EditArticle: React.FC<EditArticleProps> = ({
       </Row>
       <Text>
         Write the article text here. Cube Cobra articles use a variation of markdown you can read about{' '}
-        <Link href="/help/markdown" target="_blank">
+        <Link href="/wiki/reference/markdown" target="_blank">
           here
         </Link>
         .

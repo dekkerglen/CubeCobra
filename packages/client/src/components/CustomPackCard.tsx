@@ -7,6 +7,7 @@ import { buildDefaultSteps, DEFAULT_STEPS } from '@utils/draftutil';
 import useToggle from '../hooks/UseToggle';
 import Button from './base/Button';
 import { Card, CardFooter, CardHeader } from './base/Card';
+import Checkbox from './base/Checkbox';
 import Collapse from './base/Collapse';
 import Input from './base/Input';
 import { Flexbox } from './base/Layout';
@@ -66,6 +67,13 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
         </Flexbox>
       </CardHeader>
       <div className="p-1">
+        <div className="px-2 pt-2">
+          <Checkbox
+            label="Randomize card order (hide which slot each card came from)"
+            checked={pack.randomizeOrder ?? false}
+            setChecked={(checked) => setPack({ ...pack, randomizeOrder: checked })}
+          />
+        </div>
         <Card key="slots" className="mb-3 m-2">
           <CardHeader onClick={toggleSlotsOpen}>
             <CollapsibleCardTitle isOpen={slotsOpen}>Card Slots</CollapsibleCardTitle>

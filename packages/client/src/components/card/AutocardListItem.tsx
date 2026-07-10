@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 
-import { cardName, getCardTagColorClass } from '@utils/cardutil';
+import { cardName, getCardTagColorClass, getCardTagColorStyle } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import cx from 'classnames';
 import emojiRegex from 'emoji-regex';
@@ -75,12 +75,10 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     [openCardToolWindow],
   );
 
-  const colorClassname = useMemo(() => {
-    if (user && user.hideTagColors) {
-      return getCardTagColorClass([], card);
-    }
-    return getCardTagColorClass(tagColors, card);
-  }, [card, tagColors, user]);
+  const effectiveTagColors = user && user.hideTagColors ? [] : tagColors;
+  const colorClassname = useMemo(() => getCardTagColorClass(effectiveTagColors, card), [card, effectiveTagColors]);
+  // Custom hex tag colors are applied inline since they have no predefined bg-card class.
+  const tagColorStyle = useMemo(() => getCardTagColorStyle(effectiveTagColors, card), [card, effectiveTagColors]);
 
   const findEmojisInTags = (tags: string[]): string[] => {
     const regex = emojiRegex();
@@ -109,6 +107,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
         { 'font-bold': isSelected, 'cursor-grab active:cursor-grabbing': drag.active },
         className,
       )}
+      style={tagColorStyle}
       card={card}
       onAuxClick={noCardModal ? noOp : handleAuxClick}
       inModal={inModal}

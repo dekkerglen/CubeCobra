@@ -259,6 +259,47 @@ describe('createPacks', () => {
 
     assertSuccessfulPackCreation(result, expectedCardCount);
   });
+
+  it('randomizeOrder shuffles the card display order within a pack', async () => {
+    const packSize = 15;
+    const seats = 2;
+    const expectedCardCount = packSize * seats;
+
+    const format: DraftFormat = {
+      title: 'Custom',
+      packs: [{ ...createUnfilteredPackOfSize(packSize), randomizeOrder: true }],
+      multiples: false,
+      defaultSeats: seats,
+    };
+
+    //Fixed seed so the shuffle is deterministic for this assertion
+    const rng = seedrandom('randomize-order-test');
+    const result = createPacks(format, seats, mockUniqueCardGenerator, rng);
+
+    expect(result.ok).toBeTruthy();
+    expect(result.cards.filter((c) => typeof c !== 'undefined')).toHaveLength(expectedCardCount);
+
+    let anyPackReordered = false;
+    for (let seat = 0; seat < seats; seat++) {
+      const packCards = result.initialState[seat]![0]!.cards;
+      const expectedIndices = Array.from({ length: packSize }, (_, i) => seat * packSize + i);
+      //The pack must contain exactly the same card indices, just possibly reordered
+      expect([...packCards].sort((a, b) => a - b)).toEqual(expectedIndices);
+      if (packCards.some((cardIndex, slot) => cardIndex !== expectedIndices[slot])) {
+        anyPackReordered = true;
+      }
+    }
+    //With 15 cards across 2 packs it's astronomically unlikely both stay sorted
+    expect(anyPackReordered).toBeTruthy();
+  });
+
+  it('leaves card order untouched when randomizeOrder is not set', async () => {
+    const expectedCardCount = 1 * 5 * 2;
+    //mockSmallOnePackDraft has no randomizeOrder flag, so cards stay in slot order
+    const result = createPacks(mockSmallOnePackDraft, 2, mockUniqueCardGenerator, seedrandom('unused'));
+
+    assertSuccessfulPackCreation(result, expectedCardCount);
+  });
 });
 
 /************************/

@@ -11,6 +11,7 @@ interface ButtonLinkProps {
   target?: string;
   rel?: string;
   onClick?: (e: React.MouseEvent) => void;
+  title?: string;
 }
 
 const ButtonLink: React.FC<ButtonLinkProps> = ({
@@ -20,6 +21,7 @@ const ButtonLink: React.FC<ButtonLinkProps> = ({
   target = '_self',
   rel = 'noopener noreferrer',
   onClick,
+  title,
 }) => {
   const [loading, setLoading] = React.useState(false);
 
@@ -59,6 +61,7 @@ const ButtonLink: React.FC<ButtonLinkProps> = ({
       rel={rel}
       href={href}
       onClick={handleClick}
+      title={title}
     >
       {loading ? <Spinner className="position-absolute" /> : children}
     </a>
@@ -77,6 +80,8 @@ export interface ButtonProps {
   block?: boolean;
   className?: string;
   onSubmit?: () => void;
+  title?: string;
+  'aria-label'?: string;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -92,6 +97,8 @@ const Button: React.FC<ButtonProps> = ({
   block,
   className,
   onSubmit,
+  title,
+  'aria-label': ariaLabel,
 }) => {
   const classes = classNames(
     className,
@@ -123,7 +130,7 @@ const Button: React.FC<ButtonProps> = ({
 
   if (type === 'link') {
     return (
-      <ButtonLink className={classes} href={href} target={target} rel={rel} onClick={onClick}>
+      <ButtonLink className={classes} href={href} target={target} rel={rel} onClick={onClick} title={title}>
         {children}
       </ButtonLink>
     );
@@ -144,6 +151,8 @@ const Button: React.FC<ButtonProps> = ({
       disabled={disabled}
       type={type}
       onSubmit={onSubmit}
+      title={title}
+      aria-label={ariaLabel}
     >
       {children}
     </button>

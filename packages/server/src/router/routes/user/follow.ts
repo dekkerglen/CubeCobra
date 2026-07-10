@@ -1,3 +1,4 @@
+import { NotificationType } from '@utils/datatypes/Notification';
 import { userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { redirect } from 'serverutils/render';
@@ -28,7 +29,10 @@ export const handler = async (req: Request, res: Response) => {
       await userDao.incrementFollowingCount(user.id, 1);
 
       if (!other.disableFollowAlerts) {
-        await addNotification(other, user, `/user/view/${user.id}`, `${user.username} has followed you!`);
+        await addNotification(other, user, `/user/view/${user.id}`, `${user.username} has followed you!`, {
+          type: NotificationType.FOLLOW,
+          subject: other.id,
+        });
       }
     }
 

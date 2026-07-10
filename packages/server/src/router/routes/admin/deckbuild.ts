@@ -32,7 +32,7 @@ const buildSpecs = (queue: string, dlq: string, fn: string): MetricSpec[] => {
 };
 
 const sum = (values: number[]): number => values.reduce((a, b) => a + b, 0);
-const last = (values: number[]): number => (values.length ? values[values.length - 1] : 0);
+const last = (values: number[]): number => values[values.length - 1] ?? 0;
 // Mean of the datapoints CloudWatch actually reported (buckets with no invocation are 0 and
 // would drag a plain average down, so we ignore them).
 const meanNonZero = (values: number[]): number => {

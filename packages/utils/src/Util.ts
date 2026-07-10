@@ -192,12 +192,73 @@ export function isSamePageURL(to: string): boolean {
   }
 }
 
+// Matches a #rgb or #rrggbb custom color (as opposed to a named preset like "red").
+export function isTagHexColor(color: string | null | undefined): color is string {
+  return typeof color === 'string' && /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(color);
+}
+
+// Expands #rgb to #rrggbb and returns the r/g/b channels as 0-255 integers.
+function hexToRgb(hex: string): { r: number; g: number; b: number } {
+  let normalized = hex.replace('#', '');
+  if (normalized.length === 3) {
+    normalized = normalized
+      .split('')
+      .map((c) => c + c)
+      .join('');
+  }
+  return {
+    r: parseInt(normalized.slice(0, 2), 16),
+    g: parseInt(normalized.slice(2, 4), 16),
+    b: parseInt(normalized.slice(4, 6), 16),
+  };
+}
+
+// WCAG relative luminance of an sRGB color (0 = black, 1 = white).
+function relativeLuminance({ r, g, b }: { r: number; g: number; b: number }): number {
+  const channel = (value: number): number => {
+    const c = value / 255;
+    return c <= 0.03928 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+  };
+  return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(b);
+}
+
+// The two ink colors the built-in tag palette uses, so custom colors match the existing look.
+export const TAG_TEXT_DARK = '#020202';
+export const TAG_TEXT_LIGHT = '#f0f0f0';
+
+// Picks the ink color (light or dark) with the higher WCAG contrast against the given
+// background. Because the choice is derived from the background it is correct in both light
+// and dark app themes without needing theme-specific overrides.
+export function getContrastingTextColor(backgroundHex: string): string {
+  const bg = relativeLuminance(hexToRgb(backgroundHex));
+  const contrast = (fgHex: string): number => {
+    const fg = relativeLuminance(hexToRgb(fgHex));
+    const [lighter, darker] = fg > bg ? [fg, bg] : [bg, fg];
+    return (lighter + 0.05) / (darker + 0.05);
+  };
+  return contrast(TAG_TEXT_DARK) >= contrast(TAG_TEXT_LIGHT) ? TAG_TEXT_DARK : TAG_TEXT_LIGHT;
+}
+
 export function getTagColorClass(tagColors: { tag: string; color: string | null }[], tag: string): string {
   const tagColor = tagColors.find((tagColorB) => tag === tagColorB.tag);
-  if (tagColor && tagColor.color && tagColor.color !== 'no-color') {
+  // Custom hex colors are applied via inline style (see getTagColorStyle), not a CSS class.
+  if (tagColor && tagColor.color && tagColor.color !== 'no-color' && !isTagHexColor(tagColor.color)) {
     return `tag-color tag-${tagColor.color}`;
   }
   return '';
+}
+
+// Inline style for a tag's custom hex color, with a computed contrasting text color.
+// Returns undefined for named/absent colors, which are handled by getTagColorClass.
+export function getTagColorStyle(
+  tagColors: { tag: string; color: string | null }[],
+  tag: string,
+): { backgroundColor: string; color: string } | undefined {
+  const tagColor = tagColors.find((tagColorB) => tag === tagColorB.tag);
+  if (tagColor && isTagHexColor(tagColor.color)) {
+    return { backgroundColor: tagColor.color, color: getContrastingTextColor(tagColor.color) };
+  }
+  return undefined;
 }
 
 export async function wait(ms: number): Promise<void> {
@@ -248,6 +309,9 @@ export default {
   toNullableInt,
   isSamePageURL,
   getTagColorClass,
+  getTagColorStyle,
+  getContrastingTextColor,
+  isTagHexColor,
   wait,
   xorStrings,
 };

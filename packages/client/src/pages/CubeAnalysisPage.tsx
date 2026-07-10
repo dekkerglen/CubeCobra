@@ -25,7 +25,9 @@ import AtAGlance from '../analytics/AtAGlance';
 import Averages from '../analytics/Averages';
 import ChartComponent from '../analytics/Chart';
 import Combos from '../analytics/Combos';
+import Keywords from '../analytics/Keywords';
 import Playtest from '../analytics/PlaytestData';
+import Prices from '../analytics/Prices';
 import Suggestions from '../analytics/Suggestions';
 import Tokens from '../analytics/Tokens';
 import { Card } from '../components/base/Card';
@@ -176,13 +178,19 @@ const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, toke
       content = <Suggestions />;
       break;
     case 'playtest-data':
-      content = <Playtest cubeAnalytics={cubeAnalytics} />;
+      content = <Playtest />;
       break;
     case 'tokens':
       content = <Tokens tokenMap={tokenMap} />;
       break;
+    case 'keywords':
+      content = <Keywords />;
+      break;
     case 'combos':
       content = <Combos />;
+      break;
+    case 'prices':
+      content = <Prices />;
       break;
     case 'averages':
     default:

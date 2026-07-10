@@ -81,7 +81,9 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
       'recommender',
       'playtest-data',
       'tokens',
+      'keywords',
       'combos',
+      'prices',
     ].includes(activeLink)
   ) {
     parentKey = 'analysis';
@@ -94,7 +96,9 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
       { key: 'chart', label: 'Chart' },
       { key: 'playtest-data', label: 'Playtest Data' },
       { key: 'tokens', label: 'Tokens' },
+      { key: 'keywords', label: 'Keywords' },
       { key: 'combos', label: 'Combos' },
+      { key: 'prices', label: 'Prices' },
     ];
   } else if (
     [
@@ -161,7 +165,9 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
           'recommender',
           'playtest-data',
           'tokens',
+          'keywords',
           'combos',
+          'prices',
         ].includes(activeLink)
       ) {
         e.preventDefault();

@@ -1,7 +1,7 @@
 import React, { useRef, useState } from 'react';
 
 import TagData from '@utils/datatypes/TagData';
-import { getTagColorClass } from '@utils/Util';
+import { getTagColorClass, getTagColorStyle } from '@utils/Util';
 import classNames from 'classnames';
 
 import Input from './base/Input';
@@ -100,6 +100,7 @@ const TagInput: React.FC<TagInputProps> = ({
             key={tag.id}
             text={tag.text}
             colorClass={getTagColorClass(tagColors, tag.text)}
+            colorStyle={getTagColorStyle(tagColors, tag.text)}
             onDelete={() => handleDeleteTag(index)}
           />
         ))}

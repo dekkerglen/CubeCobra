@@ -107,7 +107,9 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean):
         { label: 'Chart', key: 'chart' },
         { label: 'Playtest Data', key: 'playtest-data' },
         { label: 'Tokens', key: 'tokens' },
+        { label: 'Keywords', key: 'keywords' },
         { label: 'Combos', key: 'combos' },
+        { label: 'Prices', key: 'prices' },
       ],
     },
   ];
@@ -520,6 +522,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                                           'playtest-data',
                                           'tokens',
                                           'combos',
+                                          'prices',
                                         ].includes(activeLink))
                                     ) {
                                       e.preventDefault();
@@ -754,6 +757,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                                 'playtest-data',
                                 'tokens',
                                 'combos',
+                                'prices',
                               ].includes(activeLink))
                           ) {
                             e.preventDefault();

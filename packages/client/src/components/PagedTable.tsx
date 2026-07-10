@@ -9,30 +9,47 @@ import Table, { TableProps } from './base/Table';
 interface PagedTableProps extends TableProps {
   pageSize: number;
   sideControl?: React.ReactNode;
+  // Rendered on the right side of the top row, immediately to the left of the pagination.
+  rightControl?: React.ReactNode;
   paginateClassname?: string;
 }
 
-const PagedTable: React.FC<PagedTableProps> = ({ pageSize, rows, headers, sideControl, paginateClassname }) => {
+const PagedTable: React.FC<PagedTableProps> = ({
+  pageSize,
+  rows,
+  headers,
+  sideControl,
+  rightControl,
+  paginateClassname,
+}) => {
   const [page, setPage] = useQueryParam('page', '0');
 
   const validPages = [...Array(Math.ceil(rows.length / pageSize)).keys()];
   const current = Math.min(parseInt(page, 10), validPages.length - 1);
   const displayRows = rows.slice(current * pageSize, (current + 1) * pageSize);
 
+  const paginate = validPages.length > 1 && (
+    <Paginate count={validPages.length} active={current} onClick={(i) => setPage(`${i}`)} />
+  );
+
+  const rightGroup =
+    rightControl || paginate ? (
+      <Flexbox direction="row" gap="2" alignItems="center">
+        {rightControl}
+        {paginate}
+      </Flexbox>
+    ) : null;
+
   return (
     <Flexbox direction="col" className="w-full" gap="2">
       {sideControl !== null ? (
         <Flexbox direction="row" justify="between" alignItems="end" className={`w-full ${paginateClassname}`}>
           {sideControl}
-          {validPages.length > 1 && (
-            <Paginate count={validPages.length} active={current} onClick={(i) => setPage(`${i}`)} />
-          )}
+          {rightGroup}
         </Flexbox>
       ) : (
         <Flexbox direction="row" justify="end" alignItems="end" className={`w-full ${paginateClassname}`}>
-          {validPages.length > 1 && (
-            <Paginate count={validPages.length} active={current} onClick={(i) => setPage(`${i}`)} />
-          )}
+          {rightGroup}
         </Flexbox>
       )}
       <Table headers={headers} rows={displayRows} />

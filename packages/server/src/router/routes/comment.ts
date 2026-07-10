@@ -1,6 +1,7 @@
 import type Comment from '@utils/datatypes/Comment';
 import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '@utils/datatypes/Comment';
 import { NoticeStatus, NoticeType } from '@utils/datatypes/Notice';
+import { NotificationType } from '@utils/datatypes/Notification';
 import User from '@utils/datatypes/User';
 import {
   articleDao,
@@ -227,6 +228,7 @@ export const addCommentHandler = async (req: Request, res: Response) => {
         user,
         `/comment/${id}`,
         `${user?.username} left a comment in response to your ${type}.`,
+        { type: NotificationType.COMMENT_REPLY, subject: `${type}:${parent}`, subjectName: type },
       );
     }
   }

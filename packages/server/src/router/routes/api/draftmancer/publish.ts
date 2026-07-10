@@ -3,6 +3,7 @@ import { CardDetails } from '@utils/datatypes/Card';
 import type CubeType from '@utils/datatypes/Cube';
 import DraftType, { DraftmancerLog } from '@utils/datatypes/Draft';
 import { PublishDraftBody } from '@utils/datatypes/Draftmancer';
+import { NotificationType } from '@utils/datatypes/Notification';
 import type DraftSeatType from '@utils/datatypes/DraftSeat';
 import { setupPicks } from '@utils/draftutil';
 import { cubeDao, draftDao, notificationDao } from 'dynamo/daos';
@@ -198,6 +199,9 @@ const sendDraftNotification = async (draftId: string, drafterName: string, cube:
     fromUsername: drafterName,
     url: `/cube/deck/${draftId}`,
     body: `${drafterName} drafted your cube: ${cube.name}`,
+    type: NotificationType.DRAFT,
+    subject: cube.id,
+    subjectName: cube.name,
   });
 };
 

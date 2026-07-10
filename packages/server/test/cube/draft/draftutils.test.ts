@@ -4,11 +4,14 @@ import {
   buildDefaultSteps,
   createDefaultDraftFormat,
   defaultStepsForLength,
+  exportDraftFormat,
   getErrorsInFormat,
   getInitialState,
   normalizeDraftFormatSteps,
   normalizeDraftSteps,
   normalizePackSlots,
+  parseDraftFormatImport,
+  sanitizeImportedFormat,
 } from '@utils/draftutil';
 
 import { createCard } from '../../test-utils/data';
@@ -397,6 +400,94 @@ describe('createDefaultDraftFormat', () => {
     expect(format.packs).toHaveLength(1);
     expect(format.packs[0]!.slots).toHaveLength(1);
     expect(format.packs[0]!.steps).toHaveLength(1);
+  });
+});
+
+describe('sanitizeImportedFormat', () => {
+  it('keeps only known fields and drops derived html', () => {
+    const format = sanitizeImportedFormat({
+      title: 'My Format',
+      packs: [{ slots: [{ filter: '*' }], steps: null }],
+      multiples: true,
+      markdown: 'hello',
+      basicsBoard: 'Basics',
+      html: '<p>hello</p>',
+      bogus: 'nope',
+    });
+    expect(format).toEqual({
+      title: 'My Format',
+      packs: [{ slots: [{ filter: '*' }], steps: null }],
+      multiples: true,
+      markdown: 'hello',
+      basicsBoard: 'Basics',
+    });
+    expect((format as any).html).toBeUndefined();
+    expect((format as any).bogus).toBeUndefined();
+  });
+
+  it('folds a legacy slot board field into the filter string', () => {
+    const format = sanitizeImportedFormat({
+      title: 'Legacy',
+      packs: [{ slots: [{ filter: 'c:w', board: 'Mainboard' }], steps: null }],
+      multiples: false,
+    });
+    expect(format.packs[0]!.slots[0]).toEqual({ filter: 'c:w board=Mainboard' });
+  });
+
+  it('defaults multiples and defaultSeats when missing', () => {
+    const format = sanitizeImportedFormat({
+      title: 'Bare',
+      packs: [{ slots: [{ filter: '*' }], steps: null }],
+    });
+    expect(format.multiples).toBe(false);
+    expect(format.defaultSeats).toBe(8);
+  });
+
+  it('throws when packs is not an array', () => {
+    expect(() => sanitizeImportedFormat({ title: 'x' })).toThrow();
+    expect(() => sanitizeImportedFormat(null)).toThrow();
+  });
+});
+
+describe('exportDraftFormat / parseDraftFormatImport round trip', () => {
+  const format = createDefaultDraftFormat(3, 15);
+
+  it('round-trips a format through export and import', () => {
+    const json = exportDraftFormat(format);
+    const { formats, error } = parseDraftFormatImport(json);
+    expect(error).toBeNull();
+    expect(formats).toHaveLength(1);
+    expect(formats[0]).toEqual(format);
+  });
+
+  it('strips the derived html field on export', () => {
+    const json = exportDraftFormat({ ...format, html: '<p>x</p>' });
+    expect(JSON.parse(json).format.html).toBeUndefined();
+  });
+
+  it('accepts a bare format object', () => {
+    const { formats, error } = parseDraftFormatImport(JSON.stringify(format));
+    expect(error).toBeNull();
+    expect(formats).toHaveLength(1);
+  });
+
+  it('accepts an array of formats', () => {
+    const { formats, error } = parseDraftFormatImport(JSON.stringify([format, format]));
+    expect(error).toBeNull();
+    expect(formats).toHaveLength(2);
+  });
+
+  it('returns an error for invalid JSON', () => {
+    const { formats, error } = parseDraftFormatImport('{ not json');
+    expect(formats).toHaveLength(0);
+    expect(error).toBe('File is not valid JSON.');
+  });
+
+  it('returns an error for a structurally invalid format', () => {
+    const bad = { ...format, packs: [{ slots: [{ filter: '*' }], steps: [{ action: 'pick', amount: 2 }] }] };
+    const { formats, error } = parseDraftFormatImport(JSON.stringify(bad));
+    expect(formats).toHaveLength(0);
+    expect(error).toContain('slots');
   });
 });
 

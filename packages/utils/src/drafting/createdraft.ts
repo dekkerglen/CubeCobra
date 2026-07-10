@@ -226,8 +226,26 @@ type PackCreationCardSlot = {
   board: string;
 };
 
+// Fisher-Yates shuffle in place, driven by the supplied RNG so the result is
+// reproducible from the draft seed.
+const shuffleInPlace = <T>(array: T[], rng: RNGFunction): void => {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    const temp = array[i]!;
+    array[i] = array[j]!;
+    array[j] = temp;
+  }
+};
+
 //Exporting for testing purposes
-export const createPacks = (format: DraftFormat, seats: number, nextCardFn: NextCardFn): CreatePacksResult => {
+export const createPacks = (
+  format: DraftFormat,
+  seats: number,
+  nextCardFn: NextCardFn,
+  //Used to shuffle packs flagged with randomizeOrder. Defaults to Math.random so
+  //existing callers/tests keep working; createDraft passes the seeded RNG.
+  rng: RNGFunction = Math.random,
+): CreatePacksResult => {
   const cardsPerDrafter = format.packs.reduce(
     (accumulator, currentValue) => accumulator + currentValue.slots.length,
     0,
@@ -343,6 +361,13 @@ export const createPacks = (format: DraftFormat, seats: number, nextCardFn: Next
     const currentPackState = result.initialState[seat]?.[packNum];
     if (currentPack && currentPackState && allocatedCards.length === currentPack.slots.length) {
       currentPackState.steps = currentPack.steps || buildDefaultSteps(currentPackState.cards.length);
+      // Randomize the display order for packs that opt in. This only permutes
+      // the card indices within this pack, so downstream code (which already
+      // handles arbitrary in-pack order) and the sum-of-indices assertion below
+      // are unaffected. Cards no longer reveal which slot they came from.
+      if (currentPack.randomizeOrder) {
+        shuffleInPlace(currentPackState.cards, rng);
+      }
     }
   }
 
@@ -394,7 +419,7 @@ export const createDraft = (
   nextCardFn = createNextCardFn(boardCards, format.multiples, rng);
 
   //TODO: Add the endpack steps here instead of in frontend
-  const result: CreatePacksResult = createPacks(format, seats, nextCardFn);
+  const result: CreatePacksResult = createPacks(format, seats, nextCardFn, rng);
 
   if (!result.ok) {
     throw new Error(`Could not create draft:\n${result.messages.join('\n')}`);

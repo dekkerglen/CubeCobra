@@ -91,9 +91,13 @@ const renderCode: React.FC = (node: any) => {
   const style = isDarkMode ? a11yDark : a11yLight;
 
   return (
-    <SyntaxHighlighter language={node.children?.props?.className?.replace('language-', '') || 'text'} style={style}>
-      {node.node?.children[0]?.children[0]?.value?.trimEnd() || ''}
-    </SyntaxHighlighter>
+    // Constrain to the container and scroll long lines internally, so a wide code block never
+    // stretches the page past the viewport (which would eat the mobile page gutters).
+    <div className="overflow-x-auto max-w-full">
+      <SyntaxHighlighter language={node.children?.props?.className?.replace('language-', '') || 'text'} style={style}>
+        {node.node?.children[0]?.children[0]?.value?.trimEnd() || ''}
+      </SyntaxHighlighter>
+    </div>
   );
 };
 
@@ -101,9 +105,22 @@ interface RenderTableProps {
   children: ReactNode;
 }
 const renderTable: React.FC<RenderTableProps> = (node) => (
-  <div className="overflow-x-auto">
-    <table className="table-auto border-collapse border border-gray-300">{node.children}</table>
+  <div className="overflow-x-auto my-2">
+    <table className="table-auto border-collapse border border-border text-sm">{node.children}</table>
   </div>
+);
+
+// gfm sets `style={{ textAlign }}` on cells for column alignment, so pass style through.
+interface RenderTableCellProps extends React.TdHTMLAttributes<HTMLTableCellElement> {}
+const renderTh: React.FC<RenderTableCellProps> = ({ children, style }) => (
+  <th className="border border-border bg-bg-active px-3 py-1.5 text-left font-semibold" style={style}>
+    {children}
+  </th>
+);
+const renderTd: React.FC<RenderTableCellProps> = ({ children, style }) => (
+  <td className="border border-border px-3 py-1.5" style={style}>
+    {children}
+  </td>
 );
 interface RenderUserlinkProps {
   name: string;
@@ -280,6 +297,8 @@ const RENDERERS = {
   blockquote: renderBlockQuote,
   pre: renderCode,
   table: renderTable,
+  th: renderTh,
+  td: renderTd,
   h1: renderH1,
   h2: renderH2,
   h3: renderH3,
