@@ -2,7 +2,7 @@
 services:
   node:
     container_name: cube
-    image: node:22.11.0
+    image: node:22.12.0
     volumes:
       - ../../../:/home/node/app
     user: 'node'
@@ -15,8 +15,8 @@ services:
       - path: ../../server/.env
         required: false
     ports:
-      # Webpack / browser entry point
-      - 8080:8080
+      # browser entry point
+      - 8080:5000
       # Node
       - 5001:5000
     expose:
@@ -30,7 +30,7 @@ services:
       - cubecobra
   recommender:
     container_name: recommender
-    image: node:22.11.0
+    image: node:22.12.0
     volumes:
       - ../../../:/home/node/app
     user: 'node'
