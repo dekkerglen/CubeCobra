@@ -155,6 +155,16 @@ export class CubeCobraStack extends cdk.Stack {
       }),
     );
 
+    // CloudWatch metrics (SQS queue depth + Lambda success rate) for the admin deckbuild
+    // dashboard. GetMetricData does not support resource-level permissions.
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['cloudwatch:GetMetricData'],
+        resources: ['*'],
+      }),
+    );
+
     // Look up the default VPC - used by all services for internal communication
     const vpc = ec2.Vpc.fromLookup(this, 'DefaultVpc', { isDefault: true });
 
@@ -238,6 +248,11 @@ export class CubeCobraStack extends cdk.Stack {
     serverEnvVars.CDN_BASE_URL = `https://assets.${params.domain}`;
     // Where the server publishes draft ids for async bot-deck building.
     serverEnvVars.BOT_DECKBUILD_TOPIC_ARN = botDeckbuildLambda.topic.topicArn;
+    // Queue/DLQ/function names so the admin deckbuild dashboard can read CloudWatch metrics
+    // (SQS queue depth + Lambda success rate) via GetMetricData.
+    serverEnvVars.BOT_DECKBUILD_QUEUE_NAME = botDeckbuildLambda.queue.queueName;
+    serverEnvVars.BOT_DECKBUILD_DLQ_NAME = botDeckbuildLambda.deadLetterQueue.queueName;
+    serverEnvVars.BOT_DECKBUILD_FUNCTION_NAME = botDeckbuildLambda.lambdaFunction.functionName;
 
     const elasticBeanstalk = new ElasticBeanstalk(this, 'ElasticBeanstalk', {
       certificate: cert.consoleCertificate,

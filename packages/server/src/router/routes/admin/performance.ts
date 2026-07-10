@@ -18,7 +18,16 @@ const MAX_LIMIT = 200;
 // The metrics the Performance page can rank routes by. Each builds an Insights `stats ...`
 // query grouped by matchedPath (the route pattern, so /cube/list/:id groups together).
 // `value` is the ranked column; extra columns give context.
-type MetricKey = 'hits' | 'slowest_avg' | 'slowest_p95' | 'server_time' | 'egress';
+type MetricKey =
+  | 'hits'
+  | 'slowest_avg'
+  | 'slowest_p95'
+  | 'slowest_p99'
+  | 'server_time'
+  | 'egress'
+  | 'egress_avg'
+  | 'ingress'
+  | 'ingress_avg';
 
 interface MetricDef {
   label: string;
@@ -50,6 +59,12 @@ const METRICS: Record<MetricKey, MetricDef> = {
     stats: 'stats pct(duration, 95) as value, count(*) as hits by matchedPath',
     extraColumns: ['hits'],
   },
+  slowest_p99: {
+    label: 'Slowest routes (p99)',
+    unit: 'ms p99',
+    stats: 'stats pct(duration, 99) as value, count(*) as hits by matchedPath',
+    extraColumns: ['hits'],
+  },
   server_time: {
     label: 'Most server time (sum of duration)',
     unit: 'ms total',
@@ -59,10 +74,60 @@ const METRICS: Record<MetricKey, MetricDef> = {
   egress: {
     label: 'Most egress (sum of response bytes)',
     unit: 'bytes total',
-    stats: 'stats sum(responseSize) as value, count(*) as hits by matchedPath',
-    extraColumns: ['hits'],
+    stats: 'stats sum(responseSize) as value, count(*) as hits, avg(responseSize) as avgBytes by matchedPath',
+    extraColumns: ['hits', 'avgBytes'],
     extraFilter: 'responseSize > 0',
   },
+  egress_avg: {
+    label: 'Largest responses (avg response bytes)',
+    unit: 'bytes avg',
+    stats: 'stats avg(responseSize) as value, count(*) as hits, max(responseSize) as maxBytes by matchedPath',
+    extraColumns: ['hits', 'maxBytes'],
+    extraFilter: 'responseSize > 0',
+  },
+  ingress: {
+    label: 'Most ingress (sum of request bytes)',
+    unit: 'bytes total',
+    stats: 'stats sum(requestSize) as value, count(*) as hits, avg(requestSize) as avgBytes by matchedPath',
+    extraColumns: ['hits', 'avgBytes'],
+    extraFilter: 'requestSize > 0',
+  },
+  ingress_avg: {
+    label: 'Largest requests (avg request bytes)',
+    unit: 'bytes avg',
+    stats: 'stats avg(requestSize) as value, count(*) as hits, max(requestSize) as maxBytes by matchedPath',
+    extraColumns: ['hits', 'maxBytes'],
+    extraFilter: 'requestSize > 0',
+  },
+};
+
+// Size buckets are order-of-magnitude in bytes. floor(log10(size)) gives a magnitude the
+// client turns into a human range (e.g. magnitude 3 -> 1 KB–10 KB).
+const distributionQuery = (field: string): string =>
+  `filter ispresent(${field}) and ${field} > 0 | fields floor(log(${field}) / log(10)) as magnitude ` +
+  `| stats count(*) as hits, sum(${field}) as bytes by magnitude | sort magnitude asc`;
+
+interface DistBucket {
+  magnitude: number;
+  hits: number;
+  bytes: number;
+}
+
+const runDistribution = async (field: string, startTimeMs: number, endTimeMs: number): Promise<DistBucket[]> => {
+  const rows = await runInsightsQuery({
+    logGroupName: logGroupFor('info'),
+    queryString: distributionQuery(field),
+    startTimeMs,
+    endTimeMs,
+    limit: 100,
+  });
+  return rows
+    .map((row) => ({
+      magnitude: Number(row.magnitude) || 0,
+      hits: Number(row.hits) || 0,
+      bytes: Number(row.bytes) || 0,
+    }))
+    .sort((a, b) => a.magnitude - b.magnitude);
 };
 
 export const performanceHandler = async (req: Request, res: Response) => {
@@ -137,11 +202,14 @@ export const performanceTimeseriesHandler = async (req: Request, res: Response) 
     const startTimeMs = endTimeMs - windowMinutes * 60 * 1000;
     const logGroupName = logGroupFor('info');
 
-    // Overall hits + egress over time, and hits broken down by status code over time.
-    const [traffic, byStatus] = await Promise.all([
+    // Overall hits + ingress/egress bytes over time, hits by status code over time, and the
+    // size distribution of request and response payloads.
+    const [traffic, byStatus, ingressDist, egressDist] = await Promise.all([
       runTimeSeries({
         logGroupName,
-        statsAndFilter: 'stats count(*) as hits, sum(responseSize) as egress',
+        statsAndFilter:
+          'stats count(*) as hits, sum(requestSize) as ingress, sum(responseSize) as egress, ' +
+          'avg(duration) as avgLatency, pct(duration, 99) as p99Latency',
         binInterval,
         startTimeMs,
         endTimeMs,
@@ -154,9 +222,11 @@ export const performanceTimeseriesHandler = async (req: Request, res: Response) 
         startTimeMs,
         endTimeMs,
       }),
+      runDistribution('requestSize', startTimeMs, endTimeMs),
+      runDistribution('responseSize', startTimeMs, endTimeMs),
     ]);
 
-    return res.status(200).send({ success: 'true', traffic, byStatus, windowMinutes });
+    return res.status(200).send({ success: 'true', traffic, byStatus, ingressDist, egressDist, windowMinutes });
   } catch (err) {
     req.logger.error((err as Error).message, (err as Error).stack);
     return res.status(500).send({ success: 'false', error: (err as Error).message });

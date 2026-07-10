@@ -28,7 +28,16 @@ interface PerfRow {
 interface TrafficPoint {
   t: number;
   hits: number;
+  ingress: number;
   egress: number;
+  avgLatency: number;
+  p99Latency: number;
+}
+
+interface DistBucket {
+  magnitude: number;
+  hits: number;
+  bytes: number;
 }
 
 interface AdminPerformancePageProps {
@@ -53,7 +62,27 @@ const LIMIT_OPTIONS = [
   { value: '200', label: 'Top 200' },
 ];
 
-const EXTRA_HEADER: Record<string, string> = { hits: 'Hits', maxMs: 'Max ms' };
+const EXTRA_HEADER: Record<string, string> = {
+  hits: 'Hits',
+  maxMs: 'Max ms',
+  avgBytes: 'Avg size',
+  maxBytes: 'Max size',
+};
+
+// Columns that hold a byte count and should render human-readable.
+const BYTE_COLUMNS = new Set(['avgBytes', 'maxBytes']);
+
+const formatBytes = (bytes: number): string => {
+  if (!Number.isFinite(bytes) || bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const exp = Math.min(Math.floor(Math.log10(bytes) / 3), units.length - 1);
+  const value = bytes / 1000 ** exp;
+  return `${value >= 100 || exp === 0 ? Math.round(value) : value.toFixed(1)} ${units[exp]}`;
+};
+
+// A magnitude m from the server represents the byte range [10^m, 10^(m+1)).
+const formatMagnitudeLabel = (magnitude: number): string =>
+  `${formatBytes(10 ** magnitude)}–${formatBytes(10 ** (magnitude + 1))}`;
 
 const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWindow, defaultMetric, metrics }) => {
   const { callApi } = useContext(CSRFContext);
@@ -70,6 +99,8 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
   const [traffic, setTraffic] = useState<TrafficPoint[]>([]);
   const [statusTimes, setStatusTimes] = useState<number[]>([]);
   const [statusSeries, setStatusSeries] = useState<Record<string, number[]>>({});
+  const [ingressDist, setIngressDist] = useState<DistBucket[]>([]);
+  const [egressDist, setEgressDist] = useState<DistBucket[]>([]);
   const [chartsLoading, setChartsLoading] = useState(false);
 
   const runTable = useCallback(async () => {
@@ -105,6 +136,8 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
         setTraffic(json.traffic || []);
         setStatusTimes(json.byStatus?.times || []);
         setStatusSeries(json.byStatus?.series || {});
+        setIngressDist(json.ingressDist || []);
+        setEgressDist(json.egressDist || []);
       }
     } catch {
       // charts are best-effort; the table query surfaces errors
@@ -121,15 +154,17 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
     runCharts();
   }, [runCharts]);
 
+  const isByteUnit = unit.includes('bytes');
   const valueHeader = unit || 'Value';
   const headers = ['Route', valueHeader, ...extraColumns.map((c) => EXTRA_HEADER[c] ?? c)];
   const tableRows = rows.map((r) => {
     const row: { [key: string]: React.ReactNode } = {
       Route: r.matchedPath,
-      [valueHeader]: Math.round(r.value).toLocaleString(),
+      [valueHeader]: isByteUnit ? formatBytes(r.value) : Math.round(r.value).toLocaleString(),
     };
     for (const c of extraColumns) {
-      row[EXTRA_HEADER[c] ?? c] = Math.round(Number(r[c]) || 0).toLocaleString();
+      const raw = Number(r[c]) || 0;
+      row[EXTRA_HEADER[c] ?? c] = BYTE_COLUMNS.has(c) ? formatBytes(raw) : Math.round(raw).toLocaleString();
     }
     return row;
   });
@@ -140,6 +175,14 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
   const statusDatasets = Object.keys(statusSeries)
     .sort()
     .map((status) => ({ label: status || '(none)', data: statusSeries[status], color: statusColor(status) }));
+
+  // Align both payload-size distributions onto a shared magnitude axis so the ranges line up.
+  const magnitudes = Array.from(new Set([...ingressDist, ...egressDist].map((b) => b.magnitude))).sort((a, b) => a - b);
+  const distLabels = magnitudes.map(formatMagnitudeLabel);
+  const ingressByMag = new Map(ingressDist.map((b) => [b.magnitude, b.hits]));
+  const egressByMag = new Map(egressDist.map((b) => [b.magnitude, b.hits]));
+  const ingressDistData = magnitudes.map((m) => ingressByMag.get(m) || 0);
+  const egressDistData = magnitudes.map((m) => egressByMag.get(m) || 0);
 
   return (
     <MainLayout>
@@ -189,11 +232,26 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
                   </Col>
                   <Col xs={12} md={6}>
                     <Text sm semibold>
-                      Egress over time (MB)
+                      Ingress / egress over time (MB)
                     </Text>
                     <LineChart
                       labels={trafficLabels}
-                      datasets={[{ label: 'Egress (MB)', data: traffic.map((p) => p.egress / 1e6), color: '#6AB572' }]}
+                      datasets={[
+                        { label: 'Ingress (MB)', data: traffic.map((p) => p.ingress / 1e6), color: '#67A6D3' },
+                        { label: 'Egress (MB)', data: traffic.map((p) => p.egress / 1e6), color: '#6AB572' },
+                      ]}
+                    />
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <Text sm semibold>
+                      Latency over time (ms)
+                    </Text>
+                    <LineChart
+                      labels={trafficLabels}
+                      datasets={[
+                        { label: 'Avg (ms)', data: traffic.map((p) => p.avgLatency), color: '#6AB572' },
+                        { label: 'p99 (ms)', data: traffic.map((p) => p.p99Latency), color: '#D85F69' },
+                      ]}
                     />
                   </Col>
                   <Col xs={12}>
@@ -201,6 +259,24 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
                       Requests by status code
                     </Text>
                     <StackedBarChart labels={statusLabels} datasets={statusDatasets} />
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <Text sm semibold>
+                      Requests by request size
+                    </Text>
+                    <StackedBarChart
+                      labels={distLabels}
+                      datasets={[{ label: 'Requests', data: ingressDistData, color: '#67A6D3' }]}
+                    />
+                  </Col>
+                  <Col xs={12} md={6}>
+                    <Text sm semibold>
+                      Requests by response size
+                    </Text>
+                    <StackedBarChart
+                      labels={distLabels}
+                      datasets={[{ label: 'Responses', data: egressDistData, color: '#6AB572' }]}
+                    />
                   </Col>
                 </Row>
               )}

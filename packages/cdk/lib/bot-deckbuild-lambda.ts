@@ -39,6 +39,7 @@ export interface BotDeckbuildLambdaProps extends StackProps {
 export class BotDeckbuildLambda extends Construct {
   public readonly topic: sns.Topic;
   public readonly queue: sqs.Queue;
+  public readonly deadLetterQueue: sqs.Queue;
   public readonly lambdaFunction: lambda.IFunction;
 
   constructor(scope: Construct, id: string, props: BotDeckbuildLambdaProps) {
@@ -48,6 +49,7 @@ export class BotDeckbuildLambda extends Construct {
       queueName: `BotDeckbuildDlq-${props.subdomain}-${props.stage}`,
       retentionPeriod: Duration.days(14),
     });
+    this.deadLetterQueue = deadLetterQueue;
 
     // Visibility timeout must comfortably exceed the lambda timeout (AWS guidance: ~6x).
     this.queue = new sqs.Queue(this, 'BotDeckbuildQueue', {
