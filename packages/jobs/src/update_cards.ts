@@ -702,7 +702,18 @@ function convertCard(
   newcard.language = card.lang;
   newcard.mtgo_id = card.mtgo_id;
   newcard.layout = card.layout;
-  newcard.keywords = card.keywords;
+  newcard.keywords = card.keywords ? [...card.keywords] : [];
+  // Omen cards (e.g. Tarkir: Dragonstorm) reuse the adventure inset layout and carry
+  // no distinguishing keyword or subtype in the processed details, so tag them with a
+  // synthetic "Omen" keyword here (their second face's type line is "... — Omen") so
+  // `is:omen` can separate them from true Adventure cards.
+  if (
+    card.layout === 'adventure' &&
+    (card.card_faces || []).some((face) => face?.type_line?.includes('Omen')) &&
+    !newcard.keywords.includes('Omen')
+  ) {
+    newcard.keywords.push('Omen');
+  }
 
   if (card.tcgplayer_id) {
     newcard.tcgplayer_id = card.tcgplayer_id;

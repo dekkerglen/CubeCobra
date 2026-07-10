@@ -1,5 +1,7 @@
 import { filterToReadableString, makeFilter } from '@utils/filtering/FilterCards';
 
+import { createCardFromDetails } from '../test-utils/data';
+
 const describeOf = (filterText: string): string | undefined => {
   const result = makeFilter(filterText);
   expect(result.err).toBeFalsy();
@@ -46,6 +48,9 @@ describe('Filter pseudo-English descriptions', () => {
     expect(describeOf('legal:modern')).toBe('is legal in Modern');
     expect(describeOf('banned:modern')).toBe('is banned in Modern');
     expect(describeOf('is:dfc')).toBe('it is a double-faced card');
+    expect(describeOf('is:adventure')).toBe('it is an adventure card');
+    expect(describeOf('is:omen')).toBe('it is an Omen card');
+    expect(describeOf('is:prepared')).toBe('it is a Prepared card');
     expect(describeOf('is:fetchland')).toBe('it is a fetch land');
     expect(describeOf('is:ub')).toBe('it is a Universes Beyond card');
     expect(describeOf('not:reprint')).toBe('it is not a reprint');
@@ -78,5 +83,25 @@ describe('Filter pseudo-English descriptions', () => {
   it('does not alter filter matching behavior (fieldsUsed parity)', () => {
     expect(makeFilter('c:w').filter?.fieldsUsed).toEqual(['colors']);
     expect(makeFilter('c:w t:creature').filter?.fieldsUsed).toEqual(['colors', 'type_line']);
+  });
+
+  it('matches adventure, omen, and prepared cards correctly', () => {
+    const match = (filterText: string, details: any): boolean => {
+      const { filter } = makeFilter(filterText);
+      return !!filter && filter(createCardFromDetails(details));
+    };
+
+    // Omen cards share the adventure layout but are tagged with an "Omen" keyword.
+    const omen = { layout: 'adventure', keywords: ['Flying', 'Omen'] };
+    const adventure = { layout: 'adventure', keywords: ['Flying'] };
+    const prepared = { layout: 'prepare', keywords: ['Prepared'] };
+
+    expect(match('is:omen', omen)).toBe(true);
+    expect(match('is:omen', adventure)).toBe(false);
+    expect(match('is:adventure', adventure)).toBe(true);
+    // is:adventure excludes omen cards
+    expect(match('is:adventure', omen)).toBe(false);
+    expect(match('is:prepared', prepared)).toBe(true);
+    expect(match('is:prepared', adventure)).toBe(false);
   });
 });

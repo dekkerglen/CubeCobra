@@ -612,7 +612,7 @@ const SECTIONS: Section[] = [
         <p>
           Additionally, you can use <code>is:dfc</code>, <code>is:mdfc</code>, <code>is:tdfc</code>,{' '}
           <code>is:meld</code>, <code>is:transform</code>, <code>is:leveler</code>, <code>is:split</code>,{' '}
-          <code>is:flip</code>.
+          <code>is:flip</code>, <code>is:adventure</code>, <code>is:omen</code>, <code>is:prepared</code>.
         </p>
       </>
     ),

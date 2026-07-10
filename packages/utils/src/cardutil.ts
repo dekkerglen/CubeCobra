@@ -709,6 +709,11 @@ const RAW_CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, car
   transform: (details) => details.layout === 'transform',
   flip: (details) => details.layout === 'flip',
   split: (details) => details.layout === 'split',
+  // Omen cards (e.g. Tarkir: Dragonstorm) reuse the adventure inset layout, so they
+  // are tagged with a synthetic "Omen" keyword at ingest to tell the two apart.
+  adventure: (details) => details.layout === 'adventure' && !(details.keywords || []).includes('Omen'),
+  omen: (details) => details.layout === 'adventure' && (details.keywords || []).includes('Omen'),
+  prepared: (details) => details.layout === 'prepare',
   leveler: (details) => details.layout === 'leveler',
   commander: (details) =>
     details.legalities.Commander === 'legal' &&

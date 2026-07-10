@@ -26,6 +26,7 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Finishing a draft is now instant — you go straight to building your own deck instead of waiting on the bots, and their decks fill in behind the scenes with a banner that lets you know when they're ready to view.
 - Cube owners can now set a default number of seats for their cube, so drafts and simulations start with the right player count instead of always defaulting to 8.
 - Card search and cube filtering now show a plain-English summary of your filter, so you can tell at a glance whether a query like `c:w mv>=3 -t:land` is doing what you intended.
+- Added `is:adventure`, `is:omen`, and `is:prepared` search filters to find Adventure, Omen, and Prepared cards.
 
 ## Bug Fixes
 

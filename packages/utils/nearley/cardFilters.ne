@@ -234,7 +234,7 @@ isOpValue -> ":" isValue {% ([, category]) => { const detector = CARD_CATEGORY_D
 isValue -> (
     "gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "reprint"i | "firstprint"i | "firstprinting"i | "digital"i | "reasonable"i | "default"i
   | "dfc"i | "mdfc"i | "tdfc"i
-  | "meld"i | "transform"i | "split"i | "flip"i | "leveler"i | "commander"i | "spell"i | "permanent"i | "historic"i
+  | "meld"i | "transform"i | "split"i | "adventure"i | "omen"i | "prepared"i | "flip"i | "leveler"i | "commander"i | "spell"i | "permanent"i | "historic"i
   | "vanilla"i | "modal"i | "fullart"i | "foil"i | "nonfoil"i | "etched"i | "altfoil"i
   | "bikeland"i | "cycleland"i | "bicycleland"i | "bounceland"i | "karoo"i | "canopyland"i | "canland"i | "fetchland"i
   | "checkland"i | "dual"i | "fastland"i | "filterland"i | "gainland"i | "painland"i | "scryland"i | "shadowland"i

@@ -59,11 +59,8 @@ export const describeColors = (colors: string[]): string => {
     return 'colorless';
   }
   const names = colors.map((c) => COLOR_NAMES[c.toLowerCase()] ?? c.toUpperCase());
-  if (names.length === 1) {
-    return names[0];
-  }
-  if (names.length === 2) {
-    return `${names[0]} and ${names[1]}`;
+  if (names.length <= 2) {
+    return names.join(' and ');
   }
   return `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`;
 };
@@ -133,6 +130,9 @@ export const CATEGORY_LABELS: Record<string, string> = {
   meld: 'a meld card',
   transform: 'a transform card',
   split: 'a split card',
+  adventure: 'an adventure card',
+  omen: 'an Omen card',
+  prepared: 'a Prepared card',
   flip: 'a flip card',
   leveler: 'a leveler',
   commander: 'a commander',

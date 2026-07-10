@@ -13,7 +13,8 @@ export type FilterFunction = ((card: Card) => boolean) & {
   stringify: string;
   // Plain-English ("pseudo-English") description of what the filter does, composed
   // by the grammar as the filter is parsed. See FuncOperations for the fragments.
-  describe: string;
+  // Optional: real parses always set it, but manually-constructed filters may not.
+  describe?: string;
 };
 
 export const operatorsRegex: RegExp = new RegExp(`(?:${ALL_OPERATORS.join('|')})`);
