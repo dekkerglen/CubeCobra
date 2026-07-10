@@ -24,9 +24,13 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - New "Default" printing option picks the most normal version of each card — standard frame with up-to-date rules text — and you can find those printings in search with `is:default`.
 - Card search now hides "extras" — tokens, art cards, emblems, planes, memorabilia, digital-only, and Unknown Event cards — by default, so results are cleaner. Check "Include extras" or add `include:extras` to your search to bring them back.
 - Finishing a draft is now instant — you go straight to building your own deck instead of waiting on the bots, and their decks fill in behind the scenes with a banner that lets you know when they're ready to view.
+- Cube owners can now set a default number of seats for their cube, so drafts and simulations start with the right player count instead of always defaulting to 8.
 
 ## Bug Fixes
 
+- The Compare view now groups cards using your full sort settings instead of always grouping by mana value.
+- Browser back and forward buttons now restore the filters and sorts stored in the page URL.
+- Fixed bulk upload failing on single-column CSV exports and on card names containing commas, like "Adeline, Resplendent Cathar".
 - Fix Cube comparison export not bucketing cards by in both, only A, or only B when there is a filter set
 - Fixed sample pack, Pack 1 Pick 1, and daily homepage pack images sometimes failing to load.
 - Fixed Draft Reports and Import Records only showing the first page of results.

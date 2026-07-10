@@ -16,7 +16,7 @@ const StandardDraftCard: React.FC<StandardDraftCardProps> = ({ defaultFormat: de
   const { cube } = useContext(CubeContext);
   const [packs, setPacks] = useState('3');
   const [cards, setCards] = useState('15');
-  const [seats, setSeats] = useState('8');
+  const [seats, setSeats] = useState(`${cube.defaultDraftSeats ?? 8}`);
   const formRef = React.createRef<HTMLFormElement>();
 
   const formData = useMemo(

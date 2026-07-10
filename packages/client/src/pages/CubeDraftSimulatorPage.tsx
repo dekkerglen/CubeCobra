@@ -953,7 +953,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
   // Controls
   const [numDrafts, setNumDrafts] = useState(100);
-  const [numSeats, setNumSeats] = useState(8);
+  const [numSeats, setNumSeats] = useState(cube.defaultDraftSeats ?? 8);
   const [gpuBatchSize, setGpuBatchSize] = useState(() => (isMobileLayout ? 4 : 32));
   const [selectedFormatId, setSelectedFormatId] = useState(cube.defaultFormat ?? -1);
 

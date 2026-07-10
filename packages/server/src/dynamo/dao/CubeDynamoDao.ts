@@ -135,6 +135,7 @@ export interface UnhydratedCube {
   basicsBoard?: string; // Board to use for basics in draft (default: 'Basics', or 'None' for no basics)
   deckbuildSpells?: number; // Max non-land cards in bot-built decks (default 23)
   deckbuildLands?: number; // Max land cards in bot-built decks (default 17)
+  defaultDraftSeats?: number; // Default seat count pre-filled for new drafts (default 8)
   tags: any[];
   keywords: string[];
   cardCount: number;
@@ -282,6 +283,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       basicsBoard: item.basicsBoard,
       deckbuildSpells: item.deckbuildSpells,
       deckbuildLands: item.deckbuildLands,
+      defaultDraftSeats: item.defaultDraftSeats,
       tags: item.tags,
       keywords: item.keywords,
       cardCount: item.cardCount,

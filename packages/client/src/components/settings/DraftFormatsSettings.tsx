@@ -59,6 +59,9 @@ const DraftFormatsSettings: React.FC = () => {
   const [deckbuildSpells, setDeckbuildSpells] = useState<number>(cube.deckbuildSpells ?? 23);
   const [deckbuildLands, setDeckbuildLands] = useState<number>(cube.deckbuildLands ?? 17);
 
+  // Cube-level default seat count pre-filled on new drafts (custom formats can override)
+  const [defaultDraftSeats, setDefaultDraftSeats] = useState<number>(cube.defaultDraftSeats ?? 8);
+
   // Migrates a legacy slot (with a top-level `board` field) into the new shape
   // where the board is folded into the filter string as `board=<name>`. Slots
   // that already encode the board in their filter, or that don't have a legacy
@@ -119,6 +122,7 @@ const DraftFormatsSettings: React.FC = () => {
       defaultFormat,
       deckbuildSpells,
       deckbuildLands,
+      defaultDraftSeats,
     });
     const initialState = JSON.stringify({
       formats: getInitialFormats(),
@@ -130,6 +134,7 @@ const DraftFormatsSettings: React.FC = () => {
       defaultFormat: cube.defaultFormat ?? -1,
       deckbuildSpells: cube.deckbuildSpells ?? 23,
       deckbuildLands: cube.deckbuildLands ?? 17,
+      defaultDraftSeats: cube.defaultDraftSeats ?? 8,
     });
     setHasChanges(currentState !== initialState);
   }, [
@@ -142,6 +147,7 @@ const DraftFormatsSettings: React.FC = () => {
     defaultFormat,
     deckbuildSpells,
     deckbuildLands,
+    defaultDraftSeats,
     getInitialFormats,
     cube.disableDraft,
     cube.disableSealed,
@@ -151,6 +157,7 @@ const DraftFormatsSettings: React.FC = () => {
     cube.defaultFormat,
     cube.deckbuildSpells,
     cube.deckbuildLands,
+    cube.defaultDraftSeats,
   ]);
 
   const addFormat = () => {
@@ -250,6 +257,7 @@ const DraftFormatsSettings: React.FC = () => {
     setDefaultFormat(cube.defaultFormat ?? -1);
     setDeckbuildSpells(cube.deckbuildSpells ?? 23);
     setDeckbuildLands(cube.deckbuildLands ?? 17);
+    setDefaultDraftSeats(cube.defaultDraftSeats ?? 8);
     setError('');
   };
 
@@ -363,6 +371,24 @@ const DraftFormatsSettings: React.FC = () => {
                 ]}
                 value={`${defaultFormat}`}
                 setValue={(value) => setDefaultFormat(parseInt(value, 10))}
+              />
+            </Flexbox>
+
+            {/* Default Seats */}
+            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
+              <Text semibold md>
+                Default Seats
+              </Text>
+              <Text sm className="text-text-secondary">
+                The seat count pre-filled when starting a new draft or simulation. Custom formats with their own seat
+                count override this.
+              </Text>
+              <Select
+                label="Default seats"
+                id="defaultDraftSeats"
+                options={Array.from({ length: 15 }, (_, i) => i + 2).map((i) => ({ value: `${i}`, label: `${i}` }))}
+                value={`${defaultDraftSeats}`}
+                setValue={(value) => setDefaultDraftSeats(parseInt(value, 10))}
               />
             </Flexbox>
 
@@ -560,6 +586,7 @@ const DraftFormatsSettings: React.FC = () => {
             defaultFormat: defaultFormat.toString(),
             deckbuildSpells: deckbuildSpells.toString(),
             deckbuildLands: deckbuildLands.toString(),
+            defaultDraftSeats: defaultDraftSeats.toString(),
           }}
           ref={formRef}
         />

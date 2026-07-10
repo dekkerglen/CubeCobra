@@ -344,6 +344,7 @@ interface Cube {
   basicsBoard?: string; // Board to use for basics in draft (default: 'Basics', or 'None' for no basics)
   deckbuildSpells?: number; // Max non-land cards in bot-built decks (default 23)
   deckbuildLands?: number; // Max non-basic lands in bot-built decks (default 17)
+  defaultDraftSeats?: number; // Default seat count pre-filled for new drafts (default 8)
   tags: any[];
   keywords: string[];
   cardCount: number;

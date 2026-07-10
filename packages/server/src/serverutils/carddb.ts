@@ -105,7 +105,19 @@ export function getIdsFromName(name: string): string[] {
       .map((card) => card.scryfall_id);
   }
 
-  return catalog.nameToId[getNameForComparison(name)] || [];
+  const ids = catalog.nameToId[getNameForComparison(name)];
+  if (ids) {
+    return ids;
+  }
+
+  // Retry with fully-surrounding double quotes stripped. Plain-text/single-column-CSV imports can
+  // leave quotes around names that contain commas (e.g. `"Adeline, Resplendent Cathar"`).
+  const unquoted = name.replace(/^"(.*)"$/, '$1');
+  if (unquoted !== name) {
+    return catalog.nameToId[getNameForComparison(unquoted)] || [];
+  }
+
+  return [];
 }
 
 export function getMostReasonable(

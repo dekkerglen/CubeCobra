@@ -154,7 +154,11 @@ async function bulkUpload(req: Request, res: Response, list: string, cube: Cube)
   const addedByBoard: Record<string, any[]> = {};
 
   if (lines) {
-    if ((lines[0].match(/,/g) || []).length > 3) {
+    // Detect CSV by looking for the required `name` header column on the first line, rather than
+    // counting commas. Comma-counting mis-classifies a single-column (name-only) CSV export as
+    // plain text, which then fails to parse quoted names containing commas.
+    const isCSV = /(^|,)\s*"?name"?\s*(,|$)/i.test(lines[0]);
+    if (isCSV) {
       // upload is in CSV format - CSVtoCards handles board assignment via "board" / "maybeboard" columns
       const { cardsByBoard, missing: csvMissing } = CSVtoCards(list);
       missing = csvMissing;

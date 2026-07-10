@@ -18,6 +18,7 @@ export const updateDraftFormatsHandler = async (req: Request, res: Response) => 
     const defaultFormat = parseInt(req.body.defaultFormat ?? '-1', 10);
     const deckbuildSpells = parseInt(req.body.deckbuildSpells ?? '23', 10);
     const deckbuildLands = parseInt(req.body.deckbuildLands ?? '17', 10);
+    const defaultDraftSeats = parseInt(req.body.defaultDraftSeats ?? '8', 10);
 
     let formats: DraftFormat[];
 
@@ -85,6 +86,7 @@ export const updateDraftFormatsHandler = async (req: Request, res: Response) => 
     cube.basicsBoard = basicsBoard;
     cube.deckbuildSpells = deckbuildSpells;
     cube.deckbuildLands = deckbuildLands;
+    cube.defaultDraftSeats = defaultDraftSeats >= 2 && defaultDraftSeats <= 16 ? defaultDraftSeats : 8;
 
     // Validate defaultFormat is in range
     cube.defaultFormat = defaultFormat >= -1 && defaultFormat < formats.length ? defaultFormat : -1;

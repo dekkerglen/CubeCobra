@@ -32,7 +32,7 @@ jest.mock('serverutils/cardCatalog', () => ({
 
 import Card, { CardDetails, PrintingPreference } from '@utils/datatypes/Card';
 import { FilterFunction } from '@utils/filtering/FilterCards';
-import { getAllMostReasonable, getMostReasonable } from 'serverutils/carddb';
+import { getAllMostReasonable, getIdsFromName, getMostReasonable } from 'serverutils/carddb';
 import cardCatalog from 'serverutils/cardCatalog';
 
 // Same object as the mocked module's default, so mutating it in tests is what the code reads.
@@ -415,5 +415,44 @@ describe('getAllMostReasonable prefers the default printing', () => {
     setFilter.fieldsUsed = ['set'];
 
     expect(getAllMostReasonable(setFilter, PrintingPreference.RECENT, false, true)).toEqual([recentPrinting.details]);
+  });
+});
+
+describe('getIdsFromName', () => {
+  afterEach(() => {
+    jest.clearAllMocks();
+  });
+
+  beforeEach(() => {
+    mockCardCatalog.nameToId = {};
+  });
+
+  it('matches a plain name', () => {
+    mockCardCatalog.nameToId['balance'] = ['balance-id'];
+    expect(getIdsFromName('Balance')).toEqual(['balance-id']);
+  });
+
+  it('returns an empty array for an unknown name', () => {
+    expect(getIdsFromName('Not A Real Card')).toEqual([]);
+    expect(getIdsFromName('')).toEqual([]);
+  });
+
+  it('matches a name wrapped in quotes by stripping the surrounding quotes', () => {
+    // A single-column CSV / pasted list quotes names containing commas.
+    mockCardCatalog.nameToId['adeline, resplendent cathar'] = ['adeline-id'];
+    expect(getIdsFromName('"Adeline, Resplendent Cathar"')).toEqual(['adeline-id']);
+  });
+
+  it('prefers the exact (quoted) name when the card name genuinely contains quotes', () => {
+    // Cards like `"Ach! Hans, Run!"` include the quotes in their real name; the exact lookup
+    // must win before the quote-stripping fallback runs.
+    mockCardCatalog.nameToId['"ach! hans, run!"'] = ['ach-hans-id'];
+    mockCardCatalog.nameToId['ach! hans, run!'] = ['wrong-id'];
+    expect(getIdsFromName('"Ach! Hans, Run!"')).toEqual(['ach-hans-id']);
+  });
+
+  it('does not strip quotes that do not fully surround the name', () => {
+    mockCardCatalog.nameToId['balance'] = ['balance-id'];
+    expect(getIdsFromName('"Balance')).toEqual([]);
   });
 });

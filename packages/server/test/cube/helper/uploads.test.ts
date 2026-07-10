@@ -164,6 +164,46 @@ describe('Bulk Upload', () => {
       );
     });
 
+    it('should route a single-column (name-only) CSV through the CSV parser', async () => {
+      // The first line ("name") has no commas, so the old comma-counting heuristic mis-classified
+      // this as plain text and never handed it to Papaparse, breaking quoted names with commas.
+      const owner = createUser();
+      const cube = createCube({ owner });
+      const csvContent = 'name\n"Adeline, Resplendent Cathar"\nBalance';
+
+      const mockCard = createMockCardFromCSV(
+        createCardDetails({ name: 'Adeline, Resplendent Cathar', scryfall_id: 'adeline-id' }),
+      );
+
+      setupBasicMocks();
+      (cubefn.CSVtoCards as jest.Mock).mockReturnValue({
+        newCards: [mockCard],
+        newMaybe: [],
+        cardsByBoard: { mainboard: [mockCard] },
+        missing: [],
+      });
+
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: {} } as any,
+        {} as any,
+        csvContent,
+        cube,
+      );
+
+      // The whole CSV string (not a line-parsed subset) must reach CSVtoCards.
+      expect(cubefn.CSVtoCards).toHaveBeenCalledWith(csvContent);
+      expect(render.render).toHaveBeenCalledWith(
+        expect.anything(),
+        expect.anything(),
+        'BulkUploadPage',
+        expect.objectContaining({
+          added: ['adeline-id'],
+          addedByBoard: { mainboard: [mockCard] },
+          missing: [],
+        }),
+      );
+    });
+
     it('should handle CSV upload with added and missing cards', async () => {
       const owner = createUser();
       const cube = createCube({ owner });

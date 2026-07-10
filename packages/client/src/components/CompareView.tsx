@@ -1,7 +1,8 @@
 import React, { useContext } from 'react';
 
 import CardType from '@utils/datatypes/Card';
-import { getLabels, sortIntoGroups } from '@utils/sorting/Sort';
+import Cube from '@utils/datatypes/Cube';
+import { getLabels, sortDeep, sortIntoGroups } from '@utils/sorting/Sort';
 
 import CubeContext from '../contexts/CubeContext';
 import { Card, CardBody } from './base/Card';
@@ -18,12 +19,29 @@ export interface CompareGroupProps {
   both: CardType[];
   onlyA: CardType[];
   onlyB: CardType[];
+  sortTertiary: string;
+  sortQuaternary: string;
+  showUnsorted: boolean;
+  cube?: Cube | null;
 }
 
-const CompareGroup: React.FC<CompareGroupProps> = ({ heading, both, onlyA, onlyB }) => {
-  const bothCmc = sortIntoGroups(both, 'Mana Value');
-  const onlyACmc = sortIntoGroups(onlyA, 'Mana Value');
-  const onlyBCmc = sortIntoGroups(onlyB, 'Mana Value');
+const CompareGroup: React.FC<CompareGroupProps> = ({
+  heading,
+  both,
+  onlyA,
+  onlyB,
+  sortTertiary,
+  sortQuaternary,
+  showUnsorted,
+  cube,
+}) => {
+  // Group by the tertiary sort and order each group by the quaternary (ordered) sort,
+  // mirroring how the standard table/list views apply all four sorts.
+  const toGroups = (cards: CardType[]): Record<string, CardType[]> =>
+    Object.fromEntries(sortDeep(cards, showUnsorted, sortQuaternary, [sortTertiary], cube) as [string, CardType[]][]);
+  const bothCmc = toGroups(both);
+  const onlyACmc = toGroups(onlyA);
+  const onlyBCmc = toGroups(onlyB);
 
   return (
     <ListGroup>
@@ -59,7 +77,7 @@ const CompareGroup: React.FC<CompareGroupProps> = ({ heading, both, onlyA, onlyB
           </Row>
         </div>
       </ListGroupItem>
-      {getLabels(null, 'Mana Value')
+      {getLabels([...both, ...onlyA, ...onlyB], sortTertiary, showUnsorted, cube)
         .filter((cmc) => onlyACmc[cmc] || bothCmc[cmc] || onlyBCmc[cmc])
         .map((cmc) => (
           <Row key={cmc} gutters={0}>
@@ -145,7 +163,7 @@ export interface CompareViewProps {
 }
 
 const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) => {
-  const { sortPrimary, sortSecondary, cube } = useContext(CubeContext) ?? {};
+  const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext) ?? {};
 
   const columnsPrimary = sortIntoGroups(cards, sortPrimary ?? 'Unsorted', !!cube?.showUnsorted, cube);
   const columnsSecondary: Record<string, Record<string, CardType[]>> = {};
@@ -242,7 +260,17 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
                   }
 
                   return (
-                    <CompareGroup key={label} heading={label} both={bothGroup} onlyA={onlyAGroup} onlyB={onlyBGroup} />
+                    <CompareGroup
+                      key={label}
+                      heading={label}
+                      both={bothGroup}
+                      onlyA={onlyAGroup}
+                      onlyB={onlyBGroup}
+                      sortTertiary={sortTertiary ?? 'Mana Value'}
+                      sortQuaternary={sortQuaternary ?? 'Alphabetical'}
+                      showUnsorted={!!cube?.showUnsorted}
+                      cube={cube}
+                    />
                   );
                 })}
             </Flexbox>
