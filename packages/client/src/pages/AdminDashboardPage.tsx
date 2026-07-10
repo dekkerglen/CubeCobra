@@ -50,6 +50,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ noticeCount, co
             <Button href="/admin/performance" block outline color="primary" type="link">
               Performance
             </Button>
+            <Button href="/admin/payloads" block outline color="primary" type="link">
+              Payloads
+            </Button>
           </Flexbox>
         </CardBody>
       </Card>

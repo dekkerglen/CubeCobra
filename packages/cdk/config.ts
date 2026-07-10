@@ -89,7 +89,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     dynamoPrefix: 'PROD',
     nitroPayEnabled: true,
     patreonRedirectUri: 'https://cubecobra.com/patreon/redirect',
-    fleetSize: 2,
+    fleetSize: 3,
     maintainCubeCardHashes: true,
     manageSharedVpcEndpoints: false,
   },
