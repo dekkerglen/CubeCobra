@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useMemo, useRef } from 'react';
 
 import Cube, { CubeCards, getViewByName, getViewDefinitions } from '@utils/datatypes/Cube';
 import { UserRoles } from '@utils/datatypes/User';
+import { filterToReadableString } from '@utils/filtering/FilterCards';
 
 import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
@@ -42,7 +43,7 @@ const CubeListPageRaw: React.FC = () => {
   const { versionMismatch } = useContext(ChangesContext);
   const { changedCards, unfilteredChangedCards, filterResult, canEdit, cube, cardsLoading } = useContext(CubeContext);
   const { showAllBoards, activeView, cubeSidebarExpanded } = useContext(DisplayContext);
-  const { filterInput, setFilterInput } = useContext(FilterContext);
+  const { filterInput, setFilterInput, filterValid, cardFilter } = useContext(FilterContext);
   const user = useContext(UserContext);
 
   // Keep the floating cube tray clear of the cube sidebar (it sits at the
@@ -157,6 +158,11 @@ const CubeListPageRaw: React.FC = () => {
               .map(([boardname, counts]) => `Showing ${counts[0]} / ${counts[1]} cards in ${boardname}`)
               .join('. ') || 'No cards found.'}
           </Text>
+          {filterValid && (
+            <Text italic sm className="block text-text-secondary">
+              {filterToReadableString(cardFilter.filter)}
+            </Text>
+          )}
         </div>
       )}
       <DynamicFlash />

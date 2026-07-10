@@ -21,6 +21,9 @@ import {
   comparisonCondition,
   legalitySuperCondition,
   setContainsOperation,
+  titleCase,
+  numericPhrase,
+  categoryLabel,
 } from '../../filtering/FuncOperations';
 import {
   CARD_CATEGORY_DETECTORS,
@@ -69,6 +72,7 @@ import {
 const negated = (inner) => {
   const result = (card) => !inner(card);
   result.fieldsUsed = inner.fieldsUsed;
+  result.describe = `not (${inner.describe})`;
   return result;
 };
 %} # %}
@@ -76,8 +80,8 @@ const negated = (inner) => {
 start -> filterStart {% id %}
 
 connector ->
-    (null | "and"i __) {% () => (clause1, clause2) => (card) => clause1(card) && clause2(card) %}
-  | "or"i __           {% () => (clause1, clause2) => (card) => clause1(card) || clause2(card) %}
+    (null | "and"i __) {% () => { const f = (clause1, clause2) => (card) => clause1(card) && clause2(card); f.conn = 'and'; return f; } %}
+  | "or"i __           {% () => { const f = (clause1, clause2) => (card) => clause1(card) || clause2(card); f.conn = 'or'; return f; } %}
 
 condition -> (
     cmcCondition
@@ -152,9 +156,9 @@ finishCondition -> ("fin"i | "finish"i) finishOpValue {% ([, valuePred]) => gene
 
 legalityCondition -> ("leg"i | "legal"i | "legality"i) equalityOperator legalityValue {% ([, op, legality]) => legalitySuperCondition(op, legality) %}
 
-bannedCondition -> ("ban"i | "banned"i) legalityOpValue {% ([, valuePred]) => genericCondition('legality', cardBannedIn, valuePred) %}
+bannedCondition -> ("ban"i | "banned"i) legalityOpValue {% ([, valuePred]) => { const c = genericCondition('legality', cardBannedIn, valuePred); c.describe = `is banned in ${titleCase(valuePred.element || '')}`; return c; } %}
 
-restrictedCondition -> "restricted"i legalityOpValue {% ([, valuePred]) => genericCondition('legality', cardRestrictedIn, valuePred) %}
+restrictedCondition -> "restricted"i legalityOpValue {% ([, valuePred]) => { const c = genericCondition('legality', cardRestrictedIn, valuePred); c.describe = `is restricted in ${titleCase(valuePred.element || '')}`; return c; } %}
 
 priceCondition -> ("p"i | "usd"i | "price"i) dollarOpValue {% ([, valuePred]) => genericCondition('price', cardPrice, valuePred) %}
 
@@ -185,14 +189,14 @@ cubeCountCondition -> ("cubes"i | "cubecount"i | "numcubes"i) integerOpValue {% 
 pickCountCondition -> ("picks"i | "pickcount"i | "numpicks"i) integerOpValue {% ([, valuePred]) => genericCondition('pickcount', cardPickCount, valuePred) %}
 
 nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCondition('name_lower', cardNameLower, valuePred) %}
-  | stringValue {% ([value]) => genericCondition('name_lower', cardNameLower, (fieldValue) => fieldValue.includes(value.toLowerCase())) %}
+  | stringValue {% ([value]) => { const pred = (fieldValue) => fieldValue.includes(value.toLowerCase()); pred.describe = `contains "${value.toLowerCase()}"`; return genericCondition('name_lower', cardNameLower, pred); } %}
 
 manaCostCondition -> ("mana"i | "cost"i | "m"i) manaCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred) %}
 
-castableCostCondition -> ("cw"i | "cast"i | "castable"i | "castwith"i | "castablewith"i) castableCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred) %}
+castableCostCondition -> ("cw"i | "cast"i | "castable"i | "castwith"i | "castablewith"i) castableCostOpValue {% ([, valuePred]) => { const c = genericCondition('parsed_cost', cardCost, valuePred); c.describe = valuePred.describe; return c; } %}
 
-devotionCondition -> ("d"i | "dev"i | "devotion"i | "devotionto"i) ("w"i | "u"i | "b"i | "r"i | "g"i) anyOperator integerValue {% ([, [color], op, value]) => genericCondition('parsed_cost', (c) => c, devotionOperation(op, color, value)) %}
-  | ("d"i | "dev"i | "devotion"i | "devotionto"i) devotionOpValue {% ([, valuePred]) => genericCondition('parsed_cost', (c) => c, valuePred) %}
+devotionCondition -> ("d"i | "dev"i | "devotion"i | "devotionto"i) ("w"i | "u"i | "b"i | "r"i | "g"i) anyOperator integerValue {% ([, [color], op, value]) => { const dop = devotionOperation(op, color, value); const c = genericCondition('parsed_cost', (c) => c, dop); c.describe = dop.describe; return c; } %}
+  | ("d"i | "dev"i | "devotion"i | "devotionto"i) devotionOpValue {% ([, valuePred]) => { const c = genericCondition('parsed_cost', (c) => c, valuePred); c.describe = valuePred.describe; return c; } %}
 
 collectorNumberCondition -> ("cn"i | "number"i) stringExactOpValue {% ([, valuePred]) => genericCondition('collector_number', cardCollectorNumber, valuePred) %}
 
@@ -217,14 +221,15 @@ boardCondition -> "board"i stringOpValue {% ([, valuePred]) => genericCondition(
 includeExtrasCondition -> ("include"i | "in"i) ":" ("extras"i | "extra"i) {% () => {
   const result = () => true;
   result.fieldsUsed = ['extras'];
+  result.describe = 'extra printings (tokens, emblems, etc.) are included';
   return result;
 } %}
 
-isCondition -> "is"i isOpValue {% ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred) %}
+isCondition -> "is"i isOpValue {% ([, valuePred]) => { const c = genericCondition('details', ({ details }) => details, valuePred); c.describe = `it is ${categoryLabel(valuePred.category)}`; return c; } %}
 
-notCondition -> "not"i isOpValue {% ([, valuePred]) => negated(genericCondition('details', ({ details }) => details, valuePred)) %}
+notCondition -> "not"i isOpValue {% ([, valuePred]) => { const c = genericCondition('details', ({ details }) => details, valuePred); const n = negated(c); n.describe = `it is not ${categoryLabel(valuePred.category)}`; return n; } %}
 
-isOpValue -> ":" isValue {% ([, category]) => CARD_CATEGORY_DETECTORS[category] %}
+isOpValue -> ":" isValue {% ([, category]) => { const detector = CARD_CATEGORY_DETECTORS[category]; const wrapped = (card) => detector(card); wrapped.fieldsUsed = detector.fieldsUsed; wrapped.category = category; return wrapped; } %}
 
 isValue -> (
     "gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "reprint"i | "firstprint"i | "firstprinting"i | "digital"i | "reasonable"i | "default"i

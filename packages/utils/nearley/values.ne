@@ -86,14 +86,14 @@ const reversedSetOperation = (op, value) => {
 %} # %}
 
 # TODO: Make these work with non-func operations
-colorCombinationOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { const operation = setOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue)); } %}
-  | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
-  | anyOperator "m"i {% ([op]) => { const operation = defaultOperation(op, 2); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
+colorCombinationOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { const operation = setOperation(op, value); const f = (fieldValue) => operation(normalizeCombination(fieldValue)); f.describe = operation.describe; return f; } %}
+  | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); const f = (fieldValue) => operation(normalizeCombination(fieldValue).length); f.describe = `count ${numericPhrase(op, value)}`; return f; } %}
+  | anyOperator "m"i {% ([op]) => { const operation = defaultOperation(op, 2); const f = (fieldValue) => operation(normalizeCombination(fieldValue).length); f.describe = 'is multicolored'; return f; } %}
 
-colorIdentityOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { const operation = reversedSetOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue)); } %}
-  | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue).length); } %}
-  | ("=" | ":") "m"i {% ([op]) => { return (fieldValue) => normalizeCombination(fieldValue).length > 1; } %}
-  | ("!=" | "<>") "m"i {% ([op]) => { return (fieldValue) => normalizeCombination(fieldValue).length < 2; } %}
+colorIdentityOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { const operation = reversedSetOperation(op, value); const f = (fieldValue) => operation(normalizeCombination(fieldValue)); f.describe = operation.describe; return f; } %}
+  | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); const f = (fieldValue) => operation(normalizeCombination(fieldValue).length); f.describe = `count ${numericPhrase(op, value)}`; return f; } %}
+  | ("=" | ":") "m"i {% ([op]) => { const f = (fieldValue) => normalizeCombination(fieldValue).length > 1; f.describe = 'is multicolored'; return f; } %}
+  | ("!=" | "<>") "m"i {% ([op]) => { const f = (fieldValue) => normalizeCombination(fieldValue).length < 2; f.describe = 'is mono-colored or colorless'; return f; } %}
 
 # Macro based handling of 4/5 colors had ordering issues. Generated all combinations using Copilot,
 # from 1 to 5 of the colors used

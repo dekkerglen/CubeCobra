@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { QuestionIcon, SearchIcon } from '@primer/octicons-react';
 import { allFields, FilterValues, isColorField, isNumField } from '@utils/datatypes/Card';
+import { filterToReadableString } from '@utils/filtering/FilterCards';
 
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
@@ -15,7 +16,7 @@ const AnalysisNavbar: React.FC = () => {
   const [filterValues, setFilterValues] = useState<Partial<FilterValues>>({});
   const [localFilterInput, setLocalFilterInput] = useState('');
 
-  const { filterInput, setFilterInput, filterValid } = useContext(FilterContext);
+  const { filterInput, setFilterInput, filterValid, cardFilter } = useContext(FilterContext);
   const { filterResult } = useContext(CubeContext);
 
   // Sync local filter with context filter
@@ -101,6 +102,11 @@ const AnalysisNavbar: React.FC = () => {
               .map(([boardname, counts]) => `Showing ${counts[0]} / ${counts[1]} cards in ${boardname}`)
               .join('. ')}
           </Text>
+          {filterValid && filterInput && (
+            <Text italic sm className="block text-text-secondary">
+              {filterToReadableString(cardFilter.filter)}
+            </Text>
+          )}
         </div>
       )}
       <AdvancedFilterModal

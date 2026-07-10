@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { allFields, FilterValues, isColorField, isNumField } from '@utils/datatypes/Card';
+import { filterToReadableString } from '@utils/filtering/FilterCards';
 
 import CubeContext from '../contexts/CubeContext';
 import FilterContext from '../contexts/FilterContext';
@@ -28,7 +29,7 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({
   className,
   filterTextFn,
 }) => {
-  const { filterInput, setFilterInput, filterValid } = useContext(FilterContext);
+  const { filterInput, setFilterInput, filterValid, cardFilter } = useContext(FilterContext);
   const { filterResult } = useContext(CubeContext);
 
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -129,6 +130,11 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({
         <Text sm>
           Having trouble using filter syntax? Check out our <Link href="/help/filters">syntax guide</Link>.
         </Text>
+        {filterValid && (filterInput?.trim().length ?? 0) > 0 && (
+          <Text italic sm>
+            {filterToReadableString(cardFilter.filter)}
+          </Text>
+        )}
         {filterResult && Object.keys(filterResult).length > 0 && filterTextFn && (
           <Text italic sm>
             {filterTextFn(filterResult)}

@@ -1,5 +1,13 @@
 function id(x) { return x[0]; }
 
+// Compose a readable description of "clause1 <and|or> clause2", parenthesizing a
+// child whose own connector differs so mixed and/or reads unambiguously.
+const describeConnect = (clause1, clause2, conn) => {
+  const wrap = (c) => (c.conn && c.conn !== conn ? `(${c.describe})` : c.describe);
+  return `${wrap(clause1)} ${conn} ${wrap(clause2)}`;
+};
+
+
 const normalizeCombination = (combination) => combination.join('').toLowerCase().replace('c', '').split('');
 const reversedSetOperation = (op, value) => {
   if (op.toString() === ':') {
@@ -29,6 +37,9 @@ import {
   comparisonCondition,
   legalitySuperCondition,
   setContainsOperation,
+  titleCase,
+  numericPhrase,
+  categoryLabel,
 } from '../../filtering/FuncOperations';
 import {
   CARD_CATEGORY_DETECTORS,
@@ -76,6 +87,7 @@ import {
 const negated = (inner) => {
   const result = (card) => !inner(card);
   result.fieldsUsed = inner.fieldsUsed;
+  result.describe = `not (${inner.describe})`;
   return result;
 };
 var grammar = {
@@ -91,12 +103,15 @@ var grammar = {
     {"name": "filterStart", "symbols": ["_"], "postprocess":  () => {
           const result = () => true;
           result.fieldsUsed = [];
+          result.describe = '';
           return result;
         } },
     {"name": "filterStart", "symbols": ["_", "filter", "_"], "postprocess": ([, filter]) => filter},
     {"name": "filter", "symbols": ["filter", "__", "connector", "clause"], "postprocess":  ([clause1, , connectorFunc, clause2]) => {
           const result = connectorFunc(clause1, clause2);
           result.fieldsUsed = [...new Set(clause1.fieldsUsed.concat(clause2.fieldsUsed))];
+          result.conn = connectorFunc.conn;
+          result.describe = describeConnect(clause1, clause2, connectorFunc.conn);
           return result;
         } },
     {"name": "filter", "symbols": ["clause"], "postprocess": id},
@@ -360,22 +375,22 @@ var grammar = {
     {"name": "gameValue$subexpression$1$subexpression$3", "symbols": [/[mM]/, /[tT]/, /[gG]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "gameValue$subexpression$1", "symbols": ["gameValue$subexpression$1$subexpression$3"]},
     {"name": "gameValue", "symbols": ["gameValue$subexpression$1"], "postprocess": ([[game]]) => game.toLowerCase()},
-    {"name": "colorCombinationOpValue", "symbols": ["anyOperator", "colorCombinationValue"], "postprocess": ([op, value]) => { const operation = setOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue)); }},
-    {"name": "colorCombinationOpValue", "symbols": ["anyOperator", "integerValue"], "postprocess": ([op, value]) => { const operation = defaultOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue).length); }},
+    {"name": "colorCombinationOpValue", "symbols": ["anyOperator", "colorCombinationValue"], "postprocess": ([op, value]) => { const operation = setOperation(op, value); const f = (fieldValue) => operation(normalizeCombination(fieldValue)); f.describe = operation.describe; return f; }},
+    {"name": "colorCombinationOpValue", "symbols": ["anyOperator", "integerValue"], "postprocess": ([op, value]) => { const operation = defaultOperation(op, value); const f = (fieldValue) => operation(normalizeCombination(fieldValue).length); f.describe = `count ${numericPhrase(op, value)}`; return f; }},
     {"name": "colorCombinationOpValue$subexpression$1", "symbols": [/[mM]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "colorCombinationOpValue", "symbols": ["anyOperator", "colorCombinationOpValue$subexpression$1"], "postprocess": ([op]) => { const operation = defaultOperation(op, 2); return (fieldValue) => operation(normalizeCombination(fieldValue).length); }},
-    {"name": "colorIdentityOpValue", "symbols": ["anyOperator", "colorCombinationValue"], "postprocess": ([op, value]) => { const operation = reversedSetOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue)); }},
-    {"name": "colorIdentityOpValue", "symbols": ["anyOperator", "integerValue"], "postprocess": ([op, value]) => { const operation = defaultOperation(op, value); return (fieldValue) => operation(normalizeCombination(fieldValue).length); }},
+    {"name": "colorCombinationOpValue", "symbols": ["anyOperator", "colorCombinationOpValue$subexpression$1"], "postprocess": ([op]) => { const operation = defaultOperation(op, 2); const f = (fieldValue) => operation(normalizeCombination(fieldValue).length); f.describe = 'is multicolored'; return f; }},
+    {"name": "colorIdentityOpValue", "symbols": ["anyOperator", "colorCombinationValue"], "postprocess": ([op, value]) => { const operation = reversedSetOperation(op, value); const f = (fieldValue) => operation(normalizeCombination(fieldValue)); f.describe = operation.describe; return f; }},
+    {"name": "colorIdentityOpValue", "symbols": ["anyOperator", "integerValue"], "postprocess": ([op, value]) => { const operation = defaultOperation(op, value); const f = (fieldValue) => operation(normalizeCombination(fieldValue).length); f.describe = `count ${numericPhrase(op, value)}`; return f; }},
     {"name": "colorIdentityOpValue$subexpression$1", "symbols": [{"literal":"="}]},
     {"name": "colorIdentityOpValue$subexpression$1", "symbols": [{"literal":":"}]},
     {"name": "colorIdentityOpValue$subexpression$2", "symbols": [/[mM]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "colorIdentityOpValue", "symbols": ["colorIdentityOpValue$subexpression$1", "colorIdentityOpValue$subexpression$2"], "postprocess": ([op]) => { return (fieldValue) => normalizeCombination(fieldValue).length > 1; }},
+    {"name": "colorIdentityOpValue", "symbols": ["colorIdentityOpValue$subexpression$1", "colorIdentityOpValue$subexpression$2"], "postprocess": ([op]) => { const f = (fieldValue) => normalizeCombination(fieldValue).length > 1; f.describe = 'is multicolored'; return f; }},
     {"name": "colorIdentityOpValue$subexpression$3$string$1", "symbols": [{"literal":"!"}, {"literal":"="}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "colorIdentityOpValue$subexpression$3", "symbols": ["colorIdentityOpValue$subexpression$3$string$1"]},
     {"name": "colorIdentityOpValue$subexpression$3$string$2", "symbols": [{"literal":"<"}, {"literal":">"}], "postprocess": function joiner(d) {return d.join('');}},
     {"name": "colorIdentityOpValue$subexpression$3", "symbols": ["colorIdentityOpValue$subexpression$3$string$2"]},
     {"name": "colorIdentityOpValue$subexpression$4", "symbols": [/[mM]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "colorIdentityOpValue", "symbols": ["colorIdentityOpValue$subexpression$3", "colorIdentityOpValue$subexpression$4"], "postprocess": ([op]) => { return (fieldValue) => normalizeCombination(fieldValue).length < 2; }},
+    {"name": "colorIdentityOpValue", "symbols": ["colorIdentityOpValue$subexpression$3", "colorIdentityOpValue$subexpression$4"], "postprocess": ([op]) => { const f = (fieldValue) => normalizeCombination(fieldValue).length < 2; f.describe = 'is mono-colored or colorless'; return f; }},
     {"name": "colorCombinationValue$subexpression$1$subexpression$1", "symbols": [/[cC]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "colorCombinationValue$subexpression$1", "symbols": ["colorCombinationValue$subexpression$1$subexpression$1"]},
     {"name": "colorCombinationValue$subexpression$1$subexpression$2", "symbols": [/[bB]/, /[rR]/, /[oO]/, /[wW]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
@@ -2369,9 +2384,9 @@ var grammar = {
     {"name": "connector$subexpression$1", "symbols": []},
     {"name": "connector$subexpression$1$subexpression$1", "symbols": [/[aA]/, /[nN]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "connector$subexpression$1", "symbols": ["connector$subexpression$1$subexpression$1", "__"]},
-    {"name": "connector", "symbols": ["connector$subexpression$1"], "postprocess": () => (clause1, clause2) => (card) => clause1(card) && clause2(card)},
+    {"name": "connector", "symbols": ["connector$subexpression$1"], "postprocess": () => { const f = (clause1, clause2) => (card) => clause1(card) && clause2(card); f.conn = 'and'; return f; }},
     {"name": "connector$subexpression$2", "symbols": [/[oO]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "connector", "symbols": ["connector$subexpression$2", "__"], "postprocess": () => (clause1, clause2) => (card) => clause1(card) || clause2(card)},
+    {"name": "connector", "symbols": ["connector$subexpression$2", "__"], "postprocess": () => { const f = (clause1, clause2) => (card) => clause1(card) || clause2(card); f.conn = 'or'; return f; }},
     {"name": "condition$subexpression$1", "symbols": ["cmcCondition"]},
     {"name": "condition$subexpression$1", "symbols": ["colorCondition"]},
     {"name": "condition$subexpression$1", "symbols": ["colorIdentityCondition"]},
@@ -2500,9 +2515,9 @@ var grammar = {
     {"name": "bannedCondition$subexpression$1", "symbols": ["bannedCondition$subexpression$1$subexpression$1"]},
     {"name": "bannedCondition$subexpression$1$subexpression$2", "symbols": [/[bB]/, /[aA]/, /[nN]/, /[nN]/, /[eE]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "bannedCondition$subexpression$1", "symbols": ["bannedCondition$subexpression$1$subexpression$2"]},
-    {"name": "bannedCondition", "symbols": ["bannedCondition$subexpression$1", "legalityOpValue"], "postprocess": ([, valuePred]) => genericCondition('legality', cardBannedIn, valuePred)},
+    {"name": "bannedCondition", "symbols": ["bannedCondition$subexpression$1", "legalityOpValue"], "postprocess": ([, valuePred]) => { const c = genericCondition('legality', cardBannedIn, valuePred); c.describe = `is banned in ${titleCase(valuePred.element || '')}`; return c; }},
     {"name": "restrictedCondition$subexpression$1", "symbols": [/[rR]/, /[eE]/, /[sS]/, /[tT]/, /[rR]/, /[iI]/, /[cC]/, /[tT]/, /[eE]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "restrictedCondition", "symbols": ["restrictedCondition$subexpression$1", "legalityOpValue"], "postprocess": ([, valuePred]) => genericCondition('legality', cardRestrictedIn, valuePred)},
+    {"name": "restrictedCondition", "symbols": ["restrictedCondition$subexpression$1", "legalityOpValue"], "postprocess": ([, valuePred]) => { const c = genericCondition('legality', cardRestrictedIn, valuePred); c.describe = `is restricted in ${titleCase(valuePred.element || '')}`; return c; }},
     {"name": "priceCondition$subexpression$1$subexpression$1", "symbols": [/[pP]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "priceCondition$subexpression$1", "symbols": ["priceCondition$subexpression$1$subexpression$1"]},
     {"name": "priceCondition$subexpression$1$subexpression$2", "symbols": [/[uU]/, /[sS]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
@@ -2606,7 +2621,7 @@ var grammar = {
     {"name": "nameCondition$subexpression$1$subexpression$2", "symbols": [/[nN]/, /[aA]/, /[mM]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "nameCondition$subexpression$1", "symbols": ["nameCondition$subexpression$1$subexpression$2"]},
     {"name": "nameCondition", "symbols": ["nameCondition$subexpression$1", "stringOpValue"], "postprocess": ([, valuePred]) => genericCondition('name_lower', cardNameLower, valuePred)},
-    {"name": "nameCondition", "symbols": ["stringValue"], "postprocess": ([value]) => genericCondition('name_lower', cardNameLower, (fieldValue) => fieldValue.includes(value.toLowerCase()))},
+    {"name": "nameCondition", "symbols": ["stringValue"], "postprocess": ([value]) => { const pred = (fieldValue) => fieldValue.includes(value.toLowerCase()); pred.describe = `contains "${value.toLowerCase()}"`; return genericCondition('name_lower', cardNameLower, pred); }},
     {"name": "manaCostCondition$subexpression$1$subexpression$1", "symbols": [/[mM]/, /[aA]/, /[nN]/, /[aA]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "manaCostCondition$subexpression$1", "symbols": ["manaCostCondition$subexpression$1$subexpression$1"]},
     {"name": "manaCostCondition$subexpression$1$subexpression$2", "symbols": [/[cC]/, /[oO]/, /[sS]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
@@ -2624,7 +2639,7 @@ var grammar = {
     {"name": "castableCostCondition$subexpression$1", "symbols": ["castableCostCondition$subexpression$1$subexpression$4"]},
     {"name": "castableCostCondition$subexpression$1$subexpression$5", "symbols": [/[cC]/, /[aA]/, /[sS]/, /[tT]/, /[aA]/, /[bB]/, /[lL]/, /[eE]/, /[wW]/, /[iI]/, /[tT]/, /[hH]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "castableCostCondition$subexpression$1", "symbols": ["castableCostCondition$subexpression$1$subexpression$5"]},
-    {"name": "castableCostCondition", "symbols": ["castableCostCondition$subexpression$1", "castableCostOpValue"], "postprocess": ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred)},
+    {"name": "castableCostCondition", "symbols": ["castableCostCondition$subexpression$1", "castableCostOpValue"], "postprocess": ([, valuePred]) => { const c = genericCondition('parsed_cost', cardCost, valuePred); c.describe = valuePred.describe; return c; }},
     {"name": "devotionCondition$subexpression$1$subexpression$1", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "devotionCondition$subexpression$1", "symbols": ["devotionCondition$subexpression$1$subexpression$1"]},
     {"name": "devotionCondition$subexpression$1$subexpression$2", "symbols": [/[dD]/, /[eE]/, /[vV]/], "postprocess": function(d) {return d.join(""); }},
@@ -2643,7 +2658,7 @@ var grammar = {
     {"name": "devotionCondition$subexpression$2", "symbols": ["devotionCondition$subexpression$2$subexpression$4"]},
     {"name": "devotionCondition$subexpression$2$subexpression$5", "symbols": [/[gG]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "devotionCondition$subexpression$2", "symbols": ["devotionCondition$subexpression$2$subexpression$5"]},
-    {"name": "devotionCondition", "symbols": ["devotionCondition$subexpression$1", "devotionCondition$subexpression$2", "anyOperator", "integerValue"], "postprocess": ([, [color], op, value]) => genericCondition('parsed_cost', (c) => c, devotionOperation(op, color, value))},
+    {"name": "devotionCondition", "symbols": ["devotionCondition$subexpression$1", "devotionCondition$subexpression$2", "anyOperator", "integerValue"], "postprocess": ([, [color], op, value]) => { const dop = devotionOperation(op, color, value); const c = genericCondition('parsed_cost', (c) => c, dop); c.describe = dop.describe; return c; }},
     {"name": "devotionCondition$subexpression$3$subexpression$1", "symbols": [/[dD]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "devotionCondition$subexpression$3", "symbols": ["devotionCondition$subexpression$3$subexpression$1"]},
     {"name": "devotionCondition$subexpression$3$subexpression$2", "symbols": [/[dD]/, /[eE]/, /[vV]/], "postprocess": function(d) {return d.join(""); }},
@@ -2652,7 +2667,7 @@ var grammar = {
     {"name": "devotionCondition$subexpression$3", "symbols": ["devotionCondition$subexpression$3$subexpression$3"]},
     {"name": "devotionCondition$subexpression$3$subexpression$4", "symbols": [/[dD]/, /[eE]/, /[vV]/, /[oO]/, /[tT]/, /[iI]/, /[oO]/, /[nN]/, /[tT]/, /[oO]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "devotionCondition$subexpression$3", "symbols": ["devotionCondition$subexpression$3$subexpression$4"]},
-    {"name": "devotionCondition", "symbols": ["devotionCondition$subexpression$3", "devotionOpValue"], "postprocess": ([, valuePred]) => genericCondition('parsed_cost', (c) => c, valuePred)},
+    {"name": "devotionCondition", "symbols": ["devotionCondition$subexpression$3", "devotionOpValue"], "postprocess": ([, valuePred]) => { const c = genericCondition('parsed_cost', (c) => c, valuePred); c.describe = valuePred.describe; return c; }},
     {"name": "collectorNumberCondition$subexpression$1$subexpression$1", "symbols": [/[cC]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "collectorNumberCondition$subexpression$1", "symbols": ["collectorNumberCondition$subexpression$1$subexpression$1"]},
     {"name": "collectorNumberCondition$subexpression$1$subexpression$2", "symbols": [/[nN]/, /[uU]/, /[mM]/, /[bB]/, /[eE]/, /[rR]/], "postprocess": function(d) {return d.join(""); }},
@@ -2691,13 +2706,14 @@ var grammar = {
     {"name": "includeExtrasCondition", "symbols": ["includeExtrasCondition$subexpression$1", {"literal":":"}, "includeExtrasCondition$subexpression$2"], "postprocess":  () => {
           const result = () => true;
           result.fieldsUsed = ['extras'];
+          result.describe = 'extra printings (tokens, emblems, etc.) are included';
           return result;
         } },
     {"name": "isCondition$subexpression$1", "symbols": [/[iI]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "isCondition", "symbols": ["isCondition$subexpression$1", "isOpValue"], "postprocess": ([, valuePred]) => genericCondition('details', ({ details }) => details, valuePred)},
+    {"name": "isCondition", "symbols": ["isCondition$subexpression$1", "isOpValue"], "postprocess": ([, valuePred]) => { const c = genericCondition('details', ({ details }) => details, valuePred); c.describe = `it is ${categoryLabel(valuePred.category)}`; return c; }},
     {"name": "notCondition$subexpression$1", "symbols": [/[nN]/, /[oO]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
-    {"name": "notCondition", "symbols": ["notCondition$subexpression$1", "isOpValue"], "postprocess": ([, valuePred]) => negated(genericCondition('details', ({ details }) => details, valuePred))},
-    {"name": "isOpValue", "symbols": [{"literal":":"}, "isValue"], "postprocess": ([, category]) => CARD_CATEGORY_DETECTORS[category]},
+    {"name": "notCondition", "symbols": ["notCondition$subexpression$1", "isOpValue"], "postprocess": ([, valuePred]) => { const c = genericCondition('details', ({ details }) => details, valuePred); const n = negated(c); n.describe = `it is not ${categoryLabel(valuePred.category)}`; return n; }},
+    {"name": "isOpValue", "symbols": [{"literal":":"}, "isValue"], "postprocess": ([, category]) => { const detector = CARD_CATEGORY_DETECTORS[category]; const wrapped = (card) => detector(card); wrapped.fieldsUsed = detector.fieldsUsed; wrapped.category = category; return wrapped; }},
     {"name": "isValue$subexpression$1$subexpression$1", "symbols": [/[gG]/, /[oO]/, /[lL]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "isValue$subexpression$1", "symbols": ["isValue$subexpression$1$subexpression$1"]},
     {"name": "isValue$subexpression$1$subexpression$2", "symbols": [/[tT]/, /[wW]/, /[oO]/, /[bB]/, /[rR]/, /[iI]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},

@@ -4,6 +4,7 @@ import { GearIcon, QuestionIcon } from '@primer/octicons-react';
 import { cardElo, cardId, detailsToCard } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
 import { allFields, CardDetails, FilterValues, isColorField, isNumField } from '@utils/datatypes/Card';
+import { filterToReadableString } from '@utils/filtering/FilterCards';
 import { ORDERED_SORTS } from '@utils/sorting/Sort';
 
 import Banner from 'components/Banner';
@@ -37,7 +38,7 @@ type ViewMode = 'cards' | 'rows';
 const PICK_COUNT_BASELINE = 'pickcount>=100';
 
 const CardSearch: React.FC = () => {
-  const { filterInput, setFilterInput, filterValid } = useContext(FilterContext);
+  const { filterInput, setFilterInput, filterValid, cardFilter } = useContext(FilterContext);
   const drag = useCubeTrayDrag();
   const [cards, setCards] = useState<CardDetails[]>([]);
   const [loading, setLoading] = useState(false);
@@ -447,9 +448,9 @@ const CardSearch: React.FC = () => {
                       <Text lg semibold className="!text-button-text">
                         {headlineCount}
                       </Text>
-                      {filterInput && (
-                        <Text sm semibold italic className="!text-button-text/80 break-all">
-                          {filterInput}
+                      {filterInput && filterValid && (
+                        <Text sm semibold italic className="!text-button-text/80 break-words">
+                          {filterToReadableString(cardFilter.filter)}
                         </Text>
                       )}
                     </Flexbox>

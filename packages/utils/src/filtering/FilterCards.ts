@@ -11,6 +11,9 @@ const ALL_OPERATORS: string[] = [':', '=', '!=', '<>', '<', '<=', '>', '>='];
 export type FilterFunction = ((card: Card) => boolean) & {
   fieldsUsed: AllField[];
   stringify: string;
+  // Plain-English ("pseudo-English") description of what the filter does, composed
+  // by the grammar as the filter is parsed. See FuncOperations for the fragments.
+  describe: string;
 };
 
 export const operatorsRegex: RegExp = new RegExp(`(?:${ALL_OPERATORS.join('|')})`);
@@ -28,10 +31,21 @@ export const filterUsedFields = (filter: FilterFunction | null): AllField[] => f
 
 export const filterToString = (filter: FilterFunction | null): string => filter?.stringify ?? 'empty filter';
 
+// Renders the filter's composed `.describe` fragment into a full readable sentence,
+// e.g. "Matching cards where mana value is 3 or more and color includes White."
+export const filterToReadableString = (filter: FilterFunction | null): string => {
+  const describe = filter?.describe?.trim();
+  if (!describe) {
+    return 'Matching all cards.';
+  }
+  return `Matching cards where ${describe}.`;
+};
+
 export function defaultFilter(): FilterFunction {
   const result: Partial<FilterFunction> = () => true;
   result.fieldsUsed = [];
   result.stringify = '';
+  result.describe = '';
   return result as FilterFunction;
 }
 
@@ -59,6 +73,9 @@ export function makeFilter(filterText: string): FilterResult {
       if (filter.fieldsUsed === undefined) {
         filter.fieldsUsed = [];
       }
+      if (filter.describe === undefined) {
+        filter.describe = '';
+      }
       return {
         err: !filter,
         filter: filter as FilterFunction,
@@ -82,6 +99,7 @@ export default {
   filterIncludesExtras,
   filterUsedFields,
   filterToString,
+  filterToReadableString,
   makeFilter,
   filterCardsDetails,
 };
