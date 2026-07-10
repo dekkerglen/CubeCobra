@@ -62,6 +62,7 @@
     "tailwindcss": "^3.4.3"
   },
   "devDependencies": {
+    "@rolldown/binding-linux-x64-gnu": "^1.1.5",
     "@types/node": "^20.12.11",
     "@types/rss": "^0.0.32",
     "@types/serialize-javascript": "^5.0.4",
