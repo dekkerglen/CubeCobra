@@ -3,10 +3,12 @@ import React, { useEffect, useState } from 'react';
 import CardType from '@utils/datatypes/Card';
 
 import DraftLocation from '../drafting/DraftLocation';
+import useLocalStorage from '../hooks/useLocalStorage';
 import { getPackMinHeight } from '../utils/packViewConstants';
 import Button from './base/Button';
 import { Card, CardBody, CardHeader } from './base/Card';
-import { Col, Row } from './base/Layout';
+import { Col, NumCols, Row } from './base/Layout';
+import Select from './base/Select';
 import Text from './base/Text';
 import DraggableCard from './DraggableCard';
 import FoilCardImage from './FoilCardImage';
@@ -29,13 +31,53 @@ interface PackProps {
   headerActions?: React.ReactNode;
 }
 
-const PACK_GRID_COLUMNS = {
+// 'auto' keeps the responsive breakpoint behavior below; a number forces that
+// many cards per row at every breakpoint (lets players make cards larger, e.g.
+// 2-3 per row on mobile — see issue #2931).
+type CardsPerRowSetting = 'auto' | NumCols;
+
+// Single source of truth for the 'auto' responsive column counts. Both the grid
+// layout (the Row props below) and the minHeight estimate (getPackColumns) derive
+// from this so the reserved height can never disagree with the rendered grid.
+const AUTO_PACK_GRID_COLUMNS = {
   base: 4,
   md: 4,
   lg: 5,
   xl: 6,
   xxl: 8,
 } as const;
+
+// The Row responsive props for 'auto' mode (base maps to Row's default, so it is omitted).
+const AUTO_ROW_COLUMN_PROPS = {
+  md: AUTO_PACK_GRID_COLUMNS.md,
+  lg: AUTO_PACK_GRID_COLUMNS.lg,
+  xl: AUTO_PACK_GRID_COLUMNS.xl,
+  xxl: AUTO_PACK_GRID_COLUMNS.xxl,
+} as const;
+
+const CARDS_PER_ROW_OPTIONS: { value: string; label: string }[] = [
+  { value: 'auto', label: 'Auto Cards Per Row' },
+  ...([1, 2, 3, 4, 5, 6, 7, 8] as const).map((n) => ({
+    value: `${n}`,
+    label: `${n} Card${n === 1 ? '' : 's'} Per Row`,
+  })),
+];
+
+// Column count actually rendered at a given viewport width, honoring the setting.
+const getPackColumns = (setting: CardsPerRowSetting, width: number): number => {
+  if (setting !== 'auto') {
+    return setting;
+  }
+  return width >= 1536
+    ? AUTO_PACK_GRID_COLUMNS.xxl
+    : width >= 1280
+      ? AUTO_PACK_GRID_COLUMNS.xl
+      : width >= 1024
+        ? AUTO_PACK_GRID_COLUMNS.lg
+        : width >= 768
+          ? AUTO_PACK_GRID_COLUMNS.md
+          : AUTO_PACK_GRID_COLUMNS.base;
+};
 
 const Pack: React.FC<PackProps> = ({
   pack = [],
@@ -50,13 +92,11 @@ const Pack: React.FC<PackProps> = ({
   headerActions,
 }) => {
   const [showRatings, setShowRatings] = useState(false);
-  const [minHeight, setMinHeight] = useState(() =>
-    getPackMinHeight(
-      Math.max(pack.length, packSize ?? pack.length),
-      PACK_GRID_COLUMNS.base,
-      typeof window !== 'undefined' ? window.innerWidth : 768,
-    ),
-  );
+  const [cardsPerRow, setCardsPerRow] = useLocalStorage<CardsPerRowSetting>('draftPackCardsPerRow', 'auto');
+  const [minHeight, setMinHeight] = useState(() => {
+    const width = typeof window !== 'undefined' ? window.innerWidth : 768;
+    return getPackMinHeight(Math.max(pack.length, packSize ?? pack.length), getPackColumns(cardsPerRow, width), width);
+  });
   const maxRating = ratings ? Math.max(...ratings) : 0;
 
   useEffect(() => {
@@ -64,21 +104,12 @@ const Pack: React.FC<PackProps> = ({
   }, [pack]);
 
   useEffect(() => {
-    // The placeholder needs to follow the same breakpoint behaviour as the grid itself,
+    // The placeholder needs to follow the same breakpoint behavior as the grid itself,
     // but once cards are actually rendered we switch to the real card count so small packs
     // do not leave unnecessary blank space below the last row.
     const updateMinHeight = () => {
       const width = window.innerWidth;
-      const columns =
-        width >= 1536
-          ? PACK_GRID_COLUMNS.xxl
-          : width >= 1280
-            ? PACK_GRID_COLUMNS.xl
-            : width >= 1024
-              ? PACK_GRID_COLUMNS.lg
-              : width >= 768
-                ? PACK_GRID_COLUMNS.md
-                : PACK_GRID_COLUMNS.base;
+      const columns = getPackColumns(cardsPerRow, width);
 
       const targetCardCount = loading ? Math.max(pack.length, packSize ?? pack.length) : pack.length;
       setMinHeight(getPackMinHeight(targetCardCount, columns, width));
@@ -88,15 +119,24 @@ const Pack: React.FC<PackProps> = ({
     window.addEventListener('resize', updateMinHeight);
 
     return () => window.removeEventListener('resize', updateMinHeight);
-  }, [loading, pack.length, packSize]);
+  }, [loading, pack.length, packSize, cardsPerRow]);
 
   return (
     <Card className="mt-3">
-      <CardHeader className="flex justify-between items-center">
-        <Text semibold lg>
+      <CardHeader className="flex flex-wrap justify-between items-center gap-2">
+        <Text semibold lg className="whitespace-nowrap">
           {title}
         </Text>
-        <div className="flex gap-2 items-center">
+        <div className="flex flex-wrap gap-2 items-center">
+          <div className="w-40 shrink-0">
+            <Select
+              dense
+              value={`${cardsPerRow}`}
+              setValue={(value) => setCardsPerRow(value === 'auto' ? 'auto' : (parseInt(value, 10) as NumCols))}
+              className="bg-bg-active"
+              options={CARDS_PER_ROW_OPTIONS}
+            />
+          </div>
           {headerActions}
           {error ? (
             <Button onClick={onRetry} color="danger" disabled={retryInProgress}>
@@ -121,7 +161,7 @@ const Pack: React.FC<PackProps> = ({
                 <div className="spinner" />
               </div>
             ) : (
-              <Row className="g-0" md={4} lg={5} xl={6} xxl={8}>
+              <Row className="g-0" {...(cardsPerRow === 'auto' ? AUTO_ROW_COLUMN_PROPS : { xs: cardsPerRow })}>
                 {pack.map((card, index) => {
                   const isHighestRated = ratings && ratings[index] === maxRating;
                   return (

@@ -1,11 +1,12 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 
-import { cardTags, isCardFoil } from '@utils/cardutil';
+import { cardTags, isCardFoil, showsBlackBorderForFoil } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 import { TagColor } from '@utils/datatypes/Cube';
 
 import { getTagColorClass, getTagColorStyle } from '../../../utils/src/Util';
+import BlackBorderOverlay from '../components/BlackBorderOverlay';
 import { Flexbox } from '../components/base/Layout';
 import Tag from '../components/base/Tag';
 
@@ -22,11 +23,12 @@ interface CardDivProps {
   tags: Tag[];
   zIndex: number;
   foilOverlay: boolean;
+  blackBorder: boolean;
 }
 
 type Position = { left?: string; right?: string; top?: string; bottom?: string };
 
-const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, foilOverlay }) => {
+const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, foilOverlay, blackBorder }) => {
   const [position, setPosition] = useState<Position>({ left: '0px', right: '0px' });
   const [tagsOnRight, setTagsOnRight] = useState(true);
   const autocardPopup = useRef<HTMLDivElement>(null);
@@ -122,6 +124,7 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
           <Flexbox direction="row">
             {front && (
               <div className="col position-relative card-border">
+                {blackBorder && <BlackBorderOverlay />}
                 {foilOverlay && (
                   <img className="foilOverlay" src={cdnUrl('/content/foilOverlay.png')} alt="foil overlay" />
                 )}
@@ -130,6 +133,7 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
             )}
             {back && (
               <div className="col position-relative card-border">
+                {blackBorder && <BlackBorderOverlay />}
                 {foilOverlay && (
                   <img className="foilOverlay" src={cdnUrl('/content/foilOverlay.png')} alt="foil overlay" />
                 )}
@@ -174,6 +178,7 @@ const AutocardContext = React.createContext<AutocardContextValue>({
 export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [hidden, setHidden] = useState(true);
   const [foilOverlay, setFoilOverlay] = useState(false);
+  const [blackBorder, setBlackBorder] = useState(false);
   const [front, setFront] = useState<string | null>(null);
   const [back, setBack] = useState<string | null>(null);
   const [stopAutocard, setStopAutocard] = useState(false);
@@ -185,6 +190,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
       if (!stopAutocard) {
         setHidden(false);
         setFoilOverlay(isCardFoil(card));
+        setBlackBorder(showsBlackBorderForFoil(card, isCardFoil(card)));
         setFront(((showCustomImages && card.imgUrl) || card.details?.image_normal) ?? null);
         setBack(((showCustomImages && card.imgBackUrl) || card.details?.image_flip) ?? null);
         setTags(
@@ -203,6 +209,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
   const hideCard = useCallback(() => {
     setHidden(true);
     setFoilOverlay(false);
+    setBlackBorder(false);
     setFront(null);
     setBack(null);
     setTags([]);
@@ -218,7 +225,15 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
   return (
     <AutocardContext.Provider value={value}>
       {children}
-      <CardDiv hidden={hidden} front={front} back={back} tags={tags} zIndex={zIndex} foilOverlay={foilOverlay} />
+      <CardDiv
+        hidden={hidden}
+        front={front}
+        back={back}
+        tags={tags}
+        zIndex={zIndex}
+        foilOverlay={foilOverlay}
+        blackBorder={blackBorder}
+      />
     </AutocardContext.Provider>
   );
 };

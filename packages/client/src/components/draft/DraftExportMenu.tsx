@@ -66,6 +66,9 @@ const DraftExportMenu: React.FC<DraftExportMenuProps> = ({ draft, seatIndex }) =
         <Link href={`/cube/deck/download/topdecked/${draft.id}/${seatIndex}`} className="dropdown-item">
           TopDecked (.csv)
         </Link>
+        <Link href={`/cube/deck/download/csv/${draft.id}/${seatIndex}`} className="dropdown-item">
+          Comma-Separated (.csv)
+        </Link>
         <Alerts alerts={alerts} />
       </Flexbox>
     </NavMenu>

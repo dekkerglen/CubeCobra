@@ -120,6 +120,28 @@ numeric comparisons to filter by the number of keywords a card has.
 | `keywords>3`      | cards with more than 3 keywords.                           |
 | `keywords=0`      | cards with no keywords.                                    |
 
+## Scryfall Tags
+
+CubeCobra imports the community-sourced tags from [Scryfall Tagger](https://tagger.scryfall.com/).
+Oracle tags describe a card's function (`otag:`, `oracletag:`, `oracletags:`) and are shared by
+every printing of a card. Art tags describe a printing's illustration (`atag:`, `arttag:`,
+`arttags:`, `illustrationtag:`) and are specific to each artwork. Tags use Scryfall's slug form
+(e.g. `removal`, `card-advantage`, `dragon`).
+
+Operators supported: `:`, `=` for matching tag text, and `=`, `<`, `>`, `<=`, `>=`, `!=`, `<>`
+for comparing tag count. Use `:` for partial matching (contains) and `=` with a string for an
+exact tag match.
+
+| Query               | Matches                                                          |
+| ------------------- | --------------------------------------------------------------- |
+| `otag:removal`      | cards with an oracle tag containing "removal".                  |
+| `oracletag=ramp`    | cards with exactly the oracle tag "ramp".                       |
+| `otag:counter`      | cards with an oracle tag containing "counter".                  |
+| `oracletags>2`      | cards with more than 2 oracle tags.                             |
+| `atag:dragon`       | cards whose artwork is tagged with something containing "dragon". |
+| `arttag=goblin`     | cards whose artwork is tagged exactly "goblin".                 |
+| `atag:landscape`    | cards whose art tag contains "landscape".                       |
+
 ## Mana Costs
 
 You can use `m:` or `mana:` to search for cards with specific mana costs.
@@ -335,6 +357,26 @@ Operators supported: `:`, `=`, `<`, `>`, `<=`, `>=`.
 | `fy=1993`               | cards first printed in 1993 (Alpha/Beta era). |
 | `firstyear<=2000`       | cards first printed in 2000 or earlier.       |
 | `year>=2015 year<=2020` | cards first printed between 2015 and 2020.    |
+
+## EDHREC Rank and Salt
+
+CubeCobra imports [EDHREC](https://edhrec.com/)'s community data. Use `rank:` (or `edhrec:`,
+`edhrecrank:`) to filter by a card's overall popularity rank, where **rank 1 is the most-played
+card**. Use `salt:` (or `saltiness:`) to filter by a card's "salt" score, EDHREC's measure of how
+much a card frustrates opponents (higher is saltier). Both are shared across every printing of a
+card. Cards EDHREC doesn't track are treated as the worst possible rank and a salt score of 0.
+
+Operators supported: `:`, `=`, `<`, `>`, `<=`, `>=`, `!=`, `<>`. Rank takes a whole number; salt
+takes a decimal.
+
+| Query           | Matches                                                       |
+| --------------- | ------------------------------------------------------------- |
+| `rank<=100`     | the 100 most-played cards on EDHREC.                          |
+| `edhrec<=1000`  | cards ranked in the EDHREC top 1000.                          |
+| `rank>5000`     | cards ranked worse than 5000 (including untracked cards).     |
+| `salt>1`        | cards with a salt score above 1.                              |
+| `salt>=1.5`     | especially salty cards (score 1.5 or higher).                 |
+| `saltiness<0.1` | cards that rarely frustrate opponents.                        |
 
 ## Miscellaneous
 

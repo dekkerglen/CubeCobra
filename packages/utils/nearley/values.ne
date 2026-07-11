@@ -32,6 +32,12 @@ fetchedIntegerOpValue -> anyOperator integerValue {% ([op, value]) => fetchedOpe
 
 integerValue -> [0-9]:+ {% ([digits]) => parseInt(digits.join(''), 10) %}
 
+# Arbitrary-precision non-negative decimal, e.g. "salt>1.25". Unlike dollarValue this
+# has no "$" prefix and allows any number of decimal places.
+floatOpValue -> anyOperator floatValue {% ([op, value]) => defaultOperation(op, value) %}
+
+floatValue -> [0-9]:+ ("." [0-9]:+):? {% ([digits, decimal]) => parseFloat(`${digits.join('')}${decimal ? '.' + decimal[1].join('') : ''}`) %}
+
 dollarOpValue -> anyOperator dollarValue {% ([op, value]) => defaultOperation(op, value) %}
 
 dollarValue -> "$":? (

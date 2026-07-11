@@ -44,6 +44,15 @@ function cardsWithBoardAndIndex(cards: Card[]): { board: BoardType; index: numbe
   }[];
 }
 
+// Combined prices round to whole units to stay compact, but small totals (e.g.
+// ultra-budget cubes) lose meaningful precision that way — $1.50 and $2.49 both
+// become "$2". Show cents below $10 so those totals stay easy to eyeball.
+function formatTotalPrice(value: number): string {
+  return value < 10
+    ? value.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    : Math.round(value).toLocaleString();
+}
+
 export interface GroupModalProps {
   isOpen: boolean;
   setOpen: (open: boolean) => void;
@@ -288,31 +297,27 @@ const GroupModal: React.FC<GroupModalProps> = ({
               <Flexbox direction="row" gap="2" wrap="wrap">
                 {Number.isFinite(totalPriceUsd) && (
                   <TextBadge name="Price USD" className="mt-2 me-2">
-                    <Tooltip text="TCGPlayer Market Price">${Math.round(totalPriceUsd).toLocaleString()}</Tooltip>
+                    <Tooltip text="TCGPlayer Market Price">${formatTotalPrice(totalPriceUsd)}</Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceUsdFoil) && (
                   <TextBadge name="Foil USD" className="mt-2 me-2">
-                    <Tooltip text="TCGPlayer Market Foil Price">
-                      ${Math.round(totalPriceUsdFoil).toLocaleString()}
-                    </Tooltip>
+                    <Tooltip text="TCGPlayer Market Foil Price">${formatTotalPrice(totalPriceUsdFoil)}</Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceUsdEtched) && (
                   <TextBadge name="Etched USD" className="mt-2 me-2">
-                    <Tooltip text="TCGPlayer Market Foil Price">
-                      ${Math.round(totalPriceUsdFoil).toLocaleString()}
-                    </Tooltip>
+                    <Tooltip text="TCGPlayer Market Foil Price">${formatTotalPrice(totalPriceUsdEtched)}</Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceEur) && (
                   <TextBadge name="EUR" className="mt-2 me-2">
-                    <Tooltip text="Cardmarket Price">${Math.round(totalPriceEur).toLocaleString()}</Tooltip>
+                    <Tooltip text="Cardmarket Price">${formatTotalPrice(totalPriceEur)}</Tooltip>
                   </TextBadge>
                 )}
                 {Number.isFinite(totalPriceTix) && (
                   <TextBadge name="TIX" className="mt-2 me-2">
-                    <Tooltip text="MTGO TIX">${Math.round(totalPriceTix).toLocaleString()}</Tooltip>
+                    <Tooltip text="MTGO TIX">${formatTotalPrice(totalPriceTix)}</Tooltip>
                   </TextBadge>
                 )}
               </Flexbox>

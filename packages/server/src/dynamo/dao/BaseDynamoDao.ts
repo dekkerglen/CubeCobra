@@ -7,6 +7,8 @@ import {
   PutCommand,
   QueryCommand,
   QueryCommandInput,
+  TransactWriteCommand,
+  TransactWriteCommandInput,
 } from '@aws-sdk/lib-dynamodb';
 import { BaseObject } from '@utils/datatypes/BaseObject';
 
@@ -18,6 +20,12 @@ export interface Key {
   PK: string;
   SK: string;
 }
+
+/**
+ * A single item in a DynamoDB TransactWriteItems call, built by one DAO and
+ * committed atomically alongside items from other DAOs (all share one table).
+ */
+export type DynamoTransactItem = NonNullable<TransactWriteCommandInput['TransactItems']>[number];
 
 export interface HashRow {
   PK: string;
@@ -253,6 +261,92 @@ export abstract class BaseDynamoDao<T extends BaseObject, U extends BaseObject =
       const code = error instanceof DaoError ? error.code : ErrorCode.INTERNAL_SERVER_ERROR;
 
       throw new DaoError(`Error putting item: ${error}`, code, {
+        cause: error,
+      });
+    }
+  }
+
+  /**
+   * Builds a transaction item that inserts a brand-new item, failing if it
+   * already exists. Mirrors {@link putWithOptimisticLocking} but is meant to be
+   * passed to {@link transactWrite} so it commits atomically with other writes.
+   *
+   * @param item - The item to insert.
+   * @returns A TransactWriteItems Put entry.
+   */
+  public buildInsertTransactItem(item: T): DynamoTransactItem {
+    return {
+      Put: {
+        TableName: this.tableName,
+        Item: this.toDynamoItem(item),
+        ConditionExpression: 'attribute_not_exists(PK) AND attribute_not_exists(SK)',
+      },
+    };
+  }
+
+  /**
+   * Builds a transaction item that overwrites an existing item under optimistic
+   * locking (the stored DynamoVersion must equal expectedDynamoVersion). Mirrors
+   * {@link updateWithOptimisticLocking} for use inside {@link transactWrite}.
+   *
+   * @param item - The item to write.
+   * @param expectedDynamoVersion - The DynamoVersion the stored row must currently have.
+   * @returns A TransactWriteItems Put entry.
+   */
+  public buildOptimisticUpdateTransactItem(item: T, expectedDynamoVersion: number): DynamoTransactItem {
+    const dynamoItem = this.toDynamoItem(item);
+    dynamoItem.DynamoVersion = expectedDynamoVersion + 1;
+
+    return {
+      Put: {
+        TableName: this.tableName,
+        Item: dynamoItem,
+        ConditionExpression: 'attribute_exists(PK) AND attribute_exists(SK) AND DynamoVersion = :expectedVersion',
+        ExpressionAttributeValues: {
+          ':expectedVersion': expectedDynamoVersion,
+        },
+      },
+    };
+  }
+
+  /**
+   * Reads the raw optimistic-locking DynamoVersion for a key, or undefined if
+   * the item does not exist. Useful for building a {@link buildOptimisticUpdateTransactItem}.
+   */
+  protected async getDynamoVersion(key: Key): Promise<number | undefined> {
+    const raw = await this.getRaw(key);
+    return raw?.DynamoVersion;
+  }
+
+  /**
+   * Atomically commits a set of transaction items (all-or-nothing). Items are
+   * typically built by different DAOs via {@link buildInsertTransactItem} /
+   * {@link buildOptimisticUpdateTransactItem}; they may span item types because
+   * the whole application shares a single table.
+   *
+   * A cancellation caused by a failed condition (e.g. a concurrent writer bumped
+   * DynamoVersion, or an insert target already exists) is surfaced as an
+   * optimistic-locking conflict so callers can translate it to a 409.
+   *
+   * @param items - The transaction items to commit (max 100 per DynamoDB limits).
+   */
+  protected async transactWrite(items: DynamoTransactItem[]): Promise<void> {
+    try {
+      await this.dynamoClient.send(new TransactWriteCommand({ TransactItems: items }));
+    } catch (e) {
+      const error = e instanceof Error ? e : new Error(String(e));
+
+      if (error.name === 'TransactionCanceledException') {
+        throw new DaoError(
+          `Transaction canceled (likely a concurrent write): ${error.message}`,
+          ErrorCode.OPTIMISTIC_LOCKING_VERSION_MISMATCH,
+          { cause: error },
+        );
+      }
+
+      const code = error instanceof DaoError ? error.code : ErrorCode.INTERNAL_SERVER_ERROR;
+
+      throw new DaoError(`Error committing transaction: ${error}`, code, {
         cause: error,
       });
     }

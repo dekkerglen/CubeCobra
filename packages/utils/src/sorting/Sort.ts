@@ -3,17 +3,21 @@ import Cube, { CustomSort } from '@utils/datatypes/Cube';
 import {
   cardAddedTime,
   cardArtist,
+  cardArtTags,
   cardCmc,
   cardCollectorNumber,
   cardColorIdentity,
   cardColors,
   cardCubeCount,
   cardDevotion,
+  cardEdhrecRank,
+  cardEdhrecSalt,
   cardElo,
   cardFinish,
   cardFirstPrintYear,
   cardKeywords,
   cardName,
+  cardOracleTags,
   cardPickCount,
   cardPopularity,
   cardPrice,
@@ -189,6 +193,7 @@ export const SORTS: string[] = [
   'Color',
   'Creature/Non-Creature',
   'Date Added',
+  'EDHREC Rank',
   'Elo',
   'Finish',
   'Guilds',
@@ -202,6 +207,7 @@ export const SORTS: string[] = [
   'Price EUR',
   'MTGO TIX',
   'Rarity',
+  'Salt',
   'Set',
   'Set (Release Date)',
   'Shards / Wedges',
@@ -209,6 +215,8 @@ export const SORTS: string[] = [
   'Subtype',
   'Supertype',
   'Tags',
+  'Oracle Tags',
+  'Art Tags',
   'Keywords',
   'Toughness',
   'Type',
@@ -227,6 +235,8 @@ export const ORDERED_SORTS: string[] = [
   'Mana Value',
   'Price',
   'Elo',
+  'EDHREC Rank',
+  'Salt',
   'Release date',
   'Cube Count',
   'Pick Count',
@@ -281,6 +291,10 @@ export const SortFunctions: Record<string, (a: any, b: any) => number> = {
   'Mana Value': (a, b) => cardCmc(a) - cardCmc(b),
   Price: (a, b) => (cardPrice(a) ?? 0) - (cardPrice(b) ?? 0),
   Elo: (a, b) => cardElo(a) - cardElo(b),
+  // Ascending rank puts the most-played cards (rank 1) first; untracked cards
+  // (MAX_SAFE_INTEGER) fall to the end.
+  'EDHREC Rank': (a, b) => cardEdhrecRank(a) - cardEdhrecRank(b),
+  Salt: (a, b) => cardEdhrecSalt(a) - cardEdhrecSalt(b),
   'Release date': (a, b) => {
     if (cardReleaseDate(a) > cardReleaseDate(b)) {
       return 1;
@@ -399,6 +413,30 @@ function wordCountBucket(wordCount: number): string {
 function getEloBucket(elo: number): string {
   const bucketFloor = Math.floor(elo / 50) * 50;
   return `${bucketFloor}-${bucketFloor + 49}`;
+}
+
+// Upper bounds for EDHREC rank groups. Ranks tighten near the top since the most-played
+// cards are the interesting ones; cards EDHREC doesn't track land in "Unranked".
+const edhrecRankBuckets = [100, 250, 500, 1000, 2500, 5000, 10000, 25000];
+
+function getEdhrecRankBucket(rank: number): string {
+  if (rank >= Number.MAX_SAFE_INTEGER) return 'Unranked';
+  let lower = 1;
+  for (const upper of edhrecRankBuckets) {
+    if (rank <= upper) return `${lower}–${upper}`;
+    lower = upper + 1;
+  }
+  return `${(edhrecRankBuckets[edhrecRankBuckets.length - 1] || 0) + 1}+`;
+}
+
+function getSaltBucket(salt: number): string {
+  if (salt <= 0) return 'Unsalted';
+  if (salt < 0.5) return '0–0.5';
+  if (salt < 1) return '0.5–1';
+  if (salt < 1.5) return '1–1.5';
+  if (salt < 2) return '1.5–2';
+  if (salt < 2.5) return '2–2.5';
+  return '2.5+';
 }
 
 //Types - To handle custom card types, we will assume anything before a dash it a type and after is a sub-type.
@@ -565,6 +603,26 @@ export function getLabelsRaw(
       }
     }
     ret = tags.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  } else if (sort === 'Oracle Tags') {
+    const oTags = new Set<string>();
+    for (const card of cube || []) {
+      for (const t of cardOracleTags(card)) {
+        if (t.length > 0) {
+          oTags.add(t);
+        }
+      }
+    }
+    ret = Array.from(oTags).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  } else if (sort === 'Art Tags') {
+    const aTags = new Set<string>();
+    for (const card of cube || []) {
+      for (const t of cardArtTags(card)) {
+        if (t.length > 0) {
+          aTags.add(t);
+        }
+      }
+    }
+    ret = Array.from(aTags).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
   } else if (sort === 'Keywords') {
     const kws: string[] = [];
     for (const card of cube || []) {
@@ -733,6 +791,26 @@ export function getLabelsRaw(
       }
     }
     ret = res;
+  } else if (sort === 'EDHREC Rank') {
+    const ranks = new Set<number>();
+    for (const card of cube || []) {
+      ranks.add(cardEdhrecRank(card));
+    }
+    const res = new Set<string>();
+    for (const rank of Array.from(ranks).sort((x, y) => x - y)) {
+      res.add(getEdhrecRankBucket(rank));
+    }
+    ret = Array.from(res);
+  } else if (sort === 'Salt') {
+    const salts = new Set<number>();
+    for (const card of cube || []) {
+      salts.add(cardEdhrecSalt(card));
+    }
+    const res = new Set<string>();
+    for (const salt of Array.from(salts).sort((x, y) => x - y)) {
+      res.add(getSaltBucket(salt));
+    }
+    ret = Array.from(res);
   } else if (sort === 'Approximate Word Count') {
     const labels: string[] = [];
     for (const card of cube || []) {
@@ -866,6 +944,10 @@ export function cardGetLabels(
     }
   } else if (sort === 'Tags') {
     ret = effectiveCard.tags || [];
+  } else if (sort === 'Oracle Tags') {
+    ret = cardOracleTags(effectiveCard);
+  } else if (sort === 'Art Tags') {
+    ret = cardArtTags(effectiveCard);
   } else if (sort === 'Keywords') {
     ret = cardKeywords(effectiveCard);
   } else if (sort === 'Status') {
@@ -1008,6 +1090,10 @@ export function cardGetLabels(
     else if (popularity <= 100) ret = ['50–100%'];
   } else if (sort === 'Elo') {
     ret = [getEloBucket(cardElo(effectiveCard))];
+  } else if (sort === 'EDHREC Rank') {
+    ret = [getEdhrecRankBucket(cardEdhrecRank(effectiveCard))];
+  } else if (sort === 'Salt') {
+    ret = [getSaltBucket(cardEdhrecSalt(effectiveCard))];
   } else if (sort === 'Approximate Word Count') {
     const wordCount = cardWordCount(effectiveCard);
     ret = [wordCountBucket(wordCount)];

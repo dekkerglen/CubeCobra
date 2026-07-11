@@ -57,6 +57,10 @@ const generateMeta = (
   width?: string | number,
   height?: string | number,
 ): MetaTag[] => {
+  // Descriptions are often raw markdown (e.g. a cube's brief). Social platforms
+  // render meta content verbatim, so strip the markdown down to plain text here —
+  // callers that already ran truncateForMeta pass plain text and this is a no-op.
+  const plainDescription = description ? stripMarkdown(description) : '';
   return [
     {
       property: 'og:title',
@@ -64,7 +68,7 @@ const generateMeta = (
     },
     {
       property: 'og:description',
-      content: description || '',
+      content: plainDescription,
     },
     {
       property: 'og:image',
@@ -92,7 +96,7 @@ const generateMeta = (
     },
     {
       property: 'twitter:description',
-      content: description || '',
+      content: plainDescription,
     },
     {
       property: 'twitter:image',

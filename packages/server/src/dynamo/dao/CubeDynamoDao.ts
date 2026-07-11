@@ -67,7 +67,7 @@ import {
   UpdateCommand,
 } from '@aws-sdk/lib-dynamodb';
 import { cdnUrl } from '@utils/cdnUrl';
-import { CardStatus } from '@utils/datatypes/Card';
+import { CardStatus, Changes } from '@utils/datatypes/Card';
 import Cube, { CubeImage, ViewDefinition } from '@utils/datatypes/Cube';
 import { CubeCards } from '@utils/datatypes/Cube';
 import { getNewCubeViews } from '@utils/datatypes/Cube';
@@ -80,10 +80,13 @@ import { cardFromId, getPlaceholderCard } from 'serverutils/carddb';
 import cloudwatch from 'serverutils/cloudwatch';
 import { getImageData } from 'serverutils/imageutil';
 
+import { DaoError } from '../../../errors/DaoError';
+import { ErrorCode } from '../../../errors/errorCodes';
 import { CubeTooLargeError } from '../../errors/CubeTooLargeError';
 import { deleteObject, getObject, putObject } from '../s3client';
 import { getObjectVersion, listObjectVersions } from '../s3client';
 import { BaseDynamoDao, HashRow } from './BaseDynamoDao';
+import { ChangelogDynamoDao } from './ChangelogDynamoDao';
 import { UserDynamoDao } from './UserDynamoDao';
 
 /**
@@ -187,10 +190,17 @@ const createDeletedUserPlaceholder = (userId: string): User => {
 
 export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   private readonly userDao: UserDynamoDao;
+  private readonly changelogDao?: ChangelogDynamoDao;
 
-  constructor(dynamoClient: DynamoDBDocumentClient, userDao: UserDynamoDao, tableName: string) {
+  constructor(
+    dynamoClient: DynamoDBDocumentClient,
+    userDao: UserDynamoDao,
+    tableName: string,
+    changelogDao?: ChangelogDynamoDao,
+  ) {
     super(dynamoClient, tableName);
     this.userDao = userDao;
+    this.changelogDao = changelogDao;
   }
 
   protected itemType(): string {
@@ -873,6 +883,124 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   }
 
   /**
+   * Atomically commits a set of card changes together with the changelog that
+   * records them. The cube version bump and the changelog metadata row are
+   * written in a single DynamoDB transaction, so the cube can never advance a
+   * version without its history. Ordering:
+   *
+   *   1. changelog body   -> S3 (immutable; a harmless orphan if we crash here)
+   *   2. { cube metadata bump, changelog metadata row } -> one atomic transaction
+   *   3. new cards        -> S3 (only after history is durable)
+   *   4. search hash rows -> best-effort
+   *
+   * A crash before step 2 loses nothing but orphan S3 objects. A crash after
+   * step 2 leaves complete history with cards that can be rebuilt by replaying
+   * the changelog — never the reverse (state advanced, history missing), which
+   * is the failure mode this method exists to eliminate.
+   *
+   * @param id - The cube ID.
+   * @param newCards - The full new card lists for the cube.
+   * @param changes - The changes to record in the changelog.
+   * @param expectedVersion - The cube version the caller edited against (optimistic concurrency).
+   * @returns The new cube version and the created changelog id.
+   */
+  public async commitCards(
+    id: string,
+    newCards: CubeCards,
+    changes: Changes,
+    expectedVersion: number,
+  ): Promise<{ version: number; changelogId: string }> {
+    if (!this.changelogDao) {
+      throw new Error('CubeDynamoDao.commitCards requires a changelogDao; construct the DAO with one.');
+    }
+
+    // Validate cards (same guards as updateCards)
+    let nullCards = 0;
+    let totalCards = 0;
+    for (const [board, list] of Object.entries(newCards)) {
+      if (board !== 'id' && Array.isArray(list)) {
+        nullCards += this.countNullCards(list);
+        totalCards += list.length;
+      }
+    }
+    if (nullCards > 0) {
+      throw new Error(`Cannot save cube: ${nullCards} null cards`);
+    }
+    if (totalCards > CARD_LIMIT) {
+      throw new Error(`Cannot save cube: too many cards (${totalCards}/${CARD_LIMIT})`);
+    }
+
+    const cube = await this.getById(id);
+    if (!cube) {
+      throw new Error(`Cube not found: ${id}`);
+    }
+
+    // Enforce optimistic concurrency on the cube's business version. The DynamoVersion
+    // condition in the transaction closes the check-then-act race; this is a clean early out.
+    if ((cube.version ?? 0) !== expectedVersion) {
+      throw new DaoError(
+        `Cube ${id} was updated since editing began (expected version ${expectedVersion}, found ${cube.version ?? 0})`,
+        ErrorCode.OPTIMISTIC_LOCKING_VERSION_MISMATCH,
+      );
+    }
+
+    // Snapshot the pre-change cube (shallow: only scalar metadata like cardCount is
+    // read for hash diffing) and cards for best-effort hash maintenance after commit.
+    const oldCube: Cube = { ...cube };
+    const oldCards = await this.getCards(id);
+
+    // Read the current optimistic-lock version so the transaction fails if a
+    // concurrent writer commits between now and the transaction.
+    const currentDynamoVersion = await this.getDynamoVersion({
+      PK: this.partitionKey(cube),
+      SK: this.itemType(),
+    });
+    if (currentDynamoVersion === undefined) {
+      throw new Error(`Cube not found in DynamoDB: ${id}`);
+    }
+
+    // Apply the version bump / counts to the in-memory cube.
+    cube.cardCount = newCards.mainboard.length;
+    cube.version = (cube.version ?? 0) + 1;
+    const now = Date.now();
+    cube.date = now;
+    cube.dateLastUpdated = now;
+    const newVersion = cube.version;
+
+    // Strip details from cards before persisting.
+    for (const [board, list] of Object.entries(newCards)) {
+      if (board !== 'id') {
+        this.stripDetails(list as any[]);
+      }
+    }
+
+    // 1. Write the changelog body to S3 and build its metadata insert (not yet committed).
+    const { id: changelogId, transactItem: changelogTransactItem } = await this.changelogDao.prepareChangelog(
+      changes,
+      id,
+      newVersion,
+    );
+
+    // 2. Atomically bump the cube metadata and insert the changelog metadata together.
+    const cubeTransactItem = this.buildOptimisticUpdateTransactItem(cube, currentDynamoVersion);
+    await this.transactWrite([cubeTransactItem, changelogTransactItem]);
+
+    // 3. History is durable and consistent — now write the live cards to S3.
+    await putObject(process.env.DATA_BUCKET!, `cube/${id}.json`, newCards);
+
+    // 4. Best-effort search index maintenance. Cube data and history are already
+    // safe, so a failure here is logged and reconciled later rather than thrown.
+    try {
+      await this.updateHashRows(cube, oldCards, newCards);
+      await this.refreshMetadataHashRows(oldCube, cube, true);
+    } catch (e: any) {
+      cloudwatch.error(`Failed to update hash rows after committing cube ${id}: ${e.message}`, e.stack);
+    }
+
+    return { version: newVersion, changelogId };
+  }
+
+  /**
    * Deletes a cube (metadata and cards).
    */
   public async deleteById(id: string): Promise<void> {
@@ -972,9 +1100,29 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       throw new Error('Cube not found');
     }
 
-    // Update hash rows if metadata changed
+    const dateChanged = !options?.skipTimestampUpdate && oldCube.dateLastUpdated !== item.dateLastUpdated;
+    await this.refreshMetadataHashRows(oldCube, item, dateChanged);
+
+    // Update metadata
+    await super.update(item);
+  }
+
+  /**
+   * Reconciles a cube's metadata hash rows after its metadata changes, diffing
+   * the old cube against the new one. Adds/removes hash rows whose set changed
+   * and, when only the GSI sort-key data changed (follower count, name, card
+   * count, date), rewrites the existing rows so search stays sorted correctly.
+   *
+   * These hash rows are a search index and are maintained best-effort — they are
+   * intentionally not part of the atomic metadata write.
+   *
+   * @param oldCube - The cube state before the change.
+   * @param newCube - The cube state after the change.
+   * @param dateChanged - Whether dateLastUpdated changed (affects GSI sort keys).
+   */
+  protected async refreshMetadataHashRows(oldCube: Cube, newCube: Cube, dateChanged: boolean): Promise<void> {
     const oldHashes = await this.getHashes(oldCube);
-    const newHashes = await this.getHashes(item);
+    const newHashes = await this.getHashes(newCube);
 
     const hashesToDelete = oldHashes.filter((hash) => !newHashes.includes(hash));
     const hashesToAdd = newHashes.filter((hash) => !oldHashes.includes(hash));
@@ -982,17 +1130,17 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     // Check if GSI sort key data changed (like count, name, card count)
     // These affect the GSI sort keys but don't change which hashes exist
     const gsiDataChanged =
-      (oldCube.likeCount ?? 0) !== (item.likeCount ?? 0) ||
-      oldCube.name !== item.name ||
-      oldCube.cardCount !== item.cardCount ||
-      (!options?.skipTimestampUpdate && oldCube.dateLastUpdated !== item.dateLastUpdated);
+      (oldCube.likeCount ?? 0) !== (newCube.likeCount ?? 0) ||
+      oldCube.name !== newCube.name ||
+      oldCube.cardCount !== newCube.cardCount ||
+      dateChanged;
 
     if (hashesToDelete.length > 0) {
-      await this.deleteHashesBySK(this.partitionKey(item), hashesToDelete);
+      await this.deleteHashesBySK(this.partitionKey(newCube), hashesToDelete);
     }
 
     if (hashesToAdd.length > 0) {
-      await this.writeHashes(this.partitionKey(item), hashesToAdd);
+      await this.writeHashes(this.partitionKey(newCube), hashesToAdd);
     }
 
     // If GSI data changed, we need to update ALL existing hash rows with new sort keys
@@ -1002,12 +1150,9 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       // We can just rewrite all existing hashes with the new cube data
       const unchangedHashes = oldHashes.filter((hash) => newHashes.includes(hash));
       if (unchangedHashes.length > 0) {
-        await this.writeHashes(this.partitionKey(item), unchangedHashes);
+        await this.writeHashes(this.partitionKey(newCube), unchangedHashes);
       }
     }
-
-    // Update metadata
-    await super.update(item);
   }
 
   /**

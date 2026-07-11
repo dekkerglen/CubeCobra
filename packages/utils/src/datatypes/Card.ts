@@ -70,6 +70,10 @@ export interface CardDetails {
   color_identity: string[];
   colorcategory: ColorCategory;
   keywords: string[];
+  // Scryfall Tagger tags (slugs), sourced from the public oracle-tags / art-tags bulk data.
+  // oracle_tags are shared by all printings of an oracle_id; art_tags are per-illustration.
+  oracle_tags?: string[];
+  art_tags?: string[];
   loyalty?: string;
   power?: string;
   toughness?: string;
@@ -100,6 +104,12 @@ export interface CardDetails {
   set_type?: string;
   firstPrintYear?: number;
   printedInExpansion?: boolean;
+  // EDHREC data, keyed off oracle_id (shared by all printings) and imported from
+  // EDHREC's public cardranks feed. edhrecRank is the overall popularity rank
+  // (1 = most played); edhrecSalt is the community "salt" score. Left unset for
+  // cards EDHREC doesn't track. See update_cards.ts.
+  edhrecRank?: number;
+  edhrecSalt?: number;
 
   // Computed values
   elo?: number;
@@ -140,6 +150,10 @@ export const allFields = [
   'color',
   'colorIdentity',
   'board',
+  'otag',
+  'atag',
+  'edhrecRank',
+  'edhrecSalt',
 ] as const;
 
 export type AllField = (typeof allFields)[number];
@@ -156,6 +170,8 @@ export const numFields = [
   'loyalty',
   'rarity',
   'legality',
+  'edhrecRank',
+  'edhrecSalt',
 ] as const;
 
 export type NumField = (typeof numFields)[number];

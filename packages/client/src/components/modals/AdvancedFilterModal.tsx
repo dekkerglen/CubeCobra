@@ -250,6 +250,24 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
             setOperator={(operator: string) => updateValue(operator, 'eloOp')}
           />
           <NumericField
+            name="edhrecRank"
+            humanName="EDHREC Rank"
+            placeholder={'Any integer number, e.g. "100"'}
+            value={values.edhrecRank}
+            operator={values.edhrecRankOp}
+            setValue={(value: string) => updateValue(value, 'edhrecRank')}
+            setOperator={(operator: string) => updateValue(operator, 'edhrecRankOp')}
+          />
+          <NumericField
+            name="edhrecSalt"
+            humanName="Salt"
+            placeholder={'Any number, e.g. "1.5"'}
+            value={values.edhrecSalt}
+            operator={values.edhrecSaltOp}
+            setValue={(value: string) => updateValue(value, 'edhrecSalt')}
+            setOperator={(operator: string) => updateValue(operator, 'edhrecSaltOp')}
+          />
+          <NumericField
             name="power"
             humanName="Power"
             placeholder={'Any value, e.g. "2"'}

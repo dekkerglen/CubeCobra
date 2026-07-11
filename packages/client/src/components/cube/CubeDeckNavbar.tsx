@@ -142,6 +142,12 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
               >
                 TopDecked (.csv)
               </Link>
+              <Link
+                href={`/cube/deck/download/csv/${draft.id}/${seatIndex}`}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+              >
+                Comma-Separated (.csv)
+              </Link>
               <Alerts alerts={alerts} />
             </Flexbox>
           </Dropdown>
@@ -312,6 +318,12 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
                 >
                   TopDecked (.csv)
+                </Link>
+                <Link
+                  href={`/cube/deck/download/csv/${draft.id}/${seatIndex}`}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                >
+                  Comma-Separated (.csv)
                 </Link>
                 <Alerts alerts={alerts} />
               </Flexbox>

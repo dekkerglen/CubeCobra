@@ -51,7 +51,7 @@ const FilterCollapse: React.FC<FilterCollapseProps> = ({
           }
         } else {
           const op = isNumField(name) ? values[`${name}Op`] || '=' : ':';
-          let value = (values[name] as string).replace('"', '\\"');
+          let value = (values[name] as string).replace(/"/g, '\\"');
           if (value.indexOf(' ') > -1) {
             value = `"${value}"`;
           }

@@ -74,6 +74,15 @@ const setSymbolBase = process.env.SET_SYMBOL_BASE_URL?.replace(/\/$/, '');
 // Lookup set_type by set code (populated during processSets)
 const setTypeByCode: Record<string, string> = {};
 
+// Scryfall Tagger tags (slugs), populated during downloadTags() and applied in convertCard.
+// Oracle tags are shared across all printings of an oracle_id; art tags are per-illustration.
+const oracleTagsByOracleId: Record<string, string[]> = {};
+const artTagsByIllustrationId: Record<string, string[]> = {};
+
+// EDHREC rank + salt score keyed by oracle_id, populated during downloadEdhrecRanks()
+// and applied to every printing in convertCard. Shared across all printings of a card.
+const edhrecByOracleId: Record<string, { rank: number; salt: number }> = {};
+
 const catalog: Catalog = {
   dict: {},
   names: [],
@@ -257,6 +266,96 @@ async function downloadDefaultCards(useS3Cache?: boolean): Promise<{ updatedAt: 
 
 async function downloadSets(useS3Cache?: boolean) {
   await getFileWithCache('https://api.scryfall.com/sets', `${PRIVATE_DIR}/sets.json`, useS3Cache);
+}
+
+interface ScryfallTag {
+  object: string;
+  label: string;
+  slug: string;
+  type: string;
+  // Each tagging references one oracle_id (oracle tags) or illustration_id (art tags).
+  taggings?: Array<{ oracle_id?: string; illustration_id?: string; weight?: string }>;
+}
+
+async function fetchTagFile(url: string): Promise<ScryfallTag[]> {
+  const response = await fetch(url, { headers: SCRYFALL_HEADERS });
+  if (!response.ok) throw new Error(`Download of tag file '${url}' failed with code ${response.status}`);
+  return (await response.json()) as ScryfallTag[];
+}
+
+// Downloads Scryfall's public Tagger bulk data (oracle tags + art tags) and builds the
+// oracleId -> slugs and illustrationId -> slugs lookups consumed by convertCard. The tag
+// files are moderate (tens of MB of plain JSON), well under V8's max string length, so we
+// parse them in memory rather than streaming. Callers treat failures as non-fatal.
+async function downloadTags(): Promise<void> {
+  const res = await fetch('https://api.scryfall.com/bulk-data', { headers: SCRYFALL_HEADERS });
+  if (!res.ok) throw new Error(`Download of /bulk-data failed with code ${res.status}`);
+  const resjson = (await res.json()) as { data: Array<{ type: string; download_uri: string }> };
+
+  let oracleTagsUrl: string | undefined;
+  let artTagsUrl: string | undefined;
+  for (const data of resjson.data) {
+    if (data.type === 'oracle_tags') oracleTagsUrl = data.download_uri;
+    else if (data.type === 'art_tags') artTagsUrl = data.download_uri;
+  }
+  if (!oracleTagsUrl) throw new Error('URL for Oracle tags not found in /bulk-data response');
+  if (!artTagsUrl) throw new Error('URL for Art tags not found in /bulk-data response');
+
+  const [oracleTags, artTags] = await Promise.all([fetchTagFile(oracleTagsUrl), fetchTagFile(artTagsUrl)]);
+
+  for (const tag of oracleTags) {
+    if (!tag.slug || !Array.isArray(tag.taggings)) continue;
+    for (const tagging of tag.taggings) {
+      const oracleId = tagging.oracle_id;
+      if (!oracleId) continue;
+      if (!oracleTagsByOracleId[oracleId]) oracleTagsByOracleId[oracleId] = [];
+      oracleTagsByOracleId[oracleId].push(tag.slug);
+    }
+  }
+
+  for (const tag of artTags) {
+    if (!tag.slug || !Array.isArray(tag.taggings)) continue;
+    for (const tagging of tag.taggings) {
+      const illustrationId = tagging.illustration_id;
+      if (!illustrationId) continue;
+      if (!artTagsByIllustrationId[illustrationId]) artTagsByIllustrationId[illustrationId] = [];
+      artTagsByIllustrationId[illustrationId].push(tag.slug);
+    }
+  }
+
+  console.info(
+    `Loaded ${oracleTags.length} oracle tags across ${Object.keys(oracleTagsByOracleId).length} oracle ids and ` +
+      `${artTags.length} art tags across ${Object.keys(artTagsByIllustrationId).length} illustrations.`,
+  );
+}
+
+interface EdhrecRankEntry {
+  oracle_id?: string;
+  rank?: number;
+  salt?: number;
+}
+
+// EDHREC publishes a single public feed of every tracked card's popularity rank and salt
+// score, keyed by oracle_id. It's a ~8MB JSON array (well under V8's max string length),
+// so we parse it in memory. Builds edhrecByOracleId, consumed by convertCard. Non-fatal:
+// callers import cards without EDHREC data rather than aborting the whole update.
+async function downloadEdhrecRanks(): Promise<void> {
+  const url = 'https://json.edhrec.com/static/public/data/cardranks.json';
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Download of EDHREC card ranks '${url}' failed with code ${response.status}`);
+  const entries = (await response.json()) as EdhrecRankEntry[];
+
+  let applied = 0;
+  for (const entry of entries) {
+    if (!entry.oracle_id || typeof entry.rank !== 'number') continue;
+    edhrecByOracleId[entry.oracle_id] = {
+      rank: entry.rank,
+      salt: typeof entry.salt === 'number' ? entry.salt : 0,
+    };
+    applied += 1;
+  }
+
+  console.info(`Loaded EDHREC ranks for ${applied} oracle ids.`);
 }
 
 const addToNameToIdMap = (normalizedName: string, scryFallId: string) => {
@@ -620,6 +719,9 @@ function convertCard(
   preflipped: boolean,
 ): CardDetails {
   const faceAttributeSource = getFaceAttributeSource(card as ScryfallCard, preflipped);
+  // The original front face, captured before we truncate card_faces below. Pre-flipped modal
+  // DFCs keep it as their flip image so both sides stay viewable.
+  const preflipFrontFace = preflipped ? card.card_faces?.[0] : undefined;
 
   const newcard: Partial<CardDetails> = {};
   if (preflipped) {
@@ -715,6 +817,41 @@ function convertCard(
     newcard.keywords.push('Omen');
   }
 
+  // Attach Scryfall Tagger tags (populated by downloadTags). Oracle tags key off
+  // oracle_id (shared by all printings); art tags key off illustration_id, which can
+  // live on the card and/or its individual faces. Left unset when a card has no tags
+  // to keep carddict.json lean; the cardOracleTags/cardArtTags accessors default to [].
+  const oracleIds = new Set<string>();
+  if (card.oracle_id) oracleIds.add(card.oracle_id);
+  const illustrationIds = new Set<string>();
+  if (card.illustration_id) illustrationIds.add(card.illustration_id);
+  for (const face of card.card_faces || []) {
+    if (face?.oracle_id) oracleIds.add(face.oracle_id);
+    if (face?.illustration_id) illustrationIds.add(face.illustration_id);
+  }
+  const oracleTags = new Set<string>();
+  for (const oracleId of oracleIds) {
+    for (const slug of oracleTagsByOracleId[oracleId] || []) oracleTags.add(slug);
+  }
+  const artTags = new Set<string>();
+  for (const illustrationId of illustrationIds) {
+    for (const slug of artTagsByIllustrationId[illustrationId] || []) artTags.add(slug);
+  }
+  if (oracleTags.size > 0) newcard.oracle_tags = Array.from(oracleTags);
+  if (artTags.size > 0) newcard.art_tags = Array.from(artTags);
+
+  // Attach EDHREC rank + salt (populated by downloadEdhrecRanks), shared by all printings
+  // of an oracle_id. Left unset for cards EDHREC doesn't track; the cardEdhrecRank/
+  // cardEdhrecSalt accessors default those to "worst rank" / "unsalted".
+  for (const oracleId of oracleIds) {
+    const edhrec = edhrecByOracleId[oracleId];
+    if (edhrec) {
+      newcard.edhrecRank = edhrec.rank;
+      newcard.edhrecSalt = edhrec.salt;
+      break;
+    }
+  }
+
   if (card.tcgplayer_id) {
     newcard.tcgplayer_id = card.tcgplayer_id;
   }
@@ -753,6 +890,16 @@ function convertCard(
   }
   if (!cardImageBase && card.card_faces && card.card_faces.length >= 2 && card.card_faces[1]?.image_uris) {
     newcard.image_flip = card.card_faces[1].image_uris.normal;
+  }
+  // A pre-flipped modal DFC displays its back face as the primary image (set above) but keeps
+  // the original front face as the flip image, so both sides remain viewable — modal DFCs can
+  // be cast as either face. Transform DFCs intentionally don't do this (one face at a time).
+  if (preflipped && card.layout === 'modal_dfc' && preflipFrontFace) {
+    if (cardImageBase) {
+      newcard.image_flip = `${cardImageBase}/${card.id}/normal.webp`;
+    } else if (preflipFrontFace.image_uris) {
+      newcard.image_flip = preflipFrontFace.image_uris.normal;
+    }
   }
   if (newcard.type.toLowerCase().includes('land')) {
     newcard.colorcategory = 'Lands';
@@ -842,7 +989,11 @@ async function writeCatalog(basePath = PRIVATE_DIR) {
 }
 
 function saveCard(card: ScryfallCard, metadata: CardMetadata | undefined, ckPrice: number, mpPrice: number) {
-  if (card.layout === 'transform') {
+  // Emit a pre-flipped catalog entry (findable by the back face's name) for cards whose
+  // back face can meaningfully be the "front" of a cube entry. Transform DFCs show only the
+  // flipped side; modal DFCs can be cast as either face, so their pre-flipped entry keeps
+  // both faces viewable (see convertCard) — this lets owners choose which side is primary.
+  if (card.layout === 'transform' || card.layout === 'modal_dfc') {
     addCardToCatalog(convertCard(card, metadata, ckPrice, mpPrice, true), true);
   }
   const convertedCard = convertCard(card, metadata, ckPrice, mpPrice, false);
@@ -1209,6 +1360,30 @@ const downloadFromScryfall = async (
 
     console.error('Cardbase was not updated');
     return undefined;
+  }
+
+  // Scryfall Tagger tags are non-fatal: a failure here simply imports cards without
+  // otag/atag data rather than aborting the whole card update.
+  try {
+    if (taskId) {
+      await cardUpdateTaskDao.updateStep(taskId, 'Downloading Scryfall tag data');
+    }
+    await downloadTags();
+  } catch (error) {
+    console.error('Downloading Scryfall tag data failed (non-fatal); cards will import without tags:');
+    console.error(error);
+  }
+
+  // EDHREC ranks are likewise non-fatal: a failure here simply imports cards without
+  // rank/salt data rather than aborting the whole card update.
+  try {
+    if (taskId) {
+      await cardUpdateTaskDao.updateStep(taskId, 'Downloading EDHREC rank data');
+    }
+    await downloadEdhrecRanks();
+  } catch (error) {
+    console.error('Downloading EDHREC rank data failed (non-fatal); cards will import without ranks:');
+    console.error(error);
   }
 
   console.info('Creating objects...');

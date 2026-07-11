@@ -411,6 +411,12 @@ export const cardIsToken = (card: Card): boolean => card.details?.isToken ?? fal
 
 export const cardBorderColor = (card: Card): string => card.details?.border_color ?? 'black';
 
+// Foil white-bordered cards actually print with a black border, but Scryfall serves the
+// white-bordered image. Callers overlay a black frame (BlackBorderOverlay) when this is
+// true. Foil-ness is passed in because callers derive it differently (card vs. finish prop).
+export const showsBlackBorderForFoil = (card: Card, isFoil: boolean): boolean =>
+  isFoil && cardBorderColor(card) === 'white';
+
 export const cardName = (card: Card): string => {
   if (isCustomOrVoucher(card)) {
     return (card.custom_name || card.details?.name) ?? '';
@@ -590,6 +596,14 @@ export const cardCubeCount = (card: Card): number => (card.details ? (card.detai
 
 export const cardPickCount = (card: Card): number => (card.details ? (card.details?.pickCount ?? 0) : 0);
 
+// EDHREC popularity rank (1 = most played). Cards EDHREC doesn't track sort/compare
+// as the worst possible rank, so `rank<=N` excludes them and rank-ascending sort
+// pushes them to the bottom.
+export const cardEdhrecRank = (card: Card): number => card.details?.edhrecRank ?? Number.MAX_SAFE_INTEGER;
+
+// EDHREC "salt" score. Untracked cards are treated as unsalted (0).
+export const cardEdhrecSalt = (card: Card): number => card.details?.edhrecSalt ?? 0;
+
 export const cardLayout = (card: Card): string => card.details?.layout ?? '';
 
 export const cardReleaseDate = (card: Card): string => card.details?.released_at ?? '';
@@ -612,6 +626,12 @@ export const cardGamesEverAvailable = (card: Card): Game[] =>
   card.details?.gamesEverAvailable ?? card.details?.games ?? [];
 
 export const cardKeywords = (card: Card): string[] => card.details?.keywords ?? [];
+
+// Scryfall Tagger tags stored directly on the card details by the update_cards pipeline.
+// oracle_tags are oracle-level (shared across printings); art_tags are per-illustration.
+export const cardOracleTags = (card: Card): string[] => card.details?.oracle_tags ?? [];
+
+export const cardArtTags = (card: Card): string[] => card.details?.art_tags ?? [];
 
 export const cardIsReserved = (card: Card): boolean => card.details?.reserved ?? false;
 
@@ -1004,6 +1024,8 @@ export default {
   cardDevotion,
   cardWordCount,
   cardKeywords,
+  cardOracleTags,
+  cardArtTags,
   cardFirstPrintYear,
   cardLayout,
   cardIsSpecialZoneType,
@@ -1011,6 +1033,8 @@ export default {
   cardPopularity,
   cardCubeCount,
   cardPickCount,
+  cardEdhrecRank,
+  cardEdhrecSalt,
   COLOR_COMBINATIONS,
   convertFromLegacyCardColorCategory,
   normalizeName,

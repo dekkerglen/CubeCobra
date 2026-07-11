@@ -3,7 +3,8 @@ import React, { ComponentProps, ElementType } from 'react';
 import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 
-import { isFoilFinish } from '../../../utils/src/cardutil';
+import { isFoilFinish, showsBlackBorderForFoil } from '../../../utils/src/cardutil';
+import BlackBorderOverlay from './BlackBorderOverlay';
 
 export interface FoilOverlayProps {
   wrapperTag?: ElementType;
@@ -25,10 +26,14 @@ const FoilOverlay = <T extends ElementType>(Tag: T) => {
       finish = props.card.finish;
     }
 
+    const showFoil = isFoilFinish(finish);
+    const showBlackBorder = !!props.card && showsBlackBorderForFoil(props.card, showFoil);
+
     const Result = (
       <WrapperTag className="relative">
         <Tag ref={innerRef} {...(props as any)} />
-        {isFoilFinish(finish) && (
+        {showBlackBorder && <BlackBorderOverlay />}
+        {showFoil && (
           <img
             src={cdnUrl('/content/foilOverlay.png')}
             className="absolute inset-0 w-full h-full foilOverlay card-border"

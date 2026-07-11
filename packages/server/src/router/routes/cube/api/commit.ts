@@ -1,8 +1,10 @@
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
-import { blogDao, changelogDao, cubeDao, feedDao, userDao } from 'dynamo/daos';
+import { blogDao, cubeDao, feedDao, userDao } from 'dynamo/daos';
 import { isCubeEditable } from 'serverutils/cubefn';
 
+import { AppError } from '../../../../../errors/AppError';
+import { ErrorCode } from '../../../../../errors/errorCodes';
 import { Request, Response } from '../../../../types/express';
 
 export const commitHandler = async (req: Request, res: Response) => {
@@ -108,10 +110,30 @@ export const commitHandler = async (req: Request, res: Response) => {
       }
     }
 
-    const newVersion = await cubeDao.updateCards(cube.id, cards);
+    // Commit the card changes and their changelog atomically. This is the core
+    // durability guarantee: the cube version bump and the changelog are written
+    // in a single DynamoDB transaction, so the cube can never advance a version
+    // without a matching history entry (issue #2459).
+    let newVersion: number;
+    let changelogId: string;
     try {
-      const changelogId = await changelogDao.createChangelog(changes, cube.id);
+      ({ version: newVersion, changelogId } = await cubeDao.commitCards(cube.id, cards, changes, expectedVersion));
+    } catch (err) {
+      // A concurrent commit to the same cube fails the transaction's version
+      // condition. That's a client-recoverable conflict, not a server fault.
+      if (err instanceof AppError && err.code === ErrorCode.OPTIMISTIC_LOCKING_VERSION_MISMATCH) {
+        return res.status(409).send({
+          success: 'false',
+          message:
+            'This cube was updated since you started editing. Refresh the page to get the latest version, then redo your changes.',
+        });
+      }
+      throw err; // Nothing was committed; handled by the outer catch as a 500.
+    }
 
+    // The cube change and its changelog are now durable and consistent. The blog
+    // post and follower feed are secondary — if they fail, the commit still stands.
+    try {
       if (useBlog) {
         const blogId = await blogDao.createBlog({
           body: blog,
@@ -150,7 +172,7 @@ export const commitHandler = async (req: Request, res: Response) => {
       req.logger.error(error.message, error.stack);
       return res.status(500).send({
         success: 'false',
-        message: `Changes applied succesfully, but encountered an error creating history/blog/feed items: ${error.message}\n${error.stack}`,
+        message: `Changes and history were saved, but creating the blog/feed post failed: ${error.message}\n${error.stack}`,
         updateApplied: true,
         version: newVersion,
       });

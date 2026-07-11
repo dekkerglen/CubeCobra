@@ -50,6 +50,8 @@ import {
   cardPopularity,
   cardCubeCount,
   cardPickCount,
+  cardEdhrecRank,
+  cardEdhrecSalt,
   cardArtist,
   cardLoyalty,
   cardRarity,
@@ -64,6 +66,8 @@ import {
   cardGamesEverAvailable,
   cardFirstPrintYear,
   cardKeywords,
+  cardOracleTags,
+  cardArtTags,
   cardBoard,
 } from '../../cardutil';
 %} # %}
@@ -112,6 +116,8 @@ condition -> (
   | popularityCondition
   | cubeCountCondition
   | pickCountCondition
+  | edhrecRankCondition
+  | saltCondition
   | nameCondition
   | manaCostCondition
   | castableCostCondition
@@ -125,6 +131,8 @@ condition -> (
   | gameCondition
   | firstYearCondition
   | keywordCondition
+  | otagCondition
+  | atagCondition
   | boardCondition
 ) {% ([[condition]]) => condition %}
 
@@ -188,6 +196,10 @@ cubeCountCondition -> ("cubes"i | "cubecount"i | "numcubes"i) integerOpValue {% 
 
 pickCountCondition -> ("picks"i | "pickcount"i | "numpicks"i) integerOpValue {% ([, valuePred]) => genericCondition('pickcount', cardPickCount, valuePred) %}
 
+edhrecRankCondition -> ("edhrec"i | "edhrecrank"i | "rank"i) integerOpValue {% ([, valuePred]) => genericCondition('edhrecRank', cardEdhrecRank, valuePred) %}
+
+saltCondition -> ("salt"i | "saltiness"i | "edhrecsalt"i) floatOpValue {% ([, valuePred]) => genericCondition('edhrecSalt', cardEdhrecSalt, valuePred) %}
+
 nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCondition('name_lower', cardNameLower, valuePred) %}
   | stringValue {% ([value]) => { const pred = (fieldValue) => fieldValue.includes(value.toLowerCase()); pred.describe = `contains "${value.toLowerCase()}"`; return genericCondition('name_lower', cardNameLower, pred); } %}
 
@@ -208,6 +220,10 @@ gameCondition -> "game"i gameOpValue {% ([, valuePred]) => genericCondition('gam
 firstYearCondition -> ("year"i | "firstyear"i | "fy"i) integerOpValue {% ([, valuePred]) => genericCondition('firstPrintYear', cardFirstPrintYear, valuePred) %}
 
 keywordCondition -> ("kw"i | "keyword"i | "keywords"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('keywords', cardKeywords, valuePred) %}
+
+otagCondition -> ("otag"i | "oracletag"i | "oracletags"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('otag', cardOracleTags, valuePred) %}
+
+atagCondition -> ("atag"i | "arttag"i | "arttags"i | "illustrationtag"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('atag', cardArtTags, valuePred) %}
 
 # board=mainboard, board=maybeboard, board=basics, or any custom-board key.
 # In non-cube contexts cardBoard() defaults to 'mainboard' so board=mainboard

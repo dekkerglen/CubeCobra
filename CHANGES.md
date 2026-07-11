@@ -2,6 +2,9 @@ The changes here are concise, one liners to be put in a future user facing blogp
 
 ## New Features
 
+- Modal double-faced cards (like spell // land cards) can now be added to your cube pre-flipped by their back face name, so you can feature the back as the primary side while still being able to see both faces.
+- Search and sort by Scryfall's community tags: use `otag:` to find cards by what they do (like `otag:removal` or `otag:ramp`) and `atag:` to find cards by what's in their artwork (like `atag:dragon`), and group your cube by Oracle Tags or Art Tags.
+- Search, sort, and group by EDHREC data: use `rank:` to filter by a card's play-rate rank (like `rank<=100` for the most-played cards) and `salt:` to filter by how salty a card is (like `salt>1.5`), and sort or group your cube by EDHREC Rank or Salt.
 - When editing a card, the version picker now previews each printing's image as you hover over it, and lets you filter a long list of printings by name — so you can find the exact art or set you want without looking up set codes elsewhere.
 - Added a Keywords analysis tab that lists every keyword in your cube with reminder text for what it does, a keyword word cloud, a color-weight breakdown, and a density-by-color heatmap so you can see which mechanics live in which colors.
 - Custom draft formats can now be exported to a JSON file and imported into any cube, so you can share a format with others or reuse it across your own cubes.
@@ -21,6 +24,7 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Import a whole event straight from a Hedron Network export — players, rounds, results, and deck photos all come in together.
 - Cube owners can now manually set a player's win/loss/draw record on an event when the logged matches don't capture it.
 - Add Artist to the CSV export of Cube cards and Tokens
+- Export a drafted deck as a Comma-Separated (.csv) file in the same format as a cube export, including card image links — so custom cards and alters keep their artwork when you reload the decklist elsewhere.
 - Download your card search results as a CSV, with name, cost, type, color, set, rarity, Elo, total picks, and cube count for every matching card.
 - Add tooltips to better describe what "Specify Versions" and "Include Extras" do in Cube Edit card search
 - Browse a new Sets page that lists every Magic set with its set symbol — sort by release date, name, or card count, and click through to see all of a set's cards.
@@ -46,9 +50,12 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Notifications of the same kind now collapse into one line — several drafts of the same cube, replies to the same post, or new followers show up as a single "There are 3 new drafts of My Cube" entry instead of cluttering your list.
 - While drafting, you can now turn your very first pack into a shareable Pack 1 Pick 1 with one click — no screenshot needed — and send it to friends to vote on your pick.
 - Card and group edit dialogs now have a "Restore to Default" button that resets a card's overridden type, mana value, rarity, color, color category, and images back to the printing's real values, leaving your status, tags, and notes untouched.
+- While drafting, you can now choose how many cards show per row in the pack, so you can make them larger and easier to read — handy on mobile where you can drop down to two or three per row.
+- The Edit Selected dialog now shows cents on combined prices under $10, so ultra-budget totals like $1.50 and $2.49 no longer both round to "$2".
 
 ## Bug Fixes
 
+- Shared cube links now show a clean plain-text description in social media previews instead of raw markdown symbols.
 - The Compare view now groups cards using your full sort settings instead of always grouping by mana value.
 - Browser back and forward buttons now restore the filters and sorts stored in the page URL.
 - Fixed bulk upload failing on single-column CSV exports and on card names containing commas, like "Adeline, Resplendent Cathar".
@@ -62,3 +69,5 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Fixed Pack height jumping between picks which was a janky UI.
 - Fixed Patreon membership changes not always syncing to your Cube Cobra supporter perks.
 - Fixed a bug where registration errors weren't surfaced to end users.
+- Foil versions of white-bordered cards now show a black border, matching how they actually print.
+- A cube edit and its change history entry are now saved together, so a save that gets interrupted can no longer leave your cube updated with a missing entry in its change history.

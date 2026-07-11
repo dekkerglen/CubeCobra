@@ -126,7 +126,7 @@ const CardSearch: React.FC = () => {
           }
         } else {
           const op = isNumField(name) ? advancedValues[`${name}Op`] || '=' : ':';
-          let value = (advancedValues[name] as string).replace('"', '\\"');
+          let value = (advancedValues[name] as string).replace(/"/g, '\\"');
           if (value.indexOf(' ') > -1) value = `"${value}"`;
           tokens.push(`${name}${op}${value}`);
         }

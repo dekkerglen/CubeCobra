@@ -5,7 +5,7 @@ import { cubeDao, draftDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { ensureAuth } from 'router/middleware';
 import { cardFromId, getIdsFromName, getMostReasonable } from 'serverutils/carddb';
-import { addBasics, createPool, exportToMtgo, getBasicsFromCube } from 'serverutils/cube';
+import { addBasics, createPool, CSV_HEADER, exportToMtgo, getBasicsFromCube, writeCard } from 'serverutils/cube';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -422,6 +422,58 @@ export const downloadTopdeckedHandler = async (req: Request, res: Response) => {
     }
     for (const [oracleId, value] of Object.entries(side)) {
       res.write(`${value},"${sideCardName[oracleId]}",${sideCardID[oracleId]},side\r\n`);
+    }
+
+    return res.end();
+  } catch (err) {
+    return handleRouteError(req, res, err as Error, '/404');
+  }
+};
+
+export const downloadCsvHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.params.id || !req.params.seat) {
+      req.flash('danger', 'Invalid deck or seat ID');
+      return redirect(req, res, '/404');
+    }
+
+    const deck = await draftDao.getById(req.params.id);
+    if (!deck) {
+      req.flash('danger', `Deck ID ${req.params.id} not found/`);
+      return redirect(req, res, '/404');
+    }
+
+    const seat = deck.seats[parseInt(req.params.seat, 10)];
+    if (!seat) {
+      req.flash('danger', 'Invalid seat');
+      return redirect(req, res, '/404');
+    }
+
+    const fileName = seat.name ? seat.name.replace(/\W/g, '') : `${req.params.id}_${req.params.seat}`;
+    res.setHeader('Content-disposition', `attachment; filename=${fileName}.csv`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+    res.write(`${CSV_HEADER}\r\n`);
+
+    // Emit one row per card, matching the cube CSV export format (including image
+    // overrides for custom cards and alters) so the deck round-trips as a cube import.
+    const boards: [string, number[][][]][] = [
+      ['mainboard', seat.mainboard],
+      ['sideboard', seat.sideboard],
+    ];
+    for (const [boardName, board] of boards) {
+      for (const row of board) {
+        for (const col of row) {
+          for (const cardIndex of col) {
+            const card = deck.cards[cardIndex];
+            if (!card) continue;
+            if (!card.details) {
+              card.details = cardFromId(card.cardID);
+            }
+            writeCard(res, card, boardName);
+          }
+        }
+      }
     }
 
     return res.end();
@@ -897,6 +949,11 @@ export const routes = [
     path: '/download/topdecked/:id/:seat',
     method: 'get',
     handler: [downloadTopdeckedHandler],
+  },
+  {
+    path: '/download/csv/:id/:seat',
+    method: 'get',
+    handler: [downloadCsvHandler],
   },
   {
     path: '/deletedeck/:id',

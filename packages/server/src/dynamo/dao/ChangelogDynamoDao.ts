@@ -5,7 +5,7 @@ import { cardFromId } from 'serverutils/carddb';
 import { v4 as uuidv4 } from 'uuid';
 
 import { getBucketName, getObject, putObject } from '../s3client';
-import { BaseDynamoDao } from './BaseDynamoDao';
+import { BaseDynamoDao, DynamoTransactItem } from './BaseDynamoDao';
 
 const CARD_LIMIT = 10000;
 
@@ -201,6 +201,7 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
     return {
       id: item.id,
       cube: item.cube,
+      cubeVersion: item.cubeVersion,
       date: item.date,
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
@@ -216,6 +217,7 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
     return {
       id: item.id,
       cube: item.cube,
+      cubeVersion: item.cubeVersion,
       date: item.date,
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
@@ -370,6 +372,45 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
 
     const earliestResult = await this.query(earliestParams);
     return earliestResult.items[0];
+  }
+
+  /**
+   * Writes the changelog body to S3 and returns the id plus a transaction item
+   * that inserts the metadata row — WITHOUT committing that row. The caller is
+   * responsible for committing the returned item (via a TransactWriteItems call)
+   * atomically with whatever state change the changelog records, so that a crash
+   * can never leave the state advanced with the history missing.
+   *
+   * The S3 body is keyed by a fresh id, so writing it before the transaction is
+   * harmless if the transaction never commits (it becomes an unreferenced orphan
+   * object, not corrupted history).
+   *
+   * @param changelog - The changes to record.
+   * @param cubeId - The cube these changes belong to.
+   * @param cubeVersion - The cube version this changelog produces.
+   * @returns The new changelog id and the DynamoDB transaction item for its metadata row.
+   */
+  public async prepareChangelog(
+    changelog: Changes,
+    cubeId: string,
+    cubeVersion: number,
+  ): Promise<{ id: string; transactItem: DynamoTransactItem }> {
+    const id = uuidv4();
+    const date = new Date().valueOf();
+
+    // Store the changelog data in S3 first (immutable, keyed by id).
+    await putObject(getBucketName(), `changelog/${cubeId}/${id}.json`, sanitizeChangelog(changelog));
+
+    const changelogItem: Changelog = {
+      id,
+      cube: cubeId,
+      cubeVersion,
+      date,
+      dateCreated: date,
+      dateLastUpdated: date,
+    };
+
+    return { id, transactItem: this.buildInsertTransactItem(changelogItem) };
   }
 
   /**
