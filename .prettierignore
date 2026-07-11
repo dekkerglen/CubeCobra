@@ -11,3 +11,6 @@ packages/recommenderService/private/**/*
 packages/utils/src/generated/**/*
 packages/server/public/css/stylesheet.css
 packages/annotator/**/*
+# Wiki content uses CubeCobra's custom Markdown extensions (>>> <<< centering, << >> cardrows).
+# Prettier rewrites >>> into nested blockquotes (> > >), which breaks the rendered examples.
+packages/server/content/wiki/**/*

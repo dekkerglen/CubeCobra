@@ -125,13 +125,13 @@ paragraphs can be centered too, and all other Markdown tags can be used inside a
 >>> This text is centered <<<
 ```
 
-> > > This text is centered <<<
+>>> This text is centered <<<
 
 ```
 >>> Centered Card: [[!Hexdrinker]] <<<
 ```
 
-> > > Centered Card: [[!Hexdrinker]] <<<
+>>> Centered Card: [[!Hexdrinker]] <<<
 
 ## Tables
 
