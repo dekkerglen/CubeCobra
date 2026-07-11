@@ -112,7 +112,10 @@ const HousmanDraftPage: React.FC<HousmanDraftPageProps> = ({ cube, initialDraft,
   }, [state.done, state.seats, csrfFetch, initialDraft.cube, initialDraft.id]);
 
   const humanPicks = useMemo(
-    () => state.seats[humanSeat]!.mainboard.map((row) => row.map((col) => col.map((cardIndex) => cards[cardIndex]!))),
+    () =>
+      state.seats[humanSeat]!.mainboard.map((row) =>
+        row.map((col) => col.map((cardIndex) => cards[cardIndex]).filter((c): c is NonNullable<typeof c> => c != null)),
+      ),
     [state.seats, humanSeat, cards],
   );
 

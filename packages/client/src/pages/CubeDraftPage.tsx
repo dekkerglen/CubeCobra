@@ -92,14 +92,17 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
   const expandPickForBoard = useCallback(
     (cardIndex: number): { cardIndex: number; row: number; col: number }[] => {
       const card = draft.cards[cardIndex];
-      if (!card) return [{ cardIndex, ...getCardDefaultRowColumn(card) }];
+      // getCardDefaultRowColumn dereferences the card, so never pass it a missing one.
+      if (!card) return [{ cardIndex, row: 1, col: 0 }];
 
       if (isVoucher(card) && card.voucher_card_indices && card.voucher_card_indices.length > 0) {
         // Use pre-expanded sub-card indices from draft creation
-        return card.voucher_card_indices.map((subCardIndex) => {
-          const subCard = draft.cards[subCardIndex];
-          return { cardIndex: subCardIndex, ...getCardDefaultRowColumn(subCard) };
-        });
+        return card.voucher_card_indices
+          .filter((subCardIndex) => draft.cards[subCardIndex])
+          .map((subCardIndex) => ({
+            cardIndex: subCardIndex,
+            ...getCardDefaultRowColumn(draft.cards[subCardIndex]),
+          }));
       }
 
       return [{ cardIndex, ...getCardDefaultRowColumn(card) }];
@@ -470,8 +473,14 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
     ],
   );
 
-  const mainboardCards = mainboard.map((row) => row.map((col) => col.map((index) => draft.cards[index])));
-  const sideboardCards = sideboard.map((row) => row.map((col) => col.map((index) => draft.cards[index])));
+  // Filter out any indices that don't resolve to a card so downstream renderers never
+  // read `.cardID` off undefined. Filtering within each pile preserves row/col positions.
+  const mainboardCards = mainboard.map((row) =>
+    row.map((col) => col.map((index) => draft.cards[index]).filter((c): c is NonNullable<typeof c> => c != null)),
+  );
+  const sideboardCards = sideboard.map((row) =>
+    row.map((col) => col.map((index) => draft.cards[index]).filter((c): c is NonNullable<typeof c> => c != null)),
+  );
 
   // Function to handle initial drag, sets in the right place and sets it as pending if necessary
   const dragPickCard = useCallback(

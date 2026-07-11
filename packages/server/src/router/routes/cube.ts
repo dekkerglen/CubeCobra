@@ -214,6 +214,9 @@ export const historyHandler = async (req: Request, res: Response) => {
 
 export const getMoreChangelogsHandler = async (req: Request, res: Response) => {
   const { lastKey, cubeId } = req.body;
+  if (!cubeId && !lastKey) {
+    return res.status(400).send({ success: 'false', message: 'cubeId is required' });
+  }
   const query = await changelogDao.queryByCubeWithData(cubeId, lastKey, 18);
 
   for (const entry of query.items) {

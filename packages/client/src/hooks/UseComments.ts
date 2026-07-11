@@ -19,6 +19,18 @@ interface CommentResponse {
   success: 'true';
 }
 
+// Guarded JSON parse: the server can return an empty body or an HTML error page
+// (rate-limit, 500, stale-deploy 404), and calling response.json() directly on
+// those throws "Unexpected end of JSON input" as an unhandled rejection.
+const parseJsonSafe = async <T,>(response: Response): Promise<T | null> => {
+  try {
+    const text = await response.text();
+    return text ? (JSON.parse(text) as T) : null;
+  } catch {
+    return null;
+  }
+};
+
 const useComments = (
   parent: string,
   type: string,
@@ -54,13 +66,15 @@ const useComments = (
       if (!response.ok) {
         console.error('Failed to add comment');
         console.log(response);
-        const json = await response.json();
+        const json = await parseJsonSafe(response);
         console.log(json);
         return;
       }
 
-      const val: { comment: Comment } = await response.json();
-      setComments([val.comment, ...comments]);
+      const val = await parseJsonSafe<{ comment: Comment }>(response);
+      if (val?.comment) {
+        setComments([val.comment, ...comments]);
+      }
     },
     [comments, parent, type, csrfFetch],
   );
@@ -115,9 +129,11 @@ const useComments = (
           parent,
         }),
       });
-      const result: CommentResponse = await response.json();
-      setComments(result.comments);
-      setLastKey(result.lastKey);
+      const result = await parseJsonSafe<CommentResponse>(response);
+      if (result) {
+        setComments(result.comments);
+        setLastKey(result.lastKey);
+      }
       setLoading(false);
     };
 
@@ -141,13 +157,13 @@ const useComments = (
     });
 
     if (response.ok) {
-      const json: CommentResponse = await response.json();
-      if (json.success === 'true') {
+      const json = await parseJsonSafe<CommentResponse>(response);
+      if (json?.success === 'true') {
         setComments([...comments, ...json.comments]);
         setLastKey(json.lastKey);
-        setLoading(false);
       }
     }
+    setLoading(false);
   }, [parent, lastKey, comments, csrfFetch]);
 
   return [comments, addComment, loading, editComment, lastKey, getMore];

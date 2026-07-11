@@ -106,7 +106,7 @@ export const playtestDataHandler = async (req: Request, res: Response) => {
       for (const draft of drafts) {
         // Only real bot/human drafts can be reconstructed pick-by-pick.
         if (draft.type !== DRAFT_TYPES.DRAFT) continue;
-        if (!draft.InitialState || draft.InitialState.length === 0) continue;
+        if (!Array.isArray(draft.InitialState) || draft.InitialState.length === 0) continue;
         if (!draft.seats || !draft.cards) continue;
 
         const seatIndex = humanSeatIndex(draft);

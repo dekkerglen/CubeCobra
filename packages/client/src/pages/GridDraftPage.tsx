@@ -39,7 +39,9 @@ const MUTATIONS = {
     }
     newGridDraft.seats[seatIndex].pickedIndices?.push(...cardIndices.map(([, x]) => x));
     for (const [cardIndex] of cardIndices) {
-      const pos = getDefaultPosition(newGridDraft.cards[cardIndex], newGridDraft.seats[seatIndex].mainboard);
+      const card = newGridDraft.cards[cardIndex];
+      if (!card) continue;
+      const pos = getDefaultPosition(card, newGridDraft.seats[seatIndex].mainboard);
       const location = DraftLocation.deck(pos[0], pos[1], pos[2]);
       newGridDraft.seats[seatIndex].mainboard = addCard(newGridDraft.seats[seatIndex].mainboard, location, cardIndex);
     }

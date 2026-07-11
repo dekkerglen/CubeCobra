@@ -43,7 +43,13 @@ const PodcastEpisodePage: React.FC<PodcastEpisodePageProps> = ({ episode }) => {
           </Col>
           <Col xs={12} sm={8} className="border-start ps-0">
             <CardBody>
-              <ReactAudioPlayer src={episode.url} controls className="w-full" />
+              <ReactAudioPlayer
+                src={episode.url}
+                controls
+                className="w-full"
+                // Swallow media aborts/decode failures so they don't surface as unhandled rejections.
+                onError={() => {}}
+              />
             </CardBody>
             <CardBody className="border-top">
               <div dangerouslySetInnerHTML={{ __html: episode.body || '' }} />

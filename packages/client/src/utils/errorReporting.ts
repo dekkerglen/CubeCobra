@@ -69,7 +69,7 @@ const THIRD_PARTY_RE =
 // "Unexpected token '<'" is a stale-tab artifact: after a deploy an old chunk path
 // 404s, the server returns the HTML 404 page, and the browser parses `<` as JS.
 const IGNORED_MESSAGE_RE =
-  /^(Load failed|Failed to fetch|NetworkError when attempting to fetch|Fetch is aborted|The user aborted|The operation was aborted|AbortError|status -> 0|The I\/O read operation failed|NotReadableError|Loading chunk \d+ failed|The play\(\) request was interrupted|(Uncaught )?(SyntaxError: )?(Unexpected token '<'|expected expression, got '<'))/i;
+  /^(Load failed|Failed to fetch|NetworkError when attempting to fetch|Fetch is aborted|The user aborted|The operation was aborted|AbortError|signal is aborted without reason|status -> 0|The I\/O read operation failed|NotReadableError|Loading chunk \d+ failed|The play\(\) request was interrupted|The fetching process for the media resource was aborted|Media resource .* could not be decoded|(Uncaught )?(SyntaxError: )?(Unexpected token '<'|expected expression, got '<'))/i;
 
 // Headless/automation browsers stub out canvas/audio and generate spurious errors.
 const BOT_UA_RE = /Lightpanda|HeadlessChrome|PhantomJS|puppeteer|bot\b|crawler|spider/i;
@@ -121,7 +121,12 @@ const shouldIgnore = (payload: ClientErrorPayload): boolean => {
   // `Ti@` — still third-party, so we only keep these if the stack points at our code.)
   if (
     payload.kind === 'unhandledrejection' &&
-    (msg === 'Unhandled promise rejection' || msg === '{}' || msg === '[object Object]') &&
+    (msg === 'Unhandled promise rejection' ||
+      msg === '{}' ||
+      msg === '[object Object]' ||
+      // Media elements reject with a bare Event (serialized as `{"isTrusted":true}`)
+      // when playback is aborted/interrupted — expected, not a bug.
+      /^\{"isTrusted":(true|false)\}$/.test(msg)) &&
     !referencesFirstParty(stack)
   ) {
     return true;

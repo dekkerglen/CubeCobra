@@ -129,8 +129,10 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pool: [...mainboard.flat(3), ...sideboard.flat(3)].map((index) => cards[index].details),
-          basics: basics.map((index) => cards[index].details),
+          pool: [...mainboard.flat(3), ...sideboard.flat(3)]
+            .map((index) => cards[index]?.details)
+            .filter((d): d is NonNullable<typeof d> => d != null),
+          basics: basics.map((index) => cards[index]?.details).filter((d): d is NonNullable<typeof d> => d != null),
           maxSpells,
           maxLands,
         }),

@@ -190,7 +190,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       cards: cardsWithDetails,
       seats: seatsData.seats || [],
       basics: seatsData.basics || [],
-      InitialState: seatsData.InitialState || {},
+      InitialState: seatsData.InitialState || [],
       DraftmancerLog: item.DraftmancerLog,
       HousmanLog: seatsData.HousmanLog,
       botDecksPending: item.botDecksPending,
@@ -233,7 +233,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
           cards: this.addDetails(cards),
           seats: seatsData.seats || [],
           basics: seatsData.basics || [],
-          InitialState: seatsData.InitialState || {},
+          InitialState: seatsData.InitialState || [],
           HousmanLog: seatsData.HousmanLog,
         };
       }),
@@ -1034,9 +1034,9 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   ): Promise<{ seats: DraftSeat[]; basics: number[]; InitialState: any; HousmanLog?: HousmanLogEntry[] }> {
     try {
       const data = await getObject(process.env.DATA_BUCKET!, `seats/${id}.json`);
-      return data || { seats: [], basics: [], InitialState: {} };
+      return data || { seats: [], basics: [], InitialState: [] };
     } catch {
-      return { seats: [], basics: [], InitialState: {} };
+      return { seats: [], basics: [], InitialState: [] };
     }
   }
 
