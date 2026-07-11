@@ -476,10 +476,14 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
   // Filter out any indices that don't resolve to a card so downstream renderers never
   // read `.cardID` off undefined. Filtering within each pile preserves row/col positions.
   const mainboardCards = mainboard.map((row) =>
-    row.map((col) => col.map((index) => draft.cards[index]).filter((c): c is NonNullable<typeof c> => c != null)),
+    row.map((col) =>
+      col.map((index) => draft.cards[index]).filter((c): c is NonNullable<typeof c> => c !== null && c !== undefined),
+    ),
   );
   const sideboardCards = sideboard.map((row) =>
-    row.map((col) => col.map((index) => draft.cards[index]).filter((c): c is NonNullable<typeof c> => c != null)),
+    row.map((col) =>
+      col.map((index) => draft.cards[index]).filter((c): c is NonNullable<typeof c> => c !== null && c !== undefined),
+    ),
   );
 
   // Function to handle initial drag, sets in the right place and sets it as pending if necessary

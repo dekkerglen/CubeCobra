@@ -75,7 +75,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     [openCardToolWindow],
   );
 
-  const effectiveTagColors = user && user.hideTagColors ? [] : tagColors;
+  const effectiveTagColors = useMemo(() => (user && user.hideTagColors ? [] : tagColors), [user, tagColors]);
   const colorClassname = useMemo(() => getCardTagColorClass(effectiveTagColors, card), [card, effectiveTagColors]);
   // Custom hex tag colors are applied inline since they have no predefined bg-card class.
   const tagColorStyle = useMemo(() => getCardTagColorStyle(effectiveTagColors, card), [card, effectiveTagColors]);

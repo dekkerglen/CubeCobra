@@ -109,12 +109,16 @@ const HousmanDraftPage: React.FC<HousmanDraftPageProps> = ({ cube, initialDraft,
       trackEvent('draft_complete', { type: 'housman' });
       submitDeckForm.current?.submit?.();
     })();
-  }, [state.done, state.seats, csrfFetch, initialDraft.cube, initialDraft.id]);
+  }, [state.done, state.seats, state.log, csrfFetch, initialDraft.cube, initialDraft.id]);
 
   const humanPicks = useMemo(
     () =>
       state.seats[humanSeat]!.mainboard.map((row) =>
-        row.map((col) => col.map((cardIndex) => cards[cardIndex]).filter((c): c is NonNullable<typeof c> => c != null)),
+        row.map((col) =>
+          col
+            .map((cardIndex) => cards[cardIndex])
+            .filter((c): c is NonNullable<typeof c> => c !== null && c !== undefined),
+        ),
       ),
     [state.seats, humanSeat, cards],
   );

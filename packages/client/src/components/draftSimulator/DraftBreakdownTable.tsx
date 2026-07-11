@@ -344,8 +344,6 @@ const DraftBreakdownTable: React.FC<{
   pools,
   deckBuilds,
   cardMeta,
-  runData,
-  skeletons,
   highlightOracle,
   showLocationFilter = false,
   focusedPoolIndex = null,

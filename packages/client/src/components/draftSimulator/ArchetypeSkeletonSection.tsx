@@ -109,7 +109,7 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
       return b.poolCount - a.poolCount;
     });
 
-  const renderSkeleton = (skeleton: ArchetypeSkeleton, skIdx: number) => {
+  const renderSkeleton = (skeleton: ArchetypeSkeleton) => {
     // Compute dominant Gwen archetype label for this cluster
     const dominantArchetype = (() => {
       if (!poolArchetypeLabels) return null;

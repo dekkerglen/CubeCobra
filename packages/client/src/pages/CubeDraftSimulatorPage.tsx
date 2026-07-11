@@ -1,7 +1,6 @@
 /* eslint-disable camelcase, no-plusplus, no-restricted-syntax */
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { isManaFixingLand } from '@utils/cardutil';
 import type { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import {
@@ -12,33 +11,29 @@ import {
   CardStats,
   SimulatedPool,
   SimulationReport,
-  SimulationRunData,
   SimulationRunEntry,
   SimulationSetupResponse,
   SlimPool,
 } from '@utils/datatypes/SimulationReport';
 import { getCubeId } from '@utils/Util';
-import Button from '../components/base/Button';
 import { Card, CardBody, CardHeader } from '../components/base/Card';
 import Collapse from '../components/base/Collapse';
 import Input from '../components/base/Input';
-import { Col, Flexbox, Row } from '../components/base/Layout';
+import { Flexbox } from '../components/base/Layout';
 import Link from '../components/base/Link';
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
-import DraftSimulatorFilterBar, { type FilterChipItem } from '../components/draftSimulator/DraftSimulatorFilterBar';
-import { type DraftMapColorMode, type DraftMapPoint } from '../components/draftSimulator/DraftMapScatter';
+import DraftSimulatorFilterBar from '../components/draftSimulator/DraftSimulatorFilterBar';
+import { type DraftMapColorMode } from '../components/draftSimulator/DraftMapScatter';
 import {
   ClearSimulationHistoryModal,
   LeaveSimulationModal,
   PriorRunDeleteModal,
 } from '../components/draftSimulator/DraftSimulatorModals';
 import { PoolInspectionModal } from '../components/draftSimulator/PoolExpansionContent';
-import DraftBreakdownTable, { buildDraftBreakdownRowSummary } from '../components/draftSimulator/DraftBreakdownTable';
-import ArchetypeSkeletonSection from '../components/draftSimulator/ArchetypeSkeletonSection';
+import { buildDraftBreakdownRowSummary } from '../components/draftSimulator/DraftBreakdownTable';
 import ClusterDetailPanel from '../components/draftSimulator/ClusterDetailPanel';
-import ColorProfileDetailPanel from '../components/draftSimulator/ColorProfileDetailPanel';
-import DraftMapCard, { computeDraftMapPoints, DraftMapScopePanel } from '../components/draftSimulator/DraftMapCard';
+import DraftMapCard, { computeDraftMapPoints } from '../components/draftSimulator/DraftMapCard';
 import DraftSimulatorBottomSection from '../components/draftSimulator/DraftSimulatorBottomSection';
 import {
   DraftSimulatorDesktopView,
@@ -46,8 +41,6 @@ import {
   DraftSimulatorOverviewSection,
 } from '../components/draftSimulator/DraftSimulatorResultsViews';
 import DynamicFlash from '../components/DynamicFlash';
-import DraftBreakdownDisplay from '../components/draft/DraftBreakdownDisplay';
-import ConfirmDeleteModal from '../components/modals/ConfirmDeleteModal';
 import RenderToRoot from '../components/RenderToRoot';
 import withAutocard from '../components/WithAutocard';
 import { CSRFContext } from '../contexts/CSRFContext';
@@ -69,13 +62,10 @@ import MainLayout from '../layouts/MainLayout';
 import {
   buildOracleRemapping,
   DeckbuildEntry,
-  loadDraftRecommender,
   localBatchDeckbuild,
   localPickBatch,
-  localRecommend,
   WebGLInferenceError,
 } from '../utils/draftBot';
-import { buildClusterRecommendationInput } from '../utils/draftSimulatorClustering';
 import { prefetchClientSimulationResources } from '../utils/draftSimulatorSetup';
 import {
   archetypeFullName,
@@ -86,12 +76,7 @@ import {
 } from '../utils/draftSimulatorThemes';
 import { computeFilteredCardStats } from '../utils/draftSimulatorStats';
 import { OTAG_BUCKET_MAP } from '../utils/otagBucketMap';
-import {
-  COLOR_KEYS,
-  getDeckShareColors,
-  MTG_COLORS,
-  normalizeColorOrder,
-} from '../components/draftSimulator/SimulatorCharts';
+import { COLOR_KEYS, getDeckShareColors, normalizeColorOrder } from '../components/draftSimulator/SimulatorCharts';
 
 interface RawStats {
   name: string;
@@ -210,40 +195,6 @@ const NumericInput: React.FC<{
   );
 };
 
-function getOverallSimProgress(
-  simPhase: 'setup' | 'loadmodel' | 'sim' | 'deckbuild' | 'save' | null,
-  modelLoadProgress: number,
-  simProgress: number,
-): number {
-  switch (simPhase) {
-    case 'setup':
-      return 5;
-    case 'loadmodel':
-      return 5 + Math.round((modelLoadProgress / 100) * 15);
-    case 'sim':
-      return 20 + Math.round((simProgress / 100) * 70);
-    case 'deckbuild':
-      return 93;
-    case 'save':
-      return 98;
-    default:
-      return 0;
-  }
-}
-
-const SIM_PREVIEW_CARD_W = 140;
-const SIM_CLUSTER_CARD_W = 165;
-
-function formatDuration(ms: number): string {
-  if (ms < 1000) return `${Math.round(ms)} ms`;
-  return `${(ms / 1000).toFixed(ms >= 10_000 ? 0 : 1)} s`;
-}
-
-function getColorProfileCodes(colorPair: string): string[] {
-  const letters = colorPair.split('').filter((c) => c in MTG_COLORS && c !== 'C' && c !== 'M');
-  return letters.length === 0 ? ['C'] : letters;
-}
-
 /** Recomputes a skeleton's color profile from actual mainboard deck builds (WUBRG order).
  *  Uses a relative threshold: a color must reach ≥33% of the dominant color's share
  *  to be considered a "main" color. This handles both pure 2-color decks and genuine
@@ -293,14 +244,6 @@ function getSkeletonDisplayName(
   return archetypeFullName(colorProfile);
 }
 
-function getColorProfileGradient(colorPair: string): string {
-  const colors = getColorProfileCodes(colorPair).map((code) => MTG_COLORS[code]?.bg ?? MTG_COLORS.C!.bg);
-  if (colors.length === 1) return colors[0]!;
-  return `linear-gradient(90deg, ${colors.map((color, index) => `${color} ${(index / (colors.length - 1)) * 100}%`).join(', ')})`;
-}
-
-// Number of lock-pair candidates to check in the filter preview (O(k²) so keep small)
-const LOCK_CANDIDATE_LIMIT = 12;
 const GPU_BATCH_OPTIONS = [
   { value: '4', label: '4 - mobile (iPhone)' },
   { value: '8', label: '8 - mobile (high-end)' },
@@ -592,351 +535,7 @@ async function runClientSimulation(
   };
 }
 
-const COLOR_KEYS_WITH_C = [...COLOR_KEYS, 'C'] as const;
-
 type PoolViewMode = 'pool' | 'deck' | 'fullPickOrder';
-type DeckLocationFilter = 'all' | 'deck' | 'sideboard';
-
-const ArchetypeChart: React.FC<{
-  archetypeDistribution: ArchetypeEntry[];
-  selectedArchetype: string | null;
-  onSelect: (colorPair: string | null) => void;
-  topArchetypesByColor?: Map<string, string[]>;
-}> = ({ archetypeDistribution, selectedArchetype, onSelect, topArchetypesByColor }) => {
-  const maxCount = Math.max(...archetypeDistribution.map((e) => e.count), 1);
-
-  const renderEntry = (entry: ArchetypeEntry) => {
-    const colorCodes = getColorProfileCodes(entry.colorPair);
-    const isSelected = entry.colorPair === selectedArchetype;
-    const pct = maxCount > 0 ? (entry.count / maxCount) * 100 : 0;
-
-    return (
-      <button
-        key={entry.colorPair}
-        type="button"
-        onClick={() => onSelect(isSelected ? null : entry.colorPair)}
-        className={[
-          'w-full text-left rounded border transition-all',
-          'px-3 py-3',
-          isSelected
-            ? 'border-link-active ring-1 ring-link-active bg-bg-active'
-            : 'border-transparent hover:border-border hover:bg-bg-accent',
-        ].join(' ')}
-        style={isSelected ? { boxShadow: 'inset 0 0 0 1px rgb(var(--link-active) / 0.08)' } : undefined}
-      >
-        <div className="flex items-center justify-between gap-4 mb-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <div className="flex items-center gap-1 flex-shrink-0">
-              {colorCodes.map((code) => (
-                <span
-                  key={code}
-                  className="inline-block rounded-full"
-                  style={{
-                    width: 14,
-                    height: 14,
-                    background: MTG_COLORS[code]?.bg ?? MTG_COLORS.C!.bg,
-                    boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.55), 0 0 0 1px rgba(15, 23, 42, 0.08)',
-                  }}
-                />
-              ))}
-            </div>
-            <span className="text-sm font-semibold truncate">{archetypeFullName(entry.colorPair)}</span>
-          </div>
-          <div className="flex items-baseline gap-2 flex-shrink-0">
-            <span className="text-sm font-bold text-text">{entry.count}</span>
-            <span className="text-xs font-semibold text-text-secondary">{(entry.percentage * 100).toFixed(1)}%</span>
-          </div>
-        </div>
-        <div className="rounded-full overflow-hidden" style={{ height: 10, background: 'rgb(var(--bg-accent) / 1)' }}>
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: `${pct}%`,
-              background: getColorProfileGradient(entry.colorPair),
-            }}
-          />
-        </div>
-        {topArchetypesByColor?.get(entry.colorPair)?.length ? (
-          <div className="mt-1.5 flex flex-wrap gap-1">
-            {topArchetypesByColor.get(entry.colorPair)!.map((label) => (
-              <span
-                key={label}
-                className="text-xs text-text-secondary bg-bg-accent border border-border/60 rounded px-2 py-1"
-              >
-                {label}
-              </span>
-            ))}
-          </div>
-        ) : null}
-      </button>
-    );
-  };
-
-  return <div className="flex flex-col gap-2">{archetypeDistribution.map(renderEntry)}</div>;
-};
-
-type SortKey = keyof CardStats | 'deckInclusion' | 'openerTakeRate';
-const CardStatsTable: React.FC<{
-  cardStats: CardStats[];
-  cardMeta?: Record<string, CardMeta>;
-  onSelectCard: (id: string) => void;
-  selectedCardOracles: string[];
-  inDeckOracles: Set<string> | null;
-  inSideboardOracles: Set<string> | null;
-  deckInclusionPct: Map<string, number>;
-  visiblePoolCounts: Map<string, number>;
-  onPageChange?: () => void;
-}> = ({
-  cardStats,
-  cardMeta: cardMetaProp,
-  onSelectCard,
-  selectedCardOracles,
-  inDeckOracles,
-  inSideboardOracles,
-  deckInclusionPct,
-  visiblePoolCounts,
-  onPageChange,
-}) => {
-  const PAGE_SIZE = 20;
-  const defaultSortDir = (key: SortKey): 'asc' | 'desc' =>
-    key === 'name' || key === 'avgPickPosition' ? 'asc' : 'desc';
-  const [sortKey, setSortKey] = useState<SortKey>('avgPickPosition');
-  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
-  const [filter, setFilter] = useState('');
-  const [locationFilter, setLocationFilter] = useState<DeckLocationFilter>('all');
-  const [page, setPage] = useState(1);
-  const handleSort = (key: SortKey) => {
-    if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    else {
-      setSortKey(key);
-      setSortDir(defaultSortDir(key));
-    }
-  };
-  const filtered = cardStats.filter((c) => {
-    if (!c.name.toLowerCase().includes(filter.toLowerCase())) return false;
-    if (locationFilter === 'deck' && inDeckOracles && !inDeckOracles.has(c.oracle_id)) return false;
-    if (locationFilter === 'sideboard' && inSideboardOracles && !inSideboardOracles.has(c.oracle_id)) return false;
-    return true;
-  });
-  const sorted = [...filtered].sort((a, b) => {
-    let av: number | string, bv: number | string;
-    if (sortKey === 'deckInclusion') {
-      av = deckInclusionPct.get(a.oracle_id) ?? 0;
-      bv = deckInclusionPct.get(b.oracle_id) ?? 0;
-    } else if (sortKey === 'openerTakeRate') {
-      av = a.p1p1Seen > 0 ? a.p1p1Count / a.p1p1Seen : 0;
-      bv = b.p1p1Seen > 0 ? b.p1p1Count / b.p1p1Seen : 0;
-    } else if (sortKey === 'avgPickPosition') {
-      av = a.avgPickPosition > 0 ? a.avgPickPosition : Number.POSITIVE_INFINITY;
-      bv = b.avgPickPosition > 0 ? b.avgPickPosition : Number.POSITIVE_INFINITY;
-    } else {
-      av = a[sortKey] as number | string;
-      bv = b[sortKey] as number | string;
-    }
-    const cmp = typeof av === 'number' && typeof bv === 'number' ? av - bv : String(av).localeCompare(String(bv));
-    return sortDir === 'asc' ? cmp : -cmp;
-  });
-  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-  const currentPage = Math.min(page, totalPages);
-  const pagedRows = sorted.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
-  useEffect(() => {
-    setPage(1);
-  }, [filter, locationFilter, sortKey, sortDir, cardStats]);
-  useEffect(() => {
-    if (page > totalPages) setPage(totalPages);
-  }, [page, totalPages]);
-  const numericSortCols = new Set<SortKey>([
-    'elo',
-    'timesSeen',
-    'timesPicked',
-    'pickRate',
-    'avgPickPosition',
-    'wheelCount',
-    'p1p1Count',
-    'p1p1Seen',
-    'deckInclusion',
-    'openerTakeRate',
-  ]);
-  const renderSortHeader = (label: string, col: SortKey, tooltip?: string) => (
-    <th
-      className={[
-        'px-3 py-2 text-xs font-medium uppercase tracking-wider whitespace-nowrap',
-        numericSortCols.has(col) ? 'text-right' : 'text-left',
-      ].join(' ')}
-      aria-sort={sortKey === col ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none'}
-      scope="col"
-    >
-      <button
-        type="button"
-        className={[
-          'w-full select-none rounded px-1 py-0.5 hover:bg-bg-active focus:outline-none focus:ring-2 focus:ring-link',
-          numericSortCols.has(col) ? 'text-right' : 'text-left',
-        ].join(' ')}
-        title={tooltip}
-        aria-label={tooltip ? `${label}. ${tooltip}` : `Sort by ${label}`}
-        onClick={() => handleSort(col)}
-      >
-        {label}
-        {tooltip ? ' ?' : ''}
-        {sortKey === col ? (sortDir === 'asc' ? ' ↑' : ' ↓') : ''}
-      </button>
-    </th>
-  );
-  return (
-    <Flexbox direction="col" gap="2">
-      <Flexbox direction="row" gap="3" alignItems="center" className="flex-wrap">
-        <div className="relative max-w-xs flex items-center">
-          <Input
-            type="text"
-            placeholder="Filter by card name…"
-            value={filter}
-            onChange={(e: React.ChangeEvent<HTMLInputElement>) => setFilter(e.target.value)}
-            className="w-full pr-7"
-          />
-          {filter && (
-            <button
-              type="button"
-              onClick={() => setFilter('')}
-              aria-label="Clear card name filter"
-              className="absolute right-2 text-text-secondary hover:text-text text-sm leading-none"
-            >
-              ✕
-            </button>
-          )}
-        </div>
-        {inDeckOracles && (
-          <Flexbox direction="row" gap="1">
-            {(['all', 'deck', 'sideboard'] as const).map((v) => (
-              <button
-                key={v}
-                type="button"
-                onClick={() => setLocationFilter(v)}
-                className={[
-                  'px-2 py-0.5 rounded text-xs font-medium border',
-                  locationFilter === v
-                    ? 'bg-link text-white border-link'
-                    : 'bg-bg text-text-secondary border-border hover:bg-bg-active',
-                ].join(' ')}
-              >
-                {v === 'all' ? 'All cards' : v === 'deck' ? 'In deck' : 'In sideboard'}
-              </button>
-            ))}
-          </Flexbox>
-        )}
-      </Flexbox>
-      <div className="overflow-x-auto rounded border border-border bg-bg">
-        <table className="min-w-full divide-y divide-border text-sm">
-          <thead className="bg-bg-accent">
-            <tr>
-              {renderSortHeader('Card', 'name')}
-              {renderSortHeader('Elo', 'elo')}
-              {renderSortHeader('Seen', 'timesSeen', 'Times this card appeared in a live pack during the draft')}
-              {renderSortHeader('Picked', 'timesPicked')}
-              {renderSortHeader('Pick Rate', 'pickRate', 'When this card was seen in a pack, how often it was drafted')}
-              {renderSortHeader('Avg Pick', 'avgPickPosition')}
-              {renderSortHeader(
-                'Wheels',
-                'wheelCount',
-                'Times this card was drafted after the pack went all the way around the table (position > seats)',
-              )}
-              {renderSortHeader('P1P1', 'p1p1Count', 'Times this card was taken as the very first pick of pack 1')}
-              {renderSortHeader(
-                'Taken P1P1 %',
-                'openerTakeRate',
-                'Of opening packs in pack 1 that contained this card, how often it was the pick',
-              )}
-              {renderSortHeader(
-                'Deck %',
-                'deckInclusion',
-                'Of decks that drafted this card, how often it made the main deck vs. sideboard',
-              )}
-              <th className="px-3 py-2 text-right text-xs font-medium uppercase tracking-wider">Filter</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-border">
-            {pagedRows.map((c) => {
-              const inclPct = deckInclusionPct.get(c.oracle_id);
-              const isFilteredCard = selectedCardOracles.includes(c.oracle_id);
-              const visiblePoolCount = visiblePoolCounts.get(c.oracle_id) ?? c.poolIndices.length;
-              const openerTakeRate = c.p1p1Seen > 0 ? c.p1p1Count / c.p1p1Seen : 0;
-              return (
-                <tr key={c.oracle_id} className={isFilteredCard ? 'bg-bg-active' : 'hover:bg-bg-active'}>
-                  <td className="px-3 py-2 font-medium">
-                    {renderAutocardNameLink(c.oracle_id, c.name, cardMetaProp?.[c.oracle_id]?.imageUrl)}
-                  </td>
-                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{Math.round(c.elo)}</td>
-                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesSeen}</td>
-                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.timesPicked}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{(c.pickRate * 100).toFixed(1)}%</td>
-                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">
-                    {c.avgPickPosition > 0 ? c.avgPickPosition.toFixed(1) : '—'}
-                  </td>
-                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.wheelCount}</td>
-                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">{c.p1p1Count}</td>
-                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">
-                    {c.p1p1Seen > 0 ? `${(openerTakeRate * 100).toFixed(1)}%` : '—'}
-                  </td>
-                  <td className="px-3 py-2 text-text-secondary text-right tabular-nums">
-                    {inclPct !== undefined ? `${(inclPct * 100).toFixed(1)}%` : '—'}
-                  </td>
-                  <td className="px-3 py-2 text-right">
-                    <button
-                      type="button"
-                      className={[
-                        'px-2 py-0.5 rounded text-xs font-medium border',
-                        isFilteredCard
-                          ? 'bg-link text-white border-link'
-                          : 'bg-link/10 text-link border-link/30 hover:bg-link/20',
-                      ].join(' ')}
-                      onClick={() => onSelectCard(c.oracle_id)}
-                    >
-                      {isFilteredCard ? (
-                        <>
-                          ✕ <span className="tabular-nums">{visiblePoolCount}</span>
-                        </>
-                      ) : (
-                        <span className="tabular-nums">{visiblePoolCount}</span>
-                      )}
-                    </button>
-                  </td>
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </div>
-      <Flexbox direction="row" justify="between" alignItems="center" className="flex-wrap gap-2 pt-1">
-        <Text xs className="text-text-secondary">
-          Page {currentPage} / {totalPages}
-        </Text>
-        <Flexbox direction="row" gap="2" alignItems="center">
-          <button
-            type="button"
-            onClick={() => {
-              setPage((p) => Math.max(1, p - 1));
-              onPageChange?.();
-            }}
-            disabled={currentPage === 1}
-            className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Previous
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setPage((p) => Math.min(totalPages, p + 1));
-              onPageChange?.();
-            }}
-            disabled={currentPage === totalPages}
-            className="px-2 py-0.5 rounded text-xs font-medium border bg-bg text-text-secondary border-border hover:bg-bg-active disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Next
-          </button>
-        </Flexbox>
-      </Flexbox>
-    </Flexbox>
-  );
-};
 
 // ---------------------------------------------------------------------------
 // Page component
@@ -987,12 +586,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
   // Section collapse state (default open)
   const [overviewOpen, setOverviewOpen] = useState(true);
-  const [detailedViewOpen, setDetailedViewOpen] = useState(true);
-  const [draftBreakdownOpen, setDraftBreakdownOpen] = useState(true);
-  const [referenceOpen, setReferenceOpen] = useState(true);
-  const [archetypesOpen, setArchetypesOpen] = useState(true);
-  const [deckColorOpen, setDeckColorOpen] = useState(true);
-  const [cardStatsOpen, setCardStatsOpen] = useState(true);
+  const [, setDraftBreakdownOpen] = useState(true);
   const [bottomTab, setBottomTab] = useState<DraftSimulatorBottomTab>('archetypes');
   const [pairingsExcludeLands, setPairingsExcludeLands] = useState(true);
   const [excludeManaFixingLands, setExcludeManaFixingLands] = useState(true);
@@ -1109,10 +703,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const {
     status,
     simPhase,
-    modelLoadProgress,
-    simProgress,
     errorMsg,
-    simAbortRef,
     isRunning,
     overallSimProgress,
     leaveModalOpen,
@@ -1146,16 +737,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
       archetype: assessDeckColors(activeDecks[idx]?.mainboard ?? [], displayRunData.cardMeta),
     }));
   }, [displayRunData, activeDecks, simulatedPools]);
-  const displayedArchetypeDistribution = useMemo(() => {
-    if (!displayRunData) return [];
-    if (!activeDecks || activeDecks.length !== simulatedPools.length) return displayRunData.archetypeDistribution;
-    const counts = new Map<string, number>();
-    for (const pool of displayedPools) counts.set(pool.archetype, (counts.get(pool.archetype) ?? 0) + 1);
-    const totalPools = displayedPools.length || 1;
-    return [...counts.entries()]
-      .map(([colorPair, count]) => ({ colorPair, count, percentage: count / totalPools }))
-      .sort((a, b) => b.count - a.count);
-  }, [displayRunData, activeDecks, simulatedPools.length, displayedPools]);
   const cubeOracleSet = useMemo(() => new Set(Object.keys(displayRunData?.cardMeta ?? {})), [displayRunData?.cardMeta]);
   const {
     pendingKnnK,
@@ -1394,11 +975,6 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   }, [poolArchetypeLabels, scopedPools]);
   const {
     selectedPools,
-    focusedPool,
-    focusedDeck,
-    focusedDeckAvailable,
-    focusedFullPickOrderAvailable,
-    effectiveFocusedPoolViewMode,
     showDraftMapScopePanel,
     mapPanelHasBoth,
     draftMapScopeSeatCount,
@@ -1660,7 +1236,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   const resultsMobileArchetypesNode: React.ReactNode = null;
 
   const resultsOovWarningNode: React.ReactNode =
-    oovWarningPct != null && oovWarningPct > 0.05 ? (
+    oovWarningPct !== null && oovWarningPct > 0.05 ? (
       <Card className="border-yellow-700">
         <CardBody>
           <Text sm className="text-yellow-300">

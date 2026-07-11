@@ -117,7 +117,7 @@ const AdminDeckbuildPage: React.FC<AdminDeckbuildPageProps> = ({ defaultWindow, 
   const backlogEmphasis = summary && summary.backlog > 0 ? 'warn' : undefined;
   const dlqEmphasis = summary && summary.dlqDepth > 0 ? 'bad' : undefined;
   const successEmphasis =
-    summary?.successRate == null
+    summary?.successRate === null || summary?.successRate === undefined
       ? undefined
       : summary.successRate >= 0.99
         ? 'good'
@@ -165,7 +165,11 @@ const AdminDeckbuildPage: React.FC<AdminDeckbuildPageProps> = ({ defaultWindow, 
                     <Col xs={6} md={3}>
                       <Stat
                         label="Success rate"
-                        value={summary.successRate == null ? '—' : `${(summary.successRate * 100).toFixed(1)}%`}
+                        value={
+                          summary.successRate === null || summary.successRate === undefined
+                            ? '—'
+                            : `${(summary.successRate * 100).toFixed(1)}%`
+                        }
                         emphasis={successEmphasis}
                       />
                     </Col>

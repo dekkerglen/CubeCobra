@@ -172,7 +172,6 @@ const CardStatsTable: React.FC<{
   selectedP1P1CardOracles,
   visibleDeckCounts,
   visibleSideboardCounts,
-  inDeckOracles,
   inSideboardOracles,
   deckInclusionPct,
   visiblePoolCounts,

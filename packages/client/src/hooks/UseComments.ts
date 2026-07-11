@@ -22,7 +22,7 @@ interface CommentResponse {
 // Guarded JSON parse: the server can return an empty body or an HTML error page
 // (rate-limit, 500, stale-deploy 404), and calling response.json() directly on
 // those throws "Unexpected end of JSON input" as an unhandled rejection.
-const parseJsonSafe = async <T,>(response: Response): Promise<T | null> => {
+const parseJsonSafe = async <T>(response: Response): Promise<T | null> => {
   try {
     const text = await response.text();
     return text ? (JSON.parse(text) as T) : null;

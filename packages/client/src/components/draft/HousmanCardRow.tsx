@@ -21,7 +21,7 @@ const HousmanCardRow: React.FC<HousmanCardRowProps> = ({ cards, indices, isKnown
   <Row className="justify-center">
     {indices.map((cardIndex, i) => (
       <Col key={`card-${cardIndex}-${i}`} className="px-0" xs={xs ?? 4} md={md ?? 2} xl={xl ?? 1}>
-        <div className={highlight != null && highlight === cardIndex ? 'rounded-md ring-4 ring-green-500' : undefined}>
+        <div className={highlight === cardIndex ? 'rounded-md ring-4 ring-green-500' : undefined}>
           {isKnown(cardIndex) ? <FoilCardImage card={cards[cardIndex]} autocard /> : <CardBack />}
         </div>
       </Col>

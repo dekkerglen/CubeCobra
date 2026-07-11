@@ -272,7 +272,7 @@ export const initErrorReporting = (): void => {
       message = reason.message || reason.name || 'Error';
     } else if (typeof reason === 'string') {
       message = reason;
-    } else if (reason == null) {
+    } else if (reason === null || reason === undefined) {
       message = 'Unhandled promise rejection';
     } else {
       try {

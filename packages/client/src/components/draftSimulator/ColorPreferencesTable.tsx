@@ -210,7 +210,7 @@ const ColorPreferencesTable: React.FC<{
       cubeShare: cubeTotal > 0 ? cubeColorCount[color] / cubeTotal : 0,
       deckShare: aggregatedTotal > 0 ? aggregatedShares[color] / aggregatedTotal : 0,
     }));
-  }, [cardStats, cardMeta, displayedPools, activeDecks, numSeats]);
+  }, [cardStats, cardMeta, displayedPools, activeDecks]);
 
   const [sortKey, setSortKey] = useState<SortKey>('color');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');

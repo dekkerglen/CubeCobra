@@ -6,6 +6,10 @@ packages/server/src/client/**/*
 packages/client/dist/**/*
 packages/jobs/dist/**/*
 packages/jobs/temp/**/*
+# cdk compiles in-place alongside its .ts sources (no outDir), so ignore the generated
+# .js/.d.ts artifacts throughout the package (the .ts sources are still checked).
+packages/cdk/**/*.js
+packages/cdk/**/*.d.ts
 packages/recommenderService/model/**/*
 packages/recommenderService/private/**/*
 packages/utils/src/generated/**/*
