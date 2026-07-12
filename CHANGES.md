@@ -54,7 +54,6 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - The Edit Selected dialog now shows cents on combined prices under $10, so ultra-budget totals like $1.50 and $2.49 no longer both round to "$2".
 - A cube edit and its change history entry are now saved together, so a save that gets interrupted can no longer leave your cube updated with a missing entry in its change history.
 
-
 ## Bug Fixes
 
 - Shared cube links now show a clean plain-text description in social media previews instead of raw markdown symbols.

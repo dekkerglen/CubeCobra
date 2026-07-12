@@ -1,5 +1,7 @@
 import React from 'react';
 
+import { ArrowDownIcon, ArrowRightIcon } from '@primer/octicons-react';
+
 import { cdnUrl } from '@utils/cdnUrl';
 import CardType from '@utils/datatypes/Card';
 
@@ -40,11 +42,12 @@ const Pack: React.FC<PackProps> = ({ pack, packNumber, pickNumber, makePick, sea
           <div />
         </Col>
         {[0, 1, 2].map((col) => (
-          <Col key={`col-btn-${col}`} xs={3} xl={2}>
+          <Col key={`col-btn-${col}`} className="flex justify-center" xs={3} xl={2}>
             <Button
-              block
+              className="flex h-10 w-10 items-center justify-center"
               outline
               color="primary"
+              aria-label={`Pick column ${col + 1}`}
               onClick={() => {
                 makePick({
                   seatIndex,
@@ -54,18 +57,19 @@ const Pack: React.FC<PackProps> = ({ pack, packNumber, pickNumber, makePick, sea
                 });
               }}
             >
-              🡇
+              <ArrowDownIcon size={24} />
             </Button>
           </Col>
         ))}
       </Row>
       {[0, 1, 2].map((row) => (
         <Row key={`row-${row}`} className="justify-center">
-          <Col className="my-2" xs={1}>
+          <Col className="my-2 flex items-center justify-end" xs={1}>
             <Button
-              className="float-end h-full"
+              className="flex h-10 w-10 items-center justify-center"
               outline
               color="primary"
+              aria-label={`Pick row ${row + 1}`}
               onClick={() => {
                 makePick({
                   seatIndex,
@@ -75,7 +79,7 @@ const Pack: React.FC<PackProps> = ({ pack, packNumber, pickNumber, makePick, sea
                 });
               }}
             >
-              🡆
+              <ArrowRightIcon size={24} />
             </Button>
           </Col>
           {[0, 1, 2].map((col) => (
