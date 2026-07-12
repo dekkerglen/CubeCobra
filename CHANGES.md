@@ -52,6 +52,8 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Card and group edit dialogs now have a "Restore to Default" button that resets a card's overridden type, mana value, rarity, color, color category, and images back to the printing's real values, leaving your status, tags, and notes untouched.
 - While drafting, you can now choose how many cards show per row in the pack, so you can make them larger and easier to read — handy on mobile where you can drop down to two or three per row.
 - The Edit Selected dialog now shows cents on combined prices under $10, so ultra-budget totals like $1.50 and $2.49 no longer both round to "$2".
+- A cube edit and its change history entry are now saved together, so a save that gets interrupted can no longer leave your cube updated with a missing entry in its change history.
+
 
 ## Bug Fixes
 
@@ -70,4 +72,3 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Fixed Patreon membership changes not always syncing to your Cube Cobra supporter perks.
 - Fixed a bug where registration errors weren't surfaced to end users.
 - Foil versions of white-bordered cards now show a black border, matching how they actually print.
-- A cube edit and its change history entry are now saved together, so a save that gets interrupted can no longer leave your cube updated with a missing entry in its change history.
