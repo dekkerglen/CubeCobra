@@ -24,6 +24,7 @@ export default defineConfig({
   // makes Vite emit absolute asset URLs, `cors` lets the node-origin page fetch modules, and
   // `fs.allow` opens the monorepo root so cross-package @utils imports (../utils) can be served.
   server: {
+    host: process.env?.LISTEN_ON ? process.env?.LISTEN_ON : '127.0.0.1',
     port: 5173,
     strictPort: true,
     origin: 'http://localhost:5173',
