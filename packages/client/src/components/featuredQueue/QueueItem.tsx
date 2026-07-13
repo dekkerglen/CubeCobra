@@ -8,11 +8,15 @@ import { Col, Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
 import CubePreview from 'components/cube/CubePreview';
+import MoveCubeModal from 'components/featuredQueue/MoveCubeModal';
+import withModal from 'components/WithModal';
 
 interface QueueItemProps {
   cube: Cube;
   index: number;
 }
+
+const MoveButton = withModal(Button, MoveCubeModal);
 
 const QueueItem: React.FC<QueueItemProps> = ({ cube, index }) => {
   const formRef = React.useRef<HTMLFormElement>(null);
@@ -39,6 +43,14 @@ const QueueItem: React.FC<QueueItemProps> = ({ cube, index }) => {
                   Remove
                 </Button>
               </CSRFForm>
+              <MoveButton
+                block
+                color="accent"
+                disabled={index < 2}
+                modalprops={{ cubeId: cube.id, currentPosition: index + 1 }}
+              >
+                Move
+              </MoveButton>
             </Flexbox>
           </Flexbox>
         </CardBody>
