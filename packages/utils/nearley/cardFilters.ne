@@ -158,7 +158,7 @@ toughnessCondition -> toughnessWords halfIntOpValue {% ([, valuePred]) => generi
 
 ptSumCondition -> ("pt"i | "wildpair"i) halfIntOpValue {% ([, valuePred]) => genericCondition('pt', (c) => parseFloat(cardToughness(c)) + parseFloat(cardPower(c)), valuePred) %}
 
-tagCondition -> ("tag"i | "tags"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('tags', cardTags, valuePred) %}
+tagCondition -> ("tag"i | "tags"i) exactSetElementOpValue {% ([, valuePred]) => genericCondition('tags', cardTags, valuePred) %}
 
 finishCondition -> ("fin"i | "finish"i) finishOpValue {% ([, valuePred]) => genericCondition('finish', cardFinish, valuePred) %}
 
@@ -221,9 +221,9 @@ firstYearCondition -> ("year"i | "firstyear"i | "fy"i) integerOpValue {% ([, val
 
 keywordCondition -> ("kw"i | "keyword"i | "keywords"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('keywords', cardKeywords, valuePred) %}
 
-otagCondition -> ("otag"i | "oracletag"i | "oracletags"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('otag', cardOracleTags, valuePred) %}
+otagCondition -> ("otag"i | "oracletag"i | "oracletags"i) exactSetElementOpValue {% ([, valuePred]) => genericCondition('otag', cardOracleTags, valuePred) %}
 
-atagCondition -> ("atag"i | "arttag"i | "arttags"i | "illustrationtag"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('atag', cardArtTags, valuePred) %}
+atagCondition -> ("atag"i | "arttag"i | "arttags"i | "illustrationtag"i) exactSetElementOpValue {% ([, valuePred]) => genericCondition('atag', cardArtTags, valuePred) %}
 
 # board=mainboard, board=maybeboard, board=basics, or any custom-board key.
 # In non-cube contexts cardBoard() defaults to 'mainboard' so board=mainboard
@@ -241,7 +241,7 @@ includeExtrasCondition -> ("include"i | "in"i) ":" ("extras"i | "extra"i) {% () 
   return result;
 } %}
 
-isCondition -> "is"i isOpValue {% ([, valuePred]) => { const c = genericCondition('details', ({ details }) => details, valuePred); c.describe = `it is ${categoryLabel(valuePred.category)}`; return c; } %}
+isCondition -> ("is"i | "has"i) isOpValue {% ([, valuePred]) => { const c = genericCondition('details', ({ details }) => details, valuePred); c.describe = `it is ${categoryLabel(valuePred.category)}`; return c; } %}
 
 notCondition -> "not"i isOpValue {% ([, valuePred]) => { const c = genericCondition('details', ({ details }) => details, valuePred); const n = negated(c); n.describe = `it is not ${categoryLabel(valuePred.category)}`; return n; } %}
 

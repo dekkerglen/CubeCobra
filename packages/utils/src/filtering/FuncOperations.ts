@@ -609,18 +609,24 @@ export const setCountOperation = (op: OperatorType, value: number): FilterFuncti
   return described((fieldValue: any[]) => operation(fieldValue.length), `count ${numericPhrase(op, value)}`);
 };
 
+// Tag-like values (Scryfall slugs, keywords, custom tags) are matched with hyphens
+// normalized away on both sides, so `otag:boardwipe` matches the slug `board-wipe`
+// and vice versa.
+const stripHyphens = (value?: string): string => (value ?? '').toLowerCase().replace(/-/g, '');
+
 export const setElementOperation = (op: OperatorType, value: string): FilterFunction<string[] | undefined> => {
   // Expose the raw value so callers (e.g. banned/restricted) can craft their own phrasing.
   const withValue = (fn: FilterFunction<string[] | undefined>): FilterFunction<string[] | undefined> => {
     (fn as any).element = value;
     return fn;
   };
+  const normalizedValue = stripHyphens(value);
   switch (op.toString()) {
     case ':':
       return withValue(
         described(
           (fieldValue: string[] | undefined) =>
-            fieldValue?.some((elem: string) => elem?.toLowerCase().includes(value)) ?? false,
+            fieldValue?.some((elem: string) => stripHyphens(elem).includes(normalizedValue)) ?? false,
           `contains "${value}"`,
         ),
       );
@@ -628,7 +634,7 @@ export const setElementOperation = (op: OperatorType, value: string): FilterFunc
       return withValue(
         described(
           (fieldValue: string[] | undefined) =>
-            fieldValue?.some((elem: string) => elem?.toLowerCase() === value) ?? false,
+            fieldValue?.some((elem: string) => stripHyphens(elem) === normalizedValue) ?? false,
           `contains exactly "${value}"`,
         ),
       );
@@ -637,7 +643,7 @@ export const setElementOperation = (op: OperatorType, value: string): FilterFunc
       return withValue(
         described(
           (fieldValue: string[] | undefined) =>
-            !(fieldValue ?? []).some((elem: string) => elem?.toLowerCase() === value),
+            !(fieldValue ?? []).some((elem: string) => stripHyphens(elem) === normalizedValue),
           `does not contain "${value}"`,
         ),
       );

@@ -49,6 +49,18 @@ describe('setElementOperation', () => {
     expect(filterer(tags)).toBeFalsy();
   });
 
+  it('Hyphens are normalized away on both sides', async () => {
+    const tags = ['board-wipe'];
+    // Query without the hyphen still matches the hyphenated slug.
+    expect(setElementOperation(':', 'boardwipe')(tags)).toBeTruthy();
+    // Query with the hyphen matches too.
+    expect(setElementOperation(':', 'board-wipe')(tags)).toBeTruthy();
+    // Exact match is hyphen-insensitive as well.
+    expect(setElementOperation('=', 'boardwipe')(tags)).toBeTruthy();
+    // And still lets non-matches through.
+    expect(setElementOperation(':', 'burn')(tags)).toBeFalsy();
+  });
+
   it.each(['!=', '<>'])('Inequality operator matching (%s)', async (op) => {
     //Predicate values are lowercased by the nearley grammar
     const filterer = setElementOperation(op, 'fetch');

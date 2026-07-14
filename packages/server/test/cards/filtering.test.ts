@@ -140,23 +140,24 @@ describe('Tag filter syntax', () => {
     expect(result.filter?.fieldsUsed).toEqual(['tags']);
   };
 
-  const assertInvalidTagFilter = (result: FilterResult) => {
-    expect(result.err).toBeTruthy();
-  };
-
   it('Tag contents filter operations', async () => {
-    //Partial matching
+    //Both `:` and `=` do an exact tag match, quoted or unquoted
     assertValidTagFilter(makeFilter('tag:fetch'));
     assertValidTagFilter(makeFilter('tags:fetch'));
-
-    //Exact matching
     assertValidTagFilter(makeFilter('tag:"fetch"'));
     assertValidTagFilter(makeFilter("tags:'fetch'"));
+    assertValidTagFilter(makeFilter('tag=fetch'));
+    assertValidTagFilter(makeFilter('tags=foo'));
+    assertValidTagFilter(makeFilter('tag="fetch"'));
+    assertValidTagFilter(makeFilter('tags="foo"'));
+    assertValidTagFilter(makeFilter("tag='fetch'"));
+    assertValidTagFilter(makeFilter("tags='foo'"));
   });
 
   it('Tag count filter operations', async () => {
-    //All filters based on the number of tags
+    //Numeric operands still mean tag count
     assertValidTagFilter(makeFilter('tag=3'));
+    assertValidTagFilter(makeFilter('tags=0'));
     assertValidTagFilter(makeFilter('tag!=3'));
     assertValidTagFilter(makeFilter('tag<>3'));
     assertValidTagFilter(makeFilter('tag>0'));
@@ -165,15 +166,11 @@ describe('Tag filter syntax', () => {
     assertValidTagFilter(makeFilter('tag<=1'));
   });
 
-  it('Tag contents invalid filters', async () => {
-    //At this time Tag= either needs to be a single/double quoted string, or be a number.
-    //To allow this form would require very tricky nearley grammar since numbers are also strings (eg both branches would match)
-    assertInvalidTagFilter(makeFilter('tag=fetch'));
-    assertInvalidTagFilter(makeFilter('tags=foo'));
-    assertInvalidTagFilter(makeFilter('tag="fetch"'));
-    assertInvalidTagFilter(makeFilter('tags="foo"'));
-    assertInvalidTagFilter(makeFilter("tag='fetch'"));
-    assertInvalidTagFilter(makeFilter("tags='foo'"));
+  it('A bare numeric tag= stays count, not an exact match', async () => {
+    //`tag=3` is unambiguously the count comparison; the string branch rejects pure integers.
+    //Quote the value (`tag="3"`) to match a tag literally named "3".
+    assertValidTagFilter(makeFilter('tag=3'));
+    assertValidTagFilter(makeFilter('tag="3"'));
   });
 
   const getDeckWithTags = (): Card[] => {
@@ -250,20 +247,87 @@ describe('Tag filter syntax', () => {
     }
   };
 
-  it('Tag string partial match', async () => {
-    assertFilteredDeck('tags:fetch', ['00001235', '00001522', '00001577', '00001611']);
+  it('Tag string exact match (unquoted)', async () => {
+    //Unquoted tags now match exactly rather than as a substring.
+    assertFilteredDeck('tags:fetchable', ['00001522', '00001577']);
+    assertFilteredDeck('tags:grixis', ['00001522']);
+    //"fetch" is a substring of several tags but the exact tag of none.
+    assertFilteredDeck('tags:fetch', []);
     assertFilteredDeck('tag:insane', []);
-    assertFilteredDeck('tags:Grix', ['00001522']);
+    assertFilteredDeck('tags:Grix', []);
   });
 
-  it('Tag string partial match mulitple words, means tag match AND name filter', async () => {
-    assertFilteredDeck('tags:fetch river', ['00001611']);
+  it('Tag exact match with = operator', async () => {
+    assertFilteredDeck('tags=fetchable', ['00001522', '00001577']);
+    assertFilteredDeck('tag="Fetch lands"', ['00001235']);
+    assertFilteredDeck('tags=fetch', []);
   });
 
-  it('Tag string exact match', async () => {
+  it('Tag exact match combined with a name filter', async () => {
+    //Exact tag "fetchable" (xanders lounge, fabled passage) AND name contains "passage".
+    assertFilteredDeck('tags:fetchable passage', ['00001577']);
+  });
+
+  it('Tag string exact match (quoted)', async () => {
     assertFilteredDeck('tags:"Fetchable"', ['00001522', '00001577']);
     assertFilteredDeck('tag:"Fetch lands"', ['00001235']);
     assertFilteredDeck('tags:"Artifacts"', []);
+  });
+
+  it('Tag count matching', async () => {
+    //Bare numeric operands are counts: only the empty-tag card has zero tags.
+    assertFilteredDeck('tags=0', ['00001234']);
+  });
+});
+
+describe('Oracle tag and art tag filter syntax', () => {
+  const getDeckWithScryfallTags = (): Card[] => [
+    createCard({
+      cardID: 'OT01',
+      details: createCardDetails({ name_lower: 'wrath of god', oracle_tags: ['board-wipe', 'removal'] }),
+    }),
+    createCard({
+      cardID: 'OT02',
+      details: createCardDetails({ name_lower: 'swords to plowshares', oracle_tags: ['spot-removal'] }),
+    }),
+    createCard({
+      cardID: 'AT01',
+      details: createCardDetails({ name_lower: 'shivan dragon', art_tags: ['dragon', 'landscape'] }),
+    }),
+  ];
+
+  const assertFilteredScryfall = (filterText: string, expectedCardIds: string[]) => {
+    const { filter } = makeFilter(filterText);
+    expect(filter).not.toBeNull();
+    if (filter !== null) {
+      const filtered = getDeckWithScryfallTags().filter(filter);
+      expect(filtered.map((c) => c.cardID).sort()).toEqual(expectedCardIds.sort());
+    }
+  };
+
+  it('Oracle tags match exactly, not as a substring', async () => {
+    //Exact slug matches; "spot-removal" is NOT matched by "removal".
+    assertFilteredScryfall('otag:removal', ['OT01']);
+    assertFilteredScryfall('otag:spot-removal', ['OT02']);
+    //"wipe" is a substring of "board-wipe" but the exact tag of nothing.
+    assertFilteredScryfall('otag:wipe', []);
+  });
+
+  it('Oracle tag matching ignores hyphens on both sides', async () => {
+    assertFilteredScryfall('otag:board-wipe', ['OT01']);
+    assertFilteredScryfall('otag:boardwipe', ['OT01']);
+    assertFilteredScryfall('oracletag=boardwipe', ['OT01']);
+  });
+
+  it('Oracle tag count still works', async () => {
+    assertFilteredScryfall('oracletags>1', ['OT01']);
+  });
+
+  it('Art tags match exactly with : and =', async () => {
+    assertFilteredScryfall('atag:dragon', ['AT01']);
+    assertFilteredScryfall('arttag=dragon', ['AT01']);
+    //Partial no longer matches.
+    assertFilteredScryfall('atag:landscap', []);
   });
 });
 

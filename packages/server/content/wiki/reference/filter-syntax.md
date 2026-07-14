@@ -44,6 +44,9 @@ You can put `-` before anything to negate it.
 | `-t:creature` | cards which are not creatures.                     |
 | `-mox`        | cards whose names do not include "mox".            |
 
+Anywhere `is:` is used to match a card category, `has:` works as an equivalent alias
+(`has:commander` is the same as `is:commander`).
+
 ## Color and Color Identity
 
 You can find cards that are a certain color by using `c:` or `color:`, and cards with a certain
@@ -129,18 +132,21 @@ every printing of a card. Art tags describe a printing's illustration (`atag:`, 
 (e.g. `removal`, `card-advantage`, `dragon`).
 
 Operators supported: `:`, `=` for matching tag text, and `=`, `<`, `>`, `<=`, `>=`, `!=`, `<>`
-for comparing tag count. Use `:` for partial matching (contains) and `=` with a string for an
-exact tag match.
+for comparing tag count. Both `:` and `=` match the whole tag exactly (case insensitive); to
+compare tag count, use a number (`oracletags>2`).
+
+Hyphens are ignored when matching, so you don't have to remember exactly where they fall in a
+slug — `otag:boardwipe`, `otag:board-wipe`, and `oracletag=boardwipe` all match the `board-wipe`
+tag. Because matching is exact, a partial word like `otag:wipe` will not match `board-wipe`.
 
 | Query               | Matches                                                          |
 | ------------------- | --------------------------------------------------------------- |
-| `otag:removal`      | cards with an oracle tag containing "removal".                  |
-| `oracletag=ramp`    | cards with exactly the oracle tag "ramp".                       |
-| `otag:counter`      | cards with an oracle tag containing "counter".                  |
+| `otag:removal`      | cards whose oracle tag is exactly "removal".                    |
+| `oracletag=ramp`    | cards whose oracle tag is exactly "ramp".                       |
+| `otag:board-wipe`   | cards tagged `board-wipe` (also matches `otag:boardwipe`).      |
 | `oracletags>2`      | cards with more than 2 oracle tags.                             |
-| `atag:dragon`       | cards whose artwork is tagged with something containing "dragon". |
+| `atag:dragon`       | cards whose artwork is tagged exactly "dragon".                 |
 | `arttag=goblin`     | cards whose artwork is tagged exactly "goblin".                 |
-| `atag:landscape`    | cards whose art tag contains "landscape".                       |
 
 ## Mana Costs
 
@@ -239,14 +245,18 @@ price. When filtering in individual cubes, `price:` uses the printing specified 
 
 You can use `tag:` or `tags:` to filter cards by tag or tag count when in a cube.
 
-| Query                   | Matches                                                                                                                                  |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `tag:Signed`            | All cards in a cube that have a tag which contains "Signed", case insensitive (matches "Signed", "Unsigned", "Signed by", "Redesigned"). |
-| `tag:Signed Blood`      | A combination of tag and name: cards that have a tag containing "Signed" and whose name contains "Blood".                                |
-| `tag:"Signed"`          | All cards in a cube that have a tag exactly matching "Signed", case insensitive.                                                         |
-| `tag:'Counter Synergy'` | All cards in a cube that have a tag exactly matching "Counter Synergy", case insensitive.                                                |
-| `tags=0`                | All cards with no tags.                                                                                                                  |
-| `tags>0`                | All cards with at least one tag.                                                                                                         |
+Tags are matched exactly (case insensitive) with both `:` and `=` — `tag:Signed` matches the tag
+"Signed" but not "Unsigned" or "Redesigned". Numeric operands instead compare the number of tags.
+
+| Query                   | Matches                                                                                                    |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `tag:Signed`            | All cards in a cube whose tag is exactly "Signed", case insensitive.                                        |
+| `tag=Signed`            | Same as above — `=` and `:` both match tags exactly.                                                        |
+| `tag:Signed Blood`      | A combination of tag and name: cards with a tag exactly "Signed" and whose name contains "Blood".          |
+| `tag:'Counter Synergy'` | All cards in a cube whose tag is exactly "Counter Synergy". Quote tags that contain spaces.                 |
+| `tags=0`                | All cards with no tags.                                                                                     |
+| `tags>0`                | All cards with at least one tag.                                                                            |
+| `tag="3"`               | All cards whose tag is exactly "3" (quote a numeric tag; unquoted `tags=3` means the tag count).           |
 
 ## Notes
 
