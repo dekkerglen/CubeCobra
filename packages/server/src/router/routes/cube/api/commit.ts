@@ -58,7 +58,7 @@ export const commitHandler = async (req: Request, res: Response) => {
       });
     }
 
-    if (cube.version !== expectedVersion) {
+    if ((cube.version ?? 0) !== (expectedVersion ?? 0)) {
       return res.status(409).send({
         success: 'false',
         message:

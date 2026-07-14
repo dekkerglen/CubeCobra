@@ -297,7 +297,9 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       tags: item.tags,
       keywords: item.keywords,
       cardCount: item.cardCount,
-      version: item.version,
+      // Legacy cubes predate the version attribute; normalize the absence to 0 so
+      // optimistic-locking comparisons (client and server) never see undefined.
+      version: item.version ?? 0,
     };
   }
 
@@ -937,9 +939,9 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     // Enforce optimistic concurrency on the cube's business version. The DynamoVersion
     // condition in the transaction closes the check-then-act race; this is a clean early out.
-    if ((cube.version ?? 0) !== expectedVersion) {
+    if ((cube.version ?? 0) !== (expectedVersion ?? 0)) {
       throw new DaoError(
-        `Cube ${id} was updated since editing began (expected version ${expectedVersion}, found ${cube.version ?? 0})`,
+        `Cube ${id} was updated since editing began (expected version ${expectedVersion ?? 0}, found ${cube.version ?? 0})`,
         ErrorCode.OPTIMISTIC_LOCKING_VERSION_MISMATCH,
       );
     }
