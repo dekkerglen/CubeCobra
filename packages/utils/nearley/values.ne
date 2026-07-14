@@ -465,13 +465,14 @@ stringSetElementOpValue -> ("=" | "!=" | "<>" | "<" | "<=" | ">" | ">=") integer
   | ":" dqstring  {% ([, value]) => setElementOperation('=', value.toLowerCase()) %}
   | ":" sqstring  {% ([, value]) => setElementOperation('=', value.toLowerCase()) %}
 
-# Tags (cube tags, oracle tags, art tags) are discrete labels, so both `:` and `=` do an EXACT
-# match — never a substring match (hyphens are still normalized away, see setElementOperation).
-# Numeric operands still mean tag count (`tags=0`, `oracletags>2`). The `=`-with-a-bare-number case
-# is ambiguous (count vs. a tag literally named "3"), so the string branch rejects pure integers and
-# lets the count branch win; quote the value (`tag="3"`) to match a numeric tag name.
-exactSetElementOpValue -> ("=" | "!=" | "<>" | "<" | "<=" | ">" | ">=") integerValue {% ([[op], value]) => setCountOperation(op, value) %}
-  | ":" noQuoteStringValue {% ([, value]) => setElementOperation('=', value.toLowerCase()) %}
+# Tags (cube tags, oracle tags, art tags): `:` is a partial (substring) match and `=` is an exact
+# match; a quoted value after `:` is also exact (quotes always mean exact). Hyphens are normalized
+# away either way (see setElementOperation). Numeric operands still mean tag count (`tags=0`,
+# `oracletags>2`). The `=`-with-a-bare-number case is ambiguous (count vs. a tag literally named
+# "3"), so the string branch rejects pure integers and lets the count branch win; quote the value
+# (`tag="3"`) to exact-match a numeric tag name.
+tagSetElementOpValue -> ("=" | "!=" | "<>" | "<" | "<=" | ">" | ">=") integerValue {% ([[op], value]) => setCountOperation(op, value) %}
+  | ":" noQuoteStringValue {% ([, value]) => setElementOperation(':', value.toLowerCase()) %}
   | ":" dqstring  {% ([, value]) => setElementOperation('=', value.toLowerCase()) %}
   | ":" sqstring  {% ([, value]) => setElementOperation('=', value.toLowerCase()) %}
   | "=" noQuoteStringValue {% ([, value], _l, reject) => (/^[0-9]+$/.test(value) ? reject : setElementOperation('=', value.toLowerCase())) %}

@@ -57,7 +57,8 @@ describe('Filter pseudo-English descriptions', () => {
     expect(describeOf('has:fetchland')).toBe('it is a fetch land');
     expect(describeOf('has:dfc')).toBe('it is a double-faced card');
     expect(describeOf('not:reprint')).toBe('it is not a reprint');
-    expect(describeOf('tag:aggro')).toBe('tags contains exactly "aggro"');
+    expect(describeOf('tag:aggro')).toBe('tags contains "aggro"');
+    expect(describeOf('tag=aggro')).toBe('tags contains exactly "aggro"');
   });
 
   it('describes negation and connectors', () => {

@@ -158,7 +158,7 @@ toughnessCondition -> toughnessWords halfIntOpValue {% ([, valuePred]) => generi
 
 ptSumCondition -> ("pt"i | "wildpair"i) halfIntOpValue {% ([, valuePred]) => genericCondition('pt', (c) => parseFloat(cardToughness(c)) + parseFloat(cardPower(c)), valuePred) %}
 
-tagCondition -> ("tag"i | "tags"i) exactSetElementOpValue {% ([, valuePred]) => genericCondition('tags', cardTags, valuePred) %}
+tagCondition -> ("tag"i | "tags"i) tagSetElementOpValue {% ([, valuePred]) => genericCondition('tags', cardTags, valuePred) %}
 
 finishCondition -> ("fin"i | "finish"i) finishOpValue {% ([, valuePred]) => genericCondition('finish', cardFinish, valuePred) %}
 
@@ -221,9 +221,9 @@ firstYearCondition -> ("year"i | "firstyear"i | "fy"i) integerOpValue {% ([, val
 
 keywordCondition -> ("kw"i | "keyword"i | "keywords"i) stringSetElementOpValue {% ([, valuePred]) => genericCondition('keywords', cardKeywords, valuePred) %}
 
-otagCondition -> ("otag"i | "oracletag"i | "oracletags"i) exactSetElementOpValue {% ([, valuePred]) => genericCondition('otag', cardOracleTags, valuePred) %}
+otagCondition -> ("otag"i | "oracletag"i | "oracletags"i) tagSetElementOpValue {% ([, valuePred]) => genericCondition('otag', cardOracleTags, valuePred) %}
 
-atagCondition -> ("atag"i | "arttag"i | "arttags"i | "illustrationtag"i) exactSetElementOpValue {% ([, valuePred]) => genericCondition('atag', cardArtTags, valuePred) %}
+atagCondition -> ("atag"i | "arttag"i | "arttags"i | "illustrationtag"i) tagSetElementOpValue {% ([, valuePred]) => genericCondition('atag', cardArtTags, valuePred) %}
 
 # board=mainboard, board=maybeboard, board=basics, or any custom-board key.
 # In non-cube contexts cardBoard() defaults to 'mainboard' so board=mainboard

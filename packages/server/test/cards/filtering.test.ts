@@ -141,7 +141,7 @@ describe('Tag filter syntax', () => {
   };
 
   it('Tag contents filter operations', async () => {
-    //Both `:` and `=` do an exact tag match, quoted or unquoted
+    //`:` is a partial match, `=` is an exact match; both accept quoted or unquoted values
     assertValidTagFilter(makeFilter('tag:fetch'));
     assertValidTagFilter(makeFilter('tags:fetch'));
     assertValidTagFilter(makeFilter('tag:"fetch"'));
@@ -247,28 +247,27 @@ describe('Tag filter syntax', () => {
     }
   };
 
-  it('Tag string exact match (unquoted)', async () => {
-    //Unquoted tags now match exactly rather than as a substring.
-    assertFilteredDeck('tags:fetchable', ['00001522', '00001577']);
-    assertFilteredDeck('tags:grixis', ['00001522']);
-    //"fetch" is a substring of several tags but the exact tag of none.
-    assertFilteredDeck('tags:fetch', []);
+  it('Tag string partial match (unquoted colon)', async () => {
+    //`:` matches any tag containing the value.
+    assertFilteredDeck('tags:fetch', ['00001235', '00001522', '00001577', '00001611']);
     assertFilteredDeck('tag:insane', []);
-    assertFilteredDeck('tags:Grix', []);
+    assertFilteredDeck('tags:Grix', ['00001522']);
+  });
+
+  it('Tag string partial match combined with a name filter', async () => {
+    assertFilteredDeck('tags:fetch river', ['00001611']);
   });
 
   it('Tag exact match with = operator', async () => {
+    //`=` matches the whole tag exactly, so "fetch" (a substring of several tags) matches none.
     assertFilteredDeck('tags=fetchable', ['00001522', '00001577']);
     assertFilteredDeck('tag="Fetch lands"', ['00001235']);
     assertFilteredDeck('tags=fetch', []);
+    assertFilteredDeck('tags=grixis', ['00001522']);
   });
 
-  it('Tag exact match combined with a name filter', async () => {
-    //Exact tag "fetchable" (xanders lounge, fabled passage) AND name contains "passage".
-    assertFilteredDeck('tags:fetchable passage', ['00001577']);
-  });
-
-  it('Tag string exact match (quoted)', async () => {
+  it('Tag string exact match (quoted colon)', async () => {
+    //A quoted value after `:` is also exact.
     assertFilteredDeck('tags:"Fetchable"', ['00001522', '00001577']);
     assertFilteredDeck('tag:"Fetch lands"', ['00001235']);
     assertFilteredDeck('tags:"Artifacts"', []);
@@ -305,12 +304,14 @@ describe('Oracle tag and art tag filter syntax', () => {
     }
   };
 
-  it('Oracle tags match exactly, not as a substring', async () => {
-    //Exact slug matches; "spot-removal" is NOT matched by "removal".
-    assertFilteredScryfall('otag:removal', ['OT01']);
-    assertFilteredScryfall('otag:spot-removal', ['OT02']);
-    //"wipe" is a substring of "board-wipe" but the exact tag of nothing.
-    assertFilteredScryfall('otag:wipe', []);
+  it('Oracle tag `:` is a partial match, `=` is exact', async () => {
+    //`:` matches any slug containing the value, so "removal" hits both removal and spot-removal.
+    assertFilteredScryfall('otag:removal', ['OT01', 'OT02']);
+    assertFilteredScryfall('otag:wipe', ['OT01']);
+    //`=` matches the whole slug exactly.
+    assertFilteredScryfall('otag=removal', ['OT01']);
+    assertFilteredScryfall('oracletag=spot-removal', ['OT02']);
+    assertFilteredScryfall('otag=wipe', []);
   });
 
   it('Oracle tag matching ignores hyphens on both sides', async () => {
@@ -323,11 +324,12 @@ describe('Oracle tag and art tag filter syntax', () => {
     assertFilteredScryfall('oracletags>1', ['OT01']);
   });
 
-  it('Art tags match exactly with : and =', async () => {
+  it('Art tag `:` is partial, `=` is exact', async () => {
     assertFilteredScryfall('atag:dragon', ['AT01']);
     assertFilteredScryfall('arttag=dragon', ['AT01']);
-    //Partial no longer matches.
-    assertFilteredScryfall('atag:landscap', []);
+    //`:` partial matches the substring, `=` exact does not.
+    assertFilteredScryfall('atag:landscap', ['AT01']);
+    assertFilteredScryfall('arttag=landscap', []);
   });
 });
 

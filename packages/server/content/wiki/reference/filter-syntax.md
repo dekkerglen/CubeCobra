@@ -131,21 +131,21 @@ every printing of a card. Art tags describe a printing's illustration (`atag:`, 
 `arttags:`, `illustrationtag:`) and are specific to each artwork. Tags use Scryfall's slug form
 (e.g. `removal`, `card-advantage`, `dragon`).
 
-Operators supported: `:`, `=` for matching tag text, and `=`, `<`, `>`, `<=`, `>=`, `!=`, `<>`
-for comparing tag count. Both `:` and `=` match the whole tag exactly (case insensitive); to
-compare tag count, use a number (`oracletags>2`).
+Operators supported: `:` for a partial (substring) match, `=` for an exact match, and `<`, `>`,
+`<=`, `>=`, `!=`, `<>` (plus a numeric `=`) for comparing tag count.
 
 Hyphens are ignored when matching, so you don't have to remember exactly where they fall in a
 slug — `otag:boardwipe`, `otag:board-wipe`, and `oracletag=boardwipe` all match the `board-wipe`
-tag. Because matching is exact, a partial word like `otag:wipe` will not match `board-wipe`.
+tag.
 
 | Query               | Matches                                                          |
 | ------------------- | --------------------------------------------------------------- |
-| `otag:removal`      | cards whose oracle tag is exactly "removal".                    |
+| `otag:removal`      | cards with an oracle tag containing "removal".                  |
+| `otag=removal`      | cards whose oracle tag is exactly "removal".                    |
 | `oracletag=ramp`    | cards whose oracle tag is exactly "ramp".                       |
 | `otag:board-wipe`   | cards tagged `board-wipe` (also matches `otag:boardwipe`).      |
 | `oracletags>2`      | cards with more than 2 oracle tags.                             |
-| `atag:dragon`       | cards whose artwork is tagged exactly "dragon".                 |
+| `atag:dragon`       | cards whose artwork has a tag containing "dragon".              |
 | `arttag=goblin`     | cards whose artwork is tagged exactly "goblin".                 |
 
 ## Mana Costs
@@ -245,15 +245,17 @@ price. When filtering in individual cubes, `price:` uses the printing specified 
 
 You can use `tag:` or `tags:` to filter cards by tag or tag count when in a cube.
 
-Tags are matched exactly (case insensitive) with both `:` and `=` — `tag:Signed` matches the tag
-"Signed" but not "Unsigned" or "Redesigned". Numeric operands instead compare the number of tags.
+`:` is a partial (substring) match and `=` is an exact match, both case insensitive — `tag:Signed`
+matches "Signed", "Unsigned", and "Redesigned", while `tag=Signed` matches only "Signed". Numeric
+operands instead compare the number of tags.
 
 | Query                   | Matches                                                                                                    |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `tag:Signed`            | All cards in a cube whose tag is exactly "Signed", case insensitive.                                        |
-| `tag=Signed`            | Same as above — `=` and `:` both match tags exactly.                                                        |
-| `tag:Signed Blood`      | A combination of tag and name: cards with a tag exactly "Signed" and whose name contains "Blood".          |
-| `tag:'Counter Synergy'` | All cards in a cube whose tag is exactly "Counter Synergy". Quote tags that contain spaces.                 |
+| `tag:Signed`            | All cards in a cube with a tag containing "Signed" (e.g. "Signed", "Unsigned", "Redesigned").               |
+| `tag=Signed`            | All cards in a cube whose tag is exactly "Signed".                                                          |
+| `tag:Signed Blood`      | A combination of tag and name: cards with a tag containing "Signed" and whose name contains "Blood".       |
+| `tag:"Signed"`          | A quoted value after `:` is exact — cards whose tag is exactly "Signed".                                    |
+| `tag='Counter Synergy'` | All cards in a cube whose tag is exactly "Counter Synergy". Quote tags that contain spaces.                 |
 | `tags=0`                | All cards with no tags.                                                                                     |
 | `tags>0`                | All cards with at least one tag.                                                                            |
 | `tag="3"`               | All cards whose tag is exactly "3" (quote a numeric tag; unquoted `tags=3` means the tag count).           |
