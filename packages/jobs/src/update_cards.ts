@@ -270,9 +270,13 @@ async function downloadSets(useS3Cache?: boolean) {
 
 interface ScryfallTag {
   object: string;
+  id: string;
   label: string;
   slug: string;
   type: string;
+  // Tags form a hierarchy: parent_ids point at broader tags (e.g. `splits-on-death`'s
+  // parent is `leaves-body-behind`). A tag can have multiple parents.
+  parent_ids?: string[];
   // Each tagging references one oracle_id (oracle tags) or illustration_id (art tags).
   taggings?: Array<{ oracle_id?: string; illustration_id?: string; weight?: string }>;
 }
@@ -281,6 +285,29 @@ async function fetchTagFile(url: string): Promise<ScryfallTag[]> {
   const response = await fetch(url, { headers: SCRYFALL_HEADERS });
   if (!response.ok) throw new Error(`Download of tag file '${url}' failed with code ${response.status}`);
   return (await response.json()) as ScryfallTag[];
+}
+
+// Resolve a tag's own slug plus every ancestor slug reachable via parent_ids. Scryfall
+// only records the most specific tag on a card (e.g. `splits-on-death`), but its Tagger
+// search treats parent tags as inherited, so a search for `leaves-body-behind` should
+// also find cards tagged with any descendant. Folding ancestors in here lets the flat
+// otag/atag filters honor the hierarchy without shipping it to the query layer. The
+// visited set makes traversal safe against any malformed cycles in the parent graph.
+function tagWithAncestorSlugs(tag: ScryfallTag, byId: Map<string, ScryfallTag>): string[] {
+  const slugs = new Set<string>();
+  if (tag.slug) slugs.add(tag.slug);
+  const visited = new Set<string>();
+  const stack = [...(tag.parent_ids || [])];
+  while (stack.length > 0) {
+    const id = stack.pop() as string;
+    if (visited.has(id)) continue;
+    visited.add(id);
+    const parent = byId.get(id);
+    if (!parent) continue;
+    if (parent.slug) slugs.add(parent.slug);
+    for (const parentId of parent.parent_ids || []) stack.push(parentId);
+  }
+  return Array.from(slugs);
 }
 
 // Downloads Scryfall's public Tagger bulk data (oracle tags + art tags) and builds the
@@ -303,23 +330,29 @@ async function downloadTags(): Promise<void> {
 
   const [oracleTags, artTags] = await Promise.all([fetchTagFile(oracleTagsUrl), fetchTagFile(artTagsUrl)]);
 
+  const oracleTagsById = new Map<string, ScryfallTag>();
+  for (const tag of oracleTags) if (tag.id) oracleTagsById.set(tag.id, tag);
   for (const tag of oracleTags) {
     if (!tag.slug || !Array.isArray(tag.taggings)) continue;
+    const slugs = tagWithAncestorSlugs(tag, oracleTagsById);
     for (const tagging of tag.taggings) {
       const oracleId = tagging.oracle_id;
       if (!oracleId) continue;
       if (!oracleTagsByOracleId[oracleId]) oracleTagsByOracleId[oracleId] = [];
-      oracleTagsByOracleId[oracleId].push(tag.slug);
+      oracleTagsByOracleId[oracleId].push(...slugs);
     }
   }
 
+  const artTagsById = new Map<string, ScryfallTag>();
+  for (const tag of artTags) if (tag.id) artTagsById.set(tag.id, tag);
   for (const tag of artTags) {
     if (!tag.slug || !Array.isArray(tag.taggings)) continue;
+    const slugs = tagWithAncestorSlugs(tag, artTagsById);
     for (const tagging of tag.taggings) {
       const illustrationId = tagging.illustration_id;
       if (!illustrationId) continue;
       if (!artTagsByIllustrationId[illustrationId]) artTagsByIllustrationId[illustrationId] = [];
-      artTagsByIllustrationId[illustrationId].push(tag.slug);
+      artTagsByIllustrationId[illustrationId].push(...slugs);
     }
   }
 
