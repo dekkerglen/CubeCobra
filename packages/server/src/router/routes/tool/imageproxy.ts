@@ -8,9 +8,12 @@ export const imageProxyHandler = async (req: Request, res: Response) => {
       return res.status(400).send('Missing or invalid URL parameter');
     }
 
-    // Only allow Scryfall image URLs to prevent abuse
-    if (!url.startsWith('https://cards.scryfall.io/')) {
-      return res.status(403).send('Only Scryfall image URLs are allowed');
+    // Only allow Scryfall or our own card-image CDN URLs to prevent abuse
+    const allowedPrefixes = ['https://cards.scryfall.io/', process.env.CARD_IMAGE_BASE_URL].filter(
+      (prefix): prefix is string => Boolean(prefix),
+    );
+    if (!allowedPrefixes.some((prefix) => url.startsWith(prefix))) {
+      return res.status(403).send('Only Scryfall or CubeCobra CDN image URLs are allowed');
     }
 
     // Fetch the image from Scryfall
