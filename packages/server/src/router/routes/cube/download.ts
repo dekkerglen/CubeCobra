@@ -265,6 +265,67 @@ export const xmageHandler = async (req: Request, res: Response) => {
   }
 };
 
+export const versionedHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.params.id) {
+      req.flash('danger', 'Invalid cube ID');
+      return redirect(req, res, '/404');
+    }
+
+    const cube = await cubeDao.getById(req.params.id);
+
+    if (!cube || !isCubeViewable(cube, req.user)) {
+      req.flash('danger', `Cube ID ${req.params.id} not found/`);
+      return redirect(req, res, '/404');
+    }
+
+    const cards = await cubeDao.getCards(cube.id);
+
+    const boardsToExport = getBoardsToExport(req, cards);
+
+    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-type', 'text/plain');
+    res.charset = 'UTF-8';
+
+    for (const boardname of boardsToExport) {
+      const list = cards[boardname];
+      if (!Array.isArray(list)) continue;
+      for (const card of list as Card[]) {
+        const details = cardFromId(card.cardID);
+        card.details = details;
+      }
+      const sorted = sortCardsByQuery(req, list as Card[]);
+
+      // Put all selected boards in main
+      // Moxfield/Archidekt/Draftmancer all use different rules
+      for (const card of sorted) {
+        // Possible card formats:
+        // 1 Cardname
+        // 1 Cardname (SET)
+        // 1 Cardname (SET) 123
+        const set = cardSet(card).toUpperCase();
+        const collectorNumber = cardCollectorNumber(card);
+
+        let line = `1 ${cardName(card)}`;
+        if (set) {
+          line += ` (${set})`;
+          if (collectorNumber) {
+            line += ` ${collectorNumber}`;
+          }
+        }
+
+        res.write(`${line}\r\n`);
+      }
+
+      res.write(`\r\n`);
+    }
+
+    return res.end();
+  } catch (err) {
+    return handleRouteError(req, res, err, '/404');
+  }
+};
+
 export const plaintextHandler = async (req: Request, res: Response) => {
   try {
     if (!req.params.id) {
@@ -335,6 +396,11 @@ export const routes = [
     path: '/xmage/:id',
     method: 'get',
     handler: [xmageHandler],
+  },
+  {
+    path: '/versioned/:id',
+    method: 'get',
+    handler: [versionedHandler],
   },
   {
     path: '/plaintext/:id',

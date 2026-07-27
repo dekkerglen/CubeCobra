@@ -309,6 +309,12 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
         Card Names (.txt)
       </a>
       <a
+        href={`/cube/download/versioned/${cube.id}?${urlSegment}`}
+        className="!text-text hover:!text-link-active font-medium"
+      >
+        Card Versions (.txt)
+      </a>
+      <a
         href={`/cube/download/csv/${cube.id}?${urlSegment}`}
         className="!text-text hover:!text-link-active font-medium"
       >
