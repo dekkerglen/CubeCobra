@@ -9,8 +9,10 @@ import CardBreakdown from 'components/cardPage/CardBreakdown';
 import Correlations from 'components/cardPage/Correlations';
 import CardPurchase from 'components/cardPage/Purchase';
 import CardVersions from 'components/cardPage/Versions';
+import CubeTray from 'components/cubetray/CubeTray';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
+import { CubeTrayProvider } from 'contexts/CubeTrayContext';
 import { useCardDetails } from 'hooks/useCardDetails';
 import MainLayout from 'layouts/MainLayout';
 import { getPlaceholderCardDetails } from 'utils/placeholderCardDetails';
@@ -91,31 +93,34 @@ const CardPage: React.FC<CardPageProps> = ({
   const synergistic = useMemo(() => hydrateBucket(synergisticIDs, detailsById), [synergisticIDs, detailsById]);
 
   return (
-    <MainLayout>
-      <DynamicFlash />
-      <Banner />
-      <Row className="my-3">
-        <Col xs={12} xxl={8}>
-          <CardBreakdown card={card} history={history} />
-        </Col>
-        <Col xs={12} xxl={4}>
-          <Row>
-            <Col xs={12} md={6} xxl={12}>
-              <CardVersions card={card} versions={filteredVersions} />
-            </Col>
-            <Col xs={12} md={6} xxl={12}>
-              <CardPurchase card={card} />
-            </Col>
-          </Row>
-        </Col>
-      </Row>
-      <Correlations
-        draftedWith={draftedWith}
-        cubedWith={cubedWith}
-        synergistic={synergistic}
-        oracleId={card.oracle_id}
-      />
-    </MainLayout>
+    <CubeTrayProvider>
+      <MainLayout>
+        <DynamicFlash />
+        <Banner />
+        <Row className="my-3">
+          <Col xs={12} xxl={8}>
+            <CardBreakdown card={card} history={history} />
+          </Col>
+          <Col xs={12} xxl={4}>
+            <Row>
+              <Col xs={12} md={6} xxl={12}>
+                <CardVersions card={card} versions={filteredVersions} />
+              </Col>
+              <Col xs={12} md={6} xxl={12}>
+                <CardPurchase card={card} />
+              </Col>
+            </Row>
+          </Col>
+        </Row>
+        <Correlations
+          draftedWith={draftedWith}
+          cubedWith={cubedWith}
+          synergistic={synergistic}
+          oracleId={card.oracle_id}
+        />
+      </MainLayout>
+      <CubeTray />
+    </CubeTrayProvider>
   );
 };
 

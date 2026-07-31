@@ -1,51 +1,32 @@
 ---
 title: Adding and Editing Cards
-description: Fill your cube with cards and keep the list organized.
+description: Fill your cube with cards and save your first update.
 order: 2
 ---
 
 Once you've [created a cube](/wiki/getting-started/creating-a-cube), it's time to add cards. Open
-your cube and switch to the **List** tab, then click **Edit** to enter edit mode.
+your cube's **List** tab and click **Edit** to open the editing panel. (On a brand-new empty cube
+it opens by itself.)
 
-## Adding cards one at a time
+Edits don't apply one at a time. They collect in a change list in the panel, and nothing is saved
+until you commit the whole batch. That means you can experiment freely and review everything before
+it becomes real.
 
-In edit mode, use the **Add** box to type a card name. Autocomplete will suggest matching cards as
-you type — pick one and it's added to your maindeck. This is the quickest way to add a handful of
-cards, like the {R} staples [[Lightning Bolt]] or [[Goblin Guide]].
+## Add your cards
 
-## Bulk uploading
+Use the **Add Card** box to type a card name; autocomplete suggests matches as you type, and each
+pick joins your change list. Adding a stack of {R} staples like [[Lightning Bolt]] and
+[[Goblin Guide]] is just type, Enter, type, Enter.
 
-To add many cards at once, use **Bulk Upload**. Paste a list of card names, one per line:
+Already have the list in a file or spreadsheet? The **Import** menu in the same panel takes a
+pasted decklist or an uploaded file, one card per line, and stages the whole thing in one go.
 
-```
-Lightning Bolt
-Goblin Guide
-Monastery Swiftspear
-```
+## Save your first update
 
-Cube Cobra matches each line to a card and adds them all in one go. This is the fastest way to
-import an existing list from a text file or spreadsheet.
+Click **Save Changes** to commit. Every commit is recorded in the cube's **Changelog**, so you can
+always look back at what changed and when. If you tick **Create Blog Post** before saving, the
+update is published to your cube's blog for your drafters to read.
 
-## Choosing printings
-
-Every card can use a specific printing (art and set). Click a card to open its detail panel, where
-you can change the **version** to any printing available on Scryfall. Set a cube-wide
-**default printing** preference in your account settings (for example, always prefer the oldest or
-newest version).
-
-## Organizing with tags
-
-Tags let you group cards by theme, archetype, or role — for example `aggro`, `removal`, or
-`fixing`. Add tags from a card's detail panel. You can then color-code tags and use them to filter
-and sort your list.
-
-| Tag     | Example cards                            |
-| ------- | ---------------------------------------- |
-| removal | [[Swords to Plowshares]], [[Doom Blade]] |
-| fixing  | [[Command Tower]], [[Fellwar Stone]]     |
-
-## Saving changes
-
-Edits are staged as you work. When you're happy, click **Save Changes** to commit them. Cube Cobra
-keeps a changelog of every edit, so you can always review what changed and when from the
-**Changelog** tab.
+That's the core loop: stage, review, save. Everything else the list can do is covered in
+[The List Tab](/wiki/cube-page/list): choosing printings, tags and tag colors, bulk edits,
+filters, display modes, and extra boards.
