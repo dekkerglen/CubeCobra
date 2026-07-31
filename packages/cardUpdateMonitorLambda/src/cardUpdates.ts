@@ -13,7 +13,11 @@ interface ScryfallBulkData {
   data: Array<{
     type: string;
     updated_at: string;
-    size: number;
+    // Scryfall's JSONL bulk format reports compressed_size; the old `size` field
+    // was removed alongside download_uri (retired 2026-07-20). Keep `size` as a
+    // fallback in case older responses are ever served.
+    compressed_size?: number;
+    size?: number;
   }>;
 }
 
@@ -54,8 +58,17 @@ async function checkScryfallFileSize(): Promise<{ size: number; updatedAt: strin
       return null;
     }
 
+    const size = allCardsData.compressed_size ?? allCardsData.size;
+    // Guard against schema drift: comparing an undefined size against a manifest
+    // whose size field was also dropped silently reads as "up to date" and stalls
+    // updates forever. Fail loudly instead so the stall is visible in the logs.
+    if (typeof size !== 'number' || !Number.isFinite(size)) {
+      console.error('Scryfall bulk-data entry for all_cards has no usable size field (schema change?)');
+      return null;
+    }
+
     return {
-      size: allCardsData.size,
+      size,
       updatedAt: allCardsData.updated_at,
     };
   } catch (error) {

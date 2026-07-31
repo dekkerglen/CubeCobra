@@ -231,10 +231,13 @@ async function downloadDefaultCards(useS3Cache?: boolean): Promise<{ updatedAt: 
       type: string;
       // Scryfall's newer bulk format: a gzipped JSONL file (one card per line).
       // download_uri (the deprecated streaming-gzip JSON array) is retired after
-      // 2026-07-20, so we consume jsonl_download_uri exclusively.
+      // 2026-07-20, so we consume jsonl_download_uri exclusively. The old `size`
+      // field was removed at the same time; the JSONL entries report
+      // compressed_size instead.
       jsonl_download_uri: string;
       updated_at: string;
-      size: number;
+      compressed_size?: number;
+      size?: number;
     }>;
   };
 
@@ -243,7 +246,15 @@ async function downloadDefaultCards(useS3Cache?: boolean): Promise<{ updatedAt: 
       defaultUrl = data.jsonl_download_uri;
     } else if (data.type === 'all_cards') {
       allUrl = data.jsonl_download_uri;
-      allCardsMetadata = { updated_at: data.updated_at, size: data.size };
+      const size = data.compressed_size ?? data.size;
+      // Fail loudly rather than writing a manifest with a missing/NaN
+      // scryfallFileSize — the monitor lambda compares that value against
+      // Scryfall's current size to decide whether to run, and an undefined
+      // value on both sides reads as "up to date" and stalls updates forever.
+      if (typeof size !== 'number' || !Number.isFinite(size)) {
+        throw new Error('all_cards bulk-data entry has no usable size field (Scryfall schema change?)');
+      }
+      allCardsMetadata = { updated_at: data.updated_at, size };
     }
   }
 
@@ -277,31 +288,37 @@ interface ScryfallTag {
   taggings?: Array<{ oracle_id?: string; illustration_id?: string; weight?: string }>;
 }
 
-async function fetchTagFile(url: string): Promise<ScryfallTag[]> {
-  const response = await fetch(url, { headers: SCRYFALL_HEADERS });
-  if (!response.ok) throw new Error(`Download of tag file '${url}' failed with code ${response.status}`);
-  return (await response.json()) as ScryfallTag[];
+// Tag bulk files are gzipped JSONL (one tag object per line), same as the card
+// bulk exports. Download+gunzip to disk, then stream line-by-line.
+async function fetchTagFile(url: string, fileName: string): Promise<ScryfallTag[]> {
+  const filePath = `${PRIVATE_DIR}/${fileName}`;
+  await downloadFile(url, filePath, true);
+  const tags: ScryfallTag[] = [];
+  await processJsonlFile(filePath, (item) => tags.push(item));
+  return tags;
 }
 
 // Downloads Scryfall's public Tagger bulk data (oracle tags + art tags) and builds the
-// oracleId -> slugs and illustrationId -> slugs lookups consumed by convertCard. The tag
-// files are moderate (tens of MB of plain JSON), well under V8's max string length, so we
-// parse them in memory rather than streaming. Callers treat failures as non-fatal.
+// oracleId -> slugs and illustrationId -> slugs lookups consumed by convertCard.
+// Callers treat failures as non-fatal.
 async function downloadTags(): Promise<void> {
   const res = await fetch('https://api.scryfall.com/bulk-data', { headers: SCRYFALL_HEADERS });
   if (!res.ok) throw new Error(`Download of /bulk-data failed with code ${res.status}`);
-  const resjson = (await res.json()) as { data: Array<{ type: string; download_uri: string }> };
+  const resjson = (await res.json()) as { data: Array<{ type: string; jsonl_download_uri: string }> };
 
   let oracleTagsUrl: string | undefined;
   let artTagsUrl: string | undefined;
   for (const data of resjson.data) {
-    if (data.type === 'oracle_tags') oracleTagsUrl = data.download_uri;
-    else if (data.type === 'art_tags') artTagsUrl = data.download_uri;
+    if (data.type === 'oracle_tags') oracleTagsUrl = data.jsonl_download_uri;
+    else if (data.type === 'art_tags') artTagsUrl = data.jsonl_download_uri;
   }
   if (!oracleTagsUrl) throw new Error('URL for Oracle tags not found in /bulk-data response');
   if (!artTagsUrl) throw new Error('URL for Art tags not found in /bulk-data response');
 
-  const [oracleTags, artTags] = await Promise.all([fetchTagFile(oracleTagsUrl), fetchTagFile(artTagsUrl)]);
+  const [oracleTags, artTags] = await Promise.all([
+    fetchTagFile(oracleTagsUrl, 'oracle-tags.jsonl'),
+    fetchTagFile(artTagsUrl, 'art-tags.jsonl'),
+  ]);
 
   for (const tag of oracleTags) {
     if (!tag.slug || !Array.isArray(tag.taggings)) continue;
