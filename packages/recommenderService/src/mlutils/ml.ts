@@ -4,6 +4,8 @@ import path from 'path';
 
 import 'dotenv/config';
 
+import { softmax } from '@utils/drafting/mlScoring';
+
 import { getAllOracleIds } from './cardCatalog';
 import cloudwatch from './cloudwatch';
 
@@ -118,13 +120,6 @@ export const ensureModelsReady = (timeout = 30000): Promise<void> => {
       }
     }, 500);
   });
-};
-
-const softmax = (array: number[]) => {
-  const max = Math.max(...array);
-  const exps = array.map((x) => Math.exp(x - max));
-  const sum = exps.reduce((a, b) => a + b, 0);
-  return exps.map((value) => value / sum);
 };
 
 const encodeIndeces = (indeces: number[]) => {

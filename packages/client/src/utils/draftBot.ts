@@ -28,6 +28,21 @@ import { MODEL_VERSION } from '@utils/modelVersion';
 import { BasicLandInfo } from '@utils/datatypes/SimulationReport';
 import { type LandTrimDeck, runManabaseTrim } from '@utils/drafting/landTrim';
 import { pickAddedBasics } from '@utils/drafting/manabaseHeuristics';
+import {
+  buildOracleRemapping,
+  buildSeatMlMaps,
+  type LogitLookup,
+  mlOracle,
+  pickTop,
+  rankPack,
+  type RatedCard,
+} from '@utils/drafting/mlScoring';
+
+// The ML post-processing (remapping, out-of-vocab rule, ranking, softmax) now
+// lives in @utils/drafting/mlScoring so the browser sim and the recommender
+// service share one implementation. Re-exported here for existing importers.
+export { buildOracleRemapping, buildSeatMlMaps };
+export type { RatedCard };
 
 // Models are served only from the CDN. We deliberately do NOT fall back to the
 // app origin: the bundle is ~70 MB and proxying it through our server would
@@ -194,17 +209,7 @@ export function countOutOfVocabOracles(cardMeta: Record<string, { mlOracleId?: s
 // Shared forward pass helper
 // ---------------------------------------------------------------------------
 
-export type RatedCard = { oracle: string; rating: number };
-type MlSeatMaps = { toMl: Record<string, string>; fromMl: Record<string, string[]> };
 type DeckCardMeta = DeckbuildEntry['cardMeta'][string];
-
-/**
- * Resolve the ML oracle ID for a given oracle ID, applying the remapping for
- * cards not in the training vocabulary (e.g. Black Lotus → most similar known card).
- */
-function mlOracle(oracle: string, remapping?: Record<string, string>): string {
-  return remapping?.[oracle] ?? oracle;
-}
 
 /**
  * Thrown when a WebGL context loss or GPU OOM is detected during TF.js inference.
@@ -311,33 +316,6 @@ async function forwardPass(
   return out;
 }
 
-/**
- * Build an oracle remapping from CardMeta: maps original oracle ID → ML oracle ID
- * for cards whose mlOracleId differs (i.e. not in training vocab).
- */
-export function buildOracleRemapping(cardMeta: Record<string, { mlOracleId?: string }>): Record<string, string> {
-  const remapping: Record<string, string> = {};
-  for (const [oracle, meta] of Object.entries(cardMeta)) {
-    if (meta.mlOracleId) remapping[oracle] = meta.mlOracleId;
-  }
-  return remapping;
-}
-
-export function buildSeatMlMaps(poolOracles: string[], remapping?: Record<string, string>): MlSeatMaps {
-  const toMl: Record<string, string> = {};
-  const fromMl: Record<string, string[]> = {};
-
-  for (const oracle of poolOracles) {
-    if (toMl[oracle] !== undefined) continue;
-    const mapped = mlOracle(oracle, remapping);
-    toMl[oracle] = mapped;
-    if (!fromMl[mapped]) fromMl[mapped] = [];
-    if (!fromMl[mapped]!.includes(oracle)) fromMl[mapped]!.push(oracle);
-  }
-
-  return { toMl, fromMl };
-}
-
 // ---------------------------------------------------------------------------
 // Embedding extraction (used for clustering / UMAP visualization)
 // ---------------------------------------------------------------------------
@@ -418,6 +396,17 @@ export function reshapeEmbeddings(flat: Float32Array, n: number): number[][] {
 // Draft picking (used during simulation)
 // ---------------------------------------------------------------------------
 
+// Build the logit lookup that the shared rankPack/pickTop consume from a decoder
+// output row. Returns undefined for out-of-vocab cards (no ML index), which the
+// shared helpers treat as never-take; an in-vocab card missing a value defaults
+// to 0, matching the original inline behavior.
+const rowLogitLookup =
+  (logits: Float32Array, rowBase: number, remapping?: Record<string, string>): LogitLookup =>
+  (oracle) => {
+    const idx = oracleToIndex[mlOracle(oracle, remapping)];
+    return idx === undefined ? undefined : (logits[rowBase + idx] ?? 0);
+  };
+
 /**
  * Picks one card per seat for a single pick round.
  * Exact port of the server's draftBatch() + simulateall top-1 extraction.
@@ -440,24 +429,10 @@ export async function localPickBatch(
 
   const logits = await forwardPass(pools, draftDecoder, remapping, chunkSize);
 
-  // Extract top pick per seat via pack-masked argmax.
-  // Softmax preserves the same ordering while doing substantially more work.
-  return packs.map((pack, i) => {
-    if (pack.length === 0) return '';
-    const rowBase = i * numOracles;
-
-    let bestOracle = '';
-    let bestRaw = -Infinity;
-    for (const oracle of pack) {
-      const idx = oracleToIndex[mlOracle(oracle, remapping)];
-      const raw = idx !== undefined ? (logits[rowBase + idx] ?? 0) : 0;
-      if (raw > bestRaw) {
-        bestRaw = raw;
-        bestOracle = oracle;
-      }
-    }
-    return bestOracle;
-  });
+  // Top pick per seat via the shared pack-masked argmax (out-of-vocab never-take,
+  // all-out-of-vocab falls back to the first card). Softmax preserves the same
+  // ordering, so the argmax matches the server draft() pick.
+  return packs.map((pack, i) => pickTop(pack, rowLogitLookup(logits, i * numOracles, remapping)));
 }
 
 // ---------------------------------------------------------------------------
@@ -477,15 +452,7 @@ export async function localBatchBuild(
     return pools.map(() => []);
   }
   const logits = await forwardPass(pools, deckBuildDecoder, remapping, chunkSize);
-  return pools.map((pool, i) => {
-    const rowBase = i * numOracles;
-    return pool
-      .map((oracle) => {
-        const idx = oracleToIndex[mlOracle(oracle, remapping)];
-        return { oracle, rating: idx !== undefined ? (logits[rowBase + idx] ?? 0) : 0 };
-      })
-      .sort((a, b) => b.rating - a.rating);
-  });
+  return pools.map((pool, i) => rankPack(pool, rowLogitLookup(logits, i * numOracles, remapping)));
 }
 
 /**
@@ -507,15 +474,7 @@ export async function localBatchDraftRanked(
     remapping,
     chunkSize,
   );
-  return inputs.map(({ pack }, i) => {
-    const rowBase = i * numOracles;
-    return pack
-      .map((oracle) => {
-        const idx = oracleToIndex[mlOracle(oracle, remapping)];
-        return { oracle, rating: idx !== undefined ? (logits[rowBase + idx] ?? 0) : 0 };
-      })
-      .sort((a, b) => b.rating - a.rating);
-  });
+  return inputs.map(({ pack }, i) => rankPack(pack, rowLogitLookup(logits, i * numOracles, remapping)));
 }
 
 /**
