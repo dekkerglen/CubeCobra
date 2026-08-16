@@ -38,8 +38,13 @@ export default {
     '^types/(.*)$': '<rootDir>/src/types/$1',
   },
 
-  // Transform ignore patterns
-  transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$))'],
+  // Transform ignore patterns. sanitize-html@2.17.6 pulls a nested htmlparser2@12 whose entry
+  // (dist/index.js) is native ESM; babel-jest must transform it (and its ESM deps) or requiring
+  // it throws "Cannot use import statement outside a module". The nested package names are listed
+  // explicitly so the negative lookahead fails at both node_modules/ segments of the nested path.
+  transformIgnorePatterns: [
+    'node_modules/(?!(.*\\.mjs$|(sanitize-html|htmlparser2|domhandler|domutils|dom-serializer|domelementtype|entities)/))',
+  ],
 
   // Test file patterns
   testMatch: ['**/*.test.ts'],
