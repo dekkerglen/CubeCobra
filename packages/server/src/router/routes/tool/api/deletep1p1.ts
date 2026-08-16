@@ -23,8 +23,10 @@ export const deleteP1P1Handler = async (req: Request, res: Response) => {
       return res.status(401).json({ error: 'Authentication required' });
     }
 
-    // Get the pack to check permissions
-    const pack = await p1p1PackDao.getById(packId);
+    // Get the pack metadata to check permissions. Use getMetadataById (DynamoDB only) rather than
+    // getById (which also hydrates from S3) so that orphaned rows — whose S3 payload is already
+    // gone — can still be found and cleaned up here instead of 404ing forever.
+    const pack = await p1p1PackDao.getMetadataById(packId);
     if (!pack) {
       return res.status(404).json({ error: 'P1P1 pack not found' });
     }
