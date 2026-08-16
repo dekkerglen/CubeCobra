@@ -46,7 +46,7 @@ const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, isBal
             <DynamicFlash />
             <Card>
               <CardHeader>
-                <Flexbox direction="row" justify="between" alignItems="center">
+                <Flexbox direction="col" gap="2">
                   <Flexbox direction="col" gap="1">
                     <Text semibold lg>
                       {isBalanced ? 'Balanced Sample Pack' : 'Sample Pack'}
@@ -60,16 +60,16 @@ const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, isBal
                       </Text>
                     )}
                   </Flexbox>
-                  <Flexbox direction="row" gap="2">
-                    <P1P1FromPackGenerator cubeId={cube.id} seed={seed} pack={pack} />
+                  <Flexbox direction="row" wrap="wrap" gap="2">
+                    <P1P1FromPackGenerator cubeId={cube.id} seed={seed} pack={pack} label="Create P1P1" />
                     <Button type="link" color="primary" href={`/cube/samplepack/${cube.id}`}>
-                      New Pack
+                      New
                     </Button>
                     <Button type="link" color="primary" href={`/cube/samplepack/${cube.id}?balanced=true`}>
-                      Balanced Pack
+                      Balanced
                     </Button>
                     <Button color="accent" onClick={handleCopyRandomLink}>
-                      {copied ? 'Copied!' : 'Link for Random Pack'}
+                      {copied ? 'Copied!' : 'Random Link'}
                     </Button>
                     <Button
                       type="link"
