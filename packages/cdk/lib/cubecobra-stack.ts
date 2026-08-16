@@ -394,6 +394,11 @@ function createEnvironmentVariables(
   if (params.r2SecretAccessKey) envVars.R2_SECRET_ACCESS_KEY = params.r2SecretAccessKey;
   if (params.r2Bucket) envVars.R2_BUCKET = params.r2Bucket;
 
+  // The server needs the card image host to allowlist it in the image proxy
+  // (packages/server/src/router/routes/tool/imageproxy.ts), which the Print &
+  // Play PDF export uses to fetch self-hosted card images without CORS issues.
+  if (params.cardImageBaseUrl) envVars.CARD_IMAGE_BASE_URL = params.cardImageBaseUrl;
+
   return envVars;
 }
 
