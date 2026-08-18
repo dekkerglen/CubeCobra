@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { GrabberIcon } from '@primer/octicons-react';
 import { TagColor } from '@utils/datatypes/Cube';
@@ -10,6 +10,7 @@ import { Card } from '../base/Card';
 import { Flexbox } from '../base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import Tag from '../base/Tag';
+import Text from '../base/Text';
 import { SortableItem, SortableList } from '../DND';
 import LoadingButton from '../LoadingButton';
 import TagColorPicker from '../TagColorPicker';
@@ -60,27 +61,57 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
   //Continually update the tagColors in CubeContext as the modal contents change. They won't persist until the actual save
   const { tagColors, setTagColors, showTagColors, updateShowTagColors, canEdit, cube } = useContext(CubeContext);
   const [loading, setLoading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  //The last-saved colors, so closing the modal without saving can revert the live preview
+  const savedTagColorsRef = useRef<TagColor[]>(tagColors);
+
+  useEffect(() => {
+    if (isOpen) {
+      setSaveError(null);
+      savedTagColorsRef.current = tagColors;
+    }
+    // Snapshot only when the modal opens, not on every color change while it is open
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen]);
+
+  //Dismissing the modal (X, backdrop, Esc) discards unsaved changes instead of leaving
+  //them applied on screen while never persisted (#2991)
+  const handleSetOpen = useCallback(
+    (open: boolean) => {
+      if (!open) {
+        setTagColors(savedTagColorsRef.current);
+      }
+      setOpen(open);
+    },
+    [setOpen, setTagColors],
+  );
 
   const updateModalColors = useCallback(
     async (colors: TagColor[]) => {
       setLoading(true);
-      const response = await csrfFetch(`/cube/api/savetagcolors/${cube.id}`, {
-        method: 'POST',
-        body: JSON.stringify({ tag_colors: tagColors }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
+      setSaveError(null);
+      try {
+        const response = await csrfFetch(`/cube/api/savetagcolors/${cube.id}`, {
+          method: 'POST',
+          body: JSON.stringify({ tag_colors: colors }),
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
 
-      if (response.ok) {
-        setTagColors(colors);
-      } else {
-        console.error('Request failed.');
+        if (response.ok) {
+          savedTagColorsRef.current = colors;
+          setTagColors(colors);
+          setOpen(false);
+        } else {
+          setSaveError('Failed to save tag colors. Please try again.');
+        }
+      } catch {
+        setSaveError('Failed to save tag colors. Please try again.');
       }
       setLoading(false);
-      setOpen(false);
     },
-    [csrfFetch, cube.id, tagColors, setOpen, setTagColors],
+    [csrfFetch, cube.id, setOpen, setTagColors],
   );
 
   const handleChangeColor = useCallback(
@@ -135,8 +166,8 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
   );
 
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen} md scrollable>
-      <ModalHeader setOpen={setOpen}>{canEdit ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
+    <Modal isOpen={isOpen} setOpen={handleSetOpen} md scrollable>
+      <ModalHeader setOpen={handleSetOpen}>{canEdit ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
       <ModalBody scrollable>
         {showTagColors ? (
           <LoadingButton
@@ -184,9 +215,16 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
         )}
       </ModalBody>
       <ModalFooter>
-        <LoadingButton block color="primary" onClick={() => updateModalColors(tagColors)} loading={loading}>
-          Save Changes
-        </LoadingButton>
+        <Flexbox direction="col" gap="2" className="w-full">
+          {saveError && (
+            <Text sm className="text-danger">
+              {saveError}
+            </Text>
+          )}
+          <LoadingButton block color="primary" onClick={() => updateModalColors(tagColors)} loading={loading}>
+            Save Changes
+          </LoadingButton>
+        </Flexbox>
       </ModalFooter>
     </Modal>
   );
