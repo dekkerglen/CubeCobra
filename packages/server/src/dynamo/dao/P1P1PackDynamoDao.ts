@@ -16,7 +16,7 @@
  * when dualWriteEnabled flag is set.
  */
 
-import { DynamoDBDocumentClient, QueryCommandInput, UpdateCommand } from '@aws-sdk/lib-dynamodb';
+import { DeleteCommand, DynamoDBDocumentClient, QueryCommandInput, UpdateCommand } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
 import Card from '@utils/datatypes/Card';
 import {
@@ -188,6 +188,21 @@ export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, Unhydrate
   }
 
   /**
+   * Gets a pack's DynamoDB metadata (createdBy, cubeId, etc.) without hydrating from S3.
+   *
+   * Unlike getById(), this does not depend on the S3 payload, so it still returns a result for
+   * packs whose S3 data is missing (e.g. orphaned rows left by an older delete path). Callers that
+   * only need ownership/permission info — or that want to clean up an orphaned row — should use this.
+   */
+  public async getMetadataById(id: string): Promise<UnhydratedP1P1Pack | undefined> {
+    const raw = await this.getRaw({
+      PK: this.typedKey(id),
+      SK: this.itemType(),
+    });
+    return raw?.item;
+  }
+
+  /**
    * Queries packs by cube with pagination.
    */
   public async queryByCube(
@@ -322,6 +337,21 @@ export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, Unhydrate
    * Deletes a pack by ID.
    */
   public async deleteById(id: string): Promise<void> {
+    // Delete the DynamoDB row first, by key. We can't route through getById()/delete(here)
+    // because getById() hydrates from S3 and returns undefined once the S3 payload is gone —
+    // deleting S3 first would leave the DynamoDB row orphaned (still listed, createdByUsername
+    // falling back to "Unknown", and undeletable since the next lookup 404s). Deleting by key
+    // avoids the S3 dependency entirely and is order-independent.
+    await this.dynamoClient.send(
+      new DeleteCommand({
+        TableName: this.tableName,
+        Key: {
+          PK: this.typedKey(id),
+          SK: this.itemType(),
+        },
+      }),
+    );
+
     // Delete from S3
     try {
       const key = this.getS3Key(id);
@@ -329,12 +359,6 @@ export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, Unhydrate
       await deleteObject(bucket, key);
     } catch (error) {
       console.error(`Failed to delete S3 object for pack ${id}:`, error);
-    }
-
-    // Delete from DynamoDB
-    const pack = await this.getById(id);
-    if (pack) {
-      await this.delete(pack);
     }
   }
 
