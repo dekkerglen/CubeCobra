@@ -43,6 +43,11 @@ process.on('unhandledRejection', (reason: unknown) => {
 // Init app
 const app = express();
 
+// We sit behind the instance's nginx (loopback) and the ALB (private address). Trusting
+// those hops makes req.ip the real client address from X-Forwarded-For, while still
+// ignoring any spoofed entries a caller prepends (req.ip feeds rate limiting and logs).
+app.set('trust proxy', ['loopback', 'uniquelocal']);
+
 // gzip middleware
 app.use(compression());
 

@@ -14,10 +14,9 @@ import { Request, Response } from 'types/express';
 const DEFAULT_WINDOW = 180;
 const DEFAULT_LIMIT = 50;
 const MAX_LIMIT = 200;
-// The per-path chart draws one line per route; capped at the chart palette size so
-// every line keeps a distinct color.
+// Bounds for how many routes the per-path chart draws a line for.
 const DEFAULT_SERIES_PATHS = 5;
-const MAX_SERIES_PATHS = 8;
+const MAX_SERIES_PATHS = 50;
 
 // The metrics the Performance page can rank routes by. Each builds an Insights `stats ...`
 // query grouped by matchedPath (the route pattern, so /cube/list/:id groups together).

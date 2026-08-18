@@ -10,6 +10,7 @@ import {
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Container from 'components/base/Container';
 import { Col, Flexbox, Row } from 'components/base/Layout';
+import Link from 'components/base/Link';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
 import Table from 'components/base/Table';
@@ -68,11 +69,11 @@ const LIMIT_OPTIONS = [
   { value: '200', label: 'Top 200' },
 ];
 
-// Capped at 8 so each line keeps a distinct palette color.
 const TOP_PATH_OPTIONS = [
-  { value: '3', label: 'Top 3 routes' },
   { value: '5', label: 'Top 5 routes' },
-  { value: '8', label: 'Top 8 routes' },
+  { value: '10', label: 'Top 10 routes' },
+  { value: '25', label: 'Top 25 routes' },
+  { value: '50', label: 'Top 50 routes' },
 ];
 
 const EXTRA_HEADER: Record<string, string> = {
@@ -212,7 +213,7 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
   const headers = ['Route', valueHeader, ...extraColumns.map((c) => EXTRA_HEADER[c] ?? c)];
   const tableRows = rows.map((r) => {
     const row: { [key: string]: React.ReactNode } = {
-      Route: r.matchedPath,
+      Route: <Link href={`/admin/pathanalysis?path=${encodeURIComponent(r.matchedPath)}`}>{r.matchedPath}</Link>,
       [valueHeader]: isByteUnit ? formatBytes(r.value) : Math.round(r.value).toLocaleString(),
     };
     for (const c of extraColumns) {

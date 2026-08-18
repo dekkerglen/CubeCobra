@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 
 import { cardId, detailsToCard } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
@@ -112,67 +112,42 @@ const CardBreakdownInfo: React.FC<CorrelationProps> = ({
 }) => {
   const [correlatedTab, setCorrelatedTab] = useQueryParam('correlatedTab', '0');
   const { csrfFetch } = useContext(CSRFContext);
-  const [loadedCombos, setLoadedCombos] = useState<Combo[] | null>(combos.length ? combos : null);
+  const [loadedCombos, setLoadedCombos] = useState<Combo[]>([]);
   const [loadingCombos, setLoadingCombos] = useState<boolean>(false);
-  const [loadedForOracleId, setLoadedForOracleId] = useState<string | null>(null);
+  // The oracleId a fetch has already been started for (in flight or done). A ref rather
+  // than state so re-renders while the request is loading can't fire duplicates.
+  const fetchStartedForRef = useRef<string | null>(null);
+
+  const hasComboProp = combos.length > 0;
 
   useEffect(() => {
-    if (combos.length) {
-      setLoadedCombos((prev) => {
-        // Only update if the data has actually changed
-        if (JSON.stringify(prev) !== JSON.stringify(combos)) {
-          return combos;
-        }
-        return prev;
-      });
-      setLoadedForOracleId(oracleId ?? null);
+    if (hasComboProp || !oracleId || fetchStartedForRef.current === oracleId) {
       return;
     }
-
-    // Don't fetch if we already have loaded combos for this specific oracle ID
-    if (loadedForOracleId === oracleId && loadedCombos !== null) {
-      return;
-    }
-
-    // Don't fetch if already loading for this oracle ID
-    if (loadingCombos && loadedForOracleId === oracleId) {
-      return;
-    }
+    fetchStartedForRef.current = oracleId;
 
     let cancelled = false;
 
     const fetchCombos = async () => {
       setLoadingCombos(true);
-
       try {
         const res = await csrfFetch('/tool/api/getcardcombos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ oracleId: oracleId }),
+          body: JSON.stringify({ oracleId }),
         });
-
         if (cancelled) {
           return;
         }
-
-        if (!res.ok) {
-          setLoadedCombos([]);
-          setLoadedForOracleId(oracleId ?? null);
-          setLoadingCombos(false);
-          return;
-        }
-
-        const data = await res.json();
-        const list = data?.combos ?? [];
-
-        setLoadedCombos(list as Combo[]);
-        setLoadedForOracleId(oracleId ?? null); // Only set after successful completion
-        setLoadingCombos(false);
+        const data = res.ok ? await res.json() : null;
+        setLoadedCombos((data?.combos ?? []) as Combo[]);
       } catch (e) {
         if (!cancelled) {
           console.error('Error fetching combos:', e);
           setLoadedCombos([]);
-          setLoadedForOracleId(oracleId ?? null);
+        }
+      } finally {
+        if (!cancelled) {
           setLoadingCombos(false);
         }
       }
@@ -183,10 +158,9 @@ const CardBreakdownInfo: React.FC<CorrelationProps> = ({
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [combos, oracleId, correlatedTab]);
+  }, [csrfFetch, hasComboProp, oracleId]);
 
-  const combosToRender = useMemo(() => loadedCombos ?? combos, [loadedCombos, combos]);
+  const combosToRender = hasComboProp ? combos : loadedCombos;
 
   return (
     <Card>
