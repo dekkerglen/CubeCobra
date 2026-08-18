@@ -12,7 +12,6 @@ import EditRecordOverviewModal from 'components/modals/EditRecordOverviewModal';
 import ShareRecordModal from 'components/modals/ShareRecordModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
-import UserContext from 'contexts/UserContext';
 
 const EditRecordOverviewLink = withModal(Link, EditRecordOverviewModal);
 const ShareRecordLink = withModal(Link, ShareRecordModal);
@@ -24,10 +23,9 @@ interface RecordOverviewProps {
 // The record's header block, shown at the top of the page (no longer a tab):
 // name, date, description, and owner controls.
 const RecordOverview: React.FC<RecordOverviewProps> = ({ record }) => {
-  const { cube } = useContext(CubeContext);
-  const user = useContext(UserContext);
+  const { canEdit } = useContext(CubeContext);
 
-  const isOwner = user && cube && user.id === cube.owner.id;
+  const isOwner = canEdit;
 
   return (
     <CardBody>

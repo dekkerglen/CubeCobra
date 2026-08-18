@@ -13,7 +13,6 @@ import EditRoundModal from 'components/modals/EditRoundModal';
 import RemoveRoundModal from 'components/modals/RemoveRoundModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
-import UserContext from 'contexts/UserContext';
 
 const AddRoundLink = withModal(Link, AddRoundModal);
 const EditRoundLink = withModal(Link, EditRoundModal);
@@ -25,10 +24,9 @@ interface RecordMatchesProps {
 }
 
 const RecordMatches: React.FC<RecordMatchesProps> = ({ record }) => {
-  const { cube } = useContext(CubeContext);
-  const user = useContext(UserContext);
+  const { canEdit } = useContext(CubeContext);
 
-  const isOwner = user && cube && user.id === cube.owner.id;
+  const isOwner = canEdit;
 
   return (
     <CardBody>

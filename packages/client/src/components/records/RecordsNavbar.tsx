@@ -10,7 +10,6 @@ import CSRFForm from 'components/CSRFForm';
 import CreateRecordFromDraftModal from 'components/modals/CreateRecordFromDraftModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
-import UserContext from 'contexts/UserContext';
 
 import { defaultRecordName } from '../../records/recordName';
 
@@ -46,12 +45,9 @@ const CreateNewRecordButton: React.FC<{ cubeId: string }> = ({ cubeId }) => {
 };
 
 const RecordsNavbar: React.FC = () => {
-  const user = useContext(UserContext);
-  const { cube } = useContext(CubeContext);
+  const { cube, canEdit } = useContext(CubeContext);
 
-  const isOwner = user && cube && user.id === cube.owner.id;
-
-  if (!isOwner) {
+  if (!canEdit || !cube) {
     return null;
   }
 

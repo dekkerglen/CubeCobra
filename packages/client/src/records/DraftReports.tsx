@@ -12,7 +12,6 @@ import IndefinitePaginatedTable from 'components/IndefinitePaginatedTable';
 import RecordDeleteModal from 'components/modals/RecordDeleteModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
-import UserContext from 'contexts/UserContext';
 
 const RecordDeleteModalButton = withModal(Button, RecordDeleteModal);
 interface DraftReportsProps {
@@ -25,10 +24,9 @@ const PAGE_SIZE = 20;
 const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
   const [items, setItems] = useState<Record[]>(records);
   const [lastKeyState, setLastKeyState] = useState<any>(lastKey);
-  const { cube } = useContext(CubeContext);
-  const user = useContext(UserContext);
+  const { cube, canEdit } = useContext(CubeContext);
 
-  const isOwner = user && cube && user.id === cube.owner.id;
+  const isOwner = canEdit;
 
   const renderItem = (record: Record) => ({
     Name: <Link href={`/cube/record/${record.id}`}>{record.name}</Link>,
