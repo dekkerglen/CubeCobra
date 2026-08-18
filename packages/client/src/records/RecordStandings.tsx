@@ -9,7 +9,6 @@ import Text from 'components/base/Text';
 import AssignTrophiesModal from 'components/modals/AssignTrophiesModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
-import UserContext from 'contexts/UserContext';
 
 const AssignTrophiesLink = withModal(Link, AssignTrophiesModal);
 
@@ -18,10 +17,9 @@ interface RecordStandingsProps {
 }
 
 const RecordStandings: React.FC<RecordStandingsProps> = ({ record }) => {
-  const { cube } = useContext(CubeContext);
-  const user = useContext(UserContext);
+  const { canEdit } = useContext(CubeContext);
 
-  const isOwner = user && cube && user.id === cube.owner.id;
+  const isOwner = canEdit;
 
   const standings = useMemo(() => {
     // playerRecord respects a manual override when present, else derives from matches.
