@@ -1,23 +1,14 @@
+import { softmax } from '@utils/drafting/mlScoring';
+
 /** Softmax — for raw logit inputs (e.g., the client-side TF.js bot, which returns
  *  the model's last-layer outputs directly). Don't use this on values that are
  *  already normalized probabilities, since softmax-of-softmax collapses to nearly
  *  uniform. For server-returned ratings (which already include a final-layer
- *  softmax on the ML service side), use `normalizeProbabilities` instead. */
-export const modelScoresToProbabilities = (scores: number[]): number[] => {
-  if (scores.length === 0) return [];
-
-  const finiteScores = scores.map((score) => (Number.isFinite(score) ? score : Number.NEGATIVE_INFINITY));
-  const maxScore = Math.max(...finiteScores);
-
-  if (!Number.isFinite(maxScore)) {
-    return scores.map(() => 0);
-  }
-
-  const exps = finiteScores.map((score) => (Number.isFinite(score) ? Math.exp(score - maxScore) : 0));
-  const total = exps.reduce((acc, value) => acc + value, 0);
-
-  return total > 0 ? exps.map((value) => value / total) : scores.map(() => 0);
-};
+ *  softmax on the ML service side), use `normalizeProbabilities` instead.
+ *
+ *  Delegates to the shared @utils softmax so the sim display, pack ranking, and
+ *  the recommender service all use one implementation. */
+export const modelScoresToProbabilities = softmax;
 
 /** Renormalize already-probability-shaped values to sum to 1. Use this for ratings
  *  returned by the server ML service (`/api/draftbots/predict`, `getBotPrediction`,

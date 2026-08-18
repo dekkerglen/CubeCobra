@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 import type { CardMeta, SimulationRunData, SlimPool } from '@utils/datatypes/SimulationReport';
 
+import { modelScoresToProbabilities } from '../../utils/botRatings';
 import { buildOracleRemapping, loadDraftBot, localBatchDraftRanked } from '../../utils/draftBot';
 import { MTG_COLORS } from './SimulatorCharts';
 
@@ -41,14 +42,6 @@ function archetypeColorCodes(archetype: string | undefined): string[] {
     .split('')
     .filter((c) => Object.prototype.hasOwnProperty.call(MTG_COLORS, c) && c !== 'C' && c !== 'M');
   return colors.length > 0 ? colors : ['C'];
-}
-
-function softmaxPcts(ratings: number[]): number[] {
-  if (ratings.length === 0) return [];
-  const max = Math.max(...ratings);
-  const exps = ratings.map((v) => Math.exp(v - max));
-  const sum = exps.reduce((a, b) => a + b, 0);
-  return exps.map((v) => (v / sum) * 100);
 }
 
 function buildPackContents(
@@ -494,7 +487,9 @@ const PackOverlay: React.FC<{
         const remapping = buildOracleRemapping(cardMeta);
         const [ranked] = await localBatchDraftRanked([{ pack: availableOracles, pool: seatPool }], remapping);
         if (!cancelled && ranked) {
-          const pcts = softmaxPcts(ranked.map((c) => c.rating));
+          // Shared softmax with SimulatorPickBreakdown / server (handles -Infinity
+          // out-of-vocab and all-OOV packs); ×100 for the percentage display.
+          const pcts = modelScoresToProbabilities(ranked.map((c) => c.rating)).map((p) => p * 100);
           const scoreMap = new Map<string, MlScore>();
           ranked.forEach((card, idx) => scoreMap.set(card.oracle, { rank: idx + 1, pct: pcts[idx] ?? 0 }));
           setMlScores(scoreMap);
