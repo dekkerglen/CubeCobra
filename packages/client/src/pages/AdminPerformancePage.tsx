@@ -1,6 +1,12 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
-import { LineChart, StackedBarChart, formatBucketLabel, statusColor } from 'components/admin/AdminCharts';
+import {
+  LineChart,
+  StackedBarChart,
+  colorForIndex,
+  formatBucketLabel,
+  statusColor,
+} from 'components/admin/AdminCharts';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Container from 'components/base/Container';
 import { Col, Flexbox, Row } from 'components/base/Layout';
@@ -62,6 +68,13 @@ const LIMIT_OPTIONS = [
   { value: '200', label: 'Top 200' },
 ];
 
+// Capped at 8 so each line keeps a distinct palette color.
+const TOP_PATH_OPTIONS = [
+  { value: '3', label: 'Top 3 routes' },
+  { value: '5', label: 'Top 5 routes' },
+  { value: '8', label: 'Top 8 routes' },
+];
+
 const EXTRA_HEADER: Record<string, string> = {
   hits: 'Hits',
   maxMs: 'Max ms',
@@ -84,6 +97,15 @@ const formatBytes = (bytes: number): string => {
 const formatMagnitudeLabel = (magnitude: number): string =>
   `${formatBytes(10 ** magnitude)}–${formatBytes(10 ** (magnitude + 1))}`;
 
+// Picks a single readable byte unit for a whole chart based on its largest value,
+// so every series shares one axis scale.
+const byteScaleFor = (maxValue: number): { divisor: number; suffix: string } => {
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  if (!Number.isFinite(maxValue) || maxValue <= 0) return { divisor: 1, suffix: 'B' };
+  const exp = Math.min(Math.floor(Math.log10(maxValue) / 3), units.length - 1);
+  return { divisor: 1000 ** exp, suffix: units[exp] };
+};
+
 const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWindow, defaultMetric, metrics }) => {
   const { callApi } = useContext(CSRFContext);
   const [windowMinutes, setWindowMinutes] = useState(String(defaultWindow));
@@ -95,6 +117,12 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
   const [extraColumns, setExtraColumns] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const [topPaths, setTopPaths] = useState('5');
+  const [pathTimes, setPathTimes] = useState<number[]>([]);
+  const [pathSeries, setPathSeries] = useState<Record<string, number[]>>({});
+  const [pathOrder, setPathOrder] = useState<string[]>([]);
+  const [pathChartLoading, setPathChartLoading] = useState(false);
 
   const [traffic, setTraffic] = useState<TrafficPoint[]>([]);
   const [statusTimes, setStatusTimes] = useState<number[]>([]);
@@ -146,6 +174,27 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
     }
   }, [callApi, windowMinutes]);
 
+  const runPathChart = useCallback(async () => {
+    setPathChartLoading(true);
+    try {
+      const response = await callApi('/admin/performance/path-timeseries', {
+        windowMinutes: Number(windowMinutes),
+        metric,
+        topPaths: Number(topPaths),
+      });
+      const json = await response.json();
+      if (json.success === 'true') {
+        setPathTimes(json.times || []);
+        setPathSeries(json.series || {});
+        setPathOrder(json.paths || []);
+      }
+    } catch {
+      // charts are best-effort; the table query surfaces errors
+    } finally {
+      setPathChartLoading(false);
+    }
+  }, [callApi, windowMinutes, metric, topPaths]);
+
   useEffect(() => {
     runTable();
   }, [runTable]);
@@ -153,6 +202,10 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
   useEffect(() => {
     runCharts();
   }, [runCharts]);
+
+  useEffect(() => {
+    runPathChart();
+  }, [runPathChart]);
 
   const isByteUnit = unit.includes('bytes');
   const valueHeader = unit || 'Value';
@@ -170,6 +223,19 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
   });
 
   const win = Number(windowMinutes);
+
+  const selectedMetric = metrics.find((m) => m.key === metric);
+  const metricIsBytes = (selectedMetric?.unit || '').includes('bytes');
+  const maxPathValue = Math.max(0, ...pathOrder.flatMap((p) => pathSeries[p] || []));
+  const { divisor, suffix } = byteScaleFor(maxPathValue);
+  const pathChartUnit = metricIsBytes ? (selectedMetric?.unit || '').replace('bytes', suffix) : selectedMetric?.unit;
+  const pathLabels = pathTimes.map((t) => formatBucketLabel(t, win));
+  const pathDatasets = pathOrder.map((p, i) => ({
+    label: p,
+    data: (pathSeries[p] || []).map((v) => (metricIsBytes ? v / divisor : v)),
+    color: colorForIndex(i),
+  }));
+
   const trafficLabels = traffic.map((p) => formatBucketLabel(p.t, win));
   const statusLabels = statusTimes.map((t) => formatBucketLabel(t, win));
   const statusDatasets = Object.keys(statusSeries)
@@ -210,11 +276,25 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
                   setValue={setWindowMinutes}
                 />
                 <Select label="Rows" dense options={LIMIT_OPTIONS} value={limit} setValue={setLimit} />
+                <Select label="Chart lines" dense options={TOP_PATH_OPTIONS} value={topPaths} setValue={setTopPaths} />
               </Flexbox>
             </Flexbox>
           </CardHeader>
           <CardBody>
             <Flexbox direction="col" gap="4">
+              {pathChartLoading ? (
+                <Flexbox direction="row" justify="center" className="w-full py-4">
+                  <Spinner />
+                </Flexbox>
+              ) : (
+                <div>
+                  <Text sm semibold>
+                    {selectedMetric?.label || 'Selected metric'} over time{pathChartUnit ? ` (${pathChartUnit})` : ''}
+                  </Text>
+                  <LineChart labels={pathLabels} datasets={pathDatasets} height={320} />
+                </div>
+              )}
+
               {chartsLoading ? (
                 <Flexbox direction="row" justify="center" className="w-full py-4">
                   <Spinner />
