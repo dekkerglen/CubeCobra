@@ -58,6 +58,13 @@ export class PasswordResetDynamoDao extends BaseDynamoDao<PasswordReset, Passwor
   }
 
   /**
+   * Deletes a password reset by ID, consuming the code so the link can't be replayed.
+   */
+  public async deleteById(id: string): Promise<void> {
+    await this.delete({ id } as PasswordReset);
+  }
+
+  /**
    * Overrides put to support dual writes and return the ID.
    * Accepts both UnhydratedPasswordReset and PasswordReset types, with optional dateCreated/dateLastUpdated.
    */

@@ -1,70 +1,13 @@
-import bcrypt from 'bcryptjs';
-import { passwordResetDao, userDao } from 'dynamo/daos';
-import { body } from 'express-validator';
 import { csrfProtection, flashValidationErrors } from 'router/middleware';
-import { handleRouteError, redirect, render } from 'serverutils/render';
 
-import { Request, Response } from '../../../types/express';
+import { passwordValidators, postHandler } from './passwordreset';
 
-function checkPasswordsMatch(value: string, { req }: any) {
-  if (value !== req.body.password2) {
-    throw new Error('Password confirmation does not match password');
-  }
-  return true;
-}
-
-export const handler = async (req: Request, res: Response) => {
-  try {
-    if (!req.validated) {
-      return render(req, res, 'PasswordResetPage', { code: req.body.code });
-    }
-    const recoveryEmail = req.body.email.toLowerCase();
-    const passwordreset = await passwordResetDao.getById(req.body.code);
-
-    if (!passwordreset) {
-      req.flash('danger', 'Incorrect email and recovery code combination.');
-      return render(req, res, 'PasswordResetPage', { code: req.body.code });
-    }
-    const userByEmail = await userDao.getByEmail(recoveryEmail);
-
-    if (!userByEmail) {
-      req.flash('danger', 'No user with that email found! Are you sure you created an account?');
-      return render(req, res, 'PasswordResetPage', { code: req.body.code });
-    }
-
-    const user = await userDao.getByIdWithSensitiveData(userByEmail.id);
-
-    if (!user) {
-      req.flash('danger', 'User not found');
-      return render(req, res, 'PasswordResetPage', { code: req.body.code });
-    }
-
-    if (req.body.password2 !== req.body.password) {
-      req.flash('danger', "New passwords don't match");
-      return render(req, res, 'PasswordResetPage', { code: req.body.code });
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    user.passwordHash = await bcrypt.hash(req.body.password2, salt);
-    await userDao.update(user as any);
-
-    req.flash('success', 'Password updated successfully');
-    return redirect(req, res, '/user/login');
-  } catch (err) {
-    return handleRouteError(req, res, err, `/user/login`);
-  }
-};
-
+// The reset form posts here; the handler itself lives in ./passwordreset alongside the GET
+// that issues the page, so the two entry points can't drift apart.
 export const routes = [
   {
     path: '/',
     method: 'post',
-    handler: [
-      csrfProtection,
-      body('password', 'Password must be between 8 and 24 characters.').isLength({ min: 8, max: 24 }),
-      body('password', 'New passwords must match.').custom(checkPasswordsMatch),
-      flashValidationErrors,
-      handler,
-    ],
+    handler: [csrfProtection, ...passwordValidators, flashValidationErrors, postHandler],
   },
 ];

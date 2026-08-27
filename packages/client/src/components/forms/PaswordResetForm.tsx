@@ -11,7 +11,6 @@ interface LoginModalProps {
 
 const PasswordResetForm: React.FC<LoginModalProps> = ({ code }) => {
   const [formData, setFormData] = React.useState<Record<string, string>>({
-    email: '',
     password: '',
     password2: '',
     code: code,
@@ -21,15 +20,6 @@ const PasswordResetForm: React.FC<LoginModalProps> = ({ code }) => {
   return (
     <CSRFForm ref={formRef} method="POST" action="/user/lostpasswordreset" formData={formData}>
       <Flexbox direction="col" gap="2">
-        <Input
-          label="Username or Email Address"
-          maxLength={1000}
-          name="email"
-          id="email"
-          type="text"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-        />
         <Input
           label="Password"
           maxLength={1000}
