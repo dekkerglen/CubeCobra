@@ -96,7 +96,7 @@ describe('DraftDynamoDao bot-deck writes', () => {
       expect(put.input.Item).toMatchObject({ DynamoVersion: 8 });
       expect(put.input.ConditionExpression).toContain('DynamoVersion = :expectedVersion');
       expect(put.input.ExpressionAttributeValues).toEqual({ ':expectedVersion': 7 });
-      expect(put.input.Item.item).toMatchObject({
+      expect(put.input.Item!.item).toMatchObject({
         botDecksPending: false,
         seatNames: ['U Tempo', 'UB Control'],
       });
@@ -133,13 +133,13 @@ describe('DraftDynamoDao bot-deck writes', () => {
 
       await dao.applySeatEdit(DRAFT_ID, 0, edit);
 
-      expect(puts()[0]!.input.Item.item).toMatchObject({ botDecksPending: false, botDecksPendingSince: 2 });
+      expect(puts()[0]!.input.Item!.item).toMatchObject({ botDecksPending: false, botDecksPendingSince: 2 });
     });
 
     it('renames only the edited seat', async () => {
       await dao.applySeatEdit(DRAFT_ID, 0, edit);
 
-      const item = puts()[0]!.input.Item.item;
+      const item = puts()[0]!.input.Item!.item;
       expect(item.seatNames).toEqual(['U Tempo', 'U']);
       expect(item.name).toBe('U Tempo Draft of Test Cube');
     });
@@ -147,7 +147,7 @@ describe('DraftDynamoDao bot-deck writes', () => {
     it('keeps a user-supplied deck name and does not regenerate one', async () => {
       await dao.applySeatEdit(DRAFT_ID, 0, { ...edit, title: 'Mono U Flyers' });
 
-      const item = puts()[0]!.input.Item.item;
+      const item = puts()[0]!.input.Item!.item;
       expect(item.name).toBe('Mono U Flyers');
       expect(item.seatNames).toEqual(['U Tempo', 'U']);
     });
@@ -189,7 +189,7 @@ describe('DraftDynamoDao bot-deck writes', () => {
 
       await dao.update(stale);
 
-      expect(puts()[0]!.input.Item.item).toMatchObject({ botDecksPending: false, botDecksPendingSince: 2 });
+      expect(puts()[0]!.input.Item!.item).toMatchObject({ botDecksPending: false, botDecksPendingSince: 2 });
     });
   });
 });

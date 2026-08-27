@@ -21,7 +21,6 @@ import SampleHandModal from 'components/modals/SampleHandModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
-import UserContext from 'contexts/UserContext';
 
 interface RecordDecksProps {
   record: Record;
@@ -48,14 +47,13 @@ const firstPlayerIndexWithDeck = (record: Record, draft: Draft | undefined): num
 };
 
 const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players }) => {
-  const { cube } = useContext(CubeContext);
-  const user = useContext(UserContext);
+  const { canEdit } = useContext(CubeContext);
   const { showCustomImages, toggleShowCustomImages } = useContext(DisplayContext);
   // Default to the first player who actually has a deck; fall back to player 0.
   const firstWithDeck = firstPlayerIndexWithDeck(record, draft);
   const [selectedUserIndex, setSelectedUserIndex] = React.useState<number>(firstWithDeck >= 0 ? firstWithDeck : 0);
 
-  const isOwner = !!(user && cube && user.id === cube.owner.id);
+  const isOwner = canEdit;
   const selectedPlayer = record.players[selectedUserIndex];
   const selectedHasDeck = seatHasDeck(draft, selectedUserIndex);
 
