@@ -313,14 +313,24 @@ const render = (
       existingTwitterImage.content = fallbackImage;
     }
 
-    // A signed-in render embeds that user's identity, cube list and CSRF token in
-    // reactProps, so it must never be stored by a browser or an intermediary. The
-    // 2026-08-20 incident proved an edge cache will happily keep one if nothing says
-    // otherwise (a Cloudflare rule overrode this in both directions that night, but the
-    // header is still the correct default and stops any other proxy repeating it).
-    if (req.user) {
-      res.setHeader('Cache-Control', 'private, no-store');
-    }
+    // Every render is per-visitor, so none of them may be stored by a browser or an
+    // intermediary. A signed-in render embeds that user's identity, cube list and CSRF
+    // token in reactProps. A signed-out one is no safer: dynamic_flash.pug bakes the
+    // session's flash messages into the HTML, and an anonymous GET still issues a
+    // connect.sid Set-Cookie -- so a cached copy hands the next visitor someone else's
+    // error message and session id. The 2026-08-20 incident proved an edge cache will
+    // happily keep one of these if nothing says otherwise (a Cloudflare rule overrode
+    // this in both directions that night); the header is still the correct default and
+    // stops any other proxy repeating it.
+    //
+    // Vary: Cookie is belt-and-braces for caches that honour it but ignore no-store.
+    //
+    // This is deliberately unconditional. If a genuinely public, flash-free page ever
+    // wants edge caching, it should opt in explicitly at the route rather than relying
+    // on the absence of a header here -- that absence is what made the incident possible.
+    res.setHeader('Cache-Control', 'private, no-store');
+    // res.vary appends; setHeader would drop the Accept-Encoding that compression sets.
+    res.vary('Cookie');
 
     try {
       const theme = (req && req.user && req.user.theme) || 'system';

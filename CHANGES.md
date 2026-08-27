@@ -15,3 +15,4 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - The draft simulator no longer treats cards from brand-new sets as near-guaranteed first picks.
 - Closing the Set Tag Colors window without saving now discards the preview instead of leaving unsaved colors applied, and a save that fails keeps the window open and tells you.
 - Bot decks no longer get stuck on "building" when you save your own deck while they're still being built, and a build that genuinely fails now says so instead of spinning forever.
+- Signed-out pages like login and password reset can no longer show you another visitor's error message.
