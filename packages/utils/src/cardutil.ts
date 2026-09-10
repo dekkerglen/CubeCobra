@@ -620,6 +620,11 @@ export const cardWordCount = (card: Card): number => {
   return card.details.wordCount;
 };
 
+// Copies of this card (grouped by name) in the same board. Stamped by the
+// cube list before filtering; anywhere else the annotation is absent and every
+// card is treated as a singleton.
+export const cardQuantity = (card: Card): number => card.quantity ?? 1;
+
 export const cardGames = (card: Card): Game[] => card.details?.games ?? [];
 
 export const cardGamesEverAvailable = (card: Card): Game[] =>
@@ -832,6 +837,7 @@ const RAW_CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, car
   standard: (details) => details.printedInExpansion === true,
   supplemental: (details) => details.printedInExpansion === false,
   voucher: (_details, card) => !!(card && isVoucher(card)),
+  singleton: (_details, card) => !!card && cardQuantity(card) === 1,
 
   // Others from Scryfall:
   //   reserved, new, old, hires,
@@ -1023,6 +1029,7 @@ export default {
   cardTokens,
   cardDevotion,
   cardWordCount,
+  cardQuantity,
   cardKeywords,
   cardOracleTags,
   cardArtTags,

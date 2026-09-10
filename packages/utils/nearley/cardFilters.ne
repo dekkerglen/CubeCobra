@@ -70,6 +70,7 @@ import {
   cardArtTags,
   cardBoard,
   cardWordCount,
+  cardQuantity,
 } from '../../cardutil';
 %} # %}
 
@@ -136,6 +137,7 @@ condition -> (
   | atagCondition
   | boardCondition
   | wordCountCondition
+  | quantityCondition
 ) {% ([[condition]]) => condition %}
 
 cmcCondition -> ("mv"i | "cmc"i) integerOpValue {% ([, valuePred]) => genericCondition('cmc', cardCmc, valuePred) %}
@@ -229,6 +231,10 @@ atagCondition -> ("atag"i | "arttag"i | "arttags"i | "illustrationtag"i) tagSetE
 
 wordCountCondition -> ("words"i | "wc"i | "wordcount"i) integerOpValue {% ([, valuePred]) => genericCondition('wordCount', cardWordCount, valuePred) %}
 
+# Quantity is stamped per-card by the cube list before filtering, so this filter
+# only meaningfully varies inside a cube; elsewhere every card reads as quantity=1.
+quantityCondition -> ("quantity"i | "count"i | "copies"i) integerOpValue {% ([, valuePred]) => genericCondition('quantity', cardQuantity, valuePred) %}
+
 # board=mainboard, board=maybeboard, board=basics, or any custom-board key.
 # In non-cube contexts cardBoard() defaults to 'mainboard' so board=mainboard
 # is a no-op there and board=anythingElse simply excludes the result, which
@@ -249,7 +255,7 @@ isCondition -> ("is"i | "has"i) isOpValue {% ([, valuePred]) => { const c = gene
 
 notCondition -> "not"i isOpValue {% ([, valuePred]) => { const c = genericCondition('details', ({ details }) => details, valuePred); const n = negated(c); n.describe = `it is not ${categoryLabel(valuePred.category)}`; return n; } %}
 
-isOpValue -> ":" isValue {% ([, category]) => { const detector = CARD_CATEGORY_DETECTORS[category]; const wrapped = (card) => detector(card); wrapped.fieldsUsed = detector.fieldsUsed; wrapped.category = category; return wrapped; } %}
+isOpValue -> ":" isValue {% ([, category]) => { const detector = CARD_CATEGORY_DETECTORS[category]; const wrapped = (details, card) => detector(details, card); wrapped.fieldsUsed = detector.fieldsUsed; wrapped.category = category; return wrapped; } %}
 
 isValue -> (
     "gold"i | "twobrid"i | "hybrid"i | "phyrexian"i | "promo"i | "reprint"i | "firstprint"i | "firstprinting"i | "digital"i | "reasonable"i | "default"i
@@ -263,6 +269,7 @@ isValue -> (
   | "reserved"i
   | "standard"i | "supplemental"i
   | "voucher"i
+  | "singleton"i
 ) {% ([[category]]) => category.toLowerCase() %}
 
 powerWords -> ("pow"i | "power"i)

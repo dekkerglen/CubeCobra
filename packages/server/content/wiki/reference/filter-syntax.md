@@ -423,3 +423,22 @@ Available options are "Not Owned", "Ordered", "Owned", "Premium Owned", "Proxied
 | `is:vanilla`             | All cards with no oracle text.                                       |
 | `is:modal`               | All cards with modal options.                                        |
 | `t:token include:extras` | Include extras (tokens, art cards, etc.) that are hidden by default. |
+
+## Copies in Board
+
+**Filters for individual cubes:** you can use `quantity:`, `count:`, or `copies:` to filter by how
+many copies of a card exist in the same board (matches the "Collapse Duplicates" grouping).
+`is:singleton` and `not:singleton` are convenience aliases for `quantity=1` and `quantity>1`.
+
+Outside a cube list (global card search, Smart Search, etc.) every card is treated as one copy, so
+`quantity>1` returns nothing and `is:singleton` matches everything.
+
+Operators supported: `:`, `=`, `<`, `>`, `<=`, `>=`, `!=`, `<>`.
+
+| Query           | Matches                                                        |
+| --------------- | -------------------------------------------------------------- |
+| `quantity>1`    | cards with more than one copy in the same board.               |
+| `count=2`       | cards with exactly two copies in the same board.               |
+| `copies<3`      | cards with one or two copies in the same board.                |
+| `is:singleton`  | cards that appear only once in the board.                      |
+| `not:singleton` | cards that appear multiple times in the board.                 |
