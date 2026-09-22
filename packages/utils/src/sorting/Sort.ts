@@ -220,6 +220,7 @@ export const SORTS: string[] = [
   'Keywords',
   'Toughness',
   'Type',
+  'Type (Primary)',
   'Types-Multicolor',
   'Devotion to White',
   'Devotion to Blue',
@@ -590,6 +591,11 @@ export function getLabelsRaw(
   } else if (sort === 'Type') {
     const { mtgTypes, otherTypes } = sortMtgTypesThenCustom(cube, false);
     ret = [...mtgTypes, ...otherTypes];
+  } else if (sort === 'Type (Primary)') {
+    // Same buckets and priority order as 'Type' — the difference is per-card
+    // (see cardGetLabels): each card lands in only its first matching bucket.
+    const { mtgTypes, otherTypes } = sortMtgTypesThenCustom(cube, false);
+    ret = [...mtgTypes, ...otherTypes];
   } else if (sort === 'Supertype') {
     //Will not handle custom supertypes because not possible to distinguish from types
     ret = SUPER_TYPES;
@@ -937,6 +943,23 @@ export function cardGetLabels(
       ret = ['Plane'];
     } else {
       ret = filterOutSupertypes(typesAndSuperTypes);
+    }
+  } else if (sort === 'Type (Primary)') {
+    // Assign each card to a single bucket — the earliest one it qualifies for
+    // in the sort's own label ordering (CARD_TYPES priority, then custom types).
+    const { typesAndSuperTypes } = splitCardTypes(effectiveCard);
+    if (typesAndSuperTypes.includes('Contraption')) {
+      ret = ['Contraption'];
+    } else if (typesAndSuperTypes.includes('Plane')) {
+      ret = ['Plane'];
+    } else {
+      const candidates = filterOutSupertypes(typesAndSuperTypes);
+      const mtg = candidates
+        .filter((t) => CARD_TYPES.includes(t))
+        .sort((a, b) => CARD_TYPES.indexOf(a) - CARD_TYPES.indexOf(b));
+      const custom = candidates.filter((t) => !CARD_TYPES.includes(t)).sort();
+      const primary = mtg[0] ?? custom[0];
+      ret = primary ? [primary] : [];
     }
   } else if (sort === 'Tags') {
     ret = effectiveCard.tags || [];

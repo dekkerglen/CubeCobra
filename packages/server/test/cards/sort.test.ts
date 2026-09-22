@@ -865,6 +865,87 @@ describe('Grouping by type', () => {
   });
 });
 
+describe('Grouping by Type (Primary)', () => {
+  const SORT = 'Type (Primary)';
+
+  it('Single-typed card produces one label', () => {
+    const card = createCard({
+      type_line: 'Instant',
+      details: createCardDetails({ type: 'Instant' }),
+    });
+    expect(cardGetLabels(card, SORT, true)).toEqual(['Instant']);
+  });
+
+  it('Multi-typed card picks the highest-priority MTG type (Creature over Artifact)', () => {
+    const card = createCard({
+      type_line: 'Legendary Artifact Creature',
+      details: createCardDetails({ type: 'Legendary Artifact Creature' }),
+    });
+    expect(cardGetLabels(card, SORT, true)).toEqual(['Creature']);
+  });
+
+  it('Land Creature is Creature, not Land', () => {
+    const card = createCard({
+      type_line: 'Land Creature',
+      details: createCardDetails({ type: 'Land Creature' }),
+    });
+    expect(cardGetLabels(card, SORT, true)).toEqual(['Creature']);
+  });
+
+  it('Artifact Planeswalker picks Planeswalker (earlier CARD_TYPES rank than Artifact)', () => {
+    const card = createCard({
+      type_line: 'Artifact Planeswalker',
+      details: createCardDetails({ type: 'Artifact Planeswalker' }),
+    });
+    expect(cardGetLabels(card, SORT, true)).toEqual(['Planeswalker']);
+  });
+
+  it('Contraption override still yields Contraption alone', () => {
+    const card = createCard({
+      type_line: 'Artifact Contraption',
+      details: createCardDetails({ type: 'Artifact Contraption' }),
+    });
+    expect(cardGetLabels(card, SORT, true)).toEqual(['Contraption']);
+  });
+
+  it('Plane override still yields Plane alone', () => {
+    const card = createCard({
+      type_line: 'Plane - Dominaria',
+      details: createCardDetails({ type: 'Plane - Dominaria' }),
+    });
+    expect(cardGetLabels(card, SORT, true)).toEqual(['Plane']);
+  });
+
+  it('Mixed MTG and custom types prefers the MTG type', () => {
+    const card = createCard({
+      type_line: 'Creature Miracle',
+      details: createCardDetails({ type: 'Creature Miracle' }),
+    });
+    expect(cardGetLabels(card, SORT, true)).toEqual(['Creature']);
+  });
+
+  it('Custom-only types fall back to first alphabetical', () => {
+    const card = createCard({
+      type_line: 'Sith Lord - Human Cyborg',
+      details: createCardDetails({ type: 'Sith Lord - Human Cyborg' }),
+    });
+    expect(cardGetLabels(card, SORT, true)).toEqual(['Lord']);
+  });
+
+  it('Sums across groups equal the total (no card in two buckets)', () => {
+    const cards = [
+      createCard({
+        type_line: 'Legendary Artifact Creature',
+        details: createCardDetails({ type: 'Legendary Artifact Creature' }),
+      }),
+      createCard({ type_line: 'Artifact', details: createCardDetails({ type: 'Artifact' }) }),
+      createCard({ type_line: 'Instant', details: createCardDetails({ type: 'Instant' }) }),
+    ];
+    const total = cards.reduce((sum, c) => sum + cardGetLabels(c, SORT, false).length, 0);
+    expect(total).toBe(cards.length);
+  });
+});
+
 describe('Grouping by Set (Release Date)', () => {
   const SORT = 'Set (Release Date)';
 
