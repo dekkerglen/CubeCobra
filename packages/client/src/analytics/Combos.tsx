@@ -196,7 +196,7 @@ const Combos: React.FC = () => {
   return (
     <Flexbox direction="col" gap="2" className="m-2">
       <Text semibold lg>
-        Combos
+        Combos ({comboData.length})
       </Text>
       <Text>
         A list of combos in the cube. These combos are curated by{' '}
