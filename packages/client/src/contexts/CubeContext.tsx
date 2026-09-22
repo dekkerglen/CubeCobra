@@ -1133,6 +1133,16 @@ export function CubeContextProvider({
       : cardFilter.filter;
     for (const board of Object.keys(changed)) {
       if (Array.isArray(changed[board])) {
+        // Stamp per-board copy counts (grouped by name, matching Collapse Duplicates)
+        // so the `quantity` / `is:singleton` filters can key off it before we filter.
+        const countsByName = new Map<string, number>();
+        for (const card of changed[board]) {
+          const name = cardName(card);
+          countsByName.set(name, (countsByName.get(name) ?? 0) + 1);
+        }
+        for (const card of changed[board]) {
+          card.quantity = countsByName.get(cardName(card)) ?? 1;
+        }
         result[board] = changed[board].filter(effectiveFilter);
       }
     }

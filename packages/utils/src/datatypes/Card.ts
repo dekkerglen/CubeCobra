@@ -155,6 +155,7 @@ export const allFields = [
   'edhrecRank',
   'edhrecSalt',
   'wordCount',
+  'quantity',
 ] as const;
 
 export type AllField = (typeof allFields)[number];
@@ -174,6 +175,7 @@ export const numFields = [
   'edhrecRank',
   'edhrecSalt',
   'wordCount',
+  'quantity',
 ] as const;
 
 export type NumField = (typeof numFields)[number];
@@ -260,6 +262,9 @@ export interface VoucherCard {
 export default interface Card {
   index?: number;
   board?: BoardType;
+  // Number of copies of this card (by name) in the same board as this card.
+  // Stamped in the client cube list before filtering; not persisted.
+  quantity?: number;
   markedForDelete?: boolean;
   editIndex?: number;
   removeIndex?: number;
