@@ -1,6 +1,6 @@
 import React, { useContext, useMemo, useState } from 'react';
 
-import { cardImageNormal } from '@utils/cardutil';
+import { cardImageUrl } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import { getViewByName } from '@utils/datatypes/Cube';
 import { sortForDownload } from '@utils/sorting/Sort';
@@ -119,7 +119,7 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
     }
 
     return sortedCards.filter((card) => {
-      const imageUrl = cardImageNormal(card);
+      const imageUrl = cardImageUrl(card);
       return imageUrl && imageUrl.length > 0;
     });
   };
@@ -158,7 +158,7 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
 
     const imagesHtml = cardsWithImages
       .map((card) => {
-        const imageUrl = toAbsoluteUrl(cardImageNormal(card));
+        const imageUrl = toAbsoluteUrl(cardImageUrl(card));
         return `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(card.details?.name ?? '')}" />`;
       })
       .join('');
@@ -232,7 +232,7 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
 
       for (let i = 0; i < cardsWithImages.length; i++) {
         const card = cardsWithImages[i];
-        const imageUrl = cardImageNormal(card);
+        const imageUrl = cardImageUrl(card);
 
         if (!imageUrl) continue;
 
