@@ -664,24 +664,20 @@ export function getLabelsRaw(
     }
     ret = sets.sort();
   } else if (sort === 'Set (Release Date)') {
-    //Use a map to prevent duplicates when we want both set and setIndex later.
-    //Sets treat each object as unique even if the contents are the same
-    const sets = new Map<string, { set: string; setIndex: number }>();
+    // Dedupe by set code — cards whose cached details predate a catalog rebuild can
+    // carry stale setIndex values, so keying by set alone (and picking the earliest
+    // seen setIndex) avoids surfacing the same set as two groups.
+    const setIndexBySet = new Map<string, number>();
     for (const card of cube || []) {
       const set = cardSet(card).toUpperCase();
       const setIndex = cardSetIndex(card);
-      //Encode set and set index into string for uniqueness
-      const key = `${set}-${setIndex}`;
-      if (!sets.has(key)) {
-        sets.set(key, {
-          set,
-          setIndex,
-        });
+      const existing = setIndexBySet.get(set);
+      if (existing === undefined || setIndex < existing) {
+        setIndexBySet.set(set, setIndex);
       }
     }
 
-    //Sort based on setIndex and then return the set codes in that order
-    ret = [...sets.values()].sort((a, b) => a.setIndex - b.setIndex).map((a) => a.set);
+    ret = [...setIndexBySet.entries()].sort((a, b) => a[1] - b[1]).map(([set]) => set);
   } else if (sort === 'Artist') {
     const artists: string[] = [];
     for (const card of cube || []) {

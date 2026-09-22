@@ -951,6 +951,20 @@ describe('Grouping by Set (Release Date)', () => {
     assertGroupOrdering(groups, ['RGPHD', 'MSK', 'RNA', 'BLB', 'MRD']);
     assertCardOrdering(groups, ['Card infinity', 'Card 4', 'Card 3', 'Card 2', 'Card 5']);
   });
+
+  // A card's setIndex can drift out of sync when its cached details predate a
+  // catalog rebuild, producing two cards with the same set but different indices.
+  it('Same set with different setIndex values still yields one group', async () => {
+    const cards = [
+      createCardFromDetails({ name: 'Card A', set: 'MOM', setIndex: 500 }),
+      createCardFromDetails({ name: 'Card B', set: 'MOM', setIndex: 502 }),
+      createCardFromDetails({ name: 'Card C', set: 'LEA', setIndex: 0 }),
+    ];
+
+    const groups = sortGroupsOrdered(cards, SORT, true);
+    assertGroupOrdering(groups, ['LEA', 'MOM']);
+    assertCardOrdering(groups, ['Card C', 'Card A', 'Card B']);
+  });
 });
 
 //The ordering here is by set code alphanumeric
