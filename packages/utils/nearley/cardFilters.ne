@@ -69,6 +69,7 @@ import {
   cardOracleTags,
   cardArtTags,
   cardBoard,
+  cardWordCount,
 } from '../../cardutil';
 %} # %}
 
@@ -134,6 +135,7 @@ condition -> (
   | otagCondition
   | atagCondition
   | boardCondition
+  | wordCountCondition
 ) {% ([[condition]]) => condition %}
 
 cmcCondition -> ("mv"i | "cmc"i) integerOpValue {% ([, valuePred]) => genericCondition('cmc', cardCmc, valuePred) %}
@@ -224,6 +226,8 @@ keywordCondition -> ("kw"i | "keyword"i | "keywords"i) stringSetElementOpValue {
 otagCondition -> ("otag"i | "oracletag"i | "oracletags"i) tagSetElementOpValue {% ([, valuePred]) => genericCondition('otag', cardOracleTags, valuePred) %}
 
 atagCondition -> ("atag"i | "arttag"i | "arttags"i | "illustrationtag"i) tagSetElementOpValue {% ([, valuePred]) => genericCondition('atag', cardArtTags, valuePred) %}
+
+wordCountCondition -> ("words"i | "wc"i | "wordcount"i) integerOpValue {% ([, valuePred]) => genericCondition('wordCount', cardWordCount, valuePred) %}
 
 # board=mainboard, board=maybeboard, board=basics, or any custom-board key.
 # In non-cube contexts cardBoard() defaults to 'mainboard' so board=mainboard

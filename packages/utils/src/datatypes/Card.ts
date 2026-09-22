@@ -154,6 +154,7 @@ export const allFields = [
   'atag',
   'edhrecRank',
   'edhrecSalt',
+  'wordCount',
 ] as const;
 
 export type AllField = (typeof allFields)[number];
@@ -172,6 +173,7 @@ export const numFields = [
   'legality',
   'edhrecRank',
   'edhrecSalt',
+  'wordCount',
 ] as const;
 
 export type NumField = (typeof numFields)[number];

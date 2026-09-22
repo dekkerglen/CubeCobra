@@ -123,6 +123,20 @@ numeric comparisons to filter by the number of keywords a card has.
 | `keywords>3`      | cards with more than 3 keywords.                           |
 | `keywords=0`      | cards with no keywords.                                    |
 
+## Approximate Word Count
+
+You can use `words:`, `wc:`, or `wordcount:` to filter cards by the approximate number of words in
+their oracle text (whitespace-split, so reminder text and face separators count).
+Matches the "Approximate Word Count" sort and analytics stat.
+
+Operators supported: `:`, `=`, `<`, `>`, `<=`, `>=`, `!=`, `<>`.
+
+| Query           | Matches                                          |
+| --------------- | ------------------------------------------------ |
+| `words>10`      | cards with more than 10 words of oracle text.    |
+| `wc<=45`        | cards with 45 or fewer words of oracle text.     |
+| `wordcount=22`  | cards with exactly 22 words of oracle text.      |
+
 ## Scryfall Tags
 
 CubeCobra imports the community-sourced tags from [Scryfall Tagger](https://tagger.scryfall.com/).

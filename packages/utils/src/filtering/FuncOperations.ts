@@ -107,6 +107,7 @@ export const FIELD_LABELS: Record<string, string> = {
   firstPrintYear: 'first printed',
   keywords: 'keywords',
   board: 'board',
+  wordCount: 'approximate word count',
 };
 
 export const fieldLabel = (propertyName: string): string => FIELD_LABELS[propertyName] ?? propertyName;

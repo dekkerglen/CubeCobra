@@ -294,6 +294,15 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
             setValue={(value: string) => updateValue(value, 'loyalty')}
             setOperator={(operator: string) => updateValue(operator, 'loyaltyOp')}
           />
+          <NumericField
+            name="wordCount"
+            humanName="Approximate Word Count"
+            placeholder={'Any integer number, e.g. "20"'}
+            value={values.wordCount}
+            operator={values.wordCountOp}
+            setValue={(value: string) => updateValue(value, 'wordCount')}
+            setOperator={(operator: string) => updateValue(operator, 'wordCountOp')}
+          />
           <SelectField
             humanName="Rarity"
             value={values.rarity}

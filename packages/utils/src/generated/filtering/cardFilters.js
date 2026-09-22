@@ -85,6 +85,7 @@ import {
   cardOracleTags,
   cardArtTags,
   cardBoard,
+  cardWordCount,
 } from '../../cardutil';
 
 
@@ -2464,6 +2465,7 @@ var grammar = {
     {"name": "condition$subexpression$1", "symbols": ["otagCondition"]},
     {"name": "condition$subexpression$1", "symbols": ["atagCondition"]},
     {"name": "condition$subexpression$1", "symbols": ["boardCondition"]},
+    {"name": "condition$subexpression$1", "symbols": ["wordCountCondition"]},
     {"name": "condition", "symbols": ["condition$subexpression$1"], "postprocess": ([[condition]]) => condition},
     {"name": "cmcCondition$subexpression$1$subexpression$1", "symbols": [/[mM]/, /[vV]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "cmcCondition$subexpression$1", "symbols": ["cmcCondition$subexpression$1$subexpression$1"]},
@@ -2758,6 +2760,13 @@ var grammar = {
     {"name": "atagCondition$subexpression$1$subexpression$4", "symbols": [/[iI]/, /[lL]/, /[lL]/, /[uU]/, /[sS]/, /[tT]/, /[rR]/, /[aA]/, /[tT]/, /[iI]/, /[oO]/, /[nN]/, /[tT]/, /[aA]/, /[gG]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "atagCondition$subexpression$1", "symbols": ["atagCondition$subexpression$1$subexpression$4"]},
     {"name": "atagCondition", "symbols": ["atagCondition$subexpression$1", "tagSetElementOpValue"], "postprocess": ([, valuePred]) => genericCondition('atag', cardArtTags, valuePred)},
+    {"name": "wordCountCondition$subexpression$1$subexpression$1", "symbols": [/[wW]/, /[oO]/, /[rR]/, /[dD]/, /[sS]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "wordCountCondition$subexpression$1", "symbols": ["wordCountCondition$subexpression$1$subexpression$1"]},
+    {"name": "wordCountCondition$subexpression$1$subexpression$2", "symbols": [/[wW]/, /[cC]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "wordCountCondition$subexpression$1", "symbols": ["wordCountCondition$subexpression$1$subexpression$2"]},
+    {"name": "wordCountCondition$subexpression$1$subexpression$3", "symbols": [/[wW]/, /[oO]/, /[rR]/, /[dD]/, /[cC]/, /[oO]/, /[uU]/, /[nN]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "wordCountCondition$subexpression$1", "symbols": ["wordCountCondition$subexpression$1$subexpression$3"]},
+    {"name": "wordCountCondition", "symbols": ["wordCountCondition$subexpression$1", "integerOpValue"], "postprocess": ([, valuePred]) => genericCondition('wordCount', cardWordCount, valuePred)},
     {"name": "boardCondition$subexpression$1", "symbols": [/[bB]/, /[oO]/, /[aA]/, /[rR]/, /[dD]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "boardCondition", "symbols": ["boardCondition$subexpression$1", "stringOpValue"], "postprocess": ([, valuePred]) => genericCondition('board', cardBoard, valuePred)},
     {"name": "includeExtrasCondition$subexpression$1$subexpression$1", "symbols": [/[iI]/, /[nN]/, /[cC]/, /[lL]/, /[uU]/, /[dD]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
