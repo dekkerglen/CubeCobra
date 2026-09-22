@@ -11,7 +11,6 @@ import DynamicFlash from 'components/DynamicFlash';
 import RecordsNavbar from 'components/records/RecordsNavbar';
 import RenderToRoot from 'components/RenderToRoot';
 import CubeContext from 'contexts/CubeContext';
-import { DisplayContextProvider } from 'contexts/DisplayContext';
 import RecordsViewContext, { RecordsViewContextProvider } from 'contexts/RecordsViewContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
@@ -51,11 +50,9 @@ const CubeRecordsPage: React.FC<CubeRecordsPageProps> = ({ cube, cards, records,
 
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cube={cube} cards={cards} activeLink={view}>
-          <CubeRecordsPageBody content={content} />
-        </CubeLayout>
-      </DisplayContextProvider>
+      <CubeLayout cube={cube} cards={cards} activeLink={view}>
+        <CubeRecordsPageBody content={content} />
+      </CubeLayout>
     </MainLayout>
   );
 };

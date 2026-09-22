@@ -12,7 +12,6 @@ import PracticeDraftView from 'components/playtest/PracticeDraftView';
 import SamplePackView from 'components/playtest/SamplePackView';
 import RenderToRoot from 'components/RenderToRoot';
 import CubeContext from 'contexts/CubeContext';
-import { DisplayContextProvider } from 'contexts/DisplayContext';
 import PlaytestViewContext, { PlaytestViewContextProvider } from 'contexts/PlaytestViewContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
@@ -61,11 +60,9 @@ const CubePlaytestPage: React.FC<CubePlaytestPageProps> = ({
 
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cube={cubeWithoutCards} cards={cards} activeLink={view}>
-          <CubePlaytestPageBody content={content} />
-        </CubeLayout>
-      </DisplayContextProvider>
+      <CubeLayout cube={cubeWithoutCards} cards={cards} activeLink={view}>
+        <CubePlaytestPageBody content={content} />
+      </CubeLayout>
     </MainLayout>
   );
 };

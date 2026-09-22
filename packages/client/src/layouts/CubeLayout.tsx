@@ -11,6 +11,7 @@ import MobileSubNav from '../components/cube/MobileSubNav';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { ChangesContextProvider } from '../contexts/ChangesContext';
 import CubeContext, { CubeContextProvider } from '../contexts/CubeContext';
+import { DisplayContextProvider } from '../contexts/DisplayContext';
 import { FilterContextProvider } from '../contexts/FilterContext';
 import TagColorContext from '../contexts/TagColorContext';
 
@@ -37,6 +38,10 @@ interface CubeLayoutProps {
   useChangedCards?: boolean;
   controls?: React.ReactNode;
   rightSidebar?: React.ReactNode;
+  // Forwarded to the hoisted DisplayContextProvider. Pages that used to wrap
+  // their own provider (e.g. CubeListPage) pass these through here instead.
+  defaultView?: string;
+  defaultEditSidebarOpen?: boolean;
 }
 
 const CubeLayout: React.FC<CubeLayoutProps> = ({
@@ -48,35 +53,39 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
   useChangedCards = false,
   controls,
   rightSidebar,
+  defaultView,
+  defaultEditSidebarOpen,
 }) => {
   // Only show full hero on list, primer, blog, and changelog pages
   const showFullHero = ['list', 'primer', 'blog', 'changelog'].includes(activeLink);
 
   return (
-    <FilterContextProvider>
-      <ChangesContextProvider cube={cube} cards={cards as any}>
-        <CubeContextProvider
-          initialCube={cube}
-          cards={cards as any}
-          loadVersionDict={loadVersionDict}
-          useChangedCards={useChangedCards}
-        >
-          <div className="flex flex-grow pb-20 sm:pb-0">
-            <CubeSidebar cube={cube} activeLink={activeLink} controls={controls} />
-            <div className="flex-1 flex flex-col min-w-0">
-              <CubeHero cube={cube} minified={!showFullHero} activeLink={activeLink} />
-              <MobileSubNav cube={cube} activeLink={activeLink} />
-              <Banner />
-              <div className="px-2">
-                <CubeLayoutInner>{children}</CubeLayoutInner>
+    <DisplayContextProvider cubeID={cube.id} defaultView={defaultView} defaultEditSidebarOpen={defaultEditSidebarOpen}>
+      <FilterContextProvider>
+        <ChangesContextProvider cube={cube} cards={cards as any}>
+          <CubeContextProvider
+            initialCube={cube}
+            cards={cards as any}
+            loadVersionDict={loadVersionDict}
+            useChangedCards={useChangedCards}
+          >
+            <div className="flex flex-grow pb-20 sm:pb-0">
+              <CubeSidebar cube={cube} activeLink={activeLink} controls={controls} />
+              <div className="flex-1 flex flex-col min-w-0">
+                <CubeHero cube={cube} minified={!showFullHero} activeLink={activeLink} />
+                <MobileSubNav cube={cube} activeLink={activeLink} />
+                <Banner />
+                <div className="px-2">
+                  <CubeLayoutInner>{children}</CubeLayoutInner>
+                </div>
               </div>
+              {rightSidebar}
             </div>
-            {rightSidebar}
-          </div>
-          <CubeBottomNav cube={cube} activeLink={activeLink} />
-        </CubeContextProvider>
-      </ChangesContextProvider>
-    </FilterContextProvider>
+            <CubeBottomNav cube={cube} activeLink={activeLink} />
+          </CubeContextProvider>
+        </ChangesContextProvider>
+      </FilterContextProvider>
+    </DisplayContextProvider>
   );
 };
 

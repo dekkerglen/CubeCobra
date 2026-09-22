@@ -27,7 +27,6 @@ import DynamicFlash from '../components/DynamicFlash';
 import ErrorBoundary from '../components/ErrorBoundary';
 import RenderToRoot from '../components/RenderToRoot';
 import { CSRFContext } from '../contexts/CSRFContext';
-import { DisplayContextProvider } from '../contexts/DisplayContext';
 import { locations } from '../drafting/DraftLocation';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
@@ -150,128 +149,124 @@ const HousmanDraftPage: React.FC<HousmanDraftPageProps> = ({ cube, initialDraft,
 
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cube={cube} activeLink="playtest">
-          <Container xl disableCenter>
-            <DynamicFlash />
-            <CSRFForm
-              ref={submitDeckForm}
-              method="POST"
-              action={`/cube/deck/submitdeck/${initialDraft.cube}`}
-              formData={{ body: initialDraft.id }}
-            >
-              {null}
-            </CSRFForm>
-            <ErrorBoundary>
-              <HousmanDraftPack
-                cards={cards}
-                pool={state.pool}
-                hand={state.hands[humanSeat]!}
-                selectedPoolCard={selectedPoolCard}
-                highlightPoolCard={lastGiven}
-                onPoolClick={onPoolClick}
-                onHandClick={onHandClick}
-                interactive={isHumanTurn}
-                round={state.round + 1}
-                numRounds={state.numRounds}
-                exchangeNumber={Math.min(state.exchangesMade[state.turn]! + 1, EXCHANGES)}
-                totalExchanges={EXCHANGES}
-                statusText={
-                  state.done ? 'Draft complete' : isHumanTurn ? 'Your turn' : `${turnSeatName} is exchanging…`
-                }
-                statusColor={isHumanTurn ? 'primary' : 'danger'}
-              />
-            </ErrorBoundary>
-            <ErrorBoundary>
-              <Card className="my-3">
-                <CardHeader>
-                  <Text semibold lg>
-                    Recent Swaps
-                  </Text>
-                </CardHeader>
-                <CardBody>
-                  {recentLog.length === 0 ? (
-                    <Text className="text-text-secondary">No swaps yet. Take a card from the pool to get started.</Text>
-                  ) : (
-                    <Flexbox direction="col" gap="1">
-                      {recentLog.map((entry, i) => (
-                        <Text key={`log-${state.log.length - i}`} sm>
-                          <span className="font-semibold">{nameForSeat(entry.seat)}</span> took{' '}
-                          <span className="font-semibold">{cardName(cards[entry.taken]!)}</span>, gave{' '}
-                          {cardName(cards[entry.given]!)}
-                          <span className="text-text-secondary"> · round {entry.round + 1}</span>
-                        </Text>
-                      ))}
+      <CubeLayout cube={cube} activeLink="playtest">
+        <Container xl disableCenter>
+          <DynamicFlash />
+          <CSRFForm
+            ref={submitDeckForm}
+            method="POST"
+            action={`/cube/deck/submitdeck/${initialDraft.cube}`}
+            formData={{ body: initialDraft.id }}
+          >
+            {null}
+          </CSRFForm>
+          <ErrorBoundary>
+            <HousmanDraftPack
+              cards={cards}
+              pool={state.pool}
+              hand={state.hands[humanSeat]!}
+              selectedPoolCard={selectedPoolCard}
+              highlightPoolCard={lastGiven}
+              onPoolClick={onPoolClick}
+              onHandClick={onHandClick}
+              interactive={isHumanTurn}
+              round={state.round + 1}
+              numRounds={state.numRounds}
+              exchangeNumber={Math.min(state.exchangesMade[state.turn]! + 1, EXCHANGES)}
+              totalExchanges={EXCHANGES}
+              statusText={state.done ? 'Draft complete' : isHumanTurn ? 'Your turn' : `${turnSeatName} is exchanging…`}
+              statusColor={isHumanTurn ? 'primary' : 'danger'}
+            />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <Card className="my-3">
+              <CardHeader>
+                <Text semibold lg>
+                  Recent Swaps
+                </Text>
+              </CardHeader>
+              <CardBody>
+                {recentLog.length === 0 ? (
+                  <Text className="text-text-secondary">No swaps yet. Take a card from the pool to get started.</Text>
+                ) : (
+                  <Flexbox direction="col" gap="1">
+                    {recentLog.map((entry, i) => (
+                      <Text key={`log-${state.log.length - i}`} sm>
+                        <span className="font-semibold">{nameForSeat(entry.seat)}</span> took{' '}
+                        <span className="font-semibold">{cardName(cards[entry.taken]!)}</span>, gave{' '}
+                        {cardName(cards[entry.given]!)}
+                        <span className="text-text-secondary"> · round {entry.round + 1}</span>
+                      </Text>
+                    ))}
+                  </Flexbox>
+                )}
+              </CardBody>
+            </Card>
+          </ErrorBoundary>
+          <ErrorBoundary>
+            {opponents.map(({ seat, index }) => {
+              const known = (cardIndex: number) => isKnownToViewer(cardIndex, index);
+              const hand = state.hands[index] ?? [];
+              const kept = seat.pickorder ?? [];
+              const isActive = !state.done && state.turn === index;
+              return (
+                <Card key={`opponent-${index}`} className="my-3">
+                  <CardHeader>
+                    <Flexbox direction="row" justify="between" alignItems="center">
+                      <Text semibold lg>
+                        {nameForSeat(index)}
+                      </Text>
+                      <Text sm className="text-text-secondary">
+                        {isActive
+                          ? `Exchanging now (${Math.min(state.exchangesMade[index]! + 1, EXCHANGES)} of ${EXCHANGES})`
+                          : `${kept.length} cards drafted`}
+                      </Text>
                     </Flexbox>
-                  )}
-                </CardBody>
-              </Card>
-            </ErrorBoundary>
-            <ErrorBoundary>
-              {opponents.map(({ seat, index }) => {
-                const known = (cardIndex: number) => isKnownToViewer(cardIndex, index);
-                const hand = state.hands[index] ?? [];
-                const kept = seat.pickorder ?? [];
-                const isActive = !state.done && state.turn === index;
-                return (
-                  <Card key={`opponent-${index}`} className="my-3">
-                    <CardHeader>
-                      <Flexbox direction="row" justify="between" alignItems="center">
-                        <Text semibold lg>
-                          {nameForSeat(index)}
-                        </Text>
-                        <Text sm className="text-text-secondary">
-                          {isActive
-                            ? `Exchanging now (${Math.min(state.exchangesMade[index]! + 1, EXCHANGES)} of ${EXCHANGES})`
-                            : `${kept.length} cards drafted`}
-                        </Text>
-                      </Flexbox>
-                    </CardHeader>
-                    <CardBody>
-                      <Flexbox direction="col" gap="2">
-                        <Text semibold sm>
-                          Current hand
-                        </Text>
-                        <HousmanCardRow
-                          cards={cards}
-                          indices={hand}
-                          isKnown={known}
-                          highlight={lastEntry && lastEntry.seat === index ? lastEntry.taken : null}
-                          xs={2}
-                          md={2}
-                          xl={1}
-                        />
-                        {kept.length > 0 && (
-                          <>
-                            <Text semibold sm>
-                              Drafted pool ({kept.length}) — cards you&apos;ve seen are shown face up
-                            </Text>
-                            <HousmanCardRow cards={cards} indices={kept} isKnown={known} xs={2} md={1} xl={1} />
-                          </>
-                        )}
-                      </Flexbox>
-                    </CardBody>
-                  </Card>
-                );
-              })}
-            </ErrorBoundary>
-            <ErrorBoundary>
-              <Card className="my-3">
-                <DndContext onDragEnd={() => undefined}>
-                  <DeckStacks
-                    cards={humanPicks}
-                    title="Your picks"
-                    subtitle={makeSubtitle(humanPicks.flat(3))}
-                    locationType={locations.deck}
-                    xs={4}
-                    md={8}
-                  />
-                </DndContext>
-              </Card>
-            </ErrorBoundary>
-          </Container>
-        </CubeLayout>
-      </DisplayContextProvider>
+                  </CardHeader>
+                  <CardBody>
+                    <Flexbox direction="col" gap="2">
+                      <Text semibold sm>
+                        Current hand
+                      </Text>
+                      <HousmanCardRow
+                        cards={cards}
+                        indices={hand}
+                        isKnown={known}
+                        highlight={lastEntry && lastEntry.seat === index ? lastEntry.taken : null}
+                        xs={2}
+                        md={2}
+                        xl={1}
+                      />
+                      {kept.length > 0 && (
+                        <>
+                          <Text semibold sm>
+                            Drafted pool ({kept.length}) — cards you&apos;ve seen are shown face up
+                          </Text>
+                          <HousmanCardRow cards={cards} indices={kept} isKnown={known} xs={2} md={1} xl={1} />
+                        </>
+                      )}
+                    </Flexbox>
+                  </CardBody>
+                </Card>
+              );
+            })}
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <Card className="my-3">
+              <DndContext onDragEnd={() => undefined}>
+                <DeckStacks
+                  cards={humanPicks}
+                  title="Your picks"
+                  subtitle={makeSubtitle(humanPicks.flat(3))}
+                  locationType={locations.deck}
+                  xs={4}
+                  md={8}
+                />
+              </DndContext>
+            </Card>
+          </ErrorBoundary>
+        </Container>
+      </CubeLayout>
     </MainLayout>
   );
 };

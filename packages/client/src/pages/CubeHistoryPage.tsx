@@ -4,7 +4,6 @@ import Cube from '@utils/datatypes/Cube';
 
 import CubeHistory from 'components/cube/CubeHistory';
 import RenderToRoot from 'components/RenderToRoot';
-import { DisplayContextProvider } from 'contexts/DisplayContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
@@ -16,11 +15,9 @@ interface CubeHistoryPageProps {
 
 const CubeHistoryPage: React.FC<CubeHistoryPageProps> = ({ cube, changes, lastKey }) => (
   <MainLayout useContainer={false}>
-    <DisplayContextProvider cubeID={cube.id}>
-      <CubeLayout cube={cube} activeLink="changelog">
-        <CubeHistory changes={changes} lastKey={lastKey} />
-      </CubeLayout>
-    </DisplayContextProvider>
+    <CubeLayout cube={cube} activeLink="changelog">
+      <CubeHistory changes={changes} lastKey={lastKey} />
+    </CubeLayout>
   </MainLayout>
 );
 

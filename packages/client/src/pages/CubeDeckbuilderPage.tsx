@@ -18,7 +18,6 @@ import DeckStacks from '../components/DeckStacks';
 import DynamicFlash from '../components/DynamicFlash';
 import ErrorBoundary from '../components/ErrorBoundary';
 import RenderToRoot from '../components/RenderToRoot';
-import { DisplayContextProvider } from '../contexts/DisplayContext';
 import DraftLocation, { addCard, locations, moveCard, removeCard } from '../drafting/DraftLocation';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
@@ -192,77 +191,75 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
 
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cube={cube} activeLink="playtest">
-          <Container xl disableCenter>
-            <DeckbuilderNavbar
-              cards={cards}
-              basics={basics}
-              mainboard={mainboard}
-              sideboard={sideboard}
-              cubeID={cube.id}
-              draft={initialDeck}
-              addBasics={addBasics}
-              className="mb-3"
-              setDeck={setMainboard}
-              setSideboard={setSideboard}
-              seat={seatIndex}
-              maxSpells={maxSpells}
-              maxLands={maxLands}
-              onAddCard={addCardToDeck}
-              defaultPrinting={cube.defaultPrinting}
-              originalCardCount={originalCardCount}
-              onSort={sortDeck}
-              onSplitCreatures={splitCreatures}
-            />
-            <BotDeckStatusBanner
-              draftId={initialDeck.id}
-              initiallyPending={initialDeck.botDecksPending}
-              initiallyFailed={initialDeck.botDecksFailed}
-            />
-            <DeckBuilderStatsPanel
-              cards={mainboard
-                .flat()
-                .flat()
-                .map((index) => cards[index])}
-            />
-            <DynamicFlash />
-            <Card className="my-3">
-              <DndContext onDragEnd={handleMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
-                <ErrorBoundary>
-                  <DeckStacks
-                    cards={mainboard.map((col) => col.map((row) => row.map((index) => cards[index])))}
-                    title="Deck"
-                    subtitle={makeSubtitle(
-                      mainboard
-                        .flat()
-                        .flat()
-                        .map((index) => cards[index]),
-                    )}
-                    locationType={locations.deck}
-                    xs={4}
-                    lg={8}
-                  />
-                  <DeckStacks
-                    cards={sideboard.map((col) => col.map((row) => row.map((index) => cards[index])))}
-                    title="Sideboard"
-                    locationType={locations.sideboard}
-                    subtitle={makeSubtitle(
-                      sideboard
-                        .flat()
-                        .flat()
-                        .map((index) => cards[index]),
-                    )}
-                    xs={4}
-                    lg={8}
-                  />
-                  <RemoveZone />
-                </ErrorBoundary>
-              </DndContext>
-            </Card>
-          </Container>
-        </CubeLayout>
-      </DisplayContextProvider>
+      <CubeLayout cube={cube} activeLink="playtest">
+        <Container xl disableCenter>
+          <DeckbuilderNavbar
+            cards={cards}
+            basics={basics}
+            mainboard={mainboard}
+            sideboard={sideboard}
+            cubeID={cube.id}
+            draft={initialDeck}
+            addBasics={addBasics}
+            className="mb-3"
+            setDeck={setMainboard}
+            setSideboard={setSideboard}
+            seat={seatIndex}
+            maxSpells={maxSpells}
+            maxLands={maxLands}
+            onAddCard={addCardToDeck}
+            defaultPrinting={cube.defaultPrinting}
+            originalCardCount={originalCardCount}
+            onSort={sortDeck}
+            onSplitCreatures={splitCreatures}
+          />
+          <BotDeckStatusBanner
+            draftId={initialDeck.id}
+            initiallyPending={initialDeck.botDecksPending}
+            initiallyFailed={initialDeck.botDecksFailed}
+          />
+          <DeckBuilderStatsPanel
+            cards={mainboard
+              .flat()
+              .flat()
+              .map((index) => cards[index])}
+          />
+          <DynamicFlash />
+          <Card className="my-3">
+            <DndContext onDragEnd={handleMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
+              <ErrorBoundary>
+                <DeckStacks
+                  cards={mainboard.map((col) => col.map((row) => row.map((index) => cards[index])))}
+                  title="Deck"
+                  subtitle={makeSubtitle(
+                    mainboard
+                      .flat()
+                      .flat()
+                      .map((index) => cards[index]),
+                  )}
+                  locationType={locations.deck}
+                  xs={4}
+                  lg={8}
+                />
+                <DeckStacks
+                  cards={sideboard.map((col) => col.map((row) => row.map((index) => cards[index])))}
+                  title="Sideboard"
+                  locationType={locations.sideboard}
+                  subtitle={makeSubtitle(
+                    sideboard
+                      .flat()
+                      .flat()
+                      .map((index) => cards[index]),
+                  )}
+                  xs={4}
+                  lg={8}
+                />
+                <RemoveZone />
+              </ErrorBoundary>
+            </DndContext>
+          </Card>
+        </Container>
+      </CubeLayout>
     </MainLayout>
   );
 };

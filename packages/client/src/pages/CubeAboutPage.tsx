@@ -13,7 +13,6 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import AboutViewContext, { AboutViewContextProvider } from 'contexts/AboutViewContext';
 import CubeContext from 'contexts/CubeContext';
-import { DisplayContextProvider } from 'contexts/DisplayContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
@@ -57,11 +56,9 @@ const CubeAboutPageContent: React.FC<CubeAboutPageProps> = ({
 
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cards={cards} cube={cube} activeLink={view}>
-          <CubeAboutPageBody content={content} />
-        </CubeLayout>
-      </DisplayContextProvider>
+      <CubeLayout cards={cards} cube={cube} activeLink={view}>
+        <CubeAboutPageBody content={content} />
+      </CubeLayout>
     </MainLayout>
   );
 };

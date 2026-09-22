@@ -12,7 +12,6 @@ import DeckCard from 'components/DeckCard';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import UpgradePrompt from 'components/UpgradePrompt';
-import { DisplayContextProvider } from 'contexts/DisplayContext';
 import UserContext from 'contexts/UserContext';
 import { useCardDetails } from 'hooks/useCardDetails';
 import useQueryParam from 'hooks/useQueryParam';
@@ -52,55 +51,53 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft }) => {
 
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cube={cube} activeLink="playtest">
-          <DynamicFlash />
-          <BotDeckStatusBanner
-            draftId={draft.id}
-            initiallyPending={draft.botDecksPending}
-            initiallyFailed={draft.botDecksFailed}
-          />
-          {hasData ? (
-            <>
-              <CubeDeckNavbar
-                draft={hydratedDraft}
-                user={user}
-                seatIndex={seatIndex}
-                setSeatIndex={setSeatIndex}
-                view={view}
-                setView={setView}
-              />
-              <UpgradePrompt className="mt-3" storageKey="deckPage" message="Hope you enjoyed your draft!" />
-              <Row className="mt-3 mb-3">
-                <Col>
-                  <DeckCard
-                    seat={hydratedDraft.seats[parseInt(seatIndex)]}
-                    draft={hydratedDraft}
-                    seatIndex={`${seatIndex}`}
-                    view={view}
-                  />
-                </Col>
-              </Row>
-            </>
-          ) : (
+      <CubeLayout cube={cube} activeLink="playtest">
+        <DynamicFlash />
+        <BotDeckStatusBanner
+          draftId={draft.id}
+          initiallyPending={draft.botDecksPending}
+          initiallyFailed={draft.botDecksFailed}
+        />
+        {hasData ? (
+          <>
+            <CubeDeckNavbar
+              draft={hydratedDraft}
+              user={user}
+              seatIndex={seatIndex}
+              setSeatIndex={setSeatIndex}
+              view={view}
+              setView={setView}
+            />
+            <UpgradePrompt className="mt-3" storageKey="deckPage" message="Hope you enjoyed your draft!" />
             <Row className="mt-3 mb-3">
               <Col>
-                <Card>
-                  <CardBody>
-                    <Text semibold lg>
-                      This draft has no data.
-                    </Text>
-                    <Text className="text-text-secondary">
-                      The seats and cards for this draft are missing. This usually means the draft was never finished or
-                      its data was lost.
-                    </Text>
-                  </CardBody>
-                </Card>
+                <DeckCard
+                  seat={hydratedDraft.seats[parseInt(seatIndex)]}
+                  draft={hydratedDraft}
+                  seatIndex={`${seatIndex}`}
+                  view={view}
+                />
               </Col>
             </Row>
-          )}
-        </CubeLayout>
-      </DisplayContextProvider>
+          </>
+        ) : (
+          <Row className="mt-3 mb-3">
+            <Col>
+              <Card>
+                <CardBody>
+                  <Text semibold lg>
+                    This draft has no data.
+                  </Text>
+                  <Text className="text-text-secondary">
+                    The seats and cards for this draft are missing. This usually means the draft was never finished or
+                    its data was lost.
+                  </Text>
+                </CardBody>
+              </Card>
+            </Col>
+          </Row>
+        )}
+      </CubeLayout>
     </MainLayout>
   );
 };

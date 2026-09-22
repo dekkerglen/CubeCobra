@@ -39,7 +39,6 @@ import DynamicFlash from '../components/DynamicFlash';
 import RenderToRoot from '../components/RenderToRoot';
 import AnalysisViewContext, { AnalysisViewContextProvider } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
-import { DisplayContextProvider } from '../contexts/DisplayContext';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
 
@@ -246,11 +245,9 @@ const AnalysisViewContextProviderInner: React.FC<CubeAnalysisPageWrapperProps> =
 
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cube={cube} cards={cards} activeLink={view}>
-          <CubeAnalysisPage cubeAnalytics={cubeAnalytics} tokenMap={tokenMap} />
-        </CubeLayout>
-      </DisplayContextProvider>
+      <CubeLayout cube={cube} cards={cards} activeLink={view}>
+        <CubeAnalysisPage cubeAnalytics={cubeAnalytics} tokenMap={tokenMap} />
+      </CubeLayout>
     </MainLayout>
   );
 };

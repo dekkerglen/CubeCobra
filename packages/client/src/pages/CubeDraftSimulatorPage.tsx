@@ -1322,363 +1322,359 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
 
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cubeId}>
-        <CubeLayout cube={cube} activeLink="draft-simulator">
-          <Flexbox direction="col" gap="4" className="p-4">
-            <DynamicFlash />
+      <CubeLayout cube={cube} activeLink="draft-simulator">
+        <Flexbox direction="col" gap="4" className="p-4">
+          <DynamicFlash />
 
-            {/* Simulator workspace */}
-            <Card>
-              <CardHeader>
+          {/* Simulator workspace */}
+          <Card>
+            <CardHeader>
+              <div className="flex flex-col gap-0.5">
+                <Text lg semibold>
+                  Draft Simulator
+                </Text>
+                <Text sm className="text-text-secondary">
+                  Simulate bot-only drafts to estimate pick rates, color trends, and archetype outcomes. The draft
+                  simulation and deckbuilding run locally in your browser and results are stored on this device.
+                  Machines with lower GPU or memory headroom may need to use Advanced Options to reduce batch size or
+                  clustering work on larger runs.
+                </Text>
+              </div>
+            </CardHeader>
+            <CardBody className="pt-3">
+              {/* Controls grid — 5 fields + CTA as sixth column */}
+              <div
+                className="grid gap-3 items-end"
+                style={
+                  isMobileLayout
+                    ? { gridTemplateColumns: 'repeat(1, minmax(0, 1fr))' }
+                    : { gridTemplateColumns: 'repeat(5, minmax(0, 1fr)) auto' }
+                }
+              >
                 <div className="flex flex-col gap-0.5">
-                  <Text lg semibold>
-                    Draft Simulator
-                  </Text>
-                  <Text sm className="text-text-secondary">
-                    Simulate bot-only drafts to estimate pick rates, color trends, and archetype outcomes. The draft
-                    simulation and deckbuilding run locally in your browser and results are stored on this device.
-                    Machines with lower GPU or memory headroom may need to use Advanced Options to reduce batch size or
-                    clustering work on larger runs.
-                  </Text>
+                  <div className="flex items-baseline gap-1.5">
+                    <label className="text-xs font-medium text-text-secondary">Drafts</label>
+                    {numDrafts > 300 && (
+                      <span className="text-[11px] text-amber-600 dark:text-amber-400">
+                        Large run — may be slow or time out.
+                      </span>
+                    )}
+                  </div>
+                  <NumericInput min={1} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} />
                 </div>
-              </CardHeader>
-              <CardBody className="pt-3">
-                {/* Controls grid — 5 fields + CTA as sixth column */}
-                <div
-                  className="grid gap-3 items-end"
-                  style={
-                    isMobileLayout
-                      ? { gridTemplateColumns: 'repeat(1, minmax(0, 1fr))' }
-                      : { gridTemplateColumns: 'repeat(5, minmax(0, 1fr)) auto' }
-                  }
-                >
-                  <div className="flex flex-col gap-0.5">
-                    <div className="flex items-baseline gap-1.5">
-                      <label className="text-xs font-medium text-text-secondary">Drafts</label>
-                      {numDrafts > 300 && (
-                        <span className="text-[11px] text-amber-600 dark:text-amber-400">
-                          Large run — may be slow or time out.
-                        </span>
-                      )}
-                    </div>
-                    <NumericInput min={1} value={numDrafts} onChange={setNumDrafts} disabled={isRunning} />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <label className="text-xs font-medium text-text-secondary" htmlFor="draftSimulatorFormat">
-                      Format
-                    </label>
-                    <Select
-                      id="draftSimulatorFormat"
-                      options={availableFormats}
-                      value={`${selectedFormatId}`}
-                      setValue={(value) => setSelectedFormatId(parseInt(value, 10))}
-                      disabled={isRunning}
-                    />
-                  </div>
-                  <div className="flex flex-col gap-0.5">
-                    <label className="text-xs font-medium text-text-secondary">Seats</label>
-                    <NumericInput min={2} max={16} value={numSeats} onChange={setNumSeats} disabled={isRunning} />
-                  </div>
-                  {/* CTA — aligned to input baseline */}
-                  <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-medium text-text-secondary" htmlFor="draftSimulatorFormat">
+                    Format
+                  </label>
+                  <Select
+                    id="draftSimulatorFormat"
+                    options={availableFormats}
+                    value={`${selectedFormatId}`}
+                    setValue={(value) => setSelectedFormatId(parseInt(value, 10))}
+                    disabled={isRunning}
+                  />
+                </div>
+                <div className="flex flex-col gap-0.5">
+                  <label className="text-xs font-medium text-text-secondary">Seats</label>
+                  <NumericInput min={2} max={16} value={numSeats} onChange={setNumSeats} disabled={isRunning} />
+                </div>
+                {/* CTA — aligned to input baseline */}
+                <div className="flex flex-col gap-1">
+                  <button
+                    onClick={handleStart}
+                    disabled={isRunning}
+                    className="px-5 py-2 rounded bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold whitespace-nowrap"
+                  >
+                    {isRunning ? 'Simulating…' : 'Run Simulation'}
+                  </button>
+                  {isRunning && (
                     <button
-                      onClick={handleStart}
-                      disabled={isRunning}
-                      className="px-5 py-2 rounded bg-green-700 hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold whitespace-nowrap"
+                      type="button"
+                      onClick={handleCancel}
+                      className="px-4 py-1.5 rounded border border-border text-sm text-text-secondary hover:bg-bg-active"
                     >
-                      {isRunning ? 'Simulating…' : 'Run Simulation'}
+                      Cancel
                     </button>
-                    {isRunning && (
-                      <button
-                        type="button"
-                        onClick={handleCancel}
-                        className="px-4 py-1.5 rounded border border-border text-sm text-text-secondary hover:bg-bg-active"
+                  )}
+                </div>
+              </div>
+
+              {/* Recent runs strip */}
+              {runs.length > 0 && (
+                <div className="mt-3 pt-3 border-t border-border">
+                  <div className="flex items-center gap-3 mb-2">
+                    <Text xs className="font-medium text-text-secondary/60 uppercase tracking-wide">
+                      Recent runs
+                    </Text>
+                    <button
+                      type="button"
+                      className="text-xs text-text-secondary hover:text-text"
+                      onClick={() => setClearHistoryModalOpen(true)}
+                    >
+                      Clear all
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
+                    {runs.map((run) => (
+                      <div
+                        key={run.entry.ts}
+                        className={[
+                          'group relative flex flex-col cursor-pointer transition-colors select-none rounded-md border overflow-hidden',
+                          run.entry.ts === selectedTs
+                            ? 'border-blue-200 bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-800 shadow-[inset_3px_0_0_rgb(59_130_246)]'
+                            : 'border-border bg-bg-accent hover:bg-bg-active',
+                        ].join(' ')}
+                        style={{ minWidth: isMobileLayout ? undefined : 160, padding: '8px 28px 8px 13px' }}
+                        onClick={() => handleLoadRun(run.entry.ts)}
                       >
-                        Cancel
-                      </button>
+                        <span className="text-sm font-semibold whitespace-nowrap leading-tight text-text">
+                          {run.entry.numDrafts} drafts · {run.entry.numSeats} seats
+                        </span>
+                        <span className="text-[11px] text-text-secondary whitespace-nowrap mt-0.5">
+                          {new Date(run.entry.generatedAt).toLocaleString(undefined, {
+                            month: 'short',
+                            day: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit',
+                          })}
+                        </span>
+                        {!run.hasExactFiltering && (
+                          <span className="mt-1 inline-flex w-fit rounded border border-yellow-500/40 bg-yellow-500/10 px-1.5 py-0.5 text-[10px] font-medium text-yellow-300">
+                            Limited filtering
+                          </span>
+                        )}
+                        <button
+                          type="button"
+                          className="absolute top-1.5 right-1.5 w-4 h-4 flex items-center justify-center rounded text-[9px] text-text-secondary/40 hover:text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setRunPendingDelete(run.entry);
+                            setDeleteRunModalOpen(true);
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    {loadingRun && (
+                      <Text xs className="text-text-secondary self-center flex-shrink-0">
+                        Loading…
+                      </Text>
                     )}
                   </div>
                 </div>
+              )}
+            </CardBody>
+          </Card>
 
-                {/* Recent runs strip */}
-                {runs.length > 0 && (
-                  <div className="mt-3 pt-3 border-t border-border">
-                    <div className="flex items-center gap-3 mb-2">
-                      <Text xs className="font-medium text-text-secondary/60 uppercase tracking-wide">
-                        Recent runs
-                      </Text>
-                      <button
-                        type="button"
-                        className="text-xs text-text-secondary hover:text-text"
-                        onClick={() => setClearHistoryModalOpen(true)}
-                      >
-                        Clear all
-                      </button>
-                    </div>
-                    <div className="grid grid-cols-2 md:flex md:flex-wrap gap-2">
-                      {runs.map((run) => (
-                        <div
-                          key={run.entry.ts}
-                          className={[
-                            'group relative flex flex-col cursor-pointer transition-colors select-none rounded-md border overflow-hidden',
-                            run.entry.ts === selectedTs
-                              ? 'border-blue-200 bg-blue-50/60 dark:bg-blue-950/20 dark:border-blue-800 shadow-[inset_3px_0_0_rgb(59_130_246)]'
-                              : 'border-border bg-bg-accent hover:bg-bg-active',
-                          ].join(' ')}
-                          style={{ minWidth: isMobileLayout ? undefined : 160, padding: '8px 28px 8px 13px' }}
-                          onClick={() => handleLoadRun(run.entry.ts)}
-                        >
-                          <span className="text-sm font-semibold whitespace-nowrap leading-tight text-text">
-                            {run.entry.numDrafts} drafts · {run.entry.numSeats} seats
-                          </span>
-                          <span className="text-[11px] text-text-secondary whitespace-nowrap mt-0.5">
-                            {new Date(run.entry.generatedAt).toLocaleString(undefined, {
-                              month: 'short',
-                              day: 'numeric',
-                              hour: '2-digit',
-                              minute: '2-digit',
-                            })}
-                          </span>
-                          {!run.hasExactFiltering && (
-                            <span className="mt-1 inline-flex w-fit rounded border border-yellow-500/40 bg-yellow-500/10 px-1.5 py-0.5 text-[10px] font-medium text-yellow-300">
-                              Limited filtering
-                            </span>
-                          )}
-                          <button
-                            type="button"
-                            className="absolute top-1.5 right-1.5 w-4 h-4 flex items-center justify-center rounded text-[9px] text-text-secondary/40 hover:text-text-secondary opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setRunPendingDelete(run.entry);
-                              setDeleteRunModalOpen(true);
-                            }}
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      ))}
-                      {loadingRun && (
-                        <Text xs className="text-text-secondary self-center flex-shrink-0">
-                          Loading…
-                        </Text>
-                      )}
-                    </div>
+          {/* Progress */}
+          {isRunning && (
+            <Card>
+              <CardBody>
+                <Flexbox direction="col" gap="2">
+                  <Flexbox direction="row" justify="between">
+                    <Text sm>
+                      {simPhase === 'setup'
+                        ? 'Preparing packs…'
+                        : simPhase === 'loadmodel'
+                          ? 'Loading draft model…'
+                          : simPhase === 'sim'
+                            ? 'Running draft simulation…'
+                            : simPhase === 'deckbuild'
+                              ? 'Building decks…'
+                              : simPhase === 'cluster'
+                                ? 'Clustering decks…'
+                                : 'Storing results locally…'}
+                    </Text>
+                    <Text sm className="text-text-secondary">
+                      {overallSimProgress}%
+                    </Text>
+                  </Flexbox>
+                  <div className="w-full bg-bg rounded-full h-2.5 overflow-hidden">
+                    <div
+                      className={[
+                        'h-2.5 rounded-full bg-green-600 transition-all duration-500',
+                        simPhase !== 'sim' ? 'animate-pulse' : '',
+                      ].join(' ')}
+                      style={{ width: `${Math.max(2, overallSimProgress)}%`, opacity: simPhase === 'sim' ? 1 : 0.8 }}
+                    />
                   </div>
-                )}
+                </Flexbox>
               </CardBody>
             </Card>
+          )}
 
-            {/* Progress */}
-            {isRunning && (
-              <Card>
-                <CardBody>
-                  <Flexbox direction="col" gap="2">
-                    <Flexbox direction="row" justify="between">
-                      <Text sm>
-                        {simPhase === 'setup'
-                          ? 'Preparing packs…'
-                          : simPhase === 'loadmodel'
-                            ? 'Loading draft model…'
-                            : simPhase === 'sim'
-                              ? 'Running draft simulation…'
-                              : simPhase === 'deckbuild'
-                                ? 'Building decks…'
-                                : simPhase === 'cluster'
-                                  ? 'Clustering decks…'
-                                  : 'Storing results locally…'}
-                      </Text>
-                      <Text sm className="text-text-secondary">
-                        {overallSimProgress}%
-                      </Text>
-                    </Flexbox>
-                    <div className="w-full bg-bg rounded-full h-2.5 overflow-hidden">
-                      <div
-                        className={[
-                          'h-2.5 rounded-full bg-green-600 transition-all duration-500',
-                          simPhase !== 'sim' ? 'animate-pulse' : '',
-                        ].join(' ')}
-                        style={{ width: `${Math.max(2, overallSimProgress)}%`, opacity: simPhase === 'sim' ? 1 : 0.8 }}
-                      />
-                    </div>
-                  </Flexbox>
-                </CardBody>
-              </Card>
-            )}
-
-            {/* Save success */}
-            {status === 'completed' && !isRunning && (
-              <Card className="border-green-700">
-                <CardBody>
-                  <Text sm className="text-text">
-                    {storageNotice?.startsWith('Results are shown below')
-                      ? 'Simulation complete — results are displayed below.'
-                      : 'Simulation complete — results are stored locally in this browser and displayed below.'}
-                  </Text>
-                </CardBody>
-              </Card>
-            )}
-            {storageNotice && (
-              <Card className="border-yellow-700">
-                <CardBody>
-                  <Text sm className="text-yellow-300">
-                    {storageNotice}
-                  </Text>
-                </CardBody>
-              </Card>
-            )}
-
-            {/* Error */}
-            {status === 'failed' && errorMsg && (
-              <Card className="border-red-700">
-                <CardBody>
-                  <Text sm className="text-red-400">
-                    Error: {errorMsg}
-                  </Text>
-                </CardBody>
-              </Card>
-            )}
-            {loadRunError && (
-              <Card className="border-red-700">
-                <CardBody>
-                  <Text sm className="text-red-400">
-                    Failed to load run: {loadRunError}
-                  </Text>
-                </CardBody>
-              </Card>
-            )}
-            {historyLoadError && (
-              <Card className="border-red-700">
-                <CardBody>
-                  <Text sm className="text-red-400">
-                    Failed to load local simulation history: {historyLoadError}
-                  </Text>
-                </CardBody>
-              </Card>
-            )}
-
-            {/* Results */}
-            {displayRunData && (
-              <Flexbox direction="col" gap="6">
-                {!currentRunSetup && (
-                  <Card className="border-yellow-700">
-                    <CardBody>
-                      <Text sm className="text-text">
-                        This saved run predates exact filter reconstruction. Filtered card stats are approximate, and
-                        full pick order may be unavailable.
-                      </Text>
-                    </CardBody>
-                  </Card>
-                )}
-                {isMobileLayout ? (
-                  <DraftSimulatorMobileView
-                    overview={resultsOverviewNode}
-                    filters={resultsFilterNode}
-                    detail={resultsMobileDetailNode}
-                    archetypes={resultsMobileArchetypesNode}
-                    oovWarning={resultsOovWarningNode}
-                    bottom={resultsBottomNode}
-                  />
-                ) : (
-                  <DraftSimulatorDesktopView
-                    overview={resultsOverviewNode}
-                    map={resultsMapNode}
-                    filters={resultsFilterNode}
-                    oovWarning={resultsOovWarningNode}
-                    bottom={resultsBottomNode}
-                  />
-                )}
-              </Flexbox>
-            )}
-
-            {/* Advanced options panel */}
-            <Card className="border-border">
-              <button
-                type="button"
-                className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-bg-active"
-                onClick={() => setShowAdvancedOptions((v) => !v)}
-              >
-                <Text sm semibold>
-                  Advanced Options
+          {/* Save success */}
+          {status === 'completed' && !isRunning && (
+            <Card className="border-green-700">
+              <CardBody>
+                <Text sm className="text-text">
+                  {storageNotice?.startsWith('Results are shown below')
+                    ? 'Simulation complete — results are displayed below.'
+                    : 'Simulation complete — results are stored locally in this browser and displayed below.'}
                 </Text>
-                <span className="text-text-secondary text-sm ml-4 flex-shrink-0">
-                  {showAdvancedOptions ? '▲' : '▼'}
-                </span>
-              </button>
-              <Collapse isOpen={showAdvancedOptions}>
-                <div className="px-4 pb-4 flex flex-col gap-4">
-                  <div className="flex flex-col gap-1.5">
-                    <label className="text-xs font-medium text-text-secondary" htmlFor="draftSimulatorGpuBatchSize">
-                      GPU batch size
-                    </label>
-                    <Select
-                      id="draftSimulatorGpuBatchSize"
-                      options={GPU_BATCH_OPTIONS}
-                      value={`${gpuBatchSize}`}
-                      setValue={(value) => setGpuBatchSize(parseInt(value, 10))}
-                      disabled={isRunning}
-                    />
-                    <p className="text-xs text-text-secondary leading-snug">
-                      Controls how many picks the ML model scores in a single GPU call. Higher values run faster on a
-                      strong GPU but use more VRAM — if simulation crashes or stalls, try a lower value. The simulator
-                      will automatically retry at a lower batch size if it detects an out-of-memory error.
-                    </p>
-                  </div>
-                  <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer select-none">
-                    <input
-                      type="checkbox"
-                      checked={showAdvancedClustering}
-                      onChange={(e) => setShowAdvancedClustering(e.target.checked)}
-                      className="rounded border-border"
-                    />
-                    Show advanced clustering options
-                  </label>
-                </div>
-              </Collapse>
+              </CardBody>
             </Card>
+          )}
+          {storageNotice && (
+            <Card className="border-yellow-700">
+              <CardBody>
+                <Text sm className="text-yellow-300">
+                  {storageNotice}
+                </Text>
+              </CardBody>
+            </Card>
+          )}
 
-            <SimulatorExplainer />
-            {displayRunData && (
-              <PoolInspectionModal
-                isOpen={inspectingPoolIndex !== null}
-                setOpen={(open) => {
-                  if (!open) {
-                    setInspectingPoolIndex(null);
-                    setInspectingPickFocus(undefined);
-                  }
-                }}
-                focusPickNumber={inspectingPickFocus}
-                pool={inspectingPool}
-                deck={inspectingDeck}
-                cardMeta={displayRunData.cardMeta}
-                runData={displayRunData}
-                themes={inspectingThemes}
-                archetypeLabel={inspectingPool ? (poolArchetypeLabels?.get(inspectingPool.poolIndex) ?? null) : null}
-                highlightOracle={selectedCard?.oracle_id}
-                deckLoading={simPhase === 'deckbuild'}
-                themeBreakdown={inspectingThemeBreakdown}
-              />
-            )}
-            <PriorRunDeleteModal
-              isOpen={deleteRunModalOpen}
-              setOpen={setDeleteRunModalOpen}
-              run={runPendingDelete}
-              onConfirm={handleDeleteRun}
-            />
-            <ClearSimulationHistoryModal
-              isOpen={clearHistoryModalOpen}
-              setOpen={setClearHistoryModalOpen}
-              onConfirm={handleClearHistory}
-            />
-            <LeaveSimulationModal
-              isOpen={leaveModalOpen}
+          {/* Error */}
+          {status === 'failed' && errorMsg && (
+            <Card className="border-red-700">
+              <CardBody>
+                <Text sm className="text-red-400">
+                  Error: {errorMsg}
+                </Text>
+              </CardBody>
+            </Card>
+          )}
+          {loadRunError && (
+            <Card className="border-red-700">
+              <CardBody>
+                <Text sm className="text-red-400">
+                  Failed to load run: {loadRunError}
+                </Text>
+              </CardBody>
+            </Card>
+          )}
+          {historyLoadError && (
+            <Card className="border-red-700">
+              <CardBody>
+                <Text sm className="text-red-400">
+                  Failed to load local simulation history: {historyLoadError}
+                </Text>
+              </CardBody>
+            </Card>
+          )}
+
+          {/* Results */}
+          {displayRunData && (
+            <Flexbox direction="col" gap="6">
+              {!currentRunSetup && (
+                <Card className="border-yellow-700">
+                  <CardBody>
+                    <Text sm className="text-text">
+                      This saved run predates exact filter reconstruction. Filtered card stats are approximate, and full
+                      pick order may be unavailable.
+                    </Text>
+                  </CardBody>
+                </Card>
+              )}
+              {isMobileLayout ? (
+                <DraftSimulatorMobileView
+                  overview={resultsOverviewNode}
+                  filters={resultsFilterNode}
+                  detail={resultsMobileDetailNode}
+                  archetypes={resultsMobileArchetypesNode}
+                  oovWarning={resultsOovWarningNode}
+                  bottom={resultsBottomNode}
+                />
+              ) : (
+                <DraftSimulatorDesktopView
+                  overview={resultsOverviewNode}
+                  map={resultsMapNode}
+                  filters={resultsFilterNode}
+                  oovWarning={resultsOovWarningNode}
+                  bottom={resultsBottomNode}
+                />
+              )}
+            </Flexbox>
+          )}
+
+          {/* Advanced options panel */}
+          <Card className="border-border">
+            <button
+              type="button"
+              className="w-full flex items-center justify-between px-4 py-3 text-left hover:bg-bg-active"
+              onClick={() => setShowAdvancedOptions((v) => !v)}
+            >
+              <Text sm semibold>
+                Advanced Options
+              </Text>
+              <span className="text-text-secondary text-sm ml-4 flex-shrink-0">{showAdvancedOptions ? '▲' : '▼'}</span>
+            </button>
+            <Collapse isOpen={showAdvancedOptions}>
+              <div className="px-4 pb-4 flex flex-col gap-4">
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-medium text-text-secondary" htmlFor="draftSimulatorGpuBatchSize">
+                    GPU batch size
+                  </label>
+                  <Select
+                    id="draftSimulatorGpuBatchSize"
+                    options={GPU_BATCH_OPTIONS}
+                    value={`${gpuBatchSize}`}
+                    setValue={(value) => setGpuBatchSize(parseInt(value, 10))}
+                    disabled={isRunning}
+                  />
+                  <p className="text-xs text-text-secondary leading-snug">
+                    Controls how many picks the ML model scores in a single GPU call. Higher values run faster on a
+                    strong GPU but use more VRAM — if simulation crashes or stalls, try a lower value. The simulator
+                    will automatically retry at a lower batch size if it detects an out-of-memory error.
+                  </p>
+                </div>
+                <label className="flex items-center gap-2 text-sm text-text-secondary cursor-pointer select-none">
+                  <input
+                    type="checkbox"
+                    checked={showAdvancedClustering}
+                    onChange={(e) => setShowAdvancedClustering(e.target.checked)}
+                    className="rounded border-border"
+                  />
+                  Show advanced clustering options
+                </label>
+              </div>
+            </Collapse>
+          </Card>
+
+          <SimulatorExplainer />
+          {displayRunData && (
+            <PoolInspectionModal
+              isOpen={inspectingPoolIndex !== null}
               setOpen={(open) => {
-                if (!open) handleCancelLeave();
+                if (!open) {
+                  setInspectingPoolIndex(null);
+                  setInspectingPickFocus(undefined);
+                }
               }}
-              onLeave={handleConfirmedLeave}
+              focusPickNumber={inspectingPickFocus}
+              pool={inspectingPool}
+              deck={inspectingDeck}
+              cardMeta={displayRunData.cardMeta}
+              runData={displayRunData}
+              themes={inspectingThemes}
+              archetypeLabel={inspectingPool ? (poolArchetypeLabels?.get(inspectingPool.poolIndex) ?? null) : null}
+              highlightOracle={selectedCard?.oracle_id}
+              deckLoading={simPhase === 'deckbuild'}
+              themeBreakdown={inspectingThemeBreakdown}
             />
-          </Flexbox>
-        </CubeLayout>
-      </DisplayContextProvider>
+          )}
+          <PriorRunDeleteModal
+            isOpen={deleteRunModalOpen}
+            setOpen={setDeleteRunModalOpen}
+            run={runPendingDelete}
+            onConfirm={handleDeleteRun}
+          />
+          <ClearSimulationHistoryModal
+            isOpen={clearHistoryModalOpen}
+            setOpen={setClearHistoryModalOpen}
+            onConfirm={handleClearHistory}
+          />
+          <LeaveSimulationModal
+            isOpen={leaveModalOpen}
+            setOpen={(open) => {
+              if (!open) handleCancelLeave();
+            }}
+            onLeave={handleConfirmedLeave}
+          />
+        </Flexbox>
+      </CubeLayout>
     </MainLayout>
   );
 };

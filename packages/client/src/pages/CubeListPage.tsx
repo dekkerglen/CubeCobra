@@ -26,7 +26,7 @@ import RenderToRoot from 'components/RenderToRoot';
 import ChangesContext from 'contexts/ChangesContext';
 import CubeContext from 'contexts/CubeContext';
 import { CubeTrayProvider } from 'contexts/CubeTrayContext';
-import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
+import DisplayContext from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
 import { RotoDraftContextProvider } from 'contexts/RotoDraftContext';
 import UserContext from 'contexts/UserContext';
@@ -295,24 +295,20 @@ const CubeListPage: React.FC<CubeListPageProps> = ({ cube, cards }) => {
 
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider
-        cubeID={cube.id}
-        defaultView={defaultView}
-        defaultEditSidebarOpen={isOwner && isCubeEmpty}
-      >
-        <RotoDraftContextProvider>
-          <CubeLayout
-            cube={cube}
-            cards={cards}
-            activeLink="list"
-            loadVersionDict
-            useChangedCards
-            rightSidebar={<CubeListPageRightSidebarWrapper />}
-          >
-            <CubeListPageRaw />
-          </CubeLayout>
-        </RotoDraftContextProvider>
-      </DisplayContextProvider>
+      <RotoDraftContextProvider>
+        <CubeLayout
+          cube={cube}
+          cards={cards}
+          activeLink="list"
+          loadVersionDict
+          useChangedCards
+          rightSidebar={<CubeListPageRightSidebarWrapper />}
+          defaultView={defaultView}
+          defaultEditSidebarOpen={isOwner && isCubeEmpty}
+        >
+          <CubeListPageRaw />
+        </CubeLayout>
+      </RotoDraftContextProvider>
     </MainLayout>
   );
 };

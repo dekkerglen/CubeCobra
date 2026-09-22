@@ -18,7 +18,6 @@ import DynamicFlash from '../components/DynamicFlash';
 import ErrorBoundary from '../components/ErrorBoundary';
 import RenderToRoot from '../components/RenderToRoot';
 import { CSRFContext } from '../contexts/CSRFContext';
-import { DisplayContextProvider } from '../contexts/DisplayContext';
 import DraftLocation, { addCard, locations, moveCard } from '../drafting/DraftLocation';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
@@ -172,58 +171,56 @@ const GridDraftPage: React.FC<GridDraftPageProps> = ({ cube, initialDraft, seatN
 
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cube={cube} activeLink="playtest">
-          <Container xl disableCenter>
-            <DynamicFlash />
-            <CSRFForm
-              ref={submitDeckForm}
-              method="POST"
-              action={`/cube/deck/submitdeck/${initialDraft.cube}`}
-              formData={{ body: initialDraft.id }}
-            >
-              {/* CSRFForm requires children, and null is a valid React node which does nothing */}
-              {null}
-            </CSRFForm>
-            <ErrorBoundary>
-              <GridDraftPack
-                pack={pack}
-                packNumber={packNum}
-                pickNumber={pickNum}
-                seatIndex={turn ? 0 : 1}
-                makePick={mutations.makePick}
-                turn={turn ? 1 : 2}
-              />
-            </ErrorBoundary>
-            <ErrorBoundary>
-              <Card className="mt-3">
-                <DndContext onDragEnd={(event) => handleMoveCard(event, 0)}>
-                  <DeckStacks
-                    cards={picked[0]}
-                    title={draftType === 'bot' ? 'Picks' : "Player One's picks"}
-                    subtitle={makeSubtitle(picked[0].flat(3))}
-                    locationType={locations.deck}
-                    xs={4}
-                    md={8}
-                  />
-                </DndContext>
-              </Card>
-              <Card className="my-3">
-                <DndContext onDragEnd={(event) => handleMoveCard(event, 1)}>
-                  <DeckStacks
-                    cards={picked[1]}
-                    title={draftType === 'bot' ? 'Bot picks' : "Player Two's picks"}
-                    subtitle={makeSubtitle(picked[1].flat(3))}
-                    locationType={locations.deck}
-                    xs={4}
-                    md={8}
-                  />
-                </DndContext>
-              </Card>
-            </ErrorBoundary>
-          </Container>
-        </CubeLayout>
-      </DisplayContextProvider>
+      <CubeLayout cube={cube} activeLink="playtest">
+        <Container xl disableCenter>
+          <DynamicFlash />
+          <CSRFForm
+            ref={submitDeckForm}
+            method="POST"
+            action={`/cube/deck/submitdeck/${initialDraft.cube}`}
+            formData={{ body: initialDraft.id }}
+          >
+            {/* CSRFForm requires children, and null is a valid React node which does nothing */}
+            {null}
+          </CSRFForm>
+          <ErrorBoundary>
+            <GridDraftPack
+              pack={pack}
+              packNumber={packNum}
+              pickNumber={pickNum}
+              seatIndex={turn ? 0 : 1}
+              makePick={mutations.makePick}
+              turn={turn ? 1 : 2}
+            />
+          </ErrorBoundary>
+          <ErrorBoundary>
+            <Card className="mt-3">
+              <DndContext onDragEnd={(event) => handleMoveCard(event, 0)}>
+                <DeckStacks
+                  cards={picked[0]}
+                  title={draftType === 'bot' ? 'Picks' : "Player One's picks"}
+                  subtitle={makeSubtitle(picked[0].flat(3))}
+                  locationType={locations.deck}
+                  xs={4}
+                  md={8}
+                />
+              </DndContext>
+            </Card>
+            <Card className="my-3">
+              <DndContext onDragEnd={(event) => handleMoveCard(event, 1)}>
+                <DeckStacks
+                  cards={picked[1]}
+                  title={draftType === 'bot' ? 'Bot picks' : "Player Two's picks"}
+                  subtitle={makeSubtitle(picked[1].flat(3))}
+                  locationType={locations.deck}
+                  xs={4}
+                  md={8}
+                />
+              </DndContext>
+            </Card>
+          </ErrorBoundary>
+        </Container>
+      </CubeLayout>
     </MainLayout>
   );
 };

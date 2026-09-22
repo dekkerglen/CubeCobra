@@ -19,7 +19,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import RenderToRoot from 'components/RenderToRoot';
 import CubeContext from 'contexts/CubeContext';
-import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
+import DisplayContext from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
 import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
@@ -177,17 +177,15 @@ const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ dat
 const CubePITListPage: React.FC<CubePITListPageProps> = ({ cube, cards, date, changelogId }) => {
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout
-          cube={cube}
-          cards={cards}
-          activeLink="changelog"
-          useChangedCards
-          rightSidebar={<CubeListRightSidebar canEdit={false} />}
-        >
-          <CubePITListInner date={date} changelogId={changelogId} />
-        </CubeLayout>
-      </DisplayContextProvider>
+      <CubeLayout
+        cube={cube}
+        cards={cards}
+        activeLink="changelog"
+        useChangedCards
+        rightSidebar={<CubeListRightSidebar canEdit={false} />}
+      >
+        <CubePITListInner date={date} changelogId={changelogId} />
+      </CubeLayout>
     </MainLayout>
   );
 };

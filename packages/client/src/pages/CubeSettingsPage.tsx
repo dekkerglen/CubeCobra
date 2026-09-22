@@ -14,7 +14,6 @@ import OverviewSettings from 'components/settings/OverviewSettings';
 import RestoreSettings from 'components/settings/RestoreSettings';
 import SettingsNavbar from 'components/settings/SettingsNavbar';
 import CubeContext from 'contexts/CubeContext';
-import { DisplayContextProvider } from 'contexts/DisplayContext';
 import SettingsViewContext, { SettingsViewContextProvider } from 'contexts/SettingsViewContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
@@ -88,11 +87,9 @@ const CubeSettingsPageContent: React.FC<CubeSettingsPageProps> = ({ cube, cards,
 
   return (
     <MainLayout useContainer={false}>
-      <DisplayContextProvider cubeID={cube.id}>
-        <CubeLayout cards={cards} cube={cube} activeLink={rawView}>
-          <SettingsContent versions={versions} />
-        </CubeLayout>
-      </DisplayContextProvider>
+      <CubeLayout cards={cards} cube={cube} activeLink={rawView}>
+        <SettingsContent versions={versions} />
+      </CubeLayout>
     </MainLayout>
   );
 };
