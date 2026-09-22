@@ -82,50 +82,121 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
     }
   };
 
+  // Collect the cards to export from the appropriate boards, applying the same
+  // filter/sort the user has active, and dropping any card that has no image.
+  // Shared by the PDF download and the browser-print paths.
+  const collectCardsWithImages = (): Card[] => {
+    let boardKeys: string[];
+    if (exportAllBoards) {
+      boardKeys = Object.keys(cube.cards).filter((k) => k !== 'id');
+    } else {
+      boardKeys = currentViewBoards;
+    }
+
+    let cards: Card[] = [];
+    for (const key of boardKeys) {
+      const boardCards = cube.cards[key];
+      if (Array.isArray(boardCards)) {
+        cards = cards.concat(boardCards);
+      }
+    }
+
+    if (isFilterUsed) {
+      cards = cards.filter(cardFilter.filter);
+    }
+
+    let sortedCards = cards;
+    if (isSortUsed) {
+      sortedCards = sortForDownload(
+        cards,
+        sortPrimary ?? undefined,
+        sortSecondary ?? undefined,
+        sortTertiary ?? undefined,
+        sortQuaternary ?? undefined,
+        cube.showUnsorted,
+        cube,
+      );
+    }
+
+    return sortedCards.filter((card) => {
+      const imageUrl = cardImageNormal(card);
+      return imageUrl && imageUrl.length > 0;
+    });
+  };
+
+  // Render the cards into a self-contained print window and open the browser's
+  // print dialog. Unlike the jsPDF path this just displays the images as <img>
+  // tags — no canvas readback — so it needs no image proxy and works directly
+  // with the cross-origin hosted card images. Layout matches the PDF: 3x3 grid
+  // of 2.5"x3.5" cards on US Letter (0.25" top/bottom, 0.5" left/right margins).
+  const printInBrowser = () => {
+    const cardsWithImages = collectCardsWithImages();
+
+    if (cardsWithImages.length === 0) {
+      addAlert('danger', 'No cards with images found to export.');
+      return;
+    }
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      addAlert('danger', 'Could not open a print window. Please allow pop-ups for this site and try again.');
+      return;
+    }
+
+    const escapeHtml = (value: string): string =>
+      value.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    // The print window is about:blank, so relative image paths (e.g. custom-card
+    // placeholders at /content/...) must be resolved against the app origin here.
+    const toAbsoluteUrl = (url: string): string => {
+      try {
+        return new URL(url, window.location.href).href;
+      } catch {
+        return url;
+      }
+    };
+
+    const imagesHtml = cardsWithImages
+      .map((card) => {
+        const imageUrl = toAbsoluteUrl(cardImageNormal(card));
+        return `<img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(card.details?.name ?? '')}" />`;
+      })
+      .join('');
+
+    const title = `${cube.name} - Print and Play`;
+
+    // The inline script waits for every image to finish loading (or error) before
+    // opening the print dialog, so no card prints blank. `</script>` is split so
+    // it can't terminate this string early when bundled.
+    printWindow.document.write(
+      `<!doctype html><html><head><meta charset="utf-8" /><title>${escapeHtml(title)}</title>` +
+        `<style>` +
+        `* { margin: 0; padding: 0; box-sizing: border-box; }` +
+        `html, body { background: #fff; }` +
+        `.pnp-grid { display: grid; grid-template-columns: repeat(3, 2.5in); grid-auto-rows: 3.5in; }` +
+        `.pnp-grid img { width: 2.5in; height: 3.5in; display: block; break-inside: avoid; ` +
+        `-webkit-print-color-adjust: exact; print-color-adjust: exact; }` +
+        `@page { size: letter; margin: 0.25in 0.5in; }` +
+        `</style></head><body>` +
+        `<div class="pnp-grid">${imagesHtml}</div>` +
+        `<script>(function(){var imgs=Array.prototype.slice.call(document.images);var pending=imgs.length;` +
+        `function done(){if(--pending<=0){window.focus();window.print();}}` +
+        `if(!pending){window.focus();window.print();return;}` +
+        `imgs.forEach(function(img){if(img.complete){done();}else{img.addEventListener('load',done);` +
+        `img.addEventListener('error',done);}});})();<\/script>` +
+        `</body></html>`,
+    );
+    printWindow.document.close();
+
+    setOpen(false);
+  };
+
   const generatePrintAndPlayPDF = async () => {
     setIsGenerating(true);
     setProgress({ current: 0, total: 0 });
 
     try {
-      // Get cards from the appropriate boards
-      let boardKeys: string[];
-      if (exportAllBoards) {
-        boardKeys = Object.keys(cube.cards).filter((k) => k !== 'id');
-      } else {
-        boardKeys = currentViewBoards;
-      }
-
-      let cards: Card[] = [];
-      for (const key of boardKeys) {
-        const boardCards = cube.cards[key];
-        if (Array.isArray(boardCards)) {
-          cards = cards.concat(boardCards);
-        }
-      }
-
-      if (isFilterUsed) {
-        cards = cards.filter(cardFilter.filter);
-      }
-
-      // Sort cards if needed
-      let sortedCards = cards;
-      if (isSortUsed) {
-        sortedCards = sortForDownload(
-          cards,
-          sortPrimary ?? undefined,
-          sortSecondary ?? undefined,
-          sortTertiary ?? undefined,
-          sortQuaternary ?? undefined,
-          cube.showUnsorted,
-          cube,
-        );
-      }
-
-      // Filter out cards without images
-      const cardsWithImages = sortedCards.filter((card) => {
-        const imageUrl = cardImageNormal(card);
-        return imageUrl && imageUrl.length > 0;
-      });
+      const cardsWithImages = collectCardsWithImages();
 
       if (cardsWithImages.length === 0) {
         addAlert('danger', 'No cards with images found to export.');
@@ -219,12 +290,14 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
           {!isGenerating ? (
             <>
               <Text md>
-                This will generate a PDF with your cube cards arranged for printing. Each page will contain 9 cards (3
-                rows × 3 columns) with no spacing between them for easy cutting.
+                Arrange your cube cards for printing — 9 cards per page (3 rows × 3 columns) with no spacing between
+                them for easy cutting, sized at 2.5" × 3.5" (standard poker card size) on portrait US Letter (8.5" ×
+                11") paper.
               </Text>
               <Text sm className="text-text-secondary">
-                Note: PDF generation may take a few minutes depending on the size of your cube. Cards are sized to print
-                at 2.5" × 3.5" (standard poker card size) on portrait US Letter (8.5" × 11") paper.
+                <strong>Print via Browser</strong> opens a print-ready page and your browser's print dialog (choose
+                "Save as PDF" there if you want a file). For best results set Margins to "Default" or "None".{' '}
+                <strong>Download PDF</strong> builds the PDF directly, which may take a few minutes for large cubes.
               </Text>
             </>
           ) : (
@@ -250,8 +323,11 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
           <Button color="secondary" onClick={() => setOpen(false)} disabled={isGenerating}>
             Cancel
           </Button>
-          <Button color="primary" onClick={generatePrintAndPlayPDF} disabled={isGenerating}>
-            {isGenerating ? 'Generating...' : 'Generate PDF'}
+          <Button color="secondary" onClick={generatePrintAndPlayPDF} disabled={isGenerating}>
+            {isGenerating ? 'Generating...' : 'Download PDF'}
+          </Button>
+          <Button color="primary" onClick={printInBrowser} disabled={isGenerating}>
+            Print via Browser
           </Button>
         </Flexbox>
       </ModalFooter>
