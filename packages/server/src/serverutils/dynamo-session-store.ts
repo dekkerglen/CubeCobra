@@ -43,6 +43,35 @@ export const DEFAULT_CALLBACK = (err?: Error) => {
 };
 
 /**
+ * Repairs a stored session so express-session can safely reconstruct its Cookie.
+ *
+ * express-session's Cookie constructor throws `maxAge must be a number or Date`
+ * when the cookie it's copying has a truthy, non-numeric `maxAge` (which happens
+ * with version-skewed or corrupted stored records). Because this throw fires
+ * during session inflation — before any of our middleware runs — a single bad
+ * record 500s *every* request and surfaces as an unrelated pug error
+ * ("messages is not a function"). Stripping the invalid fields lets a fresh,
+ * valid cookie be derived from `expires`/config instead of crashing.
+ * Returns null when the session is unusable, so a new session is created.
+ */
+export function sanitizeSessionCookie<T extends { cookie?: any } | null | undefined>(sess: T): T {
+  if (!sess || typeof sess !== 'object') return sess;
+  const cookie = sess.cookie;
+  if (!cookie || typeof cookie !== 'object') return sess;
+
+  // Drop a maxAge that would make `new Cookie()` throw (must be number or Date).
+  if (cookie.maxAge != null && typeof cookie.maxAge !== 'number' && !(cookie.maxAge instanceof Date)) {
+    delete cookie.maxAge;
+  }
+  // Drop an unparseable expires so it doesn't become an Invalid Date downstream.
+  if (cookie.expires != null && !(cookie.expires instanceof Date)) {
+    const parsed = new Date(cookie.expires);
+    if (Number.isNaN(parsed.getTime())) delete cookie.expires;
+  }
+  return sess;
+}
+
+/**
  * Transforms a date t seconds epoch.
  * @param  {Date} date The date to be converted.
  * @return {Integer}      Representation of the date in seconds epoch.
@@ -288,7 +317,7 @@ export default class DynamoDBStore extends Store {
         this.handleExpiredSession(sid, callback);
       } else {
         debug(`Session '${sid}' found`, record.sess);
-        callback(null, record.sess);
+        callback(null, sanitizeSessionCookie(record.sess));
       }
     } catch (err) {
       debug(`Error getting session '${sid}'`, err);
