@@ -77,6 +77,9 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
     }
 
     const mainboard: string[] = req.body.mainboard ? JSON.parse(req.body.mainboard) : [];
+    // The contribute page has always submitted a sideboard; it used to be discarded
+    // here, so anything a contributor sideboarded silently vanished.
+    const sideboard: string[] = req.body.sideboard ? JSON.parse(req.body.sideboard) : [];
     if (mainboard.length === 0) {
       req.flash('danger', 'No cards to add');
       return redirect(req, res, `/cube/records/contribute/${record.id}?token=${encodeURIComponent(req.body.token)}`);
@@ -130,13 +133,13 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
 
     // Attach the deck (creates the draft if needed; fills this player's seat).
     if (!record.draft) {
-      await associateNewDraft(cube, record, userIndex, mainboard, []);
+      await associateNewDraft(cube, record, userIndex, mainboard, sideboard);
     } else {
       const existingDraft = await draftDao.getById(record.draft);
       if (existingDraft) {
-        await associateWithExistingDraft(cube, existingDraft, userIndex, mainboard, []);
+        await associateWithExistingDraft(cube, existingDraft, userIndex, mainboard, sideboard);
       } else {
-        await associateNewDraft(cube, record, userIndex, mainboard, []);
+        await associateNewDraft(cube, record, userIndex, mainboard, sideboard);
       }
     }
 
