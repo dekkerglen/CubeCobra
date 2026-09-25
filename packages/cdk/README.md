@@ -41,6 +41,7 @@ The following environment variables must be set:
 | `CAPTCHA_SITE_KEY`      |
 | `CAPTCHA_SECRET_KEY`    |
 | `DRAFTMANCER_API_KEY`   |
+| `MANAMATRIX_API_KEY`    |
 | `STRIPE_SECRET_KEY`     |
 | `STRIPE_PUBLIC_KEY`     |
 

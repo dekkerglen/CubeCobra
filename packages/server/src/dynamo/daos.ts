@@ -15,6 +15,10 @@ import { ExportTaskDynamoDao } from './dao/ExportTaskDynamoDao';
 import { FeaturedQueueDynamoDao } from './dao/FeaturedQueueDynamoDao';
 import { FeedDynamoDao } from './dao/FeedDynamoDao';
 import { HostedImageDynamoDao } from './dao/HostedImageDynamoDao';
+import { ManaMatrixCellStatsDynamoDao } from './dao/ManaMatrixCellStatsDynamoDao';
+import { ManaMatrixPuzzleDynamoDao } from './dao/ManaMatrixPuzzleDynamoDao';
+import { ManaMatrixSubmissionDynamoDao } from './dao/ManaMatrixSubmissionDynamoDao';
+import { ManaMatrixUserStatsDynamoDao } from './dao/ManaMatrixUserStatsDynamoDao';
 import { MigrationTaskDynamoDao } from './dao/MigrationTaskDynamoDao';
 import { NoticeDynamoDao } from './dao/NoticeDynamoDao';
 import { NotificationDynamoDao } from './dao/NotificationDynamoDao';
@@ -50,6 +54,19 @@ export const cubeDao: CubeDynamoDao = new CubeDynamoDao(documentClient, userDao,
 export const blogDao: BlogDynamoDao = new BlogDynamoDao(documentClient, changelogDao, cubeDao, userDao, tableName);
 export const cardHistoryDao: CardHistoryDynamoDao = new CardHistoryDynamoDao(documentClient, tableName);
 export const dailyP1P1Dao: DailyP1P1DynamoDao = new DailyP1P1DynamoDao(documentClient, tableName);
+export const manaMatrixPuzzleDao: ManaMatrixPuzzleDynamoDao = new ManaMatrixPuzzleDynamoDao(documentClient, tableName);
+export const manaMatrixSubmissionDao: ManaMatrixSubmissionDynamoDao = new ManaMatrixSubmissionDynamoDao(
+  documentClient,
+  tableName,
+);
+export const manaMatrixUserStatsDao: ManaMatrixUserStatsDynamoDao = new ManaMatrixUserStatsDynamoDao(
+  documentClient,
+  tableName,
+);
+export const manaMatrixCellStatsDao: ManaMatrixCellStatsDynamoDao = new ManaMatrixCellStatsDynamoDao(
+  documentClient,
+  tableName,
+);
 export const featuredQueueDao: FeaturedQueueDynamoDao = new FeaturedQueueDynamoDao(documentClient, tableName);
 export const packageDao: PackageDynamoDao = new PackageDynamoDao(documentClient, userDao, tableName);
 export const draftDao: DraftDynamoDao = new DraftDynamoDao(documentClient, cubeDao, userDao, tableName);

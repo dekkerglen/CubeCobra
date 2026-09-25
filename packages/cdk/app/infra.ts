@@ -68,6 +68,7 @@ if (bootstrap && bootstrap === 'true') {
       gaMeasurementId: process.env.GA_MEASUREMENT_ID || '',
       gaApiSecret: process.env.GA_API_SECRET || '',
       draftmancerApiKey: process.env.DRAFTMANCER_API_KEY || '',
+      manaMatrixApiKey: process.env.MANAMATRIX_API_KEY || '',
       stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
       stripePublicKey: process.env.STRIPE_PUBLIC_KEY || '',
       enableBotSecurity: environment === 'production',

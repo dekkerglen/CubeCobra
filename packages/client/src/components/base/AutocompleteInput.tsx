@@ -173,7 +173,10 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
         setPosition((p) => (p > -1 ? p - 1 : p));
       } else if (event.keyCode === 9 || enterPressed) {
         // TAB or ENTER key
-        if (showMatches) {
+        // While a lookup is in flight, `matches` still holds the PREVIOUS query's
+        // results (hidden behind the spinner) — accepting them would commit a
+        // suggestion the user never saw. Ignore accept keys until it resolves.
+        if (showMatches && !loading) {
           const goodPosition = position >= 0 && position < matches.length ? position : 0;
           const match = matches[goodPosition];
           acceptSuggestion(match);
@@ -190,7 +193,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
         }
       }
     },
-    [position, acceptSuggestion, matches, showMatches, onSubmit, normalizedValue],
+    [position, acceptSuggestion, matches, showMatches, loading, onSubmit, normalizedValue],
   );
 
   // Portal mode: keep the fixed-positioned dropdown glued under the input while

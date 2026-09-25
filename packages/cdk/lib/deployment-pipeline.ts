@@ -203,6 +203,10 @@ export class DeploymentPipeline extends Construct {
           type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
           value: '/cubecobra/beta/draftmancer-api-key',
         },
+        MANAMATRIX_API_KEY: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/beta/manamatrix-api-key',
+        },
         // Cloudflare R2 — read by uploadAssets (deploy) and injected into the
         // jobs env at synth (sync_card_images + update_cards image URLs).
         R2_ENDPOINT: {
@@ -470,6 +474,10 @@ export class DeploymentPipeline extends Construct {
         DRAFTMANCER_API_KEY: {
           type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
           value: '/cubecobra/prod/draftmancer-api-key',
+        },
+        MANAMATRIX_API_KEY: {
+          type: codebuild.BuildEnvironmentVariableType.PARAMETER_STORE,
+          value: '/cubecobra/prod/manamatrix-api-key',
         },
         // Cloudflare R2 — read by uploadAssets (deploy) and injected into the
         // jobs env at synth (sync_card_images + update_cards image URLs).

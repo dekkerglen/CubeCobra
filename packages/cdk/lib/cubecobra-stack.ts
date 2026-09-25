@@ -48,6 +48,7 @@ interface CubeCobraStackParams {
   gaMeasurementId: string;
   gaApiSecret: string;
   draftmancerApiKey: string;
+  manaMatrixApiKey: string;
   stripeSecretKey: string;
   stripePublicKey: string;
   enableBotSecurity: boolean;
@@ -371,6 +372,7 @@ function createEnvironmentVariables(
     GA_MEASUREMENT_ID: params.gaMeasurementId,
     GA_API_SECRET: params.gaApiSecret,
     DRAFTMANCER_API_KEY: params.draftmancerApiKey,
+    MANAMATRIX_API_KEY: params.manaMatrixApiKey,
     STRIPE_SECRET_KEY: params.stripeSecretKey,
     STRIPE_PUBLIC_KEY: params.stripePublicKey,
     ENABLE_BOT_SECURITY: params.enableBotSecurity ? 'true' : 'false',
@@ -426,6 +428,7 @@ function createLambdaEnvironmentVariables(
     // beta jobs role has no access to, so they must not run outside production.
     STAGE: params.environmentName === 'production' ? 'PROD' : params.environmentName === 'beta' ? 'BETA' : 'LOCAL',
     DRAFTMANCER_API_KEY: params.draftmancerApiKey,
+    MANAMATRIX_API_KEY: params.manaMatrixApiKey,
     ENABLE_BOT_SECURITY: params.enableBotSecurity ? 'true' : 'false',
     MAINTAIN_CUBE_CARD_HASHES: params.maintainCubeCardHashes ? 'true' : 'false',
   };

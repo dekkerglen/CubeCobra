@@ -16,7 +16,9 @@ import {
   SignInIcon,
   StackIcon,
   StarIcon,
+  TableIcon,
   ToolsIcon,
+  VersionsIcon,
 } from '@primer/octicons-react';
 import { cdnUrl } from '@utils/cdnUrl';
 import Notification from '@utils/datatypes/Notification';
@@ -77,11 +79,15 @@ const exploreSections: NavSection[] = [
       { label: 'Top Cards', href: '/tool/searchcards?v=rows', icon: GraphIcon },
       { label: 'Search Cards', href: '/tool/searchcards', icon: SearchIcon },
       { label: 'Sets', href: '/tool/sets', icon: StackIcon },
+      { label: 'Packages', href: '/packages', icon: VersionsIcon },
     ],
   },
   {
-    header: 'Packages',
-    items: [{ label: 'Packages', href: '/packages', icon: PackageIcon }],
+    header: 'Dailies',
+    items: [
+      { label: 'ManaMatrix', href: '/tool/manamatrix', icon: TableIcon },
+      { label: 'Daily P1P1', href: '/tool/p1p1/daily', icon: ClockIcon },
+    ],
   },
 ];
 
