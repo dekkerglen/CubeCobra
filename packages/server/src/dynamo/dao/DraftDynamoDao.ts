@@ -1118,34 +1118,36 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
 
     // Only recalculate names if seats changed (and not explicitly skipped)
     if (!options?.skipNameUpdate) {
-      // A user-supplied deck name lives on the owner's seat as `title`. Only
-      // fall back to the generated archetype name when that name is blank, so
-      // no save or edit ever wipes a name the user typed.
-      const userDeckTitle = (item.seats[0]?.title || '').trim();
-      if (userDeckTitle) {
-        item.name = userDeckTitle.substring(0, 100);
-      } else {
-        // Extract cube name from existing draft name to avoid extra DB query
-        // Draft name format: "{colors} {type} of {cubeName}"
-        const existingCubeName = item.name?.split(' of ').pop();
-        let cubeName = existingCubeName;
+      // Extract cube name from existing draft name to avoid extra DB query.
+      // Draft name format: "{colors} {archetype} {type} of {cubeName}" — a draft
+      // named after a user-supplied deck title carries no cube name to recover,
+      // so only trust the existing name when it still has the generated shape.
+      const existingCubeName = item.name?.includes(' of ') ? item.name.split(' of ').pop() : undefined;
+      let cubeName = existingCubeName;
 
-        // Only fetch cube if we don't have a valid cube name
-        if (!cubeName || cubeName === 'Unknown Cube') {
-          const cube = await this.cubeDao.getById(item.cube);
-          cubeName = cube?.name || 'Unknown Cube';
-        }
-
-        // Recalculate seat names and draft from mainboard colors
-        const { seatNames, name } = await this.getDeckColors(item, cubeName);
-        item.seatNames = seatNames;
-        item.name = name;
-
-        // Update seat names within each seat
-        for (let i = 0; i < item.seats.length; i++) {
-          item.seats[i]!.name = seatNames[i];
-        }
+      // Only fetch cube if we don't have a valid cube name
+      if (!cubeName || cubeName === 'Unknown Cube') {
+        const cube = await this.cubeDao.getById(item.cube);
+        cubeName = cube?.name || 'Unknown Cube';
       }
+
+      // Recalculate EVERY seat's archetype name from its mainboard, the same way
+      // createDraft does. A seat's `title` must not gate this: uploaded record decks
+      // carry the player's name as the title, so keying off it left every seat after
+      // the first one unnamed — and DeckCard renders both (title as the heading,
+      // generated name beneath it).
+      const { seatNames, name } = await this.getDeckColors(item, cubeName);
+      item.seatNames = seatNames;
+
+      // Update seat names within each seat
+      for (let i = 0; i < item.seats.length; i++) {
+        item.seats[i]!.name = seatNames[i];
+      }
+
+      // A user-supplied deck name lives on the owner's seat as `title`. When it's
+      // set it names the draft, so no save or edit ever wipes a name the user typed.
+      const userDeckTitle = (item.seats[0]?.title || '').trim();
+      item.name = userDeckTitle ? userDeckTitle.substring(0, 100) : name;
     }
 
     // Save cards and seats to S3 before updating metadata

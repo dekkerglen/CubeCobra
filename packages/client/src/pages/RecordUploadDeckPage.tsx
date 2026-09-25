@@ -71,7 +71,12 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
           </CardHeader>
           <CardBody>
             <Flexbox direction="col" gap="2">
-              <UploadDeckFromPhoto cube={cube} setMainboardCards={setMainboardCards} setAlerts={setAlerts} />
+              <UploadDeckFromPhoto
+                cube={cube}
+                setMainboardCards={setMainboardCards}
+                setSideboardCards={setSideboardCards}
+                setAlerts={setAlerts}
+              />
               <UploadDeck
                 selectedUser={selectedUser}
                 setSelectedUser={setSelectedUser}

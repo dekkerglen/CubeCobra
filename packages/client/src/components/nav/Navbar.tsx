@@ -19,7 +19,7 @@ import {
   TableIcon,
   ToolsIcon,
   VersionsIcon,
-  ListOrderedIcon
+  ListOrderedIcon,
 } from '@primer/octicons-react';
 import { cdnUrl } from '@utils/cdnUrl';
 import Notification from '@utils/datatypes/Notification';

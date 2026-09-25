@@ -191,5 +191,29 @@ describe('DraftDynamoDao bot-deck writes', () => {
 
       expect(puts()[0]!.input.Item!.item).toMatchObject({ botDecksPending: false, botDecksPendingSince: 2 });
     });
+
+    // The bug: uploaded record decks carry the player's name as seat.title, and naming
+    // used to bail out entirely when seats[0] had one — so only the deck uploaded first
+    // (the one that created the draft) ever got an archetype name.
+    it('names every seat even when the seats carry titles', async () => {
+      const draft = {
+        id: DRAFT_ID,
+        cube: 'cube-1',
+        type: 'u',
+        name: 'U Tempo Upload of Test Cube',
+        seats: [
+          { title: 'Alice', mainboard: [[[0]]], sideboard: [[[]]] },
+          { title: 'Bob', mainboard: [[[1]]], sideboard: [[[]]] },
+        ],
+        cards: [{ cardID: 'c0' }, { cardID: 'c1' }],
+      } as any;
+
+      await dao.update(draft);
+
+      expect(draft.seatNames).toEqual(['U Tempo', 'U Tempo']);
+      expect(draft.seats.map((seat: any) => seat.name)).toEqual(['U Tempo', 'U Tempo']);
+      // The first seat's title still names the draft itself.
+      expect(draft.name).toBe('Alice');
+    });
   });
 });

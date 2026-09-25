@@ -235,12 +235,8 @@ export const associateWithExistingDraft = async (
 
 // Build a single draft with EVERY player's deck placed at once, then create it in
 // one draftDao.createDraft call. This mirrors the regular draft workflow: that one
-// createDraft pass names every seat from its mainboard archetype (assessColors).
-//
-// Why one batched create instead of associateNewDraft + N associateWithExistingDraft:
-// draftDao.update() SKIPS seat-name recomputation whenever seats[0].title is set,
-// so the incremental approach only ever named the first seat. Creating all seats up
-// front (no per-seat title) lets createDraft name them all — the proven path.
+// createDraft pass names every seat from its mainboard archetype (assessColors),
+// in a single draft write rather than one per player.
 export const associateDecksWithNewDraft = async (
   cube: CubeType,
   record: RecordEntity,

@@ -19,10 +19,12 @@ import Username from './Username';
 interface DeckStacksStaticProps {
   piles: number[][][];
   cards: any[];
+  // Overrides the default card-body chrome (the all-decks view supplies its own).
+  className?: string;
 }
 
-export const DeckStacksStatic: React.FC<DeckStacksStaticProps> = ({ piles, cards }) => (
-  <CardBody className="pt-0 border-bottom">
+export const DeckStacksStatic: React.FC<DeckStacksStaticProps> = ({ piles, cards, className }) => (
+  <CardBody className={className ?? 'pt-0 border-bottom'}>
     {/* Guard against malformed/legacy deck data (e.g. old Mongo-ID decks) whose
         mainboard/sideboard aren't the expected number[][][] — a mis-shaped row or
         column would otherwise throw `.map is not a function` and blank the page. */}
@@ -56,6 +58,18 @@ export const DeckStacksStatic: React.FC<DeckStacksStaticProps> = ({ piles, cards
   </CardBody>
 );
 
+// Mainboard cards in display order: color category, then mana value.
+const sortedDeckCards = (cards: CardType[]): CardType[] => {
+  const deep = sortDeep(cards, true, 'Unsorted', 'Color Category', 'Mana Value Full', 'Unsorted') as [
+    string,
+    [string, [string, CardType[]][]][],
+  ][];
+
+  return deep
+    .map((tuple1) => tuple1[1].map((tuple2) => tuple2[1].map((tuple3) => tuple3[1].map((card) => card))))
+    .flat(4);
+};
+
 interface DeckCardProps {
   seat: DeckSeat;
   view?: string;
@@ -73,61 +87,46 @@ const asPiles = (board: unknown): number[][][] =>
     (Array.isArray(row) ? row : []).map((col) => (Array.isArray(col) ? col : [])),
   );
 
+// Drop the trailing empty columns of each row so a deck's stacks end where its cards
+// do, instead of trailing off into eight empty mana-value slots.
+const trimEmptyColumns = (piles: number[][][]): number[][][] =>
+  piles.map((row) => {
+    let lastFull = row.length - 1;
+    for (; lastFull >= 0; lastFull--) {
+      if (row[lastFull] && row[lastFull]!.length > 0) {
+        break;
+      }
+    }
+    return row.slice(0, lastFull + 1);
+  });
+
+// A board coerced and trimmed into the piles DeckStacksStatic renders. Exported so the
+// all-decks view stacks a deck exactly the way the single-deck view does.
+export const deckPiles = (board: unknown): number[][][] => trimEmptyColumns(asPiles(board));
+
 const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIndex, hideComments = false }) => {
   const hasSeat = !!seat;
   const mainboard = useMemo(() => asPiles(seat?.mainboard), [seat]);
   const sideboard = asPiles(seat?.sideboard);
-  const stackedDeck = mainboard.slice();
-  const stackedSideboard = sideboard.slice();
   let sbCount = 0;
-  for (const row of stackedSideboard) {
+  for (const row of sideboard) {
     for (const col of row) {
       sbCount += col.length;
     }
   }
-  if (sbCount <= 0) {
-    stackedSideboard.splice(0, stackedSideboard.length);
-  }
-  // Cut off empty columns at the end.
-  let lastFull;
-  for (const row of stackedDeck) {
-    for (lastFull = row.length - 1; lastFull >= 0; lastFull--) {
-      if (row[lastFull] && row[lastFull].length > 0) {
-        break;
-      }
-    }
-    const startCut = lastFull + 1;
-    row.splice(startCut, row.length - startCut);
-  }
+  const stackedDeck = trimEmptyColumns(mainboard);
+  const stackedSideboard = sbCount > 0 ? trimEmptyColumns(sideboard) : [];
 
-  let lastFullSB;
-  for (const row of stackedSideboard) {
-    for (lastFullSB = row.length - 1; lastFullSB >= 0; lastFullSB--) {
-      if (row[lastFullSB] && row[lastFullSB].length > 0) {
-        break;
-      }
-    }
-    const startCut = lastFullSB + 1;
-    row.splice(startCut, row.length - startCut);
-  }
-
-  const sorted = useMemo(() => {
-    const deep = sortDeep(
-      mainboard
-        .flat(3)
-        .map((cardIndex) => draft.cards[cardIndex])
-        .filter(Boolean),
-      true,
-      'Unsorted',
-      'Color Category',
-      'Mana Value Full',
-      'Unsorted',
-    ) as [string, [string, [string, CardType[]][]][]][];
-
-    return deep
-      .map((tuple1) => tuple1[1].map((tuple2) => tuple2[1].map((tuple3) => tuple3[1].map((card) => card))))
-      .flat(4);
-  }, [draft.cards, mainboard]);
+  const sorted = useMemo(
+    () =>
+      sortedDeckCards(
+        mainboard
+          .flat(3)
+          .map((cardIndex) => draft.cards[cardIndex])
+          .filter(Boolean),
+      ),
+    [draft.cards, mainboard],
+  );
 
   const mbCount = sorted.length;
 

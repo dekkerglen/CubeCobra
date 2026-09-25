@@ -21,6 +21,9 @@ import SampleHandModal from 'components/modals/SampleHandModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
+import useQueryParam from 'hooks/useQueryParam';
+
+import RecordAllDecks from './RecordAllDecks';
 
 interface RecordDecksProps {
   record: Record;
@@ -52,6 +55,10 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
   // Default to the first player who actually has a deck; fall back to player 0.
   const firstWithDeck = firstPlayerIndexWithDeck(record, draft);
   const [selectedUserIndex, setSelectedUserIndex] = React.useState<number>(firstWithDeck >= 0 ? firstWithDeck : 0);
+  // One deck at a time, or every deck in the pod at once. In the URL so a link can
+  // point at either.
+  const [deckView, setDeckView] = useQueryParam('decks', 'one');
+  const showingAll = deckView === 'all';
 
   const isOwner = canEdit;
   const selectedPlayer = record.players[selectedUserIndex];
@@ -128,85 +135,137 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
     </Flexbox>
   );
 
-  return (
-    <CardBody>
-      <Flexbox direction="col" gap="4" className="md:flex-row md:items-start">
-        {/* Player list — a vertical pill selector that controls which deck shows. */}
-        <Flexbox direction="col" gap="2" className="md:w-60 md:shrink-0">
-          <Flexbox direction="row" justify="between" alignItems="center">
-            <Text semibold>Players</Text>
-            {isOwner && <EditPlayerListLink modalprops={{ record }}>Edit</EditPlayerListLink>}
-          </Flexbox>
-          <Flexbox direction="col" gap="1">
-            {record.players.map((player, index) => {
-              const selected = index === selectedUserIndex;
-              const hasDeck = seatHasDeck(draft, index);
-              const linkedUser = players.find((u) => u.id === player.userId);
-              const hasTrophy = record.trophy?.includes(player.name);
-              return (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => setSelectedUserIndex(index)}
-                  title={hasDeck ? player.name : `${player.name} (no deck)`}
-                  className={classNames(
-                    'flex items-center gap-2 w-full text-left rounded-full border px-3 py-1.5 transition-colors',
-                    selected ? 'border-link bg-bg-active' : 'border-border hover:bg-bg-active',
-                    { 'opacity-60': !hasDeck },
-                  )}
-                >
-                  {linkedUser?.image?.uri ? (
-                    <img src={linkedUser.image.uri} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
-                  ) : (
-                    <span className="w-6 h-6 rounded-full bg-bg-active border border-border shrink-0" />
-                  )}
-                  <span className="flex-1 min-w-0 truncate text-sm font-medium">
-                    {hasTrophy ? '🏆 ' : ''}
-                    {player.name}
-                  </span>
-                  <span className="shrink-0 text-xs text-text-secondary">
-                    {formatRecord(playerRecord(record, player.name))}
-                  </span>
-                </button>
-              );
-            })}
-          </Flexbox>
-          {isOwner && (
-            <Link href={`/cube/records/uploaddeck/${record.id}`}>
-              <Text sm>Upload a deck</Text>
-            </Link>
+  const viewToggle = (
+    <Flexbox direction="row" gap="2" alignItems="center">
+      {[
+        { value: 'one', label: 'By player' },
+        { value: 'all', label: 'Full draft' },
+      ].map((option) => (
+        <button
+          key={option.value}
+          type="button"
+          onClick={() => setDeckView(option.value)}
+          className={classNames(
+            'rounded-full border px-3 py-1 text-sm font-medium transition-colors',
+            deckView === option.value ? 'border-link bg-bg-active' : 'border-border hover:bg-bg-active',
+          )}
+        >
+          {option.label}
+        </button>
+      ))}
+    </Flexbox>
+  );
+
+  if (showingAll) {
+    return (
+      <CardBody>
+        <Flexbox direction="col" gap="4">
+          {viewToggle}
+          {draft ? (
+            <RecordAllDecks
+              record={record}
+              draft={draft}
+              players={players}
+              canEdit={isOwner}
+              onSelectPlayer={(index) => {
+                setSelectedUserIndex(index);
+                setDeckView('one');
+              }}
+            />
+          ) : (
+            <Text sm className="text-text-secondary">
+              No draft data available for this record.
+            </Text>
           )}
         </Flexbox>
+      </CardBody>
+    );
+  }
 
-        {/* Selected player's deck (or an empty state). */}
-        <Flexbox direction="col" gap="2" className="flex-1 min-w-0">
-          {selectedPlayer && (
-            <Flexbox direction="row" gap="3" wrap="wrap" alignItems="center">
-              <Text lg semibold>
-                {selectedPlayer.name}
-              </Text>
-              {recordControl}
+  return (
+    <CardBody>
+      <Flexbox direction="col" gap="4">
+        {viewToggle}
+        <Flexbox direction="col" gap="4" className="md:flex-row md:items-start">
+          {/* Player list — a vertical pill selector that controls which deck shows. */}
+          <Flexbox direction="col" gap="2" className="md:w-60 md:shrink-0">
+            <Flexbox direction="row" justify="between" alignItems="center">
+              <Text semibold>Players</Text>
+              {isOwner && <EditPlayerListLink modalprops={{ record }}>Edit</EditPlayerListLink>}
             </Flexbox>
-          )}
-          {draft && selectedHasDeck ? (
-            <>
-              {deckControls}
-              <DeckCard
-                seat={draft.seats[selectedUserIndex]}
-                draft={draft}
-                view="draft"
-                seatIndex={`${selectedUserIndex}`}
-                hideComments
-              />
-            </>
-          ) : (
-            <Flexbox direction="col" gap="2">
-              <Text sm className="text-text-secondary">
-                {draft ? 'No deck has been uploaded for this player yet.' : 'No draft data available for this record.'}
-              </Text>
-              {isOwner && <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload a deck to this record</Link>}
+            <Flexbox direction="col" gap="1">
+              {record.players.map((player, index) => {
+                const selected = index === selectedUserIndex;
+                const hasDeck = seatHasDeck(draft, index);
+                const linkedUser = players.find((u) => u.id === player.userId);
+                const hasTrophy = record.trophy?.includes(player.name);
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setSelectedUserIndex(index)}
+                    title={hasDeck ? player.name : `${player.name} (no deck)`}
+                    className={classNames(
+                      'flex items-center gap-2 w-full text-left rounded-full border px-3 py-1.5 transition-colors',
+                      selected ? 'border-link bg-bg-active' : 'border-border hover:bg-bg-active',
+                      { 'opacity-60': !hasDeck },
+                    )}
+                  >
+                    {linkedUser?.image?.uri ? (
+                      <img src={linkedUser.image.uri} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <span className="w-6 h-6 rounded-full bg-bg-active border border-border shrink-0" />
+                    )}
+                    <span className="flex-1 min-w-0 truncate text-sm font-medium">
+                      {hasTrophy ? '🏆 ' : ''}
+                      {player.name}
+                    </span>
+                    <span className="shrink-0 text-xs text-text-secondary">
+                      {formatRecord(playerRecord(record, player.name))}
+                    </span>
+                  </button>
+                );
+              })}
             </Flexbox>
-          )}
+            {isOwner && (
+              <Link href={`/cube/records/uploaddeck/${record.id}`}>
+                <Text sm>Upload a deck</Text>
+              </Link>
+            )}
+          </Flexbox>
+
+          {/* Selected player's deck (or an empty state). */}
+          <Flexbox direction="col" gap="2" className="flex-1 min-w-0">
+            {selectedPlayer && (
+              <Flexbox direction="row" gap="3" wrap="wrap" alignItems="center">
+                <Text lg semibold>
+                  {selectedPlayer.name}
+                </Text>
+                {recordControl}
+              </Flexbox>
+            )}
+            {draft && selectedHasDeck ? (
+              <>
+                {deckControls}
+                <DeckCard
+                  seat={draft.seats[selectedUserIndex]}
+                  draft={draft}
+                  view="draft"
+                  seatIndex={`${selectedUserIndex}`}
+                  hideComments
+                />
+              </>
+            ) : (
+              <Flexbox direction="col" gap="2">
+                <Text sm className="text-text-secondary">
+                  {draft
+                    ? 'No deck has been uploaded for this player yet.'
+                    : 'No draft data available for this record.'}
+                </Text>
+                {isOwner && <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload a deck to this record</Link>}
+              </Flexbox>
+            )}
+          </Flexbox>
         </Flexbox>
       </Flexbox>
     </CardBody>

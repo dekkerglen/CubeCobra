@@ -183,6 +183,9 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
         `function done(){if(--pending<=0){window.focus();window.print();}}` +
         `if(!pending){window.focus();window.print();return;}` +
         `imgs.forEach(function(img){if(img.complete){done();}else{img.addEventListener('load',done);` +
+        // The backslash keeps a literal closing script tag out of the generated
+        // document's parser, so it is not redundant here.
+        // eslint-disable-next-line no-useless-escape
         `img.addEventListener('error',done);}});})();<\/script>` +
         `</body></html>`,
     );
