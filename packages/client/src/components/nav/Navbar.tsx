@@ -19,6 +19,7 @@ import {
   TableIcon,
   ToolsIcon,
   VersionsIcon,
+  ListOrderedIcon
 } from '@primer/octicons-react';
 import { cdnUrl } from '@utils/cdnUrl';
 import Notification from '@utils/datatypes/Notification';
@@ -86,7 +87,7 @@ const exploreSections: NavSection[] = [
     header: 'Dailies',
     items: [
       { label: 'ManaMatrix', href: '/tool/manamatrix', icon: TableIcon },
-      { label: 'Daily P1P1', href: '/tool/p1p1/daily', icon: ClockIcon },
+      { label: 'Daily P1P1', href: '/tool/p1p1/daily', icon: ListOrderedIcon },
     ],
   },
 ];
