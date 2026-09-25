@@ -147,9 +147,8 @@ export const hedronImportHandler = async (req: Request, res: Response) => {
     // index). Each entry is a built mainboard + its leftover sideboard. We build
     // ONE draft with every seat filled in a single createDraft call — the same
     // pattern the regular draft workflow uses — so every seat is named from its
-    // mainboard archetype (assessColors). (An incremental per-seat approach
-    // doesn't work: draftDao.update skips seat-name recomputation once a title is
-    // set, so only the first seat would get a name.)
+    // mainboard archetype (assessColors) in one pass, rather than one draft write
+    // per player.
     const decks: { [playerIndex: string]: { mainboard: string[]; sideboard?: string[] } } = req.body.decks
       ? JSON.parse(req.body.decks)
       : {};
