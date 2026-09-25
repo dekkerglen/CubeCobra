@@ -59,12 +59,14 @@ export function sanitizeSessionCookie<T extends { cookie?: any } | null | undefi
   const cookie = sess.cookie;
   if (!cookie || typeof cookie !== 'object') return sess;
 
-  // Drop a maxAge that would make `new Cookie()` throw (must be number or Date).
-  if (cookie.maxAge != null && typeof cookie.maxAge !== 'number' && !(cookie.maxAge instanceof Date)) {
+  // Drop a maxAge that would make `new Cookie()` throw. The condition mirrors the
+  // setter's own guard: it only throws on a truthy value that is neither number nor Date.
+  if (cookie.maxAge && typeof cookie.maxAge !== 'number' && !(cookie.maxAge instanceof Date)) {
     delete cookie.maxAge;
   }
-  // Drop an unparseable expires so it doesn't become an Invalid Date downstream.
-  if (cookie.expires != null && !(cookie.expires instanceof Date)) {
+  // Drop an unparseable expires so it doesn't become an Invalid Date downstream. A stored
+  // cookie's expires arrives as a string (or epoch ms); anything else is left alone.
+  if (typeof cookie.expires === 'string' || typeof cookie.expires === 'number') {
     const parsed = new Date(cookie.expires);
     if (Number.isNaN(parsed.getTime())) delete cookie.expires;
   }
