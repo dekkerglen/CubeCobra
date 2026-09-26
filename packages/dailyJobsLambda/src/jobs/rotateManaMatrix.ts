@@ -13,7 +13,8 @@ export const rotateManaMatrix = async () => {
     }
 
     const apiBaseUrl = process.env.API_BASE_URL || 'https://cubecobra.com';
-    const response = await fetch(`${apiBaseUrl}/tool/api/manamatrix/rotate`, {
+    const url = `${apiBaseUrl}/tool/api/manamatrix/rotate`;
+    const response = await fetch(url, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -21,15 +22,27 @@ export const rotateManaMatrix = async () => {
       body: JSON.stringify({ apiKey }),
     });
 
-    if (!response.ok) {
-      const body = await response.text();
-      console.error(`ManaMatrix rotation failed with status ${response.status}: ${body}`);
+    // An unknown path renders the HTML error page with a 200, so a successful
+    // status alone doesn't mean we reached the endpoint — require JSON before
+    // parsing, and surface a snippet when it's something else (wrong
+    // API_BASE_URL, server not yet deployed, downtime page, ...).
+    const contentType = response.headers.get('content-type') || '';
+    if (!response.ok || !contentType.includes('application/json')) {
+      const body = (await response.text()).slice(0, 200);
+      console.error(
+        `ManaMatrix rotation failed: POST ${url} returned ${response.status} (${contentType || 'no content-type'}): ${body}`,
+      );
       return;
     }
 
     const result = await response.json();
+    if (!result?.success) {
+      console.error(`ManaMatrix rotation failed: ${JSON.stringify(result)}`);
+      return;
+    }
+
     console.log(
-      `ManaMatrix rotation completed successfully for ${result?.puzzle?.date}${result?.alreadyExisted ? ' (already existed)' : ''}.`,
+      `ManaMatrix rotation completed successfully for ${result.puzzle?.date}${result.alreadyExisted ? ' (already existed)' : ''}.`,
     );
   } catch (error) {
     console.error('ManaMatrix rotation error:', error);

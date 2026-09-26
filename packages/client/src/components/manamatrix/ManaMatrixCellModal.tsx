@@ -58,6 +58,9 @@ const ManaMatrixCellModal: React.FC<ManaMatrixCellModalProps> = ({
             placeholder="Card name"
             autoFocus
             portalDropdown
+            // No hover previews: seeing a card's art and text before committing
+            // would give away whether it satisfies the cell.
+            showImages={false}
           />
         </Flexbox>
       </ModalBody>

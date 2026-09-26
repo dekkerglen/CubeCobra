@@ -427,6 +427,10 @@ function createLambdaEnvironmentVariables(
     // beta/local — exports write to the shared cubecobra-public bucket, which the
     // beta jobs role has no access to, so they must not run outside production.
     STAGE: params.environmentName === 'production' ? 'PROD' : params.environmentName === 'beta' ? 'BETA' : 'LOCAL',
+    // Jobs that need the card catalog (ManaMatrix rotation) or the ML service
+    // (P1P1 bot picks) call back into THIS stage's server. Without it the jobs
+    // fall back to https://cubecobra.com, so beta would drive production.
+    API_BASE_URL: params.domain === 'localhost' ? 'http://localhost:8080' : `https://${params.domain}`,
     DRAFTMANCER_API_KEY: params.draftmancerApiKey,
     MANAMATRIX_API_KEY: params.manaMatrixApiKey,
     ENABLE_BOT_SECURITY: params.enableBotSecurity ? 'true' : 'false',

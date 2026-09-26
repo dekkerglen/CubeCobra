@@ -76,7 +76,7 @@ const ManaMatrixAnalysisModal: React.FC<ManaMatrixAnalysisModalProps> = ({ puzzl
   const selectedTitle = `${puzzle.rows[selected.row]?.description} and ${puzzle.columns[selected.col]?.description}`;
 
   return (
-    <Modal isOpen={isOpen} setOpen={setOpen} md scrollable>
+    <Modal isOpen={isOpen} setOpen={setOpen} sm scrollable>
       <ModalHeader setOpen={setOpen}>
         <Text semibold lg>
           Community Answers
