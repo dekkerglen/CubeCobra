@@ -1,12 +1,12 @@
-import { manaMatrixCellStatsDao, manaMatrixPuzzleDao } from 'dynamo/daos';
+import { synergyConnectPuzzleDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
 import { whenCardDbReady } from 'serverutils/cardCatalog';
-import { generatePuzzle } from 'serverutils/manamatrix/generate';
+import { generatePuzzle } from 'serverutils/synergyconnect/generate';
 
 import { Request, Response } from '../../../../../types/express';
 
-export const RotateManaMatrixSchema = Joi.object({
+export const RotateSynergyConnectSchema = Joi.object({
   apiKey: Joi.string().required(),
   // Optional override for backfills / manual reruns; defaults to the current puzzle day.
   date: Joi.string()
@@ -17,17 +17,16 @@ export const RotateManaMatrixSchema = Joi.object({
 /**
  * The puzzle day for a rotation happening now. Add 6 hours so the lambda
  * firing just after 00:00 UTC lands on the date most users consider "today"
- * (same convention as the daily P1P1 rotation).
+ * (same convention as the other daily rotations).
  */
 const targetDateString = (): string => new Date(Date.now() + 6 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 /**
- * Machine-to-machine endpoint called by the daily jobs lambda. Generation
- * needs the memory-resident card catalog, which only the server has, so the
- * lambda delegates here. Idempotent: re-running for a date that already has a
- * puzzle returns it unchanged.
+ * Machine-to-machine endpoint called by the daily jobs lambda. Generation needs
+ * the memory-resident card catalog and synergy metadata, which only the server
+ * has. Idempotent: re-running for a date that already has a puzzle returns it.
  */
-export const rotateManaMatrixHandler = async (req: Request, res: Response) => {
+export const rotateSynergyConnectHandler = async (req: Request, res: Response) => {
   const apiKey = process.env.MANAMATRIX_API_KEY;
   if (!apiKey || req.body.apiKey !== apiKey) {
     return res.status(401).json({ error: 'Unauthorized' });
@@ -36,7 +35,7 @@ export const rotateManaMatrixHandler = async (req: Request, res: Response) => {
   try {
     const date: string = req.body.date || targetDateString();
 
-    const existing = await manaMatrixPuzzleDao.getByDate(date);
+    const existing = await synergyConnectPuzzleDao.getByDate(date);
     if (existing) {
       return res.status(200).json({ success: true, puzzle: existing, alreadyExisted: true });
     }
@@ -44,20 +43,19 @@ export const rotateManaMatrixHandler = async (req: Request, res: Response) => {
     await whenCardDbReady();
     const generated = generatePuzzle(date);
 
-    const puzzle = await manaMatrixPuzzleDao.setActivePuzzle({
+    const puzzle = await synergyConnectPuzzleDao.setActivePuzzle({
       date,
-      columns: generated.columns,
-      rows: generated.rows,
-      counts: generated.counts,
+      theme: generated.theme,
+      groups: generated.groups,
+      order: generated.order,
       isActive: true,
     });
-    await manaMatrixCellStatsDao.createForPuzzle(date);
 
     return res.status(200).json({ success: true, puzzle });
   } catch (err) {
     const error = err as Error;
     req.logger.error(error.message, error.stack);
-    return res.status(500).json({ error: 'Error rotating Mana Matrix puzzle' });
+    return res.status(500).json({ error: 'Error rotating Synergy Connect puzzle' });
   }
 };
 
@@ -65,6 +63,6 @@ export const routes = [
   {
     method: 'post',
     path: '/',
-    handler: [bodyValidation(RotateManaMatrixSchema), rotateManaMatrixHandler],
+    handler: [bodyValidation(RotateSynergyConnectSchema), rotateSynergyConnectHandler],
   },
 ];

@@ -28,6 +28,9 @@ import { PasswordResetDynamoDao } from './dao/PasswordResetDynamoDao';
 import { PatronDynamoDao } from './dao/PatronDynamoDao';
 import { PodcastDynamoDao } from './dao/PodcastDynamoDao';
 import { RecordDynamoDao } from './dao/RecordDynamoDao';
+import { SynergyConnectPuzzleDynamoDao } from './dao/SynergyConnectPuzzleDynamoDao';
+import { SynergyConnectSubmissionDynamoDao } from './dao/SynergyConnectSubmissionDynamoDao';
+import { SynergyConnectUserStatsDynamoDao } from './dao/SynergyConnectUserStatsDynamoDao';
 import { UserDynamoDao } from './dao/UserDynamoDao';
 import { VideoDynamoDao } from './dao/VideoDynamoDao';
 import documentClient from './documentClient';
@@ -64,6 +67,18 @@ export const manaMatrixUserStatsDao: ManaMatrixUserStatsDynamoDao = new ManaMatr
   tableName,
 );
 export const manaMatrixCellStatsDao: ManaMatrixCellStatsDynamoDao = new ManaMatrixCellStatsDynamoDao(
+  documentClient,
+  tableName,
+);
+export const synergyConnectPuzzleDao: SynergyConnectPuzzleDynamoDao = new SynergyConnectPuzzleDynamoDao(
+  documentClient,
+  tableName,
+);
+export const synergyConnectSubmissionDao: SynergyConnectSubmissionDynamoDao = new SynergyConnectSubmissionDynamoDao(
+  documentClient,
+  tableName,
+);
+export const synergyConnectUserStatsDao: SynergyConnectUserStatsDynamoDao = new SynergyConnectUserStatsDynamoDao(
   documentClient,
   tableName,
 );

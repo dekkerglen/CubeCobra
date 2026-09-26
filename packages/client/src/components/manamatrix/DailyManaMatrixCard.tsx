@@ -25,7 +25,7 @@ const DailyManaMatrixCard: React.FC<DailyManaMatrixCardProps> = ({ puzzle, submi
       <CardHeader>
         <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
           <Text semibold lg>
-            ManaMatrix —{' '}
+            Mana Matrix —{' '}
             {new Date(`${puzzle.date}T00:00:00`).toLocaleDateString('en-US', {
               year: 'numeric',
               month: 'long',

@@ -13,6 +13,7 @@ import {
   PersonIcon,
   QuestionIcon,
   SearchIcon,
+  ShareAndroidIcon,
   SignInIcon,
   StackIcon,
   StarIcon,
@@ -86,7 +87,8 @@ const exploreSections: NavSection[] = [
   {
     header: 'Dailies',
     items: [
-      { label: 'ManaMatrix', href: '/tool/manamatrix', icon: TableIcon },
+      { label: 'Mana Matrix', href: '/tool/manamatrix', icon: TableIcon },
+      { label: 'Synergy Connect', href: '/tool/synergyconnect', icon: ShareAndroidIcon },
       { label: 'Daily P1P1', href: '/tool/p1p1/daily', icon: ListOrderedIcon },
     ],
   },

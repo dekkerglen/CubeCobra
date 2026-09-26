@@ -16,7 +16,7 @@ export const getArchiveHandler = async (req: Request, res: Response) => {
   } catch (err) {
     const error = err as Error;
     req.logger.error('Error loading ManaMatrix archive page:', error);
-    req.flash('danger', 'Error loading ManaMatrix archive');
+    req.flash('danger', 'Error loading Mana Matrix archive');
     return redirect(req, res, '/tool/manamatrix');
   }
 };

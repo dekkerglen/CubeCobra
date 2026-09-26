@@ -46,7 +46,7 @@ export const manaMatrixPageHandler = async (req: Request, res: Response) => {
   } catch (err) {
     const error = err as Error;
     req.logger.error('Error loading ManaMatrix page:', error);
-    req.flash('danger', 'Error loading ManaMatrix');
+    req.flash('danger', 'Error loading Mana Matrix');
     return redirect(req, res, '/');
   }
 };
@@ -55,7 +55,7 @@ export const manaMatrixDatePageHandler = async (req: Request, res: Response) => 
   try {
     const puzzle = await manaMatrixPuzzleDao.getByDate(req.params.date!);
     if (!puzzle) {
-      req.flash('danger', 'No ManaMatrix puzzle exists for that date');
+      req.flash('danger', 'No Mana Matrix puzzle exists for that date');
       return redirect(req, res, '/tool/manamatrix');
     }
 
@@ -63,7 +63,7 @@ export const manaMatrixDatePageHandler = async (req: Request, res: Response) => 
   } catch (err) {
     const error = err as Error;
     req.logger.error('Error loading ManaMatrix archive page:', error);
-    req.flash('danger', 'Error loading ManaMatrix');
+    req.flash('danger', 'Error loading Mana Matrix');
     return redirect(req, res, '/tool/manamatrix');
   }
 };

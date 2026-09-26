@@ -148,7 +148,7 @@ export const renderManaMatrixImage = async ({
   // Title
   ctx.fillStyle = COLORS.text;
   ctx.font = 'bold 34px sans-serif';
-  ctx.fillText('ManaMatrix', width / 2, margin + 34);
+  ctx.fillText('Mana Matrix', width / 2, margin + 34);
   ctx.fillStyle = COLORS.textSecondary;
   ctx.font = '20px sans-serif';
   ctx.fillText(date, width / 2, margin + 64);

@@ -1,10 +1,10 @@
-import { manaMatrixSubmissionDao, manaMatrixUserStatsDao } from 'dynamo/daos';
+import { synergyConnectSubmissionDao, synergyConnectUserStatsDao } from 'dynamo/daos';
 import { ensureAuthJson } from 'router/middleware';
 
 import { Request, Response } from '../../../../../types/express';
 
-/** The logged-in user's ManaMatrix stats and paginated submission history. */
-export const getManaMatrixMeHandler = async (req: Request, res: Response) => {
+/** The logged-in user's Synergy Connect stats and paginated submission history. */
+export const getSynergyConnectMeHandler = async (req: Request, res: Response) => {
   try {
     // ensureAuthJson guarantees user exists but we're doing this for typescript
     if (!req.user) {
@@ -25,8 +25,8 @@ export const getManaMatrixMeHandler = async (req: Request, res: Response) => {
     }
 
     const [stats, submissions] = await Promise.all([
-      manaMatrixUserStatsDao.getByUserId(req.user.id),
-      manaMatrixSubmissionDao.getUserHistory(req.user.id, parsedLastKey, limit),
+      synergyConnectUserStatsDao.getByUserId(req.user.id),
+      synergyConnectSubmissionDao.getUserHistory(req.user.id, parsedLastKey, limit),
     ]);
 
     return res.status(200).json({
@@ -39,7 +39,7 @@ export const getManaMatrixMeHandler = async (req: Request, res: Response) => {
   } catch (err) {
     const error = err as Error;
     req.logger.error(error.message, error.stack);
-    return res.status(500).json({ error: 'Error fetching Mana Matrix user data' });
+    return res.status(500).json({ error: 'Error fetching Synergy Connect user data' });
   }
 };
 
@@ -47,6 +47,6 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [ensureAuthJson, getManaMatrixMeHandler],
+    handler: [ensureAuthJson, getSynergyConnectMeHandler],
   },
 ];

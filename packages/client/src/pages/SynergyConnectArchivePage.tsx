@@ -1,7 +1,10 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
-import { ManaMatrixPuzzle, ManaMatrixSubmission, ManaMatrixUserStats } from '@utils/datatypes/ManaMatrix';
-import classNames from 'classnames';
+import {
+  SYNERGY_CONNECT_MAX_MISTAKES,
+  SynergyConnectSubmission,
+  SynergyConnectUserStats,
+} from '@utils/datatypes/SynergyConnect';
 
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
@@ -10,14 +13,18 @@ import Link from 'components/base/Link';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
-import ManaMatrixBoardPreview from 'components/manamatrix/ManaMatrixBoardPreview';
-import ManaMatrixStats from 'components/manamatrix/ManaMatrixStats';
 import RenderToRoot from 'components/RenderToRoot';
+import { GROUP_EMOJI } from 'components/synergyconnect/groupStyles';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
 
-interface ManaMatrixArchivePageProps {
-  history: ManaMatrixPuzzle[];
+interface ArchiveEntry {
+  date: string;
+  theme: { filterText: string; description: string };
+}
+
+interface SynergyConnectArchivePageProps {
+  history: ArchiveEntry[];
   hasMore: boolean;
   lastKey?: string | null;
 }
@@ -25,26 +32,7 @@ interface ManaMatrixArchivePageProps {
 const formatDate = (date: string): string =>
   new Date(`${date}T00:00:00`).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
 
-/**
- * Tiny 3x3 recap of a played puzzle: one dot per cell. Solved cells are filled,
- * missed cells are hollow, so the map survives colorblindness; the adjacent
- * "n/9" text carries the totals for screen readers.
- */
-const MiniResult: React.FC<{ correct: boolean[][] }> = ({ correct }) => (
-  <div className="grid grid-cols-3 gap-0.5" aria-hidden>
-    {correct.flat().map((cell, index) => (
-      <div
-        key={index}
-        className={classNames('h-2 w-2 rounded-full', {
-          'bg-green-500': cell,
-          'border border-red-400': !cell,
-        })}
-      />
-    ))}
-  </div>
-);
-
-const ManaMatrixArchivePage: React.FC<ManaMatrixArchivePageProps> = ({
+const SynergyConnectArchivePage: React.FC<SynergyConnectArchivePageProps> = ({
   history: initialHistory,
   hasMore: initialHasMore,
   lastKey: initialLastKey,
@@ -54,18 +42,15 @@ const ManaMatrixArchivePage: React.FC<ManaMatrixArchivePageProps> = ({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loading, setLoading] = useState(false);
   const [lastKey, setLastKey] = useState<string | null>(initialLastKey || null);
-  const [stats, setStats] = useState<ManaMatrixUserStats | null>(null);
-  const [mySubmissions, setMySubmissions] = useState<Record<string, ManaMatrixSubmission>>({});
-  // Cursor for the user's own submission history. Both lists page newest-first
-  // and submission dates are a subset of puzzle dates, so paging them in
-  // lockstep keeps the loaded submissions covering the loaded puzzle range.
+  const [stats, setStats] = useState<SynergyConnectUserStats | null>(null);
+  const [mySubmissions, setMySubmissions] = useState<Record<string, SynergyConnectSubmission>>({});
   const [meLastKey, setMeLastKey] = useState<string | null>(null);
   const [meHasMore, setMeHasMore] = useState(false);
 
   const fetchMyResults = useCallback(async (cursor: string | null) => {
     try {
       const response = await fetch(
-        '/tool/api/manamatrix/me' + (cursor ? `?lastKey=${encodeURIComponent(cursor)}` : ''),
+        '/tool/api/synergyconnect/me' + (cursor ? `?lastKey=${encodeURIComponent(cursor)}` : ''),
       );
       const data = await response.json();
       if (!data.success) {
@@ -77,7 +62,7 @@ const ManaMatrixArchivePage: React.FC<ManaMatrixArchivePageProps> = ({
       }
       setMySubmissions((prev) => {
         const next = { ...prev };
-        for (const submission of data.submissions as ManaMatrixSubmission[]) {
+        for (const submission of data.submissions as SynergyConnectSubmission[]) {
           next[submission.date] = submission;
         }
         return next;
@@ -85,11 +70,10 @@ const ManaMatrixArchivePage: React.FC<ManaMatrixArchivePageProps> = ({
       setMeHasMore(data.hasMore);
       setMeLastKey(data.lastKey);
     } catch (error) {
-      console.error('Error loading ManaMatrix user data:', error);
+      console.error('Error loading Synergy Connect user data:', error);
     }
   }, []);
 
-  // The user's own results, overlaid onto the puzzle list.
   useEffect(() => {
     if (user) {
       fetchMyResults(null);
@@ -102,7 +86,7 @@ const ManaMatrixArchivePage: React.FC<ManaMatrixArchivePageProps> = ({
     setLoading(true);
     try {
       const historyPromise = fetch(
-        '/tool/api/manamatrix/history' + (lastKey ? `?lastKey=${encodeURIComponent(lastKey)}` : ''),
+        '/tool/api/synergyconnect/history' + (lastKey ? `?lastKey=${encodeURIComponent(lastKey)}` : ''),
       );
       // Advance the submissions cursor alongside the puzzle list so older rows
       // still show the user's results.
@@ -118,7 +102,7 @@ const ManaMatrixArchivePage: React.FC<ManaMatrixArchivePageProps> = ({
       }
       await mePromise;
     } catch (error) {
-      console.error('Error loading more ManaMatrix history:', error);
+      console.error('Error loading more Synergy Connect history:', error);
     } finally {
       setLoading(false);
     }
@@ -131,45 +115,74 @@ const ManaMatrixArchivePage: React.FC<ManaMatrixArchivePageProps> = ({
         <CardHeader>
           <Flexbox direction="row" justify="between" alignItems="center" wrap="wrap" gap="2">
             <Text lg semibold>
-              Mana Matrix Archive
+              Synergy Connect Archive
             </Text>
-            <Link href="/tool/manamatrix">Today's Puzzle</Link>
+            <Link href="/tool/synergyconnect">Today's Puzzle</Link>
           </Flexbox>
         </CardHeader>
 
         {user && stats && (
           <div className="border-b border-border px-4 py-3">
-            <ManaMatrixStats stats={stats} />
+            <Flexbox direction="row" justify="center" gap="6" wrap="wrap">
+              {[
+                { value: stats.currentStreak, label: 'Current Streak' },
+                { value: stats.longestStreak, label: 'Best Streak' },
+                { value: stats.totalPlayed, label: 'Days Played' },
+                { value: stats.perfectDays, label: 'Perfect Days' },
+              ].map((stat) => (
+                <Flexbox key={stat.label} direction="col" alignItems="center">
+                  <Text semibold lg>
+                    {stat.value}
+                  </Text>
+                  <Text xs className="text-text-secondary">
+                    {stat.label}
+                  </Text>
+                </Flexbox>
+              ))}
+            </Flexbox>
           </div>
         )}
 
-        {history.map((puzzle) => {
-          const mine = mySubmissions[puzzle.date];
-          const solved = mine ? mine.correct.flat().filter(Boolean).length : null;
+        {history.map((entry) => {
+          const mine = mySubmissions[entry.date];
+          const won = mine ? mine.solvedGroups.length >= 4 : false;
+          const lost = mine ? mine.mistakes >= SYNERGY_CONNECT_MAX_MISTAKES : false;
 
           return (
             <a
-              key={puzzle.id}
-              href={`/tool/manamatrix/${puzzle.date}`}
+              key={entry.date}
+              href={`/tool/synergyconnect/${entry.date}`}
               className="block border-b border-border px-4 py-3 no-underline-hover hover:bg-bg-active"
             >
-              <Flexbox direction="col" gap="2" alignItems="center">
-                <Text semibold md>
-                  {formatDate(puzzle.date)}
-                </Text>
-                {mine && solved !== null ? (
-                  <Flexbox direction="row" gap="3" alignItems="center">
-                    <Text sm className="whitespace-nowrap text-text-secondary">
-                      {solved}/9 in {mine.attempts} guess{mine.attempts === 1 ? '' : 'es'}
-                    </Text>
-                    <MiniResult correct={mine.correct} />
-                  </Flexbox>
-                ) : (
-                  <Text sm className="whitespace-nowrap text-link">
-                    Play →
+              <Flexbox direction="row" justify="between" alignItems="center" gap="3" wrap="wrap">
+                <Flexbox direction="col" gap="1" className="min-w-0">
+                  <Text semibold md>
+                    {formatDate(entry.date)}
                   </Text>
-                )}
-                <ManaMatrixBoardPreview puzzle={puzzle} submission={mine} />
+                  <Text xs className="text-text-secondary">
+                    Legendary creatures {entry.theme.description}
+                  </Text>
+                </Flexbox>
+                <Flexbox direction="row" gap="3" alignItems="center" className="shrink-0">
+                  {mine ? (
+                    <>
+                      <Text sm className="whitespace-nowrap text-text-secondary">
+                        {won
+                          ? `Solved · ${mine.mistakes} mistake${mine.mistakes === 1 ? '' : 's'}`
+                          : lost
+                            ? 'Out of lives'
+                            : `${mine.solvedGroups.length}/4 in progress`}
+                      </Text>
+                      <span className="text-xs tracking-widest" aria-hidden>
+                        {mine.solvedGroups.map((groupIndex) => GROUP_EMOJI[groupIndex % 4]).join('')}
+                      </span>
+                    </>
+                  ) : (
+                    <Text sm className="whitespace-nowrap text-link">
+                      Play →
+                    </Text>
+                  )}
+                </Flexbox>
               </Flexbox>
             </a>
           );
@@ -201,4 +214,4 @@ const ManaMatrixArchivePage: React.FC<ManaMatrixArchivePageProps> = ({
   );
 };
 
-export default RenderToRoot(ManaMatrixArchivePage);
+export default RenderToRoot(SynergyConnectArchivePage);

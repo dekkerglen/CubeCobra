@@ -70,7 +70,7 @@ const ManaMatrixResults: React.FC<ManaMatrixResultsProps> = ({
       .join('\n');
     const attemptsLine =
       attempts !== null ? `\nAnd it only took me ${attempts} attempt${attempts === 1 ? '' : 's'}!` : '';
-    const text = `My results for the ${puzzle.date} ManaMatrix:\n${grid}${attemptsLine}\nTry it for yourself here: ${window.location.origin}/manamatrix`;
+    const text = `My results for the ${puzzle.date} Mana Matrix:\n${grid}${attemptsLine}\nTry it for yourself here: ${window.location.origin}/manamatrix`;
 
     try {
       await navigator.clipboard.writeText(text);

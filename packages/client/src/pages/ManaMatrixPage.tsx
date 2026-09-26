@@ -195,7 +195,7 @@ const ManaMatrixPage: React.FC<ManaMatrixPageProps> = ({
           <Flexbox direction="row" justify="between" alignItems="center" wrap="wrap" gap="2">
             <Flexbox direction="row" alignItems="center" gap="2" wrap="wrap">
               <Text lg semibold>
-                ManaMatrix
+                Mana Matrix
               </Text>
               {puzzle && (
                 <Text md className="text-text-secondary">
@@ -213,7 +213,7 @@ const ManaMatrixPage: React.FC<ManaMatrixPageProps> = ({
         <CardBody>
           {!puzzle ? (
             <Text className="text-center text-text-secondary">
-              No puzzle is available yet. Check back soon — a new ManaMatrix is posted every day!
+              No puzzle is available yet. Check back soon — a new Mana Matrix is posted every day!
             </Text>
           ) : (
             <Flexbox direction="col" gap="2">
