@@ -2,6 +2,7 @@ import React, { useContext, useState } from 'react';
 
 import { cdnUrl } from '@utils/cdnUrl';
 import Cube from '@utils/datatypes/Cube';
+import { ManaMatrixPuzzle, ManaMatrixSubmission } from '@utils/datatypes/ManaMatrix';
 import { P1P1Pack } from '@utils/datatypes/P1P1Pack';
 import classNames from 'classnames';
 
@@ -17,6 +18,7 @@ import CubePreview from 'components/cube/CubePreview';
 import CubesCard from 'components/cube/CubesCard';
 import DynamicFlash from 'components/DynamicFlash';
 import Feed from 'components/Feed';
+import DailyManaMatrixCard from 'components/manamatrix/DailyManaMatrixCard';
 import DailyP1P1Card from 'components/p1p1/DailyP1P1Card';
 import withQuickCreateCube from 'components/QuickCreateCubeButton';
 import RenderToRoot from 'components/RenderToRoot';
@@ -132,6 +134,10 @@ interface DashboardPageProps {
     cube: Cube;
     date?: number;
   };
+  dailyManaMatrix?: {
+    puzzle: ManaMatrixPuzzle;
+    submission: ManaMatrixSubmission | null;
+  } | null;
 }
 
 const CreateCubeModalButton = withQuickCreateCube(Button);
@@ -141,6 +147,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   collaboratingCubes = [],
   cubes = [],
   dailyP1P1,
+  dailyManaMatrix,
 }) => {
   const user = useContext(UserContext);
   const showDailyP1P1 = !user?.hideFeatured && !!dailyP1P1;
@@ -189,6 +196,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
         </div>
       )}
       {showDailyP1P1 && <DailyP1P1Card pack={dailyP1P1!.pack} cube={dailyP1P1!.cube} date={dailyP1P1!.date} />}
+      {dailyManaMatrix && (
+        <DailyManaMatrixCard puzzle={dailyManaMatrix.puzzle} submission={dailyManaMatrix.submission} />
+      )}
     </Flexbox>
   );
 

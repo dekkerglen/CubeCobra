@@ -3,6 +3,7 @@ import { sanitizeChangelog } from 'dynamo/dao/ChangelogDynamoDao';
 import { collaboratorIndexDao, cubeDao, draftDao, feedDao } from 'dynamo/daos';
 import { getDailyP1P1 } from 'serverutils/dailyP1P1';
 import { getFeaturedCubes } from 'serverutils/featuredQueue';
+import { getDailyManaMatrix } from 'serverutils/manamatrix/daily';
 import { getCubesSortValues, getPinnedCubesForOwner, handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../types/express';
@@ -45,8 +46,11 @@ const dashboardHandler = async (req: Request, res: Response) => {
 
     const featured = await getFeaturedCubes(8);
 
-    // Get daily P1P1
-    const dailyP1P1 = await getDailyP1P1(req.logger);
+    // Get daily P1P1 and today's ManaMatrix (with this user's progress)
+    const [dailyP1P1, dailyManaMatrix] = await Promise.all([
+      getDailyP1P1(req.logger),
+      getDailyManaMatrix(req.logger, req.user.id),
+    ]);
 
     // Fetch cubes the user is collaborating on
     const collaboratingCubeIds = await collaboratorIndexDao.getCubeIdsForUser(req.user.id);
@@ -62,6 +66,7 @@ const dashboardHandler = async (req: Request, res: Response) => {
     return render(req, res, 'DashboardPage', {
       featured,
       dailyP1P1,
+      dailyManaMatrix,
       collaboratingCubes,
       cubes,
     });
