@@ -7,6 +7,9 @@ import { ChangelogDynamoDao } from './dao/ChangelogDynamoDao';
 import { CollaboratorIndexDynamoDao } from './dao/CollaboratorIndexDynamoDao';
 import { ComboDynamoDao } from './dao/ComboDynamoDao';
 import { CommentDynamoDao } from './dao/CommentDynamoDao';
+import { CrosswordPuzzleDynamoDao } from './dao/CrosswordPuzzleDynamoDao';
+import { CrosswordSubmissionDynamoDao } from './dao/CrosswordSubmissionDynamoDao';
+import { CrosswordUserStatsDynamoDao } from './dao/CrosswordUserStatsDynamoDao';
 import { CubeDynamoDao } from './dao/CubeDynamoDao';
 import { DailyP1P1DynamoDao } from './dao/DailyP1P1DynamoDao';
 import { DraftDynamoDao } from './dao/DraftDynamoDao';
@@ -79,6 +82,15 @@ export const synergyConnectSubmissionDao: SynergyConnectSubmissionDynamoDao = ne
   tableName,
 );
 export const synergyConnectUserStatsDao: SynergyConnectUserStatsDynamoDao = new SynergyConnectUserStatsDynamoDao(
+  documentClient,
+  tableName,
+);
+export const crosswordPuzzleDao: CrosswordPuzzleDynamoDao = new CrosswordPuzzleDynamoDao(documentClient, tableName);
+export const crosswordSubmissionDao: CrosswordSubmissionDynamoDao = new CrosswordSubmissionDynamoDao(
+  documentClient,
+  tableName,
+);
+export const crosswordUserStatsDao: CrosswordUserStatsDynamoDao = new CrosswordUserStatsDynamoDao(
   documentClient,
   tableName,
 );

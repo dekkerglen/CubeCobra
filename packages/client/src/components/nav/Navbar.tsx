@@ -19,6 +19,7 @@ import {
   StarIcon,
   TableIcon,
   ToolsIcon,
+  TypographyIcon,
   VersionsIcon,
   ListOrderedIcon,
 } from '@primer/octicons-react';
@@ -89,6 +90,7 @@ const exploreSections: NavSection[] = [
     items: [
       { label: 'Mana Matrix', href: '/tool/manamatrix', icon: TableIcon },
       { label: 'Synergy Connect', href: '/tool/synergyconnect', icon: ShareAndroidIcon },
+      { label: 'Crossword', href: '/tool/crossword', icon: TypographyIcon },
       { label: 'Daily P1P1', href: '/tool/p1p1/daily', icon: ListOrderedIcon },
     ],
   },

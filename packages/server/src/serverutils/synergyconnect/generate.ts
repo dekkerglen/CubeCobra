@@ -4,6 +4,7 @@ import { makeFilter } from '@utils/filtering/FilterCards';
 import seedrandom from 'seedrandom';
 import { getRelatedCards } from 'serverutils/carddb';
 import catalog from 'serverutils/cardCatalog';
+import { eligibleSetCodes } from 'serverutils/setEligibility';
 import { searchAllCards } from 'serverutils/tools';
 
 import { COLOR_COMBINATIONS, KEYWORDS } from '../manamatrix/categoryPools';
@@ -25,11 +26,6 @@ const MAX_GENERATION_ATTEMPTS = 40;
 // before they're considered too alike to anchor distinct groups.
 const MAX_SHARED_SYNERGIES = 2;
 
-// Themes are only flavor — they never narrow the answer down to one group, so
-// showing them is safe.
-const ELIGIBLE_SET_TYPES = new Set(['expansion', 'core', 'masters']);
-const MIN_SET_CARDS = 150;
-
 type Rng = () => number;
 
 const pick = <T>(rng: Rng, array: T[]): T => array[Math.floor(rng() * array.length)]!;
@@ -42,19 +38,6 @@ const shuffle = <T>(rng: Rng, array: T[]): T[] => {
   }
   return copy;
 };
-
-const eligibleSets = (date: string): string[] =>
-  Object.values(catalog.setdict)
-    .filter(
-      (set) =>
-        ELIGIBLE_SET_TYPES.has(set.setType) &&
-        !set.digital &&
-        set.cardCount >= MIN_SET_CARDS &&
-        set.releasedAt !== null &&
-        set.releasedAt <= date,
-    )
-    .map((set) => set.code)
-    .sort();
 
 const COLOR_NAMES: Record<string, string> = {
   W: 'White',
@@ -121,7 +104,7 @@ const themeGenerators = (rng: Rng, sets: string[]): (() => string)[] => {
  */
 export const generatePuzzle = (date: string): GeneratedPuzzle => {
   const rng = seedrandom(date);
-  const sets = eligibleSets(date);
+  const sets = eligibleSetCodes(date);
   const start = Date.now();
 
   for (let attempt = 1; attempt <= MAX_GENERATION_ATTEMPTS; attempt++) {

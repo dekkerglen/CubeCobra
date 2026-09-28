@@ -1,7 +1,40 @@
 import { isExtraCard } from '@utils/cardutil';
 import catalog from 'serverutils/cardCatalog';
 
-import { isTagAllowed } from './categoryPools';
+/**
+ * Which Scryfall Tagger slugs count as "recognisable" — the ones a player can
+ * be expected to know as a description of a card. Tagger carries several
+ * thousand oracle tags, and the long tail is one-offs, curation bookkeeping and
+ * mature-content markers; using all of them as puzzle material produces
+ * categories nobody can answer (ManaMatrix) or clues nobody can read (crossword).
+ *
+ * Shared by every puzzle generator so the notion of a "real tag" can't drift
+ * between them, exactly as `setEligibility` is shared for sets. This used to
+ * live in `manamatrix/tagFrequencies.ts` and `manamatrix/categoryPools.ts`, back
+ * when ManaMatrix was the only consumer.
+ */
+
+/**
+ * How many distinct cards a tag has to describe before a puzzle may use it.
+ * A tag this common is one a player has met; below it, Tagger's long tail of
+ * one-offs takes over. Shared so ManaMatrix categories and crossword clues draw
+ * on the same pool — about 400 of Tagger's ~4,300 oracle tags clear it.
+ */
+export const MIN_RECOGNISABLE_TAG_NAMES = 150;
+
+/**
+ * Slugs we never want, even when they clear the frequency threshold. Curated
+ * over time; substring terms catch whole families of mature-content tags.
+ */
+const BLOCKED_TAG_SLUGS = new Set(['removed-cards', 'reprint', 'functional-reprint']);
+const BLOCKED_TAG_SUBSTRINGS = ['nud', 'sex', 'racis', 'suicid', 'slur'];
+
+export const isTagAllowed = (slug: string): boolean => {
+  if (BLOCKED_TAG_SLUGS.has(slug)) {
+    return false;
+  }
+  return !BLOCKED_TAG_SUBSTRINGS.some((term) => slug.includes(term));
+};
 
 /**
  * Distinct-card-name counts per Scryfall Tagger slug, so puzzle generation only
@@ -70,6 +103,17 @@ const eligibleTags = (counts: Map<string, number>, minNames: number): string[] =
 export const eligibleOracleTags = (minNames: number): string[] => eligibleTags(getTagCounts().oracle, minNames);
 
 export const eligibleArtTags = (minNames: number): string[] => eligibleTags(getTagCounts().art, minNames);
+
+/**
+ * The same eligible oracle tags, each with the number of distinct cards
+ * carrying it, for callers that also need to rank one card's tags against each
+ * other. Every slug here has already cleared `isTagAllowed` and `minNames`, so
+ * the count is only used to tell a specific tag from a near-universal one.
+ */
+export const eligibleOracleTagCounts = (minNames: number): Map<string, number> => {
+  const counts = getTagCounts().oracle;
+  return new Map(eligibleOracleTags(minNames).map((slug) => [slug, counts.get(slug)!]));
+};
 
 /** Test seam: drop the cache so a rebuilt catalog is re-counted. */
 export const clearTagCountsCache = (): void => {

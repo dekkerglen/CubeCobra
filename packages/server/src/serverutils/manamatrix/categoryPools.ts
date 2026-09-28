@@ -167,15 +167,5 @@ export const CREATURE_TYPES = [
   'Dwarf',
 ];
 
-// Scryfall Tagger slugs we never want as puzzle categories, even when they
-// clear the frequency threshold. Curated over time; substring terms catch
-// whole families of mature-content tags.
-const BLOCKED_TAG_SLUGS = new Set(['removed-cards', 'reprint', 'functional-reprint']);
-const BLOCKED_TAG_SUBSTRINGS = ['nud', 'sex', 'racis', 'suicid', 'slur'];
-
-export const isTagAllowed = (slug: string): boolean => {
-  if (BLOCKED_TAG_SLUGS.has(slug)) {
-    return false;
-  }
-  return !BLOCKED_TAG_SUBSTRINGS.some((term) => slug.includes(term));
-};
+// Which Scryfall Tagger slugs a puzzle may use is not a ManaMatrix question —
+// the crossword asks it too — so it lives in serverutils/tagEligibility.

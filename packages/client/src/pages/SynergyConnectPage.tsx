@@ -11,11 +11,14 @@ import {
 } from '@utils/datatypes/SynergyConnect';
 
 import Button from 'components/base/Button';
+import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
+import SideBanner from 'components/SideBanner';
 import SynergyConnectHelpModal from 'components/synergyconnect/SynergyConnectHelpModal';
 import SynergyConnectResults from 'components/synergyconnect/SynergyConnectResults';
 import SynergyConnectTile from 'components/synergyconnect/SynergyConnectTile';
@@ -235,144 +238,171 @@ const SynergyConnectPage: React.FC<SynergyConnectPageProps> = ({
   return (
     // useContainer={false}: this page owns its own layout so nothing pads the
     // board inward — on phones the grid runs to the screen edges, on desktop it
-    // sits in a centred panel.
+    // sits in a centered panel. The ad rails MainLayout would have supplied are
+    // reproduced here so they only kick in at widths where they can't squeeze
+    // the board.
     <MainLayout useContainer={false}>
-      <DynamicFlash />
-      <div className="mx-auto w-full max-w-3xl sm:my-1 sm:px-2">
-        <div className="bg-bg-accent/80 sm:rounded-md sm:border sm:border-border sm:shadow">
-          <div className="border-b border-border px-3 py-2">
-            <Flexbox direction="row" justify="between" alignItems="center" wrap="wrap" gap="2">
-              <Flexbox direction="row" alignItems="center" gap="2" wrap="wrap">
-                <Text lg semibold>
-                  Synergy Connect
-                </Text>
-                {board && (
-                  <Text md className="text-text-secondary">
-                    {formatDate(board.date)}
-                    {isArchive ? ' · archive puzzle' : ''}
-                  </Text>
-                )}
-              </Flexbox>
-              <Flexbox direction="row" gap="3" alignItems="center">
-                <Link href="#" onClick={() => setHelpOpen(true)} aria-label="How to play">
-                  How to play
-                </Link>
-                {isArchive && <Link href="/tool/synergyconnect">Today's Puzzle</Link>}
-                <Link href="/tool/synergyconnect/archive">Archive</Link>
-              </Flexbox>
-            </Flexbox>
-          </div>
-          <div className="py-2">
-            {!board ? (
-              <Text className="px-3 text-center text-text-secondary">
-                No puzzle is available yet. Check back soon — a new Synergy Connect is posted every day!
-              </Text>
-            ) : (
-              <Flexbox direction="col" gap="1">
-                <Flexbox direction="row" justify="center" alignItems="center" gap="2" wrap="wrap" className="px-3">
-                  <Text xs className="text-center text-text-secondary">
-                    Today's groupings are all{' '}
-                    <span className="font-semibold">legendary creatures {board.theme.description}</span>.
-                    {!user && (
-                      <>
-                        {' '}
-                        <Link href="/user/login">Log in</Link> to keep a streak.
-                      </>
-                    )}
-                  </Text>
-                  {/* Lives left, as dots — compact enough to sit inline. */}
-                  <span
-                    className="flex items-center gap-1"
-                    aria-label={`${mistakes} of ${SYNERGY_CONNECT_MAX_MISTAKES} mistakes used`}
-                  >
-                    {Array.from({ length: SYNERGY_CONNECT_MAX_MISTAKES }, (_, i) => (
-                      <span
-                        key={i}
-                        className={classNames('h-2 w-2 rounded-full', {
-                          'bg-text-secondary': i < SYNERGY_CONNECT_MAX_MISTAKES - mistakes,
-                          'bg-text-secondary/25': i >= SYNERGY_CONNECT_MAX_MISTAKES - mistakes,
-                        })}
-                      />
-                    ))}
-                  </span>
-                </Flexbox>
-
-                {/* Height-capped so all four rows fit without scrolling; hover a
-                  card to read it at full size. */}
-                <div
-                  className="relative mx-auto grid w-full grid-cols-4 gap-0.5 sm:gap-1.5"
-                  style={{ maxWidth: 'min(100%, calc((100vh - 12.5rem) / 1.4 + 1.5rem))' }}
-                >
-                  {displayOrder.map((oracleId, index) => {
-                    const card = cardsById.get(oracleId);
-                    if (!card) {
-                      return null;
-                    }
-                    const groupIndex = solvedGroupOf.get(oracleId) ?? null;
-                    // Label the row on its first card.
-                    const showLabel = groupIndex !== null && index % 4 === 0;
-                    const entry = showLabel ? revealedEntries.find((s) => s.groupIndex === groupIndex) : undefined;
-
-                    return (
-                      <div key={oracleId} ref={registerTile(oracleId)} className="relative">
-                        <SynergyConnectTile
-                          card={card}
-                          selected={selected.includes(oracleId)}
-                          solvedGroupIndex={groupIndex}
-                          disabled={gameOver || submitting}
-                          shake={shake.includes(oracleId)}
-                          onClick={() => toggleCard(oracleId)}
-                        />
-                        {entry && (
-                          <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex w-[calc(400%+1.5rem)] items-center justify-center px-2">
-                            <span className="synergy-solve-in rounded-md bg-black/70 px-3 py-1 text-center text-sm font-bold text-white sm:text-lg">
-                              {entry.group.commander.name}
-                            </span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-
-                {message && (
-                  <Text sm className="text-center font-semibold text-text-secondary">
-                    {message}
-                  </Text>
-                )}
-
-                {!gameOver && (
-                  <Flexbox direction="row" justify="center" gap="2" wrap="wrap" className="px-3">
-                    <Button color="secondary" onClick={shuffleBoard} disabled={submitting}>
-                      Shuffle
-                    </Button>
-                    <Button color="secondary" onClick={() => setSelected([])} disabled={submitting || !selected.length}>
-                      Deselect all
-                    </Button>
-                    <Button color="primary" onClick={submitGuess} disabled={submitting || selected.length !== 4}>
-                      {submitting ? 'Checking…' : 'Submit'}
-                    </Button>
+      <Container xxxl>
+        <Flexbox direction="row" gap="4" className="flex-grow max-w-full">
+          <ResponsiveDiv xxl className="pl-2 py-2 min-w-fit">
+            <SideBanner placementId="left-rail" />
+          </ResponsiveDiv>
+          <div className="flex-grow min-w-0 max-w-full">
+            <DynamicFlash />
+            <div className="mx-auto w-full max-w-3xl sm:my-1 sm:px-2">
+              <div className="bg-bg-accent/80 sm:rounded-md sm:border sm:border-border sm:shadow">
+                <div className="border-b border-border px-3 py-2">
+                  <Flexbox direction="row" justify="between" alignItems="center" wrap="wrap" gap="2">
+                    <Flexbox direction="row" alignItems="center" gap="2" wrap="wrap">
+                      <Text lg semibold>
+                        Synergy Connect
+                      </Text>
+                      {board && (
+                        <Text md className="text-text-secondary">
+                          {formatDate(board.date)}
+                          {isArchive ? ' · archive puzzle' : ''}
+                        </Text>
+                      )}
+                    </Flexbox>
+                    <Flexbox direction="row" gap="3" alignItems="center">
+                      <Link href="#" onClick={() => setHelpOpen(true)} aria-label="How to play">
+                        How to play
+                      </Link>
+                      {isArchive && <Link href="/tool/synergyconnect">Today's Puzzle</Link>}
+                      <Link href="/tool/synergyconnect/archive">Archive</Link>
+                    </Flexbox>
                   </Flexbox>
-                )}
+                </div>
+                <div className="py-2">
+                  {!board ? (
+                    <Text className="px-3 text-center text-text-secondary">
+                      No puzzle is available yet. Check back soon — a new Synergy Connect is posted every day!
+                    </Text>
+                  ) : (
+                    <Flexbox direction="col" gap="1">
+                      <Flexbox
+                        direction="row"
+                        justify="center"
+                        alignItems="center"
+                        gap="2"
+                        wrap="wrap"
+                        className="px-3"
+                      >
+                        <Text xs className="text-center text-text-secondary">
+                          Today's groupings are all{' '}
+                          <span className="font-semibold">legendary creatures {board.theme.description}</span>.
+                          {!user && (
+                            <>
+                              {' '}
+                              <Link href="/user/login">Log in</Link> to keep a streak.
+                            </>
+                          )}
+                        </Text>
+                        {/* Lives left, as dots — compact enough to sit inline. */}
+                        <span
+                          className="flex items-center gap-1"
+                          aria-label={`${mistakes} of ${SYNERGY_CONNECT_MAX_MISTAKES} mistakes used`}
+                        >
+                          {Array.from({ length: SYNERGY_CONNECT_MAX_MISTAKES }, (_, i) => (
+                            <span
+                              key={i}
+                              className={classNames('h-2 w-2 rounded-full', {
+                                'bg-text-secondary': i < SYNERGY_CONNECT_MAX_MISTAKES - mistakes,
+                                'bg-text-secondary/25': i >= SYNERGY_CONNECT_MAX_MISTAKES - mistakes,
+                              })}
+                            />
+                          ))}
+                        </span>
+                      </Flexbox>
 
-                {gameOver && (
-                  <div className="px-3">
-                    <SynergyConnectResults
-                      date={board.date}
-                      won={won}
-                      guesses={guesses}
-                      mistakes={mistakes}
-                      stats={stats}
-                      isArchive={isArchive}
-                      canReveal={!!user || won}
-                    />
-                  </div>
-                )}
-              </Flexbox>
-            )}
+                      {/* Height-capped so all four rows fit without scrolling; hover a
+                  card to read it at full size. */}
+                      <div
+                        className="relative mx-auto grid w-full grid-cols-4 gap-0.5 sm:gap-1.5"
+                        style={{ maxWidth: 'min(100%, calc((100vh - 12.5rem) / 1.4 + 1.5rem))' }}
+                      >
+                        {displayOrder.map((oracleId, index) => {
+                          const card = cardsById.get(oracleId);
+                          if (!card) {
+                            return null;
+                          }
+                          const groupIndex = solvedGroupOf.get(oracleId) ?? null;
+                          // Label the row on its first card.
+                          const showLabel = groupIndex !== null && index % 4 === 0;
+                          const entry = showLabel
+                            ? revealedEntries.find((s) => s.groupIndex === groupIndex)
+                            : undefined;
+
+                          return (
+                            <div key={oracleId} ref={registerTile(oracleId)} className="relative">
+                              <SynergyConnectTile
+                                card={card}
+                                selected={selected.includes(oracleId)}
+                                solvedGroupIndex={groupIndex}
+                                disabled={gameOver || submitting}
+                                shake={shake.includes(oracleId)}
+                                onClick={() => toggleCard(oracleId)}
+                              />
+                              {entry && (
+                                <div className="pointer-events-none absolute inset-y-0 left-0 z-10 flex w-[calc(400%+1.5rem)] items-center justify-center px-2">
+                                  <span className="synergy-solve-in rounded-md bg-black/70 px-3 py-1 text-center text-sm font-bold text-white sm:text-lg">
+                                    {entry.group.commander.name}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {message && (
+                        <Text sm className="text-center font-semibold text-text-secondary">
+                          {message}
+                        </Text>
+                      )}
+
+                      {!gameOver && (
+                        <Flexbox direction="row" justify="center" gap="2" wrap="wrap" className="px-3">
+                          <Button color="secondary" onClick={shuffleBoard} disabled={submitting}>
+                            Shuffle
+                          </Button>
+                          <Button
+                            color="secondary"
+                            onClick={() => setSelected([])}
+                            disabled={submitting || !selected.length}
+                          >
+                            Deselect all
+                          </Button>
+                          <Button color="primary" onClick={submitGuess} disabled={submitting || selected.length !== 4}>
+                            {submitting ? 'Checking…' : 'Submit'}
+                          </Button>
+                        </Flexbox>
+                      )}
+
+                      {gameOver && (
+                        <div className="px-3">
+                          <SynergyConnectResults
+                            date={board.date}
+                            won={won}
+                            guesses={guesses}
+                            mistakes={mistakes}
+                            stats={stats}
+                            isArchive={isArchive}
+                            canReveal={!!user || won}
+                          />
+                        </div>
+                      )}
+                    </Flexbox>
+                  )}
+                </div>
+              </div>
+            </div>
           </div>
-        </div>
-      </div>
+          <ResponsiveDiv lg className="pr-2 py-2 min-w-fit">
+            <SideBanner placementId="right-rail" />
+          </ResponsiveDiv>
+        </Flexbox>
+      </Container>
 
       <SynergyConnectHelpModal isOpen={helpOpen} setOpen={setHelpOpen} />
     </MainLayout>

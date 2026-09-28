@@ -3,9 +3,11 @@ import { ManaMatrixCategory } from '@utils/datatypes/ManaMatrix';
 import { FilterFunction, makeFilter } from '@utils/filtering/FilterCards';
 import seedrandom from 'seedrandom';
 import catalog from 'serverutils/cardCatalog';
+import { describeFilterTerm } from 'serverutils/filterDescription';
+import { eligibleSetCodes } from 'serverutils/setEligibility';
+import { eligibleArtTags, eligibleOracleTags, MIN_RECOGNISABLE_TAG_NAMES } from 'serverutils/tagEligibility';
 
 import { CARD_TYPES, COLOR_COMBINATIONS, COLORS, CREATURE_TYPES, KEYWORDS, ORACLE_TERMS } from './categoryPools';
-import { eligibleArtTags, eligibleOracleTags } from './tagFrequencies';
 
 export interface GeneratedPuzzle {
   columns: ManaMatrixCategory[];
@@ -18,13 +20,6 @@ export interface GeneratedPuzzle {
 // cells; 5 keeps every cell plausibly guessable.
 export const MIN_ANSWERS_PER_CELL = 5;
 const MAX_GENERATION_ATTEMPTS = 30;
-
-// Tags need a healthy answer pool before they're interesting categories.
-const MIN_TAG_NAMES = 150;
-
-// Sets eligible as categories: real paper releases with a full card list.
-const ELIGIBLE_SET_TYPES = new Set(['expansion', 'core', 'masters']);
-const MIN_SET_CARDS = 150;
 
 type Rng = () => number;
 
@@ -72,19 +67,6 @@ const shuffle = <T>(rng: Rng, array: T[]): T[] => {
 };
 
 const nDistinctRandom = <T>(rng: Rng, array: T[], n: number): T[] => shuffle(rng, array).slice(0, n);
-
-const eligibleSets = (date: string): string[] =>
-  Object.values(catalog.setdict)
-    .filter(
-      (set) =>
-        ELIGIBLE_SET_TYPES.has(set.setType) &&
-        !set.digital &&
-        set.cardCount >= MIN_SET_CARDS &&
-        set.releasedAt !== null &&
-        set.releasedAt <= date,
-    )
-    .map((set) => set.code)
-    .sort();
 
 export interface GeneratorPools {
   sets: string[];
@@ -199,26 +181,6 @@ const computeCellCounts = (columnFilters: FilterFunction[], rowFilters: FilterFu
   return cellNames.map((row) => row.map((names) => names.size));
 };
 
-const describeFilter = (filter: FilterFunction, filterText: string): string => {
-  // The grammar's generated fragments for tag and set filters are stilted
-  // ('atag contains exactly "..."', 'set is "dst"'), so those get bespoke
-  // wording; everything else uses the filter's own .describe translation.
-  const tagMatch = filterText.match(/^(otag|atag):"(.+)"$/);
-  if (tagMatch) {
-    return `${tagMatch[1] === 'otag' ? 'oracle' : 'art'} tag is "${tagMatch[2]}"`;
-  }
-
-  const setMatch = filterText.match(/^set:(.+)$/);
-  if (setMatch) {
-    const setCode = setMatch[1]!;
-    const setName = catalog.setdict[setCode]?.name;
-    return setName ? `printed in ${setName} (${setCode.toUpperCase()})` : `printed in set "${setCode}"`;
-  }
-
-  const fragment = filter.describe?.trim();
-  return fragment && fragment.length > 0 ? fragment : filterText;
-};
-
 /**
  * Generates the puzzle for a date. Deterministic for a given date and catalog:
  * the RNG is seeded with the date (a local instance — never seed the global
@@ -228,9 +190,9 @@ const describeFilter = (filter: FilterFunction, filterText: string): string => {
 export const generatePuzzle = (date: string): GeneratedPuzzle => {
   const rng = seedrandom(date);
   const pools: GeneratorPools = {
-    sets: eligibleSets(date),
-    oracleTags: eligibleOracleTags(MIN_TAG_NAMES),
-    artTags: eligibleArtTags(MIN_TAG_NAMES),
+    sets: eligibleSetCodes(date),
+    oracleTags: eligibleOracleTags(MIN_RECOGNISABLE_TAG_NAMES),
+    artTags: eligibleArtTags(MIN_RECOGNISABLE_TAG_NAMES),
   };
 
   const start = Date.now();
@@ -256,9 +218,12 @@ export const generatePuzzle = (date: string): GeneratedPuzzle => {
       continue;
     }
 
+    // A category is one filter term, so its description is one fragment. The
+    // wording lives in serverutils/filterDescription, shared with the crossword
+    // clue writer — both needed the same overrides for tag, set and type terms.
     const toCategory = (filterText: string, filter: FilterFunction): ManaMatrixCategory => ({
       filterText,
-      description: describeFilter(filter, filterText),
+      description: describeFilterTerm(filterText, filter),
     });
 
     console.info(
