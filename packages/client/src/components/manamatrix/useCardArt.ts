@@ -6,7 +6,15 @@ import { fetchCardImage } from 'utils/cardAutocomplete';
 // board (or rendering it in the archive) doesn't refire identical requests.
 const artCache = new Map<string, string | null>();
 
-/** Best-effort art crop URL for a card name (cached); null on miss. */
+/**
+ * Best-effort art crop URL for a card name (cached); null on miss.
+ *
+ * Always the card's first printing. A ManaMatrix tile is showing the player the
+ * card they named, and a goofy Secret Lair of an iconic card leaves them unsure
+ * they picked what they meant; the first printing is the one image that reads as
+ * the card itself. Reskin names resolve through to the original too, so a tile's
+ * art always matches the canonical name the server answered with.
+ */
 export const getCardArtUrl = async (name: string, signal?: AbortSignal): Promise<string | null> => {
   if (!name) {
     return null;
@@ -15,7 +23,7 @@ export const getCardArtUrl = async (name: string, signal?: AbortSignal): Promise
     return artCache.get(name) ?? null;
   }
 
-  const image = await fetchCardImage(name, signal);
+  const image = await fetchCardImage(name, signal, true);
   const uri = image?.uri ?? null;
   artCache.set(name, uri);
   return uri;

@@ -4,7 +4,7 @@ import { FilterFunction, makeFilter } from '@utils/filtering/FilterCards';
 import seedrandom from 'seedrandom';
 import catalog from 'serverutils/cardCatalog';
 import { describeFilterTerm } from 'serverutils/filterDescription';
-import { eligibleSetCodes } from 'serverutils/setEligibility';
+import { eligiblePremiereSetCodes } from 'serverutils/setEligibility';
 import { eligibleArtTags, eligibleOracleTags, MIN_RECOGNISABLE_TAG_NAMES } from 'serverutils/tagEligibility';
 
 import { CARD_TYPES, COLOR_COMBINATIONS, COLORS, CREATURE_TYPES, KEYWORDS, ORACLE_TERMS } from './categoryPools';
@@ -190,7 +190,11 @@ const computeCellCounts = (columnFilters: FilterFunction[], rowFilters: FilterFu
 export const generatePuzzle = (date: string): GeneratedPuzzle => {
   const rng = seedrandom(date);
   const pools: GeneratorPools = {
-    sets: eligibleSetCodes(date),
+    // Only sets that premiered a card: a ManaMatrix set category asks the player
+    // to *name a card from* the set, and a reprint-only set (every masters set,
+    // and every core set up to Tenth Edition) turns that into a question about
+    // one product's reprint list. See `eligiblePremiereSetCodes`.
+    sets: eligiblePremiereSetCodes(date),
     oracleTags: eligibleOracleTags(MIN_RECOGNISABLE_TAG_NAMES),
     artTags: eligibleArtTags(MIN_RECOGNISABLE_TAG_NAMES),
   };

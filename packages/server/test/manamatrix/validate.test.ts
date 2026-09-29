@@ -31,6 +31,7 @@ jest.mock('serverutils/cardCatalog', () => ({
 import { CardDetails } from '@utils/datatypes/Card';
 import { ManaMatrixPuzzle } from '@utils/datatypes/ManaMatrix';
 import cardCatalog from 'serverutils/cardCatalog';
+import { clearPrintingIndexCache } from 'serverutils/cardPrintings';
 import { clearCompiledFilterCache, validateAnswers } from 'serverutils/manamatrix/validate';
 
 import { createCardDetails } from '../test-utils/data';
@@ -49,6 +50,7 @@ const normalDetails: Partial<CardDetails> = {
 
 const seedCard = (details: CardDetails) => {
   mockCardCatalog._carddict[details.scryfall_id] = details;
+  mockCardCatalog.printedCardList = [...mockCardCatalog.printedCardList, details];
   const nameKey = details.name_lower;
   mockCardCatalog.nameToId[nameKey] = [...(mockCardCatalog.nameToId[nameKey] ?? []), details.scryfall_id];
   mockCardCatalog.oracleToId[details.oracle_id] = [
@@ -87,7 +89,9 @@ const emptyAnswers = (): (string | null)[][] => [
 describe('validateAnswers', () => {
   beforeEach(() => {
     clearCompiledFilterCache();
+    clearPrintingIndexCache();
     mockCardCatalog._carddict = {};
+    mockCardCatalog.printedCardList = [];
     mockCardCatalog.nameToId = {};
     mockCardCatalog.oracleToId = {};
   });
@@ -202,5 +206,82 @@ describe('validateAnswers', () => {
     const result = validateAnswers(puzzle, answers);
     expect(result.correct.flat().every((cell) => cell === false)).toBe(true);
     expect(result.matchedNames.flat().every((name) => name === null)).toBe(true);
+  });
+
+  describe('reskinned cards', () => {
+    // One card, two names: The Great Henge premiered in Throne of Eldraine and
+    // came back as "Party Tree" in a Secret Lair.
+    const HENGE_ORACLE = 'great-henge-oracle';
+    const seedHenge = () => {
+      seedCard(
+        createCardDetails({
+          ...normalDetails,
+          name: 'Party Tree',
+          name_lower: 'party tree',
+          oracle_id: HENGE_ORACLE,
+          scryfall_id: 'henge-reskin',
+          set: 'sld',
+          setIndex: 9,
+          reprint: true,
+          type: 'Legendary Artifact',
+          cmc: 9,
+        }),
+      );
+      seedCard(
+        createCardDetails({
+          ...normalDetails,
+          name: 'The Great Henge',
+          name_lower: 'the great henge',
+          oracle_id: HENGE_ORACLE,
+          scryfall_id: 'henge-original',
+          set: 'eld',
+          setIndex: 2,
+          reprint: false,
+          type: 'Legendary Artifact',
+          cmc: 9,
+        }),
+      );
+    };
+
+    it('accepts the reskin name but answers with the real card name', () => {
+      seedHenge();
+      const puzzle = createPuzzle(['type:artifact', 'cmc=0', 'cmc=0'], ['cmc=9', 'cmc=0', 'cmc=0']);
+      const answers = emptyAnswers();
+      answers[0]![0] = 'Party Tree';
+
+      const result = validateAnswers(puzzle, answers);
+      // Still a correct answer — canonicalisation is for display and grouping,
+      // never for deciding whether the player was right.
+      expect(result.correct[0]![0]).toBe(true);
+      expect(result.displayNames[0]![0]).toBe('The Great Henge');
+      expect(result.matchedNames[0]![0]).toBe('the great henge');
+    });
+
+    it('groups both names of the card under one answer', () => {
+      seedHenge();
+      const puzzle = createPuzzle(['type:artifact', 'cmc=0', 'cmc=0'], ['cmc=9', 'cmc=9', 'cmc=0']);
+      const answers = emptyAnswers();
+      answers[0]![0] = 'Party Tree';
+      answers[1]![0] = 'the great henge';
+
+      const result = validateAnswers(puzzle, answers);
+      // Same popularity key from both spellings, so two players who named the
+      // same card count as having given the same answer.
+      expect(result.matchedNames[0]![0]).toBe('the great henge');
+      expect(result.matchedNames[1]![0]).toBe('the great henge');
+    });
+
+    it('canonicalises the name even when it was the reskin printing that matched', () => {
+      seedHenge();
+      // Only the Secret Lair printing is in set sld, so that is the printing that
+      // satisfied the cell — but the card is still called The Great Henge.
+      const puzzle = createPuzzle(['set:sld', 'cmc=0', 'cmc=0'], ['cmc=9', 'cmc=0', 'cmc=0']);
+      const answers = emptyAnswers();
+      answers[0]![0] = 'Party Tree';
+
+      const result = validateAnswers(puzzle, answers);
+      expect(result.correct[0]![0]).toBe(true);
+      expect(result.displayNames[0]![0]).toBe('The Great Henge');
+    });
   });
 });

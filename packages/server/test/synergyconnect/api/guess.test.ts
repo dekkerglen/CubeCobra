@@ -24,7 +24,7 @@ const createPuzzle = (overrides?: Partial<SynergyConnectPuzzle>): SynergyConnect
   id: DATE,
   type: 'HISTORY',
   date: DATE,
-  theme: { filterText: 'keyword:Flying', description: 'with Flying' },
+  theme: { filterText: 'ci=wu', description: 'in Azorius colors' },
   groups: [
     { commander: card('Commander A'), cards: [card('a1'), card('a2'), card('a3'), card('a4')] },
     { commander: card('Commander B'), cards: [card('b1'), card('b2'), card('b3'), card('b4')] },

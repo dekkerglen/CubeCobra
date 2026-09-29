@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { ManaMatrixPuzzle, ManaMatrixSubmission } from '@utils/datatypes/ManaMatrix';
+import { ManaMatrixPuzzle } from '@utils/datatypes/ManaMatrix';
 
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
@@ -10,15 +10,20 @@ import ManaMatrixBoardPreview from 'components/manamatrix/ManaMatrixBoardPreview
 
 interface DailyManaMatrixCardProps {
   puzzle: ManaMatrixPuzzle;
-  submission?: ManaMatrixSubmission | null;
 }
 
-const DailyManaMatrixCard: React.FC<DailyManaMatrixCardProps> = ({ puzzle, submission }) => {
+/**
+ * The dashboard teaser for today's Mana Matrix.
+ *
+ * Only ever rendered for a puzzle the viewer has not started — the dashboard slot picks
+ * from the games they have not touched — so the board is always empty and there is no
+ * progress to report. ManaMatrixBoardPreview is the piece that also renders a played
+ * board, in the archive.
+ */
+const DailyManaMatrixCard: React.FC<DailyManaMatrixCardProps> = ({ puzzle }) => {
   if (!puzzle) {
     return null;
   }
-
-  const solved = submission ? submission.correct.flat().filter(Boolean).length : null;
 
   return (
     <Card>
@@ -38,21 +43,14 @@ const DailyManaMatrixCard: React.FC<DailyManaMatrixCardProps> = ({ puzzle, submi
       <CardBody>
         <Flexbox direction="col" gap="2">
           <Text sm className="text-text-secondary">
-            {solved !== null ? (
-              <>
-                You've solved <span className="font-semibold text-text">{solved} of 9</span> cells
-                {submission ? ` in ${submission.attempts} guess${submission.attempts === 1 ? '' : 'es'}` : ''}.
-              </>
-            ) : (
-              "Name a card for each cell matching both its row and column category. Today's puzzle is waiting."
-            )}
+            Name a card for each cell matching both its row and column category. Today's puzzle is waiting.
           </Text>
 
           <a href="/tool/manamatrix" className="block no-underline-hover">
-            <ManaMatrixBoardPreview puzzle={puzzle} submission={submission} />
+            <ManaMatrixBoardPreview puzzle={puzzle} />
           </a>
 
-          <Link href="/tool/manamatrix">{solved !== null ? 'Continue playing' : "Play today's puzzle"} →</Link>
+          <Link href="/tool/manamatrix">Play today's puzzle →</Link>
         </Flexbox>
       </CardBody>
     </Card>

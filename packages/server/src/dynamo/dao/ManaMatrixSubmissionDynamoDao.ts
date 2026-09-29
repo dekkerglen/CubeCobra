@@ -26,6 +26,7 @@ export class ManaMatrixSubmissionDynamoDao extends BaseDynamoDao<ManaMatrixSubmi
 
   /**
    * GSI1: Query a user's submission history, newest first.
+   * GSI2: Query every player of one puzzle date — see {@link getAllByDate}.
    */
   protected GSIKeys(item: ManaMatrixSubmission): {
     GSI1PK: string | undefined;
@@ -40,8 +41,8 @@ export class ManaMatrixSubmissionDynamoDao extends BaseDynamoDao<ManaMatrixSubmi
     return {
       GSI1PK: `${this.itemType()}#USER#${item.userId}`,
       GSI1SK: `DATE#${item.date}`,
-      GSI2PK: undefined,
-      GSI2SK: undefined,
+      GSI2PK: `${this.itemType()}#DATE#${item.date}`,
+      GSI2SK: `USER#${item.userId}`,
       GSI3PK: undefined,
       GSI3SK: undefined,
       GSI4PK: undefined,
@@ -107,6 +108,45 @@ export class ManaMatrixSubmissionDynamoDao extends BaseDynamoDao<ManaMatrixSubmi
     );
 
     return this.query(params);
+  }
+
+  /**
+   * Every player's submission for one puzzle date, via GSI2.
+   *
+   * The admin daily-games funnel needs "who played on day D", which GSI1 (keyed by user)
+   * cannot answer. GSI2 was unused on this item type, so it costs no new index — but a GSI
+   * only carries items whose keys were present when they were *written*, so rows created
+   * before this key existed are invisible here until they are rewritten. `update()` rewrites
+   * the whole item (GSI keys included), so any day still being played self-heals; finished
+   * days need the backfill in
+   * packages/scripts/src/dynamoMigrations/backfillDailyGameDateGSI.ts.
+   *
+   * Pages the whole partition rather than taking a limit: one partition is one day's players
+   * for one game, and a partial count is worse than a slow one on a dashboard.
+   */
+  public async getAllByDate(date: string): Promise<ManaMatrixSubmission[]> {
+    const all: ManaMatrixSubmission[] = [];
+    let lastKey: Record<string, any> | undefined = undefined;
+
+    do {
+      const params: QueryCommandInput = this.buildQueryParams(
+        {
+          TableName: this.tableName,
+          IndexName: 'GSI2',
+          KeyConditionExpression: 'GSI2PK = :date',
+          ExpressionAttributeValues: {
+            ':date': `${this.itemType()}#DATE#${date}`,
+          },
+        },
+        lastKey,
+      );
+
+      const page = await this.query(params);
+      all.push(...page.items);
+      lastKey = page.lastKey;
+    } while (lastKey);
+
+    return all;
   }
 
   /**

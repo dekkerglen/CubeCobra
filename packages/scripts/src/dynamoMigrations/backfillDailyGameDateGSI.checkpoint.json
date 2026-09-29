@@ -1,0 +1,42 @@
+{
+  "segments": {
+    "0": {
+      "PK": "DRAFT#68fd7d29-0a89-421d-a9c4-9bb85e335e73",
+      "SK": "DRAFT"
+    },
+    "1": {
+      "PK": "BLOG#6341d4b38861bd5ae7c92cbe",
+      "SK": "BLOG"
+    },
+    "2": {
+      "PK": "CUBE#3ea40ef2-42b4-40e5-b400-33762d611b05",
+      "SK": "CUBE"
+    },
+    "3": {
+      "PK": "HASH#CUBE#6138dd2496d64410334779de",
+      "SK": "534983803d19c8c0180b20ebbee4a36d7245d1f3ffbc554707aec67cb022a38b"
+    },
+    "4": {
+      "PK": "HASH#CUBE#63ee9c349cd2550473bfa648",
+      "SK": "693c4c924b54b7ff04d06a039a5b6d9be0005bcd93e68a84ac8935fada9058e7"
+    },
+    "5": {
+      "PK": "CARDHISTORY#3518e273-bd92-46bc-b361-da52c670dfe1:day",
+      "SK": "DATE#1770595200000"
+    },
+    "6": {
+      "PK": "HASH#CUBE#d77883a2-c67f-4cd0-8c03-4bdea65875ed",
+      "SK": "d843cfdb8ada4baf32ab0f9ada2130a6372d739dd61a7c2da1bc158537e732f5"
+    },
+    "7": {
+      "PK": "CARDHISTORY#6536f72e-ff4e-4cda-bc7d-909145adf829:week",
+      "SK": "DATE#1614470400000"
+    }
+  },
+  "stats": {
+    "scanned": 967521,
+    "updated": 0,
+    "skipped": 0,
+    "errors": 0
+  }
+}

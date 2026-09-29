@@ -160,17 +160,41 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   const hasQuery = visible && !!value && normalizedValue.length >= MIN_QUERY_LENGTH;
   const showDropdown = hasQuery && (loading || showMatches);
 
+  // How many rows the arrow keys can land on: the suggestions actually rendered.
+  // While a lookup is in flight the list is a single spinner row, so there is
+  // nothing to highlight even though `matches` still holds the previous results.
+  const highlightableCount = showMatches && !loading ? matches.length : 0;
+
   const handleKeyDown = useCallback(
     (event: React.KeyboardEvent<HTMLInputElement>) => {
       const enterPressed = event.keyCode === 13;
+      // Walks the rendered suggestions, wrapping at both ends. The bound used to
+      // be a hardcoded 9 — three short of the twelve /tool/api/cardnames returns
+      // by default — so arrowing down stopped on the third-to-last row and the
+      // last two suggestions were keyboard-unreachable. Deriving it from the
+      // rendered list means the two can't disagree again, whatever the endpoint's
+      // page size or a caller's fetcher returns.
+      const moveHighlight = (delta: number) =>
+        setPosition((position) => {
+          const last = highlightableCount - 1;
+          if (last < 0) {
+            return -1;
+          }
+          const next = position + delta;
+          if (next < 0) {
+            return last;
+          }
+          return next > last ? 0 : next;
+        });
+
       if (event.keyCode === 40) {
         // DOWN key
         event.preventDefault();
-        setPosition((p) => (p < 9 ? p + 1 : p));
+        moveHighlight(1);
       } else if (event.keyCode === 38) {
         // UP key
         event.preventDefault();
-        setPosition((p) => (p > -1 ? p - 1 : p));
+        moveHighlight(-1);
       } else if (event.keyCode === 9 || enterPressed) {
         // TAB or ENTER key
         // While a lookup is in flight, `matches` still holds the PREVIOUS query's
@@ -193,7 +217,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
         }
       }
     },
-    [position, acceptSuggestion, matches, showMatches, loading, onSubmit, normalizedValue],
+    [position, acceptSuggestion, matches, showMatches, loading, onSubmit, normalizedValue, highlightableCount],
   );
 
   // Portal mode: keep the fixed-positioned dropdown glued under the input while

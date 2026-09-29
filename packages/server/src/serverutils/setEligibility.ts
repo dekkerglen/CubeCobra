@@ -1,5 +1,6 @@
 import SetInfo from '@utils/datatypes/SetInfo';
 import catalog from 'serverutils/cardCatalog';
+import { setsWithFirstPrinting } from 'serverutils/cardPrintings';
 
 /**
  * Which Magic sets count as "recognisable" — the ones a player can be expected
@@ -24,3 +25,20 @@ export const eligibleSetCodes = (date: string): string[] =>
     .filter((set) => isRecognisableSet(set) && set.releasedAt !== null && set.releasedAt <= date)
     .map((set) => set.code)
     .sort();
+
+/**
+ * The eligible sets that premiered at least one card — the narrower pool for
+ * puzzles that ask the player to *name a card from* a set.
+ *
+ * `isRecognisableSet` admits masters sets, and a masters set is reprint-only:
+ * "name a card printed in Ultimate Masters" is not a question about Magic, it's a
+ * question about which reprints landed in one specific product, and the same goes
+ * for every core set from Unlimited through Tenth Edition. Recognising the set's
+ * *name* is a fair ask — which is all the crossword's `setCode` entries and
+ * Synergy Connect's set categories need, so `eligibleSetCodes` keeps its meaning
+ * and this sits beside it rather than replacing it.
+ */
+export const eligiblePremiereSetCodes = (date: string): string[] => {
+  const premiered = setsWithFirstPrinting();
+  return eligibleSetCodes(date).filter((code) => premiered.has(code.toLowerCase()));
+};

@@ -2,8 +2,7 @@ import React, { useContext, useState } from 'react';
 
 import { cdnUrl } from '@utils/cdnUrl';
 import Cube from '@utils/datatypes/Cube';
-import { ManaMatrixPuzzle, ManaMatrixSubmission } from '@utils/datatypes/ManaMatrix';
-import { P1P1Pack } from '@utils/datatypes/P1P1Pack';
+import { DailyGameTeaserResult } from '@utils/datatypes/DailyGameTeaser';
 import classNames from 'classnames';
 
 import Banner from 'components/Banner';
@@ -16,10 +15,9 @@ import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Text from 'components/base/Text';
 import CubePreview from 'components/cube/CubePreview';
 import CubesCard from 'components/cube/CubesCard';
+import DailyGameCard from 'components/dailies/DailyGameCard';
 import DynamicFlash from 'components/DynamicFlash';
 import Feed from 'components/Feed';
-import DailyManaMatrixCard from 'components/manamatrix/DailyManaMatrixCard';
-import DailyP1P1Card from 'components/p1p1/DailyP1P1Card';
 import withQuickCreateCube from 'components/QuickCreateCubeButton';
 import RenderToRoot from 'components/RenderToRoot';
 import SideBanner from 'components/SideBanner';
@@ -129,15 +127,11 @@ interface DashboardPageProps {
   featured?: Cube[];
   collaboratingCubes?: Cube[];
   cubes?: Cube[];
-  dailyP1P1?: {
-    pack: P1P1Pack;
-    cube: Cube;
-    date?: number;
-  };
-  dailyManaMatrix?: {
-    puzzle: ManaMatrixPuzzle;
-    submission: ManaMatrixSubmission | null;
-  } | null;
+  /**
+   * One of the four dailies — whichever of them this user hasn't started today — or
+   * the all-played state. Chosen server-side by serverutils/dailyGamePick.ts.
+   */
+  dailyGame?: DailyGameTeaserResult | null;
 }
 
 const CreateCubeModalButton = withQuickCreateCube(Button);
@@ -146,11 +140,9 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
   featured = [],
   collaboratingCubes = [],
   cubes = [],
-  dailyP1P1,
-  dailyManaMatrix,
+  dailyGame,
 }) => {
   const user = useContext(UserContext);
-  const showDailyP1P1 = !user?.hideFeatured && !!dailyP1P1;
   const featuredPair = featured.slice(0, 2);
 
   const yourCubesSection = (
@@ -178,7 +170,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
     </div>
   );
 
-  const featuredAndP1P1Section = (
+  const featuredAndDailySection = (
     <Flexbox direction="col" gap="4">
       {featuredPair.length > 0 && (
         <div>
@@ -195,10 +187,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
           </div>
         </div>
       )}
-      {showDailyP1P1 && <DailyP1P1Card pack={dailyP1P1!.pack} cube={dailyP1P1!.cube} date={dailyP1P1!.date} />}
-      {dailyManaMatrix && (
-        <DailyManaMatrixCard puzzle={dailyManaMatrix.puzzle} submission={dailyManaMatrix.submission} />
-      )}
+      <DailyGameCard dailyGame={dailyGame} />
     </Flexbox>
   );
 
@@ -250,7 +239,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                     {collaboratingCubes.length > 0 && (
                       <CubesCard title="Collaborating On" cubes={collaboratingCubes} lean />
                     )}
-                    {featuredAndP1P1Section}
+                    {featuredAndDailySection}
                   </Flexbox>
                 </div>
 
@@ -266,7 +255,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
                       </Flexbox>
                     </Col>
                     <Col xs={12} md={6}>
-                      {featuredAndP1P1Section}
+                      {featuredAndDailySection}
                     </Col>
                   </Row>
                 </div>

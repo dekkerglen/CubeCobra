@@ -1,9 +1,8 @@
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { sanitizeChangelog } from 'dynamo/dao/ChangelogDynamoDao';
 import { collaboratorIndexDao, cubeDao, draftDao, feedDao } from 'dynamo/daos';
-import { getDailyP1P1 } from 'serverutils/dailyP1P1';
+import { pickDailyGame } from 'serverutils/dailyGamePick';
 import { getFeaturedCubes } from 'serverutils/featuredQueue';
-import { getDailyManaMatrix } from 'serverutils/manamatrix/daily';
 import { getCubesSortValues, getPinnedCubesForOwner, handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../types/express';
@@ -44,29 +43,32 @@ const dashboardHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/landing');
     }
 
-    const featured = await getFeaturedCubes(8);
-
-    // Get daily P1P1 and today's ManaMatrix (with this user's progress)
-    const [dailyP1P1, dailyManaMatrix] = await Promise.all([
-      getDailyP1P1(req.logger),
-      getDailyManaMatrix(req.logger, req.user.id),
-    ]);
-
-    // Fetch cubes the user is collaborating on
-    const collaboratingCubeIds = await collaboratorIndexDao.getCubeIdsForUser(req.user.id);
-    const collaboratingCubes = collaboratingCubeIds.length > 0 ? await cubeDao.batchGet(collaboratingCubeIds) : [];
-
     const { sort, ascending } = getCubesSortValues(req.user);
-    const [userCubes, { pinnedCubes, pinnedIds }] = await Promise.all([
+
+    // The dashboard is a hot page, so everything that does not depend on something
+    // else goes out together. The only serial step left is the collaborating-cube
+    // batchGet, which needs the ids this wave resolves.
+    const [featured, dailyGame, collaboratingCubeIds, userCubes, { pinnedCubes, pinnedIds }] = await Promise.all([
+      getFeaturedCubes(8),
+      // One of the four dailies, chosen from the ones this user hasn't started today.
+      pickDailyGame({
+        logger: req.logger,
+        userId: req.user.id,
+        // "Hide featured cubes" used to suppress the Daily P1P1 card, which leads with
+        // a cube and its owner; it now takes P1P1 out of the rotation instead.
+        includeDailyP1P1: !req.user.hideFeatured,
+      }),
+      collaboratorIndexDao.getCubeIdsForUser(req.user.id),
       cubeDao.queryByOwner(req.user.id, sort, ascending, undefined, 36),
       getPinnedCubesForOwner(req.user.id, req.user.id),
     ]);
+
+    const collaboratingCubes = collaboratingCubeIds.length > 0 ? await cubeDao.batchGet(collaboratingCubeIds) : [];
     const cubes = [...pinnedCubes, ...userCubes.items.filter((cube) => !pinnedIds.has(cube.id))];
 
     return render(req, res, 'DashboardPage', {
       featured,
-      dailyP1P1,
-      dailyManaMatrix,
+      dailyGame,
       collaboratingCubes,
       cubes,
     });

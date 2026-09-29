@@ -56,6 +56,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ noticeCount, co
             <Button href="/admin/deckbuild" block outline color="primary" type="link">
               Bot Deckbuild
             </Button>
+            <Button href="/admin/dailygames" block outline color="primary" type="link">
+              Daily Games
+            </Button>
           </Flexbox>
         </CardBody>
       </Card>

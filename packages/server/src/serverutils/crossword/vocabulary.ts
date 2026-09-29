@@ -1,8 +1,9 @@
 import { isExtraCard } from '@utils/cardutil';
-import Card, { CardDetails } from '@utils/datatypes/Card';
+import Card from '@utils/datatypes/Card';
 import { CrosswordEntryClass, CrosswordVocabEntry } from '@utils/datatypes/Crossword';
 import { makeFilter } from '@utils/filtering/FilterCards';
 import catalog from 'serverutils/cardCatalog';
+import { clearPrintingIndexCache, originalPrintings, setsWithFirstPrinting } from 'serverutils/cardPrintings';
 import { isRecognisableSet } from 'serverutils/setEligibility';
 
 /**
@@ -304,38 +305,6 @@ export const oracleTokens = (oracleText: string): string[] =>
 
 export const oracleWords = (oracleText: string): string[] => oracleTokens(oracleText).map(normalize);
 
-/**
- * Whether `candidate` is a better claim to being a name's original printing than
- * `incumbent`.
- *
- * printedCardList is *not* ordered oldest-first — a name's printings arrive in
- * whatever order the catalog holds them, so "Disintegrate" turns up under Summer
- * Magic and "Artisan of Kozilek" under Ultimate Masters. Taking the first one
- * seen made every recognisable set look as though something had premiered there,
- * which is why `reprintOnly` was false for all 97 set codes including TSR, UMA
- * and SUM. So the original is picked explicitly: a non-reprint beats a reprint,
- * then the earlier set in release order, then the earlier release date.
- *
- * Shared with clue generation, which needs the same printing for the same reason
- * ("X was first printed in this set" has to be true).
- */
-export const isEarlierPrinting = (candidate: CardDetails, incumbent: CardDetails): boolean => {
-  const rank = (details: CardDetails): [number, number, string] => [
-    details.reprint === false ? 0 : 1,
-    details.setIndex >= 0 ? details.setIndex : Number.MAX_SAFE_INTEGER,
-    details.released_at || '9999-99-99',
-  ];
-  const [aOriginal, aSet, aDate] = rank(candidate);
-  const [bOriginal, bSet, bDate] = rank(incumbent);
-  if (aOriginal !== bOriginal) {
-    return aOriginal < bOriginal;
-  }
-  if (aSet !== bSet) {
-    return aSet < bSet;
-  }
-  return aDate < bDate;
-};
-
 interface NameWordSource {
   name: string;
   oracleId: string;
@@ -384,65 +353,6 @@ const noteSource = (stats: Map<string, NameWordStats>, text: string, source: Nam
   }
 };
 
-/**
- * The original printing of every distinct card name, keyed by `name_lower`, in
- * first-seen order.
- *
- * Everything derived from a single card — its set, its rules text, the rarity a
- * clue may state — has to come from one printing, and the original is the only
- * one that makes "first printed in" and "premiered here" true. See
- * `isEarlierPrinting`: the catalog's order is not it.
- *
- * Insertion order follows printedCardList, so the build stays deterministic.
- *
- * Shared with clue generation, and not just to save a loop: the vocabulary counts
- * a rules word on these cards and the clue writer looks the word up on these
- * cards, so every entry having a card to cite depends on the two sets being the
- * same set.
- */
-export const originalPrintings = (): Map<string, CardDetails> => {
-  const best = new Map<string, CardDetails>();
-  // Earliest printing per oracle id, which is what says a name is the card's own.
-  const canonical = new Map<string, CardDetails>();
-
-  for (const details of catalog.printedCardList) {
-    if (isExtraCard(details)) {
-      continue;
-    }
-    const incumbent = best.get(details.name_lower);
-    if (!incumbent || isEarlierPrinting(details, incumbent)) {
-      best.set(details.name_lower, details);
-    }
-    const oracleId = details.oracle_id;
-    if (oracleId) {
-      const earliest = canonical.get(oracleId);
-      if (!earliest || isEarlierPrinting(details, earliest)) {
-        canonical.set(oracleId, details);
-      }
-    }
-  }
-
-  // Drop reskins: a printing that shares an oracle id with an earlier card under
-  // a different name is the same card wearing a costume — "Paradise Chocobo" is
-  // Birds of Paradise, "Krang's Android" is Triskelion. 979 oracle ids in the
-  // catalog carry more than one name.
-  //
-  // They can't be clued. The clue describes the card's real attributes, so a
-  // reskin's name is never deducible from them, and the type line still names
-  // the original — which produced "type line includes Chandra" for an answer of
-  // MEIKO. Keeping only the canonical name is the fix at the source; a rule
-  // about type lines would only have papered over one symptom of it.
-  for (const [nameLower, details] of [...best]) {
-    const oracleId = details.oracle_id;
-    const earliest = oracleId ? canonical.get(oracleId) : undefined;
-    if (earliest && earliest.name_lower !== nameLower) {
-      best.delete(nameLower);
-    }
-  }
-
-  return best;
-};
-
 const buildVocabulary = (): Vocabulary => {
   const seen = new Map<string, CrosswordVocabEntry>();
   const priorities = new Map<string, number>();
@@ -455,7 +365,7 @@ const buildVocabulary = (): Vocabulary => {
   const nameWordCards = new Map<string, NameWordStats>();
   const nameBigramCards = new Map<string, NameWordStats>();
   // Sets that are somebody's first printing; everything else is reprint-only.
-  const setsWithFirstPrinting = new Set<string>();
+  const premiereSets = setsWithFirstPrinting();
 
   // Types and keywords are read off every printing, because a reprint can carry a
   // type line or a keyword the original didn't.
@@ -472,10 +382,6 @@ const buildVocabulary = (): Vocabulary => {
   }
 
   for (const details of originalPrintings().values()) {
-    if (details.set) {
-      setsWithFirstPrinting.add(details.set.toLowerCase());
-    }
-
     // Rules-text vocabulary, counted once per card.
     //
     // A card names itself in its own rules text ("Searing Blaze deals 1 damage
@@ -607,7 +513,7 @@ const buildVocabulary = (): Vocabulary => {
         entryClass: 'setCode',
         setCode: set.code,
         setReleasedAt: set.releasedAt,
-        reprintOnly: !setsWithFirstPrinting.has(set.code.toLowerCase()),
+        reprintOnly: !premiereSets.has(set.code.toLowerCase()),
       },
       priorities,
     );
@@ -665,11 +571,16 @@ export const getVocabulary = (): Vocabulary => {
   return cached;
 };
 
-/** Test seam: drop the cache so a rebuilt catalog is re-scanned. */
+/**
+ * Test seam: drop the cache so a rebuilt catalog is re-scanned. The printing
+ * index goes with it — the vocabulary is built from it, so leaving it cached
+ * would describe the previous catalog.
+ */
 export const clearVocabularyCache = (): void => {
   cached = undefined;
   filteredCache.clear();
   themeCache.clear();
+  clearPrintingIndexCache();
 };
 
 /**

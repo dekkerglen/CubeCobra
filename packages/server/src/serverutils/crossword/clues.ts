@@ -2,11 +2,12 @@ import { normalizeName } from '@utils/cardutil';
 import Card, { CardDetails } from '@utils/datatypes/Card';
 import { CrosswordEntryClass, CrosswordVocabEntry } from '@utils/datatypes/Crossword';
 import { makeFilter } from '@utils/filtering/FilterCards';
+import { clearPrintingIndexCache, originalPrintings } from 'serverutils/cardPrintings';
 import { describeFilterTerms } from 'serverutils/filterDescription';
 import { clearTagCountsCache, eligibleOracleTagCounts, MIN_RECOGNISABLE_TAG_NAMES } from 'serverutils/tagEligibility';
 
 import { CROSSWORD_SYNONYMS } from './synonyms.generated';
-import { creatureSubtypes, nameTokens, normalize, oracleWords, originalPrintings, splitNameParts } from './vocabulary';
+import { creatureSubtypes, nameTokens, normalize, oracleWords, splitNameParts } from './vocabulary';
 
 /**
  * Clue text for crossword entries. Clues are built per puzzle and never stored,
@@ -316,12 +317,13 @@ export const getClueContext = (): ClueContext => {
 
 /**
  * Test seam: drop the cache so a rebuilt catalog is re-scanned. The tag counts
- * are dropped with it — the context embeds them, so leaving them cached would
- * describe the previous catalog.
+ * and the printing index go with it — the context is built from both, so leaving
+ * either cached would describe the previous catalog.
  */
 export const clearClueContextCache = (): void => {
   cachedContext = undefined;
   clearTagCountsCache();
+  clearPrintingIndexCache();
 };
 
 /**

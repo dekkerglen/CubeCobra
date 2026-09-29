@@ -63,8 +63,20 @@ export const cubeCardTagMatches =
 // Resolves one card name → its art (uri/artist/id). Replaces imagedict.json
 // (~28MB) that pages used to download whole just to look up a single card.
 // Returns null when there is no real match.
-export const fetchCardImage = async (name: string, signal?: AbortSignal): Promise<Image | null> => {
+//
+// `firstPrinting` asks for the card's original printing rather than whichever one
+// the bare name happens to resolve to, and sees through reskins to the card being
+// reskinned. Pass it where the card is the subject (a puzzle answer); leave it off
+// where the user picked a printing on purpose.
+export const fetchCardImage = async (
+  name: string,
+  signal?: AbortSignal,
+  firstPrinting: boolean = false,
+): Promise<Image | null> => {
   if (!name) return null;
-  const json = await getJson(`/tool/api/cardimagedata?name=${encodeURIComponent(name)}`, signal);
+  const json = await getJson(
+    `/tool/api/cardimagedata?name=${encodeURIComponent(name)}${firstPrinting ? '&firstPrinting=1' : ''}`,
+    signal,
+  );
   return json?.success === 'true' ? (json.image as Image | null) : null;
 };

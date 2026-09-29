@@ -2,6 +2,7 @@ import { isExtraCard } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import { ManaMatrixPuzzle } from '@utils/datatypes/ManaMatrix';
 import { FilterFunction, makeFilter } from '@utils/filtering/FilterCards';
+import { canonicalPrintingForName } from 'serverutils/cardPrintings';
 import { cardFromId, getIdsFromName } from 'serverutils/carddb';
 
 export interface ManaMatrixValidation {
@@ -63,6 +64,12 @@ export const compilePuzzleFilters = (puzzle: ManaMatrixPuzzle): CompiledPuzzleFi
  *
  * Name resolution goes through getIdsFromName, which already handles case,
  * accents, surrounding quotes, and split/double-faced card names.
+ *
+ * What comes back out is the card's *canonical* name, not the name of whichever
+ * printing satisfied the filters: a reskin is the same card wearing a costume, so
+ * a player who typed "Party Tree" is right and is told they answered The Great
+ * Henge. Note the asymmetry — canonicalisation happens only on the way out, so
+ * every name the card has ever borne stays a correct answer.
  */
 export const validateAnswers = (puzzle: ManaMatrixPuzzle, answers: (string | null)[][]): ManaMatrixValidation => {
   const { columns, rows } = compilePuzzleFilters(puzzle);
@@ -86,9 +93,12 @@ export const validateAnswers = (puzzle: ManaMatrixPuzzle, answers: (string | nul
 
         const card = { details } as Card;
         if (columns[col]!(card) && rows[row]!(card)) {
+          // Group and display under the card's real name, so two players who
+          // named the same card by different names are one answer.
+          const canonical = canonicalPrintingForName(details.name_lower) ?? details;
           correct[row]![col] = true;
-          matchedNames[row]![col] = details.name_lower;
-          displayNames[row]![col] = details.name;
+          matchedNames[row]![col] = canonical.name_lower;
+          displayNames[row]![col] = canonical.name;
           break;
         }
       }

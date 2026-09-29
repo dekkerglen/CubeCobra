@@ -29,6 +29,7 @@ export class SynergyConnectSubmissionDynamoDao extends BaseDynamoDao<
 
   /**
    * GSI1: Query a user's submission history, newest first.
+   * GSI2: Query every player of one puzzle date — see {@link getAllByDate}.
    */
   protected GSIKeys(item: SynergyConnectSubmission): {
     GSI1PK: string | undefined;
@@ -43,8 +44,8 @@ export class SynergyConnectSubmissionDynamoDao extends BaseDynamoDao<
     return {
       GSI1PK: `${this.itemType()}#USER#${item.userId}`,
       GSI1SK: `DATE#${item.date}`,
-      GSI2PK: undefined,
-      GSI2SK: undefined,
+      GSI2PK: `${this.itemType()}#DATE#${item.date}`,
+      GSI2SK: `USER#${item.userId}`,
       GSI3PK: undefined,
       GSI3SK: undefined,
       GSI4PK: undefined,
@@ -103,6 +104,35 @@ export class SynergyConnectSubmissionDynamoDao extends BaseDynamoDao<
     );
 
     return this.query(params);
+  }
+
+  /**
+   * Every player's submission for one puzzle date, via GSI2.
+   * See ManaMatrixSubmissionDynamoDao.getAllByDate for why GSI2 and what it can't see.
+   */
+  public async getAllByDate(date: string): Promise<SynergyConnectSubmission[]> {
+    const all: SynergyConnectSubmission[] = [];
+    let lastKey: Record<string, any> | undefined = undefined;
+
+    do {
+      const params: QueryCommandInput = this.buildQueryParams(
+        {
+          TableName: this.tableName,
+          IndexName: 'GSI2',
+          KeyConditionExpression: 'GSI2PK = :date',
+          ExpressionAttributeValues: {
+            ':date': `${this.itemType()}#DATE#${date}`,
+          },
+        },
+        lastKey,
+      );
+
+      const page = await this.query(params);
+      all.push(...page.items);
+      lastKey = page.lastKey;
+    } while (lastKey);
+
+    return all;
   }
 
   public async createSubmission(document: NewSynergyConnectSubmission): Promise<SynergyConnectSubmission> {
