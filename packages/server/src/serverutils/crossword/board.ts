@@ -72,6 +72,13 @@ export const toBoard = (puzzle: CrosswordPuzzle): CrosswordBoard => ({
 /**
  * Every answer, in clue order. Only ever sent once the solver has finished the
  * puzzle — at which point the answers are no longer a secret.
+ *
+ * `display` is the card the clue actually cited where the clue cited one
+ * (`clueSource`), and the entry's own readable form otherwise. The key is what a
+ * solver reads to find out why they were wrong, so it has to be about the same
+ * card the clue was about: the clue shapes that blank a word out of a card name
+ * pick that card from a pool with the puzzle's rng, and reading `entry.display`
+ * instead answered "____ Lantern" with "Reito Sentinel".
  */
 export const answerKey = (puzzle: CrosswordPuzzle): CrosswordAnswer[] =>
   puzzle.grid.slots.map((slot) => ({
@@ -79,7 +86,7 @@ export const answerKey = (puzzle: CrosswordPuzzle): CrosswordAnswer[] =>
     number: slot.number,
     direction: slot.direction,
     text: slot.entry.text,
-    display: slot.entry.display,
+    display: slot.clueSource ?? slot.entry.display,
     entryClass: slot.entry.entryClass,
   }));
 

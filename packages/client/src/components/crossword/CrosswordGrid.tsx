@@ -24,7 +24,7 @@ export interface CrosswordGridProps {
  * letters in it, so there is nothing here that could put an answer on the screen.
  */
 const CrosswordGrid: React.FC<CrosswordGridProps> = ({ shape, solver, maxWidth = '36rem', className }) => {
-  const { filled, cursor, activeCells, wrong, revealed, numberAt, captureRef } = solver;
+  const { filled, cursor, activeCells, wrong, revealed, numberAt, captureRef, gridRef } = solver;
 
   // Cells are 1fr of a square box, so a letter has to be sized off the box rather
   // than off the page. Measured rather than guessed in vw: the grid shares its row
@@ -55,19 +55,43 @@ const CrosswordGrid: React.FC<CrosswordGridProps> = ({ shape, solver, maxWidth =
       `min(${(47 / shape.width).toFixed(2)}vw, ${((576 / shape.width) * 0.58).toFixed(1)}px)`;
 
   return (
-    <div className={classNames('relative mx-auto w-full max-w-full', className)} style={{ maxWidth }}>
-      {/* Off-screen but focused: it owns the keystrokes and keeps the mobile
-          keyboard open while the grid itself stays styled divs. */}
+    <div ref={gridRef} className={classNames('relative mx-auto w-full max-w-full', className)} style={{ maxWidth }}>
+      {/* Off-screen but focused: it owns the keystrokes and keeps the soft keyboard
+          open while the grid itself stays styled divs. */}
       <input
         ref={captureRef}
         className="absolute left-0 top-0 h-px w-px border-0 p-0 opacity-0"
-        value={CAPTURE_FILLER}
+        type="text"
+        // Uncontrolled on purpose. A controlled value has React rewriting the field
+        // on every render, including mid-composition, which is the well-worn way to
+        // garble Android input — and it evidently does not reset Gboard's predictive
+        // buffer either. The solver wipes the field itself, once per accepted
+        // keystroke, so the reset lands at a moment we picked. See resetCapture.
+        defaultValue={CAPTURE_FILLER}
         onChange={solver.handleCaptureChange}
         onKeyDown={solver.handleKeyDown}
+        onCompositionStart={solver.handleCompositionStart}
+        onCompositionEnd={solver.handleCompositionEnd}
         autoComplete="off"
         autoCorrect="off"
         autoCapitalize="characters"
         spellCheck={false}
+        // Gboard ignores autocomplete and spellcheck when it decides whether to show
+        // its suggestion strip — all four attributes above were already here and the
+        // strip still accumulated the whole puzzle. An email field is the one text
+        // field it reliably offers no word suggestions in, and its layout keeps a
+        // space bar, which this solver needs because space toggles direction. The
+        // cost is an @ key taking a slot and lowercase key faces; letters are
+        // uppercased on the way into the grid regardless.
+        inputMode="email"
+        // No enterKeyHint on purpose, tempting as "next" is now that Enter advances.
+        // Android routes a labelled action key through performEditorAction instead of
+        // dispatching a key event: "next" asks Chrome to move focus to the next form
+        // field, which for a lone input outside a <form> does nothing at all, and
+        // "done"/"go"/"send" are submit actions Gboard follows by closing itself.
+        // Either one costs us the keystroke or the keyboard. Left unset, the return
+        // key stays a plain Enter that arrives as a keydown — which is how the solver
+        // reached toggleDirection before this change, so it is a proven path.
         aria-label="Crossword letter entry"
       />
       <div

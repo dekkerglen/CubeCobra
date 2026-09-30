@@ -6,17 +6,39 @@
  *
  * Reuses MANAMATRIX_API_KEY, the key the other daily rotations already share, so
  * there is no new Parameter Store secret to provision.
+ *
+ * Retried because the biggest grids don't always fill. The server already
+ * exhausts a ladder of theme redraws inside one request, but it is bounded by a
+ * 60-second request timeout, and Sunday's 16x16 still comes back empty about
+ * three times in ten. Each call is an independent set of draws, so asking again
+ * turns that into roughly three in a hundred. The endpoint is idempotent, so a
+ * retry after a *successful* call just returns the stored puzzle.
  */
+const ROTATE_ATTEMPTS = 3;
+
 export const rotateCrossword = async () => {
-  try {
-    const apiKey = process.env.MANAMATRIX_API_KEY;
-    if (!apiKey) {
-      console.error('Crossword rotation skipped: MANAMATRIX_API_KEY is not set');
+  const apiKey = process.env.MANAMATRIX_API_KEY;
+  if (!apiKey) {
+    console.error('Crossword rotation skipped: MANAMATRIX_API_KEY is not set');
+    return;
+  }
+
+  const apiBaseUrl = process.env.API_BASE_URL || 'https://cubecobra.com';
+  const url = `${apiBaseUrl}/tool/api/crossword/rotate`;
+
+  for (let attempt = 1; attempt <= ROTATE_ATTEMPTS; attempt++) {
+    const outcome = await attemptRotation(url, apiKey, attempt);
+    if (outcome === 'done') {
       return;
     }
+  }
 
-    const apiBaseUrl = process.env.API_BASE_URL || 'https://cubecobra.com';
-    const url = `${apiBaseUrl}/tool/api/crossword/rotate`;
+  console.error(`Crossword rotation failed after ${ROTATE_ATTEMPTS} attempts; today has no puzzle.`);
+};
+
+/** 'done' when the day is settled — success, or a failure retrying can't fix. */
+const attemptRotation = async (url: string, apiKey: string, attempt: number): Promise<'done' | 'retry'> => {
+  try {
     const response = await fetch(url, {
       method: 'POST',
       headers: {
@@ -35,19 +57,22 @@ export const rotateCrossword = async () => {
       console.error(
         `Crossword rotation failed: POST ${url} returned ${response.status} (${contentType || 'no content-type'}): ${body}`,
       );
-      return;
+      // Wrong URL, bad key, server down — none of which a redraw fixes.
+      return 'done';
     }
 
     const result = await response.json();
     if (!result?.success) {
-      console.error(`Crossword rotation failed: ${JSON.stringify(result)}`);
-      return;
+      console.error(`Crossword rotation attempt ${attempt} failed: ${JSON.stringify(result)}`);
+      return 'retry';
     }
 
     console.log(
-      `Crossword rotation completed successfully for ${result.puzzle?.date}${result.alreadyExisted ? ' (already existed)' : ''}.`,
+      `Crossword rotation completed successfully for ${result.puzzle?.date} on attempt ${attempt}${result.alreadyExisted ? ' (already existed)' : ''}.`,
     );
+    return 'done';
   } catch (error) {
-    console.error('Crossword rotation error:', error);
+    console.error(`Crossword rotation attempt ${attempt} error:`, error);
+    return 'retry';
   }
 };

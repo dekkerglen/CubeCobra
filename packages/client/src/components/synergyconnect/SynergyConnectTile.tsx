@@ -30,12 +30,17 @@ const SynergyConnectTile: React.FC<SynergyConnectTileProps> = ({
   onClick,
 }) => {
   const solved = solvedGroupIndex !== null;
-  const imageUrl = `/tool/cardimage/${encodeURIComponent(card.oracleId)}`;
+  const cardImage = `/tool/cardimage/${encodeURIComponent(card.oracleId)}`;
+  // The tile renders at ~100 CSS px, where asking the browser to squeeze the
+  // 488px image down reads as aliasing; the 146px one is close to the displayed
+  // size and stays clean. The autocard preview is the opposite case — it is
+  // shown full size to be *read*, so it keeps the large image.
+  const tileImage = `${cardImage}?size=small`;
 
   return (
     <AutocardButton
       type="button"
-      image={imageUrl}
+      image={cardImage}
       // NOT `disabled`: a disabled button fires no mouse events, which would
       // kill the autocard preview on solved cards and after the game ends.
       onClick={() => {
@@ -53,7 +58,7 @@ const SynergyConnectTile: React.FC<SynergyConnectTileProps> = ({
     >
       <img
         // Accepts an oracle id and redirects to the card's default printing.
-        src={imageUrl}
+        src={tileImage}
         alt={card.name}
         loading="lazy"
         className={classNames(

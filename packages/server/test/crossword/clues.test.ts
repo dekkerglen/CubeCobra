@@ -32,7 +32,8 @@ import { CardDetails } from '@utils/datatypes/Card';
 import { CrosswordVocabEntry } from '@utils/datatypes/Crossword';
 import cardCatalog from 'serverutils/cardCatalog';
 import { blankNameBigram, blankNameWord, nameWordClue } from 'serverutils/crossword/clues';
-import { clearVocabularyCache, getVocabulary, nameTokens } from 'serverutils/crossword/vocabulary';
+import { nameTokens } from 'serverutils/crossword/text';
+import { clearVocabularyCache, getVocabulary } from 'serverutils/crossword/vocabulary';
 
 import { createCardDetails } from '../test-utils/data';
 
@@ -107,15 +108,27 @@ describe('blankNameWord', () => {
 describe('nameWordClue', () => {
   it('picks a source with the rng it is handed', () => {
     const bears = entry('BEARS', ['Grizzly Bears', 'Ancient Bears', 'Sleeping Bears']);
-    expect(nameWordClue(bears, fakeRng(0))).toBe('Grizzly ____');
-    expect(nameWordClue(bears, fakeRng(0.9))).toBe('Sleeping ____');
+    expect(nameWordClue(bears, fakeRng(0))).toEqual({ clue: 'Grizzly ____', clueSource: 'Grizzly Bears' });
+    expect(nameWordClue(bears, fakeRng(0.9))).toEqual({ clue: 'Sleeping ____', clueSource: 'Sleeping Bears' });
     // Same rng, same clue: a seed reproduces its puzzle's clues.
-    expect(nameWordClue(bears, fakeRng(0.5))).toBe(nameWordClue(bears, fakeRng(0.5)));
+    expect(nameWordClue(bears, fakeRng(0.5))).toEqual(nameWordClue(bears, fakeRng(0.5)));
+  });
+
+  it('reports the card it cited, not the one the entry is displayed as', () => {
+    // The bug this field exists for: the clue blanks a card the rng chose, while
+    // the answer key used to read `display` and name a different card. REITO clued
+    // as "____ Lantern" came back as "Reito Sentinel".
+    const reito = entry('REITO', ['Reito Sentinel', 'Reito Lantern']);
+    const built = nameWordClue(reito, fakeRng(0.9))!;
+    expect(built.clue).toBe('____ Lantern');
+    expect(built.clueSource).toBe('Reito Lantern');
+    // And the source it names really is the name it blanked.
+    expect(blankNameWord(built.clueSource!, 'REITO')).toBe(built.clue);
   });
 
   it('moves on to the next source when one cannot be blanked', () => {
     const bears = entry('BEARS', ['Sanctuary Bear', 'Grizzly Bears']);
-    expect(nameWordClue(bears, fakeRng(0))).toBe('Grizzly ____');
+    expect(nameWordClue(bears, fakeRng(0))).toEqual({ clue: 'Grizzly ____', clueSource: 'Grizzly Bears' });
   });
 
   it('falls back to the single-source field and gives up when nothing blanks', () => {
@@ -124,7 +137,7 @@ describe('nameWordClue', () => {
         { text: 'BEARS', display: 'Grizzly Bears', entryClass: 'nameWord', sourceCardName: 'Grizzly Bears' },
         fakeRng(0),
       ),
-    ).toBe('Grizzly ____');
+    ).toEqual({ clue: 'Grizzly ____', clueSource: 'Grizzly Bears' });
     expect(nameWordClue({ text: 'BEARS', display: 'BEARS', entryClass: 'nameWord' }, fakeRng(0))).toBeNull();
     expect(nameWordClue(entry('BEARS', ['Sanctuary Bear']), fakeRng(0))).toBeNull();
   });

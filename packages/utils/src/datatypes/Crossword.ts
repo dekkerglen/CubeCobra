@@ -79,6 +79,18 @@ export interface CrosswordFilledSlot extends CrosswordSlot {
    * lab shows it under the clue, the daily game need not show it at all.
    */
   clueFilter?: string;
+  /**
+   * The one card `clue` cites, for the shapes that blank a word out of a card
+   * name or quote a card's rules text. Stored, and shown in the answer key in
+   * place of `entry.display`.
+   *
+   * Those shapes pick their card from a pool with the puzzle's rng, so the card
+   * the clue is about is not the card the entry is displayed as. Without this the
+   * key contradicts the clue it is explaining: REITO clued as "____ Lantern" came
+   * back as "Reito Sentinel". Absent for the shapes that cite no particular card,
+   * where `entry.display` is the right thing to show.
+   */
+  clueSource?: string;
 }
 
 export interface CrosswordPuzzleGrid {

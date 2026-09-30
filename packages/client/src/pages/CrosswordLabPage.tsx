@@ -497,9 +497,11 @@ const CrosswordLabPage: React.FC<CrosswordLabPageProps> = ({ stats }) => {
                   {/* Sized here rather than on the children so the grid, the clue bar
                       above it and the buttons below it all share one width. */}
                   <div className="flex w-full max-w-[34rem] flex-col gap-2 lg:w-[34rem] lg:max-w-none lg:shrink-0">
-                    <CrosswordClueBar activeSlot={solver.activeSlot} />
-
                     <CrosswordGrid shape={grid} solver={solver} maxWidth="34rem" />
+
+                    {/* Below the grid, as on the game page: the lab is where the
+                        solving UI gets tried out, so it has to be the same UI. */}
+                    <CrosswordClueBar solver={solver} />
 
                     <Flexbox direction="row" gap="2" wrap="wrap">
                       <Button color="primary" onClick={check}>
@@ -582,9 +584,13 @@ const CrosswordLabPage: React.FC<CrosswordLabPageProps> = ({ stats }) => {
                             {slot.clueFilter}
                           </Text>
                         )}
-                        {slot.entry.display !== slot.entry.text && (
+                        {/* The card the clue cited, where it cited one, exactly as
+                            the answer key shows it — a clue that blanks a word out
+                            of a name picks its card from a pool, so the entry's own
+                            display name is a different card. */}
+                        {(slot.clueSource ?? slot.entry.display) !== slot.entry.text && (
                           <Text xs className="text-text-secondary italic">
-                            {slot.entry.display}
+                            {slot.clueSource ?? slot.entry.display}
                           </Text>
                         )}
                       </Flexbox>

@@ -1,10 +1,23 @@
 import { isExtraCard } from '@utils/cardutil';
-import Card from '@utils/datatypes/Card';
+import Card, { CardDetails } from '@utils/datatypes/Card';
 import { CrosswordEntryClass, CrosswordVocabEntry } from '@utils/datatypes/Crossword';
 import { makeFilter } from '@utils/filtering/FilterCards';
 import catalog from 'serverutils/cardCatalog';
 import { clearPrintingIndexCache, originalPrintings, setsWithFirstPrinting } from 'serverutils/cardPrintings';
 import { isRecognisableSet } from 'serverutils/setEligibility';
+
+import { CROSSWORD_SYNONYMS } from './synonyms.generated';
+import {
+  acronymOf,
+  blankWordInRulesText,
+  CLUE_SOURCES_PER_KEY,
+  creatureSubtypes,
+  nameTokens,
+  normalize,
+  oracleWords,
+  splitNameParts,
+  STRUCTURAL_WORDS,
+} from './text';
 
 /**
  * The crossword vocabulary, derived from the card catalog. Every entry keeps
@@ -13,26 +26,11 @@ import { isRecognisableSet } from 'serverutils/setEligibility';
  *
  * Built lazily on first use — it's a full pass over the catalog — and cached
  * for the process lifetime.
+ *
+ * How a name or a rules text is cut into words lives in `./text`, shared with the
+ * clue writer: a word only belongs here if a clue can be written about it later,
+ * and that is only true by construction if both sides read the same words.
  */
-
-// Grid entries are letters only. Accents are folded so "Márton" indexes as MARTON.
-export const normalize = (text: string): string =>
-  text
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toUpperCase()
-    .replace(/[^A-Z]/g, '');
-
-/** Initials of every word: "Thrun, the Last Troll" -> "TTLT". */
-export const acronymOf = (name: string): string =>
-  name
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .split(/[\s]+/)
-    .map((word) => word.replace(/[^A-Za-z]/g, ''))
-    .filter((word) => word.length > 0)
-    .map((word) => word[0]!.toUpperCase())
-    .join('');
 
 // Anything outside this range is unusable in a crossword of sane dimensions.
 const MIN_LENGTH = 3;
@@ -76,35 +74,6 @@ const MAX_NAME_WORD_SOURCES = 6;
  * back up to MAX_NAME_WORD_SOURCES, so no word loses sources to the cap.
  */
 const MAX_SOURCES_PER_SET = 2;
-/**
- * English structural words to drop from the name-word pool. Deliberately a
- * short blocklist rather than a stopword corpus: only words whose clue would be
- * unanswerable because they carry no Magic content at all. Entries below
- * MIN_LENGTH can't survive the length filter anyway and are listed for the
- * record.
- *
- * Bigrams (see `nameBigrams`) deliberately do *not* consult this list: "____
- * ____ Terror" for OFTHE is answerable in a way "a word in the name of ..." for
- * OF never was, because the blank shows the solver both words are wanted.
- */
-const NAME_WORD_BLOCKLIST = new Set([
-  'A',
-  'AN',
-  'AND',
-  'FOR',
-  'FROM',
-  'IN',
-  'INTO',
-  'ITS',
-  'OF',
-  'ON',
-  'THAT',
-  'THE',
-  'THIS',
-  'TO',
-  'UPON',
-  'WITH',
-]);
 
 /**
  * Which class wins when two sources produce the same letters, lowest first.
@@ -185,43 +154,6 @@ const addEntry = (
 };
 
 /**
- * Subtypes from a type line: "Legendary Creature — Elf Warrior" -> [Elf, Warrior].
- *
- * Exported because clue generation has to find a card for every creature type
- * this mints; it used to hold a copy, and a copy that drifted would leave a type
- * with no card to cite.
- */
-export const creatureSubtypes = (typeLine: string): string[] => {
-  if (!typeLine.includes('Creature')) {
-    return [];
-  }
-  const parts = typeLine.split('—');
-  if (parts.length < 2) {
-    return [];
-  }
-  return parts[1]!.trim().split(/\s+/).filter(Boolean);
-};
-
-/**
- * A card name cut into alternating words and separators, so that `parts.join('')`
- * is the name again: "Fire // Ice" -> ["Fire", " // ", "Ice"]. Even indices are
- * words, odd indices the whitespace (and split-card slashes) between them.
- *
- * Exported because clue generation has to blank exactly the words this pass
- * counted — a separate regex over there would silently mis-handle split cards and
- * hyphens, and the mismatch would only show up as clues that never render.
- */
-export const splitNameParts = (name: string): string[] => name.split(/([\s/]+)/);
-
-/**
- * The words of a card name, as printed: "Fire // Ice" -> [Fire, Ice],
- * "Never-Ending Torment" -> [Never-Ending, Torment]. Hyphens and apostrophes are
- * inside a word, not between words, so they don't split.
- */
-export const nameTokens = (name: string): string[] =>
-  splitNameParts(name).filter((part, index) => index % 2 === 0 && part.length > 0);
-
-/**
  * Whether a name still says something once `consumedTokens` of its words are
  * blanked out. Blanking the only word of "Duress" leaves "____", which is not a
  * clue; blanking both words of "Lightning Bolt" leaves "____ ____", which is no
@@ -242,11 +174,16 @@ export const isCluableName = (name: string): boolean => leavesCluableRemainder(n
  * The individual words of a card name, normalized: "Fire // Ice" -> [FIRE, ICE],
  * "Llanowar Elves" -> [LLANOWAR, ELVES]. Split cards separate on the slash, so
  * both halves contribute.
+ *
+ * `STRUCTURAL_WORDS` drops the English filler: "____ Terror" for THE is
+ * unanswerable. The list is shared with the clue writer's name redaction, which
+ * declines to redact the same words for the same reason — they say nothing about
+ * a card either way.
  */
 const nameWords = (name: string): string[] =>
   nameTokens(name)
     .map((word) => normalize(word))
-    .filter((word) => word.length >= MIN_LENGTH && !NAME_WORD_BLOCKLIST.has(word));
+    .filter((word) => word.length >= MIN_LENGTH && !STRUCTURAL_WORDS.has(word));
 
 /**
  * Adjacent pairs of words from a card name, concatenated: "Jace, the Mind
@@ -274,36 +211,6 @@ const nameBigrams = (name: string): string[] => {
   }
   return pairs;
 };
-
-/**
- * The words of a card's rules text, normalized, at their printed positions.
- *
- * Positions have to be the ones a reader counting words off the card would get,
- * so the rules here are chosen for that and nothing else:
- *
- * - `{T}`, `{2}{G}` and loyalty symbols go first. A solver counting the words of
- *   "{T}: Add {G}." calls "Add" the first word; a clue saying "second" is wrong.
- * - A token counts as a word if it has a letter *or a digit*, so "3" in
- *   "deals 3 damage" occupies a position — a reader would count it. Numbers
- *   normalize to '' and stay in the array as position holders, which is why the
- *   filter runs before the map.
- * - Splitting is on whitespace only, so punctuation never shifts a position and
- *   intra-word punctuation binds: "aren't" is ARENT, "non-Human" is NONHUMAN.
- *   That is the word a reader would count, which is the whole point — splitting
- *   on non-letters instead (as this pass used to) mints AREN, ISN, NON and SIDED,
- *   entries no clue can honestly place.
- *
- * Exported because clue generation states positions from this same array: a word
- * only becomes vocabulary if this tokenizer finds it, so every stated position
- * holds. A second tokenizer over there is exactly the drift being prevented.
- */
-export const oracleTokens = (oracleText: string): string[] =>
-  oracleText
-    .replace(/\{[^}]*\}/g, ' ')
-    .split(/\s+/)
-    .filter((token) => /[A-Za-z0-9]/.test(token));
-
-export const oracleWords = (oracleText: string): string[] => oracleTokens(oracleText).map(normalize);
 
 interface NameWordSource {
   name: string;
@@ -351,6 +258,71 @@ const noteSource = (stats: Map<string, NameWordStats>, text: string, source: Nam
   } else {
     stats.set(text, { count: 1, sources: [source], reserves: [] });
   }
+};
+
+/**
+ * Which of `words` a clue could actually be written for.
+ *
+ * A rules word is clued one of two ways and there is no third: the synonyms baked
+ * into `synonyms.generated.ts`, or the word blanked out of real rules text. Four
+ * words in the current catalog clear the frequency floor with neither — EFFECTS,
+ * EITHER, OVER, TEAMMATE — and the slot they filled shipped with "6-letter word
+ * from Magic rules text" beside it, a clue that states nothing but the length of
+ * its own answer. This is the gate that keeps them out, and it is the same rule
+ * the two name classes already follow (see `leavesCluableRemainder`): a word
+ * nobody can be asked about is not vocabulary.
+ *
+ * The blank has to be *proved*, not assumed, so this asks the one function that
+ * decides it — `blankWordInRulesText`, which the clue writer calls in turn — over
+ * exactly the cards the clue writer would have to choose between: the same
+ * printing order, under the same `CLUE_SOURCES_PER_KEY` cap. A word proved on a
+ * card the writer never looks at would be admitted and then fall back anyway.
+ *
+ * Cost is bounded by that cap rather than by how common the word is: one more
+ * pass over the catalog's rules text, and at most eight blanking attempts per
+ * unproven word, stopping at the first that works.
+ */
+const clueableRulesWords = (words: Iterable<string>): Set<string> => {
+  const clueable = new Set<string>();
+  const unproven = new Set<string>();
+  for (const word of words) {
+    if ((CROSSWORD_SYNONYMS[word]?.length ?? 0) > 0) {
+      clueable.add(word);
+    } else {
+      unproven.add(word);
+    }
+  }
+  if (unproven.size === 0) {
+    return clueable;
+  }
+
+  // Membership of `unproven` is the length filter as well: every word in it came
+  // from a count that already applied the window.
+  const sources = new Map<string, CardDetails[]>();
+  for (const details of originalPrintings().values()) {
+    if (!details.oracle_text) {
+      continue;
+    }
+    for (const word of new Set(oracleWords(details.oracle_text))) {
+      if (!unproven.has(word)) {
+        continue;
+      }
+      const bucket = sources.get(word);
+      if (!bucket) {
+        sources.set(word, [details]);
+      } else if (bucket.length < CLUE_SOURCES_PER_KEY) {
+        bucket.push(details);
+      }
+    }
+  }
+
+  for (const [word, cards] of sources) {
+    // `some` short-circuits: the question is whether one card works, not how many.
+    if (cards.some((details) => blankWordInRulesText(details.oracle_text ?? '', details.name, word) !== null)) {
+      clueable.add(word);
+    }
+  }
+  return clueable;
 };
 
 const buildVocabulary = (): Vocabulary => {
@@ -519,10 +491,16 @@ const buildVocabulary = (): Vocabulary => {
     );
   }
 
-  // Generic Magic vocabulary from rules text. Only words that appear on enough
-  // distinct cards, so clues can always cite real cards.
-  for (const [word, frequency] of oracleWordCounts) {
-    if (frequency < MIN_ORACLE_WORD_CARDS) {
+  // Generic Magic vocabulary from rules text. Two gates: the word has to appear
+  // on enough distinct cards, so a clue can always cite real ones, and a clue has
+  // to be writable for it at all (see `clueableRulesWords`). The second gate is
+  // checked after the first because it costs a pass over the rules text, and the
+  // frequency floor is what cuts the candidates from tens of thousands to
+  // hundreds.
+  const frequentWords = [...oracleWordCounts].filter(([, frequency]) => frequency >= MIN_ORACLE_WORD_CARDS);
+  const clueable = clueableRulesWords(frequentWords.map(([word]) => word));
+  for (const [word, frequency] of frequentWords) {
+    if (!clueable.has(word)) {
       continue;
     }
     addEntry(seen, { text: word, display: word, entryClass: 'oracleWord', frequency }, priorities);

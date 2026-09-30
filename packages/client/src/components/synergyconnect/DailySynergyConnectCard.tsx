@@ -56,7 +56,7 @@ const DailySynergyConnectCard: React.FC<DailySynergyConnectCardProps> = ({ board
                 <img
                   key={card.oracleId}
                   // Accepts an oracle id and redirects to the card's default printing.
-                  src={`/tool/cardimage/${encodeURIComponent(card.oracleId)}`}
+                  src={`/tool/cardimage/${encodeURIComponent(card.oracleId)}?size=small`}
                   alt={card.name}
                   loading="lazy"
                   className="block aspect-[63/88] w-full rounded-md border border-border object-cover"

@@ -36,7 +36,7 @@ import cardCatalog from 'serverutils/cardCatalog';
 import { normalizeName } from '@utils/cardutil';
 import { clearClueContextCache, ClueContext, clueFor, getClueContext } from 'serverutils/crossword/clues';
 import { CROSSWORD_SYNONYMS } from 'serverutils/crossword/synonyms.generated';
-import { normalize, oracleWords } from 'serverutils/crossword/vocabulary';
+import { blankWordInRulesText, normalize, oracleWords } from 'serverutils/crossword/text';
 import { MIN_RECOGNISABLE_TAG_NAMES } from 'serverutils/tagEligibility';
 
 import { createCardDetails } from '../test-utils/data';
@@ -450,8 +450,8 @@ describe('clueFor, one class at a time', () => {
 
   it('clues a card name by translating a filter that parses and really matches it', () => {
     const { clue, clueFilter } = clueFor(ENTRIES.cardName, fakeRng(0), ctx);
-    expect(clueFilter).toBe('ci=g t:elf');
-    expect(clue).toBe('color identity is exactly Green, type line includes Elf');
+    expect(clueFilter).toBe('ci=g t:druid');
+    expect(clue).toBe('color identity is exactly Green, type line includes Druid');
 
     const { err, filter } = makeFilter(clueFilter!);
     expect(err).toBeFalsy();
@@ -465,27 +465,59 @@ describe('clueFor, one class at a time', () => {
   it('keeps adding attributes until the filter is selective, then stops', () => {
     // ci=g alone matches 34 of this catalog, so a second term was forced on, and
     // the second one got it under the target so there is no third.
-    expect(clueFor(ENTRIES.cardName, fakeRng(0), ctx).clueFilter).toBe('ci=g t:elf');
+    expect(clueFor(ENTRIES.cardName, fakeRng(0), ctx).clueFilter).toBe('ci=g t:druid');
+  });
+
+  it('opens on colour identity whatever else it reaches for', () => {
+    // The one anchored term. Everything after it is drawn per clue, so it is the
+    // only thing a solver can count on being told first.
+    for (const roll of [0, 0.2, 0.4, 0.6, 0.8, 0.99]) {
+      expect(clueFor(ENTRIES.cardName, fakeRng(roll), ctx).clueFilter).toMatch(/^ci=/);
+      expect(clueFor(ENTRIES.cardName, fakeRng(roll), ctx).clue).toMatch(/^color identity is/);
+    }
+  });
+
+  it('reaches for different attributes on different draws', () => {
+    // The whole point of shuffling the candidates: a fixed order meant colour and
+    // type line led every clue in every puzzle and the rest was never reached.
+    // Llanowar Elves can be identified by either of its subtypes, by its set or by
+    // the year, and over a handful of seeds it uses more than one of them.
+    const filters = new Set(
+      ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map(
+        (seed) => clueFor(ENTRIES.cardName, seedrandom(seed), ctx).clueFilter!,
+      ),
+    );
+    expect(filters.size).toBeGreaterThan(1);
+    // Every one of them still parses and still matches the card it clues.
+    for (const clueFilter of filters) {
+      const { err, filter } = makeFilter(clueFilter);
+      expect(err).toBeFalsy();
+      expect(ctx.cards.filter((details) => filter!({ details } as Card)).map((details) => details.name)).toContain(
+        'Llanowar Elves',
+      );
+    }
   });
 
   it('never states how many cards a filter matches, however many that is', () => {
     // The thirty filler cubs are identical in every attribute the builder knows,
     // so the filter runs out of terms with the whole flock still matching. It
     // ships anyway — but the count that decided it stays internal, and the terms
-    // that would have narrowed nothing (t:creature, pow, tou, rarity, set) are
-    // left off rather than padding the clue.
-    const { clue, clueFilter } = clueFor(
-      entry({ text: 'FILLERCUB7', display: 'Filler Cub 7', entryClass: 'cardName', sourceCardName: 'Filler Cub 7' }),
-      fakeRng(0),
-      ctx,
-    );
-    expect(clueFilter).toBe('ci=g t:bear mv=3');
-    expect(clue).toBe('color identity is exactly Green, type line includes Bear, mana value is 3');
-    expect(clue).not.toMatch(/\d+ match/);
-    const { err, filter } = makeFilter(clueFilter!);
-    expect(err).toBeFalsy();
-    // The count the clue refuses to state is real, and large.
-    expect(ctx.cards.filter((details) => filter!({ details } as Card)).length).toBe(FILLER_COUNT);
+    // that would have narrowed nothing are left off rather than padding the clue.
+    const cub = entry({
+      text: 'FILLERCUB7',
+      display: 'Filler Cub 7',
+      entryClass: 'cardName',
+      sourceCardName: 'Filler Cub 7',
+    });
+    for (const seed of ['a', 'b', 'c', 'd']) {
+      const { clue, clueFilter } = clueFor(cub, seedrandom(seed), ctx);
+      expect(clue).not.toMatch(/\d+ match/);
+      const { err, filter } = makeFilter(clueFilter!);
+      expect(err).toBeFalsy();
+      // The count the clue refuses to state is real, and large: whatever the
+      // filter says, it cannot tell one cub from another.
+      expect(ctx.cards.filter((details) => filter!({ details } as Card)).length).toBeGreaterThanOrEqual(FILLER_COUNT);
+    }
   });
 
   it('drops a filter term that repeats a word of the card name', () => {
@@ -519,8 +551,8 @@ describe('clueFor, one class at a time', () => {
 
   it('clues an acronym by describing the card instead of naming it', () => {
     const { clue, clueFilter } = clueFor(ENTRIES.acronym, fakeRng(0), ctx);
-    expect(clue).toBe('color identity is exactly Blue, mana value is 4, as an acronym');
-    expect(clueFilter).toBe('ci=u mv=4');
+    expect(clue).toBe('color identity is exactly Blue, type line includes Planeswalker, as an acronym');
+    expect(clueFilter).toBe('ci=u t:planeswalker');
     // The old format was '"Jace, the Mind Sculptor", as an acronym' — the answer
     // by first letters. Neither the name nor its initials survive.
     expect(clue).not.toContain('Jace');
@@ -840,20 +872,24 @@ describe('oracle tags in filter clues', () => {
         color_identity: ['R'],
       }),
     ]);
-    const { clue, clueFilter } = clueFor(
-      entry({
-        text: 'MIRRORBREAKER',
-        display: 'Mirror Breaker',
-        entryClass: 'legendTitle',
-        sourceCardName: 'Kiki, Mirror Breaker',
-      }),
-      fakeRng(0),
-      context,
-    );
-    expect(clueFilter).not.toContain('mirror-breaker');
-    expect(handsOverAnswer(clue, 'MIRRORBREAKER')).toBe(false);
-    expect(clueFilter).toContain('otag:"copy"');
-    expect(clue).not.toMatch(/^\d+-letter /);
+    const kiki = entry({
+      text: 'MIRRORBREAKER',
+      display: 'Mirror Breaker',
+      entryClass: 'legendTitle',
+      sourceCardName: 'Kiki, Mirror Breaker',
+    });
+
+    // Never, on any draw: the leaking tag is dropped before the shuffle sees it.
+    const filters = new Set<string>();
+    for (const seed of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
+      const { clue, clueFilter } = clueFor(kiki, seedrandom(seed), context);
+      expect(clueFilter).not.toContain('mirror-breaker');
+      expect(handsOverAnswer(clue, 'MIRRORBREAKER')).toBe(false);
+      expect(clue).not.toMatch(/^\d+-letter /);
+      filters.add(clueFilter!);
+    }
+    // And the other tag is still reachable, on the draws that get to it.
+    expect([...filters].some((clueFilter) => clueFilter.includes('otag:"copy"'))).toBe(true);
   });
 
   it('spends its two tag slots on two different families, and stops at two', () => {
@@ -912,6 +948,197 @@ describe('oracle tags in filter clues', () => {
 });
 
 /**
+ * The second shape a card-part answer can be clued in: one line of the card's own
+ * rules text, its name redacted.
+ *
+ * The clue material a player actually wants. "color identity is exactly Blue, mana
+ * value is 4" describes a spreadsheet row; "Whenever ~ deals combat damage to a
+ * player, draw a card." describes a card. Drawn against the filter shape with the
+ * puzzle's rng, so both keep happening.
+ */
+describe('a line of the card own rules text', () => {
+  /** rng values: the first decides the shape, so 0 asks for rules text. */
+  const RULES_FIRST = 0;
+  const FILTER_FIRST = 0.99;
+
+  const publish = (cards: CardDetails[]): ClueContext => {
+    mockCardCatalog.printedCardList = cards;
+    mockCardCatalog._carddict = {};
+    mockCardCatalog.oracleToId = {};
+    clearClueContextCache();
+    return getClueContext();
+  };
+
+  const cardNameEntry = (name: string): CrosswordVocabEntry =>
+    entry({ text: normalize(name), display: name, entryClass: 'cardName', sourceCardName: name });
+
+  it('quotes the line and redacts the name out of it', () => {
+    const context = publish([
+      card({
+        name: 'Shivan Dragon',
+        type: 'Creature — Dragon',
+        cmc: 6,
+        colors: ['R'],
+        color_identity: ['R'],
+        power: '5',
+        toughness: '5',
+        set: 'lea',
+        keywords: ['Flying'],
+        oracle_text: 'Flying\n{R}: Shivan Dragon gets +1/+0 until end of turn.',
+      }),
+    ]);
+    const { clue, clueFilter } = clueFor(cardNameEntry('Shivan Dragon'), fakeRng(RULES_FIRST), context);
+
+    expect(clue).toBe('{R}: ~ gets +1/+0 until end of turn.');
+    // Not a filter clue, so no Scryfall syntax goes with it.
+    expect(clueFilter).toBeUndefined();
+    // "Flying" is the card's other line and is not a clue to anything.
+    expect(clue).not.toBe('Flying');
+    expect(handsOverAnswer(clue, 'SHIVANDRAGON')).toBe(false);
+  });
+
+  it('takes the filter shape instead for a card with nothing quotable', () => {
+    // A vanilla bear has no rules text, and "Flying" on its own is a mechanic
+    // rather than a card, so both fall through to the filter.
+    const context = publish([
+      card({ name: 'Grizzly Bears', type: 'Creature — Bear', cmc: 2, color_identity: ['G'], set: 'lea' }),
+      card({
+        name: 'Wind Drake',
+        type: 'Creature — Bird',
+        cmc: 3,
+        color_identity: ['U'],
+        set: 'lea',
+        keywords: ['Flying'],
+        oracle_text: 'Flying',
+      }),
+    ]);
+    for (const name of ['Grizzly Bears', 'Wind Drake']) {
+      const { clue, clueFilter } = clueFor(cardNameEntry(name), fakeRng(RULES_FIRST), context);
+      expect(clueFilter).toBeDefined();
+      expect(clue).not.toContain('~');
+    }
+  });
+
+  it('leaves the sentence intact instead of redacting inside other words', () => {
+    // The name's structural words are left alone. Redacting "the" out of "Jace,
+    // the Mind Sculptor" also took it out of "then" and "their", and the clue came
+    // out as "~n ~ir opponents" — a mangled sentence rather than a redacted one.
+    const context = publish([
+      card({
+        name: 'Jace, the Mind Sculptor',
+        type: 'Legendary Planeswalker — Jace',
+        cmc: 4,
+        colors: ['U'],
+        color_identity: ['U'],
+        set: 'wwk',
+        oracle_text: 'Target player draws a card, then their opponents each discard a card.',
+      }),
+    ]);
+    const { clue } = clueFor(cardNameEntry('Jace, the Mind Sculptor'), fakeRng(RULES_FIRST), context);
+
+    expect(clue).toBe('Target player draws a card, then their opponents each discard a card.');
+    expect(clue).not.toContain('~');
+  });
+
+  it('redacts a possessive form of a name word', () => {
+    // Magic's templating writes "Urza's", which is the name as a solver reads it.
+    const context = publish([
+      card({
+        name: 'Urza, Lord Protector',
+        type: 'Legendary Creature — Human Artificer',
+        cmc: 3,
+        colors: ['U'],
+        color_identity: ['U'],
+        power: '1',
+        toughness: '4',
+        set: 'bro',
+        oracle_text: "Whenever you cast an artifact spell, Urza's controller draws a card.",
+      }),
+    ]);
+    const { clue } = clueFor(cardNameEntry('Urza, Lord Protector'), fakeRng(RULES_FIRST), context);
+
+    expect(clue.toLowerCase()).not.toContain('urza');
+    expect(clue).toBe('Whenever you cast an artifact spell, ~ controller draws a card.');
+  });
+
+  it('drops the full stop before a suffix, so the suffix reads as a clause', () => {
+    // "Unsummon target creature., abbrev." is not a sentence anybody wrote.
+    const context = publish([
+      card({
+        name: 'Urza, Lord Protector',
+        type: 'Legendary Creature — Human Artificer',
+        cmc: 3,
+        colors: ['U'],
+        color_identity: ['U'],
+        set: 'bro',
+        oracle_text: 'Whenever you cast an artifact spell, that spell costs one less to cast.',
+      }),
+    ]);
+    for (const [entryClass, suffix] of [
+      ['legendName', ', abbrev.'],
+      ['legendTitle', ', title'],
+      ['acronym', ', as an acronym'],
+    ] as const) {
+      const { clue } = clueFor(
+        entry({ text: 'URZA', display: 'Urza', entryClass, sourceCardName: 'Urza, Lord Protector' }),
+        fakeRng(RULES_FIRST),
+        context,
+      );
+      expect(clue).toBe(`Whenever you cast an artifact spell, that spell costs one less to cast${suffix}`);
+      expect(clue).not.toContain('.,');
+    }
+  });
+
+  it('is one shape of two, drawn with the rng rather than replacing the other', () => {
+    const context = publish([
+      card({
+        name: 'Shivan Dragon',
+        type: 'Creature — Dragon',
+        cmc: 6,
+        colors: ['R'],
+        color_identity: ['R'],
+        set: 'lea',
+        keywords: ['Flying'],
+        oracle_text: '{R}: Shivan Dragon gets +1/+0 until end of turn.',
+      }),
+      // Something for the filter to narrow away from, or no term narrows and the
+      // filter shape has nothing to say whatever the rng asks for.
+      ...Array.from({ length: 20 }, (_, index) =>
+        card({ name: `Bulk Goblin ${index}`, type: 'Creature — Goblin', cmc: 1, color_identity: ['R'], set: 'lea' }),
+      ),
+    ]);
+    const dragon = cardNameEntry('Shivan Dragon');
+    expect(clueFor(dragon, fakeRng(RULES_FIRST), context).clueFilter).toBeUndefined();
+    expect(clueFor(dragon, fakeRng(FILTER_FIRST), context).clueFilter).toBeDefined();
+
+    // And over real seeds both shapes turn up.
+    const shapes = new Set(
+      ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'].map((seed) =>
+        clueFor(dragon, seedrandom(seed), context).clueFilter === undefined ? 'rules' : 'filter',
+      ),
+    );
+    expect(shapes).toEqual(new Set(['rules', 'filter']));
+  });
+
+  it('falls through to the filter when the quoted line would leak the answer', () => {
+    // A card that spells its own name out in words the redaction cannot see.
+    const context = publish([
+      card({
+        name: 'Loyal Retainers',
+        type: 'Creature — Human',
+        cmc: 2,
+        colors: ['W'],
+        color_identity: ['W'],
+        set: 'chr',
+        oracle_text: 'A loyal retainer serves loyally: choose one loyal retainers reference here.',
+      }),
+    ]);
+    const { clue } = clueFor(cardNameEntry('Loyal Retainers'), fakeRng(RULES_FIRST), context);
+    expect(handsOverAnswer(clue, 'LOYALRETAINERS')).toBe(false);
+  });
+});
+
+/**
  * The three classes whose answer is part of a card name, and which used to print
  * that name: "Jace, the Mind Sculptor, abbrev." for JACE, "Richard Garfield,
  * Ph.D., title" for PHD, '"Thrun, the Last Troll", as an acronym' for TTLT. All
@@ -922,12 +1149,12 @@ describe('clues for part of a card never contain the card', () => {
 
   it('translates a real filter, with the raw syntax alongside', () => {
     expect(clueFor(ENTRIES.legendName, fakeRng(0), ctx)).toEqual({
-      clue: 'color identity is exactly Blue, mana value is 4, abbrev.',
-      clueFilter: 'ci=u mv=4',
+      clue: 'color identity is exactly Blue, type line includes Planeswalker, abbrev.',
+      clueFilter: 'ci=u t:planeswalker',
     });
     expect(clueFor(ENTRIES.legendTitle, fakeRng(0), ctx)).toEqual({
-      clue: 'color identity is exactly Blue, mana value is 4, title',
-      clueFilter: 'ci=u mv=4',
+      clue: 'color identity is exactly Blue, type line includes Planeswalker, title',
+      clueFilter: 'ci=u t:planeswalker',
     });
   });
 
@@ -1058,6 +1285,95 @@ describe('oracleWord clues are a synonym, or the word blanked out of rules text'
         }
       }
     }
+  });
+});
+
+/**
+ * Which card a clue is about, for the shapes that pick one out of a pool.
+ *
+ * The answer key reads `clueSource` in place of `entry.display`, so a clue that
+ * cites a card has to say which — REITO clued as "____ Lantern" came back in the
+ * key as "Reito Sentinel", a card the clue never mentioned.
+ */
+describe('a clue reports the card it cited', () => {
+  it('blanks a rules word out of the card it names as the source', () => {
+    // A word the thesaurus bake found nothing for, so the clue is the blank and
+    // the blank came off one particular card.
+    const text = ctx.cards
+      .flatMap((details) => oracleWords(details.oracle_text))
+      .find((word) => word.length >= 3 && !CROSSWORD_SYNONYMS[word])!;
+    const { clue, clueSource } = clueFor(
+      entry({ text, display: text, entryClass: 'oracleWord', frequency: 1 }),
+      fakeRng(0),
+      ctx,
+    );
+    expect(clue).toContain('____');
+    expect(clueSource).toBeDefined();
+    // The clue really is that card's own text with the word blanked out of it.
+    const cited = ctx.cards.find((details) => details.name === clueSource)!;
+    expect(blankWordInRulesText(cited.oracle_text, cited.name, text)).toBe(clue);
+  });
+
+  it('quotes the card it names as the source', () => {
+    mockCardCatalog.printedCardList = [
+      card({
+        name: 'Shivan Dragon',
+        type: 'Creature — Dragon',
+        cmc: 6,
+        color_identity: ['R'],
+        set: 'lea',
+        oracle_text: '{R}: Shivan Dragon gets +1/+0 until end of turn.',
+      }),
+    ];
+    clearClueContextCache();
+    const { clue, clueSource } = clueFor(
+      entry({
+        text: 'SHIVANDRAGON',
+        display: 'Shivan Dragon',
+        entryClass: 'cardName',
+        sourceCardName: 'Shivan Dragon',
+      }),
+      fakeRng(0),
+      getClueContext(),
+    );
+    expect(clueSource).toBe('Shivan Dragon');
+    expect(clue).toContain('~');
+  });
+
+  it('says nothing about a source when it cited no particular card', () => {
+    // A creature type, a keyword and a set code are clued *with* a card and
+    // answered by themselves, so the key's own display name is the right thing.
+    for (const entryClass of ['creatureType', 'keyword', 'setCode'] as const) {
+      expect(clueFor(ENTRIES[entryClass], fakeRng(0), ctx).clueSource).toBeUndefined();
+    }
+    // And neither does the clue of last resort, which cites nothing at all.
+    expect(
+      clueFor(entry({ text: 'ZOMBIE', display: 'Zombie', entryClass: 'creatureType' }), fakeRng(0), ctx).clueSource,
+    ).toBeUndefined();
+  });
+
+  it('names a card that really is one of the entry sources, for every citing class', () => {
+    const sources = ['Grizzly Bears', 'Ancient Bears', 'Sleeping Bears', 'Dancing Bears'];
+    const seen = new Set<string>();
+    for (const seed of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
+      const { clue, clueSource } = clueFor(
+        entry({
+          text: 'BEARS',
+          display: 'Grizzly Bears',
+          entryClass: 'nameWord',
+          sourceCardName: 'Grizzly Bears',
+          sourceCardNames: sources,
+        }),
+        seedrandom(seed),
+        ctx,
+      );
+      expect(sources).toContain(clueSource);
+      // The cited card is the one the clue blanked, whichever it was.
+      expect(clue).toBe(clueSource!.replace('Bears', '____'));
+      seen.add(clueSource!);
+    }
+    // The pool is the point: more than one card gets cited across seeds.
+    expect(seen.size).toBeGreaterThan(1);
   });
 });
 

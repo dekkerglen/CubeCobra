@@ -7,13 +7,28 @@ import { describeFilterTerms } from 'serverutils/filterDescription';
 import { clearTagCountsCache, eligibleOracleTagCounts, MIN_RECOGNISABLE_TAG_NAMES } from 'serverutils/tagEligibility';
 
 import { CROSSWORD_SYNONYMS } from './synonyms.generated';
-import { creatureSubtypes, nameTokens, normalize, oracleWords, splitNameParts } from './vocabulary';
+import {
+  BLANK,
+  blankWordInRulesText,
+  CLUE_SOURCES_PER_KEY,
+  creatureSubtypes,
+  nameTokens,
+  normalize,
+  oracleWords,
+  redactedRulesLine,
+  spellsOutAnswer,
+  splitNameParts,
+} from './text';
 
 /**
  * Clue text for crossword entries. Clues are built per puzzle and never stored,
  * so everything here is a pure function of a vocabulary entry, a seeded rng and
  * the catalog-derived `ClueContext`. Nothing in this file may call Math.random:
  * a seed has to reproduce its clues along with its grid.
+ *
+ * How a name or a rules text is cut into words, and whether a word can be blanked
+ * out of a rules text at all, live in `./text` — shared with the vocabulary build,
+ * which uses them to decide what becomes an entry in the first place.
  *
  * Two rules hold for every class:
  *
@@ -24,16 +39,6 @@ import { creatureSubtypes, nameTokens, normalize, oracleWords, splitNameParts } 
  *   matches to decide when it is specific enough, but the count is a tell about
  *   how pinned-down the answer is and stays internal.
  */
-
-/** What the solver fills in. Four underscores read as a blank at any font size. */
-const BLANK = '____';
-
-/**
- * Card names remembered per creature type / keyword / rules word / set. Clues
- * pick from the pool with the puzzle's rng, so a pool is what makes successive
- * puzzles vary; eight is plenty of variety for a bounded index.
- */
-const CLUE_SOURCES_PER_KEY = 8;
 
 /**
  * Match count a narrowing filter aims to get under. Above this the filter hasn't
@@ -104,6 +109,23 @@ const FILTER_CLUE_SUFFIX: Partial<Record<CrosswordEntryClass, string>> = {
 export interface CrosswordClue {
   clue: string;
   clueFilter?: string;
+  /**
+   * The one card this clue cites, for the clue shapes that blank a word out of a
+   * card name or quote a card's rules text.
+   *
+   * Those shapes pick their card from a pool with the puzzle's rng, so the card
+   * the clue is about is not the card the entry happens to be displayed as. Left
+   * unset the answer key reads off `entry.display` instead and disagrees with the
+   * clue: REITO clued as "____ Lantern" came back in the key as "Reito Sentinel",
+   * which is a different card and makes the explanation incoherent. It is not a
+   * rare disagreement either — the pool exists precisely so successive puzzles
+   * cite different cards.
+   *
+   * Unset for the shapes that cite no particular card: a creature type, a keyword
+   * and a set code are clued *with* a card but answered by themselves, and a
+   * translated filter describes the entry's own card.
+   */
+  clueSource?: string;
 }
 
 /**
@@ -193,12 +215,16 @@ const rotated = <T>(items: T[], rng: () => number): T[] => {
  * The card is picked with the puzzle's seeded rng so the same puzzle always
  * shows the same clue while successive puzzles vary. A source that can't be
  * blanked is skipped rather than fatal; null means none of them worked.
+ *
+ * Which card it landed on comes back as `clueSource`, because the answer key has
+ * to name the card the clue blanked rather than the entry's representative one —
+ * see `CrosswordClue.clueSource`.
  */
 export const nameWordClue = (
   entry: CrosswordVocabEntry,
   rng: () => number,
   blank: (cardName: string, text: string) => string | null = blankNameWord,
-): string | null => {
+): CrosswordClue | null => {
   const sources = entry.sourceCardNames ?? (entry.sourceCardName ? [entry.sourceCardName] : []);
   if (sources.length === 0) {
     return null;
@@ -207,7 +233,7 @@ export const nameWordClue = (
   for (const source of rotated(sources, rng)) {
     const clue = blank(source, entry.text);
     if (clue) {
-      return clue;
+      return { clue, clueSource: source };
     }
   }
   return null;
@@ -487,21 +513,50 @@ const tagTerms = (details: CardDetails, ctx: ClueContext, forbidden: Set<string>
 };
 
 /**
- * Filter terms for a card, most characteristic first.
- *
- * Colour identity and the creature's own subtype are what a solver recognises a
- * card by, so they lead; mana value is the cheapest big cut after that. The tail
- * — power/toughness, rarity, first-printed year, set — only gets used by cards
- * whose front half doesn't narrow enough, which in practice means vanilla spells.
- *
- * The list is walked in order and stops as soon as the filter is narrow enough,
- * so a term's position is the whole of its priority: anything near the end is
- * never reached. That is why the set code had to move up, and why oracle tags go
- * near the front rather than being appended.
+ * A list in a seeded random order. Fisher-Yates, so every permutation is reachable
+ * and the same rng state always produces the same one.
  */
-const filterTerms = (details: CardDetails, ctx: ClueContext, forbidden: Set<string>): string[] => {
+const shuffled = <T>(items: T[], rng: () => number): T[] => {
+  const out = [...items];
+  for (let index = out.length - 1; index > 0; index--) {
+    const swap = Math.floor(rng() * (index + 1));
+    [out[index], out[swap]] = [out[swap]!, out[index]!];
+  }
+  return out;
+};
+
+/**
+ * Filter terms for a card: colour identity, then everything else in a seeded
+ * random order.
+ *
+ * `narrowingFilter` walks this list and stops as soon as the filter is specific
+ * enough, so a term's position *is* its priority — anything near the end is never
+ * reached. Ranking the attributes once and for all therefore meant every clue in
+ * every puzzle led with the same two or three things: colour identity, type line,
+ * mana value. Adding better attributes (keywords, then oracle tags) widened the
+ * pool without touching that, because the new ones landed in fixed positions too.
+ * So the order is drawn per clue instead, from the puzzle's rng, and the same card
+ * is described by its set in one puzzle and by its keywords in the next.
+ *
+ * Two things stay fixed, and only two:
+ *
+ * - Colour identity opens. It is the one attribute every Magic player reads first,
+ *   it is true of every card including the colourless ones, and it cuts the
+ *   catalog by an order of magnitude for free. A clue that opens somewhere else
+ *   reads as though it started mid-sentence.
+ * - The statistical tail — mana value, power, toughness, rarity — is drawn *after*
+ *   the descriptive attributes, not among them. "power is 3, toughness is 3" is a
+ *   stat block rather than a description, and letting it compete for the second
+ *   slot is exactly the complaint this change answers. It still gets used, because
+ *   plenty of cards have nothing else that narrows.
+ *
+ * Everything else — the creature's subtypes, its card types, its keywords, its
+ * oracle tags, the set it premiered in, the year — competes on equal footing.
+ */
+const filterTerms = (details: CardDetails, ctx: ClueContext, forbidden: Set<string>, rng: () => number): string[] => {
   const { types, subtypes } = typeWords(details.type);
-  const terms = [`ci=${colorIdentityValue(details.color_identity ?? [])}`];
+  const descriptive: string[] = [];
+  const statistical: string[] = [];
 
   // A planeswalker's subtype is a character's name, so it is never a fair clue
   // term. Usually it repeats the card's own name and the name-word guard drops
@@ -511,50 +566,49 @@ const filterTerms = (details: CardDetails, ctx: ClueContext, forbidden: Set<stri
   // subtype costs these cards some precision and stops them lying.
   if (!types.some((type) => type.toLowerCase() === 'planeswalker')) {
     for (const subtype of subtypes) {
-      terms.push(`t:${filterValue(subtype)}`);
+      descriptive.push(`t:${filterValue(subtype)}`);
     }
-  }
-  // What the card does, ahead of its keywords and its stats — a clue saying
-  // Keywords first: an evergreen keyword is something every player knows, where
-  // most tags are Tagger vocabulary. Putting tags ahead of these collapsed
-  // keyword usage by 88% and cost Serra Angel "flying, vigilance" in exchange
-  // for "french-vanilla, namesake-spell" — a plainly worse clue.
-  for (const keyword of details.keywords ?? []) {
-    if (/^[A-Za-z][A-Za-z' -]*$/.test(keyword)) {
-      terms.push(`keyword:${filterValue(keyword)}`);
-    }
-  }
-  // "oracle tag is "counterspell"" describes a card the way a player would,
-  // where "color identity is exactly Blue, mana value is 2" describes a
-  // spreadsheet row. Most instants and sorceries have no keywords at all, so
-  // without these they had nothing between colour and cost. (Printed mana cost
-  // would belong around here too, but CardDetails has no mana_cost field — it
-  // needs the parsed-cost representation and is left for a follow-up.)
-  terms.push(...tagTerms(details, ctx, forbidden));
-  if (Number.isInteger(details.cmc)) {
-    terms.push(`mv=${details.cmc}`);
   }
   for (const type of types) {
-    terms.push(`t:${filterValue(type)}`);
+    descriptive.push(`t:${filterValue(type)}`);
   }
-  // Where it premiered is more interesting than its stat line, so it comes
-  // before them rather than last where it was never reached.
+  // An evergreen keyword is something every player knows, where most oracle tags
+  // are Tagger vocabulary — but both say what the card *does*, which colour and
+  // mana value never will, so both belong in the descriptive draw.
+  for (const keyword of details.keywords ?? []) {
+    if (/^[A-Za-z][A-Za-z' -]*$/.test(keyword)) {
+      descriptive.push(`keyword:${filterValue(keyword)}`);
+    }
+  }
+  descriptive.push(...tagTerms(details, ctx, forbidden));
+  // Where and when it premiered. Both used to sit in the tail and go unreached,
+  // and "first printed in Dominaria (DOM)" is one of the things the clues were
+  // missing most.
   if (details.set && /^[A-Za-z0-9]+$/.test(details.set)) {
-    terms.push(`s:${details.set.toLowerCase()}`);
-  }
-  if (details.power && /^\d+$/.test(details.power)) {
-    terms.push(`pow=${details.power}`);
-  }
-  if (details.toughness && /^\d+$/.test(details.toughness)) {
-    terms.push(`tou=${details.toughness}`);
-  }
-  if (details.rarity && FILTERABLE_RARITIES.has(details.rarity.toLowerCase())) {
-    terms.push(`r:${details.rarity.toLowerCase()}`);
+    descriptive.push(`s:${details.set.toLowerCase()}`);
   }
   if (Number.isInteger(details.firstPrintYear)) {
-    terms.push(`fy=${details.firstPrintYear}`);
+    descriptive.push(`fy=${details.firstPrintYear}`);
   }
-  return terms;
+
+  if (Number.isInteger(details.cmc)) {
+    statistical.push(`mv=${details.cmc}`);
+  }
+  if (details.power && /^\d+$/.test(details.power)) {
+    statistical.push(`pow=${details.power}`);
+  }
+  if (details.toughness && /^\d+$/.test(details.toughness)) {
+    statistical.push(`tou=${details.toughness}`);
+  }
+  if (details.rarity && FILTERABLE_RARITIES.has(details.rarity.toLowerCase())) {
+    statistical.push(`r:${details.rarity.toLowerCase()}`);
+  }
+
+  return [
+    `ci=${colorIdentityValue(details.color_identity ?? [])}`,
+    ...shuffled(descriptive, rng),
+    ...shuffled(statistical, rng),
+  ];
 };
 
 /** The value side of a term: `t:"human wizard"` -> HUMANWIZARD, `mv=1` -> ''. */
@@ -584,7 +638,12 @@ const termValueText = (term: string): string => {
  * the name: the oracle tag `counterspell` spells the cardName answer for
  * Counterspell, and `mirror-breaker` would spell a legendTitle.
  */
-const narrowingFilter = (details: CardDetails, ctx: ClueContext, entryText: string): string[] | null => {
+const narrowingFilter = (
+  details: CardDetails,
+  ctx: ClueContext,
+  entryText: string,
+  rng: () => number,
+): string[] | null => {
   // Letterless tokens — the "40,000" of "Warhammer 40,000" — normalize to nothing,
   // and so does the value of `mv=3`. Dropping them keeps a number from matching a
   // number and taking a good term out of every clue for the card.
@@ -594,7 +653,7 @@ const narrowingFilter = (details: CardDetails, ctx: ClueContext, entryText: stri
   const accepted: string[] = [];
   let matches = ctx.cards;
 
-  for (const term of filterTerms(details, ctx, forbidden)) {
+  for (const term of filterTerms(details, ctx, forbidden, rng)) {
     const value = termValueText(term);
     if (value && forbidden.has(value)) {
       continue;
@@ -623,58 +682,97 @@ const narrowingFilter = (details: CardDetails, ctx: ClueContext, entryText: stri
   return accepted.length === 0 ? null : accepted;
 };
 
-/** Consecutive words of a clue, letters only: used to read an answer back out of it. */
-const clueWords = (text: string): string[] => text.split(/\s+/).map(normalize).filter(Boolean);
+/**
+ * Whether a solver could read the answer straight off this clue, spelled out by
+ * consecutive words or as their initials.
+ *
+ * `spellsOutAnswer` is the rule; this is the entry's view of it. The card's own
+ * name is checked as well as the entry text, since naming the card gives away
+ * every class derived from it.
+ *
+ * The rule lives in `./text` because the vocabulary build applies it too: a rules
+ * word whose only blankable sentence gives the word away is not vocabulary, and
+ * `blankWordInRulesText` refuses it on the build's behalf and the writer's alike.
+ */
+const revealsEntry = (text: string, entry: CrosswordVocabEntry): boolean =>
+  spellsOutAnswer(text, entry.text, normalize(entry.sourceCardName ?? entry.display));
 
 /**
- * Whether a solver could read the answer straight off this clue.
+ * A quoted line of the card's own rules text, name redacted: "Whenever ~ deals
+ * combat damage to a player, draw a card."
  *
- * Two ways that happens, and both are checked over every run of consecutive
- * words rather than over the whole string, because a substring test on letters
- * alone fires on accidents ("with" contains ITH, the legend Ith):
+ * The best clue material the catalog has, and for a long time the clues didn't use
+ * it: a translated filter says what a card *costs* and what colour it *is*, while
+ * its rules text says what it does, in Magic's own words. `redactedRulesLine`
+ * decides what is quotable and does the redacting, shared with the rules-word
+ * clues so there is one anonymiser rather than two.
  *
- * - the words spell the answer — MINDSCULPTOR out of "... Mind Sculptor ...";
- * - their initials spell it, which is how an acronym clue leaks: TTLT out of any
- *   four consecutive words starting T, T, L, T.
- *
- * The card's own name is checked as well as the entry text, since naming the card
- * gives away every class derived from it.
+ * The suffix classes get the line with any full stop dropped, because ", abbrev."
+ * reads as a clause of the sentence and "Unsummon target creature., abbrev." does
+ * not. Null for vanilla creatures, most lands, and anything whose text is a bare
+ * keyword — those take the filter shape instead.
  */
-const revealsEntry = (text: string, entry: CrosswordVocabEntry): boolean => {
-  const words = clueWords(text);
-  const spelled = new Set([entry.text, normalize(entry.sourceCardName ?? entry.display)].filter(Boolean));
-  const longest = Math.max(...[...spelled].map((target) => target.length));
-  for (let start = 0; start < words.length; start++) {
-    let run = '';
-    let initials = '';
-    for (let end = start; end < words.length; end++) {
-      run += words[end]!;
-      initials += words[end]![0]!;
-      if (spelled.has(run) || initials === entry.text) {
-        return true;
-      }
-      // Both only grow from here, so once each is past its target the window is
-      // spent and the next start is the only thing left to try.
-      if (run.length >= longest && initials.length >= entry.text.length) {
-        break;
-      }
-    }
+const rulesLineClue = (details: CardDetails, suffix: string): CrosswordClue | null => {
+  const line = redactedRulesLine(details.oracle_text ?? '', details.name);
+  if (!line) {
+    return null;
   }
-  return false;
+  // The quoted card, for the answer key: this shape is about one specific card's
+  // text, and for a legend's name or initials that card is not what `display` says.
+  return { clue: suffix ? `${line.replace(/\.$/, '')}${suffix}` : line, clueSource: details.name };
 };
 
 /**
- * The clue for an answer that is part of one card: a plain-English reading of a
- * filter that narrows to it, plus the suffix for which part is wanted.
+ * A plain-English reading of a filter that narrows to the card, plus the suffix
+ * for which part of it is wanted.
  *
  * "color identity is exactly Blue, mana value is 4, type line includes
  * Planeswalker, abbrev." — which asks for JACE without printing it, where the
  * specified format ("Jace, the Mind Sculptor, abbrev.") answered itself.
  *
- * Returns null, and so falls through to the clue of last resort, when the card
- * isn't in the context or when everything available would give the answer away.
+ * Which attributes it reaches for varies per clue; see `filterTerms`.
  */
-const filterClue = (entry: CrosswordVocabEntry, ctx: ClueContext, suffix: string): CrosswordClue | null => {
+const filterClue = (
+  details: CardDetails,
+  entry: CrosswordVocabEntry,
+  ctx: ClueContext,
+  suffix: string,
+  rng: () => number,
+): CrosswordClue | null => {
+  const terms = narrowingFilter(details, ctx, entry.text, rng);
+  if (!terms) {
+    return null;
+  }
+  return { clue: `${describeFilterTerms(terms)}${suffix}`, clueFilter: terms.join(' ') };
+};
+
+/**
+ * How often the rules-text shape is tried before the filter shape. Not a
+ * replacement for it: half and half keeps the mix varied, lets the same card clue
+ * differently in different puzzles, and means a grid full of vanilla creatures
+ * still gets clued at all.
+ */
+const RULES_LINE_SHARE = 0.5;
+
+/**
+ * The clue for an answer that is part of one card, in whichever shape the puzzle's
+ * rng draws: a line of the card's own rules text, or a filter that narrows to it.
+ *
+ * Both shapes are checked for leaks here rather than only in `clueFor`, so a shape
+ * that would have given the answer away falls through to the other one instead of
+ * all the way to the clue of last resort.
+ *
+ * The type line is the third and last shape, for a card that narrowed to nothing
+ * and has no quotable text: it still describes the card without naming it, which
+ * is a clue, just not a filter. Returns null — and so falls through to the clue of
+ * last resort — only when the card isn't in the context at all.
+ */
+const cardPartClue = (
+  entry: CrosswordVocabEntry,
+  ctx: ClueContext,
+  suffix: string,
+  rng: () => number,
+): CrosswordClue | null => {
   const name = entry.sourceCardName ?? entry.display;
   // `normalizeName`, not toLowerCase: `name_lower` is accent-folded, so a plain
   // lowercase of "Gríma, Saruman's Footman" misses the card and every clue for
@@ -684,16 +782,18 @@ const filterClue = (entry: CrosswordVocabEntry, ctx: ClueContext, suffix: string
     return null;
   }
   const details = ctx.cards[index]!;
-  const terms = narrowingFilter(details, ctx, entry.text);
-  if (terms) {
-    const described = `${describeFilterTerms(terms)}${suffix}`;
-    if (!revealsEntry(described, entry)) {
-      return { clue: described, clueFilter: terms.join(' ') };
+
+  const rules = (): CrosswordClue | null => rulesLineClue(details, suffix);
+  const filter = (): CrosswordClue | null => filterClue(details, entry, ctx, suffix, rng);
+  const shapes = rng() < RULES_LINE_SHARE ? [rules, filter] : [filter, rules];
+
+  for (const shape of shapes) {
+    const built = shape();
+    if (built && !revealsEntry(built.clue, entry)) {
+      return built;
     }
   }
-  // Nothing about the card narrowed, or what did would have leaked the answer.
-  // The type line still describes the card without naming it, which is a clue,
-  // just not a filter. (If that leaks too, `clueFor`'s guard catches it.)
+
   const fallback = Number.isInteger(details.cmc) ? `${details.type}, mana value ${details.cmc}` : details.type;
   return fallback ? { clue: `${fallback}${suffix}` } : null;
 };
@@ -710,6 +810,9 @@ const setCodeClue = (entry: CrosswordVocabEntry, ctx: ClueContext, rng: () => nu
   }
   return entry.setReleasedAt ? `set released on ${entry.setReleasedAt}` : null;
 };
+
+/** A clue citing no particular card, or null when the class had nothing to say. */
+const plain = (clue: string | null): CrosswordClue | null => (clue ? { clue } : null);
 
 /**
  * a synonym pair, or failing that the word blanked out of real rules text.
@@ -736,130 +839,49 @@ const synonymClue = (entry: CrosswordVocabEntry, rng: () => number): string | nu
   return joined.charAt(0).toUpperCase() + joined.slice(1);
 };
 
-/** Reminder text is parenthesised rules restatement — it would give the game away. */
-const stripReminders = (text: string): string => text.replace(/\([^)]*\)/g, ' ');
-
 /**
- * The card's own name, blanked out of its rules text — except where a name word
- * IS the answer. "Searing Blaze" says "Searing" in its text, and blanking that
- * along with the name left SEARING with nothing to be clued from; 37 rules words
- * were unclueable for exactly this reason.
- */
-const anonymiseCardName = (text: string, cardName: string, answer: string): string => {
-  let out = text.split(cardName).join('~');
-  splitNameParts(cardName).forEach((part, index) => {
-    if (index % 2 !== 0 || part.length < 3 || normalize(part) === answer) {
-      return;
-    }
-    out = out.split(part).join('~');
-  });
-  return out;
-};
-
-/** Long enough for most Magic sentences, short enough to still read as a clue. */
-const MAX_BLANK_CLUE_LENGTH = 200;
-
-/** Words kept either side of the answer when a sentence is too long to quote whole. */
-const EXCERPT_WORDS_EACH_SIDE = 6;
-
-/**
- * A window of a sentence around the answer, elided at whichever end was cut.
+ * The word blanked out of one of the cards whose rules text uses it.
  *
- * A clue doesn't have to be a whole sentence. Magic's longer rules text runs
- * well past what reads as a clue, and discarding those cards outright left 32
- * rules words with no clue at all.
+ * Which card is the only decision made here; whether a given card can supply the
+ * clue is `blankWordInRulesText`'s, in `./text`, because the vocabulary build asks
+ * the same question of the same cards before admitting the word at all. Two
+ * implementations would mean the build could admit a word this then fails to clue.
+ *
+ * Returns null only when every card in the pool failed, which the build has
+ * already ruled out for anything that reached the vocabulary.
  */
-const excerptAround = (sentence: string, answer: string): string | null => {
-  const parts = splitNameParts(sentence);
-  const target = parts.findIndex((part, index) => index % 2 === 0 && normalize(part) === answer);
-  if (target < 0) {
-    return null;
-  }
-  // Parts alternate word/separator, so a word's neighbours are two apart.
-  const first = Math.max(0, target - EXCERPT_WORDS_EACH_SIDE * 2);
-  const last = Math.min(parts.length - 1, target + EXCERPT_WORDS_EACH_SIDE * 2);
-  const body = parts
-    .slice(first, last + 1)
-    .join('')
-    .trim();
-  if (!body) {
-    return null;
-  }
-  return `${first > 0 ? '…' : ''}${body}${last < parts.length - 1 ? '…' : ''}`;
-};
-
-const blankInRulesText = (entry: CrosswordVocabEntry, ctx: ClueContext, rng: () => number): string | null => {
+const blankInRulesText = (entry: CrosswordVocabEntry, ctx: ClueContext, rng: () => number): CrosswordClue | null => {
   // Every source, not `usableSources`: that filter exists to stop a clue naming
   // a card whose name gives the answer away, and here the name is removed.
   for (const index of rotated(ctx.byOracleWord.get(entry.text) ?? [], rng)) {
     const details = ctx.cards[index]!;
-    const anonymised = anonymiseCardName(stripReminders(details.oracle_text ?? ''), details.name, entry.text);
-
-    // Shortest sentence that actually contains the word — long ones read as a
-    // wall of rules rather than a clue.
-    const sentence = anonymised
-      .split(/(?<=[.!?])\s+|\n+/)
-      .map((part) => part.trim())
-      .filter((part) => part.length > 0 && oracleWords(part).includes(entry.text))
-      .sort((a, b) => a.length - b.length)[0];
-    if (!sentence) {
-      continue;
+    const blanked = blankWordInRulesText(details.oracle_text ?? '', details.name, entry.text);
+    if (blanked) {
+      return { clue: blanked, clueSource: details.name };
     }
-    const quoted = sentence.length > MAX_BLANK_CLUE_LENGTH ? excerptAround(sentence, entry.text) : sentence;
-    if (!quoted) {
-      continue;
-    }
-
-    // Blank on normalized words, not a raw regex. The grid holds YOURE while
-    // the card prints "you're", and \bYOURE\b can never match that — which is
-    // why every folded contraction came out unclueable. Punctuation around the
-    // word is kept so the sentence still reads: "creature." -> "____."
-    let matched = false;
-    const blanked = splitNameParts(quoted)
-      .map((part, index) => {
-        if (index % 2 !== 0 || normalize(part) !== entry.text) {
-          return part;
-        }
-        matched = true;
-        const lead = /^[^A-Za-z]*/.exec(part)![0];
-        const trail = /[^A-Za-z]*$/.exec(part)![0];
-        return `${lead}${BLANK}${trail}`;
-      })
-      .join('');
-    if (!matched) {
-      continue;
-    }
-    // The same rule the name clues follow: blanking has to leave something
-    // behind. A sentence that is only the word collapses to a bare "____",
-    // which is not a clue.
-    const context = blanked
-      .split(BLANK)
-      .join(' ')
-      .replace(/[^A-Za-z]+/g, '');
-    if (context.length < 3) {
-      continue;
-    }
-    return blanked;
   }
   return null;
 };
 
-const oracleWordClue = (entry: CrosswordVocabEntry, ctx: ClueContext, rng: () => number): string | null =>
-  synonymClue(entry, rng) ?? blankInRulesText(entry, ctx, rng);
-
-/** A clue with no filter behind it, or null when the class had nothing to say. */
-const plain = (clue: string | null): CrosswordClue | null => (clue ? { clue } : null);
+/**
+ * The two ways a rules word is clued, and there is no third — which is why the
+ * vocabulary build admits a rules word only if one of them will work for it (see
+ * `clueableRulesWords` in vocabulary.ts). This never returns null for a word that
+ * came out of the vocabulary.
+ */
+const oracleWordClue = (entry: CrosswordVocabEntry, ctx: ClueContext, rng: () => number): CrosswordClue | null =>
+  plain(synonymClue(entry, rng)) ?? blankInRulesText(entry, ctx, rng);
 
 const buildClue = (entry: CrosswordVocabEntry, rng: () => number, ctx: ClueContext): CrosswordClue | null => {
   const suffix = FILTER_CLUE_SUFFIX[entry.entryClass];
   if (suffix !== undefined) {
-    return filterClue(entry, ctx, suffix);
+    return cardPartClue(entry, ctx, suffix, rng);
   }
   switch (entry.entryClass) {
     case 'nameWord':
-      return plain(nameWordClue(entry, rng));
+      return nameWordClue(entry, rng);
     case 'nameBigram':
-      return plain(nameWordClue(entry, rng, blankNameBigram));
+      return nameWordClue(entry, rng, blankNameBigram);
     case 'creatureType': {
       const name = pickCardName(ctx.byCreatureType.get(entry.text) ?? [], entry.text, ctx, rng);
       return plain(name && `a type of ${name}`);
@@ -871,7 +893,7 @@ const buildClue = (entry: CrosswordVocabEntry, rng: () => number, ctx: ClueConte
     case 'setCode':
       return plain(setCodeClue(entry, ctx, rng));
     case 'oracleWord':
-      return plain(oracleWordClue(entry, ctx, rng));
+      return oracleWordClue(entry, ctx, rng);
     default:
       return null;
   }
@@ -883,12 +905,21 @@ const buildClue = (entry: CrosswordVocabEntry, rng: () => number, ctx: ClueConte
  * didn't work out — or whose clue would have given the answer away — falls back to
  * naming what kind of answer it wants.
  *
+ * That fallback is a safety net and nothing a solver should want to meet: a slot
+ * clued "6-letter word from Magic rules text" cannot be solved. It is unreachable
+ * for a rules word, because the vocabulary build refuses a rules word it can't
+ * clue (see `clueableRulesWords` in vocabulary.ts) rather than anything downstream
+ * checking for one. The net stays for the classes that have no such gate, where it
+ * is rare: sweeping the whole vocabulary leaves it on about forty creature types
+ * and four keywords, all of them types whose every card is named after them, plus
+ * one acronym and one name word.
+ *
  * The leak check is here, over every class, rather than only where a leak was
  * expected. Two real ones turn up in the catalog that no per-class rule would have
  * caught: the nameWord BFM blanks to "____ (Big Furry Monster)", whose initials are
  * the answer, and the creature type MASTICORE has no card to cite that isn't named
- * after it ("a type of Razormane Masticore"). Both now fall back, because a bland
- * clue beats a free one. It costs about one entry in ten thousand.
+ * after it ("a type of Razormane Masticore"). Both fall back, because a bland clue
+ * beats a free one.
  *
  * `rng` is the puzzle's seeded generator and is consumed in call order, so clues
  * must be generated for the same slots in the same order to reproduce. The
@@ -902,7 +933,9 @@ export const clueFor = (
   const built = buildClue(entry, rng, ctx);
   const clue = built?.clue.trim();
   if (!clue || revealsEntry(clue, entry)) {
+    // No clue, so nothing cited: the fallback must not carry a `clueSource` the
+    // answer key would then show beside an answer the clue never mentioned.
     return { clue: `${entry.text.length}-letter ${CLASS_NOUN[entry.entryClass] ?? 'answer'}` };
   }
-  return built!.clueFilter ? { clue, clueFilter: built!.clueFilter } : { clue };
+  return { ...built!, clue };
 };

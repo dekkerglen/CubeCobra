@@ -113,7 +113,9 @@ describe('DailyGameCard', () => {
 
     expect(screen.getByText(/Synergy Connect/)).toBeInTheDocument();
     expect(screen.getAllByRole('img')).toHaveLength(16);
-    expect(screen.getByAltText('Card 0')).toHaveAttribute('src', '/tool/cardimage/oracle-0');
+    // Small source on purpose: these tiles render near 140px, and making the
+    // browser squeeze the 488px image down is what made them look aliased.
+    expect(screen.getByAltText('Card 0')).toHaveAttribute('src', '/tool/cardimage/oracle-0?size=small');
   });
 
   it('acknowledges a viewer who has played everything, with a way back to each game', () => {

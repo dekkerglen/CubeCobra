@@ -134,6 +134,9 @@ export const storableGrid = (grid: CrosswordPuzzleGrid): CrosswordPuzzleGrid => 
     number: slot.number,
     nonsense: slot.nonsense,
     clue: slot.clue,
+    // Kept, unlike `clueFilter`: the answer key reads it, and re-deriving it
+    // later would need the rng draw that produced the clue.
+    clueSource: slot.clueSource,
     entry: {
       text: slot.entry.text,
       display: slot.entry.display,

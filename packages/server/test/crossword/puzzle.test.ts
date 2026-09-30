@@ -123,6 +123,17 @@ describe('storableGrid', () => {
     expect(storableGrid(source).slots[0]).not.toHaveProperty('clueFilter');
   });
 
+  // Unlike the filter, the cited card is kept: the answer key shows it in place of
+  // the entry's display name, and it cannot be re-derived later without the rng
+  // draw that chose it.
+  it('keeps the card the clue cited', () => {
+    const source = fullGrid();
+    source.slots[0]!.clue = '____ Burglar';
+    source.slots[0]!.clueSource = 'Cat Burglar';
+
+    expect(storableGrid(source).slots[0]!.clueSource).toBe('Cat Burglar');
+  });
+
   it('copies the rows so the stored grid is not an alias of the generated one', () => {
     const source = fullGrid();
     const stored = storableGrid(source);

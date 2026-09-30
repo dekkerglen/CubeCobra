@@ -31,14 +31,14 @@ jest.mock('serverutils/cardCatalog', () => ({
 import { CardDetails } from '@utils/datatypes/Card';
 import SetInfo from '@utils/datatypes/SetInfo';
 import cardCatalog from 'serverutils/cardCatalog';
+import { clearClueContextCache, clueFor, getClueContext } from 'serverutils/crossword/clues';
+import { CROSSWORD_SYNONYMS } from 'serverutils/crossword/synonyms.generated';
+import { blankWordInRulesText, nameTokens, normalize, oracleWords } from 'serverutils/crossword/text';
 import {
   clearVocabularyCache,
   getVocabulary,
   isCluableName,
   leavesCluableRemainder,
-  nameTokens,
-  normalize,
-  oracleWords,
 } from 'serverutils/crossword/vocabulary';
 
 import { createCardDetails } from '../test-utils/data';
@@ -475,6 +475,84 @@ describe('crossword vocabulary: oracleWord tokenizing', () => {
     for (const junk of ['ISN', 'WEREN', 'HASN', 'DON', 'CAN', 'WASN', 'AREN', 'SLINGING', 'LIVING']) {
       expect(texts).not.toContain(junk);
     }
+  });
+});
+
+/**
+ * The gate that keeps unclueable rules words out of the pool at all.
+ *
+ * A rules word is clued one of two ways and there is no third: baked synonyms, or
+ * the word blanked out of real rules text. A word with neither used to clear the
+ * frequency floor anyway and fill a slot labelled "5-letter word from Magic rules
+ * text" — a clue that states nothing but the length of its own answer, which no
+ * solver can work with. It is the same rule the two name classes already follow
+ * (see `leavesCluableRemainder`), applied to the third source of entries.
+ */
+describe('crossword vocabulary: a rules word nobody can be asked about', () => {
+  /** Enough cards to clear MIN_ORACLE_WORD_CARDS, all with the same rules text. */
+  const withText = (prefix: string, text: string, count = 10): CardDetails[] =>
+    Array.from({ length: count }, (_, index) => card(`${prefix} ${index}`, { oracle_text: text }));
+
+  const rulesWords = (): string[] =>
+    getVocabulary()
+      .entries.filter((entry) => entry.entryClass === 'oracleWord')
+      .map((entry) => entry.text);
+
+  beforeEach(() => {
+    mockCardCatalog.setdict = {};
+    mockCardCatalog.printedCardList = [
+      // ZILCH is the whole of its cards' rules text, so blanking it leaves a bare
+      // "____" with nothing around it to reason from.
+      ...withText('Bare Card', 'Zilch'),
+      // FLUMPH is just as obscure and just as absent from the thesaurus, but it
+      // has real rules text around it — so the difference under test is the blank,
+      // not the word.
+      ...withText('Wordy Card', 'Destroy target flumph.'),
+    ];
+    clearVocabularyCache();
+    clearClueContextCache();
+  });
+
+  afterEach(() => {
+    clearVocabularyCache();
+    clearClueContextCache();
+  });
+
+  it('starts from two words the thesaurus bake found nothing for', () => {
+    // The premise. If a later bake ever learns these words the test would pass for
+    // the wrong reason, so it says so out loud rather than assuming.
+    expect(CROSSWORD_SYNONYMS['ZILCH']).toBeUndefined();
+    expect(CROSSWORD_SYNONYMS['FLUMPH']).toBeUndefined();
+  });
+
+  it('admits the word its rules text can be blanked around', () => {
+    expect(blankWordInRulesText('Destroy target flumph.', 'Wordy Card 0', 'FLUMPH')).toBe('Destroy target ____.');
+    expect(rulesWords()).toContain('FLUMPH');
+  });
+
+  it('never admits the word whose only sentence is the word', () => {
+    expect(blankWordInRulesText('Zilch', 'Bare Card 0', 'ZILCH')).toBeNull();
+    // Frequent enough to clear the floor, and dropped anyway.
+    expect(new Set(mockCardCatalog.printedCardList.map((details) => details.name_lower)).size).toBe(20);
+    expect(rulesWords()).not.toContain('ZILCH');
+  });
+
+  it('leaves no rules word in the pool that clueFor can only state the length of', () => {
+    // The consequence, end to end, and the reason the gate is at build time: the
+    // clue writer has no fallback for a rules word that is worth shipping, so the
+    // pool has to be the thing that is clean.
+    const ctx = getClueContext();
+    const words = rulesWords();
+    expect(words.length).toBeGreaterThan(0);
+    for (const text of words) {
+      const { clue } = clueFor({ text, display: text, entryClass: 'oracleWord' }, () => 0, ctx);
+      expect(clue).not.toMatch(/^\d+-letter word from Magic rules text$/);
+    }
+
+    // And ZILCH is exactly what that fallback would have said, had it been let in.
+    expect(clueFor({ text: 'ZILCH', display: 'ZILCH', entryClass: 'oracleWord' }, () => 0, ctx).clue).toBe(
+      '5-letter word from Magic rules text',
+    );
   });
 });
 

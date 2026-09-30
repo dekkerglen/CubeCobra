@@ -60,13 +60,23 @@ export const getCardImageHandler = async (req: Request, res: Response) => {
 
     // if id is not a scryfall ID, error
     const card = cardFromId(id);
-    if (card.error || !card.image_normal) {
+
+    // `?size=small` opts into Scryfall's 146px image. The default 488px one is
+    // right for anything card-sized, but the daily-game boards render tiles at
+    // ~100 CSS px, and asking the browser for a 2.4x downscale is what made
+    // those look aliased — past roughly 2x, Chrome stops filtering well. A
+    // source near the displayed size is the fix; opt-in so every other caller
+    // keeps the full-quality image.
+    const wantsSmall = req.query?.size === 'small';
+    const image = wantsSmall ? (card.image_small ?? card.image_normal) : card.image_normal;
+
+    if (card.error || !image) {
       res.setHeader('Cache-Control', 'public, max-age=604800'); // Cache for 1 month
       return redirect(req, res, '/content/invalidcard.png');
     }
 
     res.setHeader('Cache-Control', 'public, max-age=604800'); // Cache for 1 month
-    return redirect(req, res, card.image_normal);
+    return redirect(req, res, image);
   } catch {
     res.setHeader('Cache-Control', 'public, max-age=604800'); // Cache for 1 year
     return redirect(req, res, '/content/invalidcard.png');

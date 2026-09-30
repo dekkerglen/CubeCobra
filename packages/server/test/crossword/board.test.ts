@@ -254,4 +254,19 @@ describe('answerKey', () => {
       entryClass: 'nameWord',
     });
   });
+
+  it('names the card the clue cited, not the one the entry is displayed as', () => {
+    // A name-word clue blanks whichever of the entry's source cards the puzzle's
+    // rng chose, and the entry's `display` is a different one of them. Reading
+    // `display` here answered "____ Lantern" with "Reito Sentinel" — a card the
+    // clue never mentioned, which makes the key's explanation incoherent.
+    const puzzle = createPuzzle();
+    puzzle.grid.slots[0]!.entry = entry('REITO', 'Reito Sentinel');
+    puzzle.grid.slots[0]!.clue = '____ Lantern';
+    puzzle.grid.slots[0]!.clueSource = 'Reito Lantern';
+
+    expect(answerKey(puzzle)[0]!.display).toBe('Reito Lantern');
+    // Everything that cites no particular card is unaffected.
+    expect(answerKey(puzzle)[1]!.display).toBe('Plural of is');
+  });
 });

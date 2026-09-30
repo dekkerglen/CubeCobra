@@ -318,9 +318,12 @@ const CrosswordPage: React.FC<CrosswordPageProps> = ({
                           they stack, so the grid never shrinks to share a row. */}
                       <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:px-3">
                         <div className="flex w-full min-w-0 flex-col gap-1 lg:shrink-0" style={{ maxWidth: '36rem' }}>
-                          <CrosswordClueBar activeSlot={solver.activeSlot} />
-
                           <CrosswordGrid shape={board} solver={solver} maxWidth={GRID_MAX_WIDTH} />
+
+                          {/* Under the grid, not over it: that is the strip a phone
+                              leaves above the keyboard, and the pair of them is what
+                              the soft-keyboard fit scrolls into view. */}
+                          <CrosswordClueBar solver={solver} />
 
                           {message && (
                             <Text sm className="px-1 text-center text-text-secondary">
