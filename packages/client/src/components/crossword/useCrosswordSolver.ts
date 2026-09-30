@@ -495,9 +495,18 @@ export const useCrosswordSolver = ({
       resetCapture();
       if (letter) {
         typeLetter(letter.toUpperCase());
+        return;
+      }
+      // Space has to be caught here too. Gboard delivers it as input rather than a
+      // keydown, so the `key === ' '` branch above never sees it on Android — and
+      // because the filler IS a space, stripping the filler leaves a lone space that
+      // looked like nothing at all and got dropped. That is what stopped space
+      // switching direction on a phone while it kept working on a desktop.
+      if (typed.includes(' ')) {
+        toggleDirection();
       }
     },
-    [backspace, resetCapture, typeLetter],
+    [backspace, resetCapture, toggleDirection, typeLetter],
   );
 
   const handleCompositionStart = useCallback(() => {
