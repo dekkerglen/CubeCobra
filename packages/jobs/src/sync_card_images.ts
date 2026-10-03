@@ -92,14 +92,17 @@ async function fetchImage(url: string): Promise<Buffer | null> {
   return Buffer.from(await res.arrayBuffer());
 }
 
-async function upsertCard(id: string): Promise<number> {
+async function upsertCard(entry: ManifestEntry): Promise<number> {
+  const { id } = entry;
   const a = id[0];
   const b = id[1];
+  // Scryfall's cache-buster is image_updated_at in Unix seconds; without it their CDN can serve a stale render.
+  const version = Math.floor(new Date(entry.image_updated_at!).getTime() / 1000);
   let written = 0;
   for (const face of ['front', 'back'] as const) {
     const suffix = face === 'back' ? '_back' : '';
     for (const v of VARIANTS) {
-      const src = `${CDN}/${v.cdnDir}/${face}/${a}/${b}/${id}.${v.ext}`;
+      const src = `${CDN}/${v.cdnDir}/${face}/${a}/${b}/${id}.${v.ext}?${version}`;
       let buf: Buffer | null;
       try {
         buf = await fetchImage(src);
@@ -158,7 +161,7 @@ export async function syncCardImages(): Promise<{ cardsUpserted: number; imagesU
   let totalWritten = 0;
   let processed = 0;
   await runPool(changed, CONCURRENCY, async (entry) => {
-    totalWritten += await upsertCard(entry.id);
+    totalWritten += await upsertCard(entry);
     processed += 1;
     if (processed % 200 === 0) console.log(`  ${processed}/${changed.length} cards, ${totalWritten} files`);
   });
