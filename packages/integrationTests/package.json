@@ -29,7 +29,7 @@
     "cross-env": "^7.0.3"
   },
   "devDependencies": {
-    "@faker-js/faker": "^10.2.0",
+    "@faker-js/faker": "^10.5.0",
     "@types/node": "^20.11.0",
     "node-fetch": "^2.7.0",
     "tsx": "^4.7.0",
