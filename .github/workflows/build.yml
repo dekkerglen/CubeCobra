@@ -1,0 +1,57 @@
+name: Build
+
+# One workflow for every package build. The `plan` job works out which packages a push
+# or pull request affects, including packages that bundle code from another package
+# (declared in dynamic-monorepo.config.json), and only those are built.
+on:
+  pull_request:
+  push:
+    branches:
+      - 'master'
+
+permissions:
+  contents: read
+
+jobs:
+  plan:
+    if: github.repository == 'dekkerglen/CubeCobra'
+    runs-on: ubuntu-latest
+    outputs:
+      packages: ${{ steps.plan.outputs.build }}
+      has_packages: ${{ steps.plan.outputs.has_build }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Continuous-Actions/dynamic-monorepo@v1
+        id: plan
+
+  build:
+    name: Build ${{ matrix.package }}
+    needs: plan
+    if: needs.plan.outputs.has_packages == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        package: ${{ fromJSON(needs.plan.outputs.packages) }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Enable Corepack
+        run: corepack enable
+
+      - name: Install dependencies
+        run: npm install
+
+      # The server build serves the client bundle, so build the client first (as before).
+      - name: Build client
+        if: matrix.package == '@cubecobra/server'
+        run: npm run build --workspace=packages/client
+
+      - name: Build ${{ matrix.package }}
+        run: npm run build --workspace=${{ matrix.package }}

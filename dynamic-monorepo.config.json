@@ -1,0 +1,20 @@
+{
+  "$schema": "https://raw.githubusercontent.com/Continuous-Actions/dynamic-monorepo/v1/schema.json",
+  "infer": ["node"],
+  "projects": {
+    "@cubecobra/utils": { "path": "packages/utils", "targets": [] },
+    "@cubecobra/jobs": { "path": "packages/jobs", "targets": [] },
+    "@cubecobra/annotator": { "path": "packages/annotator", "targets": [] },
+    "@cubecobra/archetype-annotater": { "path": "packages/archetypeAnnotater", "targets": [] },
+    "@cubecobra/integration-tests": { "path": "packages/integrationTests", "targets": [] },
+    "@cubecobra/scripts": { "path": "packages/scripts", "targets": [] },
+
+    "@cubecobra/cdk": { "path": "packages/cdk", "targets": ["build"] },
+    "@cubecobra/client": { "path": "packages/client", "targets": ["build"], "dependsOn": ["@cubecobra/utils"] },
+    "@cubecobra/recommender-service": { "path": "packages/recommenderService", "targets": ["build"], "dependsOn": ["@cubecobra/utils"] },
+    "@cubecobra/server": { "path": "packages/server", "targets": ["build"], "dependsOn": ["@cubecobra/utils"] },
+    "@cubecobra/bot-deckbuild-lambda": { "path": "packages/botDeckbuildLambda", "targets": ["build"], "dependsOn": ["@cubecobra/server", "@cubecobra/utils"] },
+    "@cube-cobra/card-update-monitor-lambda": { "path": "packages/cardUpdateMonitorLambda", "targets": ["build"], "dependsOn": ["@cubecobra/server", "@cubecobra/utils"] },
+    "@cubecobra/daily-jobs-lambda": { "path": "packages/dailyJobsLambda", "targets": ["build"], "dependsOn": ["@cubecobra/server", "@cubecobra/utils"] }
+  }
+}
