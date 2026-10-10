@@ -306,6 +306,48 @@ export class ChangelogDynamoDao extends BaseDynamoDao<Changelog, UnhydratedChang
   }
 
   /**
+   * Pages a cube's changelogs newest-first using an opaque cursor safe to hand to public callers.
+   * Returns undefined if the cursor is malformed.
+   */
+  public async queryByCubePage(
+    cubeId: string,
+    cursor: string | undefined,
+    limit: number,
+  ): Promise<{ items: Changelog[]; cursor?: string } | undefined> {
+    let startKey: Record<string, any> | undefined;
+    if (cursor) {
+      startKey = this.decodeCursor(cubeId, cursor);
+      if (!startKey) return undefined;
+    }
+
+    const result = await this.queryByCube(cubeId, startKey, limit);
+    return { items: result.items, cursor: this.encodeCursor(result.lastKey) };
+  }
+
+  private encodeCursor(lastKey: Record<string, any> | undefined): string | undefined {
+    if (!lastKey) return undefined;
+    const id = String(lastKey.PK).slice(this.typedKey('').length);
+    const date = Number(String(lastKey.GSI1SK).slice('DATE#'.length));
+    return Buffer.from(JSON.stringify({ id, date })).toString('base64url');
+  }
+
+  // Rebuilds the start key from the requested cube so a cursor can't page another cube's index.
+  private decodeCursor(cubeId: string, cursor: string): Record<string, any> | undefined {
+    try {
+      const { id, date } = JSON.parse(Buffer.from(cursor, 'base64url').toString('utf8'));
+      if (typeof id !== 'string' || !id || typeof date !== 'number' || !Number.isFinite(date)) return undefined;
+      return {
+        PK: this.typedKey(id),
+        SK: this.itemType(),
+        GSI1PK: `${this.itemType()}#CUBE#${cubeId}`,
+        GSI1SK: `DATE#${date}`,
+      };
+    } catch {
+      return undefined;
+    }
+  }
+
+  /**
    * Queries changelogs by cube with changelog data loaded from S3.
    */
   public async queryByCubeWithData(

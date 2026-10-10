@@ -58,6 +58,7 @@ interface TocEntry {
 const tocSections: TocEntry[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'cube-json', label: 'Cube JSON Export' },
+  { id: 'cube-history', label: 'Cube History' },
   { id: 'cube-downloads', label: 'Cube File Downloads' },
   { id: 'deck-downloads', label: 'Deck File Downloads' },
   { id: 'draft-bots', label: 'Draft Bots & ML' },
@@ -271,6 +272,10 @@ const ApiDocsPage: React.FC = () => (
                   or before this date. Response includes a <InlineCode>changelog</InlineCode> field with the resolved
                   changelog ID and date.
                 </Param>
+                <Param name="changelog" type="query">
+                  Changelog ID. Returns the cube as it was immediately after that changelog. Takes precedence over{' '}
+                  <InlineCode>date</InlineCode>. Returns 404 if the changelog does not belong to this cube.
+                </Param>
               </>
             }
             responseExample={`{
@@ -305,8 +310,8 @@ const ApiDocsPage: React.FC = () => (
               <Text sm className="text-text-secondary">
                 Cards are sorted by the default sort (Color Category → Types-Multicolor → Mana Value → Alphabetical).
                 All boards are always returned regardless of cube visibility settings. The{' '}
-                <InlineCode>changelog</InlineCode> field is only present when the <InlineCode>date</InlineCode> query
-                parameter is used.
+                <InlineCode>changelog</InlineCode> field is only present when the <InlineCode>date</InlineCode> or{' '}
+                <InlineCode>changelog</InlineCode> query parameter is used.
               </Text>
             }
           />
@@ -327,6 +332,10 @@ const ApiDocsPage: React.FC = () => (
                   Unix timestamp in milliseconds. When provided, returns card names from the cube at the nearest
                   changelog at or before this date.
                 </Param>
+                <Param name="changelog" type="query">
+                  Changelog ID. Returns card names from the cube as it was immediately after that changelog. Takes
+                  precedence over <InlineCode>date</InlineCode>.
+                </Param>
               </>
             }
             responseExample={`Black Lotus
@@ -334,6 +343,88 @@ Ancestral Recall
 Time Walk
 Mox Sapphire
 ...`}
+          />
+        </Flexbox>
+      </CollapsibleSection>
+
+      {/* ─── Cube History ───────────────────────────────────────── */}
+      <CollapsibleSection id="cube-history" title="Cube History">
+        <Flexbox direction="col" gap="4">
+          <Text md className="text-text-secondary">
+            Every change to a cube&#39;s card list is recorded as a changelog entry. List a cube&#39;s entries, fetch
+            the changes in a single entry, or pass an entry ID as the <InlineCode>changelog</InlineCode> parameter to{' '}
+            <InlineCode>/cube/api/cubeJSON/:id</InlineCode> to get the whole cube at that point in time.
+          </Text>
+
+          <Endpoint
+            method="GET"
+            path="/cube/api/history/:id"
+            returnType="CubeHistory"
+            description="Lists a cube&#39;s changelog entries, newest first."
+            cors
+            rateLimit="100 req/min"
+            responseFormat="application/json"
+            params={
+              <>
+                <Param name=":id" type="path" required>
+                  Cube UUID or short ID
+                </Param>
+                <Param name="limit" type="query">
+                  Entries per page. Defaults to 50, maximum 100.
+                </Param>
+                <Param name="cursor" type="query">
+                  The <InlineCode>nextCursor</InlineCode> value from a previous response, to fetch the next page.
+                </Param>
+              </>
+            }
+            responseExample={`{
+  "cubeId": "5f2b...",
+  "changelogs": [
+    { "id": "abc123", "date": 1710460800000, "cubeVersion": 42 },
+    ...
+  ],
+  "nextCursor": "eyJpZCI6..."
+}`}
+            notes={
+              <Text sm className="text-text-secondary">
+                Keep requesting pages until <InlineCode>nextCursor</InlineCode> is absent; the final page may be empty.{' '}
+                <InlineCode>cubeVersion</InlineCode> may be missing on older entries.
+              </Text>
+            }
+          />
+
+          <Endpoint
+            method="GET"
+            path="/cube/api/changelog/:id/:changelogId"
+            returnType="Changelog"
+            description="Returns the changes recorded in a single changelog entry, grouped by board."
+            cors
+            rateLimit="100 req/min"
+            responseFormat="application/json"
+            params={
+              <>
+                <Param name=":id" type="path" required>
+                  Cube UUID or short ID
+                </Param>
+                <Param name=":changelogId" type="path" required>
+                  Changelog ID from <InlineCode>/cube/api/history/:id</InlineCode>
+                </Param>
+              </>
+            }
+            responseExample={`{
+  "id": "abc123",
+  "cubeId": "5f2b...",
+  "date": 1710460800000,
+  "cubeVersion": 42,
+  "changes": {
+    "mainboard": {
+      "adds": [ { "cardID": "...", "details": { "name": "Black Lotus", ... } } ],
+      "removes": [ { "index": 12, "oldCard": { ... } } ],
+      "swaps": [ { "index": 3, "card": { ... }, "oldCard": { ... } } ],
+      "edits": [ { "index": 7, "newCard": { ... }, "oldCard": { ... } } ]
+    }
+  }
+}`}
           />
         </Flexbox>
       </CollapsibleSection>
@@ -848,6 +939,8 @@ Time Walk`}
           <ul className="list-disc list-inside space-y-1 text-text-secondary ml-4 text-sm">
             <li>
               CORS-enabled endpoints (<InlineCode>/cube/api/cubeJSON/:id</InlineCode>,{' '}
+              <InlineCode>/cube/api/history/:id</InlineCode>,{' '}
+              <InlineCode>/cube/api/changelog/:id/:changelogId</InlineCode>,{' '}
               <InlineCode>/public/cube/history/:id</InlineCode>) are rate limited to{' '}
               <span className="font-semibold">100 requests per minute</span> per IP address.
             </li>
