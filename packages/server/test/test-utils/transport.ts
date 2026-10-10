@@ -48,6 +48,12 @@ export const createMockResponse = (locals: Record<string, any>): MockResponse =>
       this.writeEnabled = false;
       return this as MockResponse;
     },
+    contentType(): MockResponse {
+      return this as MockResponse;
+    },
+    set(): MockResponse {
+      return this as MockResponse;
+    },
     locals,
   };
 
