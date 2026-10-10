@@ -33,6 +33,7 @@ interface CubeCompareNavbarProps {
   onlyA: number[];
   onlyB: number[];
   pitDate?: string;
+  pitCardCount?: number;
 }
 
 const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
@@ -48,6 +49,7 @@ const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
   onlyA,
   onlyB,
   pitDate,
+  pitCardCount,
 }) => {
   const [expanded, toggleExpanded] = useToggle(false);
   const handleOpenCollapse = useCallback(
@@ -107,22 +109,42 @@ const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
       <Flexbox direction="col" gap="2" className="py-2 px-4">
         <Flexbox direction="col" gap="2">
           <Text semibold lg>
-            Compare cubes
+            {pitDate ? 'Compare cube over time' : 'Compare cubes'}
           </Text>
-          <Flexbox direction="row" gap="2" wrap="wrap" justify="start">
-            <Text semibold md className="text-muted">
-              Base Cube:
-            </Text>{' '}
-            <Link href={`/cube/list/${cubeAID}`}>
-              {cubeA.name} ({cubeA.cardCount} cards)
-            </Link>{' '}
-            <Text semibold md className="text-muted">
-              Comparison Cube:
-            </Text>{' '}
-            <Link href={`/cube/list/${cubeBID}`}>
-              {cubeB.name} ({cubeB.cardCount} cards)
-            </Link>
-          </Flexbox>
+          {pitDate ? (
+            <Flexbox direction="row" gap="2" wrap="wrap" justify="start">
+              <Text semibold md className="text-muted">
+                Cube:
+              </Text>
+              <Link href={`/cube/list/${cubeAID}`}>{cubeA.name}</Link>
+              <Text semibold md className="text-muted">
+                Base:
+              </Text>
+              <Text md>
+                {pitDate}
+                {pitCardCount !== undefined && ` (${pitCardCount} cards)`}
+              </Text>
+              <Text semibold md className="text-muted">
+                Comparison:
+              </Text>
+              <Text md>Present ({cubeB.cardCount} cards)</Text>
+            </Flexbox>
+          ) : (
+            <Flexbox direction="row" gap="2" wrap="wrap" justify="start">
+              <Text semibold md className="text-muted">
+                Base Cube:
+              </Text>{' '}
+              <Link href={`/cube/list/${cubeAID}`}>
+                {cubeA.name} ({cubeA.cardCount} cards)
+              </Link>{' '}
+              <Text semibold md className="text-muted">
+                Comparison Cube:
+              </Text>{' '}
+              <Link href={`/cube/list/${cubeBID}`}>
+                {cubeB.name} ({cubeB.cardCount} cards)
+              </Link>
+            </Flexbox>
+          )}
           <Text semibold sm>
             Note: Custom cards are compared based on name
           </Text>

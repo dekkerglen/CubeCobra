@@ -146,6 +146,7 @@ export const pitCompareHandler = async (req: Request, res: Response) => {
         both: inBothIndices,
         cards: strippedCards,
         pitDate: dateStr,
+        pitCardCount: pitCards.mainboard.length,
         changelogId,
       },
       {

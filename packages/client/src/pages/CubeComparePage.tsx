@@ -26,10 +26,20 @@ interface CubeComparePageProps {
   onlyB: number[];
   both: number[];
   pitDate?: string;
+  pitCardCount?: number;
   changelogId?: string;
 }
 
-const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cubeB, onlyA, onlyB, both, pitDate }) => {
+const CubeComparePageInner: React.FC<CubeComparePageProps> = ({
+  cards,
+  cube,
+  cubeB,
+  onlyA,
+  onlyB,
+  both,
+  pitDate,
+  pitCardCount,
+}) => {
   const [openCollapse, setOpenCollapse] = useState<string | null>(Query.get('f') ? 'filter' : null);
   const { cardFilter } = useContext(FilterContext);
 
@@ -71,10 +81,18 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cub
         onlyA={filteredOnlyA}
         onlyB={filteredOnlyB}
         pitDate={pitDate}
+        pitCardCount={pitCardCount}
       />
       <DynamicFlash />
       <ErrorBoundary>
-        <CompareView cards={filteredCards} onlyA={onlyA} onlyB={onlyB} both={both} />
+        <CompareView
+          cards={filteredCards}
+          onlyA={onlyA}
+          onlyB={onlyB}
+          both={both}
+          baseLabel={pitDate}
+          comparisonLabel={pitDate ? 'Present' : undefined}
+        />
       </ErrorBoundary>
     </>
   );
@@ -88,6 +106,7 @@ const CubeComparePage: React.FC<CubeComparePageProps> = ({
   onlyB,
   both,
   pitDate,
+  pitCardCount,
   changelogId: _changelogId,
 }) => {
   // Server strips card.details to keep response size down; rehydrate from the
@@ -118,6 +137,7 @@ const CubeComparePage: React.FC<CubeComparePageProps> = ({
                 onlyB={onlyB}
                 both={both}
                 pitDate={pitDate}
+                pitCardCount={pitCardCount}
               />
             </CubeContextProvider>
           </ChangesContextProvider>
