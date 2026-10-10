@@ -26,6 +26,7 @@ interface CubeComparePageProps {
   onlyB: number[];
   both: number[];
   pitDate?: string;
+  pitTimestamp?: number;
   pitCardCount?: number;
   changelogId?: string;
 }
@@ -38,7 +39,9 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({
   onlyB,
   both,
   pitDate,
+  pitTimestamp,
   pitCardCount,
+  changelogId,
 }) => {
   const [openCollapse, setOpenCollapse] = useState<string | null>(Query.get('f') ? 'filter' : null);
   const { cardFilter } = useContext(FilterContext);
@@ -81,7 +84,9 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({
         onlyA={filteredOnlyA}
         onlyB={filteredOnlyB}
         pitDate={pitDate}
+        pitTimestamp={pitTimestamp}
         pitCardCount={pitCardCount}
+        changelogId={changelogId}
       />
       <DynamicFlash />
       <ErrorBoundary>
@@ -106,8 +111,9 @@ const CubeComparePage: React.FC<CubeComparePageProps> = ({
   onlyB,
   both,
   pitDate,
+  pitTimestamp,
   pitCardCount,
-  changelogId: _changelogId,
+  changelogId,
 }) => {
   // Server strips card.details to keep response size down; rehydrate from the
   // shared IndexedDB cache and fall back to a placeholder while a card's real
@@ -137,7 +143,9 @@ const CubeComparePage: React.FC<CubeComparePageProps> = ({
                 onlyB={onlyB}
                 both={both}
                 pitDate={pitDate}
+                pitTimestamp={pitTimestamp}
                 pitCardCount={pitCardCount}
+                changelogId={changelogId}
               />
             </CubeContextProvider>
           </ChangesContextProvider>

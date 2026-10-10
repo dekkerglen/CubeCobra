@@ -33,7 +33,9 @@ interface CubeCompareNavbarProps {
   onlyA: number[];
   onlyB: number[];
   pitDate?: string;
+  pitTimestamp?: number;
   pitCardCount?: number;
+  changelogId?: string;
 }
 
 const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
@@ -49,7 +51,9 @@ const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
   onlyA,
   onlyB,
   pitDate,
+  pitTimestamp,
   pitCardCount,
+  changelogId,
 }) => {
   const [expanded, toggleExpanded] = useToggle(false);
   const handleOpenCollapse = useCallback(
@@ -120,10 +124,13 @@ const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
               <Text semibold md className="text-muted">
                 Base:
               </Text>
-              <Text md>
+              <Link
+                href={changelogId ? `/cube/changelog/${cubeAID}/${changelogId}/list` : undefined}
+                title={pitTimestamp ? new Date(pitTimestamp).toLocaleString() : undefined}
+              >
                 {pitDate}
                 {pitCardCount !== undefined && ` (${pitCardCount} cards)`}
-              </Text>
+              </Link>
               <Text semibold md className="text-muted">
                 Comparison:
               </Text>
