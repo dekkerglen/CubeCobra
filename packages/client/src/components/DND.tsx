@@ -1,16 +1,18 @@
 import React from 'react';
 
 import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
-import { SortableContext, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
+import { SortableContext, SortingStrategy, useSortable, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 
 interface SortableItemProps {
   id: string;
   children: (props: { handleProps: any }) => React.ReactNode;
   className?: string;
+  /** Caller-supplied role for the wrapper; skips dnd-kit's button attributes so drag stays on the handle's listeners. */
+  role?: string;
 }
 
-export const SortableItem: React.FC<SortableItemProps> = ({ id, children, className }) => {
+export const SortableItem: React.FC<SortableItemProps> = ({ id, children, className, role }) => {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: id });
 
   const style: React.CSSProperties = {
@@ -19,7 +21,7 @@ export const SortableItem: React.FC<SortableItemProps> = ({ id, children, classN
   };
 
   return (
-    <div ref={setNodeRef} {...attributes} style={style} className={className}>
+    <div ref={setNodeRef} {...(role ? { role } : attributes)} style={style} className={className}>
       {children({ handleProps: listeners })}
     </div>
   );
@@ -29,9 +31,15 @@ interface SortableListProps {
   items: string[];
   children: React.ReactNode;
   onDragEnd: (event: any) => void;
+  strategy?: SortingStrategy;
 }
 
-export const SortableList: React.FC<SortableListProps> = ({ items, children, onDragEnd }) => {
+export const SortableList: React.FC<SortableListProps> = ({
+  items,
+  children,
+  onDragEnd,
+  strategy = verticalListSortingStrategy,
+}) => {
   // Only use pointer sensors (mouse/touch), not keyboard sensor which would capture space key
   const sensors = useSensors(
     useSensor(MouseSensor, {
@@ -49,7 +57,7 @@ export const SortableList: React.FC<SortableListProps> = ({ items, children, onD
 
   return (
     <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-      <SortableContext strategy={verticalListSortingStrategy} items={items}>
+      <SortableContext strategy={strategy} items={items}>
         {children}
       </SortableContext>
     </DndContext>

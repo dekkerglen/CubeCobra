@@ -1,6 +1,7 @@
 import { DefaultPrintingPreference } from '@utils/datatypes/Card';
 import { CUBE_VISIBILITY, PRICE_VISIBILITY } from '@utils/datatypes/Cube';
 import Cube from '@utils/datatypes/Cube';
+import { LEGACY_PRIMER_TAB_TITLE } from '@utils/primerTabs';
 import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { getRandomNewCubeImage } from 'serverutils/imageutil';
@@ -61,7 +62,7 @@ export const quickAddHandler = async (req: Request, res: Response) => {
       owner: user,
       imageName: imageName,
       image: image,
-      description: 'This is a brand new cube!',
+      primerTabs: [{ title: LEGACY_PRIMER_TAB_TITLE, content: 'This is a brand new cube!' }],
       date: now,
       dateCreated: now,
       dateLastUpdated: now,

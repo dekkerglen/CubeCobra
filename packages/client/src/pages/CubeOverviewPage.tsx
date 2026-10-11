@@ -27,10 +27,10 @@ const CubeOverview: React.FC<CubeOverviewProps> = ({ cards, cube }) => {
       <CubeLayout cards={cards} cube={cube} activeLink="primer">
         <Flexbox direction="col" gap="2" className="mb-2">
           <DynamicFlash />
-          {cube.description && (
+          {cube.primerTabs[0]?.content && (
             <Card>
               <CardBody>
-                <SafeMarkdown markdown={cube.description} />
+                <SafeMarkdown markdown={cube.primerTabs[0].content} />
               </CardBody>
             </Card>
           )}

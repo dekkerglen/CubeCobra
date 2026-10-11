@@ -76,6 +76,7 @@ import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 import User from '@utils/datatypes/User';
 import { normalizeDraftFormatSteps } from '@utils/draftutil';
 import { hostedImageToImageData } from '@utils/hostedImagesUtil';
+import { PrimerTab, primerTabsFromLegacy } from '@utils/primerTabs';
 import { cardFromId, getPlaceholderCard } from 'serverutils/carddb';
 import cloudwatch from 'serverutils/cloudwatch';
 import { getImageData } from 'serverutils/imageutil';
@@ -106,7 +107,9 @@ export interface UnhydratedCube {
   tagColors: any[];
   defaultFormat: number;
   numDecks: number;
-  description: string;
+  primerTabs?: PrimerTab[];
+  /** @deprecated legacy single-string primer */
+  description?: string;
   brief?: string;
   imageName: string;
   // Lotus Cobra perk: uploaded custom cube image. See utils Cube.ts for semantics.
@@ -149,6 +152,12 @@ interface QueryResult {
   items: Cube[];
   lastKey?: Record<string, any>;
 }
+
+/** Replaces a stored legacy `description` with `primerTabs`, so no hydrated cube carries `description`. */
+const withPrimerTabs = ({ description, ...rest }: UnhydratedCube) => ({
+  ...rest,
+  primerTabs: rest.primerTabs ?? primerTabsFromLegacy(description),
+});
 
 /**
  * Resolves the cube's display image. Prefers an uploaded custom image (Lotus Cobra perk) when set,
@@ -264,7 +273,9 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       tagColors: item.tagColors,
       defaultFormat: item.defaultFormat,
       numDecks: item.numDecks,
-      description: item.description,
+      primerTabs: item.primerTabs,
+      // Cubes that never got primerTabs keep their stored description rather than losing it.
+      description: item.primerTabs ? undefined : (item as any).description,
       brief: item.brief,
       imageName: item.imageName,
       imgHostedImageId: item.imgHostedImageId,
@@ -339,7 +350,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       }
 
       return {
-        ...item,
+        ...withPrimerTabs(item),
         owner: deletedUser,
         collaborators: item.collaborators ?? [],
         image,
@@ -382,7 +393,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       }
 
       return {
-        ...item,
+        ...withPrimerTabs(item),
         owner: deletedUser,
         collaborators: item.collaborators ?? [],
         image,
@@ -424,7 +435,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     }
 
     return {
-      ...item,
+      ...withPrimerTabs(item),
       owner: owner,
       collaborators: item.collaborators ?? [],
       image,
@@ -479,7 +490,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       }
 
       return {
-        ...item,
+        ...withPrimerTabs(item),
         owner: finalOwner,
         image,
       } as Cube;
@@ -496,7 +507,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       }
 
       return {
-        ...item,
+        ...withPrimerTabs(item),
         owner: deletedUser,
         image,
       } as Cube;

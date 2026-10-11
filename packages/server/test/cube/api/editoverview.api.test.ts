@@ -183,7 +183,7 @@ describe('Edit overview API', () => {
       shortId: 'bar',
       owner,
       name: 'Updated Cube',
-      description: 'New description',
+      brief: 'New brief',
       tags: ['Foo', 'BAR', 'baz', ''],
       //@ts-expect-error -- Per the Cube type categoryOverride/categoryPrefixes cannot be null but the handler doesn't guarantee the input is a Cube type, so still checks
       categoryOverride: null,
@@ -229,7 +229,7 @@ describe('Edit overview API', () => {
       ...existingCube,
       owner,
       name: 'Updated Cube',
-      description: 'New description',
+      brief: 'New brief',
     });
     const currentUser = owner;
 
@@ -359,7 +359,7 @@ describe('Edit overview API', () => {
       shortId: 'newid',
       owner,
       name: 'Updated Cube',
-      description: 'New description',
+      brief: 'New brief',
     });
     const currentUser = owner;
 
@@ -401,7 +401,7 @@ describe('Edit overview API', () => {
       shortId: '',
       owner,
       name: 'Updated Cube',
-      description: 'New description',
+      brief: 'New brief',
     });
     const currentUser = owner;
 

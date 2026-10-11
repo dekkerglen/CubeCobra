@@ -306,7 +306,7 @@ export const createCube = (overrides?: Partial<Cube>): Cube => ({
   tagColors: [],
   defaultFormat: 0,
   numDecks: 0,
-  description: '',
+  primerTabs: [{ title: 'Primer', content: '' }],
   imageName: '',
   date: 0,
   dateCreated: Date.now(),
