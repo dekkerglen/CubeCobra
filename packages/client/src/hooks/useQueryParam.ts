@@ -4,18 +4,14 @@ import Query from '../utils/Query';
 
 const useQueryParam = (name: string, defaultValue: string): [string, React.Dispatch<React.SetStateAction<string>>] => {
   const didMountRef = useRef(false);
-  const [value, setValue] = useState<string>(defaultValue);
+  const [value, setValue] = useState<string>(() => Query.get(name, defaultValue));
 
-  // Sync state -> URL. On mount, seed from the URL. On subsequent user-driven
+  // Sync state -> URL. The mount run is skipped (state was seeded from the URL). On subsequent
   // changes, push a new history entry (only when the value actually differs from
   // what's already in the URL) so browser back/forward can restore prior values.
   useEffect(() => {
     if (!didMountRef.current) {
       didMountRef.current = true;
-      const query = Query.get(name, defaultValue as string);
-      if ((query ?? null) !== null && query !== value) {
-        setValue(query as string);
-      }
       return;
     }
 

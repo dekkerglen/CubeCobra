@@ -1,3 +1,4 @@
+import type { PrimerTab } from '../primerTabs';
 import Card, { CardStatus } from './Card';
 import { DraftFormat } from './Draft';
 import User from './User';
@@ -306,7 +307,7 @@ interface Cube {
   tagColors: TagColor[];
   defaultFormat: number;
   numDecks: number;
-  description: string;
+  primerTabs: PrimerTab[];
   brief?: string;
   imageName: string;
   // Lotus Cobra perk: an uploaded custom cube image. When set, this takes precedence over the

@@ -1,5 +1,6 @@
 import { CUBE_VISIBILITY, PRICE_VISIBILITY } from '@utils/datatypes/Cube';
 import Cube from '@utils/datatypes/Cube';
+import { prependToPrimaryTab } from '@utils/primerTabs';
 import { cubeDao } from 'dynamo/daos';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { getImageData } from 'serverutils/imageutil';
@@ -42,7 +43,7 @@ export const cloneHandler = async (req: Request, res: Response) => {
       owner: req.user,
       imageName: source.imageName,
       image: getImageData(source.imageName),
-      description: `Cloned from [${source.name}](/c/${source.id})\n\n${source.description}`,
+      primerTabs: prependToPrimaryTab(source.primerTabs, `Cloned from [${source.name}](/c/${source.id})\n\n`),
       date: now,
       dateCreated: now,
       dateLastUpdated: now,
