@@ -11,16 +11,54 @@ import { CardDetails } from '@utils/datatypes/Card';
 // past TTL are treated as misses; the server refetch overwrites the entry on
 // the way back through. Entries from before this scheme (no `cachedAt`) are
 // likewise treated as expired so existing users get a one-time refresh.
+//
+// Two kinds of response must not live for the full week:
+//   - Placeholders (`error: true`). The server returns one when the id isn't in
+//     its catalog — a card newer than that instance's data, a transient lookup
+//     failure. These are never persisted, and any already stored are ignored.
+//   - Volatile cards: non-English printings and anything released recently or
+//     not yet released. During spoiler season Scryfall often has a foreign-
+//     language version of a card first and fixes it up in place later, so the
+//     data behind the same id keeps changing. These entries are stamped with the
+//     server's card data version and dropped as soon as the page reports a
+//     different one, with a one-day TTL as a backstop when no version is known.
 
 const DB_NAME = 'cubecobra-card-details';
 const DB_VERSION = 1;
 const STORE = 'details';
 const TTL_MS = 7 * 24 * 60 * 60 * 1000;
+const VOLATILE_TTL_MS = 24 * 60 * 60 * 1000;
+const VOLATILE_RELEASE_WINDOW_MS = 90 * 24 * 60 * 60 * 1000;
 
 interface CachedEntry {
   details: CardDetails;
   cachedAt: number;
+  // Server card data version the details were fetched under (empty in local dev).
+  version?: string;
 }
+
+// The card data version the server that rendered this page had loaded.
+const currentCatalogVersion = (): string =>
+  (typeof window !== 'undefined' && window.reactProps?.cardDbVersion) || '';
+
+const isVolatile = (details: CardDetails, now: number): boolean => {
+  if (details.language && details.language !== 'en') return true;
+  const released = Date.parse(details.released_at);
+  return Number.isNaN(released) || now - released < VOLATILE_RELEASE_WINDOW_MS;
+};
+
+const isUsable = (entry: CachedEntry | undefined, now: number): entry is CachedEntry => {
+  if (!entry || typeof entry.cachedAt !== 'number' || !entry.details) return false;
+  if (entry.details.error) return false;
+  const age = now - entry.cachedAt;
+  if (age > TTL_MS) return false;
+  if (isVolatile(entry.details, now)) {
+    if (age > VOLATILE_TTL_MS) return false;
+    const current = currentCatalogVersion();
+    if (current && entry.version !== current) return false;
+  }
+  return true;
+};
 
 const hasIndexedDB = typeof window !== 'undefined' && typeof window.indexedDB !== 'undefined';
 
@@ -60,9 +98,7 @@ const readMany = async (ids: string[]): Promise<Record<string, CardDetails | und
     await Promise.all(
       ids.map(async (id) => {
         const entry = (await wrap(store.get(id))) as CachedEntry | undefined;
-        if (!entry || typeof entry.cachedAt !== 'number') return;
-        if (now - entry.cachedAt > TTL_MS) return;
-        result[id] = entry.details;
+        if (isUsable(entry, now)) result[id] = entry.details;
       }),
     );
   } catch {
@@ -71,7 +107,7 @@ const readMany = async (ids: string[]): Promise<Record<string, CardDetails | und
   return result;
 };
 
-const writeMany = async (entries: Array<[string, CardDetails]>): Promise<void> => {
+const writeMany = async (entries: Array<[string, CardDetails]>, version: string): Promise<void> => {
   if (!hasIndexedDB || entries.length === 0) return;
   try {
     const db = await openDb();
@@ -79,7 +115,7 @@ const writeMany = async (entries: Array<[string, CardDetails]>): Promise<void> =
     const store = tx.objectStore(STORE);
     const cachedAt = Date.now();
     for (const [id, value] of entries) {
-      const entry: CachedEntry = { details: value, cachedAt };
+      const entry: CachedEntry = { details: value, cachedAt, version };
       store.put(entry, id);
     }
     await new Promise<void>((resolve, reject) => {
@@ -106,6 +142,7 @@ const flushPending = async (): Promise<void> => {
 
   const uniqueIds = [...new Set(batch.map((r) => r.id))];
   const detailsById: Record<string, CardDetails | null> = {};
+  let version = '';
 
   try {
     const response = await fetch('/cube/api/getdetailsforcards', {
@@ -116,6 +153,7 @@ const flushPending = async (): Promise<void> => {
     if (response.ok) {
       const json = await response.json();
       if (json.success === 'true' && Array.isArray(json.details)) {
+        version = typeof json.version === 'string' ? json.version : '';
         for (let i = 0; i < uniqueIds.length; i++) {
           detailsById[uniqueIds[i]] = json.details[i] ?? null;
         }
@@ -128,11 +166,13 @@ const flushPending = async (): Promise<void> => {
   const toPersist: Array<[string, CardDetails]> = [];
   for (const id of uniqueIds) {
     const value = detailsById[id];
-    if (value) toPersist.push([id, value]);
+    // Placeholders still go back to callers, but never into the cache — the card
+    // may well exist on the next request (see header).
+    if (value && !value.error) toPersist.push([id, value]);
   }
   if (toPersist.length > 0) {
     // Fire and forget — persistence shouldn't delay the response to consumers.
-    writeMany(toPersist);
+    writeMany(toPersist, version);
   }
 
   for (const request of batch) {

@@ -30,3 +30,4 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - The cube sidebar now remembers whether you collapsed it on every cube page, instead of springing back open on pages like blog, followers, and records.
 - Fixed an error that could make every page fail to load with an unrelated-looking message, caused by a stored login session going bad.
 - Linking your Patreon account works again — it had been failing with an "undefined" error after Patreon retired an older version of their API.
+- Newly spoiled cards no longer stay stuck showing a foreign-language version or "Invalid Card" after the real card data arrives — they now refresh as soon as the site updates its card data.

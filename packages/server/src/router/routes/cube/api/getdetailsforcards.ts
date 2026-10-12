@@ -1,3 +1,4 @@
+import { getCatalogVersion } from 'serverutils/cardCatalog';
 import { cardFromId } from 'serverutils/carddb';
 
 import { Request, Response } from '../../../../types/express';
@@ -21,6 +22,9 @@ export const getdetailsforcardsHandler = async (req: Request, res: Response) => 
     return res.status(200).send({
       success: 'true',
       details,
+      // Lets the client cache know which card data these details came from (see
+      // utils/cardDetailsCache). Instances can briefly disagree after an update.
+      version: getCatalogVersion(),
     });
   } catch (err) {
     const error = err as Error;
