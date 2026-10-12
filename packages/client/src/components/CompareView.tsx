@@ -110,9 +110,11 @@ interface SummaryCardProps {
   both: number;
   onlyA: number;
   onlyB: number;
+  baseLabel: string;
+  comparisonLabel: string;
 }
 
-const SummaryCard: React.FC<SummaryCardProps> = ({ label, both, onlyA, onlyB }) => (
+const SummaryCard: React.FC<SummaryCardProps> = ({ label, both, onlyA, onlyB, baseLabel, comparisonLabel }) => (
   <>
     <Flexbox direction="row" gap="2" justify="center">
       <Text semibold lg>
@@ -123,7 +125,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ label, both, onlyA, onlyB }) 
       <Col xs={4}>
         <Flexbox direction="col" alignItems="center">
           <Text semibold md>
-            In Both cubes
+            In Both
           </Text>
           <Text semibold md>
             ({both})
@@ -133,7 +135,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ label, both, onlyA, onlyB }) 
       <Col xs={4}>
         <Flexbox direction="col" alignItems="center">
           <Text semibold md>
-            Only in Base Cube
+            Only in {baseLabel}
           </Text>
           <Text semibold md>
             ({onlyA})
@@ -143,7 +145,7 @@ const SummaryCard: React.FC<SummaryCardProps> = ({ label, both, onlyA, onlyB }) 
       <Col xs={4}>
         <Flexbox direction="col" alignItems="center">
           <Text semibold md>
-            Only in Comparison Cube
+            Only in {comparisonLabel}
           </Text>
           <Text semibold md>
             ({onlyB})
@@ -160,9 +162,18 @@ export interface CompareViewProps {
   both: number[];
   onlyA: number[];
   onlyB: number[];
+  baseLabel?: string;
+  comparisonLabel?: string;
 }
 
-const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) => {
+const CompareView: React.FC<CompareViewProps> = ({
+  cards,
+  both,
+  onlyA,
+  onlyB,
+  baseLabel = 'Base Cube',
+  comparisonLabel = 'Comparison Cube',
+}) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext) ?? {};
 
   const columnsPrimary = sortIntoGroups(cards, sortPrimary ?? 'Unsorted', !!cube?.showUnsorted, cube);
@@ -217,7 +228,14 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
     <Flexbox direction="col" gap="3" className="my-2">
       <Card>
         <CardBody>
-          <SummaryCard label="All Cards" both={bothCounts.total} onlyA={onlyACounts.total} onlyB={onlyBCounts.total} />
+          <SummaryCard
+            label="All Cards"
+            both={bothCounts.total}
+            onlyA={onlyACounts.total}
+            onlyB={onlyBCounts.total}
+            baseLabel={baseLabel}
+            comparisonLabel={comparisonLabel}
+          />
         </CardBody>
       </Card>
       {getLabels(cards, sortPrimary ?? 'Unsorted', cube?.showUnsorted, cube)
@@ -233,6 +251,8 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB }) 
                     both={bothCounts[columnLabel]}
                     onlyA={onlyACounts[columnLabel]}
                     onlyB={onlyBCounts[columnLabel]}
+                    baseLabel={baseLabel}
+                    comparisonLabel={comparisonLabel}
                   />
                 </CardBody>
               </Card>
