@@ -42,11 +42,27 @@ export type ColorMatchups = { [key: string]: { matches: number; wins: number; dr
 // Per-oracle card info captured from the records' drafts, so decks/charts render
 // even for cards no longer in the live cube. Keyed by oracle id.
 export interface RecordCardInfo {
+  // absent on runs saved before these were captured
+  cardID?: string;
   name: string;
   imageUrl: string;
   type: string;
   cmc: number;
   colorIdentity: string[];
+  elo?: number;
+}
+
+// How often each card was played when it was available: `events` counts events
+// with decklists where the card was in the mainboard on the event's date (or was
+// maindecked anyway), `played` the events where at least one deck maindecked it.
+export interface CubeAvailability {
+  cards: { [oracle: string]: { events: number; played: number } };
+  // events with decklists that count toward availability
+  countedEvents: number;
+  // events with decklists dated before the cube's changelog history begins
+  excludedEvents: number;
+  // counted events where only some players' decklists were uploaded
+  partialEvents: number;
 }
 
 export interface RecordAnalysisRunData {
@@ -67,6 +83,9 @@ export interface RecordAnalysisRunData {
   // even when the archetype map fails to build)
   colorMatchups: ColorMatchups;
   cardImages: { [oracle: string]: RecordCardInfo };
+  // absent on runs saved before availability was tracked, or when the cube's
+  // history couldn't be loaded
+  cubeAvailability?: CubeAvailability;
   clusterMethod: string;
   clustered: boolean; // true once the archetype map (ML model) has been computed
 }

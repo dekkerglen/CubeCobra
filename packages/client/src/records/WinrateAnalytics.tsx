@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
-import { TrophyIcon } from '@primer/octicons-react';
+import { HistoryIcon, TrophyIcon } from '@primer/octicons-react';
 import {
   cardCmc,
   cardColorCategory,
@@ -34,6 +34,7 @@ import { CSVLink } from 'react-csv';
 
 import Alert from 'components/base/Alert';
 import { Card as CardUI, CardBody, CardHeader } from 'components/base/Card';
+import Checkbox from 'components/base/Checkbox';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
@@ -53,8 +54,16 @@ import SimulationProgressBar, {
 } from '../components/draftSimulator/SimulationProgressBar';
 import { computeColorProfileFromDecks } from '../components/draftSimulator/SimulatorCharts';
 import useLocalRecordAnalysisHistory from '../hooks/useLocalRecordAnalysisHistory';
+import useLocalStorage from '../hooks/useLocalStorage';
+import { getPlaceholderCardDetails } from '../utils/placeholderCardDetails';
 import { runRecordAnalysis } from '../utils/recordAnalysisRun';
-import { AnalysisDeck, ClusterMatchups, ColorMatchups, RecordAnalysisRunEntry } from '../utils/recordAnalysisStorage';
+import {
+  AnalysisDeck,
+  ClusterMatchups,
+  ColorMatchups,
+  RecordAnalysisRunEntry,
+  RecordCardInfo,
+} from '../utils/recordAnalysisStorage';
 import { buildCardMeta } from '../utils/recordCardMeta';
 import TrophyArchive from './TrophyArchive';
 
@@ -181,6 +190,7 @@ interface CardRow {
   type: string;
   cmc: number;
   draftElo: number;
+  hasDraftElo: boolean;
   matchElo: number; // 1200 baseline when no match data
   hasMatchElo: boolean;
   decks: number;
@@ -192,17 +202,49 @@ interface CardRow {
   trophyRate: number;
   mWe: number; // match wins (draws are not counted as wins)
   mC: number;
+  inCube: boolean; // in the current cube list
+  eventsInCube: number | null; // null when the run has no availability data
+  playRate: number | null; // events maindecked / events in cube
 }
+
+// A card no longer in the cube, rebuilt from the info captured with the run.
+const cardFromInfo = (oracle: string, info: RecordCardInfo): Card => {
+  const cardID = info.cardID || oracle;
+  return {
+    cardID,
+    details: {
+      ...getPlaceholderCardDetails(cardID),
+      oracle_id: oracle,
+      name: info.name,
+      name_lower: info.name.toLowerCase(),
+      full_name: info.name,
+      image_normal: info.imageUrl || '/content/loadingcard.png',
+      type: info.type,
+      cmc: info.cmc,
+      color_identity: info.colorIdentity,
+      ...(info.elo !== undefined ? { elo: info.elo } : {}),
+    },
+  };
+};
 
 // ─── Card link (autocard on hover) ───────────────────────────────────────────
 
 const AutocardItem = withAutocard('span');
-const renderCardLink = (card: Card) => (
-  <AutocardItem className="p-0" card={card}>
-    <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer" className="text-nowrap">
-      {cardName(card)}
-    </a>
-  </AutocardItem>
+const renderCardLink = (card: Card, removed = false) => (
+  <>
+    <AutocardItem className="p-0" card={card}>
+      <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer" className="text-nowrap">
+        {cardName(card)}
+      </a>
+    </AutocardItem>
+    {removed && (
+      <Tooltip text="Not included in current cube list." wrapperTag="span" position="bottom">
+        <span className="ml-1 text-text-secondary align-text-bottom">
+          <HistoryIcon size={12} />
+        </span>
+      </Tooltip>
+    )}
+  </>
 );
 
 // ─── Building blocks ─────────────────────────────────────────────────────────
@@ -568,7 +610,7 @@ const Leaderboard: React.FC<{
             className="inline-block h-2.5 w-2.5 rounded-sm shrink-0"
             style={{ background: COLOR_MAP[r.colorCategory] ?? '#888' }}
           />
-          <div className="flex-1 min-w-0 truncate text-sm">{renderCardLink(r.card)}</div>
+          <div className="flex-1 min-w-0 truncate text-sm">{renderCardLink(r.card, !r.inCube)}</div>
           <Flexbox direction="col" gap="0" className="items-end shrink-0">
             <Text sm semibold className="tabular-nums">
               {metric(r)}
@@ -939,16 +981,17 @@ interface TopSynergy {
   winRate: number;
 }
 
-const SynergyRow: React.FC<{ card?: Card; right: React.ReactNode; sub?: React.ReactNode; over?: boolean }> = ({
-  card,
-  right,
-  sub,
-  over,
-}) => {
+const SynergyRow: React.FC<{
+  card?: Card;
+  removed?: boolean;
+  right: React.ReactNode;
+  sub?: React.ReactNode;
+  over?: boolean;
+}> = ({ card, removed, right, sub, over }) => {
   if (!card) return null;
   return (
     <div className="flex items-center gap-2 py-1 border-b border-border last:border-b-0">
-      <div className="flex-1 min-w-0 truncate text-sm">{renderCardLink(card)}</div>
+      <div className="flex-1 min-w-0 truncate text-sm">{renderCardLink(card, removed)}</div>
       <Flexbox direction="col" gap="0" className="items-end shrink-0">
         <Text sm semibold className="tabular-nums">
           <span style={over === undefined ? undefined : { color: over ? OVER : UNDER }}>{right}</span>
@@ -1166,12 +1209,37 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
   );
 
   const analyticsCards = displayRun?.cards;
+  const [showRemoved, setShowRemoved] = useLocalStorage('winrate-analytics-show-removed', false);
+
+  // Cards the run saw in decks that are no longer in the cube, rebuilt from the
+  // card info captured with the run.
+  const removedCardDict = useMemo(() => {
+    const out: Record<string, Card> = {};
+    const infos = displayRun?.cardImages ?? {};
+    for (const oracle of Object.keys(analyticsCards ?? {})) {
+      const info = infos[oracle];
+      if (!cardDict[oracle] && info) out[oracle] = cardFromInfo(oracle, info);
+    }
+    return out;
+  }, [analyticsCards, cardDict, displayRun]);
+  const removedCount = Object.keys(removedCardDict).length;
+
+  // Every card the page can show: the live cube, plus removed cards when toggled on.
+  const visibleCardDict = useMemo(
+    () => (showRemoved ? { ...removedCardDict, ...cardDict } : cardDict),
+    [showRemoved, removedCardDict, cardDict],
+  );
+  const isRemoved = (oracle: string) => !cardDict[oracle];
+
+  const availability = displayRun?.cubeAvailability;
   const allRows = useMemo<CardRow[]>(() => {
     if (!analyticsCards) return [];
     return Object.entries(analyticsCards)
-      .filter(([oracle]) => cardDict[oracle])
+      .filter(([oracle]) => visibleCardDict[oracle])
       .map(([oracle, a]) => {
-        const card = cardDict[oracle]!;
+        const card = visibleCardDict[oracle]!;
+        const inCube = !!cardDict[oracle];
+        const available = availability ? (availability.cards[oracle] ?? { events: 0, played: 0 }) : null;
         const matchCount = a.matchWins + a.matchLosses + a.matchDraws;
         const gameTotal = a.gameWins + a.gameLosses + a.gameDraws;
         // Draws are not wins (they count against the rate), so win-equivalent = wins.
@@ -1184,6 +1252,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           type: majorType(card),
           cmc: cardCmc(card),
           draftElo: Math.round(cardElo(card)),
+          hasDraftElo: inCube || card.details?.elo !== undefined,
           matchElo: a.matchElo ?? 1200,
           hasMatchElo: a.matchElo !== undefined,
           decks: a.decks,
@@ -1195,9 +1264,49 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           trophyRate: a.decks ? a.trophies / a.decks : 0,
           mWe,
           mC: matchCount,
+          inCube,
+          eventsInCube: available ? available.events : null,
+          playRate: available && available.events ? available.played / available.events : null,
         };
       });
-  }, [analyticsCards, cardDict]);
+  }, [analyticsCards, visibleCardDict, cardDict, availability]);
+  // Current cube cards no deck has played: All Cards rows only, so the charts and
+  // leaderboards aren't skewed by cards with no results.
+  const unplayedRows = useMemo<CardRow[]>(() => {
+    if (!analyticsCards) return [];
+    return Object.entries(cardDict)
+      .filter(([oracle]) => !analyticsCards[oracle])
+      .map(([oracle, card]) => {
+        const available = availability ? (availability.cards[oracle] ?? { events: 0, played: 0 }) : null;
+        return {
+          oracle,
+          card: { exportValue: cardName(card), ...card },
+          name: cardName(card),
+          colorCategory: cardColorCategory(card),
+          type: majorType(card),
+          cmc: cardCmc(card),
+          draftElo: Math.round(cardElo(card)),
+          hasDraftElo: true,
+          matchElo: 1200,
+          hasMatchElo: false,
+          decks: 0,
+          matchCount: 0,
+          winRate: 0,
+          drawRate: 0,
+          gameWinRate: 0,
+          trophyCount: 0,
+          trophyRate: 0,
+          mWe: 0,
+          mC: 0,
+          inCube: true,
+          eventsInCube: available ? available.events : null,
+          playRate: available && available.events ? 0 : null,
+        };
+      });
+  }, [analyticsCards, cardDict, availability]);
+  const tableRows = useMemo(() => [...allRows, ...unplayedRows], [allRows, unplayedRows]);
+  // Removed cards from older runs have no draft Elo to plot.
+  const eloRows = useMemo(() => allRows.filter((r) => r.hasDraftElo), [allRows]);
 
   const [mapColorBy, setMapColorBy] = useState<'cluster' | 'deckColor'>('cluster');
   const [selectedClusterId, setSelectedClusterId] = useState<number | null>(null);
@@ -1216,7 +1325,8 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
     [allRows],
   );
   const [selectedOracle, setSelectedOracle] = useState('');
-  const activeOracle = selectedOracle || mostPlayedOracle;
+  // Falls back when the picked card is hidden (e.g. removed cards toggled off).
+  const activeOracle = selectedOracle && byOracle[selectedOracle] ? selectedOracle : mostPlayedOracle;
 
   const pairsMap = displayRun?.pairs ?? {};
   const matchupsMap = displayRun?.matchups ?? {};
@@ -1533,25 +1643,43 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
   const selectedRow = byOracle[activeOracle];
 
   // Clean CSV for the All Cards table, exported from the card header.
-  const allCardsCsv = [...allRows]
+  const allCardsCsv = [...tableRows]
     .sort((a, b) => b.decks - a.decks)
     .map((r) => ({
       Card: r.name,
       Colors: cardColorIdentity(r.card).join('') || 'C',
       Type: r.type,
       MV: r.cmc,
+      'In Current Cube': r.inCube ? 'Yes' : 'No',
       Decks: r.decks,
-      'Match Win %': fmtPct(r.winRate),
+      ...(availability
+        ? { 'In Cube': r.eventsInCube ?? 0, 'Play Rate': r.playRate === null ? '' : fmtPct(r.playRate) }
+        : {}),
+      'Match Win %': r.decks ? fmtPct(r.winRate) : '',
       Matches: r.matchCount,
-      'Game Win %': fmtPct(r.gameWinRate),
+      'Game Win %': r.decks ? fmtPct(r.gameWinRate) : '',
       Trophies: r.trophyCount,
       'Match Elo': r.hasMatchElo ? r.matchElo : '',
-      'Draft Elo': r.draftElo,
+      'Draft Elo': r.hasDraftElo ? r.draftElo : '',
     }));
+
+  const inCubeTooltip = availability
+    ? [
+        "Events with decklists where this card was in the cube's mainboard on the event's date.",
+        availability.excludedEvents > 0
+          ? `${availability.excludedEvents} event${availability.excludedEvents === 1 ? ' predates' : 's predate'} the cube's history and ${availability.excludedEvents === 1 ? "isn't" : "aren't"} counted.`
+          : '',
+        availability.partialEvents > 0
+          ? `${availability.partialEvents} of ${availability.countedEvents} events have only some decklists uploaded.`
+          : '',
+      ]
+        .filter(Boolean)
+        .join(' ')
+    : '';
 
   const synergyList = (entries: PartnerEntry[] | undefined, empty: string) => {
     const items = (entries ?? [])
-      .map((e) => ({ e, card: cardDict[e.oracle] }))
+      .map((e) => ({ e, card: visibleCardDict[e.oracle] }))
       .filter((x) => x.card)
       .slice(0, 8);
     if (items.length === 0)
@@ -1566,6 +1694,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           <SynergyRow
             key={e.oracle}
             card={card}
+            removed={isRemoved(e.oracle)}
             over={e.winRate >= baseline}
             right={fmtPct(e.winRate)}
             sub={`${e.decks} deck${e.decks === 1 ? '' : 's'}`}
@@ -1576,7 +1705,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
   };
   const matchupList = (entries: RivalEntry[] | undefined, empty: string) => {
     const items = (entries ?? [])
-      .map((e) => ({ e, card: cardDict[e.oracle] }))
+      .map((e) => ({ e, card: visibleCardDict[e.oracle] }))
       .filter((x) => x.card)
       .slice(0, 8);
     if (items.length === 0)
@@ -1591,6 +1720,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           <SynergyRow
             key={e.oracle}
             card={card}
+            removed={isRemoved(e.oracle)}
             over={e.winRate >= baseline}
             right={fmtPct(e.winRate)}
             sub={`${e.matches} match${e.matches === 1 ? '' : 'es'}`}
@@ -1651,6 +1781,15 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
                 average, red trails it. Win rate is wins over matches played; a draw counts against both players, so the
                 average sits at or below 50%.
               </Text>
+              {removedCount > 0 && (
+                <div className="mt-2 text-sm">
+                  <Checkbox
+                    label={`Include cards not in current cube list (${removedCount.toLocaleString()})`}
+                    checked={showRemoved}
+                    setChecked={setShowRemoved}
+                  />
+                </div>
+              )}
             </CardBody>
           </CardUI>
 
@@ -2018,7 +2157,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
                 title="Reputation vs Reality"
                 tooltip="Each card's Cobra draft Elo (how strong the model expects it to be) against its Match Elo (how it actually performed in your records). Above the dashed line = overperforming its draft reputation."
               >
-                <EloScatter rows={allRows} />
+                <EloScatter rows={eloRows} />
               </Panel>
             </Col>
           </Row>
@@ -2100,7 +2239,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
                 ) : (
                   <Flexbox direction="col" gap="0">
                     {topSynergies
-                      .map((s) => ({ s, a: cardDict[s.a], b: cardDict[s.b] }))
+                      .map((s) => ({ s, a: visibleCardDict[s.a], b: visibleCardDict[s.b] }))
                       .filter((x) => x.a && x.b)
                       .slice(0, 12)
                       .map(({ s, a, b }) => (
@@ -2109,7 +2248,8 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
                           className="flex items-center gap-2 py-1 border-b border-border last:border-b-0"
                         >
                           <div className="flex-1 min-w-0 text-sm truncate">
-                            {renderCardLink(a!)} <span className="text-text-secondary">+</span> {renderCardLink(b!)}
+                            {renderCardLink(a!, isRemoved(s.a))} <span className="text-text-secondary">+</span>{' '}
+                            {renderCardLink(b!, isRemoved(s.b))}
                           </div>
                           <Flexbox direction="col" gap="0" className="items-end shrink-0">
                             <Text sm semibold className="tabular-nums">
@@ -2141,9 +2281,20 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
                       className="inline-block h-3 w-3 rounded-sm shrink-0"
                       style={{ background: COLOR_MAP[selectedRow.colorCategory] ?? '#888' }}
                     />
-                    <Text semibold>{selectedRow.name}</Text>
+                    <Text semibold>
+                      {selectedRow.name}
+                      {!selectedRow.inCube && (
+                        <Tooltip text="Not included in current cube list." wrapperTag="span" position="bottom">
+                          <span className="ml-1 text-text-secondary">
+                            <HistoryIcon size={12} />
+                          </span>
+                        </Tooltip>
+                      )}
+                    </Text>
                     <Text sm className="text-text-secondary">
-                      {fmtPct(selectedRow.winRate)} win · {selectedRow.decks} decks · {selectedRow.trophyCount} 🏆
+                      {fmtPct(selectedRow.winRate)} win · {selectedRow.decks} decks
+                      {selectedRow.playRate !== null && ` · ${fmtPct(selectedRow.playRate)} play rate`} ·{' '}
+                      {selectedRow.trophyCount} 🏆
                     </Text>
                   </Flexbox>
                 )}
@@ -2181,11 +2332,12 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           <Panel
             flush
             title="All Cards"
-            tooltip="Every tracked card. Click a column to sort."
+            tooltip="Every tracked card, plus cards in the cube that no deck has played yet (sort Decks ascending to find them). Click a column to sort."
             right={
               <Flexbox direction="row" gap="3" alignItems="center" className="shrink-0">
                 <Text xs className="text-text-secondary whitespace-nowrap">
-                  {allRows.length.toLocaleString()} cards
+                  {tableRows.length.toLocaleString()} cards
+                  {unplayedRows.length > 0 && ` · ${unplayedRows.length.toLocaleString()} never played`}
                 </Text>
                 <CSVLink
                   data={allCardsCsv}
@@ -2202,12 +2354,27 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
               (how highly the card is drafted everywhere). <span className="font-semibold text-text">Match Elo</span> is
               computed from this cube&apos;s match results — it rises when the card&apos;s decks beat higher-rated
               opposition.
+              {availability ? (
+                <>
+                  {' '}
+                  <span className="font-semibold text-text">Play Rate</span> is how often the card made a deck when it
+                  was in the cube — Match Win % only counts decks that played it.
+                </>
+              ) : (
+                ' Re-run the analysis to see In Cube and Play Rate.'
+              )}
             </Text>
             <SortableTable
               flush
               showCsvLink={false}
               columnProps={[
-                { key: 'card', title: 'Card', heading: true, sortable: true, renderFn: renderCardLink },
+                {
+                  key: 'card',
+                  title: 'Card',
+                  heading: true,
+                  sortable: true,
+                  renderFn: (_v, row) => renderCardLink(row.card, !row.inCube),
+                },
                 {
                   key: 'colorCategory',
                   title: 'Colors',
@@ -2218,9 +2385,41 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
                 { key: 'type', title: 'Type', sortable: true, heading: false },
                 { key: 'cmc', title: 'MV', sortable: true, heading: false },
                 { key: 'decks', title: 'Decks', sortable: true, heading: false },
-                { key: 'winRate', title: 'Match Win %', sortable: true, heading: false, renderFn: renderPercent },
+                ...(availability
+                  ? [
+                      {
+                        key: 'eventsInCube',
+                        title: 'In Cube',
+                        sortable: true,
+                        heading: false,
+                        tooltip: inCubeTooltip,
+                      },
+                      {
+                        key: 'playRate',
+                        title: 'Play Rate',
+                        sortable: true,
+                        heading: false,
+                        tooltip:
+                          'Share of In Cube events where at least one deck maindecked this card. Cards that sit in sideboards have a low play rate.',
+                        renderFn: (v: number | null) => (v === null ? '—' : renderPercent(v)),
+                      },
+                    ]
+                  : []),
+                {
+                  key: 'winRate',
+                  title: 'Match Win %',
+                  sortable: true,
+                  heading: false,
+                  renderFn: (v: number, row: CardRow) => (row.decks ? renderPercent(v) : '—'),
+                },
                 { key: 'matchCount', title: 'Matches', sortable: true, heading: false },
-                { key: 'gameWinRate', title: 'Game Win %', sortable: true, heading: false, renderFn: renderPercent },
+                {
+                  key: 'gameWinRate',
+                  title: 'Game Win %',
+                  sortable: true,
+                  heading: false,
+                  renderFn: (v: number, row: CardRow) => (row.decks ? renderPercent(v) : '—'),
+                },
                 { key: 'trophyCount', title: 'Trophies', sortable: true, heading: false },
                 {
                   key: 'matchElo',
@@ -2236,10 +2435,14 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
                   sortable: true,
                   heading: false,
                   tooltip: 'CubeCobra global draft Elo — how highly the card is picked across all cubes.',
+                  renderFn: (_v, row) => (row.hasDraftElo ? row.draftElo : '—'),
                 },
               ]}
-              data={allRows}
-              sortFns={{ card: (a: Card, b: Card) => cardNameLower(a).localeCompare(cardNameLower(b)) }}
+              data={tableRows}
+              sortFns={{
+                card: (a: Card, b: Card) => cardNameLower(a).localeCompare(cardNameLower(b)),
+                playRate: (a: number | null, b: number | null) => (a ?? -1) - (b ?? -1),
+              }}
               defaultSortConfig={{ key: 'decks', direction: 'descending' }}
             />
           </Panel>
