@@ -1,21 +1,25 @@
 import React, { useCallback, useContext, useState } from 'react';
 
 import { PencilIcon } from '@primer/octicons-react';
+import { findTabIndexBySlug, PrimerTab, slugifyTabTitle, validatePrimerTabs } from '@utils/primerTabs';
 
+import PrimerTabBar, { TAB_PANEL_ID } from 'components/about/PrimerTabBar';
+import PrimerTabsEditor from 'components/about/PrimerTabsEditor';
 import Alert from 'components/base/Alert';
 import { Card, CardBody } from 'components/base/Card';
 import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
+import Text from 'components/base/Text';
 import Tooltip from 'components/base/Tooltip';
 import LoadingButton from 'components/LoadingButton';
 import { SafeMarkdown } from 'components/Markdown';
 import TagInput from 'components/TagInput';
-import TextEntry from 'components/TextEntry';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
+import useQueryParam from 'hooks/useQueryParam';
 
 interface PrimerViewProps {
-  description: string | null;
+  primerTabs: PrimerTab[];
   tags?: string[];
 }
 
@@ -24,16 +28,34 @@ interface AlertProps {
   message: string;
 }
 
-const PrimerView: React.FC<PrimerViewProps> = ({ description, tags }) => {
+const PrimerView: React.FC<PrimerViewProps> = ({ primerTabs, tags }) => {
   const { cube, canEdit } = useContext(CubeContext);
   const { csrfFetch } = useContext(CSRFContext);
 
+  const [tabSlug, setTabSlug] = useQueryParam('tab', '');
   const [isEditing, setIsEditing] = useState(false);
-  const [editDescription, setEditDescription] = useState(description || '');
+  const [editTabs, setEditTabs] = useState<PrimerTab[]>(primerTabs);
+  const [editSelected, setEditSelected] = useState(0);
   const [editTags, setEditTags] = useState<string[]>(tags || []);
   const [alerts, setAlerts] = useState<AlertProps[]>([]);
 
   const hasCards = cube?.cardCount > 0;
+  const selected = findTabIndexBySlug(primerTabs, tabSlug);
+  const selectedTab = primerTabs[selected];
+  const editError = isEditing ? validatePrimerTabs(editTabs) : null;
+  const hasTabBar = primerTabs.length > 1;
+  const content = selectedTab?.content && (
+    <Card>
+      <CardBody>
+        <SafeMarkdown markdown={selectedTab.content} />
+      </CardBody>
+    </Card>
+  );
+
+  const selectTab = (index: number) => {
+    const tab = primerTabs[index];
+    setTabSlug(index === 0 || !tab ? '' : slugifyTabTitle(tab.title));
+  };
 
   const saveChanges = useCallback(async () => {
     setAlerts([]);
@@ -45,8 +67,9 @@ const PrimerView: React.FC<PrimerViewProps> = ({ description, tags }) => {
       },
       body: JSON.stringify({
         cubeId: cube.id,
-        description: editDescription,
+        primerTabs: editTabs,
         tags: editTags,
+        activeTab: editSelected,
       }),
     });
 
@@ -56,10 +79,11 @@ const PrimerView: React.FC<PrimerViewProps> = ({ description, tags }) => {
     } else {
       setAlerts([{ color: 'danger', message: body.error }]);
     }
-  }, [csrfFetch, cube.id, editDescription, editTags]);
+  }, [csrfFetch, cube.id, editTabs, editTags, editSelected]);
 
   const handleEditClick = () => {
-    setEditDescription(description || '');
+    setEditTabs(primerTabs);
+    setEditSelected(selected);
     setEditTags(tags || []);
     setAlerts([]);
     setIsEditing(true);
@@ -73,9 +97,21 @@ const PrimerView: React.FC<PrimerViewProps> = ({ description, tags }) => {
           <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2" wrap="wrap">
             {hasCards ? (
               isEditing ? (
-                <LoadingButton color="primary" onClick={saveChanges} className="flex items-center gap-2">
-                  Save Changes
-                </LoadingButton>
+                <Flexbox direction="col" gap="1">
+                  <LoadingButton
+                    color="primary"
+                    onClick={saveChanges}
+                    disabled={editError !== null}
+                    className="flex items-center gap-2"
+                  >
+                    Save Changes
+                  </LoadingButton>
+                  {editError && (
+                    <Text sm className="text-red-500">
+                      {editError}
+                    </Text>
+                  )}
+                </Flexbox>
               ) : (
                 <a
                   onClick={handleEditClick}
@@ -138,25 +174,25 @@ const PrimerView: React.FC<PrimerViewProps> = ({ description, tags }) => {
           )
         )}
 
-        {/* Description - Edit or Display */}
+        {/* Content - Edit or Display */}
         {isEditing ? (
-          <Flexbox direction="col" gap="2" className="px-2">
-            <TextEntry
-              name="description"
-              value={editDescription}
-              setValue={setEditDescription}
-              maxLength={100000}
-              rows={20}
-            />
-          </Flexbox>
+          <PrimerTabsEditor
+            tabs={editTabs}
+            setTabs={setEditTabs}
+            selected={editSelected}
+            setSelected={setEditSelected}
+          />
         ) : (
-          description && (
-            <Card>
-              <CardBody>
-                <SafeMarkdown markdown={description} />
-              </CardBody>
-            </Card>
-          )
+          <>
+            <PrimerTabBar tabs={primerTabs} selected={selected} onSelect={selectTab} />
+            {hasTabBar ? (
+              <div role="tabpanel" id={TAB_PANEL_ID} aria-labelledby={`primer-tab-${selected}`} tabIndex={0}>
+                {content}
+              </div>
+            ) : (
+              content
+            )}
+          </>
         )}
       </Flexbox>
     </Container>

@@ -258,7 +258,7 @@ const ApiDocsPage: React.FC = () => (
             method="GET"
             path="/cube/api/cubeJSON/:id"
             returnType="CubeJSON"
-            description="Returns the full cube object including all boards (mainboard, maybeboard, etc.) with every card&#39;s complete details (name, colors, type, CMC, image URLs, tags, and more)."
+            description="Returns the full cube object including all boards (mainboard, maybeboard, etc.) with every card&#39;s complete details (name, colors, type, CMC, image URLs, tags, and more). The ordered `primerTabs` array (first tab is the primary tab) replaced the former `description` field."
             cors
             rateLimit="100 req/min"
             responseFormat="application/json"
@@ -282,7 +282,7 @@ const ApiDocsPage: React.FC = () => (
   "name": "My Vintage Cube",
   "shortId": "myvintagecube",
   "owner": "username",
-  "description": "A powered vintage cube.",
+  "primerTabs": [{ "title": "Primer", "content": "A powered vintage cube." }],
   "image_uri": "https://...",
   "cards": {
     "mainboard": [

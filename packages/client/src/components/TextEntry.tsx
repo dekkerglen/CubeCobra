@@ -14,9 +14,16 @@ interface TextEntryProps {
   setValue: (value: string) => void;
   maxLength?: number;
   rows?: number;
+  showCharacterLimit?: boolean;
 }
 
-const TextEntry: React.FC<TextEntryProps> = ({ value = '', setValue, maxLength = 1000, rows = 4 }) => {
+const TextEntry: React.FC<TextEntryProps> = ({
+  value = '',
+  setValue,
+  maxLength = 1000,
+  rows = 4,
+  showCharacterLimit = true,
+}) => {
   const [tab, setTab] = useState('0');
 
   return (
@@ -35,7 +42,7 @@ const TextEntry: React.FC<TextEntryProps> = ({ value = '', setValue, maxLength =
                     className="w-full markdown-input"
                     value={value}
                     onChange={(e) => setValue(e.target.value)}
-                    showCharacterLimit={true}
+                    showCharacterLimit={showCharacterLimit}
                     rows={rows}
                   />
                 ),

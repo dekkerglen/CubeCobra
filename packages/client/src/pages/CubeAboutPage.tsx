@@ -50,7 +50,7 @@ const CubeAboutPageContent: React.FC<CubeAboutPageProps> = ({
       break;
     case 'primer':
     default:
-      content = <PrimerView description={cube.description} tags={cube.tags} />;
+      content = <PrimerView primerTabs={cube.primerTabs} tags={cube.tags} />;
       break;
   }
 

@@ -54,4 +54,19 @@ describe('GET /cube/api/cubeJSON/:id', () => {
 
     expect(res.status).toBe(404);
   });
+
+  it('returns primerTabs in place of description', async () => {
+    const primerTabs = [
+      { title: 'Primer', content: 'x' },
+      { title: 'Español', content: 'y' },
+    ];
+    (cubeDao.getById as jest.Mock).mockResolvedValue(createCube({ id: cube.id, primerTabs }));
+
+    const res = await call(cubeJSONHandler).withParams({ id: cube.id }).send();
+
+    expect(res.status).toEqual(200);
+    const body = JSON.parse(res.body);
+    expect(body.primerTabs).toEqual(primerTabs);
+    expect(body).not.toHaveProperty('description');
+  });
 });
