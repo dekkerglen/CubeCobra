@@ -17,3 +17,20 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Bot decks no longer get stuck on "building" when you save your own deck while they're still being built, and a build that genuinely fails now says so instead of spinning forever.
 - Resetting your password no longer asks you to re-enter your email address — the link from the email is all you need, and it now stops working once used or after six hours.
 - Signed-out pages like login and password reset can no longer show you another visitor's error message.
+- Three new daily puzzle games under Games → Dailies: Mana Matrix, a 3×3 grid where you name a card matching each row and column; Synergy Connect, where you sort sixteen cards into four groups that each go with the same legendary creature; and a Magic crossword built fresh every day, which gets larger and harder from Monday through Sunday.
+- Your dashboard now shows one daily game you haven't played yet, rotating through them instead of always showing the same one.
+- Mana Matrix keeps your history and streaks, shows how unusual each of your answers was, and lets you see how everyone else answered once you've submitted.
+- Card art on the daily games now uses each card's first printing, so you see the version you recognise rather than an alternate-art reprint.
+- The Print and Play export now uses the art you picked for each card, and can print straight from the browser instead of only downloading a PDF.
+- Cube lists can be filtered by how many copies of a card you have, including singleton-only.
+- Card searches support `words`, `wc`, or `wordcount` to find cards by roughly how much text they have.
+- A new Type (Primary) sort groups by a card's main type instead of its full type line.
+- Set (Release Date) sort no longer shows the same set twice.
+- The Combos analytics tab now shows how many combos it found in its header.
+- The cube sidebar now remembers whether you collapsed it on every cube page, instead of springing back open on pages like blog, followers, and records.
+- Fixed an error that could make every page fail to load with an unrelated-looking message, caused by a stored login session going bad.
+- Linking your Patreon account works again — it had been failing with an "undefined" error after Patreon retired an older version of their API.
+- Newly spoiled cards no longer stay stuck showing a foreign-language version or "Invalid Card" after the real card data arrives — they now refresh as soon as the site updates its card data.
+- Winrate Analytics can now include cards that have since been cut from the cube, marked with an icon so you can tell them apart.
+- The All Cards table in Winrate Analytics has two new columns: In Cube, counting the events where a card was in the cube list on the event's date, and Play Rate, showing how often it made a deck in those events.
+- The All Cards table in Winrate Analytics now lists cards in your cube that haven't made a single recorded deck, so you can spot never-played cards at a glance.

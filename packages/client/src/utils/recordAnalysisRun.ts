@@ -3,6 +3,7 @@
 // (per-card stats, synergies, matchups, Match Elo), then load the ML model and
 // cluster the decks into archetypes (encode → k-NN + Leiden + UMAP).
 
+import { cardOracleId } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import type Cube from '@utils/datatypes/Cube';
 import { Analytic, MatchupStat, PlayerAnalytic } from '@utils/datatypes/RecordAnalytic';
@@ -21,6 +22,7 @@ import {
   AnalysisDeck,
   ClusterMatchups,
   ColorMatchups,
+  CubeAvailability,
   RecordAnalysisRunData,
   RecordCardInfo,
 } from './recordAnalysisStorage';
@@ -156,6 +158,51 @@ const getStandings = (record: RawRecord): Standing[] => {
   return Object.values(byPlayer);
 };
 
+// When each card was in the cube's mainboard, as [start, end) date intervals
+// (end null = still in the cube). Events dated before `start` predate the cube's
+// known history.
+interface MainboardHistory {
+  start: number;
+  presence: { [oracle: string]: [number, number | null][] };
+}
+
+// Per-card availability across events with decklists. A card maindecked in an
+// event counts as available there even if the rebuilt list says otherwise (bad
+// event date, re-imported cube), so play rate never exceeds 100%.
+const computeCubeAvailability = (
+  records: RawRecord[],
+  oracles: string[],
+  history: MainboardHistory,
+): CubeAvailability => {
+  const inMainboard = (oracle: string, date: number): boolean =>
+    (history.presence[oracle] ?? []).some(([start, end]) => date >= start && (end === null || date < end));
+
+  const result: CubeAvailability = { cards: {}, countedEvents: 0, excludedEvents: 0, partialEvents: 0 };
+  for (const record of records) {
+    const playerNames = new Set(record.players.map((p) => p.name));
+    const deckLists = Object.entries(record.decks)
+      .filter(([name, deck]) => playerNames.has(name) && deck.length > 0)
+      .map(([, deck]) => deck);
+    if (deckLists.length === 0) continue;
+    if (record.date < history.start) {
+      result.excludedEvents += 1;
+      continue;
+    }
+    result.countedEvents += 1;
+    if (deckLists.length < record.players.length) result.partialEvents += 1;
+
+    const played = new Set(deckLists.flat());
+    for (const oracle of oracles) {
+      const wasPlayed = played.has(oracle);
+      if (!wasPlayed && !inMainboard(oracle, record.date)) continue;
+      const entry = (result.cards[oracle] ??= { events: 0, played: 0 });
+      entry.events += 1;
+      if (wasPlayed) entry.played += 1;
+    }
+  }
+  return result;
+};
+
 const MIN_PAIR_DECKS = 2;
 const MIN_MATCHUP_MATCHES = 2;
 const ELO_K = 24;
@@ -180,6 +227,7 @@ export async function runRecordAnalysis(
   }
   const records: RawRecord[] = json.records;
   const cardImages: { [oracle: string]: RecordCardInfo } = json.cards ?? {};
+  const cubeHistory: MainboardHistory | undefined = json.cubeHistory;
   throwIfAborted();
 
   // ── Aggregate (per-card, synergy pairs, matchups, players, decks) ──────────
@@ -462,6 +510,12 @@ export async function runRecordAnalysis(
     }
   }
 
+  // Played cards plus current cube cards, so never-played cards get availability too.
+  const availabilityOracles = [
+    ...new Set([...Object.keys(cards), ...cubeCards.map((card) => cardOracleId(card)).filter(Boolean)]),
+  ];
+  const cubeAvailability = cubeHistory ? computeCubeAvailability(records, availabilityOracles, cubeHistory) : undefined;
+
   onPhase('save');
   return {
     ts: Date.now(),
@@ -477,6 +531,7 @@ export async function runRecordAnalysis(
     clusterMatchups,
     colorMatchups,
     cardImages,
+    cubeAvailability,
     clusterMethod,
     clustered,
   };

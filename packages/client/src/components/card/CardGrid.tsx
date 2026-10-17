@@ -23,6 +23,8 @@ export interface CardGridProps {
   onClick?: (card: Card, index: number) => void;
   className?: string;
   ratings?: number[];
+  // Shows a "×N" badge on cards whose quantity is greater than 1.
+  quantities?: number[];
   selectedIndex?: number;
   // When set, each card can be dragged onto the floating cube tray to add it to
   // a saved cube board (requires an enclosing CubeTrayProvider and a logged-in
@@ -43,6 +45,7 @@ const CardGrid: React.FC<CardGridProps> = ({
   onClick,
   className,
   ratings,
+  quantities,
   selectedIndex,
   cubeTrayDraggable,
 }) => {
@@ -65,6 +68,7 @@ const CardGrid: React.FC<CardGridProps> = ({
         const isHighestRated = ratings?.[cardIndex] === maxRating;
         const wasSelected = cardIndex === selectedIndex;
         const rating = ratings?.[cardIndex];
+        const quantity = quantities?.[cardIndex] ?? 1;
 
         const getRatingStyle = () => {
           if (isHighestRated && wasSelected) return 'bg-[#087715]/95';
@@ -121,6 +125,19 @@ const CardGrid: React.FC<CardGridProps> = ({
                     )}
                   >
                     {Math.round(rating * 100)}%
+                  </div>
+                )}
+                {quantity > 1 && (
+                  <div
+                    className={classNames(
+                      // Sits inside the art box so the card name and mana cost stay readable.
+                      'absolute top-[14%] right-[8%] pointer-events-none',
+                      'px-2 py-0.5 text-center',
+                      'text-sm font-semibold text-white',
+                      'rounded-md shadow-sm backdrop-blur-[2px] bg-gray-900/80',
+                    )}
+                  >
+                    ×{quantity}
                   </div>
                 )}
               </div>

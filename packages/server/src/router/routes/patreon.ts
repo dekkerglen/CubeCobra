@@ -2,13 +2,10 @@ import { PatronLevels, PatronStatuses } from '@utils/datatypes/Patron';
 import { UserRoles } from '@utils/datatypes/User';
 import crypto from 'crypto';
 import { patronDao, userDao } from 'dynamo/daos';
-import { oauth, patreon } from 'patreon';
 import { ensureAuth } from 'router/middleware';
 import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../types/express';
-
-const patreonOAuthClient = oauth(process.env.PATREON_CLIENT_ID || '', process.env.PATREON_CLIENT_SECRET || '');
 
 // Patreon's registered webhook URL is uppercase (`/PATREON/HOOK`). Express routes
 // case-insensitively so the handler still runs, but `req.originalUrl` preserves the
@@ -43,6 +40,22 @@ const isValidPatreonSignature = (signature: string | undefined, rawBody: Buffer 
 
 // The normalized state we derive from a webhook payload, regardless of API version.
 type PledgeState = { email: string; active: boolean; level: number };
+
+// Maps a v2 member's highest currently entitled tier (resolved from `included`) to a
+// PatronLevel. Falls back to the base 'Patron' level when no tier maps.
+const levelFromEntitledTiers = (member: any, included: any): number => {
+  const tierRefs = member.relationships?.currently_entitled_tiers?.data;
+  if (Array.isArray(tierRefs) && tierRefs.length > 0 && Array.isArray(included)) {
+    const levels = tierRefs
+      .map((ref: any) => included.find((item: any) => item.id === ref.id && item.type === 'tier'))
+      .map((tier: any) => (tier ? PatronLevels[tier.attributes?.title as keyof typeof PatronLevels] : undefined))
+      .filter((l: any): l is number => typeof l === 'number');
+    if (levels.length > 0) {
+      return Math.max(...levels);
+    }
+  }
+  return PatronLevels['Patron'];
+};
 
 // Parses the current Patreon API v2 `members:*` webhook shape.
 // The membership resource is `data` (type: "member"); the linked user and entitled tiers
@@ -79,19 +92,7 @@ const resolveMemberV2 = (action: string, body: any): PledgeState | null => {
     return { email, active: false, level: 0 };
   }
 
-  // Highest entitled tier determines the level.
-  let level = PatronLevels['Patron'];
-  const tierRefs = data.relationships?.currently_entitled_tiers?.data;
-  if (Array.isArray(tierRefs) && tierRefs.length > 0 && Array.isArray(included)) {
-    const levels = tierRefs
-      .map((ref: any) => included.find((item: any) => item.id === ref.id && item.type === 'tier'))
-      .map((tier: any) => (tier ? PatronLevels[tier.attributes?.title as keyof typeof PatronLevels] : undefined))
-      .filter((l: any): l is number => typeof l === 'number');
-    if (levels.length > 0) {
-      level = Math.max(...levels);
-    }
-  }
-  return { email, active: true, level };
+  return { email, active: true, level: levelFromEntitledTiers(data, included) };
 };
 
 // Parses the deprecated Patreon API v1 `pledges:*` webhook shape. Retained so any events
@@ -244,110 +245,133 @@ export const hookHandler = async (req: Request, res: Response) => {
   }
 };
 
+// Exchanges an OAuth grant code for an access token (Patreon API v2).
+const exchangePatreonCode = async (code: string): Promise<string> => {
+  const response = await fetch('https://www.patreon.com/api/oauth2/token', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({
+      code,
+      grant_type: 'authorization_code',
+      client_id: process.env.PATREON_CLIENT_ID || '',
+      client_secret: process.env.PATREON_CLIENT_SECRET || '',
+      redirect_uri: process.env.PATREON_REDIRECT || '',
+    }),
+  });
+  if (!response.ok) {
+    throw new Error(`Patreon token exchange failed (${response.status}): ${await response.text()}`);
+  }
+  const json: any = await response.json();
+  if (!json.access_token) {
+    throw new Error('Patreon token exchange returned no access token');
+  }
+  return json.access_token;
+};
+
+// Fetches the authorizing user's identity plus their membership to our campaign (Patreon
+// API v2). Without the `identity.memberships` scope, Patreon only returns the membership
+// to the client owner's campaign, which is exactly the one we care about.
+const fetchPatreonIdentity = async (accessToken: string): Promise<any> => {
+  const params = new URLSearchParams({
+    include: 'memberships,memberships.currently_entitled_tiers',
+    'fields[user]': 'email',
+    'fields[member]': 'patron_status',
+    'fields[tier]': 'title',
+  });
+  const response = await fetch(`https://www.patreon.com/api/oauth2/v2/identity?${params.toString()}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+  if (!response.ok) {
+    throw new Error(`Patreon identity request failed (${response.status}): ${await response.text()}`);
+  }
+  return response.json();
+};
+
 export const redirectHandler = async (req: Request, res: Response) => {
-  const oauthGrantCode = req.query.code as string;
+  try {
+    const oauthGrantCode = req.query.code as string;
+    if (!oauthGrantCode) {
+      req.flash('danger', `Patreon did not return an authorization code. Please try linking again.`);
+      return redirect(req, res, '/user/account?nav=patreon');
+    }
 
-  const patron = await patronDao.getById(req.user!.id);
+    const patron = await patronDao.getById(req.user!.id);
 
-  // if this user is already a patron, error
-  if (patron && patron.status === PatronStatuses.ACTIVE) {
-    req.flash('danger', `A Patreon account has already been linked.`);
+    // if this user is already a patron, error
+    if (patron && patron.status === PatronStatuses.ACTIVE) {
+      req.flash('danger', `A Patreon account has already been linked.`);
+      return redirect(req, res, '/user/account?nav=patreon');
+    }
+
+    const accessToken = await exchangePatreonCode(oauthGrantCode);
+    const identity = await fetchPatreonIdentity(accessToken);
+
+    // use email for unique key
+    const rawEmail: string | undefined = identity.data?.attributes?.email;
+    if (!rawEmail) {
+      req.flash(
+        'danger',
+        `Patreon did not share an email address for this account. Please make sure your Patreon email is verified and try again.`,
+      );
+      return redirect(req, res, '/user/account?nav=patreon');
+    }
+    const email = rawEmail.toLowerCase();
+
+    // if a patron with this email is already linked, we can't use it
+    const document = await patronDao.getByEmail(email);
+
+    if (document) {
+      req.flash(
+        'danger',
+        `This Patreon account has already been linked to another Cube Cobra account. If you think this was done by mistake, please contact us.`,
+      );
+      return redirect(req, res, '/user/account?nav=patreon');
+    }
+
+    const included = Array.isArray(identity.included) ? identity.included : [];
+    const member = included.find(
+      (item: any) => item.type === 'member' && item.attributes?.patron_status === 'active_patron',
+    );
+
+    if (!member) {
+      req.flash('danger', `This Patreon account does not appear to currently support Cube Cobra.`);
+      return redirect(req, res, '/user/account?nav=patreon');
+    }
+
+    const newPatron: any = {
+      email,
+      owner: req.user!.id,
+      status: PatronStatuses.ACTIVE,
+      level: levelFromEntitledTiers(member, included),
+    };
+
+    await patronDao.put(newPatron);
+
+    const user = await userDao.getByIdWithSensitiveData(req.user!.id);
+    if (user) {
+      if (!user.roles) {
+        user.roles = [UserRoles.PATRON];
+      } else if (!user.roles.includes(UserRoles.PATRON)) {
+        user.roles.push(UserRoles.PATRON);
+      }
+      await userDao.update(user as any);
+    }
+
+    if (newPatron.level === 0) {
+      req.flash(
+        'warning',
+        "Your pledge isn't tied to any support tiers. Choose an eligible tier on Patreon to get access to all your rewards.",
+      );
+    }
+    req.flash('success', `Your Patreon account has successfully been linked.`);
+    return redirect(req, res, '/user/account?nav=patreon');
+  } catch (err) {
+    const error = err instanceof Error ? err : new Error(String(err));
+    req.logger.error(error.message, error.stack);
+
+    req.flash('danger', `There was an error linking your Patreon account. Please try again or contact us.`);
     return redirect(req, res, '/user/account?nav=patreon');
   }
-
-  return patreonOAuthClient
-    .getTokens(oauthGrantCode, process.env.PATREON_REDIRECT)
-    .then((tokensResponse: any) => {
-      const patreonAPIClient = patreon(tokensResponse.access_token);
-      return patreonAPIClient('/current_user');
-    })
-    .then(async ({ rawJson }: any) => {
-      // use email for unique key
-      const email = rawJson.data.attributes.email.toLowerCase();
-
-      // if a patron with this email is already linked, we can't use it
-      const document = await patronDao.getByEmail(email);
-
-      if (document) {
-        req.flash(
-          'danger',
-          `This Patreon account has already been linked to another Cube Cobra account. If you think this was done by mistake, please contact us.`,
-        );
-        return redirect(req, res, '/user/account?nav=patreon');
-      }
-
-      const newPatron: any = {
-        email,
-        owner: req.user!.id,
-        status: PatronStatuses.INACTIVE,
-      };
-      if (!rawJson.included) {
-        req.flash('danger', `This Patreon account does not appear to be currently support Cube Cobra.`);
-        return redirect(req, res, '/user/account?nav=patreon');
-      }
-
-      const pledges = rawJson.included.filter((item: any) => item.type === 'pledge');
-
-      if (pledges.length === 0) {
-        req.flash('danger', `This Patreon account does not appear to be currently support Cube Cobra.`);
-        return redirect(req, res, '/user/account?nav=patreon');
-      }
-
-      if (pledges.length > 1) {
-        req.flash('danger', `The server response from Patreon was malformed. Please contact us for more information.`);
-        return redirect(req, res, '/user/account?nav=patreon');
-      }
-
-      if (!pledges[0].relationships.reward || !pledges[0].relationships.reward.data) {
-        newPatron.level = PatronLevels['Patron'];
-      } else {
-        const rewardId = pledges[0].relationships.reward.data.id;
-
-        const rewards = rawJson.included.filter((item: any) => item.id === rewardId);
-
-        if (rewards.length > 1) {
-          req.flash(
-            'danger',
-            `The server response from Patreon was malformed, too many reward objects. Please contact us for more information.`,
-          );
-          return redirect(req, res, '/user/account?nav=patreon');
-        }
-
-        if (rewards.length === 0) {
-          newPatron.level = PatronLevels['Patron'];
-        } else {
-          newPatron.level = PatronLevels[rewards[0].attributes.title as keyof typeof PatronLevels];
-        }
-      }
-
-      newPatron.status = PatronStatuses.ACTIVE;
-
-      await patronDao.put(newPatron);
-
-      const user = await userDao.getByIdWithSensitiveData(req.user!.id);
-      if (user) {
-        if (!user.roles?.includes(UserRoles.PATRON)) {
-          user.roles?.push(UserRoles.PATRON);
-        }
-        await userDao.update(user as any);
-      }
-
-      if (newPatron.level === 0) {
-        req.flash(
-          'warning',
-          "Your pledge isn't tied to any support tiers. Choose an eligible tier on Patreon to get access to all your rewards.",
-        );
-      }
-      req.flash('success', `Your Patreon account has successfully been linked.`);
-      return redirect(req, res, '/user/account?nav=patreon');
-    })
-    .catch((err: any) => {
-      console.error(err);
-      req.logger.error(err.message, err.stack, JSON.stringify(err));
-
-      req.flash('danger', `There was an error linking your Patreon account: ${err.message}`);
-      return redirect(req, res, '/user/account?nav=patreon');
-    });
 };
 
 export const routes = [

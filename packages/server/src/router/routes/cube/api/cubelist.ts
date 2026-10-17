@@ -17,14 +17,18 @@ export const cubelistHandler = async (req: Request, res: Response) => {
       return res.status(404).send('Cube not found.');
     }
 
-    const dateMs = parseDateParam(req.query.date as string | undefined);
+    const changelogId = req.query.changelog as string | undefined;
+    const dateMs = changelogId ? undefined : parseDateParam(req.query.date as string | undefined);
     if (dateMs !== undefined && isNaN(dateMs)) {
       return res.status(400).send('Invalid date parameter. Must be a unix timestamp in milliseconds.');
     }
 
-    const { cards: cubeCards } = await resolveCubeCards(cube.id, dateMs);
+    const resolved = await resolveCubeCards(cube.id, { dateMs, changelogId });
+    if (!resolved) {
+      return res.status(404).send('Changelog not found.');
+    }
 
-    const names = cubeCards.mainboard.map((card: any) => cardFromId(card.cardID).name);
+    const names = resolved.cards.mainboard.map((card: any) => cardFromId(card.cardID).name);
     res.contentType('text/plain');
     res.set('Access-Control-Allow-Origin', '*');
     return res.status(200).send(names.join('\n'));

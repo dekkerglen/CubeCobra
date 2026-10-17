@@ -26,10 +26,23 @@ interface CubeComparePageProps {
   onlyB: number[];
   both: number[];
   pitDate?: string;
+  pitTimestamp?: number;
+  pitCardCount?: number;
   changelogId?: string;
 }
 
-const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cubeB, onlyA, onlyB, both, pitDate }) => {
+const CubeComparePageInner: React.FC<CubeComparePageProps> = ({
+  cards,
+  cube,
+  cubeB,
+  onlyA,
+  onlyB,
+  both,
+  pitDate,
+  pitTimestamp,
+  pitCardCount,
+  changelogId,
+}) => {
   const [openCollapse, setOpenCollapse] = useState<string | null>(Query.get('f') ? 'filter' : null);
   const { cardFilter } = useContext(FilterContext);
 
@@ -71,10 +84,20 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({ cards, cube, cub
         onlyA={filteredOnlyA}
         onlyB={filteredOnlyB}
         pitDate={pitDate}
+        pitTimestamp={pitTimestamp}
+        pitCardCount={pitCardCount}
+        changelogId={changelogId}
       />
       <DynamicFlash />
       <ErrorBoundary>
-        <CompareView cards={filteredCards} onlyA={onlyA} onlyB={onlyB} both={both} />
+        <CompareView
+          cards={filteredCards}
+          onlyA={onlyA}
+          onlyB={onlyB}
+          both={both}
+          baseLabel={pitDate}
+          comparisonLabel={pitDate ? 'Present' : undefined}
+        />
       </ErrorBoundary>
     </>
   );
@@ -88,7 +111,9 @@ const CubeComparePage: React.FC<CubeComparePageProps> = ({
   onlyB,
   both,
   pitDate,
-  changelogId: _changelogId,
+  pitTimestamp,
+  pitCardCount,
+  changelogId,
 }) => {
   // Server strips card.details to keep response size down; rehydrate from the
   // shared IndexedDB cache and fall back to a placeholder while a card's real
@@ -118,6 +143,9 @@ const CubeComparePage: React.FC<CubeComparePageProps> = ({
                 onlyB={onlyB}
                 both={both}
                 pitDate={pitDate}
+                pitTimestamp={pitTimestamp}
+                pitCardCount={pitCardCount}
+                changelogId={changelogId}
               />
             </CubeContextProvider>
           </ChangesContextProvider>

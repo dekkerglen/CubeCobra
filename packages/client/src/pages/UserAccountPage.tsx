@@ -98,7 +98,7 @@ const SECTIONS: AccountSection[] = [
             block
             outline
             color="primary"
-            href={`https://www.patreon.com/oauth2/authorize?response_type=code&client_id=${patreonClientId}&redirect_uri=${encodeURIComponent(
+            href={`https://www.patreon.com/oauth2/authorize?response_type=code&scope=${encodeURIComponent('identity identity[email]')}&client_id=${patreonClientId}&redirect_uri=${encodeURIComponent(
               patreonRedirectUri,
             )}`}
           >

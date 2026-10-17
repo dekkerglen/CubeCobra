@@ -1,8 +1,9 @@
-import { cardCmc, cardColorIdentity, cardImageUrl, cardName, cardOracleId, cardType } from '@utils/cardutil';
+import { cardCmc, cardColorIdentity, cardElo, cardImageUrl, cardName, cardOracleId, cardType } from '@utils/cardutil';
 import DraftType from '@utils/datatypes/Draft';
 import RecordType from '@utils/datatypes/Record';
-import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
+import { changelogDao, cubeDao, draftDao, recordDao } from 'dynamo/daos';
 import { isCubeViewable } from 'serverutils/cubefn';
+import { buildMainboardHistory, MainboardHistory } from 'serverutils/mainboardHistory';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -31,11 +32,13 @@ interface AnalysisRecord {
 // Per-oracle card info for every card that appears in any deck — lets the client
 // render decks/charts even for cards no longer in the live cube.
 interface CardInfo {
+  cardID: string;
   name: string;
   imageUrl: string;
   type: string;
   cmc: number;
   colorIdentity: string[];
+  elo: number;
 }
 
 export const analysisDataHandler = async (req: Request, res: Response) => {
@@ -81,11 +84,13 @@ export const analysisDataHandler = async (req: Request, res: Response) => {
                 const oracle = cardOracleId(card);
                 if (oracle && !cards[oracle]) {
                   cards[oracle] = {
+                    cardID: card.cardID,
                     name: cardName(card),
                     imageUrl: cardImageUrl(card) || '',
                     type: cardType(card) || '',
                     cmc: cardCmc(card) || 0,
                     colorIdentity: cardColorIdentity(card) || [],
+                    elo: cardElo(card),
                   };
                 }
                 return oracle;
@@ -107,7 +112,21 @@ export const analysisDataHandler = async (req: Request, res: Response) => {
       }
     }
 
-    return res.status(200).send({ success: 'true', records: out, cards });
+    // When each card was in the mainboard, so the client can tell which events a
+    // card was available in. Best-effort: without it the client hides play rate.
+    let cubeHistory: MainboardHistory | undefined;
+    if (out.length > 0) {
+      try {
+        const minDate = Math.min(...out.map((record) => record.date));
+        const cubeCards = await cubeDao.getCards(cube.id);
+        cubeHistory = await buildMainboardHistory(cube.id, cubeCards.mainboard ?? [], minDate, changelogDao);
+      } catch (err) {
+        const error = err as Error;
+        req.logger.error(`Error building mainboard history: ${error.message}`, error.stack);
+      }
+    }
+
+    return res.status(200).send({ success: 'true', records: out, cards, cubeHistory });
   } catch (err) {
     const error = err as Error;
     req.logger.error(error.message, error.stack);

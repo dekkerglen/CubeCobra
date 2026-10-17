@@ -13,6 +13,7 @@ import { SortOrder } from '../dynamo/dao/CubeDynamoDao';
 import { collaboratorIndexDao, cubeDao, notificationDao, patronDao } from '../dynamo/daos';
 import { CubeTooLargeError } from '../errors/CubeTooLargeError';
 import { Request, Response } from '../types/express';
+import { getCatalogVersion } from './cardCatalog';
 import { getBaseUrl } from './util';
 
 // Vite emits a manifest keyed by source path (e.g. "src/pages/DraftPage.tsx"). Each entry lists
@@ -228,6 +229,9 @@ interface ReactProps {
   // a long-open (stale) tab keeps the version it was served with — lets error reports
   // distinguish which frontend build actually threw, independent of the server version.
   version?: string;
+  // Version of the card data this server has loaded; the client's card details cache
+  // uses it to drop entries for cards whose data is still settling (see cardCatalog).
+  cardDbVersion?: string;
   [key: string]: any;
 }
 
@@ -284,6 +288,7 @@ const render = (
     reactProps.cdnBaseUrl = process.env.CDN_BASE_URL || '';
     reactProps.captchaSiteKey = process.env.CAPTCHA_SITE_KEY;
     reactProps.version = process.env.CUBECOBRA_VERSION;
+    reactProps.cardDbVersion = getCatalogVersion();
     if (res.locals.csrfToken) {
       reactProps.csrfToken = res.locals.csrfToken;
     }

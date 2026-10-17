@@ -37,6 +37,23 @@ const cardDbReadyPromise = new Promise<void>((resolve) => {
 export const isCardDbReady = (): boolean => cardDbReady;
 export const whenCardDbReady = (): Promise<void> => cardDbReadyPromise;
 
+// Identifies the card data currently in memory: the checksum from the manifest the
+// card-update job publishes alongside the files. The client stamps cached card details
+// with it so entries that are likely to change between updates (spoilers, non-English
+// printings) are refetched once this instance picks up newer data. Empty when no
+// manifest is present (local dev).
+let catalogVersion = '';
+export const getCatalogVersion = (): string => catalogVersion;
+
+function loadCatalogVersion(basePath: string) {
+  try {
+    const manifest = JSON.parse(fs.readFileSync(`${basePath}/manifest.json`, 'utf8'));
+    catalogVersion = typeof manifest?.checksum === 'string' ? manifest.checksum.substring(0, 16) : '';
+  } catch {
+    catalogVersion = '';
+  }
+}
+
 // names/full_names back the card-name autocomplete (served via /tool/api/cardnames
 // query endpoint); imagedict/cardimages back image lookups (imageutil +
 // /tool/api/cardimagedata). All are kept in memory so nothing ships to the client.
@@ -106,6 +123,7 @@ export async function loadAllFiles(basePath: string = 'private') {
   await Promise.all(
     Object.entries(fileToAttribute).map(([filename, attribute]) => loadJSONFile(`${basePath}/${filename}`, attribute)),
   );
+  loadCatalogVersion(basePath);
 }
 
 export async function initializeCardDb(basePath: string = 'private') {

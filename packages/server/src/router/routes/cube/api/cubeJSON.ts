@@ -38,12 +38,17 @@ export const cubeJSONHandler = async (req: Request, res: Response) => {
       return res.status(404).send('Cube not found.');
     }
 
-    const dateMs = parseDateParam(req.query.date as string | undefined);
+    const changelogId = req.query.changelog as string | undefined;
+    const dateMs = changelogId ? undefined : parseDateParam(req.query.date as string | undefined);
     if (dateMs !== undefined && isNaN(dateMs)) {
       return res.status(400).send('Invalid date parameter. Must be a unix timestamp in milliseconds.');
     }
 
-    const { cards: cubeCards, changelog: changelogMeta } = await resolveCubeCards(cube.id, dateMs);
+    const resolved = await resolveCubeCards(cube.id, { dateMs, changelogId });
+    if (!resolved) {
+      return res.status(404).send('Changelog not found.');
+    }
+    const { cards: cubeCards, changelog: changelogMeta } = resolved;
 
     // Sort every board using the cube's configured default sorts (falling back to the canonical defaults).
     const [primary, secondary, tertiary, quaternary] = getCubeSorts(cube);

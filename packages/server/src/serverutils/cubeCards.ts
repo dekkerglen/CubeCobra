@@ -7,19 +7,32 @@ export interface ResolvedCubeCards {
   changelog?: { id: string; date: number };
 }
 
+export interface PointInTime {
+  dateMs?: number;
+  changelogId?: string;
+}
+
 /**
  * Resolves cube cards, optionally at a point in time.
- * When dateMs is provided, reconstructs the cube state at the nearest changelog at or before that date.
- * Returns the cards and optional changelog metadata for the resolved snapshot.
+ * A changelogId takes precedence over dateMs; dateMs resolves to the nearest changelog at or before that date.
+ * Returns undefined if changelogId does not exist on this cube.
  */
-export async function resolveCubeCards(cubeId: string, dateMs?: number): Promise<ResolvedCubeCards> {
+export async function resolveCubeCards(
+  cubeId: string,
+  { dateMs, changelogId }: PointInTime = {},
+): Promise<ResolvedCubeCards | undefined> {
   let cards = await cubeDao.getCards(cubeId);
 
-  if (dateMs === undefined) {
-    return { cards };
+  let changelog;
+  if (changelogId) {
+    changelog = await changelogDao.getById(changelogId);
+    if (!changelog || changelog.cube !== cubeId) {
+      return undefined;
+    }
+  } else if (dateMs !== undefined) {
+    changelog = await changelogDao.getNearest(cubeId, dateMs);
   }
 
-  const changelog = await changelogDao.getNearest(cubeId, dateMs);
   if (!changelog) {
     return { cards };
   }
