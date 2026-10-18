@@ -9,7 +9,7 @@ import { slug } from 'github-slugger';
 import ReactMarkdown, { MarkdownProps } from 'react-markdown';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yDark, a11yLight } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
-import reactToText from 'react-to-text';
+import reactNodeToText from 'utils/reactNodeToText';
 
 import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS, NO_CONTAINER_PLUGINS } from 'markdown/parser';
 
@@ -27,8 +27,8 @@ import withModal, { WithModalProps } from './WithModal';
  * ReactMarkdown with custom components (renderers) for those which generate Text components (they are not h# elements)
  */
 function generateHeadingId(node: ReactNode): string {
-  //Since headings can contain non-text stuff like LateX, use reactToText to get any textual parts of the heading
-  return slug(reactToText(node).trim(), false) ?? '';
+  //Since headings can contain non-text stuff like LateX, use reactNodeToText to get any textual parts of the heading
+  return slug(reactNodeToText(node).trim(), false) ?? '';
 }
 
 type AutocardLinkProps = WithAutocardProps & LinkProps;
