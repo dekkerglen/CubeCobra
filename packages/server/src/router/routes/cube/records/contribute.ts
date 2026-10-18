@@ -154,7 +154,7 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
         }
       }
     }
-    const player = record.players[userIndex - 1];
+    const player = record.players[userIndex - 1] ?? target;
 
     // Their self-reported record (override), keyed by player name.
     record.overrides = record.overrides || {};

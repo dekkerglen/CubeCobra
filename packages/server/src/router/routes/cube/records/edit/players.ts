@@ -72,7 +72,8 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
     // name through the matches, overrides and trophies that reference the old one.
     const renames = new Map<string, string>();
     players.forEach((player: { name: string }, index: number) => {
-      const previous = record.players[seatOrder[index]];
+      const seat = seatOrder[index];
+      const previous = seat === undefined ? undefined : record.players[seat];
       if (previous && previous.name !== player.name) {
         renames.set(previous.name, player.name);
       }
