@@ -10,7 +10,7 @@ import {
   PlayIcon,
   TrophyIcon,
 } from '@primer/octicons-react';
-import Cube, { getViewDefinitions, viewNameToKey } from '@utils/datatypes/Cube';
+import Cube, { getViewDefinitions, viewNameToSlug } from '@utils/datatypes/Cube';
 import { UserRoles } from '@utils/datatypes/User';
 import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
@@ -45,7 +45,7 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean):
   const views = getViewDefinitions(cube);
   const viewSubItems = views.map((view) => ({
     label: view.name,
-    key: viewNameToKey(view.name),
+    key: viewNameToSlug(view.name),
   }));
 
   const baseItems: NavigationItem[] = [
@@ -673,16 +673,16 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
 
                       // Handle different types of sub-items
                       if (item.key === 'list') {
-                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.label}`;
+                        subHref = `${item.href}/${encodeURIComponent(getCubeId(cube))}?view=${subItem.key}`;
 
                         // View is active if activeView matches
-                        const isViewActive = activeLink === 'list' && activeView === subItem.label;
+                        const isViewActive = activeLink === 'list' && activeView === subItem.key;
 
                         // If already on list page, change view; otherwise navigate
                         handleClick = (e: React.MouseEvent) => {
                           if (activeLink === 'list') {
                             e.preventDefault();
-                            setActiveView(subItem.label);
+                            setActiveView(subItem.key);
                           }
                         };
 

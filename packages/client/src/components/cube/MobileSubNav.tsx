@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import Cube, { getViewDefinitions, viewNameToKey } from '@utils/datatypes/Cube';
+import Cube, { getViewDefinitions, viewNameToSlug } from '@utils/datatypes/Cube';
 import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
@@ -35,9 +35,9 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
 
   // Get view definitions for determining navigation
   const views = useMemo(() => getViewDefinitions(cube), [cube]);
-  const viewKeys = useMemo(() => views.map((v) => viewNameToKey(v.name)), [views]);
+  const viewKeys = useMemo(() => views.map((v) => viewNameToSlug(v.name)), [views]);
   const viewSubItems = useMemo(
-    () => views.map((view) => ({ key: viewNameToKey(view.name), label: view.name })),
+    () => views.map((view) => ({ key: viewNameToSlug(view.name), label: view.name })),
     [views],
   );
 
@@ -140,7 +140,7 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
     // Special handling for List sub-items (view navigation)
     if (parentKey === 'list') {
       e.preventDefault();
-      setActiveView(subItem.label);
+      setActiveView(subItem.key);
       return;
     }
 
@@ -224,8 +224,7 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
 
     switch (parentKey) {
       case 'list': {
-        // Use the view name for the URL param
-        return `/cube/list/${cubeId}?view=${subItem.label}`;
+        return `/cube/list/${cubeId}?view=${subItem.key}`;
       }
       case 'about':
         return `/cube/about/${cubeId}?view=${subItem.key}`;
@@ -247,8 +246,8 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
   // Determine if a subitem is active
   const isSubItemActive = (subItem: SubNavItem): boolean => {
     if (parentKey === 'list') {
-      // For list view, check if this view's name matches the current active view
-      return activeView === subItem.label;
+      // For list view, check if this view's slug matches the current active view
+      return activeView === subItem.key;
     }
     return activeLink === subItem.key;
   };

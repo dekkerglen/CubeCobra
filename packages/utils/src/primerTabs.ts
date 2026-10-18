@@ -1,3 +1,5 @@
+import { slugify } from './slugify';
+
 export interface PrimerTab {
   title: string;
   content: string;
@@ -10,13 +12,7 @@ export const LEGACY_PRIMER_TAB_TITLE = 'Primer';
 
 const NEW_TAB_TITLE = 'New Tab';
 
-export const slugifyTabTitle = (title: string): string =>
-  title
-    .normalize('NFKC')
-    .trim()
-    .toLowerCase()
-    .replace(/[^\p{L}\p{N}]+/gu, '-')
-    .replace(/^-+|-+$/g, '');
+export const slugifyTabTitle = slugify;
 
 export const primerTabsFromLegacy = (description: string | null | undefined): PrimerTab[] => [
   { title: LEGACY_PRIMER_TAB_TITLE, content: description ?? '' },

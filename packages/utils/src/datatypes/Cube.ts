@@ -1,4 +1,5 @@
 import type { PrimerTab } from '../primerTabs';
+import { slugify } from '../slugify';
 import Card, { CardStatus } from './Card';
 import { DraftFormat } from './Draft';
 import User from './User';
@@ -188,25 +189,29 @@ export function getViewDefinitions(cube: Cube): ViewDefinition[] {
 }
 
 /**
- * Gets a specific view by name or by its URL-safe key.
+ * Resolves a view from the value carried in the `view` query param.
  *
- * Navigation links carry the view either by its display name (e.g. "Base Packs")
- * or by its URL-safe key (e.g. "base-packs", see viewNameToKey). Match both so a
- * multi-word view doesn't silently fall through to the mainboard fallback.
+ * The param normally holds a slug (e.g. "base-packs"), but links predating slug
+ * navigation carried the display name ("Base Packs"), so slugify whatever arrives
+ * and compare slugs. Returns undefined when nothing matches, letting callers fall
+ * back to the cube's first view.
  */
-export function getViewByName(cube: Cube, name: string): ViewDefinition | undefined {
-  const target = name.toLowerCase();
-  return getViewDefinitions(cube).find((v) => {
-    const lower = v.name.toLowerCase();
-    return lower === target || lower.replace(/\s+/g, '-') === target;
-  });
+export function findViewBySlug(cube: Cube, slug: string | null | undefined): ViewDefinition | undefined {
+  if (!slug) {
+    return undefined;
+  }
+  const target = viewNameToSlug(slug);
+  if (!target) {
+    return undefined;
+  }
+  return getViewDefinitions(cube).find((v) => viewNameToSlug(v.name) === target);
 }
 
 /**
- * Converts a view name to a URL-safe key
+ * Converts a view name to its URL-safe slug, the canonical form of the `view` query param.
  */
-export function viewNameToKey(viewName: string): string {
-  return encodeURIComponent(viewName.toLowerCase().replace(/\s+/g, '-'));
+export function viewNameToSlug(viewName: string): string {
+  return slugify(viewName);
 }
 
 /**
@@ -243,6 +248,20 @@ export function validateViewDefinitions(views: ViewDefinition[]): { valid: boole
   // Check for empty names
   if (views.some((v) => !v.name.trim())) {
     return { valid: false, error: 'View names cannot be empty' };
+  }
+
+  // Views are addressed by slug in the `view` query param, so names that slug to
+  // the same value (or to nothing at all) can't be told apart in a URL.
+  const seenSlugs = new Set<string>();
+  for (const v of views) {
+    const slug = viewNameToSlug(v.name);
+    if (!slug) {
+      return { valid: false, error: `View name "${v.name}" must contain at least one letter or number.` };
+    }
+    if (seenSlugs.has(slug)) {
+      return { valid: false, error: `Two views share the link name "${slug}". Rename one of them.` };
+    }
+    seenSlugs.add(slug);
   }
 
   // Check that each view has at least one board

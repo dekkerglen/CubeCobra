@@ -1,6 +1,6 @@
 import React, { useContext, useEffect, useMemo, useRef } from 'react';
 
-import Cube, { CubeCards, getViewByName, getViewDefinitions } from '@utils/datatypes/Cube';
+import Cube, { CubeCards, findViewBySlug } from '@utils/datatypes/Cube';
 import { UserRoles } from '@utils/datatypes/User';
 import { filterToReadableString } from '@utils/filtering/FilterCards';
 
@@ -51,7 +51,7 @@ const CubeListPageRaw: React.FC = () => {
   const trayLeftClassName = cubeSidebarExpanded ? 'left-4 sm:left-[14rem]' : 'left-4 sm:left-20';
 
   // Get the current view definition
-  const currentView = useMemo(() => getViewByName(cube, activeView), [cube, activeView]);
+  const currentView = useMemo(() => findViewBySlug(cube, activeView), [cube, activeView]);
   const viewBoards = useMemo(() => currentView?.boards.map((b) => b.toLowerCase()) || ['mainboard'], [currentView]);
 
   // Determine the display view (table, spoiler, etc.) from the view settings or URL param
@@ -79,7 +79,7 @@ const CubeListPageRaw: React.FC = () => {
     }
 
     if (currentView) {
-      const prevView = getViewByName(cube, prevActiveViewRef.current);
+      const prevView = findViewBySlug(cube, prevActiveViewRef.current);
       const prevDefaultDisplay = prevView?.displayView || 'table';
       const prevDefaultFilter = prevView?.defaultFilter || '';
 
@@ -280,7 +280,6 @@ const CubeListPageRaw: React.FC = () => {
 };
 
 const CubeListPage: React.FC<CubeListPageProps> = ({ cube, cards }) => {
-  const defaultView = getViewDefinitions(cube)[0]?.name || 'Mainboard';
   const user = useContext(UserContext);
   const isAdmin = !!user && Array.isArray(user.roles) && user.roles.includes(UserRoles.ADMIN);
   const isOwner = (!!user && cube.owner?.id === user.id) || isAdmin;
@@ -303,7 +302,6 @@ const CubeListPage: React.FC<CubeListPageProps> = ({ cube, cards }) => {
           loadVersionDict
           useChangedCards
           rightSidebar={<CubeListPageRightSidebarWrapper />}
-          defaultView={defaultView}
           defaultEditSidebarOpen={isOwner && isCubeEmpty}
         >
           <CubeListPageRaw />

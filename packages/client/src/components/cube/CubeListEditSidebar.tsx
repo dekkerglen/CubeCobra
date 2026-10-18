@@ -3,7 +3,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { QuestionIcon } from '@primer/octicons-react';
 import { cardName, normalizeName } from '@utils/cardutil';
 import { BoardType } from '@utils/datatypes/Card';
-import { boardNameToKey, getBoardDefinitions, getViewByName } from '@utils/datatypes/Cube';
+import { boardNameToKey, getBoardDefinitions, findViewBySlug } from '@utils/datatypes/Cube';
 
 import Alert from 'components/base/Alert';
 import AutocompleteInput from 'components/base/AutocompleteInput';
@@ -102,7 +102,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
   const lastViewRef = useRef<string | null>(null);
   useEffect(() => {
     if (lastViewRef.current === activeView) return;
-    const view = getViewByName(cube, activeView);
+    const view = findViewBySlug(cube, activeView);
     if (!view || !view.boards || view.boards.length === 0) return;
     lastViewRef.current = activeView;
     const target = view.boards[0] as BoardType;
