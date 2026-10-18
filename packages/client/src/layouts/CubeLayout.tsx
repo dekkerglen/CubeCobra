@@ -1,7 +1,7 @@
-import React, { ReactNode, useContext } from 'react';
+import React, { ReactNode, useContext, useMemo } from 'react';
 
 import Card, { BoardType } from '@utils/datatypes/Card';
-import Cube from '@utils/datatypes/Cube';
+import Cube, { getViewDefinitions, viewNameToSlug } from '@utils/datatypes/Cube';
 
 import Banner from '../components/Banner';
 import CubeBottomNav from '../components/cube/CubeBottomNav';
@@ -40,7 +40,6 @@ interface CubeLayoutProps {
   rightSidebar?: React.ReactNode;
   // Forwarded to the hoisted DisplayContextProvider. Pages that used to wrap
   // their own provider (e.g. CubeListPage) pass these through here instead.
-  defaultView?: string;
   defaultEditSidebarOpen?: boolean;
 }
 
@@ -53,14 +52,22 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
   useChangedCards = false,
   controls,
   rightSidebar,
-  defaultView,
   defaultEditSidebarOpen,
 }) => {
   // Only show full hero on list, primer, blog, and changelog pages
   const showFullHero = ['list', 'primer', 'blog', 'changelog'].includes(activeLink);
 
+  const viewSlugs = useMemo(
+    // The `view` param is shared across cube sections: the list page uses it to pick a
+    // cube view, while About/Analysis/Playtest/Settings use it for their own section
+    // (?view=averages, ?view=blog). Only claim it — and only police unknown values — on
+    // the list page, so the other sections' params survive untouched.
+    () => (activeLink === 'list' ? getViewDefinitions(cube).map((view) => viewNameToSlug(view.name)) : undefined),
+    [cube, activeLink],
+  );
+
   return (
-    <DisplayContextProvider cubeID={cube.id} defaultView={defaultView} defaultEditSidebarOpen={defaultEditSidebarOpen}>
+    <DisplayContextProvider cubeID={cube.id} viewSlugs={viewSlugs} defaultEditSidebarOpen={defaultEditSidebarOpen}>
       <FilterContextProvider>
         <ChangesContextProvider cube={cube} cards={cards as any}>
           <CubeContextProvider

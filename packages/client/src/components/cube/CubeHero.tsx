@@ -20,7 +20,7 @@ import {
   StopIcon,
 } from '@primer/octicons-react';
 import { cardIsToken, cardName, cardPrice, cardPriceCardKingdom, cardPriceManaPool } from '@utils/cardutil';
-import Cube, { getViewByName } from '@utils/datatypes/Cube';
+import Cube, { findViewBySlug } from '@utils/datatypes/Cube';
 import { getCubeCardCountSnippet } from '@utils/Util';
 
 import BaseUrlContext from '../../contexts/BaseUrlContext';
@@ -257,7 +257,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
 
   // Derive the boards visible in the current view
   const currentViewBoards = useMemo(() => {
-    const view = getViewByName(cube, activeView);
+    const view = findViewBySlug(cube, activeView);
     return view?.boards.map((b) => b.toLowerCase()) || ['mainboard'];
   }, [cube, activeView]);
 

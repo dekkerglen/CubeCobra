@@ -2,7 +2,7 @@ import React, { useContext, useMemo, useState } from 'react';
 
 import { cardImageUrl } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
-import { getViewByName } from '@utils/datatypes/Cube';
+import { findViewBySlug } from '@utils/datatypes/Cube';
 import { sortForDownload } from '@utils/sorting/Sort';
 import { jsPDF } from 'jspdf';
 
@@ -40,7 +40,7 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
 
   // Derive boards to export
   const currentViewBoards = useMemo(() => {
-    const view = getViewByName(cube, activeView);
+    const view = findViewBySlug(cube, activeView);
     return view?.boards.map((b) => b.toLowerCase()) || ['mainboard'];
   }, [cube, activeView]);
 

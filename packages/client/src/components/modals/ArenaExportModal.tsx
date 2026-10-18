@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import Card, { CardDetails } from '@utils/datatypes/Card';
-import { getViewByName } from '@utils/datatypes/Cube';
+import { findViewBySlug } from '@utils/datatypes/Cube';
 import { sortForDownload } from '@utils/sorting/Sort';
 
 import CubeContext from '../../contexts/CubeContext';
@@ -37,7 +37,7 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({
 
   // Derive boards to export
   const currentViewBoards = useMemo(() => {
-    const view = getViewByName(cube, activeView);
+    const view = findViewBySlug(cube, activeView);
     return view?.boards.map((b) => b.toLowerCase()) || ['mainboard'];
   }, [cube, activeView]);
 
