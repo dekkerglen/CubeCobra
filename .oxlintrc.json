@@ -36,6 +36,12 @@
     "eqeqeq": "warn",
     "no-useless-rename": "warn",
     "react-hooks/exhaustive-deps": "warn",
+    "react/set-state-in-effect": "warn",
+    "react/refs": "warn",
+    "react/preserve-manual-memoization": "warn",
+    "react/purity": "warn",
+    "react/immutability": "warn",
+    "react/globals": "warn",
     "typescript/no-unused-vars": [
       "warn",
       {
