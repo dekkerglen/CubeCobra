@@ -4,7 +4,7 @@ describe('Crossword routes', () => {
   it('registers the page and API routes', () => {
     expectRegisteredRoutes([
       { path: '/tool/crossword/', method: 'get' },
-      { path: '/tool/crossword/:date([0-9]{4}-[0-9]{2}-[0-9]{2})', method: 'get' },
+      { path: '/tool/crossword/:date', method: 'get' },
       { path: '/tool/crossword/archive/', method: 'get' },
       { path: '/tool/api/crossword/active/', method: 'get' },
       { path: '/tool/api/crossword/history/', method: 'get' },

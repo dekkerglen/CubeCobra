@@ -30,7 +30,7 @@ jest.mock('serverutils/cardCatalog', () => ({
 }));
 
 import { CardDetails } from '@utils/datatypes/Card';
-import { Request, Response } from 'express';
+import { Request, Response } from 'types/express';
 import { cardImageDataHandler } from 'router/routes/tool/api/cardimagedata';
 import cardCatalog from 'serverutils/cardCatalog';
 import { clearPrintingIndexCache } from 'serverutils/cardPrintings';

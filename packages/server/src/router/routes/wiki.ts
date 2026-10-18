@@ -26,7 +26,9 @@ const wikiIndexHandler = async (req: Request, res: Response) => {
 
 // GET /wiki/<any/nested/slug> — render the article at that slug, or 404 if it doesn't exist.
 const wikiPageHandler = async (req: Request, res: Response) => {
-  const raw = (req.params[0] ?? '').replace(/\/+$/, '');
+  // Express 5 captures `*splat` as an array of path segments; rejoin to recover the raw slug.
+  const splat = (req.params as unknown as { splat?: string | string[] }).splat;
+  const raw = (Array.isArray(splat) ? splat.join('/') : (splat ?? '')).replace(/\/+$/, '');
   // "/wiki/" (empty capture) belongs on the landing page, not a 404.
   if (raw === '') {
     return redirect(req, res, '/wiki');
@@ -62,7 +64,7 @@ export const routes = [
     handler: [wikiIndexHandler],
   },
   {
-    path: '/*',
+    path: '/*splat',
     method: 'get',
     handler: [wikiPageHandler],
   },

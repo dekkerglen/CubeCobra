@@ -3,6 +3,7 @@ import { crosswordPuzzleDao, crosswordUserStatsDao } from 'dynamo/daos';
 import { answerKey, toBoard } from 'serverutils/crossword/board';
 import { startSession } from 'serverutils/crossword/daily';
 import { redirect, render } from 'serverutils/render';
+import { ISO_DATE, matchParam } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -78,7 +79,7 @@ export const routes = [
   },
   {
     method: 'get',
-    path: '/:date([0-9]{4}-[0-9]{2}-[0-9]{2})',
-    handler: [crosswordDatePageHandler],
+    path: '/:date',
+    handler: [matchParam('date', ISO_DATE), crosswordDatePageHandler],
   },
 ];

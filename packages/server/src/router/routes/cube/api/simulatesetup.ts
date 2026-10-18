@@ -16,7 +16,7 @@ import { isCubeViewable } from 'serverutils/cubefn';
 import { userOrIpKey } from 'serverutils/rateLimitKeys';
 import { MAX_SEATS } from 'serverutils/simulatorConstants';
 
-import { NextFunction, Request, Response } from '../../../../types/express';
+import { Request, Response } from '../../../../types/express';
 
 // 8 setup calls per 30 minutes per user — allows retries but prevents hammering
 // the CPU-expensive pack generation step.
@@ -26,7 +26,7 @@ const setupLimiter = rateLimit({
   keyGenerator: userOrIpKey,
   standardHeaders: true,
   legacyHeaders: false,
-  handler: (_req: Request, res: Response, _next: NextFunction) => {
+  handler: (_req, res) => {
     res.status(429).json({
       success: false,
       message: 'Too many simulation requests. Please wait before starting another simulation.',

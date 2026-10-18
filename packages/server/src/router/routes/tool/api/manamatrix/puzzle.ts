@@ -1,4 +1,5 @@
 import { manaMatrixPuzzleDao } from 'dynamo/daos';
+import { ISO_DATE, matchParam } from 'router/middleware';
 
 import { Request, Response } from '../../../../../types/express';
 
@@ -21,7 +22,7 @@ export const getManaMatrixPuzzleHandler = async (req: Request, res: Response) =>
 export const routes = [
   {
     method: 'get',
-    path: '/:date([0-9]{4}-[0-9]{2}-[0-9]{2})',
-    handler: [getManaMatrixPuzzleHandler],
+    path: '/:date',
+    handler: [matchParam('date', ISO_DATE), getManaMatrixPuzzleHandler],
   },
 ];
