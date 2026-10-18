@@ -27,7 +27,7 @@ const ArticlePreview: React.FC<ArticlePreviewProps> = ({ article, showStatus = f
     >
       <AspectRatioBox ratio={1.9}>
         {article.image && <MtgImage image={article.image} />}
-        <Text bold className="absolute bottom-0 left-0 text-white text-shadow bg-article bg-opacity-50 w-full mb-0 p-1">
+        <Text bold className="absolute bottom-0 left-0 text-white text-shadow bg-article/50 w-full mb-0 p-1">
           Article
           {showStatus && ` - Status: ${ContentStatusEnglish[article.status]}`}
         </Text>

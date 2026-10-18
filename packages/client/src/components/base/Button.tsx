@@ -122,7 +122,7 @@ const Button: React.FC<ButtonProps> = ({
         outline && color === 'secondary',
       'bg-button-secondary border-button-secondary hover:bg-button-secondary-active': !outline && color === 'secondary',
       'opacity-50 cursor-not-allowed': disabled,
-      'focus:ring-2 focus:ring-focus-ring focus:ring-opacity-50 focus:border-focus-ring': true,
+      'focus:ring-2 focus:ring-focus-ring/50 focus:border-focus-ring': true,
       'w-full': block,
       'flex flex-row justify-center items-center': type === 'link',
     },

@@ -23,7 +23,7 @@ const VideoPreview: React.FC<VideoPreviewProps> = ({ video }) => {
     >
       <AspectRatioBox ratio={1.9}>
         {video.image && <MtgImage image={video.image} />}
-        <Text bold className="absolute bottom-0 left-0 text-white text-shadow bg-video bg-opacity-50 w-full mb-0 p-1">
+        <Text bold className="absolute bottom-0 left-0 text-white text-shadow bg-video/50 w-full mb-0 p-1">
           Video
         </Text>
       </AspectRatioBox>

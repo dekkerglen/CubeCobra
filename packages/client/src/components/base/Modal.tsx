@@ -47,7 +47,7 @@ export const Modal: React.FC<ModalProps> = ({
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className={classNames('fixed inset-0 bg-bg bg-opacity-75 transition-opacity', backdropClassName)} />
+          <div className={classNames('fixed inset-0 bg-bg/75 transition-opacity', backdropClassName)} />
         </TransitionChild>
         <div className="fixed inset-0 z-[60]">
           <div

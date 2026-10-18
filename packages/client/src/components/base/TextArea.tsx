@@ -69,7 +69,7 @@ const TextArea: React.FC<TextAreaProps> = ({
       </Flexbox>
       <textarea
         className={classNames(
-          'block w-full h-full px-3 py-2 border border-border bg-bg rounded-md shadow-sm placeholder-text-secondary focus:outline-none focus:ring-2 focus:ring-opacity-50 focus:border-focus-ring sm:text-sm transition duration-200 ease-in-out',
+          'block w-full h-full px-3 py-2 border border-border bg-bg rounded-md shadow-sm placeholder-text-secondary focus:outline-none focus:ring-2 focus:border-focus-ring sm:text-sm transition duration-200 ease-in-out',
           {
             'focus:ring-focus-ring': valid === undefined,
             'focus:ring-green-500 border-green-500': valid === true,
