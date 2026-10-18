@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useState } from 'react';
 
-import { cardName } from '@utils/cardutil';
+import { cardImageUrl, cardName } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
 
 import Button from 'components/base/Button';
@@ -10,6 +10,7 @@ import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Moda
 import Select from 'components/base/Select';
 import LoadingButton from 'components/LoadingButton';
 import { CSRFContext } from 'contexts/CSRFContext';
+import DisplayContext from 'contexts/DisplayContext';
 
 const MAX_BASICS = 21;
 
@@ -24,6 +25,7 @@ export interface BasicsModalProps {
 
 const BasicsModal: React.FC<BasicsModalProps> = ({ isOpen, setOpen, addBasics, deck, basics, cards }) => {
   const { csrfFetch } = useContext(CSRFContext);
+  const { showCustomImages } = useContext(DisplayContext);
   const [counts, setCounts] = useState<number[]>(basics.map(() => 0));
 
   const handleAddBasics = useCallback(() => {
@@ -71,7 +73,7 @@ const BasicsModal: React.FC<BasicsModalProps> = ({ isOpen, setOpen, addBasics, d
           {basics.map((cardIndex, index) => (
             <Col xs={1} key={`basics-${index}`}>
               <Card className="mb-3">
-                <img className="w-full" src={cards[cardIndex].details?.image_normal} alt={cardName(cards[cardIndex])} />
+                <img className="w-full" src={(showCustomImages && cardImageUrl(cards[cardIndex])) || cards[cardIndex].details?.image_normal} alt={cardName(cards[cardIndex])} />
                 <Select
                   options={Array.from(Array(MAX_BASICS + 1).keys()).map((num) => ({
                     value: num.toString(),
