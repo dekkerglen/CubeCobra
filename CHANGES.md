@@ -37,6 +37,7 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Fixed an error that could make every page fail to load with an unrelated-looking message, caused by a stored login session going bad.
 - Linking your Patreon account works again — it had been failing with an "undefined" error after Patreon retired an older version of their API.
 - Newly spoiled cards no longer stay stuck showing a foreign-language version or "Invalid Card" after the real card data arrives — they now refresh as soon as the site updates its card data.
+- Card images that were stuck showing a foreign-language spoiler (e.g. Craftwork Crusher in Japanese) now show the English card, and future image updates show up right away.
 - Winrate Analytics can now include cards that have since been cut from the cube, marked with an icon so you can tell them apart.
 - The All Cards table in Winrate Analytics has two new columns: In Cube, counting the events where a card was in the cube list on the event's date, and Play Rate, showing how often it made a deck in those events.
 - The All Cards table in Winrate Analytics now lists cards in your cube that haven't made a single recorded deck, so you can spot never-played cards at a glance.

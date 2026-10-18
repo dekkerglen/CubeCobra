@@ -754,6 +754,13 @@ describe('getInitialState', () => {
 
 describe('getSeatActionStates', () => {
   // Two seats, two packs of three. Pack 2 includes a trash so both action types are covered.
+  const pack1Steps: DraftStep[] = [
+    { action: 'pick', amount: 1 },
+    { action: 'pass', amount: 1 },
+    { action: 'pick', amount: 1 },
+    { action: 'pass', amount: 1 },
+    { action: 'pick', amount: 1 },
+  ];
   const pack2Steps: DraftStep[] = [
     { action: 'pick', amount: 1 },
     { action: 'pass', amount: 1 },
@@ -767,8 +774,8 @@ describe('getSeatActionStates', () => {
       { mainboard: [], sideboard: [], pickorder: [11, 3, 4, 9], trashorder: [7] },
     ],
     InitialState: [
-      [{ cards: [0, 1, 2] }, { cards: [6, 7, 8], steps: pack2Steps }],
-      [{ cards: [3, 4, 5] }, { cards: [9, 10, 11], steps: pack2Steps }],
+      [{ cards: [0, 1, 2], steps: pack1Steps }, { cards: [6, 7, 8], steps: pack2Steps }],
+      [{ cards: [3, 4, 5], steps: pack1Steps }, { cards: [9, 10, 11], steps: pack2Steps }],
     ],
   });
 

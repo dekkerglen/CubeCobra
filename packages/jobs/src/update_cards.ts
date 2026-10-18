@@ -761,6 +761,15 @@ function getFaceAttributeSource(card: ScryfallCard, preflipped: boolean): Scryfa
   return faceAttributeSource;
 }
 
+// Scryfall image URLs end in `?{image_updated_at as Unix seconds}`, the same value
+// sync_card_images uses as its cache-buster when copying the file into R2. Returned
+// as a `?v=` suffix for our self-hosted URLs, or '' if the card has no image yet.
+function selfHostedImageVersion(card: ScryfallCard): string {
+  const src = card.image_uris?.normal ?? card.card_faces?.find((face) => face.image_uris)?.image_uris?.normal;
+  const match = src?.match(/\?(\d+)$/);
+  return match ? `?v=${match[1]}` : '';
+}
+
 function convertCard(
   card: ScryfallCard,
   metadata: CardMetadata | undefined,
@@ -920,14 +929,20 @@ function convertCard(
   // packages/jobs/src/sync_card_images.ts and packages/scripts/seed-cardimages.mjs.
   // Reversible "preflipped" entries get id `${card.id}2` (convertId), but their
   // art lives under the real card.id's back face, so we use card.id + _back.
+  //
+  // The images are served immutable for a year, so each URL carries Scryfall's image
+  // version (see selfHostedImageVersion): when Scryfall swaps a spoiler scan for the
+  // real one, the URL changes and browsers/Cloudflare fetch the new file instead of
+  // keeping the old one.
   const cardImageBase = process.env.CARD_IMAGE_BASE_URL?.replace(/\/$/, '');
+  const imageVersion = selfHostedImageVersion(card);
   if (cardImageBase) {
     const face = preflipped ? '_back' : '';
-    newcard.image_small = `${cardImageBase}/${card.id}/small${face}.webp`;
-    newcard.image_normal = `${cardImageBase}/${card.id}/normal${face}.webp`;
-    newcard.art_crop = `${cardImageBase}/${card.id}/art_crop${face}.webp`;
+    newcard.image_small = `${cardImageBase}/${card.id}/small${face}.webp${imageVersion}`;
+    newcard.image_normal = `${cardImageBase}/${card.id}/normal${face}.webp${imageVersion}`;
+    newcard.art_crop = `${cardImageBase}/${card.id}/art_crop${face}.webp${imageVersion}`;
     if (!preflipped && card.card_faces && card.card_faces.length >= 2 && card.card_faces[1]?.image_uris) {
-      newcard.image_flip = `${cardImageBase}/${card.id}/normal_back.webp`;
+      newcard.image_flip = `${cardImageBase}/${card.id}/normal_back.webp${imageVersion}`;
     }
   } else if (faceAttributeSource.image_uris) {
     newcard.image_small = faceAttributeSource.image_uris.small;
@@ -946,7 +961,7 @@ function convertCard(
   // be cast as either face. Transform DFCs intentionally don't do this (one face at a time).
   if (preflipped && card.layout === 'modal_dfc' && preflipFrontFace) {
     if (cardImageBase) {
-      newcard.image_flip = `${cardImageBase}/${card.id}/normal.webp`;
+      newcard.image_flip = `${cardImageBase}/${card.id}/normal.webp${imageVersion}`;
     } else if (preflipFrontFace.image_uris) {
       newcard.image_flip = preflipFrontFace.image_uris.normal;
     }
@@ -1737,15 +1752,12 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
       process.exit(1);
     }
 
-    if (skipUpload) {
-      console.log('SKIP_CARD_UPLOAD set — skipping catalog upload to DATA_BUCKET (local run).');
-    } else {
-      await uploadCardDb(scryfallMetadata, taskId);
-    }
-
     // Sync any card images Scryfall re-rendered since our last run into R2, and
     // record how many image files were upserted on the task for the admin view.
     // Non-fatal: a sync hiccup shouldn't fail an otherwise-successful catalog update.
+    // Runs before the catalog upload: the catalog's image URLs carry the new image
+    // version, and if one were requested before R2 had the new file, Cloudflare would
+    // cache the old file under the new URL for a year.
     if (taskId) {
       await cardUpdateTaskDao.updateStep(taskId, 'Syncing card images');
     }
@@ -1755,6 +1767,12 @@ const taskId = process.env.CARD_UPDATE_TASK_ID;
       imagesUpserted = syncResult.imagesUpserted;
     } catch (err) {
       console.error('Card image sync failed (non-fatal):', err);
+    }
+
+    if (skipUpload) {
+      console.log('SKIP_CARD_UPLOAD set — skipping catalog upload to DATA_BUCKET (local run).');
+    } else {
+      await uploadCardDb(scryfallMetadata, taskId);
     }
 
     // Cache any newly-seen set symbols into R2. Non-fatal, same as image sync.
