@@ -56,16 +56,26 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
     const cards: Card[] = [];
     const oracleIds: string[] = [];
 
-    // Combine mainboard and maybeboard to search all cube cards
-    const allCubeCards = [...(cubeCards.mainboard || []), ...(cubeCards.maybeboard || [])];
+    // Search every board. Boards are user-definable, so a pack can legitimately draw
+    // from a custom board; only considering mainboard and maybeboard sent those cards
+    // down the fallback path, which rebuilds them without their tags, status or finish.
+    const allCubeCards: Card[] = [];
+    for (const [board, list] of Object.entries(cubeCards)) {
+      if (board !== 'id' && Array.isArray(list)) {
+        allCubeCards.push(...list);
+      }
+    }
 
     for (const packCard of packCards) {
       try {
-        // Prefer matching by index if available (handles duplicate cardIDs with different properties)
-        // Otherwise fall back to matching by cardID (for backwards compatibility)
+        // `index` is per-board, so it isn't unique across a multi-board cube. Match on
+        // cardID as well to pick the right card, and fall back to either key alone for
+        // packs generated before this pairing was required.
         const cubeCard =
           packCard.index !== undefined
-            ? allCubeCards.find((card) => card.index === packCard.index)
+            ? (allCubeCards.find((card) => card.index === packCard.index && card.cardID === packCard.cardID) ??
+              allCubeCards.find((card) => card.cardID === packCard.cardID) ??
+              allCubeCards.find((card) => card.index === packCard.index))
             : allCubeCards.find((card) => card.cardID === packCard.cardID);
 
         if (cubeCard) {

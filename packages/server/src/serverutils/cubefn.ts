@@ -211,12 +211,29 @@ function abbreviate(name: string): string {
   return name.length < 20 ? name : `${name.slice(0, 20)}…`;
 }
 
+/**
+ * Flattens every board's cards into one list.
+ *
+ * Boards are user-definable, so anything that means "all the cards in this cube" has
+ * to walk the whole cards object rather than assuming mainboard + maybeboard. The
+ * cards object also carries a non-array `id` property, which is skipped.
+ */
+function allCardsFromBoards(cubeCards: CubeCards): Card[] {
+  const allCards: Card[] = [];
+  for (const [board, list] of Object.entries(cubeCards)) {
+    if (board !== 'id' && Array.isArray(list)) {
+      allCards.push(...list);
+    }
+  }
+  return allCards;
+}
+
 function buildTagColors(cube: any, cubeCards: CubeCards): TagColor[] {
   const { tagColors } = cube;
   const tags = tagColors.map((item: TagColor) => item.tag);
   const notFound = tagColors.map((item: TagColor) => item.tag);
 
-  const allCards = [...cubeCards.mainboard, ...cubeCards.maybeboard];
+  const allCards = allCardsFromBoards(cubeCards);
   for (const card of allCards) {
     if (card.tags) {
       for (let tag of card.tags) {
@@ -243,7 +260,7 @@ function buildTagColors(cube: any, cubeCards: CubeCards): TagColor[] {
 
 function cubeCardTags(cubeCards: CubeCards): string[] {
   const tags: string[] = [];
-  const allCards = [...cubeCards.mainboard, ...cubeCards.maybeboard];
+  const allCards = allCardsFromBoards(cubeCards);
   for (const card of allCards) {
     if (card.tags) {
       for (let tag of card.tags) {
