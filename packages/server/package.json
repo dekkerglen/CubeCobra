@@ -78,7 +78,7 @@
     "stripe": "^14.0.0",
     "supertest": "^7.1.4",
     "tsx": "^4.19.0",
-    "uuid": "^11.0.0"
+    "uuid": "^14.0.3"
   },
   "devDependencies": {
     "@babel/plugin-transform-nullish-coalescing-operator": "^7.27.1",
@@ -107,7 +107,6 @@
     "@types/response-time": "^2.3.9",
     "@types/sanitize-html": "^2.16.0",
     "@types/stripe": "^8.0.416",
-    "@types/uuid": "^9.0.8",
     "aws-sdk": "^2.1691.0",
     "babel-jest": "^29.7.0",
     "clinic": "^13.0.0",

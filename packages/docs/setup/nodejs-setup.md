@@ -5,13 +5,17 @@ This guide covers running CubeCobra directly with Node.js, which requires manual
 ## Prerequisites
 
 - [All general prerequisites](./prerequisites.md)
-- Node.js 20+
+- Node.js 22.12+ (see `engines` in the root `package.json`)
 - LocalStack
 - AWS Local CLI
 
 ## Node.js Installation
 
-**Node.js 20**: https://nodejs.org/en/download/
+**Node.js 22.12+**: https://nodejs.org/en/download/
+
+Node.js 22.12 is the minimum because several dependencies (for example `uuid`) ship as
+ESM-only packages, and the CommonJS server build relies on `require()` of ES modules,
+which Node.js only supports unflagged from 22.12 onwards.
 
 ## LocalStack Installation
 

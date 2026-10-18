@@ -32,8 +32,10 @@ module.exports = {
     '^\\.\\.\\./server/test/test-utils/(.*)$': '<rootDir>/../server/test/test-utils/$1',
   },
 
-  // Transform ignore patterns - transform everything including node_modules for our packages
-  transformIgnorePatterns: ['node_modules/(?!(.*\\.mjs$))'],
+  // Transform ignore patterns - transform everything including node_modules for our packages.
+  // uuid v14 is ESM-only for the browser/default export condition, which is what jsdom resolves,
+  // so it has to go through babel to be loadable from CommonJS test code.
+  transformIgnorePatterns: ['node_modules/(?!(uuid|.*\\.mjs$))'],
 
   // Test file patterns
   testMatch: ['<rootDir>/test/**/*.test.(ts|tsx|js|jsx)'],

@@ -47,7 +47,7 @@
     "node-fetch": "^2.7.0",
     "sanitize-html": "^2.17.4",
     "sharp": "^0.35.5",
-    "uuid": "^11.0.0"
+    "uuid": "^14.0.3"
   },
   "devDependencies": {
     "@swc/core": "^1.15.43",
