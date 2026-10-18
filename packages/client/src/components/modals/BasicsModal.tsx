@@ -73,7 +73,11 @@ const BasicsModal: React.FC<BasicsModalProps> = ({ isOpen, setOpen, addBasics, d
           {basics.map((cardIndex, index) => (
             <Col xs={1} key={`basics-${index}`}>
               <Card className="mb-3">
-                <img className="w-full" src={(showCustomImages && cardImageUrl(cards[cardIndex])) || cards[cardIndex].details?.image_normal} alt={cardName(cards[cardIndex])} />
+                <img
+                  className="w-full"
+                  src={(showCustomImages && cardImageUrl(cards[cardIndex])) || cards[cardIndex].details?.image_normal}
+                  alt={cardName(cards[cardIndex])}
+                />
                 <Select
                   options={Array.from(Array(MAX_BASICS + 1).keys()).map((num) => ({
                     value: num.toString(),
