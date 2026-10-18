@@ -19,6 +19,8 @@ export interface DisplayContextValue {
   showInlineTagEmojis: boolean;
   toggleShowMaybeboard: () => void;
   toggleShowInlineTagEmojis: () => void;
+  showTagQuickFilters: boolean;
+  toggleShowTagQuickFilters: () => void;
   openCollapse: string | null;
   setOpenCollapse: React.Dispatch<React.SetStateAction<string | null>>;
   cardsPerRow: NumCols;
@@ -50,6 +52,8 @@ const DisplayContext = React.createContext<DisplayContextValue>({
   toggleShowCustomImages: () => {},
   toggleShowMaybeboard: () => {},
   toggleShowInlineTagEmojis: () => {},
+  showTagQuickFilters: true,
+  toggleShowTagQuickFilters: () => {},
   openCollapse: null,
   setOpenCollapse: () => {},
   cardsPerRow: 8,
@@ -165,6 +169,14 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
     setShowInlineTagEmojis((prev) => !prev);
   }, [cubeID, showInlineTagEmojis]);
 
+  const [showTagQuickFilters, setShowTagQuickFilters] = useLocalStorage<boolean>(
+    `${cubeID}-showTagQuickFilters`,
+    true,
+  );
+  const toggleShowTagQuickFilters = useCallback(() => {
+    setShowTagQuickFilters((prev) => !prev);
+  }, [setShowTagQuickFilters]);
+
   const toggleShowDeckBuilderStatsPanel = useCallback(() => {
     localStorage.setItem('show-deckbuilder-stats', (!showDeckBuilderStatsPanel).toString());
     setShowDeckBuilderStatsPanel((prev) => !prev);
@@ -225,6 +237,8 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
     toggleShowMaybeboard,
     showInlineTagEmojis,
     toggleShowInlineTagEmojis,
+    showTagQuickFilters,
+    toggleShowTagQuickFilters,
     openCollapse,
     setOpenCollapse,
     cardsPerRow,

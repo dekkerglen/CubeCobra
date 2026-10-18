@@ -47,6 +47,8 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
     setRightSidebarMode: _setRightSidebarMode,
     showInlineTagEmojis,
     toggleShowInlineTagEmojis,
+    showTagQuickFilters,
+    toggleShowTagQuickFilters,
     showAllBoards,
     setShowAllBoards,
     useBaseCardData,
@@ -156,6 +158,16 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               </Tooltip>
             </Flexbox>
             <Flexbox direction="row" gap="2" alignItems="center">
+              <Checkbox
+                label="Show Tag Quick Filters"
+                checked={showTagQuickFilters}
+                setChecked={toggleShowTagQuickFilters}
+              />
+              <Tooltip text="Show a row of buttons for this cube's emoji tags below the filter bar. Clicking one filters to that tag.">
+                <QuestionIcon size={16} className="hidden md:inline" />
+              </Tooltip>
+            </Flexbox>
+            <Flexbox direction="row" gap="2" alignItems="center">
               <Checkbox label="Show All Boards" checked={showAllBoards} setChecked={setShowAllBoards} />
               <Tooltip text="Display all boards at the same time, regardless of the current view's board selection.">
                 <QuestionIcon size={16} className="hidden md:inline" />
@@ -248,6 +260,16 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
                   setChecked={toggleShowInlineTagEmojis}
                 />
                 <Tooltip text="Display emoji tags directly next to card names in the list view.">
+                  <QuestionIcon size={16} />
+                </Tooltip>
+              </Flexbox>
+              <Flexbox direction="row" gap="2" alignItems="center">
+                <Checkbox
+                  label="Show Tag Quick Filters"
+                  checked={showTagQuickFilters}
+                  setChecked={toggleShowTagQuickFilters}
+                />
+                <Tooltip text="Show a row of buttons for this cube's emoji tags below the filter bar. Clicking one filters to that tag.">
                   <QuestionIcon size={16} />
                 </Tooltip>
               </Flexbox>

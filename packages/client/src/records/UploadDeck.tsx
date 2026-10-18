@@ -30,6 +30,10 @@ interface UploadDeckProps {
   // Optional: when provided, an inline "+ Add new player" option is offered.
   newPlayerName?: string;
   setNewPlayerName?: (name: string) => void;
+  // Optional: when provided, picking an existing player offers a field to correct
+  // their name (or swap it for an @account handle).
+  renamePlayer?: string;
+  setRenamePlayer?: (name: string) => void;
   record: Record;
   mainboardCards: CardDetails[];
   setMainboardCards: React.Dispatch<React.SetStateAction<CardDetails[]>>;
@@ -44,6 +48,8 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
   setSelectedUser,
   newPlayerName,
   setNewPlayerName,
+  renamePlayer,
+  setRenamePlayer,
   record,
   mainboardCards,
   setMainboardCards,
@@ -219,6 +225,8 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
         setValue={(value) => {
           const userId = parseInt(value, 10);
           setSelectedUser(userId);
+          const player = record.players[userId - 1];
+          setRenamePlayer?.(player ? (player.userId ? `@${player.name}` : player.name) : '');
         }}
         label="Upload deck for player"
         options={[
@@ -236,6 +244,16 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
           value={newPlayerName ?? ''}
           onChange={(e) => setNewPlayerName(e.target.value)}
           placeholder="New player name"
+          autoComplete="off"
+        />
+      )}
+      {selectedUser > 0 && setRenamePlayer && (
+        <Input
+          type="text"
+          label="Name on this record (fix a misspelling, or use @username to link your account)"
+          value={renamePlayer ?? ''}
+          onChange={(e) => setRenamePlayer(e.target.value)}
+          placeholder="Player name"
           autoComplete="off"
         />
       )}

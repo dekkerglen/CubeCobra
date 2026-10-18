@@ -1,6 +1,6 @@
 import { cardOracleId } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
-import CubeType from '@utils/datatypes/Cube';
+import CubeType, { CubeCards } from '@utils/datatypes/Cube';
 import DraftType, { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { setupPicks } from '@utils/draftutil';
 import { Draft } from 'dynamo/dao/DraftDynamoDao';
@@ -241,8 +241,10 @@ export const associateDecksWithNewDraft = async (
   cube: CubeType,
   record: RecordEntity,
   decksByIndex: { [userIndex: number]: { mainboard: string[]; sideboard?: string[] } },
+  // Pass the cube's cards when attaching decks to many records, to load them once.
+  preloadedCubeCards?: CubeCards,
 ) => {
-  const cubeCards = await cubeDao.getCards(cube.id);
+  const cubeCards = preloadedCubeCards ?? (await cubeDao.getCards(cube.id));
   const { mainboard: cubeMainboard } = cubeCards;
   const cards: CardType[] = [];
 

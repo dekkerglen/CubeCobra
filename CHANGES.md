@@ -1,5 +1,7 @@
 The changes here are concise, one liners to be put in a future user facing blogpost. Focus on the effect of the new feature, no technical details.
 
+- Cubes with emoji tags now show a row of quick-filter buttons under the filter bar on the cube list — click one to show just the cards with that tag, and click it again to clear. You can hide the row from the Display options.
+- Players in a draft record can now be renamed — fix a misspelling or swap a real name for an @username — without losing their deck or results, and players can correct their own name from the deck collection link.
 - Tag searches now ignore hyphens, so `otag:boardwipe` finds board wipes just like `otag:board-wipe`.
 - You can now use `has:` as an alias for `is:` in card searches (e.g. `has:commander`).
 - Tag searches (cube tags, oracle tags, and art tags) now support exact matching with the `=` operator, so `otag=removal` finds only the exact tag while `otag:removal` still matches any tag containing it.
@@ -34,3 +36,4 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Winrate Analytics can now include cards that have since been cut from the cube, marked with an icon so you can tell them apart.
 - The All Cards table in Winrate Analytics has two new columns: In Cube, counting the events where a card was in the cube list on the event's date, and Play Rate, showing how often it made a deck in those events.
 - The All Cards table in Winrate Analytics now lists cards in your cube that haven't made a single recorded deck, so you can spot never-played cards at a glance.
+- Draft records can now be exported to a file — one record or a whole cube's worth — and imported into any cube you manage. Anyone who can view a cube can export its records, so you can bring records from a clone of your cube back into the original. The file format is documented so other tools can create records to import too.

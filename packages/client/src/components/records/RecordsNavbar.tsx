@@ -1,6 +1,6 @@
 import React, { createRef, useContext } from 'react';
 
-import { PlusIcon, UploadIcon } from '@primer/octicons-react';
+import { DownloadIcon, PlusIcon, UploadIcon } from '@primer/octicons-react';
 import { getCubeId } from '@utils/Util';
 
 import { Flexbox } from 'components/base/Layout';
@@ -47,8 +47,27 @@ const CreateNewRecordButton: React.FC<{ cubeId: string }> = ({ cubeId }) => {
 const RecordsNavbar: React.FC = () => {
   const { cube, canEdit } = useContext(CubeContext);
 
-  if (!canEdit || !cube) {
+  if (!cube) {
     return null;
+  }
+
+  // Exporting is open to anyone who can see the cube; everything else needs edit rights.
+  const exportLink = (
+    <a href={`/cube/records/export/${getCubeId(cube)}`} download className={navItemClass}>
+      <DownloadIcon size={16} />
+      <ResponsiveDiv baseVisible md>
+        Export
+      </ResponsiveDiv>
+      <ResponsiveDiv md>Export All Records</ResponsiveDiv>
+    </a>
+  );
+
+  if (!canEdit) {
+    return (
+      <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2" wrap="wrap">
+        {exportLink}
+      </Flexbox>
+    );
   }
 
   return (
@@ -68,6 +87,14 @@ const RecordsNavbar: React.FC = () => {
         </ResponsiveDiv>
         <ResponsiveDiv md>Import from Hedron Network</ResponsiveDiv>
       </Link>
+      <Link href={`/cube/records/importfile/${getCubeId(cube)}`} className={navItemClass}>
+        <UploadIcon size={16} />
+        <ResponsiveDiv baseVisible md>
+          Import
+        </ResponsiveDiv>
+        <ResponsiveDiv md>Import from File</ResponsiveDiv>
+      </Link>
+      {exportLink}
     </Flexbox>
   );
 };

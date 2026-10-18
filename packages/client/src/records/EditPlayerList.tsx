@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
-import { GrabberIcon } from '@primer/octicons-react';
+import { CheckIcon, GrabberIcon, PencilIcon, XIcon } from '@primer/octicons-react';
 import { PlayerList } from '@utils/datatypes/Record';
 
 import Link from 'components/base/Link';
@@ -82,53 +82,96 @@ const EditPlayerList: React.FC<EditPlayerListProps> = ({ players, setPlayers, se
     setSeatOrderRef.current?.(entries.map((entry) => entry.originalIndex));
   }, [entries]);
 
+  // A leading @ opts in to linking the player to a CubeCobra account. Returns
+  // null for an empty entry.
+  const resolvePlayer = useCallback(
+    async (raw: string): Promise<{ name: string; userId?: string } | null> => {
+      const trimmed = raw.trim();
+      const isHandle = trimmed.startsWith('@');
+      const lookupName = isHandle ? trimmed.slice(1).trim() : trimmed;
+      if (!lookupName) {
+        return null;
+      }
+      if (!isHandle) {
+        return { name: lookupName };
+      }
+      try {
+        const response = await csrfFetch(`/api/user/getByUsername/${lookupName}`, {
+          method: 'GET',
+        });
+        const { user } = await response.json();
+        return { name: user?.username || lookupName, userId: user?.id || undefined };
+      } catch {
+        return { name: lookupName };
+      }
+    },
+    [csrfFetch],
+  );
+
+  const isNameTaken = useCallback(
+    (name: string, exceptUid?: string) =>
+      entries.some((entry) => entry.uid !== exceptUid && entry.name.toLowerCase() === name.toLowerCase()),
+    [entries],
+  );
+
   const handleAddPlayer = useCallback(async () => {
-    const raw = newPlayer.trim();
-    if (!raw) {
-      return;
-    }
-
-    // A leading @ opts in to linking the player to a CubeCobra account.
-    const isHandle = raw.startsWith('@');
-    const lookupName = isHandle ? raw.slice(1).trim() : raw;
-    if (!lookupName) {
-      return;
-    }
-
-    if (entries.some((entry) => entry.name.toLowerCase() === lookupName.toLowerCase())) {
-      return;
-    }
-
-    if (!isHandle) {
-      setEntries((prev) => [...prev, { uid: nextUid(), name: lookupName, originalIndex: -1 }]);
-      setNewPlayer('');
-      return;
-    }
-
     setLoading(true);
     try {
-      const response = await csrfFetch(`/api/user/getByUsername/${lookupName}`, {
-        method: 'GET',
-      });
-      const { user } = await response.json();
-
-      setEntries((prev) => [
-        ...prev,
-        {
-          uid: nextUid(),
-          name: user?.username || lookupName,
-          userId: user?.id || undefined,
-          originalIndex: -1,
-        },
-      ]);
-      setNewPlayer('');
-    } catch {
-      setEntries((prev) => [...prev, { uid: nextUid(), name: lookupName, originalIndex: -1 }]);
+      const player = await resolvePlayer(newPlayer);
+      if (!player || isNameTaken(player.name)) {
+        return;
+      }
+      setEntries((prev) => [...prev, { uid: nextUid(), ...player, originalIndex: -1 }]);
       setNewPlayer('');
     } finally {
       setLoading(false);
     }
-  }, [csrfFetch, newPlayer, entries, nextUid]);
+  }, [resolvePlayer, newPlayer, isNameTaken, nextUid]);
+
+  // Renaming keeps the entry's originalIndex, so the player's seat (and deck)
+  // stays attached and the server carries the new name through their results.
+  const [editingUid, setEditingUid] = useState<string | null>(null);
+  const [editingName, setEditingName] = useState<string>('');
+  const [renameError, setRenameError] = useState<string>('');
+
+  const startRename = useCallback((entry: PlayerEntry) => {
+    setEditingUid(entry.uid);
+    setEditingName(entry.userId ? `@${entry.name}` : entry.name);
+    setRenameError('');
+  }, []);
+
+  const cancelRename = useCallback(() => {
+    setEditingUid(null);
+    setRenameError('');
+  }, []);
+
+  const commitRename = useCallback(async () => {
+    if (!editingUid) {
+      return;
+    }
+    setLoading(true);
+    try {
+      const player = await resolvePlayer(editingName);
+      if (!player) {
+        setRenameError('Enter a name');
+        return;
+      }
+      if (isNameTaken(player.name, editingUid)) {
+        setRenameError(`Another player is already named ${player.name}`);
+        return;
+      }
+      setEntries((prev) =>
+        prev.map((entry) =>
+          entry.uid === editingUid
+            ? { uid: entry.uid, originalIndex: entry.originalIndex, name: player.name, userId: player.userId }
+            : entry,
+        ),
+      );
+      cancelRename();
+    } finally {
+      setLoading(false);
+    }
+  }, [editingUid, editingName, resolvePlayer, isNameTaken, cancelRename]);
 
   const removeLastPlayer = useCallback(() => {
     setEntries((prev) => prev.slice(0, -1));
@@ -197,7 +240,43 @@ const EditPlayerList: React.FC<EditPlayerListProps> = ({ players, setPlayers, se
                   <div {...handleProps}>
                     <GrabberIcon size={16} className="cursor-grab mr-2" />
                   </div>
-                  <PlayerName player={entry}>{`Seat ${index + 1}. ${entry.name}`}</PlayerName>
+                  {editingUid === entry.uid ? (
+                    <Flexbox direction="col" gap="1" className="grow">
+                      <Flexbox direction="row" gap="2" alignItems="center">
+                        <Text sm className="whitespace-nowrap">{`Seat ${index + 1}.`}</Text>
+                        <Input
+                          value={editingName}
+                          onChange={(e) => setEditingName(e.target.value)}
+                          onEnter={commitRename}
+                          placeholder="Player name (prefix with @ to link an account)"
+                          otherInputProps={{ autoFocus: true }}
+                        />
+                        <Button color="primary" onClick={commitRename} disabled={loading}>
+                          <CheckIcon size={16} />
+                        </Button>
+                        <Button color="secondary" onClick={cancelRename}>
+                          <XIcon size={16} />
+                        </Button>
+                      </Flexbox>
+                      {renameError && (
+                        <Text sm className="text-danger">
+                          {renameError}
+                        </Text>
+                      )}
+                    </Flexbox>
+                  ) : (
+                    <>
+                      <PlayerName player={entry}>{`Seat ${index + 1}. ${entry.name}`}</PlayerName>
+                      <button
+                        type="button"
+                        className="ml-2 text-text-secondary hover:text-text"
+                        aria-label={`Rename ${entry.name}`}
+                        onClick={() => startRename(entry)}
+                      >
+                        <PencilIcon size={16} />
+                      </button>
+                    </>
+                  )}
                 </Flexbox>
               </Card>
             )}

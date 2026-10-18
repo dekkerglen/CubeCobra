@@ -1,3 +1,4 @@
+import { applyPlayerRenames } from '@utils/datatypes/Record';
 import { setupPicks } from '@utils/draftutil';
 import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi';
@@ -60,6 +61,23 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
     } catch {
       seatOrder = players.map((_: unknown, index: number) => index);
     }
+
+    const names = players.map((player: { name: string }) => player.name.toLowerCase());
+    if (new Set(names).size !== names.length) {
+      req.flash('danger', 'Each player in a record needs a unique name');
+      return redirect(req, res, `/cube/record/${req.params.id}`);
+    }
+
+    // A player that kept their seat but changed name was renamed: carry the new
+    // name through the matches, overrides and trophies that reference the old one.
+    const renames = new Map<string, string>();
+    players.forEach((player: { name: string }, index: number) => {
+      const previous = record.players[seatOrder[index]];
+      if (previous && previous.name !== player.name) {
+        renames.set(previous.name, player.name);
+      }
+    });
+    applyPlayerRenames(record, renames);
 
     record.players = players;
 

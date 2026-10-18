@@ -59,6 +59,7 @@ const tocSections: TocEntry[] = [
   { id: 'overview', label: 'Overview' },
   { id: 'cube-json', label: 'Cube JSON Export' },
   { id: 'cube-history', label: 'Cube History' },
+  { id: 'record-files', label: 'Draft Record Files' },
   { id: 'cube-downloads', label: 'Cube File Downloads' },
   { id: 'deck-downloads', label: 'Deck File Downloads' },
   { id: 'draft-bots', label: 'Draft Bots & ML' },
@@ -425,6 +426,83 @@ Mox Sapphire
     }
   }
 }`}
+          />
+        </Flexbox>
+      </CollapsibleSection>
+
+      {/* ─── Draft Record Files ────────────────────────────────── */}
+      <CollapsibleSection id="record-files" title="Draft Record Files">
+        <Flexbox direction="col" gap="4">
+          <Text md className="text-text-secondary">
+            A cube&#39;s draft records can be downloaded as a JSON file and imported into any cube you can edit, from
+            the Records tab. Other tools can create or edit these files too: anything in this format can be imported.
+            Importing always adds new records, so importing the same file twice creates duplicates.
+          </Text>
+
+          <Endpoint
+            method="GET"
+            path="/cube/records/export/:id"
+            returnType="RecordsFile"
+            description="Downloads every record for a cube, oldest first, with each player&#39;s deck."
+            responseFormat="application/json"
+            params={
+              <>
+                <Param name=":id" type="path" required>
+                  Cube UUID or short ID
+                </Param>
+                <Param name="record" type="query">
+                  A record ID, to download just that record.
+                </Param>
+              </>
+            }
+            responseExample={`{
+  "format": "cubecobra-records",
+  "version": 1,
+  "exportedAt": "2026-10-17T18:30:00.000Z",
+  "source": { "cubeId": "5f2b...", "cubeName": "My Cube" },
+  "records": [
+    {
+      "id": "8c1d...",
+      "name": "Friday Draft",
+      "date": 1760000000000,
+      "description": "",
+      "players": [
+        { "name": "Andy", "userId": "61a0..." },
+        { "name": "Sam" }
+      ],
+      "rounds": [
+        { "matches": [ { "p1": "Andy", "p2": "Sam", "results": [2, 1, 0] } ] }
+      ],
+      "trophy": ["Andy"],
+      "decks": {
+        "Andy": {
+          "mainboard": [ { "name": "Lightning Bolt", "oracleId": "4457ed35-..." } ],
+          "sideboard": []
+        }
+      }
+    }
+  ]
+}`}
+            notes={
+              <Flexbox direction="col" gap="1">
+                <Text sm className="text-text-secondary">
+                  Players are referred to by <InlineCode>name</InlineCode> everywhere: in matches, trophies, and as the
+                  keys of <InlineCode>decks</InlineCode>, so names must be unique within a record.{' '}
+                  <InlineCode>userId</InlineCode> links a player to their Cube Cobra account and is optional.
+                </Text>
+                <Text sm className="text-text-secondary">
+                  <InlineCode>date</InlineCode> is milliseconds since the Unix epoch. Each match&#39;s{' '}
+                  <InlineCode>results</InlineCode> is <InlineCode>[p1 wins, p2 wins, draws]</InlineCode> in games.
+                  The optional <InlineCode>overrides</InlineCode> maps a player name to{' '}
+                  <InlineCode>{'{ wins, losses, draws }'}</InlineCode> for records entered without match results.
+                </Text>
+                <Text sm className="text-text-secondary">
+                  A deck card is <InlineCode>{'{ "name", "oracleId" }'}</InlineCode> or just a card name as a string.
+                  On import, a known <InlineCode>oracleId</InlineCode> wins; otherwise the card is found by name. Cards
+                  that can&#39;t be found are skipped and reported. Only decks are included, not draft pick order.
+                </Text>
+              </Flexbox>
+            }
           />
         </Flexbox>
       </CollapsibleSection>

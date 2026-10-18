@@ -67,3 +67,24 @@ export function playerRecord(record: Record, playerName: string): WinLossDraw {
 
 export const formatRecord = ({ wins, losses, draws }: WinLossDraw): string =>
   draws > 0 ? `${wins}-${losses}-${draws}` : `${wins}-${losses}`;
+
+// Carries player renames through everything keyed by player name (match
+// pairings, overrides, trophies). Takes the whole old -> new mapping at once so
+// a swap or chain of renames resolves against the original names.
+export function applyPlayerRenames(record: Record, renames: Map<string, string>): void {
+  if (renames.size === 0) {
+    return;
+  }
+  const rename = (name: string): string => renames.get(name) ?? name;
+
+  record.matches = (record.matches || []).map((round) => ({
+    ...round,
+    matches: round.matches.map((match) => ({ ...match, p1: rename(match.p1), p2: rename(match.p2) })),
+  }));
+  record.trophy = (record.trophy || []).map(rename);
+  if (record.overrides) {
+    record.overrides = Object.fromEntries(
+      Object.entries(record.overrides).map(([name, value]) => [rename(name), value]),
+    );
+  }
+}

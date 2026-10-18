@@ -25,6 +25,7 @@ import UserContext from 'contexts/UserContext';
 
 import Select from '../base/Select';
 import Tooltip from '../base/Tooltip';
+import TagQuickFilters from './TagQuickFilters';
 
 interface CubeListNavbarProps {
   cubeView: string;
@@ -447,6 +448,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
           </div>
         </Flexbox>
       </Flexbox>
+      <TagQuickFilters />
       <AdvancedFilterModal
         isOpen={advancedOpen}
         setOpen={setAdvancedOpen}

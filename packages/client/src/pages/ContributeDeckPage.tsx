@@ -31,6 +31,7 @@ const ContributeDeckPage: React.FC<ContributeDeckPageProps> = ({ cube, record, t
   // Default to adding yourself as a new player when we know your account name.
   const [selectedUser, setSelectedUser] = useState<number>(suggestedName ? NEW_PLAYER : 0);
   const [newPlayerName, setNewPlayerName] = useState<string>(suggestedName);
+  const [renamePlayer, setRenamePlayer] = useState<string>('');
   const [mainboardCards, setMainboardCards] = useState<CardDetails[]>([]);
   const [sideboardCards, setSideboardCards] = useState<CardDetails[]>([]);
   const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
@@ -47,12 +48,14 @@ const ContributeDeckPage: React.FC<ContributeDeckPageProps> = ({ cube, record, t
       }
     } else if (selectedUser <= 0 || selectedUser > record.players.length) {
       return { submitDisabled: true, disabledExplanation: 'Pick or add a player' };
+    } else if (!renamePlayer.trim()) {
+      return { submitDisabled: true, disabledExplanation: 'Enter your name' };
     }
     if (mainboardCards.length === 0) {
       return { submitDisabled: true, disabledExplanation: 'Add the cards in your deck' };
     }
     return { submitDisabled: false, disabledExplanation: '' };
-  }, [isNewPlayer, newPlayerName, selectedUser, record.players.length, mainboardCards.length]);
+  }, [isNewPlayer, newPlayerName, renamePlayer, selectedUser, record.players.length, mainboardCards.length]);
 
   const numberField = (label: string, value: number, setValue: (v: number) => void) => (
     <Col xs={4} md={4}>
@@ -90,6 +93,8 @@ const ContributeDeckPage: React.FC<ContributeDeckPageProps> = ({ cube, record, t
               setSelectedUser={setSelectedUser}
               newPlayerName={newPlayerName}
               setNewPlayerName={setNewPlayerName}
+              renamePlayer={renamePlayer}
+              setRenamePlayer={setRenamePlayer}
               record={record as unknown as Record}
               mainboardCards={mainboardCards}
               setMainboardCards={setMainboardCards}
@@ -126,6 +131,7 @@ const ContributeDeckPage: React.FC<ContributeDeckPageProps> = ({ cube, record, t
                 token,
                 userIndex: `${selectedUser}`,
                 newPlayer: isNewPlayer ? newPlayerName.trim() : '',
+                renamePlayer: isNewPlayer ? '' : renamePlayer.trim(),
                 mainboard: JSON.stringify(mainboardCards.map(detailsToCard).map(cardOracleId)),
                 sideboard: JSON.stringify(sideboardCards.map(detailsToCard).map(cardOracleId)),
                 wins: `${wins}`,

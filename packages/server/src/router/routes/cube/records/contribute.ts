@@ -1,3 +1,4 @@
+import { applyPlayerRenames } from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
 import { setupPicks } from '@utils/draftutil';
 import { cubeDao, draftDao, recordDao, userDao } from 'dynamo/daos';
@@ -12,6 +13,19 @@ import { Request, Response } from '../../../../types/express';
 import { associateNewDraft, associateWithExistingDraft } from './uploaddeck';
 
 const num = (v: unknown): number => Math.max(0, Math.floor(Number(v) || 0));
+
+// A leading @ links the player to a CubeCobra account (matching the record
+// player-list convention). Resolve it to a real user so the player shows up as
+// a linked account; otherwise keep the typed name as-is.
+const resolvePlayer = async (raw: string): Promise<{ name: string; userId?: string }> => {
+  if (!raw.startsWith('@')) {
+    return { name: raw };
+  }
+  const handle = raw.slice(1).trim();
+  const linked = handle ? await userDao.getByUsername(handle) : null;
+  const name = linked?.username || handle || raw;
+  return linked?.id ? { name, userId: linked.id } : { name };
+};
 
 // Token-gated page where someone with the share link adds their deck to a record.
 export const contributePageHandler = async (req: Request, res: Response) => {
@@ -88,25 +102,15 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
     let userIndex = parseInt(req.body.userIndex, 10);
     const rawNewPlayer = `${req.body.newPlayer ?? ''}`.trim();
     if (rawNewPlayer) {
-      // A leading @ links the deck to a CubeCobra account (matching the record
-      // player-list convention). Resolve it to a real user so the player shows up
-      // as a linked account; otherwise store the typed name as-is.
-      let name = rawNewPlayer;
-      let linkedUserId: string | undefined;
-      if (rawNewPlayer.startsWith('@')) {
-        const handle = rawNewPlayer.slice(1).trim();
-        const linked = handle ? await userDao.getByUsername(handle) : null;
-        name = linked?.username || handle || rawNewPlayer;
-        linkedUserId = linked?.id;
-      }
-      record.players = [...(record.players || []), linkedUserId ? { name, userId: linkedUserId } : { name }];
+      const added = await resolvePlayer(rawNewPlayer);
+      record.players = [...(record.players || []), added];
       userIndex = record.players.length;
       if (record.draft) {
         const existingDraft = await draftDao.getById(record.draft);
         if (existingDraft) {
           existingDraft.seats.push({
-            owner: linkedUserId,
-            title: name,
+            owner: added.userId,
+            title: added.name,
             mainboard: createPool() as number[][][],
             sideboard: setupPicks(1, 8) as number[][][],
           });
@@ -121,9 +125,40 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
       return redirect(req, res, `/cube/records/contribute/${record.id}?token=${encodeURIComponent(req.body.token)}`);
     }
 
+    // An existing player can correct their name (or swap it for their account
+    // handle) without losing their seat, deck or results.
+    const rawRename = rawNewPlayer ? '' : `${req.body.renamePlayer ?? ''}`.trim();
+    if (rawRename) {
+      const renamed = await resolvePlayer(rawRename);
+      if (renamed.name !== target.name || renamed.userId !== target.userId) {
+        const taken = record.players.some(
+          (player, index) => index !== userIndex - 1 && player.name.toLowerCase() === renamed.name.toLowerCase(),
+        );
+        if (taken) {
+          req.flash('danger', `Another player in this record is already named ${renamed.name}`);
+          return redirect(req, res, `/cube/records/contribute/${record.id}?token=${encodeURIComponent(req.body.token)}`);
+        }
+        applyPlayerRenames(record, new Map([[target.name, renamed.name]]));
+        record.players[userIndex - 1] = renamed;
+        if (record.draft) {
+          const existingDraft = await draftDao.getById(record.draft);
+          const seat = existingDraft?.seats[userIndex - 1];
+          if (existingDraft && seat) {
+            // Some import flows title seats by archetype; only replace a name title.
+            if (seat.title === target.name) {
+              seat.title = renamed.name;
+            }
+            seat.owner = renamed.userId;
+            await draftDao.update(existingDraft);
+          }
+        }
+      }
+    }
+    const player = record.players[userIndex - 1];
+
     // Their self-reported record (override), keyed by player name.
     record.overrides = record.overrides || {};
-    record.overrides[target.name] = {
+    record.overrides[player.name] = {
       wins: num(req.body.wins),
       losses: num(req.body.losses),
       draws: num(req.body.draws),
