@@ -44,7 +44,6 @@ import DynamicFlash from '../components/DynamicFlash';
 import RenderToRoot from '../components/RenderToRoot';
 import withAutocard from '../components/WithAutocard';
 import { CSRFContext } from '../contexts/CSRFContext';
-import { DisplayContextProvider } from '../contexts/DisplayContext';
 import useClusteringPipeline from '../hooks/useClusteringPipeline';
 import useDraftSimulatorFocus from '../hooks/useDraftSimulatorFocus';
 import useDraftSimulatorPresentation from '../hooks/useDraftSimulatorPresentation';

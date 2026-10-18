@@ -136,7 +136,11 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
         );
         if (taken) {
           req.flash('danger', `Another player in this record is already named ${renamed.name}`);
-          return redirect(req, res, `/cube/records/contribute/${record.id}?token=${encodeURIComponent(req.body.token)}`);
+          return redirect(
+            req,
+            res,
+            `/cube/records/contribute/${record.id}?token=${encodeURIComponent(req.body.token)}`,
+          );
         }
         applyPlayerRenames(record, new Map([[target.name, renamed.name]]));
         record.players[userIndex - 1] = renamed;

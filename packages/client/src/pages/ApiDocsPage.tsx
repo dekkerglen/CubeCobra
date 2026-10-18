@@ -492,13 +492,13 @@ Mox Sapphire
                 </Text>
                 <Text sm className="text-text-secondary">
                   <InlineCode>date</InlineCode> is milliseconds since the Unix epoch. Each match&#39;s{' '}
-                  <InlineCode>results</InlineCode> is <InlineCode>[p1 wins, p2 wins, draws]</InlineCode> in games.
-                  The optional <InlineCode>overrides</InlineCode> maps a player name to{' '}
+                  <InlineCode>results</InlineCode> is <InlineCode>[p1 wins, p2 wins, draws]</InlineCode> in games. The
+                  optional <InlineCode>overrides</InlineCode> maps a player name to{' '}
                   <InlineCode>{'{ wins, losses, draws }'}</InlineCode> for records entered without match results.
                 </Text>
                 <Text sm className="text-text-secondary">
-                  A deck card is <InlineCode>{'{ "name", "oracleId" }'}</InlineCode> or just a card name as a string.
-                  On import, a known <InlineCode>oracleId</InlineCode> wins; otherwise the card is found by name. Cards
+                  A deck card is <InlineCode>{'{ "name", "oracleId" }'}</InlineCode> or just a card name as a string. On
+                  import, a known <InlineCode>oracleId</InlineCode> wins; otherwise the card is found by name. Cards
                   that can&#39;t be found are skipped and reported. Only decks are included, not draft pick order.
                 </Text>
               </Flexbox>
