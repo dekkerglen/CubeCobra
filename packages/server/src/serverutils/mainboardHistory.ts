@@ -11,7 +11,11 @@ export interface MainboardHistory {
 }
 
 interface ChangelogSource<T extends { date: number }> {
-  queryByCube: (cubeId: string, lastKey?: Record<string, any>, limit?: number) => Promise<{ items: T[]; lastKey?: any }>;
+  queryByCube: (
+    cubeId: string,
+    lastKey?: Record<string, any>,
+    limit?: number,
+  ) => Promise<{ items: T[]; lastKey?: any }>;
   loadChangelogData: (changelog: T) => Promise<Changes>;
 }
 

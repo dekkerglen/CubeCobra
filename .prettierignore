@@ -15,6 +15,11 @@ packages/recommenderService/private/**/*
 packages/utils/src/generated/**/*
 packages/server/public/css/stylesheet.css
 packages/annotator/**/*
+# Generated migration checkpoint state, rewritten by the migration runner.
+packages/scripts/src/dynamoMigrations/*.checkpoint.json
+# Local agent scratch directories, excluded from git and not part of the project.
+.superpowers/**/*
+docs/superpowers/**/*
 # Wiki content uses CubeCobra's custom Markdown extensions (>>> <<< centering, << >> cardrows).
 # Prettier rewrites >>> into nested blockquotes (> > >), which breaks the rendered examples.
 packages/server/content/wiki/**/*

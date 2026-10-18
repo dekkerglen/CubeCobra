@@ -233,7 +233,12 @@ const AutocardItem = withAutocard('span');
 const renderCardLink = (card: Card, removed = false) => (
   <>
     <AutocardItem className="p-0" card={card}>
-      <a href={`/tool/card/${encodeName(card.cardID)}`} target="_blank" rel="noopener noreferrer" className="text-nowrap">
+      <a
+        href={`/tool/card/${encodeName(card.cardID)}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-nowrap"
+      >
         {cardName(card)}
       </a>
     </AutocardItem>

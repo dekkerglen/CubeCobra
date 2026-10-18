@@ -4,7 +4,10 @@
     {
       "name": "cubecobra-dev",
       "runtimeExecutable": "bash",
-      "runtimeArgs": ["-c", "npx npm-run-all --parallel dev:client dev:server & PORT=5002 npm run dev:recommender >/dev/null 2>&1 & wait"],
+      "runtimeArgs": [
+        "-c",
+        "npx npm-run-all --parallel dev:client dev:server & PORT=5002 npm run dev:recommender >/dev/null 2>&1 & wait"
+      ],
       "port": 5000
     }
   ]

@@ -38,8 +38,7 @@ interface CachedEntry {
 }
 
 // The card data version the server that rendered this page had loaded.
-const currentCatalogVersion = (): string =>
-  (typeof window !== 'undefined' && window.reactProps?.cardDbVersion) || '';
+const currentCatalogVersion = (): string => (typeof window !== 'undefined' && window.reactProps?.cardDbVersion) || '';
 
 const isVolatile = (details: CardDetails, now: number): boolean => {
   if (details.language && details.language !== 'en') return true;

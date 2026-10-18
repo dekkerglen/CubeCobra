@@ -169,10 +169,7 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
     setShowInlineTagEmojis((prev) => !prev);
   }, [cubeID, showInlineTagEmojis]);
 
-  const [showTagQuickFilters, setShowTagQuickFilters] = useLocalStorage<boolean>(
-    `${cubeID}-showTagQuickFilters`,
-    true,
-  );
+  const [showTagQuickFilters, setShowTagQuickFilters] = useLocalStorage<boolean>(`${cubeID}-showTagQuickFilters`, true);
   const toggleShowTagQuickFilters = useCallback(() => {
     setShowTagQuickFilters((prev) => !prev);
   }, [setShowTagQuickFilters]);

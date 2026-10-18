@@ -94,10 +94,7 @@ const ImportRecordsFilePage: React.FC<ImportRecordsFilePageProps> = ({ cube }) =
       return next;
     });
 
-  const chosen = useMemo(
-    () => (parsed ? parsed.records.filter((_, i) => selected.has(i)) : []),
-    [parsed, selected],
-  );
+  const chosen = useMemo(() => (parsed ? parsed.records.filter((_, i) => selected.has(i)) : []), [parsed, selected]);
 
   const handleImport = async () => {
     setImporting(true);
@@ -224,7 +221,8 @@ const ImportRecordsFilePage: React.FC<ImportRecordsFilePageProps> = ({ cube }) =
                   {result.error ? (
                     <Alert color="danger">
                       {result.error}
-                      {result.created > 0 && ` ${result.created} record${result.created === 1 ? ' was' : 's were'} imported before it stopped.`}
+                      {result.created > 0 &&
+                        ` ${result.created} record${result.created === 1 ? ' was' : 's were'} imported before it stopped.`}
                     </Alert>
                   ) : (
                     <Alert color="success">

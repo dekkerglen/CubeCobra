@@ -206,7 +206,7 @@ export const ArchetypeSkeletonSectionInner: React.FC<{
       <CardBody>
         <Flexbox direction="col" gap="3">
           <div className="overflow-hidden rounded-lg border border-border/80 divide-y divide-border/70">
-            {sortedSkeletons.map((skeleton, idx) => renderSkeleton(skeleton, idx))}
+            {sortedSkeletons.map((skeleton) => renderSkeleton(skeleton))}
           </div>
         </Flexbox>
       </CardBody>
