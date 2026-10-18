@@ -348,11 +348,17 @@ interface DraftDocument {
  * @param legacyBasics - Legacy basics array (card IDs) as fallback
  * @returns Array of basic land card IDs
  */
-const getBasicsFromCube = (
-  cubeCards: Record<string, Array<{ cardID: string }>>,
+type BasicCard = Partial<Card> & { cardID: string };
+
+/**
+ * Like getBasicsFromCube, but returns the cube's card objects so per-card customizations
+ * (custom images, finish) survive. Legacy basics are bare IDs and are wrapped as `{ cardID }`.
+ */
+const getBasicCardsFromCube = (
+  cubeCards: Record<string, any>,
   basicsBoard?: string,
   legacyBasics?: string[],
-): string[] => {
+): BasicCard[] => {
   // 'None' is the explicit opt-out: the cube chose to add no basics at all. Treat
   // it as no basics rather than falling through to the legacy cube.basics array —
   // otherwise a cube with "None" selected still has basics injected.
@@ -364,23 +370,32 @@ const getBasicsFromCube = (
   // basicsBoard may be a display name (e.g. "Basics") - normalize via boardNameToKey
   if (basicsBoard) {
     const boardKey = boardNameToKey(basicsBoard);
-    if (cubeCards[boardKey]) {
-      return cubeCards[boardKey].map((card) => card.cardID);
+    if (Array.isArray(cubeCards[boardKey])) {
+      return cubeCards[boardKey];
     }
   }
 
   // Fall back to legacy basics array for backwards compatibility
-  return legacyBasics || [];
+  return (legacyBasics || []).map((cardID) => ({ cardID }));
 };
 
-const addBasics = (document: DraftDocument, basics: string[]) => {
+const getBasicsFromCube = (
+  cubeCards: Record<string, Array<{ cardID: string }>>,
+  basicsBoard?: string,
+  legacyBasics?: string[],
+): string[] => getBasicCardsFromCube(cubeCards, basicsBoard, legacyBasics).map((card) => card.cardID);
+
+const addBasics = (document: DraftDocument, basics: BasicCard[]) => {
   if (!document.cards) {
     throw new Error('Document must contains cards to add basics');
   }
 
-  const populatedBasics = basics.map((cardID) => {
-    const details = cardFromId(cardID);
+  const populatedBasics = basics.map((basic) => {
+    const details = cardFromId(basic.cardID);
     const populatedCard = {
+      // Carry the cube card over (as createDraft does for pack cards) so custom
+      // images and finish on the Basics board reach the deck.
+      ...basic,
       cardID: details.scryfall_id,
       index: document.cards!.length,
       isUnlimited: true,
@@ -432,6 +447,7 @@ export {
   createPool,
   CSV_HEADER,
   exportToMtgo,
+  getBasicCardsFromCube,
   getBasicsFromCube,
   reverseArray,
   rotateArrayLeft,

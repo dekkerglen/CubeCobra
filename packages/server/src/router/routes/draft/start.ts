@@ -4,7 +4,7 @@ import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
 import { cubeDao, draftDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { cardFromId } from 'serverutils/carddb';
-import { addBasics, getBasicsFromCube } from 'serverutils/cube';
+import { addBasics, getBasicCardsFromCube } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
@@ -150,7 +150,7 @@ const handler = async (req: Request, res: Response) => {
     };
 
     // Get basics from the specified board or fall back to legacy cube.basics
-    const basicsToAdd = getBasicsFromCube(cubeCards, populated.basicsBoard, cube.basics);
+    const basicsToAdd = getBasicCardsFromCube(cubeCards, populated.basicsBoard, cube.basics);
 
     // addBasics modifies the draft object in place, adding basic cards to cards array
     // and setting basics to be an array of card indices

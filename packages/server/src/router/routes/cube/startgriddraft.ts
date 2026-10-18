@@ -1,7 +1,7 @@
 import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { cubeDao, draftDao } from 'dynamo/daos';
 import { body } from 'express-validator';
-import { addBasics, createPool, getBasicsFromCube, shuffle } from 'serverutils/cube';
+import { addBasics, createPool, getBasicCardsFromCube, shuffle } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
@@ -58,7 +58,7 @@ export const startGridDraftHandler = async (req: Request, res: Response) => {
     }
 
     // Grid draft doesn't use format definitions, so default to "Basics" board
-    const basicsToAdd = getBasicsFromCube(cubeCards, 'Basics', cube.basics);
+    const basicsToAdd = getBasicCardsFromCube(cubeCards, 'Basics', cube.basics);
     addBasics(doc, basicsToAdd);
     const pool = createPool();
 

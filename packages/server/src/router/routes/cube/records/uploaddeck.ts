@@ -10,7 +10,7 @@ import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from 'serverutils/carddb';
-import { addBasics, createPool, getBasicsFromCube } from 'serverutils/cube';
+import { addBasics, createPool, getBasicCardsFromCube } from 'serverutils/cube';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
@@ -146,7 +146,7 @@ export const associateNewDraft = async (
   }
 
   // Get basics from the "Basics" board or fall back to legacy cube.basics
-  const basicsToAdd = getBasicsFromCube(cubeCards, 'Basics', cube.basics);
+  const basicsToAdd = getBasicCardsFromCube(cubeCards, 'Basics', cube.basics);
 
   // addBasics modifies the draft object in place, adding basic cards to cards array
   // and setting basics to be an array of card indices
@@ -321,7 +321,7 @@ export const associateDecksWithNewDraft = async (
     basics: [] as number[], // populated by addBasics
   };
 
-  const basicsToAdd = getBasicsFromCube(cubeCards, 'Basics', cube.basics);
+  const basicsToAdd = getBasicCardsFromCube(cubeCards, 'Basics', cube.basics);
   addBasics(newDraft, basicsToAdd);
 
   const id = await draftDao.createDraft(newDraft);

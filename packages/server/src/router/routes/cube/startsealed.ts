@@ -3,7 +3,7 @@ import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { cubeDao, draftDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { cardFromId } from 'serverutils/carddb';
-import { addBasics, createPool, getBasicsFromCube, shuffle } from 'serverutils/cube';
+import { addBasics, createPool, getBasicCardsFromCube, shuffle } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
@@ -121,7 +121,7 @@ export const startSealedHandler = async (req: Request, res: Response) => {
     } as any;
 
     // Sealed doesn't use format definitions, so default to "Basics" board
-    const basicsToAdd = getBasicsFromCube(cubeCards, 'Basics', cube.basics);
+    const basicsToAdd = getBasicCardsFromCube(cubeCards, 'Basics', cube.basics);
     addBasics(deck, basicsToAdd);
 
     deck.seats.push({
