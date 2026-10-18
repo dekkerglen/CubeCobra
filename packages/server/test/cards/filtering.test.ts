@@ -609,3 +609,51 @@ describe('Quantity filter syntax', () => {
     expect(notFilter!(trio)).toBe(true);
   });
 });
+
+describe('Oracle text name placeholder', () => {
+  const cardWithText = (name: string, oracle_text: string, type = 'Creature — Human'): Card =>
+    createCard({ details: createCardDetails({ name, name_lower: name.toLowerCase(), oracle_text, type }) });
+
+  const matches = (query: string, card: Card): boolean => {
+    const { err, filter } = makeFilter(query);
+    expect(err).toBeFalsy();
+    return filter!(card);
+  };
+
+  it('matches the card name', () => {
+    expect(matches('o:"~ deals 3"', cardWithText('Lightning Bolt', 'Lightning Bolt deals 3 damage to any target.'))).toBe(
+      true,
+    );
+  });
+
+  it.each([
+    ['this creature', 'When this creature enters, draw a card.'],
+    ['this artifact', 'When this artifact enters, draw a card.'],
+    ['this enchantment', 'When this enchantment enters, draw a card.'],
+    ['this land', 'When this land enters, draw a card.'],
+    ['this Aura', 'When this Aura enters, draw a card.'],
+  ])('matches "%s" self-references', (_, text) => {
+    expect(matches('o:"when ~ enters"', cardWithText('Some Card', text))).toBe(true);
+  });
+
+  it('matches capitalized self-references', () => {
+    expect(matches('o:"~ deals 3"', cardWithText('Some Card', '{T}: This creature deals 3 damage to any target.'))).toBe(
+      true,
+    );
+  });
+
+  it('does not match unrelated "this" phrases', () => {
+    expect(matches('o:"~ ends"', cardWithText('Some Card', 'Draw a card. This turn ends.'))).toBe(false);
+  });
+
+  it('matches each face of a multi-faced card', () => {
+    const card = cardWithText('Front Face // Back Face', 'When Back Face enters, draw a card.');
+    expect(matches('o:"when ~ enters"', card)).toBe(true);
+  });
+
+  it('handles regex characters in card names', () => {
+    expect(matches('o:"~ enters"', cardWithText('Question Elemental?', 'When Question Elemental? enters, scry 1.'))).toBe(
+      true,
+    );
+  });
+});

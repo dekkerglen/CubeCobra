@@ -222,7 +222,40 @@ export const stringOperation = (op: OperatorType, value: string): FilterFunction
 };
 
 const NAME_PLACEHOLDER = '~';
-const NAME_ALIAS = /\b[Tt]his spell\b/g;
+// Oracle text now refers to a card as "this creature", "this artifact", etc. rather than by name; Scryfall's `~`
+// matches these self-references as well as the card's name.
+const SELF_REFERENCE_NOUNS = [
+  'spell',
+  'card',
+  'permanent',
+  'token',
+  'artifact',
+  'battle',
+  'creature',
+  'enchantment',
+  'land',
+  'planeswalker',
+  'kindred',
+  'Attraction',
+  'Aura',
+  'Background',
+  'Case',
+  'Class',
+  'Contraption',
+  'Curse',
+  'Equipment',
+  'Fortification',
+  'Room',
+  'Saga',
+  'Shrine',
+  'Siege',
+  'Spacecraft',
+  'Planet',
+  'Vehicle',
+];
+const NAME_ALIAS = new RegExp(`\\b[Tt]his (?:${SELF_REFERENCE_NOUNS.join('|')})\\b`, 'g');
+
+const escapeRegExp = (value: string): string => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const SHORTHAND_OVERRIDES = [
   'Crovax the Cursed',
@@ -254,12 +287,16 @@ export const nameStringOperation = (op: OperatorType, value: string): ((fieldVal
       if (!card.details) {
         return strOp(fieldValue);
       }
-      let expandedValue = fieldValue
-        .replace(new RegExp(card.details.name.replace(/\+/g, '\\+'), 'g'), NAME_PLACEHOLDER)
-        .replace(NAME_ALIAS, NAME_PLACEHOLDER);
+      // Multi-faced cards refer to each face by that face's name.
+      const names = [card.details.name, ...card.details.name.split(' // ')];
+      let expandedValue = fieldValue;
+      for (const name of names) {
+        expandedValue = expandedValue.replace(new RegExp(escapeRegExp(name), 'g'), NAME_PLACEHOLDER);
+      }
+      expandedValue = expandedValue.replace(NAME_ALIAS, NAME_PLACEHOLDER);
       const shorthand = getShorthand(card.details);
       if (shorthand) {
-        expandedValue = expandedValue.replace(new RegExp(shorthand, 'g'), NAME_PLACEHOLDER);
+        expandedValue = expandedValue.replace(new RegExp(escapeRegExp(shorthand), 'g'), NAME_PLACEHOLDER);
       }
       return strOp(fieldValue) || strOp(expandedValue);
     },

@@ -28,12 +28,22 @@ async function fetchWithTimeout(resource: RequestInfo, options: ExtendedRequestI
 
   const controller = new AbortController();
   const id = setTimeout(() => controller.abort(), timeout);
-  const response = await fetch(resource, {
-    ...options,
-    signal: controller.signal,
-  });
-  clearTimeout(id);
-  return response;
+  // Honor a caller-supplied signal too, so callers can cancel in-flight requests.
+  const callerSignal = options.signal;
+  const onCallerAbort = () => controller.abort();
+  if (callerSignal) {
+    if (callerSignal.aborted) controller.abort();
+    else callerSignal.addEventListener('abort', onCallerAbort, { once: true });
+  }
+  try {
+    return await fetch(resource, {
+      ...options,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(id);
+    callerSignal?.removeEventListener('abort', onCallerAbort);
+  }
 }
 
 export const CSRFContextProvider: React.FC<CSRFContextProviderProps> = ({ children, csrfToken }) => {

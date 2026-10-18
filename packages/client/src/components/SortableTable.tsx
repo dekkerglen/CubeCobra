@@ -32,6 +32,9 @@ interface SortableTableProps {
 }
 
 export const valueRenderer = (value: any): any => {
+  if (value === null || value === undefined) {
+    return '';
+  }
   if (Number.isInteger(value)) {
     return value;
   }
@@ -61,7 +64,8 @@ export const SortableTable: React.FC<SortableTableProps> = ({
   const exportData = items.map((row) =>
     fromEntries(
       Object.entries(row).map(([key, value]) => {
-        if (value.exportValue) {
+        // Cells can be null/undefined (e.g. Winrate Analytics' Play Rate with no data).
+        if (value?.exportValue) {
           return [key, value.exportValue];
         }
         return [key, value];

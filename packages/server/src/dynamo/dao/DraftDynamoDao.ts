@@ -545,6 +545,40 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   }
 
   /**
+   * Queries completed drafts of one type for a cube, with pagination. The type is
+   * filtered in DynamoDB, so only matching drafts are hydrated from S3. As with any
+   * filtered query, a page may hold fewer than `Limit` items (or none) while
+   * `lastKey` is still set.
+   */
+  public async queryByCubeAndType(
+    cubeId: string,
+    type: string,
+    lastKey?: Record<string, NativeAttributeValue>,
+  ): Promise<QueryResult> {
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI2',
+      KeyConditionExpression: 'GSI2PK = :cube',
+      FilterExpression: '#item.#complete = :complete AND #item.#type = :type',
+      ExpressionAttributeNames: {
+        '#item': 'item',
+        '#complete': 'complete',
+        '#type': 'type',
+      },
+      ExpressionAttributeValues: {
+        ':cube': `${this.itemType()}#CUBE#${cubeId}`,
+        ':complete': true,
+        ':type': type,
+      },
+      ScanIndexForward: false,
+      Limit: 200,
+      ExclusiveStartKey: lastKey,
+    };
+
+    return this.query(params);
+  }
+
+  /**
    * Queries drafts by cube owner with pagination (unhydrated version for listing).
    * Only hydrates user data, skips loading cards/seats from S3 for better performance.
    */

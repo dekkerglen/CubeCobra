@@ -1,19 +1,23 @@
 import { cardCmc, cardColorIdentity, cardImageUrl, cardName, cardOracleId, cardType } from '@utils/cardutil';
 import DraftType, { DRAFT_TYPES } from '@utils/datatypes/Draft';
-import { getDrafterState } from '@utils/draftutil';
+import { getSeatActionStates } from '@utils/draftutil';
 import { cubeDao, draftDao } from 'dynamo/daos';
+import { csrfProtection } from 'router/middleware';
 import { isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
 
-// Most recent human drafts to include. Playtest analysis runs on demand and
-// hydrates every draft's pick data (S3), so this bounds the download + request
-// time on very large cubes. Older drafts beyond this are excluded (see `capped`).
-const MAX_DRAFTS = 5000;
+// The client pages through a cube's drafts (newest first), one request per page,
+// passing back `lastKey` until it's absent. Each request stops after collecting
+// PAGE_DRAFTS usable drafts or spending PAGE_TIME_BUDGET_MS, whichever comes
+// first, so it stays well under the 60s request timeout on any cube.
+const PAGE_DRAFTS = 250;
+const PAGE_TIME_BUDGET_MS = 15 * 1000;
 
 // One human draft's raw inputs for client-side playtest analysis. Everything is
-// dictionary-encoded against the response's `oracles` array (index → oracle id)
-// to keep the payload small: the same oracle id appears in many packs/decks.
+// dictionary-encoded against the page's `oracles` array (index → oracle id) to
+// keep the payload small: the same oracle id appears in many packs/decks. Each
+// page has its own dictionary; the client merges them.
 interface PlaytestDraft {
   id: string;
   date: number;
@@ -94,31 +98,35 @@ export const playtestDataHandler = async (req: Request, res: Response) => {
       return out;
     };
 
+    const startKey = req.body?.lastKey;
+    if (startKey !== undefined && startKey !== null && (typeof startKey !== 'object' || Array.isArray(startKey))) {
+      return res.status(400).send({ success: 'false', message: 'Invalid lastKey' });
+    }
+
     const out: PlaytestDraft[] = [];
-    let capped = false;
-    let lastKey: any = undefined;
+    const startedAt = Date.now();
+    let lastKey: any = startKey ?? undefined;
 
     do {
-      const result = await draftDao.queryByCube(cube.id, lastKey);
+      // Only real bot/human drafts can be reconstructed pick-by-pick; filtering by
+      // type in the query skips the S3 reads for every other draft type.
+      const result = await draftDao.queryByCubeAndType(cube.id, DRAFT_TYPES.DRAFT, lastKey);
       lastKey = result?.lastKey;
       const drafts = (result?.items ?? []) as DraftType[];
 
       for (const draft of drafts) {
-        // Only real bot/human drafts can be reconstructed pick-by-pick.
-        if (draft.type !== DRAFT_TYPES.DRAFT) continue;
         if (!Array.isArray(draft.InitialState) || draft.InitialState.length === 0) continue;
         if (!draft.seats || !draft.cards) continue;
 
         const seatIndex = humanSeatIndex(draft);
         const seat = draft.seats[seatIndex];
         if (!seat || seat.bot) continue;
-        const pickorder = seat.pickorder;
-        if (!pickorder || pickorder.length === 0) continue;
+        if (!seat.pickorder || seat.pickorder.length === 0) continue;
 
         try {
           const picks: PlaytestDraft['picks'] = [];
-          for (let j = 0; j < pickorder.length; j++) {
-            const state = getDrafterState(draft, seatIndex, j);
+          for (const state of getSeatActionStates(draft, seatIndex)) {
+            if (state.action !== 'pick') continue;
             const picked = state.selection;
             if (picked === undefined || picked < 0 || picked >= draft.cards.length) continue;
             const pickedIdx = intern(draft.cards[picked]);
@@ -146,17 +154,11 @@ export const playtestDataHandler = async (req: Request, res: Response) => {
           // A single malformed draft shouldn't sink the whole run.
           req.logger.error(`Failed to reconstruct draft ${draft.id}: ${(err as Error).message}`);
         }
-
-        if (out.length >= MAX_DRAFTS) {
-          capped = true;
-          break;
-        }
       }
+      // Dynamo pages are processed whole so `lastKey` is always a valid resume point.
+    } while (lastKey && out.length < PAGE_DRAFTS && Date.now() - startedAt < PAGE_TIME_BUDGET_MS);
 
-      if (out.length >= MAX_DRAFTS) break;
-    } while (lastKey);
-
-    return res.status(200).send({ success: 'true', oracles, cards, drafts: out, capped });
+    return res.status(200).send({ success: 'true', oracles, cards, drafts: out, lastKey: lastKey ?? null });
   } catch (err) {
     const error = err as Error;
     req.logger.error(error.message, error.stack);
@@ -166,8 +168,8 @@ export const playtestDataHandler = async (req: Request, res: Response) => {
 
 export const routes = [
   {
-    method: 'get',
+    method: 'post',
     path: '/:id',
-    handler: [playtestDataHandler],
+    handler: [csrfProtection, playtestDataHandler],
   },
 ];

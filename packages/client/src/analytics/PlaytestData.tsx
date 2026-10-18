@@ -99,6 +99,7 @@ const RunControls: React.FC<{
   runError: string | null;
   simPhase: SimulationPhase;
   overallProgress: number;
+  downloadedCount: number;
   onRun: () => void;
   onCancel: () => void;
   onLoad: (ts: number) => void;
@@ -112,6 +113,7 @@ const RunControls: React.FC<{
   runError,
   simPhase,
   overallProgress,
+  downloadedCount,
   onRun,
   onCancel,
   onLoad,
@@ -155,7 +157,13 @@ const RunControls: React.FC<{
           <SimulationProgressBar
             phase={simPhase}
             overallProgress={overallProgress}
-            label={simPhase ? PLAYTEST_PHASE_LABELS[simPhase] : undefined}
+            label={
+              simPhase === 'setup' && downloadedCount > 0
+                ? `Downloading draft data… (${downloadedCount.toLocaleString()} decks)`
+                : simPhase
+                  ? PLAYTEST_PHASE_LABELS[simPhase]
+                  : undefined
+            }
           />
         </div>
       )}
@@ -341,6 +349,7 @@ const PlaytestData: React.FC = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [simPhase, setSimPhase] = useState<SimulationPhase>(null);
   const [modelLoadProgress, setModelLoadProgress] = useState(0);
+  const [downloadedCount, setDownloadedCount] = useState(0);
   const [runError, setRunError] = useState<string | null>(null);
   const abortRef = useRef<AbortController | null>(null);
 
@@ -355,12 +364,22 @@ const PlaytestData: React.FC = () => {
       const runData = await runPlaytestAnalysis(csrfFetch, cube, cards, {
         onPhase: setSimPhase,
         onModelProgress: setModelLoadProgress,
+        onDownloadProgress: setDownloadedCount,
         signal: controller.signal,
       });
       await handlePersistCompletedRun(runData);
     } catch (err) {
-      if (!(err instanceof Error && err.name === 'AbortError')) {
-        setRunError(err instanceof Error ? err.message : 'Analysis failed');
+      // Stay quiet only when the user cancelled; a request timeout also surfaces as
+      // an AbortError and should be reported.
+      if (!controller.signal.aborted) {
+        const timedOut = err instanceof Error && err.name === 'AbortError';
+        setRunError(
+          timedOut
+            ? 'The request timed out. Please try again.'
+            : err instanceof Error
+              ? err.message
+              : 'Analysis failed',
+        );
       }
     } finally {
       setIsRunning(false);
@@ -542,6 +561,7 @@ const PlaytestData: React.FC = () => {
           runError={runError}
           simPhase={simPhase}
           overallProgress={overallProgress}
+          downloadedCount={downloadedCount}
           onRun={handleRun}
           onCancel={handleCancel}
           onLoad={handleLoadRun}

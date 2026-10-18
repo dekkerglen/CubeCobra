@@ -28,6 +28,10 @@ type CsrfFetch = (input: RequestInfo, init?: RequestInit) => Promise<Response>;
 
 export type RunPhase = 'setup' | 'loadmodel' | 'cluster' | 'save';
 
+// Most recent human drafts to include. Bounds the download, memory and clustering
+// time on very large cubes; older drafts beyond this are excluded (see `capped`).
+const MAX_DRAFTS = 5000;
+
 interface RawPlaytestDraft {
   id: string;
   date: number;
@@ -160,25 +164,77 @@ export async function runPlaytestAnalysis(
   csrfFetch: CsrfFetch,
   cube: Cube,
   cubeCards: Card[],
-  callbacks: { onPhase: (p: RunPhase) => void; onModelProgress: (pct: number) => void; signal?: AbortSignal },
+  callbacks: {
+    onPhase: (p: RunPhase) => void;
+    onModelProgress: (pct: number) => void;
+    onDownloadProgress: (draftCount: number) => void;
+    signal?: AbortSignal;
+  },
 ): Promise<PlaytestAnalysisRunData> {
-  const { onPhase, onModelProgress, signal } = callbacks;
+  const { onPhase, onModelProgress, onDownloadProgress, signal } = callbacks;
   const throwIfAborted = () => {
     if (signal?.aborted) throw new DOMException('Aborted', 'AbortError');
   };
 
   // ── Fetch raw inputs ───────────────────────────────────────────────────────
+  // The server returns one page of drafts per request (newest first), each with
+  // its own oracle dictionary; remap every page into one run-wide dictionary.
   onPhase('setup');
-  const res = await csrfFetch(`/cube/analysis/playtestdata/${encodeURIComponent(cube.id)}`, { method: 'GET' });
-  const json = await res.json();
-  if (!json?.success || !Array.isArray(json.drafts) || !Array.isArray(json.oracles)) {
-    throw new Error('Failed to load playtest data');
-  }
-  const oracles: string[] = json.oracles;
-  const cardImages: { [oracle: string]: RecordCardInfo } = json.cards ?? {};
-  const rawDrafts: RawPlaytestDraft[] = json.drafts;
-  const capped: boolean = !!json.capped;
-  throwIfAborted();
+  onDownloadProgress(0);
+  const oracles: string[] = [];
+  const oracleIndex = new Map<string, number>();
+  const cardImages: { [oracle: string]: RecordCardInfo } = {};
+  const rawDrafts: RawPlaytestDraft[] = [];
+  let capped = false;
+  let lastKey: unknown = null;
+
+  do {
+    const res = await csrfFetch(`/cube/analysis/playtestdata/${encodeURIComponent(cube.id)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ lastKey }),
+      signal,
+    });
+    if (!res.ok) {
+      throw new Error(`Failed to load playtest data (server responded ${res.status}). Please try again.`);
+    }
+    const json = await res.json();
+    if (!json?.success || !Array.isArray(json.drafts) || !Array.isArray(json.oracles)) {
+      throw new Error('Failed to load playtest data');
+    }
+
+    const pageOracles: string[] = json.oracles;
+    const pageCards: { [oracle: string]: RecordCardInfo } = json.cards ?? {};
+    const remap = pageOracles.map((oracle) => {
+      let idx = oracleIndex.get(oracle);
+      if (idx === undefined) {
+        idx = oracles.length;
+        oracleIndex.set(oracle, idx);
+        oracles.push(oracle);
+        if (pageCards[oracle]) cardImages[oracle] = pageCards[oracle];
+      }
+      return idx;
+    });
+    const at = (i: number) => remap[i] ?? -1;
+
+    for (const draft of json.drafts as RawPlaytestDraft[]) {
+      if (rawDrafts.length >= MAX_DRAFTS) {
+        capped = true;
+        break;
+      }
+      rawDrafts.push({
+        ...draft,
+        picks: draft.picks.map((pick) => ({ ...pick, o: at(pick.o), seen: pick.seen.map(at) })),
+        mainboard: draft.mainboard.map(at),
+        sideboard: draft.sideboard.map(at),
+      });
+    }
+
+    lastKey = json.lastKey ?? null;
+    if (lastKey && rawDrafts.length >= MAX_DRAFTS) capped = true;
+    onDownloadProgress(rawDrafts.length);
+    throwIfAborted();
+  } while (lastKey && !capped);
 
   // ── Build per-deck data ─────────────────────────────────────────────────────
   // Card metadata for color assessment (cube cards, backfilled with captured info

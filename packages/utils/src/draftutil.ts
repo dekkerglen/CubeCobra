@@ -109,17 +109,21 @@ export const getStepList = (initialState: any[]): FlattenedStep[] =>
     ])
     .flat();
 
-export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: number): DrafterState => {
+const emptyDrafterState = (): DrafterState => ({
+  picked: [],
+  trashed: [],
+  pickQueue: [],
+  trashQueue: [],
+  cardsPicked: [],
+  cardsInPack: [],
+  picksList: [],
+});
+
+// Replays the draft step by step, calling `visit` with every seat's state after each
+// step's picks/trashes are applied (before passing). Return true from `visit` to stop.
+const replayDraft = (draft: Draft, visit: (states: DrafterState[]) => boolean): DrafterState[] => {
   if (!draft.InitialState) {
-    return {
-      picked: [],
-      trashed: [],
-      pickQueue: [],
-      trashQueue: [],
-      cardsPicked: [],
-      cardsInPack: [],
-      picksList: [],
-    };
+    return [];
   }
 
   // build list of steps and match to pick and pack number
@@ -230,9 +234,7 @@ export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: nu
       }
     }
 
-    // if we've reached the desired time in the draft, we're done
-    const currentState = states[seatNumber];
-    if (currentState && currentState.picked.length + currentState.trashed.length > pickNumber) {
+    if (visit(states)) {
       break;
     }
 
@@ -243,17 +245,57 @@ export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: nu
     }
   }
 
-  return (
-    states[seatNumber] || {
-      picked: [],
-      trashed: [],
-      pickQueue: [],
-      trashQueue: [],
-      cardsPicked: [],
-      cardsInPack: [],
-      picksList: [],
+  return states;
+};
+
+export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: number): DrafterState => {
+  if (!draft.InitialState) {
+    return emptyDrafterState();
+  }
+
+  const states = replayDraft(draft, (current) => {
+    // if we've reached the desired time in the draft, we're done
+    const currentState = current[seatNumber];
+    return !!currentState && currentState.picked.length + currentState.trashed.length > pickNumber;
+  });
+
+  return states[seatNumber] || emptyDrafterState();
+};
+
+export interface SeatActionState {
+  action: 'pick' | 'trash';
+  selection?: number;
+  cardsInPack: number[];
+  pack?: number;
+  pick?: number;
+}
+
+/**
+ * Every pick/trash one seat made, in order, from a single replay of the draft.
+ * Equivalent to calling getDrafterState(draft, seatNumber, j) for each j, but
+ * linear in the draft length instead of quadratic.
+ */
+export const getSeatActionStates = (draft: Draft, seatNumber: number): SeatActionState[] => {
+  if (!draft.InitialState) {
+    return [];
+  }
+
+  const out: SeatActionState[] = [];
+  replayDraft(draft, (states) => {
+    const seat = states[seatNumber];
+    if (!seat) return true;
+    if (seat.picked.length + seat.trashed.length > out.length) {
+      out.push({
+        action: seat.step?.action.startsWith('trash') ? 'trash' : 'pick',
+        selection: seat.selection,
+        cardsInPack: seat.cardsInPack,
+        pack: seat.pack,
+        pick: seat.pick,
+      });
     }
-  );
+    return false;
+  });
+  return out;
 };
 
 export const getDefaultPosition = (card: Card, picks: any[][][]): [number, number, number] => {

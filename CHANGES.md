@@ -1,5 +1,9 @@
 The changes here are concise, one liners to be put in a future user facing blogpost. Focus on the effect of the new feature, no technical details.
 
+- The Winrate Analytics page loads again — it had been showing a "Something went wrong" error.
+- Playtest analysis now works on cubes with lots of drafts — it no longer stops partway through downloading draft data, shows how many decks it has loaded so far, and tells you if something goes wrong instead of silently closing.
+- The `~` card-name placeholder in oracle text searches now matches the way Scryfall does: it also finds cards that refer to themselves as "this creature", "this artifact", "this enchantment" and so on, and it works for the back face of double-faced cards.
+- Switching between views on the cube list now works for views with a slash or other special characters in their name, instead of needing to leave the page first.
 - Cubes with emoji tags now show a row of quick-filter buttons under the filter bar on the cube list — click one to show just the cards with that tag, and click it again to clear. You can hide the row from the Display options.
 - Players in a draft record can now be renamed — fix a misspelling or swap a real name for an @username — without losing their deck or results, and players can correct their own name from the deck collection link.
 - Tag searches now ignore hyphens, so `otag:boardwipe` finds board wipes just like `otag:board-wipe`.
