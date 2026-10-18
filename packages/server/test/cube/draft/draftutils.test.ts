@@ -774,8 +774,14 @@ describe('getSeatActionStates', () => {
       { mainboard: [], sideboard: [], pickorder: [11, 3, 4, 9], trashorder: [7] },
     ],
     InitialState: [
-      [{ cards: [0, 1, 2], steps: pack1Steps }, { cards: [6, 7, 8], steps: pack2Steps }],
-      [{ cards: [3, 4, 5], steps: pack1Steps }, { cards: [9, 10, 11], steps: pack2Steps }],
+      [
+        { cards: [0, 1, 2], steps: pack1Steps },
+        { cards: [6, 7, 8], steps: pack2Steps },
+      ],
+      [
+        { cards: [3, 4, 5], steps: pack1Steps },
+        { cards: [9, 10, 11], steps: pack2Steps },
+      ],
     ],
   });
 

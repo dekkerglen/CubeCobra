@@ -621,9 +621,9 @@ describe('Oracle text name placeholder', () => {
   };
 
   it('matches the card name', () => {
-    expect(matches('o:"~ deals 3"', cardWithText('Lightning Bolt', 'Lightning Bolt deals 3 damage to any target.'))).toBe(
-      true,
-    );
+    expect(
+      matches('o:"~ deals 3"', cardWithText('Lightning Bolt', 'Lightning Bolt deals 3 damage to any target.')),
+    ).toBe(true);
   });
 
   it.each([
@@ -637,9 +637,9 @@ describe('Oracle text name placeholder', () => {
   });
 
   it('matches capitalized self-references', () => {
-    expect(matches('o:"~ deals 3"', cardWithText('Some Card', '{T}: This creature deals 3 damage to any target.'))).toBe(
-      true,
-    );
+    expect(
+      matches('o:"~ deals 3"', cardWithText('Some Card', '{T}: This creature deals 3 damage to any target.')),
+    ).toBe(true);
   });
 
   it('does not match unrelated "this" phrases', () => {
@@ -652,8 +652,8 @@ describe('Oracle text name placeholder', () => {
   });
 
   it('handles regex characters in card names', () => {
-    expect(matches('o:"~ enters"', cardWithText('Question Elemental?', 'When Question Elemental? enters, scry 1.'))).toBe(
-      true,
-    );
+    expect(
+      matches('o:"~ enters"', cardWithText('Question Elemental?', 'When Question Elemental? enters, scry 1.')),
+    ).toBe(true);
   });
 });
