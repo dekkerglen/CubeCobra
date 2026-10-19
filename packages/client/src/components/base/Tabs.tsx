@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 import classNames from 'classnames';
 
@@ -62,6 +62,18 @@ interface TabContentProps {
 }
 
 export const TabContent: React.FC<TabContentProps> = ({ activeTab, contents, className = '' }) => {
+  // Tabs mount on first visit and stay mounted afterwards, so returning to one is
+  // instant and any state it holds survives, while a tab the user never opens costs
+  // nothing. Mounting every tab up front meant the card page fetched two thirds of
+  // its card images, and fired the combos request, for tabs nobody looked at.
+  const [visited, setVisited] = useState<number[]>(() => [activeTab]);
+
+  // Recorded during render rather than in an effect so the tab counts as mounted on
+  // the same pass that reveals it, with no intermediate frame of empty content.
+  if (!visited.includes(activeTab)) {
+    setVisited([...visited, activeTab]);
+  }
+
   return (
     <div className={className}>
       {contents.map((content, index) => (
@@ -69,7 +81,7 @@ export const TabContent: React.FC<TabContentProps> = ({ activeTab, contents, cla
           key={index}
           className={classNames('max-w-full', { block: index === activeTab, hidden: index !== activeTab })}
         >
-          {content}
+          {index === activeTab || visited.includes(index) ? content : null}
         </div>
       ))}
     </div>

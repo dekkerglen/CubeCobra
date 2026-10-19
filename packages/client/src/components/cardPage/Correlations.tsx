@@ -103,25 +103,27 @@ interface CorrelationProps {
   oracleId?: string; // New: oracle id for fetching combos when not provided
 }
 
-const CardBreakdownInfo: React.FC<CorrelationProps> = ({
-  draftedWith,
-  cubedWith,
-  synergistic,
-  combos = [],
-  oracleId,
-}) => {
-  const [correlatedTab, setCorrelatedTab] = useQueryParam('correlatedTab', '0');
+interface CombosTabProps {
+  combos: Combo[];
+  oracleId?: string;
+}
+
+// Lives in its own component so it mounts with the Combos tab rather than with the
+// page. Visitors who never open the tab cost no request.
+const CombosTab: React.FC<CombosTabProps> = ({ combos, oracleId }) => {
   const { csrfFetch } = useContext(CSRFContext);
+  const hasComboProp = combos.length > 0;
+  const shouldFetch = !hasComboProp && !!oracleId;
   const [loadedCombos, setLoadedCombos] = useState<Combo[]>([]);
-  const [loadingCombos, setLoadingCombos] = useState<boolean>(false);
+  // Starts true whenever a request is still to come, so the first paint after the
+  // tab opens shows the loading state instead of flashing "No combos found".
+  const [loadingCombos, setLoadingCombos] = useState<boolean>(shouldFetch);
   // The oracleId a fetch has already been started for (in flight or done). A ref rather
   // than state so re-renders while the request is loading can't fire duplicates.
   const fetchStartedForRef = useRef<string | null>(null);
 
-  const hasComboProp = combos.length > 0;
-
   useEffect(() => {
-    if (hasComboProp || !oracleId || fetchStartedForRef.current === oracleId) {
+    if (!shouldFetch || !oracleId || fetchStartedForRef.current === oracleId) {
       return;
     }
     fetchStartedForRef.current = oracleId;
@@ -158,9 +160,34 @@ const CardBreakdownInfo: React.FC<CorrelationProps> = ({
     return () => {
       cancelled = true;
     };
-  }, [csrfFetch, hasComboProp, oracleId]);
+  }, [csrfFetch, shouldFetch, oracleId]);
 
   const combosToRender = hasComboProp ? combos : loadedCombos;
+
+  return (
+    <CardBody>
+      <Flexbox direction="col" gap="2">
+        {!loadingCombos && combosToRender.length > 0 && <Text>{combosToRender.length} combos found.</Text>}
+        {loadingCombos ? (
+          <Text>Loading combos…</Text>
+        ) : combosToRender.length > 0 ? (
+          combosToRender.map((combo) => <ComboCard key={combo.id} combo={combo} />)
+        ) : (
+          <Text>No combos found.</Text>
+        )}
+      </Flexbox>
+    </CardBody>
+  );
+};
+
+const CardBreakdownInfo: React.FC<CorrelationProps> = ({
+  draftedWith,
+  cubedWith,
+  synergistic,
+  combos = [],
+  oracleId,
+}) => {
+  const [correlatedTab, setCorrelatedTab] = useQueryParam('correlatedTab', '0');
 
   return (
     <Card>
@@ -184,20 +211,7 @@ const CardBreakdownInfo: React.FC<CorrelationProps> = ({
           {
             label: 'Combos',
             onClick: () => setCorrelatedTab('3'),
-            content: (
-              <CardBody>
-                <Flexbox direction="col" gap="2">
-                  {!loadingCombos && combosToRender.length > 0 && <Text>{combosToRender.length} combos found.</Text>}
-                  {loadingCombos ? (
-                    <Text>Loading combos…</Text>
-                  ) : combosToRender.length > 0 ? (
-                    combosToRender.map((combo) => <ComboCard key={combo.id} combo={combo} />)
-                  ) : (
-                    <Text>No combos found.</Text>
-                  )}
-                </Flexbox>
-              </CardBody>
-            ),
+            content: <CombosTab combos={combos} oracleId={oracleId} />,
           },
         ]}
         activeTab={parseInt(correlatedTab || '0', 10)}
