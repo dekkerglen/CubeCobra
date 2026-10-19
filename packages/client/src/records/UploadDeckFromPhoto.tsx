@@ -180,8 +180,10 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
   const imageElRef = useRef<HTMLImageElement | null>(null);
   const objectUrlRef = useRef<string | null>(null);
   const previewCanvasRef = useRef<HTMLCanvasElement>(null);
-  // The rotated source canvas the OCR ran on; kept so we can crop/re-OCR regions.
-  const scanCanvasRef = useRef<HTMLCanvasElement | null>(null);
+  // The rotated source canvas the OCR ran on; kept so we can crop/re-OCR regions. Held in
+  // state, not a ref, because the row crops read it while rendering - as a ref it only
+  // happened to display because an adjacent setState forced the re-render.
+  const [scanCanvas, setScanCanvas] = useState<HTMLCanvasElement | null>(null);
   // Persistent single-line worker reused for per-box re-OCR.
   const ocrWorkerRef = useRef<any>(null);
 
@@ -263,7 +265,7 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
   const reset = useCallback(() => {
     resetImage();
     terminateWorker();
-    scanCanvasRef.current = null;
+    setScanCanvas(null);
     setRows([]);
     setScanSrc(null);
     setScanDims(null);
@@ -400,7 +402,10 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
   // Deck mode: report the current decklist (named cards) and whether this pool
   // should be auto-built on submit, to the parent whenever either changes. Held
   // in a ref so an unmemoized callback can't loop.
+  // react/refs flags the render-phase write. This is the "latest ref" idiom and the ref is
+  // only read from the effect below, which runs after this assignment.
   const onCardsChangeRef = useRef(onCardsChange);
+  // eslint-disable-next-line react/refs
   onCardsChangeRef.current = onCardsChange;
   const wantsAutoBuild = autoBuildPool && currentPhoto?.type === 'pool';
   useEffect(() => {
@@ -419,7 +424,7 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
     }
 
     const canvas = makeRotatedCanvas(img, rotation, SCAN_MAX_EDGE);
-    scanCanvasRef.current = canvas;
+    setScanCanvas(canvas);
     setScanSrc(canvas.toDataURL('image/jpeg', 0.92));
     setScanDims({ w: canvas.width, h: canvas.height });
     setStatus('working');
@@ -785,7 +790,7 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
                       {/* The name-bar pixels the OCR read (absent for manually-added cards). */}
                       {row.quad ? (
                         <OrientedCrop
-                          source={scanCanvasRef.current}
+                          source={scanCanvas}
                           quad={row.quad}
                           targetH={28}
                           className="h-7 w-auto max-w-full block rounded bg-white border border-border shrink-0"

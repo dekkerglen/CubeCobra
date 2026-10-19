@@ -66,12 +66,15 @@ const Suggestions: React.FC = () => {
   const targetPageRef = useRef(0); // highest page the running loop should fill to
 
   // Latest request params, read by the (otherwise stable) fill routine.
+  // react/refs flags the render-phase write. This is the "latest ref" idiom: the object is
+  // only read from the async fill loop, which always runs after render.
   const paramsRef = useRef({
     cubeId: cube.id,
     filterText: filterInput,
     printingPreference: cube.defaultPrinting,
     isEmpty: isEmptyCube,
   });
+  // eslint-disable-next-line react/refs
   paramsRef.current = {
     cubeId: cube.id,
     filterText: filterInput,

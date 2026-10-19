@@ -38,9 +38,13 @@ const AdvancedFilterModal: React.FC<AdvancedFilterModalProps> = ({ isOpen, setOp
   // artist, and rarity values actually present in it. Empty when there is no
   // cube (e.g. the global card search), in which case the enum fields fall back
   // to free-text inputs.
+  // `cards` is read outside the memo so the callback closes over that value rather than over
+  // `cube`; otherwise the compiler infers a dependency on the whole cube and cannot preserve
+  // the memoization.
+  const cards = cube?.cards;
   const cubeCards = useMemo<Card[]>(
-    () => (cube?.cards ? (Object.values(cube.cards).flat().filter(Boolean) as Card[]) : []),
-    [cube?.cards],
+    () => (cards ? (Object.values(cards).flat().filter(Boolean) as Card[]) : []),
+    [cards],
   );
 
   const setOptions = useMemo(() => toOptions(getLabels(cubeCards, 'Set', false)), [cubeCards]);

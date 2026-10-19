@@ -4,6 +4,7 @@ import Card from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 
 import { useCardDetails } from 'hooks/useCardDetails';
+import { applyIndexMap } from 'utils/applyIndexMap';
 import { getPlaceholderCardDetails } from 'utils/placeholderCardDetails';
 import Query from 'utils/Query';
 
@@ -48,10 +49,12 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({
 
   const filteredCards = cardFilter ? cards.filter(cardFilter.filter) : cards;
 
-  // Map original indices to filtered indices
-  const createFilteredIndices = useMemo(() => {
+  // Map original indices to filtered indices. Memoise the map itself rather than a function
+  // that closes over it: React Compiler cannot prove a returned closure stays memoized, so the
+  // whole component was being skipped for optimisation.
+  const filteredIndexMap = useMemo(() => {
     const cardFilterFn = cardFilter?.filter;
-    if (!cardFilterFn) return (indices: number[]) => indices;
+    if (!cardFilterFn) return null;
 
     const indexMap = new Map<number, number>();
     let filteredIndex = 0;
@@ -63,12 +66,12 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({
       }
     }
 
-    return (indices: number[]) => indices.map((i) => indexMap.get(i)).filter((i) => i !== undefined) as number[];
+    return indexMap;
   }, [cards, cardFilter]);
 
-  const filteredBoth = useMemo(() => createFilteredIndices(both), [both, createFilteredIndices]);
-  const filteredOnlyA = useMemo(() => createFilteredIndices(onlyA), [onlyA, createFilteredIndices]);
-  const filteredOnlyB = useMemo(() => createFilteredIndices(onlyB), [onlyB, createFilteredIndices]);
+  const filteredBoth = useMemo(() => applyIndexMap(both, filteredIndexMap), [both, filteredIndexMap]);
+  const filteredOnlyA = useMemo(() => applyIndexMap(onlyA, filteredIndexMap), [onlyA, filteredIndexMap]);
+  const filteredOnlyB = useMemo(() => applyIndexMap(onlyB, filteredIndexMap), [onlyB, filteredIndexMap]);
 
   return (
     <>

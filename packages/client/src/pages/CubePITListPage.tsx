@@ -53,11 +53,14 @@ const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ dat
     return new Date().toISOString().split('T')[0];
   });
 
+  // `cubeId` is read outside the callback so the compiler infers a dependency on that value
+  // rather than on `cube`, which would stop it preserving the memoization.
+  const cubeId = cube?.id;
   const handleDateJump = useCallback(() => {
-    if (!dateValue || !cube?.id) return;
+    if (!dateValue || !cubeId) return;
     const dateMs = new Date(dateValue).getTime();
-    window.location.href = `/cube/changelog/${cube.id}/at?date=${dateMs}`;
-  }, [dateValue, cube?.id]);
+    window.location.href = `/cube/changelog/${cubeId}/at?date=${dateMs}`;
+  }, [dateValue, cubeId]);
 
   // Override canEdit to false — this is a read-only point-in-time view
   const readOnlyContext = useMemo(() => ({ ...cubeContext, canEdit: false }), [cubeContext]);

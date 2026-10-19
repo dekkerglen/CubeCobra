@@ -172,16 +172,19 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
     setTimeout(dismissAlerts, 3000);
   }, [addAlert, dismissAlerts, exportTokens]);
 
+  // `cubeName` is read outside the callback so the compiler infers a dependency on that value
+  // rather than on `cube`, which would stop it preserving the memoization.
+  const cubeName = cube?.name;
   const downloadCSV = useCallback(() => {
     const csvContent = [CSV_HEADER, ...exportCSVRows].join('\r\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `${cube?.name ? cube.name.replace(/\W/g, '') : 'tokens'}_tokens.csv`;
+    link.download = `${cubeName ? cubeName.replace(/\W/g, '') : 'tokens'}_tokens.csv`;
     link.click();
     URL.revokeObjectURL(url);
-  }, [cube?.name, exportCSVRows]);
+  }, [cubeName, exportCSVRows]);
 
   return (
     <Flexbox direction="col" gap="2" className="m-2">

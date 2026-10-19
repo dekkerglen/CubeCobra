@@ -37,8 +37,6 @@
     "no-useless-rename": "warn",
     "react-hooks/exhaustive-deps": "warn",
     "react/set-state-in-effect": "warn",
-    "react/refs": "warn",
-    "react/preserve-manual-memoization": "warn",
     "typescript/no-unused-vars": [
       "warn",
       {
