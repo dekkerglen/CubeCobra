@@ -81,7 +81,7 @@ const useComments = (
 
   const editComment = useCallback(
     async (editRequest: EditRequest) => {
-      await csrfFetch(`/comment/edit`, {
+      const response = await csrfFetch(`/comment/edit`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,6 +90,11 @@ const useComments = (
           comment: editRequest,
         }),
       });
+
+      if (!response.ok) {
+        console.error('Failed to edit comment');
+        return;
+      }
 
       const clone = JSON.parse(JSON.stringify(comments)) as Comment[];
 

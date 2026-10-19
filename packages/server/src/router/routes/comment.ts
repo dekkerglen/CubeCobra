@@ -183,7 +183,7 @@ export const editCommentHandler = async (req: Request, res: Response) => {
     comment.owner = { id: '404', username: 'Anonymous' };
   }
 
-  await commentDao.put(comment);
+  await commentDao.update(comment);
 
   return res.status(200).send({ success: 'true' });
 };

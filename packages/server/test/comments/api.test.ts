@@ -20,6 +20,7 @@ jest.mock('../../src/dynamo/daos', () => ({
     getById: jest.fn(),
     queryByParent: jest.fn(),
     put: jest.fn(),
+    update: jest.fn(),
     createComment: jest.fn(),
   },
   noticeDao: {
@@ -294,7 +295,7 @@ describe('Edit Comment', () => {
     };
 
     (commentDao.getById as jest.Mock).mockResolvedValue(comment);
-    (commentDao.put as jest.Mock).mockResolvedValue(undefined);
+    (commentDao.update as jest.Mock).mockResolvedValue(undefined);
 
     const res = await call(editCommentHandler)
       .as(commenter)
@@ -305,7 +306,8 @@ describe('Edit Comment', () => {
 
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({ success: 'true' });
-    expect(commentDao.put).toHaveBeenCalledWith(
+    expect(commentDao.put).not.toHaveBeenCalled();
+    expect(commentDao.update).toHaveBeenCalledWith(
       expect.objectContaining({
         id: 'comment-to-delete',
         owner: expect.objectContaining({ id: '404' }),
@@ -321,7 +323,7 @@ describe('Edit Comment', () => {
       body: 'Original content',
       owner: commenter,
     });
-    (commentDao.put as jest.Mock).mockResolvedValue(undefined);
+    (commentDao.update as jest.Mock).mockResolvedValue(undefined);
 
     const res = await call(editCommentHandler)
       .as(commenter)
@@ -337,7 +339,8 @@ describe('Edit Comment', () => {
       .send();
 
     expect(commentDao.getById).toHaveBeenCalledWith('123');
-    expect(commentDao.put).toHaveBeenCalledWith(
+    expect(commentDao.put).not.toHaveBeenCalled();
+    expect(commentDao.update).toHaveBeenCalledWith(
       expect.objectContaining({
         id: '123',
         body: 'This is the updated comment content.',

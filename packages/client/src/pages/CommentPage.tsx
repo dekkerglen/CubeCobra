@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 
 import CommentType from '@utils/datatypes/Comment';
 
@@ -9,6 +9,8 @@ import Comment from 'components/comments/Comment';
 import CommentsSection from 'components/comments/CommentsSection';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
+import { CSRFContext } from 'contexts/CSRFContext';
+import { EditRequest } from 'hooks/UseComments';
 import MainLayout from 'layouts/MainLayout';
 
 const translateType: { [key: string]: string } = {
@@ -45,6 +47,26 @@ interface CommentPageProps {
 
 const CommentPage: React.FC<CommentPageProps> = ({ comment }) => {
   const [content, setContent] = useState<CommentType>(comment);
+  const { csrfFetch } = useContext(CSRFContext);
+
+  const editComment = async (editRequest: EditRequest) => {
+    const response = await csrfFetch('/comment/edit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ comment: editRequest }),
+    });
+
+    if (!response.ok) {
+      console.error('Failed to edit comment');
+      return;
+    }
+
+    setContent((prevContent) =>
+      editRequest.remove
+        ? { ...prevContent, body: '[deleted]', owner: { id: '404', username: 'Anonymous' } as CommentType['owner'] }
+        : { ...prevContent, body: editRequest.content ?? prevContent.body },
+    );
+  };
 
   return (
     <MainLayout>
@@ -56,12 +78,7 @@ const CommentPage: React.FC<CommentPageProps> = ({ comment }) => {
             {`Responding to this ${translateType[content.type]}`}
           </Link>
         </CardHeader>
-        <Comment
-          comment={content}
-          index={0}
-          noReplies
-          editComment={(editRequest) => setContent((prevContent) => ({ ...prevContent, ...editRequest }))}
-        />
+        <Comment comment={content} index={0} noReplies editComment={editComment} />
         <CommentsSection parentType="comment" parent={content.id} collapse={false} />
       </Card>
     </MainLayout>
