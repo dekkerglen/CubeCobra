@@ -71,20 +71,19 @@ describe('GET /cube/api/cubeJSON/:id', () => {
   });
 });
 
-describe('GET /cube/api/cubeJSON/:id "show unsorted" handling', () => {
-  // A custom card with no type line lands outside every Types-Multicolor bucket, so it is only
-  // included when the cube's "show unsorted" setting is on. The export has to agree with what
-  // the cube page shows, and the page sorts with that same setting.
+describe('GET /cube/api/cubeJSON/:id returns every card', () => {
+  // A custom card with no type line lands outside every Types-Multicolor bucket. The API is a data
+  // export, so it must still return it regardless of the cube's "show unsorted" display setting.
   const typelessCustom = createCustomCard('My Custom', { details: undefined });
   const regular = createCard({
     details: createCardDetails({ name: 'Grizzly Bears', type: 'Creature — Bear', color_identity: ['G'] }),
   });
 
-  const exportedNames = async (showUnsorted: boolean): Promise<string[]> => {
-    const cube = createCube({ id: 'cube-1', showUnsorted });
+  const exportedNames = async (showUnsorted: boolean, cards = [typelessCustom, regular], cubeOverrides = {}) => {
+    const cube = createCube({ id: 'cube-1', showUnsorted, ...cubeOverrides });
     (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
     (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
-    (cubeDao.getCards as jest.Mock).mockResolvedValue({ mainboard: [regular, typelessCustom] });
+    (cubeDao.getCards as jest.Mock).mockResolvedValue({ mainboard: cards });
 
     const res = await call(cubeJSONHandler).as(createUser()).withParams({ id: cube.id }).send();
 
@@ -96,16 +95,19 @@ describe('GET /cube/api/cubeJSON/:id "show unsorted" handling', () => {
     jest.clearAllMocks();
   });
 
-  it('includes an unsorted custom card when the cube shows unsorted cards', async () => {
-    await expect(exportedNames(true)).resolves.toEqual(expect.arrayContaining(['My Custom']));
+  it.each([true, false])('includes unsorted cards at the end when showUnsorted is %s', async (showUnsorted) => {
+    await expect(exportedNames(showUnsorted)).resolves.toEqual(['Grizzly Bears', 'My Custom']);
   });
 
-  it('omits an unsorted custom card when the cube hides unsorted cards', async () => {
-    await expect(exportedNames(false)).resolves.not.toContain('My Custom');
-  });
+  it('lists a card once even when the default sort puts it in several groups', async () => {
+    const tagged = createCard({
+      tags: ['a', 'b'],
+      details: createCardDetails({ name: 'Tagged', type: 'Instant', color_identity: ['R'] }),
+    });
 
-  it('always includes cards the sort can place', async () => {
-    await expect(exportedNames(true)).resolves.toContain('Grizzly Bears');
-    await expect(exportedNames(false)).resolves.toContain('Grizzly Bears');
+    const names = await exportedNames(false, [tagged], {
+      defaultSorts: ['Tags', 'Types-Multicolor', 'Mana Value', 'Alphabetical'],
+    });
+    expect(names).toEqual(['Tagged']);
   });
 });

@@ -2,7 +2,7 @@ import { cardCollectorNumber, cardName, cardSet } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import Cube, { CubeCards } from '@utils/datatypes/Cube';
 import filterutil from '@utils/filtering/FilterCards';
-import { sortForDownload } from '@utils/sorting/Sort';
+import { getCubeSorts, sortForDownload } from '@utils/sorting/Sort';
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId } from 'serverutils/carddb';
 import { CSV_HEADER, exportToMtgo, writeCard } from 'serverutils/cube';
@@ -44,18 +44,23 @@ const sortCardsByQuery = (req: Request, cards: Card[], cube: Cube): Card[] => {
     }
   }
 
+  if (req.query.nosort === 'true') {
+    return filteredCards;
+  }
+
   // Default to the cube's own "show unsorted" setting so a download matches what the cube page shows.
   // Without this, any card no sort bucket claims - a custom card or voucher with no type line, say -
   // is silently dropped from the export even though the page lists it under "Other". An explicit
   // showother query param still wins, so callers can override either way.
   const showOther = req.query.showother !== undefined ? req.query.showother === 'true' : cube.showUnsorted || false;
+  const [primary, secondary, tertiary, quaternary] = getCubeSorts(cube);
 
   return sortForDownload(
     filteredCards,
-    req.query.primary as string | undefined,
-    req.query.secondary as string | undefined,
-    req.query.tertiary as string | undefined,
-    req.query.quaternary as string | undefined,
+    (req.query.primary as string | undefined) ?? primary,
+    (req.query.secondary as string | undefined) ?? secondary,
+    (req.query.tertiary as string | undefined) ?? tertiary,
+    (req.query.quaternary as string | undefined) ?? quaternary,
     showOther,
     cube,
   );
@@ -140,7 +145,7 @@ export const csvHandler = async (req: Request, res: Response) => {
     for (const boardKey of boardsToExport) {
       const boardCards = cards[boardKey];
       if (!Array.isArray(boardCards)) continue;
-      for (const card of boardCards as Card[]) {
+      for (const card of sortCardsByQuery(req, boardCards as Card[], cube)) {
         writeCard(res, card, boardKey);
       }
     }

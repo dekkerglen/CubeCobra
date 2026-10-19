@@ -17,16 +17,20 @@ describe('buildExportParams', () => {
   const paramsOf = (overrides: Partial<typeof base> = {}) =>
     new URLSearchParams(buildExportParams({ ...base, ...overrides }));
 
-  it('asks for unsorted cards when the cube shows them', () => {
-    expect(paramsOf({ showUnsorted: true }).get('showother')).toBe('true');
+  it('asks for unsorted cards when sorting and the cube shows them', () => {
+    expect(paramsOf({ isSortUsed: true, showUnsorted: true }).get('showother')).toBe('true');
   });
 
   it('does not ask for unsorted cards when the cube hides them', () => {
-    expect(paramsOf({ showUnsorted: false }).get('showother')).toBeNull();
+    expect(paramsOf({ isSortUsed: true, showUnsorted: false }).get('showother')).toBeNull();
   });
 
-  it('carries showother even when the sort checkbox is off, since the download still sorts', () => {
-    expect(paramsOf({ showUnsorted: true, isSortUsed: false }).get('showother')).toBe('true');
+  it('asks for no sorting when the sort checkbox is off', () => {
+    const off = paramsOf({ isSortUsed: false, showUnsorted: true });
+    expect(off.get('nosort')).toBe('true');
+    expect(off.get('showother')).toBeNull();
+
+    expect(paramsOf({ isSortUsed: true }).get('nosort')).toBeNull();
   });
 
   it('includes the filter only when the filter checkbox is on', () => {

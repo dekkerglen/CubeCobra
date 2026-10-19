@@ -309,9 +309,10 @@ const ApiDocsPage: React.FC = () => (
 }`}
             notes={
               <Text sm className="text-text-secondary">
-                Cards are sorted by the default sort (Color Category → Types-Multicolor → Mana Value → Alphabetical).
-                All boards are always returned regardless of cube visibility settings. The{' '}
-                <InlineCode>changelog</InlineCode> field is only present when the <InlineCode>date</InlineCode> or{' '}
+                Cards are ordered by the cube's default sorts (Color Category → Types-Multicolor → Mana Value →
+                Alphabetical unless the cube sets its own). Every card is returned exactly once; cards no sort group
+                claims come last in their board. All boards are always returned regardless of cube visibility settings.
+                The <InlineCode>changelog</InlineCode> field is only present when the <InlineCode>date</InlineCode> or{' '}
                 <InlineCode>changelog</InlineCode> query parameter is used.
               </Text>
             }
@@ -534,7 +535,8 @@ Mox Sapphire
               A <Link href="/wiki/reference/filter-syntax">filter expression</Link> to include only matching cards
             </Param>
             <Param name="primary" type="query">
-              Primary sort column (e.g. <InlineCode>Color Category</InlineCode>)
+              Primary sort column (e.g. <InlineCode>Color Category</InlineCode>). Each sort column defaults to the
+              cube's own default sort.
             </Param>
             <Param name="secondary" type="query">
               Secondary sort column
@@ -548,6 +550,10 @@ Mox Sapphire
             <Param name="showother" type="query">
               Set to <InlineCode>true</InlineCode> to include the "other" category in the export. Defaults to the cube's
               "show unsorted" setting, so by default the export matches what the cube page displays.
+            </Param>
+            <Param name="nosort" type="query">
+              Set to <InlineCode>true</InlineCode> to skip sorting and export every matching card once, in the cube's
+              stored order. Sort parameters and <InlineCode>showother</InlineCode> are ignored.
             </Param>
           </ul>
 
