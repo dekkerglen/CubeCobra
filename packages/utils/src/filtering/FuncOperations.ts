@@ -154,6 +154,12 @@ export const CATEGORY_LABELS: Record<string, string> = {
   standard: 'a standard card',
   supplemental: 'a supplemental card',
   voucher: 'a voucher',
+  custom: 'a custom card',
+  override: 'overriding at least one of its printed attributes',
+  overridden: 'overriding at least one of its printed attributes',
+  image: 'using a custom image',
+  imageurl: 'using a custom front image',
+  imagebackurl: 'using a custom back image',
   singleton: 'a singleton in its board',
   // Land archetypes (is:fetchland, is:shockland, ...).
   bikeland: 'a cycling land',
