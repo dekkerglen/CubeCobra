@@ -36,6 +36,8 @@ interface CubeTypeResult {
   pauper: boolean;
   peasant: boolean;
   type: number;
+  /** Every format the whole cube is legal in, least to most restrictive. */
+  eligibleFormats: string[];
 }
 
 export interface GeneratePackResult {
@@ -69,6 +71,7 @@ function getCubeId(cube: { shortId?: string; id: string }): string {
 }
 
 const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'];
+const VINTAGE = 0;
 
 function intToLegality(val: number): string | undefined {
   return FORMATS[val];
@@ -112,21 +115,36 @@ function cardsAreEquivalent(card: CubeCard, details: CubeCard): boolean {
 }
 
 function cardIsLegal(card: any, legality: string): boolean {
-  return card.legalities[legality] === 'legal' || card.legalities[legality] === 'banned';
+  const status = card.legalities[legality];
+  // Restricted cards are playable (capped at one copy); banned cards are not.
+  // Counting banned as playable would read Deathrite Shaman, banned in Modern,
+  // as a Modern card.
+  return status === 'legal' || status === 'restricted';
 }
 
 function getCubeTypes(cards: CubeCard[]): CubeTypeResult {
   let pauper = true;
   let peasant = false;
-  let type = FORMATS.length - 1;
+  // Each format is evaluated on its own merits rather than by walking down a
+  // chain, because legality does not nest. Deathrite Shaman is playable in
+  // Pioneer yet banned in the wider Modern, and Geological Appraiser is
+  // playable in Standard yet banned in the wider Pioneer.
+  //
+  // Vintage is deliberately never checked, so it stays eligible. A Vintage cube
+  // means "anything goes", making it the floor for cubes that qualify for no
+  // tighter format, including those holding power, custom cards, or un-cards.
+  const eligible = FORMATS.map(() => true);
+
   for (const card of cards) {
-    if (pauper && !cardIsLegal(cardFromId(card.cardID), 'Pauper')) {
+    const details = cardFromId(card.cardID);
+
+    if (pauper && !cardIsLegal(details, 'Pauper')) {
       pauper = false;
       peasant = true;
     }
     if (!pauper && peasant) {
       // check rarities of all card versions
-      const versions = getAllVersionIds(cardFromId(card.cardID));
+      const versions = getAllVersionIds(details);
       if (versions) {
         const rarities = versions.map((id) => cardFromId(id).rarity);
         if (!rarities.includes('common') && !rarities.includes('uncommon')) {
@@ -134,13 +152,27 @@ function getCubeTypes(cards: CubeCard[]): CubeTypeResult {
         }
       }
     }
-    const legality = intToLegality(type);
-    while (type > 0 && legality && !cardIsLegal(cardFromId(card.cardID), legality)) {
-      type -= 1;
+
+    FORMATS.forEach((format, index) => {
+      if (index !== VINTAGE && eligible[index] && !cardIsLegal(details, format)) {
+        eligible[index] = false;
+      }
+    });
+  }
+
+  const eligibleFormats = FORMATS.filter((_format, index) => eligible[index]);
+
+  // FORMATS runs least to most restrictive, so the last eligible entry is the
+  // tightest format the whole cube fits in.
+  let type = VINTAGE;
+  for (let index = FORMATS.length - 1; index >= 0; index -= 1) {
+    if (eligible[index]) {
+      type = index;
+      break;
     }
   }
 
-  return { pauper, peasant, type };
+  return { pauper, peasant, type, eligibleFormats };
 }
 
 function setCubeType(cube: any): any {

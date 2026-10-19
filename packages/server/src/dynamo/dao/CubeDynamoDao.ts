@@ -1309,20 +1309,31 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
   /**
    * Calculates cube categories based on card legalities.
-   * This mirrors the logic in setCubeType from cubefn.ts
+   *
+   * Kept in sync with getCubeTypes in serverutils/cubefn, which cannot be reused
+   * here: cubefn imports serverutils/util, which imports dynamo/daos, closing an
+   * import cycle back onto this file.
    */
   private calculateCategoriesFromCards(cards: CubeCards): string[] {
     const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'];
+    const VINTAGE = 0;
+
+    // Restricted cards are playable (one copy); banned cards are not.
+    const isPlayable = (details: any, format: string) =>
+      details.legalities[format] === 'legal' || details.legalities[format] === 'restricted';
 
     let pauper = true;
     let peasant = false;
-    let type = FORMATS.length - 1;
+    // Every format is evaluated independently because legality does not nest:
+    // Deathrite Shaman is playable in Pioneer yet banned in the wider Modern.
+    // Vintage is never checked, so it remains the catch-all floor.
+    const eligible = FORMATS.map(() => true);
 
     for (const card of cards.mainboard) {
       const cardDetails = cardFromId(card.cardID);
 
       // Check pauper legality
-      if (pauper && cardDetails.legalities.Pauper !== 'legal' && cardDetails.legalities.Pauper !== 'banned') {
+      if (pauper && !isPlayable(cardDetails, 'Pauper')) {
         pauper = false;
         peasant = true;
       }
@@ -1332,24 +1343,25 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         peasant = false;
       }
 
-      // Find most restrictive legal format
-      while (type > 0) {
-        const legality = FORMATS[type];
-        if (legality && cardDetails.legalities[legality] !== 'legal' && cardDetails.legalities[legality] !== 'banned') {
-          type -= 1;
-        } else {
-          break;
+      FORMATS.forEach((format, index) => {
+        if (index !== VINTAGE && eligible[index] && !isPlayable(cardDetails, format)) {
+          eligible[index] = false;
         }
-      }
+      });
     }
 
     const categories: string[] = [];
 
-    // Add base format
-    const baseFormat = FORMATS[type];
-    if (baseFormat) {
-      categories.push(baseFormat);
+    // FORMATS runs least to most restrictive, so the last eligible entry is the
+    // tightest format the whole cube fits in.
+    let baseFormat = FORMATS[VINTAGE] as string;
+    for (let index = FORMATS.length - 1; index >= 0; index -= 1) {
+      if (eligible[index]) {
+        baseFormat = FORMATS[index] as string;
+        break;
+      }
     }
+    categories.push(baseFormat);
 
     // Add modifiers
     if (pauper) {

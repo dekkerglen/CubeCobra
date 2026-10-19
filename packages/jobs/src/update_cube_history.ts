@@ -51,6 +51,15 @@ interface Totals {
   total: number;
 }
 
+// Legality buckets we report, least to most restrictive. Standard is omitted
+// because it rotates: a cube leaves the format without a single card changing.
+const TRACKED_FORMATS: [string, keyof Totals][] = [
+  ['Vintage', 'vintage'],
+  ['Legacy', 'legacy'],
+  ['Modern', 'modern'],
+  ['Pioneer', 'pioneer'],
+];
+
 const saveCubesHistory = async (cubes: CubeDict, key: string) => {
   const uniqueOracles = [...new Set(Object.values(cubes).flat())];
 
@@ -349,9 +358,10 @@ const mapTotalsToCardHistory = (
       if (processedCubes % 5000 === 0) {
         console.log(`    Analyzed ${processedCubes} / ${totalCubes} cubes...`);
       }
+
       const cubeCards = cube.map((id) => cardFromId(id));
       const oracles = [...new Set(cubeCards.map((card) => card.oracle_id))];
-      const { pauper, peasant, type } = getCubeTypes(
+      const { pauper, peasant, eligibleFormats } = getCubeTypes(
         cubeCards.map((card) => ({
           cardID: card.scryfall_id,
           status: 'Not Owned',
@@ -385,22 +395,16 @@ const mapTotalsToCardHistory = (
         categories.push('peasant');
       }
 
-      switch (type) {
-        case 0: // vintage
-          categories.push('vintage');
-          break;
-        case 1: // legacy
-          categories.push('legacy');
-          break;
-        case 2: // modern
-          categories.push('modern');
-          break;
-        case 4: // pioneer
-          categories.push('pioneer');
-          break;
-        default:
-          break;
+      // The tightest tracked format the cube actually qualifies for. Standard
+      // is not tracked because it rotates, and legality does not nest, so this
+      // walks the eligible list rather than assuming the next format down.
+      let legalityBucket: keyof Totals = 'vintage';
+      for (const [format, bucket] of TRACKED_FORMATS) {
+        if (eligibleFormats.includes(format)) {
+          legalityBucket = bucket;
+        }
       }
+      categories.push(legalityBucket);
 
       for (const category of categories) {
         totals[category] += 1;
