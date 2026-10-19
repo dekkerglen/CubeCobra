@@ -72,9 +72,13 @@ const EditPlayerList: React.FC<EditPlayerListProps> = ({ players, setPlayers, se
   // Push derived players + seatOrder to the parent whenever entries change.
   // Keep the parent setters in refs so the effect doesn't refire (and loop)
   // when a parent passes a freshly-allocated setter on every render.
+  // react/refs flags the render-phase writes. This is the "latest ref" idiom and the refs are
+  // only read from the effect below, which runs after these assignments.
   const setPlayersRef = useRef(setPlayers);
+  // eslint-disable-next-line react/refs
   setPlayersRef.current = setPlayers;
   const setSeatOrderRef = useRef(setSeatOrder);
+  // eslint-disable-next-line react/refs
   setSeatOrderRef.current = setSeatOrder;
 
   useEffect(() => {

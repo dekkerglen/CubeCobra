@@ -69,7 +69,11 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   const cache = useRef<Map<string, string[]>>(new Map());
   // Held in a ref so a fresh getMatches identity each parent render doesn't
   // restart the debounce timer (callers pass inline fetcher factories).
+  // react/refs flags the render-phase write below. This is the "latest ref" idiom: the value
+  // is only ever read from the debounced fetch, long after render, so moving the assignment
+  // into an effect would add a frame of staleness for no benefit.
   const getMatchesRef = useRef(getMatches);
+  // eslint-disable-next-line react/refs
   getMatchesRef.current = getMatches;
 
   // Clear cache when the fetcher changes (e.g., toggling filter options).

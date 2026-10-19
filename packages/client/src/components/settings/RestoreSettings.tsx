@@ -42,9 +42,14 @@ const RestoreSettings: React.FC<RestoreSettingsProps> = ({ versions }) => {
         body: formData,
       });
 
+      // react/immutability flags assignment to anything declared outside the component, which
+      // catches `window.location.href`. This is a navigation from an async click handler, not a
+      // render-time mutation, so the rule does not apply here.
       if (response.redirected) {
+        // eslint-disable-next-line react/immutability
         window.location.href = response.url;
       } else if (response.ok) {
+        // eslint-disable-next-line react/immutability
         window.location.href = `/cube/settings/${cube.id}?view=restore`;
       }
     } catch (error) {

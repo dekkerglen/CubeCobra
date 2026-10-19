@@ -29,10 +29,12 @@ interface PrimerTabsEditorProps {
 }
 
 const PrimerTabsEditor: React.FC<PrimerTabsEditorProps> = ({ tabs, setTabs, selected, setSelected }) => {
-  const nextKey = useRef(0);
+  // Sortable ids only; never sent to the server. The initial keys are derived from the tab
+  // index rather than by bumping the ref, so the counter is not mutated during render; it then
+  // starts past them and only advances from the "add tab" handler.
+  const [keys, setKeys] = useState<string[]>(() => tabs.map((_tab, index) => `primer-tab-${index}`));
+  const nextKey = useRef(tabs.length);
   const makeKey = () => `primer-tab-${nextKey.current++}`;
-  // Sortable ids only; never sent to the server.
-  const [keys, setKeys] = useState<string[]>(() => tabs.map(makeKey));
 
   const selectedTab = tabs[selected];
   const total = totalPrimerLength(tabs);

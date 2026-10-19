@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 
 const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
@@ -24,8 +24,13 @@ interface DatetimeProps {
 }
 
 const Datetime: React.FC<DatetimeProps> = ({ date }) => {
+  // Pin "now" to mount time via a lazy initialiser. Calling Date.now() during render is impure,
+  // and this label never ticked on its own anyway - it only changed if a parent happened to
+  // re-render, which made the output unstable for no user-visible benefit.
+  const [now] = useState(() => Date.now());
+
   const d = new Date(date);
-  const diffMs = d.getTime() - Date.now();
+  const diffMs = d.getTime() - now;
   const isRecent = Math.abs(diffMs) < SEVEN_DAYS_MS;
 
   const display = isRecent ? formatRelative(diffMs) : absoluteFormatter.format(d);

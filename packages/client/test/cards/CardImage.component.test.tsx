@@ -88,4 +88,48 @@ describe('CardImage Component', () => {
     await waitFor(() => expect(image).toHaveAttribute('src', '/mock/custom-image.png'));
     expect(cardImageUrl).toHaveBeenCalledWith(card);
   });
+
+  it('does not mutate the card prop when details are supplied', () => {
+    const card = createCard({
+      cardID: 'original-card-id',
+      details: createCardDetails({ name: 'Original Name', image_normal: 'original.png' }),
+    });
+    const originalDetails = card.details;
+    const override = createCardDetails({
+      name: 'Override Name',
+      image_normal: 'override.png',
+      oracle_id: 'override-oracle-id',
+    });
+
+    render(<CardImage card={card} details={override} />);
+
+    // The component used to assign `details`/`cardID` onto the card object it was handed, which
+    // clobbered a card the parent still owned.
+    expect(card.cardID).toBe('original-card-id');
+    expect(card.details).toBe(originalDetails);
+    expect(card.details?.name).toBe('Original Name');
+  });
+
+  it('renders the overriding details rather than the card ones', async () => {
+    const card = createCard({
+      cardID: 'original-card-id',
+      details: createCardDetails({ name: 'Original Name', image_normal: 'original.png' }),
+    });
+    const override = createCardDetails({
+      name: 'Override Name',
+      image_normal: 'override.png',
+      oracle_id: 'override-oracle-id',
+    });
+
+    // Pin showCustomImages off so this asserts the details override rather than whatever
+    // cardImageUrl was last stubbed to return - jest.clearAllMocks() keeps return values.
+    render(
+      <DisplayContext.Provider value={{ ...defaultDisplayContext, showCustomImages: false }}>
+        <CardImage card={card} details={override} />
+      </DisplayContext.Provider>,
+    );
+
+    const image = screen.getByAltText('Override Name');
+    await waitFor(() => expect(image).toHaveAttribute('src', 'override.png'));
+  });
 });

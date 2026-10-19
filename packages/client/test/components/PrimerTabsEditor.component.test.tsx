@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 
 import { fireEvent, render, screen, within } from '@testing-library/react';
 
@@ -27,8 +27,13 @@ let latestSelected = 0;
 const Harness: React.FC<{ initial: PrimerTab[]; initialSelected?: number }> = ({ initial, initialSelected = 0 }) => {
   const [tabs, setTabs] = useState(initial);
   const [selected, setSelected] = useState(initialSelected);
-  latestTabs = tabs;
-  latestSelected = selected;
+  // Mirror state out for assertions from an effect rather than during render. Writing to a
+  // module variable mid-render is a side effect; the probes are only read after fireEvent,
+  // which flushes effects, so an effect is equivalent here.
+  useEffect(() => {
+    latestTabs = tabs;
+    latestSelected = selected;
+  }, [tabs, selected]);
   return <PrimerTabsEditor tabs={tabs} setTabs={setTabs} selected={selected} setSelected={setSelected} />;
 };
 
