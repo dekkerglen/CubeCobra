@@ -353,11 +353,20 @@ const mapTotalsToCardHistory = (
 
     console.log(`  Calculating card statistics for ${Object.keys(cubes).length} cubes...`);
     let processedCubes = 0;
+    let skippedEmptyCubes = 0;
     const totalCubes = Object.values(cubes).length;
     for (const cube of Object.values(cubes)) {
       processedCubes += 1;
       if (processedCubes % 5000 === 0) {
         console.log(`    Analyzed ${processedCubes} / ${totalCubes} cubes...`);
+      }
+
+      // An empty cube plays no cards, so counting it only inflates every
+      // denominator. It would also classify as Standard Pauper, since neither
+      // check has a card to fail against.
+      if (cube.length === 0) {
+        skippedEmptyCubes += 1;
+        continue;
       }
 
       const cubeCards = cube.map((id) => cardFromId(id));
@@ -434,7 +443,10 @@ const mapTotalsToCardHistory = (
         }
       }
     }
-    console.log(`  Completed analysis: found ${Object.keys(data).length} unique cards across all cubes`);
+    console.log(
+      `  Completed analysis: found ${Object.keys(data).length} unique cards across all cubes` +
+        ` (skipped ${skippedEmptyCubes} empty cubes)`,
+    );
 
     const eloFile = await downloadJson(`global_draft_history/${key}.json`);
     if (eloFile) {
