@@ -1,6 +1,6 @@
 import { cardCollectorNumber, cardName, cardSet } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
-import { CubeCards } from '@utils/datatypes/Cube';
+import Cube, { CubeCards } from '@utils/datatypes/Cube';
 import filterutil, { FilterFunction, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
 import { sortForDownload } from '@utils/sorting/Sort';
 import { cubeDao } from 'dynamo/daos';
@@ -62,8 +62,14 @@ const filterLimiter = expensiveGetLimiter(60_000, 30);
 const limitFilteredDownloads = (req: ExpressRequest, res: ExpressResponse, next: NextFunction) =>
   req.query.filter ? filterLimiter(req, res, next) : next();
 
-const sortCardsByQuery = (req: Request, cards: Card[], filter: FilterFunction | null): Card[] => {
+const sortCardsByQuery = (req: Request, cards: Card[], filter: FilterFunction | null, cube: Cube): Card[] => {
   const filteredCards = filter ? cards.filter(filter) : cards;
+
+  // Default to the cube's own "show unsorted" setting so a download matches what the cube page shows.
+  // Without this, any card no sort bucket claims - a custom card or voucher with no type line, say -
+  // is silently dropped from the export even though the page lists it under "Other". An explicit
+  // showother query param still wins, so callers can override either way.
+  const showOther = req.query.showother !== undefined ? req.query.showother === 'true' : cube.showUnsorted || false;
 
   return sortForDownload(
     filteredCards,
@@ -71,7 +77,8 @@ const sortCardsByQuery = (req: Request, cards: Card[], filter: FilterFunction | 
     req.query.secondary as string | undefined,
     req.query.tertiary as string | undefined,
     req.query.quaternary as string | undefined,
-    req.query.showother === 'true', // Coerce string parameter to boolean
+    showOther,
+    cube,
   );
 };
 
@@ -103,7 +110,7 @@ export const cubecobraHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards, filter);
+    allCards = sortCardsByQuery(req, allCards, filter, cube);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -196,7 +203,7 @@ export const forgeHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards, filter);
+    allCards = sortCardsByQuery(req, allCards, filter, cube);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -242,7 +249,7 @@ export const mtgoHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards, filter);
+    allCards = sortCardsByQuery(req, allCards, filter, cube);
 
     // MTGO format uses main/side split; put all selected boards in main
     return exportToMtgo(res, cube.name, allCards, []);
@@ -280,7 +287,7 @@ export const xmageHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards, filter);
+    allCards = sortCardsByQuery(req, allCards, filter, cube);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -325,7 +332,7 @@ export const versionedHandler = async (req: Request, res: Response) => {
         const details = cardFromId(card.cardID);
         card.details = details;
       }
-      const sorted = sortCardsByQuery(req, list as Card[], filter);
+      const sorted = sortCardsByQuery(req, list as Card[], filter, cube);
 
       // Put all selected boards in main
       // Moxfield/Archidekt/Draftmancer all use different rules
@@ -389,7 +396,7 @@ export const plaintextHandler = async (req: Request, res: Response) => {
         const details = cardFromId(card.cardID);
         card.details = details;
       }
-      const sorted = sortCardsByQuery(req, list as Card[], filter);
+      const sorted = sortCardsByQuery(req, list as Card[], filter, cube);
 
       res.write(`# ${boardname}\r\n`);
       for (const card of sorted) {
