@@ -51,7 +51,9 @@ describe('PrimerTabsEditor', () => {
 
   it('sorts with the wrapping-aware rect strategy', () => {
     render(<Harness initial={twoTabs} />);
-    expect(SortableList).toHaveBeenCalledWith(expect.objectContaining({ strategy: rectSortingStrategy }), {});
+    // React 19 dropped legacy context, so function components are called with props only;
+    // under React 18 the second argument was an empty legacy-context object.
+    expect(SortableList).toHaveBeenCalledWith(expect.objectContaining({ strategy: rectSortingStrategy }), undefined);
   });
 
   it('renders a labelled list of tabs rather than a tablist', () => {

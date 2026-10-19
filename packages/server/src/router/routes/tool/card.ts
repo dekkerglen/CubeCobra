@@ -32,8 +32,7 @@ const bucketsToIds = (
 const chooseIdFromInput = (req: Request): string => {
   //ID is scryfall id or a card name (eg. via Autocomplete hover)
   const printingPreference = (req?.query?.defaultPrinting || req?.user?.defaultPrinting) as
-    | PrintingPreference
-    | undefined;
+    PrintingPreference | undefined;
   let { id } = req.params;
 
   if (!id) {

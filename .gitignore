@@ -49,6 +49,7 @@ packages/utils/src/**/*.js
 /dist
 **/dist/
 **/build/
+**/*.tsbuildinfo
 
 # misc
 .DS_Store

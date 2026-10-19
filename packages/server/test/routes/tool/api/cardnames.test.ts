@@ -27,7 +27,7 @@ jest.mock('serverutils/cardCatalog', () => ({
   } as Catalog,
 }));
 
-import { Request, Response } from 'express';
+import { Request, Response } from 'types/express';
 import { cardNamesHandler } from 'router/routes/tool/api/cardnames';
 
 const createMockReq = (query: Record<string, string>) =>

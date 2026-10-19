@@ -35,13 +35,7 @@ import { getVocabulary, themedCardTexts } from './vocabulary';
  * the note on `themePools`.
  */
 export type CrosswordRestrictionKind =
-  | 'creatureType'
-  | 'colour'
-  | 'cardType'
-  | 'keyword'
-  | 'manaValue'
-  | 'colourPair'
-  | 'set';
+  'creatureType' | 'colour' | 'cardType' | 'keyword' | 'manaValue' | 'colourPair' | 'set';
 
 export interface CrosswordDayPlan {
   size: number;

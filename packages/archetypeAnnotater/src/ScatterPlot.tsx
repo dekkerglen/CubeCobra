@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 
+import type { Data } from 'plotly.js';
 import Plot from 'react-plotly.js';
 
 // Color palette for up to 100+ clusters
@@ -140,7 +141,7 @@ const ScatterPlot: React.FC<ScatterPlotProps> = ({ annotations }) => {
   if (!data) return <div>Loading 2.3M points...</div>;
 
   // Group points by cluster for coloring
-  const traces: Plotly.Data[] = [];
+  const traces: Data[] = [];
   const buckets = new Map<number, { x: number[]; y: number[] }>();
   for (let i = 0; i < data.count; i++) {
     const c = data.clusters[i];

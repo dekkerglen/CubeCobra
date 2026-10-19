@@ -7,6 +7,7 @@ import {
 } from 'dynamo/daos';
 import { countedNamesGrid, popularityGrid } from 'serverutils/manamatrix/popularity';
 import { redirect, render } from 'serverutils/render';
+import { ISO_DATE, matchParam } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -76,7 +77,7 @@ export const routes = [
   },
   {
     method: 'get',
-    path: '/:date([0-9]{4}-[0-9]{2}-[0-9]{2})',
-    handler: [manaMatrixDatePageHandler],
+    path: '/:date',
+    handler: [matchParam('date', ISO_DATE), manaMatrixDatePageHandler],
   },
 ];

@@ -1,5 +1,6 @@
 import { dailyP1P1Dao } from 'dynamo/daos';
 import { redirect } from 'serverutils/render';
+import { matchParam, UUID } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -31,7 +32,7 @@ export const routes = [
   },
   {
     method: 'get',
-    path: '/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})',
-    handler: [redirectP1P1Handler],
+    path: '/:packId',
+    handler: [matchParam('packId', UUID), redirectP1P1Handler],
   },
 ];

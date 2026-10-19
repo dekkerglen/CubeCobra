@@ -31,7 +31,7 @@ import DynamoDBStore from './serverutils/dynamo-session-store';
 import { logError, logInfo } from './serverutils/errorLog';
 import { render } from './serverutils/render';
 import { checkAndUpdateCardbase } from './serverutils/updatecards';
-import { CustomError } from './types/express';
+import { CustomError, Request as AppRequest, Response as AppResponse } from './types/express';
 
 // global listeners for promise rejections
 process.on('unhandledRejection', (reason: unknown) => {
@@ -279,7 +279,7 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
 // check for downtime
 
 if (process.env.DOWNTIME_ACTIVE === 'true') {
-  app.use((req: express.Request, res: express.Response) =>
+  app.use((req: AppRequest, res: AppResponse) =>
     render(req, res, 'DownTimePage', {
       title: 'Down for Maintenance',
     }),
@@ -341,7 +341,7 @@ export async function registerRoutes(expressApp: express.Express): Promise<void>
   const { router } = await import('./router/router.js');
   expressApp.use(router);
 
-  expressApp.use((req: express.Request, res: express.Response) =>
+  expressApp.use((req: AppRequest, res: AppResponse) =>
     render(
       req,
       res,
@@ -360,7 +360,7 @@ export async function registerRoutes(expressApp: express.Express): Promise<void>
   // only treats a middleware as an error handler when its arity is 4, so this is what makes
   // next(err) (from async handlers, the request timeout, etc.) actually render our error
   // page and log with request context, instead of falling through to Express's default.
-  expressApp.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  expressApp.use((err: any, req: AppRequest, res: AppResponse, next: express.NextFunction) => {
     // If the response has already started, we can't render an error page over it. This is
     // typically a follow-on error (e.g. the request timed out and responded, then a slow
     // handler resolved and tried to send again) — the original cause was already logged, so

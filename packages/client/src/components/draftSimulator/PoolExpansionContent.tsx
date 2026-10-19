@@ -164,7 +164,7 @@ export const PoolInspectionModal: React.FC<{
       isOpen={isOpen}
       setOpen={setOpen}
       offsetClassName="pt-4 md:pt-8"
-      backdropClassName="bg-opacity-60 backdrop-blur-[2px]"
+      backdropClassName="!bg-bg/60 backdrop-blur-[2px]"
       panelClassName="rounded-xl border-border/70 bg-bg shadow-2xl"
     >
       <ModalHeader setOpen={setOpen} className="!bg-transparent !px-5 !py-3 border-b border-border/70">

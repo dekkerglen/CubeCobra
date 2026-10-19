@@ -18,7 +18,7 @@ const PodcastPreview: React.FC<PodcastPreviewProps> = ({ podcast }) => {
     <Tile href={`/content/podcast/${podcast.id}`}>
       <AspectRatioBox ratio={1.2} className="text-ellipsis">
         {podcast.image && <img className="w-full" alt={podcast.title} src={podcast.image} />}
-        <Text bold className="absolute bottom-0 left-0 text-white text-shadow bg-podcast bg-opacity-50 w-full mb-0 p-1">
+        <Text bold className="absolute bottom-0 left-0 text-white text-shadow bg-podcast/50 w-full mb-0 p-1">
           Podcast
         </Text>
       </AspectRatioBox>

@@ -35,11 +35,7 @@ const CubeListRightSidebar: React.FC<CubeListRightSidebarProps> = ({ canEdit }) 
     <>
       {/* Mobile backdrop overlay */}
       {isSidebarOpen && (
-        <div
-          className="md:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
-          onClick={closeSidebar}
-          aria-hidden="true"
-        />
+        <div className="md:hidden fixed inset-0 bg-black/50 z-40" onClick={closeSidebar} aria-hidden="true" />
       )}
 
       {/* Edit Sidebar - Mobile */}

@@ -2,6 +2,7 @@ import { SYNERGY_CONNECT_MAX_MISTAKES, SynergyConnectPuzzle } from '@utils/datat
 import { synergyConnectPuzzleDao, synergyConnectSubmissionDao, synergyConnectUserStatsDao } from 'dynamo/daos';
 import { isComplete, revealAll, toBoard } from 'serverutils/synergyconnect/board';
 import { redirect, render } from 'serverutils/render';
+import { ISO_DATE, matchParam } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
 
@@ -76,7 +77,7 @@ export const routes = [
   },
   {
     method: 'get',
-    path: '/:date([0-9]{4}-[0-9]{2}-[0-9]{2})',
-    handler: [synergyConnectDatePageHandler],
+    path: '/:date',
+    handler: [matchParam('date', ISO_DATE), synergyConnectDatePageHandler],
   },
 ];

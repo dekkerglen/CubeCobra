@@ -8,6 +8,28 @@ import { redirect } from 'serverutils/render';
 
 import { NextFunction, Request, Response } from '../types/express';
 
+export const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
+export const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
+/**
+ * Guards a route on the shape of a path parameter.
+ *
+ * Express 4 allowed an inline constraint in the path itself, e.g.
+ * `/:date([0-9]{4}-[0-9]{2}-[0-9]{2})`. path-to-regexp v8, which Express 5 uses, removed that
+ * syntax. A non-matching request used to mean "this route does not match", so Express carried
+ * on looking at later routes and ultimately fell through to the 404 handler. `next('route')`
+ * reproduces exactly that: it abandons this route and resumes matching at the next one.
+ */
+export const matchParam =
+  (name: string, pattern: RegExp) =>
+  (req: Request, _res: Response, next: NextFunction): void => {
+    const value = req.params[name];
+    if (typeof value !== 'string' || !pattern.test(value)) {
+      return next('route');
+    }
+    return next();
+  };
+
 export const ensureAuth = (req: Request, res: Response, next: NextFunction): void => {
   if (req.isAuthenticated()) {
     return next();

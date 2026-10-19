@@ -2,7 +2,7 @@ import bcrypt from 'bcryptjs';
 import { userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
-import { redirect } from 'serverutils/render';
+import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
 
@@ -16,36 +16,34 @@ export const handler = async (req: Request, res: Response) => {
     return redirect(req, res, '/user/account?nav=password');
   }
 
-  const user = await userDao.getByIdWithSensitiveData(req.user.id);
+  try {
+    const user = await userDao.getByIdWithSensitiveData(req.user.id);
 
-  if (!user) {
-    req.flash('danger', 'User not found');
-    return redirect(req, res, '/user/account?nav=password');
-  }
+    if (!user) {
+      req.flash('danger', 'User not found');
+      return redirect(req, res, '/user/account?nav=password');
+    }
 
-  return bcrypt.compare(req.body.password, user.passwordHash, (_err2, isMatch) => {
+    const isMatch = await bcrypt.compare(req.body.password, user.passwordHash);
     if (!isMatch) {
       req.flash('danger', 'Password is incorrect');
       return redirect(req, res, '/user/account?nav=password');
     }
+
     if (req.body.password2 !== req.body.password3) {
       req.flash('danger', "New passwords don't match");
       return redirect(req, res, '/user/account?nav=password');
     }
-    return bcrypt.genSalt(10, (_err3, salt) => {
-      bcrypt.hash(req.body.password2, salt, async (err4, hash) => {
-        if (err4) {
-          return req.logger.error(err4.message, err4.stack);
-        }
-        if (user) {
-          user.passwordHash = hash;
-          await userDao.update(user as any);
-        }
-        req.flash('success', 'Password updated successfully');
-        return redirect(req, res, '/user/account?nav=password');
-      });
-    });
-  });
+
+    const salt = await bcrypt.genSalt(10);
+    user.passwordHash = await bcrypt.hash(req.body.password2, salt);
+    await userDao.update(user as any);
+
+    req.flash('success', 'Password updated successfully');
+    return redirect(req, res, '/user/account?nav=password');
+  } catch (err) {
+    return handleRouteError(req, res, err as Error, '/user/account?nav=password');
+  }
 };
 
 export const routes = [

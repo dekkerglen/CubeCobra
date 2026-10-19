@@ -1,6 +1,28 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+/* Tailwind 4 replaces the three @tailwind directives with a single import. The JS config is
+   still the source of truth for theme, safelist and plugins, loaded via @config. */
+@import 'tailwindcss';
+@config '../../tailwind.config.js';
+
+/* Tailwind 4 compatibility shim.
+   v4's preflight changed two defaults that this app's markup depends on:
+     - the universal border colour went from gray-200 to currentColor, which would repaint
+       every element using a bare `border`/`border-t` with the surrounding text colour;
+     - the default ring colour went from blue-500/50 to currentColor.
+   Restoring the v3 values keeps the upgrade visually neutral instead of silently
+   restyling several hundred call sites. */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: #e5e7eb;
+  }
+
+  * {
+    --tw-ring-color: #3b82f680;
+  }
+}
 
 @layer base {
   /* Prevent text overflow from causing horizontal scroll on mobile.

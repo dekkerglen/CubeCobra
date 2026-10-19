@@ -3,6 +3,7 @@ import rateLimit from 'express-rate-limit';
 import { whenCardDbReady } from 'serverutils/cardCatalog';
 import { analyzePuzzle } from 'serverutils/manamatrix/analysis';
 import { userOrIpKey } from 'serverutils/rateLimitKeys';
+import { ISO_DATE, matchParam } from 'router/middleware';
 
 import { Request, Response } from '../../../../../types/express';
 
@@ -45,7 +46,7 @@ export const getManaMatrixAnalysisHandler = async (req: Request, res: Response) 
 export const routes = [
   {
     method: 'get',
-    path: '/:date([0-9]{4}-[0-9]{2}-[0-9]{2})',
-    handler: [analysisLimiter, getManaMatrixAnalysisHandler],
+    path: '/:date',
+    handler: [matchParam('date', ISO_DATE), analysisLimiter, getManaMatrixAnalysisHandler],
   },
 ];

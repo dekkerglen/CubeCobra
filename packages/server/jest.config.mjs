@@ -42,8 +42,10 @@ export default {
   // (dist/index.js) is native ESM; babel-jest must transform it (and its ESM deps) or requiring
   // it throws "Cannot use import statement outside a module". The nested package names are listed
   // explicitly so the negative lookahead fails at both node_modules/ segments of the nested path.
+  // uuid@14 is ESM-only (both its default and its "node" export condition resolve to ESM), so it
+  // needs the same treatment.
   transformIgnorePatterns: [
-    'node_modules/(?!(.*\\.mjs$|(sanitize-html|htmlparser2|domhandler|domutils|dom-serializer|domelementtype|entities)/))',
+    'node_modules/(?!(.*\\.mjs$|(sanitize-html|htmlparser2|domhandler|domutils|dom-serializer|domelementtype|entities|uuid)/))',
   ],
 
   // Test file patterns

@@ -1,5 +1,6 @@
 import type UserType from '@utils/datatypes/User';
 import express from 'express';
+import type { ParamsFlatDictionary } from 'express-serve-static-core';
 
 // Extend Error interface to include status property
 export interface CustomError extends Error {
@@ -34,10 +35,17 @@ declare global {
 }
 
 // Export types for use in other files
-export interface Request extends Omit<express.Request, 'isAuthenticated' | 'flash'> {
+//
+// `params` is narrowed to ParamsFlatDictionary. Express 5's ParamsDictionary widened its values
+// to `string | string[]` because a wildcard segment (`/*splat`) captures an array. Every route in
+// this app binds only named `:param` segments, which are always single strings, so the flat
+// dictionary is the accurate type for them and avoids 300+ spurious narrowing checks. The two
+// wildcard routes (wiki, model) read `params.splat` and narrow it themselves.
+export interface Request extends Omit<express.Request, 'isAuthenticated' | 'flash' | 'params'> {
   user?: Express.User;
   uuid: string;
   rawBody?: Buffer;
+  params: ParamsFlatDictionary;
   logger: {
     error: (...args: any[]) => void;
     info: (...args: any[]) => void;

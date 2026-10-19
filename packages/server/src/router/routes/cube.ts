@@ -11,7 +11,7 @@ import {
   p1p1PackDao,
   userDao,
 } from 'dynamo/daos';
-import { csrfProtection, ensureAuth } from 'router/middleware';
+import { csrfProtection, ensureAuth, matchParam, UUID } from 'router/middleware';
 import {
   abbreviate,
   cachePromise,
@@ -655,9 +655,9 @@ export const routes = [
     handler: [samplePackImageHandler],
   },
   {
-    path: '/p1p1/:packId([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})',
+    path: '/p1p1/:packId',
     method: 'get',
-    handler: [p1p1Handler],
+    handler: [matchParam('packId', UUID), p1p1Handler],
   },
   {
     path: '/p1p1packimage/:packId',

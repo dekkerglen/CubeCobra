@@ -17,7 +17,9 @@ const PUBLIC_MODEL_BASE = `https://cubecobra-public.s3.us-east-2.amazonaws.com/m
  * segment so dev keeps resolving against that flat source.
  */
 const modelHandler = async (req: Request, res: Response) => {
-  const modelPath = (req.params as any)[0] as string | undefined;
+  // Express 5 captures `*splat` as an array of path segments; rejoin to recover the model path.
+  const splat = (req.params as unknown as { splat?: string | string[] }).splat;
+  const modelPath = Array.isArray(splat) ? splat.join('/') : splat;
   if (!modelPath) {
     return res.status(400).json({ error: 'Model path required' });
   }
@@ -74,4 +76,4 @@ const modelHandler = async (req: Request, res: Response) => {
   }
 };
 
-export const routes = [{ method: 'get', path: '/*', handler: [modelHandler] }];
+export const routes = [{ method: 'get', path: '/*splat', handler: [modelHandler] }];
