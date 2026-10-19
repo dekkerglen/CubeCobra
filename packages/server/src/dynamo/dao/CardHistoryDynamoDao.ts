@@ -72,6 +72,7 @@ export class CardHistoryDynamoDao extends BaseDynamoDao<History, UnhydratedCardH
       pauper: item.pauper,
       vintage: item.vintage,
       peasant: item.peasant,
+      pioneer: item.pioneer,
       size180: item.size180,
       size360: item.size360,
       size450: item.size450,

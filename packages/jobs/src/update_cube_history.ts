@@ -120,6 +120,7 @@ const mapTotalsToCardHistory = (
     legacy: [history.legacy, totals.legacy],
     modern: [history.modern, totals.modern],
     vintage: [history.vintage, totals.vintage],
+    pioneer: [history.pioneer, totals.pioneer],
     total: [history.total, totals.total],
     cubeCount: [history.total, totals.total],
     elo: elo || DefaultElo,

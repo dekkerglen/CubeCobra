@@ -26,6 +26,7 @@ const createUnhydratedCardHistory = (overrides?: Partial<UnhydratedCardHistory>)
   legacy: [50, 75],
   modern: [33, 45],
   vintage: [0, 0],
+  pioneer: [0, 0],
   cubeCount: undefined,
   total: [83, 120],
   dateCreated: Date.now(),
