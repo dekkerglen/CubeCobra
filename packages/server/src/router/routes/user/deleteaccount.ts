@@ -95,7 +95,7 @@ export const handler = async (req: Request, res: Response) => {
     for (const comment of comments) {
       comment.owner = undefined;
       comment.body = '[deleted]';
-      await commentDao.put(comment);
+      await commentDao.update(comment);
     }
 
     // Delete the user

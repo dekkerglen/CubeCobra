@@ -320,7 +320,7 @@ export const redirectHandler = async (req: Request, res: Response) => {
     // if a patron with this email is already linked, we can't use it
     const document = await patronDao.getByEmail(email);
 
-    if (document) {
+    if (document && document.owner !== req.user!.id) {
       req.flash(
         'danger',
         `This Patreon account has already been linked to another Cube Cobra account. If you think this was done by mistake, please contact us.`,
@@ -345,7 +345,7 @@ export const redirectHandler = async (req: Request, res: Response) => {
       level: levelFromEntitledTiers(member, included),
     };
 
-    await patronDao.put(newPatron);
+    await (patron ? patronDao.update({ ...patron, ...newPatron }) : patronDao.put(newPatron));
 
     const user = await userDao.getByIdWithSensitiveData(req.user!.id);
     if (user) {
