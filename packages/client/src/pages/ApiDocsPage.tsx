@@ -546,7 +546,8 @@ Mox Sapphire
               Quaternary sort column
             </Param>
             <Param name="showother" type="query">
-              Set to <InlineCode>true</InlineCode> to include the "other" category in the export
+              Set to <InlineCode>true</InlineCode> to include the "other" category in the export. Defaults to the cube's
+              "show unsorted" setting, so by default the export matches what the cube page displays.
             </Param>
           </ul>
 

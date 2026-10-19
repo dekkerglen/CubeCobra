@@ -21,6 +21,8 @@ interface MockResponse extends Response {
   statusCode: number;
   responseBody: any;
   writeEnabled: boolean;
+  /** Headers recorded by setHeader, for handlers that stream file downloads. */
+  sentHeaders: Record<string, string>;
 
   status(code: number): this;
 
@@ -34,6 +36,7 @@ export const createMockResponse = (locals: Record<string, any>): MockResponse =>
     statusCode: 200,
     responseBody: undefined,
     writeEnabled: true,
+    sentHeaders: {},
     status(code: number): MockResponse {
       this.statusCode = code;
       return this as MockResponse;
@@ -45,6 +48,22 @@ export const createMockResponse = (locals: Record<string, any>): MockResponse =>
     },
     send(payload: any): MockResponse {
       this.responseBody = payload;
+      this.writeEnabled = false;
+      return this as MockResponse;
+    },
+    setHeader(name: string, value: any): MockResponse {
+      (this as MockResponse).sentHeaders[name] = String(value);
+      return this as MockResponse;
+    },
+    // File download handlers stream their payload rather than calling send/json, so accumulate it.
+    write(chunk: any): boolean {
+      this.responseBody = `${this.responseBody ?? ''}${chunk}`;
+      return true;
+    },
+    end(chunk?: any): MockResponse {
+      if (chunk !== undefined) {
+        this.responseBody = `${this.responseBody ?? ''}${chunk}`;
+      }
       this.writeEnabled = false;
       return this as MockResponse;
     },
