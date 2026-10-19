@@ -77,15 +77,6 @@ function intToLegality(val: number): string | undefined {
   return FORMATS[val];
 }
 
-function legalityToInt(legality: string): number | undefined {
-  let res: number | undefined;
-  FORMATS.forEach((format, index) => {
-    if (legality === format) res = index;
-  });
-
-  return res;
-}
-
 function cardsAreEquivalent(card: CubeCard, details: CubeCard): boolean {
   if (card.cardID !== details.cardID) {
     return false;
@@ -173,45 +164,6 @@ function getCubeTypes(cards: CubeCard[]): CubeTypeResult {
   }
 
   return { pauper, peasant, type, eligibleFormats };
-}
-
-function setCubeType(cube: any): any {
-  const { pauper, peasant, type } = getCubeTypes(cube.cards);
-
-  cube.type = intToLegality(type);
-  if (pauper) {
-    cube.type += ' Pauper';
-  }
-  if (peasant) {
-    cube.type += ' Peasant';
-  }
-
-  if (cube.overrideCategory) {
-    cube.categories = [
-      cube.categoryOverride.toLowerCase(),
-      ...cube.categoryPrefixes.map((c: string) => c.toLowerCase()),
-    ];
-  } else {
-    cube.categories = Array.from(new Set(`${cube.type}`.toLowerCase().split(' ')));
-  }
-
-  cube.cardOracles = Array.from(new Set(cube.cards.map((card: CubeCard) => cardFromId(card.cardID).oracle_id)));
-  cube.keywords = `${cube.type} ${cube.name} ${cube.owner_name}`
-    .replace(/[^\w\s]/gi, '')
-    .toLowerCase()
-    .split(' ')
-    .filter((keyword) => keyword.length > 0);
-  cube.keywords.push(
-    ...(cube.tags || [])
-      .filter((tag: string) => tag && tag.length > 0)
-      .map((tag: string) => tag.replace(/[^\w\s]/gi, '').toLowerCase()),
-  );
-  cube.keywords.push(...cube.categories);
-  cube.keywords = Array.from(new Set(cube.keywords));
-
-  cube.card_count = cube.cards.length;
-
-  return cube;
 }
 
 function cardHtml(card: any): string {
@@ -933,14 +885,12 @@ async function reconstructCubeAtChangelog(
 }
 
 const methods = {
-  setCubeType,
   cardsAreEquivalent,
   sanitize,
   generatePack,
   generateBalancedPack,
   getCubeId,
   intToLegality,
-  legalityToInt,
   addCardHtml,
   removeCardHtml,
   replaceCardHtml,
@@ -975,10 +925,8 @@ export {
   isCubeEditable,
   isCubeListed,
   isCubeViewable,
-  legalityToInt,
   reconstructCubeAtChangelog,
   removeCardHtml,
   replaceCardHtml,
   sanitize,
-  setCubeType,
 };
