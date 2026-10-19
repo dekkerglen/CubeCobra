@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useState } from 'react';
 
 import { HeartFillIcon, XIcon } from '@primer/octicons-react';
 import { isAdFree } from '@utils/adsUtil';
@@ -33,6 +33,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
  */
 const UpgradePrompt: React.FC<UpgradePromptProps> = ({ message, storageKey, snoozeDays = 30, className }) => {
   const user = useContext(UserContext);
+  const [mountedAt] = useState(() => Date.now());
   const [dismissedAt, setDismissedAt] = useLocalStorage<number>(`upgradePrompt:${storageKey}`, 0);
 
   // Patrons already support the site, and admins get every patron perk - never nag them.
@@ -40,8 +41,10 @@ const UpgradePrompt: React.FC<UpgradePromptProps> = ({ message, storageKey, snoo
     return null;
   }
 
-  // Respect a recent dismissal.
-  if (dismissedAt > 0 && Date.now() - dismissedAt < snoozeDays * DAY_MS) {
+  // Respect a recent dismissal. "now" is pinned to mount via a lazy initialiser rather than
+  // calling Date.now() during render; the snooze window is measured in days, so re-evaluating
+  // it mid-session would never change the outcome.
+  if (dismissedAt > 0 && mountedAt - dismissedAt < snoozeDays * DAY_MS) {
     return null;
   }
 

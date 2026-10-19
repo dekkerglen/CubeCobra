@@ -79,12 +79,12 @@ const Comment: React.FC<CommentProps> = ({
     });
   };
 
-  if (!comment.owner) {
-    comment.owner = {
-      id: '',
-      username: '',
-    };
-  }
+  // Derive a fallback rather than assigning to `comment.owner`, which mutated the prop during
+  // render.
+  const owner = comment.owner ?? {
+    id: '',
+    username: '',
+  };
 
   return (
     <div
@@ -100,7 +100,7 @@ const Comment: React.FC<CommentProps> = ({
     >
       <Flexbox direction="row" gap="2" className="relative">
         {comment.image && (
-          <a href={`/user/view/${comment.owner.id}`} className="flex-shrink-0">
+          <a href={`/user/view/${owner.id}`} className="flex-shrink-0">
             <img
               className="w-11 h-11 rounded-full object-cover border border-border mt-0.5"
               src={comment.image.uri}
@@ -120,11 +120,7 @@ const Comment: React.FC<CommentProps> = ({
         <div className="flex-grow min-w-0">
           <Flexbox direction="col" gap="1">
             <Text sm>
-              {comment.owner.username ? (
-                <Link href={`/user/view/${comment.owner.id}`}>{comment.owner.username}</Link>
-              ) : (
-                'Anonymous'
-              )}
+              {owner.username ? <Link href={`/user/view/${owner.id}`}>{owner.username}</Link> : 'Anonymous'}
               {comment.date && (
                 <span className="text-text-secondary">
                   {' · '}
@@ -152,7 +148,7 @@ const Comment: React.FC<CommentProps> = ({
                   <Text sm>Reply</Text>
                 </Link>
               )}
-              {user && comment.owner.id === user.id && (
+              {user && owner.id === user.id && (
                 <>
                   <Link onClick={() => setIsEdit(true)}>
                     <Text sm>Edit</Text>

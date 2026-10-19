@@ -30,7 +30,9 @@ interface BannerProps {
 
 const Banner: React.FC<BannerProps> = ({ className }) => {
   const user: UserContextValue | null = useContext(UserContext);
-  const [option] = useState<number>(Math.floor(Math.random() * options.length * BANNER_RATE));
+  // Lazy initialiser: the choice is made once per mount. Passing the expression directly
+  // re-rolled it on every render even though useState discards all but the first value.
+  const [option] = useState<number>(() => Math.floor(Math.random() * options.length * BANNER_RATE));
 
   if (isAdFree(user?.roles)) return <></>;
 

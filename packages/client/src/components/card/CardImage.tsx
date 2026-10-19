@@ -31,17 +31,19 @@ const CardImage: React.FC<CardImageProps> = ({
   onClick,
 }) => {
   const current = useMemo<Card>(() => {
-    const result: Card = card || {
+    const base: Card = card || {
       cardID: '',
       details: {} as CardDetails,
     };
 
+    // Return a copy rather than assigning onto `base`: when `card` is supplied, `base` IS the
+    // caller's prop object, so writing to it mutated a card the parent (and anything else
+    // holding that reference) still owns.
     if (details) {
-      result.details = details;
-      result.cardID = details.oracle_id;
+      return { ...base, details, cardID: details.oracle_id };
     }
 
-    return result;
+    return base;
   }, [card, details]);
 
   const { showCustomImages } = useContext(DisplayContext);

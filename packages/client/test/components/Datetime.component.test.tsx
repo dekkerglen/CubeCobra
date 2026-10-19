@@ -56,4 +56,29 @@ describe('Datetime component', () => {
     render(<Datetime date={new RealDate('2024-06-15T12:00:00Z')} />);
     expect(screen.getByRole('time').textContent).toBe('less than a minute ago');
   });
+
+  it('keeps the label stable across re-renders as the clock advances', () => {
+    mockNow('2024-06-15T12:00:00Z');
+    const { rerender } = render(<Datetime date={new RealDate('2024-06-15T11:00:00Z')} />);
+    const initial = screen.getByRole('time').textContent;
+    expect(initial).toMatch(/hour ago/i);
+
+    // "now" is captured once at mount, so a parent re-rendering hours later must not silently
+    // relabel an element the user is already looking at.
+    jest.spyOn(Date, 'now').mockReturnValue(new RealDate('2024-06-25T12:00:00Z').getTime());
+    rerender(<Datetime date={new RealDate('2024-06-15T11:00:00Z')} />);
+
+    expect(screen.getByRole('time').textContent).toBe(initial);
+  });
+
+  it('reads the clock once per mount rather than on every render', () => {
+    mockNow('2024-06-15T12:00:00Z');
+    const { rerender } = render(<Datetime date={new RealDate('2024-06-15T11:00:00Z')} />);
+    const callsAfterMount = (Date.now as jest.Mock).mock.calls.length;
+
+    rerender(<Datetime date={new RealDate('2024-06-15T11:00:00Z')} />);
+    rerender(<Datetime date={new RealDate('2024-06-15T11:00:00Z')} />);
+
+    expect((Date.now as jest.Mock).mock.calls.length).toBe(callsAfterMount);
+  });
 });

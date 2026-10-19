@@ -1,4 +1,4 @@
-import React, { createRef, useContext } from 'react';
+import React, { useContext, useRef } from 'react';
 
 import { DownloadIcon, PlusIcon, UploadIcon } from '@primer/octicons-react';
 import { getCubeId } from '@utils/Util';
@@ -21,11 +21,29 @@ const FromDraftLink = withModal(Link, CreateRecordFromDraftModal);
 // One click: POST a record with today's date + a default name, server redirects
 // straight to the new record.
 const CreateNewRecordButton: React.FC<{ cubeId: string }> = ({ cubeId }) => {
-  const formRef = createRef<HTMLFormElement>();
-  const now = new Date();
+  const formRef = useRef<HTMLFormElement>(null);
+
+  // Build the record when the button is pressed rather than during render. `new Date()` in
+  // render is impure, and the previous version baked the render-time date into a hidden input,
+  // so a page left open overnight would have created a record dated the day before.
+  const handleClick = () => {
+    const form = formRef.current;
+    if (!form) {
+      return;
+    }
+
+    const now = new Date();
+    const recordInput = form.elements.namedItem('record') as HTMLInputElement | null;
+    if (recordInput) {
+      recordInput.value = JSON.stringify({ name: defaultRecordName(now), date: now.valueOf() });
+    }
+
+    form.submit();
+  };
+
   return (
     <>
-      <button type="button" className={navItemClass} onClick={() => formRef.current?.submit()}>
+      <button type="button" className={navItemClass} onClick={handleClick}>
         <PlusIcon size={16} />
         <ResponsiveDiv baseVisible md>
           New Record
@@ -33,12 +51,7 @@ const CreateNewRecordButton: React.FC<{ cubeId: string }> = ({ cubeId }) => {
         <ResponsiveDiv md>Create New Record</ResponsiveDiv>
       </button>
       <div className="hidden">
-        <CSRFForm
-          method="POST"
-          action={`/cube/records/create/${cubeId}`}
-          formData={{ record: JSON.stringify({ name: defaultRecordName(now), date: now.valueOf() }) }}
-          ref={formRef}
-        />
+        <CSRFForm method="POST" action={`/cube/records/create/${cubeId}`} formData={{ record: '' }} ref={formRef} />
       </div>
     </>
   );
