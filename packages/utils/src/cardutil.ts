@@ -586,6 +586,48 @@ export const cardWithBaseAttributes = (card: Card): Card => ({
   imgBackUrl: undefined,
 });
 
+/**
+ * Attributes that, when set on a cube card, replace the printed values from card.details.
+ *
+ * Deliberately excludes custom_name: renaming a card is a labelling choice rather than a
+ * deviation in how the card actually plays, so it does not count as an override for `is:override`.
+ */
+const OVERRIDABLE_ATTRIBUTES = [
+  'colors',
+  'colorCategory',
+  'cmc',
+  'type_line',
+  'rarity',
+  'imgUrl',
+  'imgBackUrl',
+] as const;
+
+/**
+ * True when the card carries at least one attribute that deviates from its printing.
+ *
+ * Custom cards and vouchers are excluded: those fields are the only data such a card has, so
+ * treating them as overrides would match every hand-made card and bury the real signal.
+ */
+export const hasOverriddenAttributes = (card: Card): boolean => {
+  if (isCustomOrVoucher(card)) {
+    return false;
+  }
+
+  return OVERRIDABLE_ATTRIBUTES.some((attribute) => {
+    const value = card[attribute];
+    return Array.isArray(value) ? value.length > 0 : value !== undefined && value !== null && value !== '';
+  });
+};
+
+/** True when the card has a user-supplied front image. */
+export const hasCustomFrontImage = (card: Card): boolean => !!card.imgUrl;
+
+/** True when the card has a user-supplied back image. */
+export const hasCustomBackImage = (card: Card): boolean => !!card.imgBackUrl;
+
+/** True when the card has a user-supplied image on either face. */
+export const hasCustomImage = (card: Card): boolean => hasCustomFrontImage(card) || hasCustomBackImage(card);
+
 export const cardTokens = (card: Card): string[] => card.details?.tokens ?? [];
 
 export const cardElo = (card: Card): number => (card.details ? card.details?.elo || DefaultElo : DefaultElo);
@@ -837,6 +879,12 @@ const RAW_CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, car
   standard: (details) => details.printedInExpansion === true,
   supplemental: (details) => details.printedInExpansion === false,
   voucher: (_details, card) => !!(card && isVoucher(card)),
+  custom: (_details, card) => !!(card && isCustomCard(card)),
+  override: (_details, card) => !!(card && hasOverriddenAttributes(card)),
+  overridden: (_details, card) => !!(card && hasOverriddenAttributes(card)),
+  image: (_details, card) => !!(card && hasCustomImage(card)),
+  imageurl: (_details, card) => !!(card && hasCustomFrontImage(card)),
+  imagebackurl: (_details, card) => !!(card && hasCustomBackImage(card)),
   singleton: (_details, card) => !!card && cardQuantity(card) === 1,
 
   // Others from Scryfall:

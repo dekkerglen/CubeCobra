@@ -269,6 +269,9 @@ isValue -> (
   | "reserved"i
   | "standard"i | "supplemental"i
   | "voucher"i
+  | "custom"i
+  | "override"i | "overridden"i
+  | "image"i | "imageurl"i | "imagebackurl"i
   | "singleton"i
 ) {% ([[category]]) => category.toLowerCase() %}
 

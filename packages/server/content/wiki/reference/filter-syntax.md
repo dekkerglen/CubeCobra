@@ -345,6 +345,39 @@ Available options are "Non-foil", "Foil", "Etched", and "Alt-foil".
 | `is:standard`        | All cards that were printed in a standard expansion set.                                   |
 | `is:supplemental`    | All cards that were only printed in supplemental products (never in a standard expansion). |
 
+## Cube Customizations
+
+These filters match on how a card has been customized inside your cube, rather than on anything
+about the printed card. As with every `is:` filter, `has:` is an equivalent alias and both `-is:`
+and `not:` invert the match.
+
+| Query              | Matches                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------- |
+| `is:custom`        | Custom cards. Vouchers are matched by `is:voucher`; use `is:custom or is:voucher` for both. |
+| `is:override`      | Cards with at least one attribute changed from the printed card. Also `is:overridden`. |
+| `is:image`         | Cards with a custom image on either face.                                          |
+| `is:imageUrl`      | Cards with a custom front image.                                                   |
+| `is:imageBackUrl`  | Cards with a custom back image.                                                    |
+
+`is:override` matches when any of a card's colors, color category, mana value, type line, rarity,
+or either custom image differs from its printing. A renamed card does not count on its own, since
+renaming does not change how the card plays. Custom cards and vouchers are never matched: those
+attributes are the only data such a card has, so every one of them would otherwise match.
+
+The image filters match custom images anywhere, including on custom cards, so negating one is a
+quick way to find cards still waiting for art:
+
+| Query                        | Matches                                              |
+| ---------------------------- | ---------------------------------------------------- |
+| `-has:image`                 | Cards that have no custom image yet.                 |
+| `is:custom -has:image`       | Custom cards still needing art.                      |
+| `is:override -has:image`     | Cards customized in some way other than their image. |
+
+> **Note:** these filters read the customizations themselves, so they find nothing while the
+> **Use Base Card Data** display option is turned on. That option deliberately hides every
+> customization and shows cards as printed, which leaves `is:override` and the image filters with
+> nothing to match.
+
 ## Shortcuts and Nicknames
 
 Land groups — each `is:` shortcut matches a well-known land cycle.

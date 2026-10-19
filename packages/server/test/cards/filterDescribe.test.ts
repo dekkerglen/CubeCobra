@@ -109,3 +109,22 @@ describe('Filter pseudo-English descriptions', () => {
     expect(match('is:prepared', adventure)).toBe(false);
   });
 });
+
+describe('Descriptions for custom, override and image filters', () => {
+  it('describes the custom card category', () => {
+    expect(describeOf('is:custom')).toBe('it is a custom card');
+    expect(describeOf('has:custom')).toBe('it is a custom card');
+    expect(describeOf('not:custom')).toBe('it is not a custom card');
+  });
+
+  it('describes both spellings of the override category identically', () => {
+    expect(describeOf('is:override')).toBe('it is overriding at least one of its printed attributes');
+    expect(describeOf('is:overridden')).toBe('it is overriding at least one of its printed attributes');
+  });
+
+  it('describes the custom image categories', () => {
+    expect(describeOf('is:image')).toBe('it is using a custom image');
+    expect(describeOf('is:imageUrl')).toBe('it is using a custom front image');
+    expect(describeOf('is:imageBackUrl')).toBe('it is using a custom back image');
+  });
+});

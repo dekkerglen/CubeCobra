@@ -657,3 +657,157 @@ describe('Oracle text name placeholder', () => {
     ).toBe(true);
   });
 });
+
+describe('is:custom', () => {
+  const matches = (query: string, card: Card): boolean => {
+    const { err, filter } = makeFilter(query);
+    expect(err).toBeFalsy();
+    return filter!(card);
+  };
+
+  const customCard = createCard({ cardID: 'custom-card', custom_name: 'My Custom' });
+  const voucherCard = createCard({ cardID: 'voucher', custom_name: 'Zoo Kickstarter' });
+  const realCard = createCard({ cardID: 'a1b2c3d4-0000-0000-0000-000000000000' });
+
+  it('matches a custom card', () => {
+    expect(matches('is:custom', customCard)).toBe(true);
+  });
+
+  it('does not match a voucher', () => {
+    expect(matches('is:custom', voucherCard)).toBe(false);
+  });
+
+  it('does not match a real card', () => {
+    expect(matches('is:custom', realCard)).toBe(false);
+  });
+
+  it('works through the has: alias', () => {
+    expect(matches('has:custom', customCard)).toBe(true);
+    expect(matches('has:custom', realCard)).toBe(false);
+  });
+
+  it('inverts with -is: and not:', () => {
+    expect(matches('-is:custom', customCard)).toBe(false);
+    expect(matches('-is:custom', realCard)).toBe(true);
+    expect(matches('not:custom', customCard)).toBe(false);
+    expect(matches('not:custom', realCard)).toBe(true);
+  });
+
+  it('composes with is:voucher to cover both', () => {
+    expect(matches('is:custom or is:voucher', customCard)).toBe(true);
+    expect(matches('is:custom or is:voucher', voucherCard)).toBe(true);
+    expect(matches('is:custom or is:voucher', realCard)).toBe(false);
+  });
+});
+
+describe('is:override', () => {
+  const matches = (query: string, card: Card): boolean => {
+    const { err, filter } = makeFilter(query);
+    expect(err).toBeFalsy();
+    return filter!(card);
+  };
+
+  const plainCard = () => createCard({ cardID: 'a1b2c3d4-0000-0000-0000-000000000000' });
+
+  it('does not match a card with no overrides', () => {
+    expect(matches('is:override', plainCard())).toBe(false);
+  });
+
+  it.each([
+    ['colors', { colors: ['R'] as any }],
+    ['colorCategory', { colorCategory: 'Red' as any }],
+    ['cmc', { cmc: 4 }],
+    ['type_line', { type_line: 'Artifact' }],
+    ['rarity', { rarity: 'mythic' }],
+    ['imgUrl', { imgUrl: 'https://example.com/front.png' }],
+    ['imgBackUrl', { imgBackUrl: 'https://example.com/back.png' }],
+  ])('matches a card whose %s was overridden', (_label, override) => {
+    expect(matches('is:override', createCard({ ...plainCard(), ...override }))).toBe(true);
+  });
+
+  it('does not match a card that only has a custom name', () => {
+    expect(matches('is:override', createCard({ ...plainCard(), custom_name: 'Renamed' }))).toBe(false);
+  });
+
+  it('does not match a custom card even when those fields are populated', () => {
+    const custom = createCard({ cardID: 'custom-card', type_line: 'Artifact', cmc: 3, imgUrl: 'https://e.com/a.png' });
+    expect(matches('is:override', custom)).toBe(false);
+  });
+
+  it('does not match a voucher even when those fields are populated', () => {
+    const voucher = createCard({ cardID: 'voucher', type_line: 'Artifact', cmc: 3, imgUrl: 'https://e.com/a.png' });
+    expect(matches('is:override', voucher)).toBe(false);
+  });
+
+  it('accepts the overridden spelling as the same filter', () => {
+    const overridden = createCard({ ...plainCard(), rarity: 'mythic' });
+    expect(matches('is:overridden', overridden)).toBe(true);
+    expect(matches('is:overridden', plainCard())).toBe(false);
+  });
+
+  it('works through has: and inverts with -is: and not:', () => {
+    const overridden = createCard({ ...plainCard(), cmc: 4 });
+    expect(matches('has:override', overridden)).toBe(true);
+    expect(matches('-is:override', overridden)).toBe(false);
+    expect(matches('-is:override', plainCard())).toBe(true);
+    expect(matches('not:override', overridden)).toBe(false);
+  });
+});
+
+describe('custom image filters', () => {
+  const matches = (query: string, card: Card): boolean => {
+    const { err, filter } = makeFilter(query);
+    expect(err).toBeFalsy();
+    return filter!(card);
+  };
+
+  const base = () => createCard({ cardID: 'a1b2c3d4-0000-0000-0000-000000000000' });
+  const frontOnly = () => createCard({ ...base(), imgUrl: 'https://example.com/front.png' });
+  const backOnly = () => createCard({ ...base(), imgBackUrl: 'https://example.com/back.png' });
+  const bothFaces = () =>
+    createCard({ ...base(), imgUrl: 'https://example.com/front.png', imgBackUrl: 'https://example.com/back.png' });
+
+  it.each([
+    ['no custom image', false],
+    ['front only', true],
+    ['back only', true],
+    ['both faces', true],
+  ])('is:image with %s', (label, expected) => {
+    const card = { 'no custom image': base, 'front only': frontOnly, 'back only': backOnly, 'both faces': bothFaces }[
+      label
+    ]!();
+    expect(matches('is:image', card)).toBe(expected);
+  });
+
+  it('is:imageUrl matches only when the front image is set', () => {
+    expect(matches('is:imageUrl', frontOnly())).toBe(true);
+    expect(matches('is:imageUrl', bothFaces())).toBe(true);
+    expect(matches('is:imageUrl', backOnly())).toBe(false);
+    expect(matches('is:imageUrl', base())).toBe(false);
+  });
+
+  it('is:imageBackUrl matches only when the back image is set', () => {
+    expect(matches('is:imageBackUrl', backOnly())).toBe(true);
+    expect(matches('is:imageBackUrl', bothFaces())).toBe(true);
+    expect(matches('is:imageBackUrl', frontOnly())).toBe(false);
+    expect(matches('is:imageBackUrl', base())).toBe(false);
+  });
+
+  it('matches regardless of the casing used', () => {
+    expect(matches('is:imageurl', frontOnly())).toBe(true);
+    expect(matches('is:IMAGEBACKURL', backOnly())).toBe(true);
+  });
+
+  it('finds cards still needing an image via negation', () => {
+    expect(matches('-has:image', base())).toBe(true);
+    expect(matches('-has:image', frontOnly())).toBe(false);
+    expect(matches('not:image', base())).toBe(true);
+  });
+
+  it('matches a custom card that has an image, so authors can audit their own art', () => {
+    const customWithArt = createCard({ cardID: 'custom-card', imgUrl: 'https://example.com/mine.png' });
+    const customWithoutArt = createCard({ cardID: 'custom-card' });
+    expect(matches('is:image', customWithArt)).toBe(true);
+    expect(matches('is:image', customWithoutArt)).toBe(false);
+  });
+});
