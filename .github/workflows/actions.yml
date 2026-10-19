@@ -78,7 +78,13 @@ jobs:
           git reset --hard
           git clean -fd
           git checkout origin/${{ github.base_ref }}
-          npm install
+          # node_modules still holds the PR's tree. Reinstalling the base branch's lockfile
+          # over the top makes npm reify a large in-place downgrade, and on a big dependency
+          # diff that trips an arborist bug ("The \"from\" argument must be of type string").
+          # Installing from a clean directory avoids it. This whole step is best-effort - it
+          # falls back to a zero baseline - so a failure here must not fail the job.
+          rm -rf node_modules packages/*/node_modules
+          npm install || echo "Base branch install failed, will use zero baseline"
           npm run test:ci || echo "Base branch tests failed, will use zero baseline"
           if [ -f "packages/server/coverage/coverage-summary.json" ]; then
             cp packages/server/coverage/coverage-summary.json /tmp/coverage-base.json
