@@ -50,24 +50,19 @@ export const cubeJSONHandler = async (req: Request, res: Response) => {
     }
     const { cards: cubeCards, changelog: changelogMeta } = resolved;
 
-    // Sort every board using the cube's configured default sorts (falling back to the canonical defaults).
-    // showUnsorted has to be carried through: it is what the cube page sorts with, so passing
-    // anything else here would hand back an export that disagrees with what the user is looking at.
-    // Cards no bucket claims - custom cards and vouchers with no type line, for instance - are only
-    // part of either when it is on.
+    // Order each board by the cube's default sorts, but return every card exactly once: sorting
+    // repeats cards that fall in several groups and drops those in none, which suits the page but
+    // not a data export.
     const [primary, secondary, tertiary, quaternary] = getCubeSorts(cube);
     for (const boardName of Object.keys(cubeCards)) {
       const board = cubeCards[boardName];
       if (Array.isArray(board)) {
-        cubeCards[boardName] = sortForDownload(
-          board as Card[],
-          primary,
-          secondary,
-          tertiary,
-          quaternary,
-          cube.showUnsorted || false,
-          cube,
-        );
+        const sorted = sortForDownload(board as Card[], primary, secondary, tertiary, quaternary, false, cube);
+        const ordered = new Set<Card>(sorted);
+        for (const card of board as Card[]) {
+          ordered.add(card);
+        }
+        cubeCards[boardName] = [...ordered];
       }
     }
 
