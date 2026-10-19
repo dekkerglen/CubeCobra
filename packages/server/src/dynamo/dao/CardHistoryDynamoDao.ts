@@ -109,33 +109,15 @@ export class CardHistoryDynamoDao extends BaseDynamoDao<History, UnhydratedCardH
   }
 
   /**
-   * Calculates the number of cubes from the card history data.
-   * This is derived data based on the cube type counts.
+   * The number of cubes containing this card.
+   *
+   * The per-type buckets overlap by construction -- every cube falls into both a
+   * size bucket and a legality bucket, and may additionally be pauper or peasant
+   * -- so summing them counts each cube two or more times. The total bucket is
+   * the only count of distinct cubes.
    */
   private calculateCubes(item: UnhydratedCardHistory): number {
-    // Sum up all the cube type counts
-    let total = 0;
-    const cubeTypes = [
-      'legacy',
-      'modern',
-      'pauper',
-      'vintage',
-      'peasant',
-      'size180',
-      'size360',
-      'size450',
-      'size540',
-      'size720',
-    ] as const;
-
-    for (const type of cubeTypes) {
-      const value = item[type];
-      if (value && Array.isArray(value) && value.length > 0) {
-        total += value[0]; // First element is the count
-      }
-    }
-
-    return total;
+    return item.total?.[0] ?? 0;
   }
 
   /**

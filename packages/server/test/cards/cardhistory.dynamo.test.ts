@@ -171,12 +171,12 @@ describe('CardHistoryDynamoDao', () => {
   });
 
   describe('hydration', () => {
-    it('correctly calculates cubes from cube type data', async () => {
+    it('reports the number of cubes containing the card', async () => {
       const unhydrated = createUnhydratedCardHistory({
         legacy: [50, 75],
         modern: [33, 45],
         pauper: [10, 15],
-        // Other types are [0, 0] or undefined
+        total: [83, 120],
       });
 
       mockSend.mockResolvedValueOnce({
@@ -187,7 +187,23 @@ describe('CardHistoryDynamoDao', () => {
       const result = await cardHistoryDao.queryByOracleAndType('oracle-123', Period.DAY);
 
       expect(result.items?.length).toBe(1);
-      expect(result.items?.[0]?.cubes).toBe(93); // 50 + 33 + 10
+      // Buckets overlap by construction: every cube lands in both a size and a
+      // legality bucket, and may also be pauper or peasant. Summing them double
+      // counts, so the total bucket is the only real count.
+      expect(result.items?.[0]?.cubes).toBe(83);
+    });
+
+    it('falls back to zero when no total was recorded', async () => {
+      const unhydrated = createUnhydratedCardHistory({ total: undefined });
+
+      mockSend.mockResolvedValueOnce({
+        Items: [{ item: unhydrated }],
+        LastEvaluatedKey: undefined,
+      });
+
+      const result = await cardHistoryDao.queryByOracleAndType('oracle-123', Period.DAY);
+
+      expect(result.items?.[0]?.cubes).toBe(0);
     });
   });
 });
