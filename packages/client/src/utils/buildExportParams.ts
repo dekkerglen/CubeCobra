@@ -13,13 +13,9 @@ export interface ExportParamsOptions {
 }
 
 /**
- * Builds the query string for the cube export links.
- *
- * `showother` mirrors the cube's "show unsorted" setting so a download matches what the page is
- * showing. Without it the download endpoint defaults to false and silently discards any card no
- * sort bucket claims - a custom card or voucher with no type line, for example - even though the
- * page lists those cards under "Other". It is sent regardless of the sort checkbox because the
- * download endpoint sorts either way, falling back to the default sorts when none are given.
+ * Builds the query string for the cube export links so a download matches what the page shows with
+ * the same Use Sort / Use Filter settings. With sorting off it sends `nosort`, since the download
+ * endpoint otherwise sorts by the cube's defaults and drops cards no sort group claims.
  */
 export const buildExportParams = ({
   isFilterUsed,
@@ -44,10 +40,9 @@ export const buildExportParams = ({
     if (sortSecondary) params.set('secondary', sortSecondary);
     if (sortTertiary) params.set('tertiary', sortTertiary);
     if (sortQuaternary) params.set('quaternary', sortQuaternary);
-  }
-
-  if (showUnsorted) {
-    params.set('showother', 'true');
+    if (showUnsorted) params.set('showother', 'true');
+  } else {
+    params.set('nosort', 'true');
   }
 
   if (exportAllBoards) {
