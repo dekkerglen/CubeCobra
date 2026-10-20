@@ -104,7 +104,7 @@ export interface CubeContextValue {
   cardsLoading: boolean;
   setShowUnsorted: (value: boolean) => Promise<void>;
   setCollapseDuplicateCards: (value: boolean) => Promise<void>;
-  saveSorts: () => Promise<void>;
+  saveSorts: () => Promise<boolean>;
   resetSorts: () => void;
   effectiveDefaultSorts: string[];
   sortPrimary: string | null;
@@ -1584,18 +1584,33 @@ export function CubeContextProvider({
     );
 
     setLoading(true);
+    const previousCube = cube;
     setCube({
       ...cube,
       views: updatedViews,
     });
-    await csrfFetch(`/cube/updateviews/${cube.id}`, {
-      method: 'POST',
-      body: JSON.stringify({ views: updatedViews }),
-      headers: {
-        'Content-Type': 'application/json',
-      },
-    });
+
+    let saved = false;
+    try {
+      const response = await csrfFetch(`/cube/updateviews/${cube.id}`, {
+        method: 'POST',
+        body: JSON.stringify({ views: updatedViews }),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+      // An expired session redirects to the login page, which is a 200 with an HTML body.
+      const json = await response.json().catch(() => null);
+      saved = response.ok && json?.success === true;
+    } catch {
+      saved = false;
+    }
+
+    if (!saved) {
+      setCube(previousCube);
+    }
     setLoading(false);
+    return saved;
   }, [sortPrimary, defaultSorts, sortSecondary, sortTertiary, sortQuaternary, cube, activeView, csrfFetch]);
 
   const resetSorts = useCallback(() => {

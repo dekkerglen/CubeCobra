@@ -1,4 +1,4 @@
-import React, { Dispatch, SetStateAction, useState } from 'react';
+import React, { Dispatch, SetStateAction, useEffect, useState } from 'react';
 
 import Collapse from '../base/Collapse';
 import Link from '../base/Link';
@@ -15,6 +15,10 @@ export interface CommentEntryProps {
 const CommentEntry: React.FC<CommentEntryProps> = ({ submit, expanded, toggle, defaultValue = '' }) => {
   const [text, setText]: [string, Dispatch<SetStateAction<string>>] = useState(defaultValue);
 
+  useEffect(() => {
+    setText(defaultValue);
+  }, [defaultValue]);
+
   return (
     <Collapse isOpen={expanded}>
       <TextArea value={text} onChange={(event) => setText(event.target.value)} maxLength={5000} rows={3} />
@@ -22,7 +26,7 @@ const CommentEntry: React.FC<CommentEntryProps> = ({ submit, expanded, toggle, d
         onClick={() => {
           submit(text);
           toggle();
-          setText('');
+          setText(defaultValue);
         }}
       >
         <Text sm>Submit</Text>

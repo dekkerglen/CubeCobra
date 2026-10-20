@@ -30,8 +30,15 @@ const cube = {
 } as unknown as Cube;
 
 const SaveSortsButton: React.FC = () => {
-  const { saveSorts } = useContext(CubeContext);
-  return <button onClick={() => saveSorts()}>save-sorts</button>;
+  const { saveSorts, cube: current } = useContext(CubeContext);
+  const [result, setResult] = React.useState<string>('none');
+  return (
+    <>
+      <button onClick={async () => setResult(String(await saveSorts()))}>save-sorts</button>
+      <span data-testid="result">{result}</span>
+      <span data-testid="mainboard-sort">{current.views?.[0]?.defaultSorts?.[0]}</span>
+    </>
+  );
 };
 
 const csrfFetch = jest.fn();
@@ -59,7 +66,7 @@ describe('CubeContext saveSorts', () => {
   beforeEach(() => {
     localStorage.clear();
     csrfFetch.mockReset();
-    csrfFetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    csrfFetch.mockResolvedValue({ ok: true, json: async () => ({ success: true }) });
   });
 
   it('saves sorts onto the view named by the URL slug', async () => {
@@ -84,5 +91,51 @@ describe('CubeContext saveSorts', () => {
     const views = savedViews();
     expect(views.find((v: any) => v.name === 'Mainboard').defaultSorts[0]).toBe('Mana Value');
     expect(views.find((v: any) => v.name === 'Base Packs').defaultSorts[0]).toBe('Color Category');
+  });
+
+  it('keeps the new sorts and reports success when the server accepts them', async () => {
+    renderProvider('?s1=Mana%20Value');
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('save-sorts'));
+    });
+
+    expect(screen.getByTestId('result')).toHaveTextContent('true');
+    expect(screen.getByTestId('mainboard-sort')).toHaveTextContent('Mana Value');
+  });
+
+  it.each([
+    ['a server error', { ok: false, status: 400, json: async () => ({ success: false, message: 'bad views' }) }],
+    [
+      'an expired session redirected to the login page',
+      {
+        ok: true,
+        json: async () => {
+          throw new SyntaxError('Unexpected token <');
+        },
+      },
+    ],
+  ])('reverts the views and reports failure on %s', async (_label, response) => {
+    csrfFetch.mockResolvedValue(response);
+    renderProvider('?s1=Mana%20Value');
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('save-sorts'));
+    });
+
+    expect(screen.getByTestId('result')).toHaveTextContent('false');
+    expect(screen.getByTestId('mainboard-sort')).toHaveTextContent('Color Category');
+  });
+
+  it('reverts the views and reports failure when the request throws', async () => {
+    csrfFetch.mockRejectedValue(new TypeError('Failed to fetch'));
+    renderProvider('?s1=Mana%20Value');
+
+    await act(async () => {
+      fireEvent.click(screen.getByText('save-sorts'));
+    });
+
+    expect(screen.getByTestId('result')).toHaveTextContent('false');
+    expect(screen.getByTestId('mainboard-sort')).toHaveTextContent('Color Category');
   });
 });
