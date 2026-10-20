@@ -1,7 +1,7 @@
-import { buildExportParams } from 'utils/buildExportParams';
+import { buildExportParams, ExportParamsOptions } from 'utils/buildExportParams';
 
 describe('buildExportParams', () => {
-  const base = {
+  const base: ExportParamsOptions = {
     isFilterUsed: false,
     filterInput: '',
     isSortUsed: false,
@@ -14,15 +14,15 @@ describe('buildExportParams', () => {
     showUnsorted: false,
   };
 
-  const paramsOf = (overrides: Partial<typeof base> = {}) =>
+  const paramsOf = (overrides: Partial<ExportParamsOptions> = {}) =>
     new URLSearchParams(buildExportParams({ ...base, ...overrides }));
 
   it('asks for unsorted cards when sorting and the cube shows them', () => {
     expect(paramsOf({ isSortUsed: true, showUnsorted: true }).get('showother')).toBe('true');
   });
 
-  it('does not ask for unsorted cards when the cube hides them', () => {
-    expect(paramsOf({ isSortUsed: true, showUnsorted: false }).get('showother')).toBeNull();
+  it('explicitly excludes unsorted cards when the cube hides them', () => {
+    expect(paramsOf({ isSortUsed: true, showUnsorted: false }).get('showother')).toBe('false');
   });
 
   it('asks for no sorting when the sort checkbox is off', () => {

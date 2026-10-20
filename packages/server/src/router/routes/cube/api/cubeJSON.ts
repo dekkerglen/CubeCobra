@@ -50,9 +50,7 @@ export const cubeJSONHandler = async (req: Request, res: Response) => {
     }
     const { cards: cubeCards, changelog: changelogMeta } = resolved;
 
-    // Order each board by the cube's default sorts, but return every card exactly once: sorting
-    // repeats cards that fall in several groups and drops those in none, which suits the page but
-    // not a data export.
+    // Sorting repeats multi-group cards and drops ungrouped ones, so use it for order only.
     const [primary, secondary, tertiary, quaternary] = getCubeSorts(cube);
     for (const boardName of Object.keys(cubeCards)) {
       const board = cubeCards[boardName];

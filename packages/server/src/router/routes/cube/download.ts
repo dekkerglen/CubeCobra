@@ -62,17 +62,19 @@ const filterLimiter = expensiveGetLimiter(60_000, 30);
 const limitFilteredDownloads = (req: ExpressRequest, res: ExpressResponse, next: NextFunction) =>
   req.query.filter ? filterLimiter(req, res, next) : next();
 
-const sortCardsByQuery = (req: Request, cards: Card[], filter: FilterFunction | null, cube: Cube): Card[] => {
+const sortCardsByQuery = (
+  req: Request,
+  cards: Card[],
+  filter: FilterFunction | null,
+  cube: Cube,
+  sortByDefault = true,
+): Card[] => {
   const filteredCards = filter ? cards.filter(filter) : cards;
 
-  if (req.query.nosort === 'true') {
+  if (req.query.nosort === 'true' || (!sortByDefault && req.query.primary === undefined)) {
     return filteredCards;
   }
 
-  // Default to the cube's own "show unsorted" setting so a download matches what the cube page shows.
-  // Without this, any card no sort bucket claims - a custom card or voucher with no type line, say -
-  // is silently dropped from the export even though the page lists it under "Other". An explicit
-  // showother query param still wins, so callers can override either way.
   const showOther = req.query.showother !== undefined ? req.query.showother === 'true' : cube.showUnsorted || false;
   const [primary, secondary, tertiary, quaternary] = getCubeSorts(cube);
 
@@ -136,6 +138,8 @@ export const csvHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
+    const filter = getQueryFilter(req);
+
     const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
@@ -168,7 +172,8 @@ export const csvHandler = async (req: Request, res: Response) => {
     for (const boardKey of boardsToExport) {
       const boardCards = cards[boardKey];
       if (!Array.isArray(boardCards)) continue;
-      for (const card of sortCardsByQuery(req, boardCards as Card[], cube)) {
+      // Bare CSV URLs serve as backups, so keep every card in stored order unless a sort is requested.
+      for (const card of sortCardsByQuery(req, boardCards as Card[], filter, cube, false)) {
         writeCard(res, card, boardKey);
       }
     }
@@ -425,7 +430,7 @@ export const routes = [
   {
     path: '/csv/:id',
     method: 'get',
-    handler: [csvHandler],
+    handler: [limitFilteredDownloads, csvHandler],
   },
   {
     path: '/forge/:id',
