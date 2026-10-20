@@ -139,7 +139,6 @@ describe.each([
   ['xmage', xmageHandler, 'My Custom'],
   ['versioned', versionedHandler, 'My Custom'],
   ['plaintext', plaintextHandler, 'My Custom'],
-  ['csv', csvHandler, 'My Custom'],
   // MTGO lists cards by their catalog name, so a custom card appears as the placeholder.
   ['mtgo', mtgoHandler, 'Invalid Card'],
 ])('GET /cube/download/%s/:id', (_name, handler, customName) => {
@@ -164,12 +163,29 @@ describe.each([
   });
 });
 
-describe('GET /cube/download/csv/:id ordering', () => {
+describe('GET /cube/download/csv/:id', () => {
   const cube = createCube({ id: 'c1', showUnsorted: false });
   const rowNames = (body: string) =>
     lines(body)
       .slice(1)
-      .map((line) => line.split(',')[0].replace(/"/g, ''));
+      .map((line) => (line.split(',')[0] ?? '').replace(/"/g, ''));
+
+  it('keeps every card once in stored order when no sort is given', async () => {
+    const body = await download(csvHandler, cube, [custom(), bears({ tags: ['a', 'b'] }), bolt()], {
+      showother: 'false',
+    });
+    expect(rowNames(body)).toEqual(['My Custom', 'Grizzly Bears', 'Lightning Bolt']);
+  });
+
+  it('omits cards the cube hides when a sort is given', async () => {
+    const body = await download(csvHandler, cube, [bears(), custom()], { primary: 'Color Category' });
+    expect(rowNames(body)).toEqual(['Grizzly Bears']);
+  });
+
+  it('applies the filter without a sort', async () => {
+    const body = await download(csvHandler, cube, [bears(), bolt()], { filter: 'type:bear' });
+    expect(rowNames(body)).toEqual(['Grizzly Bears']);
+  });
 
   it('orders rows by the requested sort', async () => {
     const body = await download(csvHandler, cube, [bears(), bolt()], { primary: 'Color Category' });

@@ -40,7 +40,7 @@ export const buildExportParams = ({
     if (sortSecondary) params.set('secondary', sortSecondary);
     if (sortTertiary) params.set('tertiary', sortTertiary);
     if (sortQuaternary) params.set('quaternary', sortQuaternary);
-    if (showUnsorted) params.set('showother', 'true');
+    params.set('showother', String(showUnsorted));
   } else {
     params.set('nosort', 'true');
   }
