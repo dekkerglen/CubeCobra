@@ -71,7 +71,8 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const isCubeOwner = !!user && cube.owner.id === user.id;
 
   // Get current filter and sort values from contexts
-  const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
+  // The cube prop is the initial page data; the context copy reflects toggles made on the page.
+  const { cube: liveCube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
   const { filterInput } = useContext(FilterContext);
 
   // State for collapsed hero, stored per page
@@ -275,7 +276,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
         sortQuaternary,
         exportAllBoards,
         currentViewBoards,
-        showUnsorted: cube.showUnsorted || false,
+        showUnsorted: liveCube.showUnsorted || false,
       }),
     [
       isFilterUsed,
@@ -287,7 +288,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
       sortQuaternary,
       exportAllBoards,
       currentViewBoards,
-      cube.showUnsorted,
+      liveCube.showUnsorted,
     ],
   );
 

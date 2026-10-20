@@ -31,7 +31,7 @@ const getBoardsToExport = (req: Request, cards: CubeCards): string[] => {
   return ['mainboard'];
 };
 
-const sortCardsByQuery = (req: Request, cards: Card[], cube: Cube): Card[] => {
+const sortCardsByQuery = (req: Request, cards: Card[], cube: Cube, sortByDefault = true): Card[] => {
   let filteredCards = cards;
 
   if (req.query.filter) {
@@ -44,14 +44,10 @@ const sortCardsByQuery = (req: Request, cards: Card[], cube: Cube): Card[] => {
     }
   }
 
-  if (req.query.nosort === 'true') {
+  if (req.query.nosort === 'true' || (!sortByDefault && req.query.primary === undefined)) {
     return filteredCards;
   }
 
-  // Default to the cube's own "show unsorted" setting so a download matches what the cube page shows.
-  // Without this, any card no sort bucket claims - a custom card or voucher with no type line, say -
-  // is silently dropped from the export even though the page lists it under "Other". An explicit
-  // showother query param still wins, so callers can override either way.
   const showOther = req.query.showother !== undefined ? req.query.showother === 'true' : cube.showUnsorted || false;
   const [primary, secondary, tertiary, quaternary] = getCubeSorts(cube);
 
@@ -145,7 +141,8 @@ export const csvHandler = async (req: Request, res: Response) => {
     for (const boardKey of boardsToExport) {
       const boardCards = cards[boardKey];
       if (!Array.isArray(boardCards)) continue;
-      for (const card of sortCardsByQuery(req, boardCards as Card[], cube)) {
+      // Bare CSV URLs serve as backups, so keep every card in stored order unless a sort is requested.
+      for (const card of sortCardsByQuery(req, boardCards as Card[], cube, false)) {
         writeCard(res, card, boardKey);
       }
     }

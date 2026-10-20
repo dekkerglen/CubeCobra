@@ -536,7 +536,8 @@ Mox Sapphire
             </Param>
             <Param name="primary" type="query">
               Primary sort column (e.g. <InlineCode>Color Category</InlineCode>). Each sort column defaults to the
-              cube's own default sort.
+              cube's own default sort, except for CSV, which keeps the cube's stored order unless{' '}
+              <InlineCode>primary</InlineCode> is given.
             </Param>
             <Param name="secondary" type="query">
               Secondary sort column
