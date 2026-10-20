@@ -59,6 +59,7 @@ const toDirection = (value: string): SortDirection => (value === 'descending' ? 
 const toSort = (value: string): string => (ORDERED_SORTS.includes(value) ? value : DEFAULT_SORT);
 // The api accepts both spellings of the flag, so links using its "1"/"0" form must work here too.
 const toIncludeExtras = (value: string): boolean => value === 'true' || value === '1';
+const toView = (value: string): ViewMode => (value === 'rows' ? 'rows' : 'cards');
 const toPage = (value: string): number => {
   const parsed = parseInt(value, 10);
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
@@ -77,7 +78,7 @@ const CardSearch: React.FC = () => {
   const [includeExtras, setIncludeExtras] = useState(toIncludeExtras(Query.get('ie', 'false')));
   const [sort, setSort] = useState(toSort(Query.get('s', DEFAULT_SORT)));
   const [direction, setDirection] = useState<SortDirection>(toDirection(Query.get('d', 'descending')));
-  const [view, setView] = useState<ViewMode>((Query.get('v', 'cards') as ViewMode) === 'rows' ? 'rows' : 'cards');
+  const [view, setView] = useState<ViewMode>(toView(Query.get('v', 'cards')));
 
   const [filterText, setFilterText] = useState(filterInput || '');
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -85,6 +86,25 @@ const CardSearch: React.FC = () => {
   const [controlsOpen, setControlsOpen] = useState(false);
   const latestRequest = useRef(0);
   const didMountRef = useRef(false);
+  const restoringRef = useRef(false);
+
+  // Back/forward swaps the query string out from under the controls. FilterContext already
+  // re-reads "f" on popstate; the rest of the options have to follow the restored url too, or
+  // they keep describing a search the user navigated away from.
+  useEffect(() => {
+    const onPopState = () => {
+      restoringRef.current = true;
+      setPage(toPage(Query.get('p', '0')));
+      setSort(toSort(Query.get('s', DEFAULT_SORT)));
+      setDirection(toDirection(Query.get('d', 'descending')));
+      setDistinct(toDistinct(Query.get('di', 'names')));
+      setIncludeExtras(toIncludeExtras(Query.get('ie', 'false')));
+      setView(toView(Query.get('v', 'cards')));
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
 
   // The url has to track the controls on its own rather than as a side effect of searching:
   // in card view with no filter nothing is fetched, so the chosen options would otherwise be
@@ -162,14 +182,24 @@ const CardSearch: React.FC = () => {
   }, [page, direction, distinct, includeExtras, sort, filterInput, view, fetchData]);
 
   // Anything that changes which cards match invalidates the current page, so go back to the
-  // first one. The mount run is skipped so a shared link's "p" survives the first render.
+  // first one. The mount run is skipped so a shared link's "p" survives the first render, and
+  // a restored history entry keeps the page it was pushed with.
   useEffect(() => {
     if (!didMountRef.current) {
       didMountRef.current = true;
       return;
     }
+    if (restoringRef.current) {
+      return;
+    }
     setPage(0);
   }, [filterInput, view, includeExtras, distinct]);
+
+  // Runs after every commit, so the restore flag is cleared even when the reset above had no
+  // dependency change to react to.
+  useEffect(() => {
+    restoringRef.current = false;
+  });
 
   const updatePage = (index: number) => {
     setLoading(true);

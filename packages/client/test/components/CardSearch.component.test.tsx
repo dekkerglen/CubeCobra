@@ -308,3 +308,105 @@ describe('CardSearch cleared filter', () => {
     expect(screen.getByText('Enter a filter above to begin searching.')).toBeInTheDocument();
   });
 });
+
+describe('CardSearch history navigation', () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [], numResults: 0 }),
+    });
+    global.fetch = mockFetch as unknown as typeof fetch;
+  });
+
+  const lastParam = (key: string): string | null => {
+    const url: string = mockFetch.mock.calls[mockFetch.mock.calls.length - 1][0];
+    return new URLSearchParams(url.split('?')[1]).get(key);
+  };
+
+  const goBackTo = (query: string) => {
+    window.history.replaceState({}, '', `/tool/searchcards?${query}`);
+    fireEvent.popState(window);
+  };
+
+  it('restores the options from the url the browser navigated back to', async () => {
+    renderSearch('f=set%3Aotj&s=Price&di=printings');
+
+    await waitFor(() => expect(screen.getAllByDisplayValue('Price').length).toBeGreaterThan(0));
+
+    goBackTo('f=set%3Aotj&d=ascending');
+
+    await waitFor(() => expect(screen.getAllByDisplayValue('Elo').length).toBeGreaterThan(0));
+    expect(screen.getAllByDisplayValue('Cards').length).toBeGreaterThan(0);
+    expect(screen.getAllByDisplayValue('Ascending').length).toBeGreaterThan(0);
+    await waitFor(() => expect(lastParam('s')).toEqual('Elo'));
+    expect(lastParam('di')).toEqual('names');
+    expect(lastParam('d')).toEqual('ascending');
+  });
+
+  it('keeps the page of the restored entry even though the filter changed with it', async () => {
+    window.history.replaceState({}, '', '/tool/searchcards?f=set%3Aotj');
+
+    const value: FilterContextValue = {
+      filterInput: 'set:otj',
+      setFilterInput: jest.fn(),
+      filterValid: true,
+      cardFilter: { filter: defaultFilter() },
+    };
+
+    const { rerender } = render(
+      <FilterContext.Provider value={value}>
+        <CardSearch />
+      </FilterContext.Provider>,
+    );
+
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+
+    act(() => {
+      goBackTo('f=type%3Asnake&p=2');
+      rerender(
+        <FilterContext.Provider value={{ ...value, filterInput: 'type:snake' }}>
+          <CardSearch />
+        </FilterContext.Provider>,
+      );
+    });
+
+    await waitFor(() => expect(lastParam('p')).toEqual('2'));
+    expect(urlParam('p')).toEqual('2');
+  });
+
+  it('still resets the page for a filter change made after a restore', async () => {
+    window.history.replaceState({}, '', '/tool/searchcards?f=set%3Aotj&p=2');
+
+    const value: FilterContextValue = {
+      filterInput: 'set:otj',
+      setFilterInput: jest.fn(),
+      filterValid: true,
+      cardFilter: { filter: defaultFilter() },
+    };
+
+    const { rerender } = render(
+      <FilterContext.Provider value={value}>
+        <CardSearch />
+      </FilterContext.Provider>,
+    );
+
+    await waitFor(() => expect(lastParam('p')).toEqual('2'));
+
+    // A restore that changes nothing the page reset watches must not leave the guard armed.
+    act(() => {
+      goBackTo('f=set%3Aotj&p=2&s=Price');
+    });
+
+    await waitFor(() => expect(screen.getAllByDisplayValue('Price').length).toBeGreaterThan(0));
+
+    rerender(
+      <FilterContext.Provider value={{ ...value, filterInput: 'type:snake' }}>
+        <CardSearch />
+      </FilterContext.Provider>,
+    );
+
+    await waitFor(() => expect(lastParam('p')).toEqual('0'));
+    expect(urlParam('p')).toBeNull();
+  });
+});
