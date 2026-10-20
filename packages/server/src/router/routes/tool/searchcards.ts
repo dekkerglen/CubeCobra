@@ -8,7 +8,7 @@ import { searchAllCards } from 'serverutils/tools';
 
 import { Request, Response } from '../../../types/express';
 
-type Distinct = 'names' | 'printing';
+type Distinct = 'names' | 'printings';
 
 export const getSearchCardsHandler = async (req: Request, res: Response) =>
   render(

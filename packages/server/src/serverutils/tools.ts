@@ -8,7 +8,7 @@ import carddb, { getAllMostReasonable } from './carddb';
 /* Page size for results */
 const PAGE_SIZE = 96;
 
-type Distinct = 'names' | 'printing';
+type Distinct = 'names' | 'printings';
 
 // Collect and sort every card matching the filter, without paginating. Used
 // both by the paginated searchCards below and by the CSV export, which needs

@@ -5,7 +5,7 @@ import { searchCards } from 'serverutils/tools';
 
 import { Request, Response } from '../../../../types/express';
 
-type Distinct = 'names' | 'printing';
+type Distinct = 'names' | 'printings';
 
 export const searchCardsHandler = async (req: Request, res: Response) => {
   try {

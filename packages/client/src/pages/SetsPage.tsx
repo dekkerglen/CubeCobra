@@ -51,7 +51,7 @@ const searchHref = (code: string): string => {
     f: `set:${code}`,
     s: 'Collector number',
     d: 'ascending',
-    di: 'printing',
+    di: 'printings',
   });
   return `/tool/searchcards?${params.toString()}`;
 };
