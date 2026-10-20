@@ -29,6 +29,7 @@ import { initializeCardDb, isCardDbReady, whenCardDbReady } from './serverutils/
 import DynamoDBStore from './serverutils/dynamo-session-store';
 import { logError, logInfo } from './serverutils/errorLog';
 import { flashMessages } from './serverutils/flashMessages';
+import { createHealthcheckHandler } from './serverutils/healthcheck';
 import { render } from './serverutils/render';
 import { checkAndUpdateCardbase } from './serverutils/updatecards';
 import { CustomError, Request as AppRequest, Response as AppResponse } from './types/express';
@@ -81,10 +82,10 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
   next();
 });
 
-// do this before https redirect
-app.post('/healthcheck', (_req: express.Request, res: express.Response) => {
-  res.status(200).send('OK');
-});
+// do this before https redirect, and before sessions so load balancer checks never create one
+const healthcheck = createHealthcheckHandler(() => isCardDbReady() && routesReady);
+app.get('/healthcheck', healthcheck);
+app.post('/healthcheck', healthcheck);
 
 //If this isn't a local developer environment, improve security by only allowing HTTPS
 if (process.env?.NODE_ENV !== 'development' && process.env?.HTTP_ONLY !== 'true') {
