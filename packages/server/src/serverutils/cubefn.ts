@@ -35,9 +35,11 @@ interface CubeCard {
 interface CubeTypeResult {
   pauper: boolean;
   peasant: boolean;
-  type: number;
-  /** Every format the whole cube is legal in, least to most restrictive. */
-  eligibleFormats: string[];
+  /**
+   * Every format the whole cube is legal in, least to most restrictive. The
+   * last entry is therefore the tightest format the cube fits in.
+   */
+  eligibleFormats: LegalityFormat[];
 }
 
 export interface GeneratePackResult {
@@ -70,12 +72,13 @@ function getCubeId(cube: { shortId?: string; id: string }): string {
   return cube.id;
 }
 
-const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'];
+// Least to most restrictive. Declared as a const tuple so LegalityFormat below
+// is derived from it, making a mistyped format name a compile error rather than
+// a silent non-match.
+const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'] as const;
 const VINTAGE = 0;
 
-function intToLegality(val: number): string | undefined {
-  return FORMATS[val];
-}
+export type LegalityFormat = (typeof FORMATS)[number];
 
 function cardsAreEquivalent(card: CubeCard, details: CubeCard): boolean {
   if (card.cardID !== details.cardID) {
@@ -153,17 +156,7 @@ function getCubeTypes(cards: CubeCard[]): CubeTypeResult {
 
   const eligibleFormats = FORMATS.filter((_format, index) => eligible[index]);
 
-  // FORMATS runs least to most restrictive, so the last eligible entry is the
-  // tightest format the whole cube fits in.
-  let type = VINTAGE;
-  for (let index = FORMATS.length - 1; index >= 0; index -= 1) {
-    if (eligible[index]) {
-      type = index;
-      break;
-    }
-  }
-
-  return { pauper, peasant, type, eligibleFormats };
+  return { pauper, peasant, eligibleFormats };
 }
 
 function cardHtml(card: any): string {
@@ -890,7 +883,6 @@ const methods = {
   generatePack,
   generateBalancedPack,
   getCubeId,
-  intToLegality,
   addCardHtml,
   removeCardHtml,
   replaceCardHtml,
@@ -921,7 +913,6 @@ export {
   generatePack,
   getCubeId,
   getCubeTypes,
-  intToLegality,
   isCubeEditable,
   isCubeListed,
   isCubeViewable,

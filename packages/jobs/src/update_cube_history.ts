@@ -9,7 +9,7 @@ dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') })
 import { cardHistoryDao, cardMetadataTaskDao, cardUpdateTaskDao, changelogDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { cardFromId } from '@server/serverutils/carddb';
-import { getCubeTypes } from '@server/serverutils/cubefn';
+import { getCubeTypes, type LegalityFormat } from '@server/serverutils/cubefn';
 import { BoardChanges, DefaultElo } from '@utils/datatypes/Card';
 import type ChangeLogType from '@utils/datatypes/ChangeLog';
 import History, { Period } from '@utils/datatypes/History';
@@ -53,7 +53,9 @@ interface Totals {
 
 // Legality buckets we report, least to most restrictive. Standard is omitted
 // because it rotates: a cube leaves the format without a single card changing.
-const TRACKED_FORMATS: [string, keyof Totals][] = [
+// Typed against LegalityFormat so a mistyped name fails to compile rather than
+// silently never matching and emptying the bucket.
+const TRACKED_FORMATS: [LegalityFormat, keyof Totals][] = [
   ['Vintage', 'vintage'],
   ['Legacy', 'legacy'],
   ['Modern', 'modern'],

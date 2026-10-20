@@ -1,6 +1,6 @@
 import { LegalityFormats } from '@utils/datatypes/Card';
 import { cardFromId, getAllVersionIds } from 'serverutils/carddb';
-import { getCubeTypes, intToLegality } from 'serverutils/cubefn';
+import { getCubeTypes } from 'serverutils/cubefn';
 
 import { createCardDetails } from '../test-utils/data';
 
@@ -32,6 +32,10 @@ const cubeCardLegalIn = (cardID: string, mostRestrictive: LegalityFormats | null
 
 const cubeCard = (cardID: string) => ({ cardID, status: 'Not Owned', cmc: 1, tags: [], colors: [] });
 
+// The tightest format the cube fits in: eligibleFormats runs least to most
+// restrictive, so that is its last entry.
+const tightestFormat = (eligibleFormats: string[]) => eligibleFormats[eligibleFormats.length - 1];
+
 describe('getCubeTypes', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -39,18 +43,18 @@ describe('getCubeTypes', () => {
   });
 
   it.each([
-    ['Standard', 4],
-    ['Pioneer', 3],
-    ['Modern', 2],
-    ['Legacy', 1],
-    [null, 0],
-  ])('classifies a cube whose most restrictive legal format is %s', (mostRestrictive, expectedType) => {
+    ['Standard', ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard']],
+    ['Pioneer', ['Vintage', 'Legacy', 'Modern', 'Pioneer']],
+    ['Modern', ['Vintage', 'Legacy', 'Modern']],
+    ['Legacy', ['Vintage', 'Legacy']],
+    [null, ['Vintage']],
+  ])('classifies a cube whose most restrictive legal format is %s', (mostRestrictive, expected) => {
     const card = cubeCardLegalIn('card1', mostRestrictive as LegalityFormats | null);
 
-    const { type } = getCubeTypes([card]);
+    const { eligibleFormats } = getCubeTypes([card]);
 
-    expect(type).toEqual(expectedType);
-    expect(intToLegality(type)).toEqual(mostRestrictive === null ? 'Vintage' : mostRestrictive);
+    expect(eligibleFormats).toEqual(expected);
+    expect(tightestFormat(eligibleFormats)).toEqual(mostRestrictive === null ? 'Vintage' : mostRestrictive);
   });
 
   it('uses the most restrictive format shared by every card in the cube', () => {
@@ -74,7 +78,7 @@ describe('getCubeTypes', () => {
       colors: [],
     }));
 
-    expect(getCubeTypes(cards).type).toEqual(2);
+    expect(tightestFormat(getCubeTypes(cards).eligibleFormats)).toEqual('Modern');
   });
 
   // Vintage is the catch-all: a cube that qualifies for no tighter format
@@ -95,9 +99,9 @@ describe('getCubeTypes', () => {
       }),
     );
 
-    const { type, eligibleFormats } = getCubeTypes([cubeCard('moxJet')]);
+    const { eligibleFormats } = getCubeTypes([cubeCard('moxJet')]);
 
-    expect(intToLegality(type)).toEqual('Vintage');
+    expect(tightestFormat(eligibleFormats)).toEqual('Vintage');
     expect(eligibleFormats).toEqual(['Vintage']);
   });
 
@@ -118,9 +122,9 @@ describe('getCubeTypes', () => {
       }),
     );
 
-    const { type, eligibleFormats } = getCubeTypes([cubeCard('deathriteShaman')]);
+    const { eligibleFormats } = getCubeTypes([cubeCard('deathriteShaman')]);
 
-    expect(intToLegality(type)).toEqual('Pioneer');
+    expect(tightestFormat(eligibleFormats)).toEqual('Pioneer');
     expect(eligibleFormats).toEqual(['Vintage', 'Pioneer']);
   });
 
@@ -141,9 +145,9 @@ describe('getCubeTypes', () => {
       }),
     );
 
-    const { type, eligibleFormats } = getCubeTypes([cubeCard('geologicalAppraiser')]);
+    const { eligibleFormats } = getCubeTypes([cubeCard('geologicalAppraiser')]);
 
-    expect(intToLegality(type)).toEqual('Standard');
+    expect(tightestFormat(eligibleFormats)).toEqual('Standard');
     expect(eligibleFormats).toEqual(['Vintage', 'Legacy', 'Modern', 'Standard']);
   });
 
