@@ -48,10 +48,7 @@ const ASCENDING_OPTIONS: { value: string; label: string }[] = [
   { value: 'false', label: 'Descending' },
 ];
 
-// A <select> whose value matches none of its options silently displays the first one, so an
-// unrecognized query param would leave the control disagreeing with the results. Clamp both
-// the way the server reads them: an unknown order falls back to popularity, and only the exact
-// string "true" counts as ascending.
+// Clamp params the way the server reads them; a <select> with an unknown value shows its first option.
 const toOrder = (value: string): string =>
   SORT_OPTIONS.some((option) => option.value === value) ? value : DEFAULT_ORDER;
 const toAscending = (value: string): string => (value === 'true' ? 'true' : 'false');
@@ -67,10 +64,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
   const [showSyntaxModal, setShowSyntaxModal] = useState(false);
   const { begin } = useLatestRequest();
 
-  // Plain state seeded from the url rather than useQueryParam: that hook writes each param from
-  // an effect of its own, so a search that changed both the query and the sort pushed two
-  // history entries, and the one in between described a search that never ran. go() writes all
-  // three at once instead.
+  // Plain state rather than useQueryParam, so go() can write all three params as one history entry.
   const [currentQuery, setCurrentQuery] = useState(() => Query.get('q', ''));
   const [currentOrder, setCurrentOrder] = useState(() => toOrder(Query.get('order', DEFAULT_ORDER)));
   const [currentAscending, setCurrentAscending] = useState(() => toAscending(Query.get('ascending', 'false')));
@@ -79,8 +73,6 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
   const [orderText, setOrderText] = useState(currentOrder);
   const [ascendingText, setAscendingText] = useState(currentAscending);
 
-  // The controls follow the search that was actually run, so a restored history entry moves
-  // them too.
   useEffect(() => {
     setQueryText(currentQuery);
     setOrderText(currentOrder);
@@ -90,8 +82,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
   const pageCount = Math.ceil(items.length / PAGE_SIZE);
   const hasMore = !!currentLastKey;
 
-  // Runs a search and adopts its results, without touching the url. Both pressing Search and
-  // restoring a history entry land here; only the former has a new url to write.
+  // Doesn't touch the url: Search writes it first via go(), and back/forward has already restored it.
   const runSearch = useCallback(
     async (q: string, order: string, ascending: string) => {
       setCurrentQuery(q);
@@ -113,8 +104,6 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
         });
         const json = response.ok ? await response.json() : null;
 
-        // A slower earlier search must not land on top of a newer one, and its lastKey would
-        // otherwise leave paging walking the wrong result set.
         if (!request.isCurrent()) {
           return;
         }
@@ -124,8 +113,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
           setCurrentLastKey(json.lastKey);
           setCurrentParsedQuery(json.parsedQuery);
         } else {
-          // Keeping the previous lastKey would leave "load more" paging a result set that is
-          // no longer on screen.
+          // A stale lastKey would page through results no longer on screen.
           setCurrentLastKey(undefined);
           setFailed(true);
         }
@@ -135,8 +123,6 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
           setFailed(true);
         }
       } finally {
-        // Only the newest request owns the spinner. An abandoned one clearing it would claim
-        // the search that replaced it had finished.
         if (request.isCurrent()) {
           setLoading(false);
         }
@@ -150,8 +136,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
       const safeOrder = toOrder(order);
       const safeAscending = toAscending(ascending);
 
-      // One search, one history entry, so a single Back returns to the search before it.
-      // Params left at their default are dropped to keep shared links short.
+      // One history entry per search; defaults are dropped to keep links short.
       Query.setMany(
         {
           q: q === '' ? null : q,
@@ -185,8 +170,6 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
       });
       const json = response.ok ? await response.json() : null;
 
-      // The appended list is built from the items captured when this started, so a superseded
-      // page would duplicate or drop cubes.
       if (!request.isCurrent()) {
         return;
       }
@@ -202,7 +185,6 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
         }
         setCurrentLastKey(json.lastKey);
       } else {
-        // Stop the pager rather than leave it offering the page that just failed.
         setCurrentLastKey(undefined);
         setFailed(true);
       }
@@ -218,9 +200,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
     }
   }, [begin, csrfFetch, currentAscending, currentLastKey, currentOrder, currentQuery, items, page]);
 
-  // Back/forward restores the query and both dropdowns from the url, but the cubes on screen
-  // are still whatever the last search returned. Re-run it so they match the url the browser
-  // navigated to.
+  // Back/forward restores the url; re-run the search so the cubes match it.
   useEffect(() => {
     const onPopState = () => {
       runSearch(
@@ -319,9 +299,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
                       className="!bg-white !text-gray-800 !placeholder-gray-500 !border-gray-300"
                       otherInputProps={{ enterKeyHint: 'search', name: 'q' }}
                     />
-                    {/* Hidden submit so Enter, and mobile virtual keyboards' "Go"/"Search" key,
-                        submit the form. The input deliberately has no onEnter of its own: it
-                        would run the search a second time alongside this submit. */}
+                    {/* Hidden submit so Enter and mobile keyboards' "Go" key submit the form. */}
                     <button type="submit" aria-hidden="true" tabIndex={-1} className="hidden" />
                     <div className="hidden md:block">
                       <LoadingButton color="primary" onClick={() => go(queryText, orderText, ascendingText)}>

@@ -31,14 +31,7 @@ function set(key: string, value: string, push = false): void {
   changeQuery(params, push);
 }
 
-/**
- * Apply several changes with a single history entry. A null value removes the key.
- *
- * Writing params one at a time means one history call each, so a single action that changes
- * two of them (a search that also changes the sort) pushed an entry for an intermediate url
- * that never described anything the user saw. Nothing is written when the result would leave
- * the query string unchanged.
- */
+// Apply several changes as one history entry (null removes a key); a no-op change writes nothing.
 function setMany(updates: Record<string, string | null>, push = false): void {
   const params = new URLSearchParams(query());
   for (const [key, value] of Object.entries(updates)) {
@@ -48,7 +41,6 @@ function setMany(updates: Record<string, string | null>, push = false): void {
       params.set(key, value);
     }
   }
-  // Compare both sides normalized, so re-encoding alone (%20 vs +) isn't treated as a change.
   if (params.toString() === new URLSearchParams(query()).toString()) {
     return;
   }

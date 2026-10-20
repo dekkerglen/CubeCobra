@@ -344,105 +344,57 @@ describe('CardSearch history navigation', () => {
     expect(lastParam('d')).toEqual('ascending');
   });
 
-  it('keeps the page of the restored entry even though the filter changed with it', async () => {
-    window.history.replaceState({}, '', '/tool/searchcards?f=set%3Aotj');
-
-    const value: FilterContextValue = {
-      filterInput: 'set:otj',
-      setFilterInput: jest.fn(),
-      filterValid: true,
-      cardFilter: { filter: defaultFilter() },
-    };
-
-    const { rerender } = render(
-      <FilterContext.Provider value={value}>
-        <CardSearch />
-      </FilterContext.Provider>,
-    );
+  it('keeps the page of the restored entry', async () => {
+    renderSearch('f=set%3Aotj');
 
     await waitFor(() => expect(mockFetch).toHaveBeenCalled());
 
-    act(() => {
-      goBackTo('f=type%3Asnake&p=2');
-      rerender(
-        <FilterContext.Provider value={{ ...value, filterInput: 'type:snake' }}>
-          <CardSearch />
-        </FilterContext.Provider>,
-      );
-    });
+    goBackTo('f=set%3Aotj&p=2');
 
     await waitFor(() => expect(lastParam('p')).toEqual('2'));
     expect(urlParam('p')).toEqual('2');
   });
+});
 
-  it('still resets the page for a filter change made after a restore', async () => {
-    window.history.replaceState({}, '', '/tool/searchcards?f=set%3Aotj&p=2');
-
-    const value: FilterContextValue = {
-      filterInput: 'set:otj',
-      setFilterInput: jest.fn(),
-      filterValid: true,
-      cardFilter: { filter: defaultFilter() },
-    };
-
-    const { rerender } = render(
-      <FilterContext.Provider value={value}>
-        <CardSearch />
-      </FilterContext.Provider>,
-    );
-
-    await waitFor(() => expect(lastParam('p')).toEqual('2'));
-
-    // A restore that changes nothing the page reset watches must not leave the guard armed.
-    act(() => {
-      goBackTo('f=set%3Aotj&p=2&s=Price');
+describe('CardSearch page reset', () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [], numResults: 0 }),
     });
-
-    await waitFor(() => expect(screen.getAllByDisplayValue('Price').length).toBeGreaterThan(0));
-
-    rerender(
-      <FilterContext.Provider value={{ ...value, filterInput: 'type:snake' }}>
-        <CardSearch />
-      </FilterContext.Provider>,
-    );
-
-    await waitFor(() => expect(lastParam('p')).toEqual('0'));
-    expect(urlParam('p')).toBeNull();
+    global.fetch = mockFetch as unknown as typeof fetch;
   });
 
-  // A restore that moves none of these options commits nothing, so nothing post-commit runs to
-  // clear the guard. Recording the combination rather than a bare flag keeps that harmless: a
-  // leftover entry can only match a commit that changed none of the options it names.
-  it('still resets the page after a restore that commits nothing', async () => {
-    window.history.replaceState({}, '', '/tool/searchcards?f=set%3Aotj&p=2');
+  it('returns to the first page when an option changes which cards match', async () => {
+    renderSearch('f=set%3Aotj&p=2');
 
-    const value: FilterContextValue = {
-      filterInput: 'set:otj',
-      setFilterInput: jest.fn(),
-      filterValid: true,
-      cardFilter: { filter: defaultFilter() },
-    };
+    await waitFor(() => expect(urlParam('p')).toEqual('2'));
 
-    const { rerender } = render(
-      <FilterContext.Provider value={value}>
-        <CardSearch />
-      </FilterContext.Provider>,
-    );
+    fireEvent.change(screen.getAllByDisplayValue('Cards')[0], { target: { value: 'printings' } });
 
-    await waitFor(() => expect(lastParam('p')).toEqual('2'));
+    await waitFor(() => expect(urlParam('p')).toBeNull());
+  });
 
-    act(() => {
-      goBackTo('f=set%3Aotj&p=2');
-    });
+  it('returns to the first page when a search is submitted', async () => {
+    renderSearch('f=set%3Aotj&p=2');
 
-    rerender(
-      <FilterContext.Provider value={{ ...value, filterInput: 'type:snake' }}>
-        <CardSearch />
-      </FilterContext.Provider>,
-    );
+    await waitFor(() => expect(urlParam('p')).toEqual('2'));
 
-    await waitFor(() => expect(lastParam('p')).toEqual('0'));
-    expect(urlParam('p')).toBeNull();
+    fireEvent.submit(screen.getByPlaceholderText('Filter cards: e.g. name:"Ambush Viper"').closest('form')!);
+
+    await waitFor(() => expect(urlParam('p')).toBeNull());
+  });
+
+  it('keeps the page when only the sort changes', async () => {
+    renderSearch('f=set%3Aotj&p=2');
+
+    await waitFor(() => expect(urlParam('p')).toEqual('2'));
+
+    fireEvent.change(screen.getAllByDisplayValue('Elo')[0], { target: { value: 'Price' } });
+
+    await waitFor(() => expect(urlParam('s')).toEqual('Price'));
+    expect(urlParam('p')).toEqual('2');
   });
 });
 

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { DownloadIcon, GearIcon, QuestionIcon } from '@primer/octicons-react';
 import { Distinct, toDistinct } from '@utils/cardSearchOptions';
@@ -50,14 +50,9 @@ const DIRECTION_OPTIONS: { value: SortDirection; label: string }[] = [
 
 const DEFAULT_SORT = 'Elo';
 
-// A <select> whose value matches none of its options silently displays the first one, so an
-// unrecognized query param would leave a control disagreeing with the results on screen (the
-// sets page used to link with the singular "printing"). Clamp every param to a real option,
-// matching how the search API reads it: anything but "names" is printings (toDistinct, shared
-// with the server), and anything but "descending" is ascending.
+// Clamp params to a real option the way the API reads them; a <select> with an unknown value shows its first option.
 const toDirection = (value: string): SortDirection => (value === 'descending' ? 'descending' : 'ascending');
 const toSort = (value: string): string => (ORDERED_SORTS.includes(value) ? value : DEFAULT_SORT);
-// The api accepts both spellings of the flag, so links using its "1"/"0" form must work here too.
 const toIncludeExtras = (value: string): boolean => value === 'true' || value === '1';
 const toView = (value: string): ViewMode => (value === 'rows' ? 'rows' : 'cards');
 const toPage = (value: string): number => {
@@ -66,10 +61,6 @@ const toPage = (value: string): number => {
 };
 
 const PICK_COUNT_BASELINE = 'pickcount>=100';
-
-// The options that change which cards match, and therefore invalidate the current page.
-const resetKey = (filter: string, view: ViewMode, includeExtras: boolean, distinct: Distinct): string =>
-  JSON.stringify([filter, view, includeExtras, distinct]);
 
 const CardSearch: React.FC = () => {
   const { filterInput, setFilterInput, filterValid, cardFilter } = useContext(FilterContext);
@@ -90,39 +81,23 @@ const CardSearch: React.FC = () => {
   const [advancedValues, setAdvancedValues] = useState<Partial<FilterValues>>({});
   const [controlsOpen, setControlsOpen] = useState(false);
   const { begin, invalidate } = useLatestRequest();
-  const didMountRef = useRef(false);
-  const restoredKeyRef = useRef<string | null>(null);
 
-  // Back/forward swaps the query string out from under the controls. FilterContext already
-  // re-reads "f" on popstate; the rest of the options have to follow the restored url too, or
-  // they keep describing a search the user navigated away from.
+  // FilterContext restores "f" on back/forward; restore the other options alongside it.
   useEffect(() => {
     const onPopState = () => {
-      const restoredDistinct = toDistinct(Query.get('di', 'names'));
-      const restoredExtras = toIncludeExtras(Query.get('ie', 'false'));
-      const restoredView = toView(Query.get('v', 'cards'));
-
-      // A restored entry keeps the page it was pushed with, so record the combination this
-      // restore produces and let the page reset recognize and skip it.
-      restoredKeyRef.current = resetKey(Query.get('f', ''), restoredView, restoredExtras, restoredDistinct);
-
       setPage(toPage(Query.get('p', '0')));
       setSort(toSort(Query.get('s', DEFAULT_SORT)));
       setDirection(toDirection(Query.get('d', 'descending')));
-      setDistinct(restoredDistinct);
-      setIncludeExtras(restoredExtras);
-      setView(restoredView);
+      setDistinct(toDistinct(Query.get('di', 'names')));
+      setIncludeExtras(toIncludeExtras(Query.get('ie', 'false')));
+      setView(toView(Query.get('v', 'cards')));
     };
 
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
   }, []);
 
-  // The url has to track the controls on its own rather than as a side effect of searching:
-  // in card view with no filter nothing is fetched, so the chosen options would otherwise be
-  // dropped on reload. Values left at their default are removed to keep shared links short,
-  // and all six are written together so the url is never observed half updated. The filter
-  // itself is owned by FilterContext, which writes "f".
+  // Synced from state rather than from the fetch, which doesn't run in card view without a filter.
   useEffect(() => {
     Query.setMany({
       p: page === 0 ? null : page.toString(),
@@ -165,9 +140,6 @@ const CardSearch: React.FC = () => {
 
       const json = await response.json();
 
-      // A slower earlier request must not overwrite the results of the one the controls now
-      // describe; options changed while a search is in flight would otherwise be undone by
-      // whichever response happens to land last.
       if (!request.isCurrent()) {
         return;
       }
@@ -185,8 +157,6 @@ const CardSearch: React.FC = () => {
       setCount('0');
       setFailed(true);
     } finally {
-      // Only the newest request owns the spinner. An abandoned one clearing it would claim the
-      // search that replaced it had finished.
       if (request.isCurrent()) {
         setLoading(false);
       }
@@ -199,8 +169,7 @@ const CardSearch: React.FC = () => {
       setLoading(true);
       fetchData();
     } else {
-      // Clearing the filter has to invalidate anything still in flight, or its response would
-      // repopulate the grid after the results were cleared.
+      // Otherwise an in-flight response would repopulate the cleared grid.
       invalidate();
       setLoading(false);
       setFailed(false);
@@ -208,30 +177,30 @@ const CardSearch: React.FC = () => {
     }
   }, [page, direction, distinct, includeExtras, sort, filterInput, view, fetchData, invalidate]);
 
-  // Anything that changes which cards match invalidates the current page, so go back to the
-  // first one. The mount run is skipped so a shared link's "p" survives the first render, and
-  // a restored history entry keeps the page it was pushed with.
-  useEffect(() => {
-    const key = resetKey(filterInput ?? '', view, includeExtras, distinct);
-    // Consume the restore on the first commit after it, whichever options it moved. A restore
-    // that changes nothing React commits leaves this holding the current combination, which
-    // can only ever match a commit that changed none of these options.
-    const restored = restoredKeyRef.current;
-    restoredKeyRef.current = null;
-
-    if (!didMountRef.current) {
-      didMountRef.current = true;
-      return;
-    }
-    if (restored === key) {
-      return;
-    }
-    setPage(0);
-  }, [filterInput, view, includeExtras, distinct]);
-
   const updatePage = (index: number) => {
     setLoading(true);
     setPage(index);
+  };
+
+  // These change which cards match, so they also return to the first page.
+  const submitFilter = (value: string) => {
+    setPage(0);
+    setFilterInput(value);
+  };
+  const changeDistinct = (value: string) => {
+    setLoading(true);
+    setPage(0);
+    setDistinct(toDistinct(value));
+  };
+  const changeView = (value: string) => {
+    setLoading(true);
+    setPage(0);
+    setView(toView(value));
+  };
+  const changeIncludeExtras = (value: boolean) => {
+    setLoading(true);
+    setPage(0);
+    setIncludeExtras(value);
   };
 
   const applyAdvanced = useCallback(() => {
@@ -253,6 +222,7 @@ const CardSearch: React.FC = () => {
     }
     const filterString = tokens.join(' ');
     setFilterText(filterString);
+    setPage(0);
     setFilterInput(filterString);
     setAdvancedOpen(false);
   }, [advancedValues, setFilterInput]);
@@ -379,7 +349,7 @@ const CardSearch: React.FC = () => {
               action="#"
               onSubmit={(e) => {
                 e.preventDefault();
-                setFilterInput(filterText);
+                submitFilter(filterText);
               }}
               className="w-full"
             >
@@ -400,9 +370,7 @@ const CardSearch: React.FC = () => {
                   className="!bg-white !text-gray-800 !placeholder-gray-500 !border-gray-300"
                   otherInputProps={{ enterKeyHint: 'search', name: 'f' }}
                 />
-                {/* Hidden submit so Enter, and mobile virtual keyboards' "Go"/"Search" key,
-                    submit the form. The input deliberately has no onEnter of its own: it
-                    would run the same search a second time alongside this submit. */}
+                {/* Hidden submit so Enter and mobile keyboards' "Go" key submit the form. */}
                 <button type="submit" aria-hidden="true" tabIndex={-1} className="hidden" />
                 <button
                   type="button"
@@ -413,7 +381,7 @@ const CardSearch: React.FC = () => {
                   <GearIcon size={20} />
                 </button>
                 <div className="hidden md:block">
-                  <LoadingButton color="primary" onClick={() => setFilterInput(filterText)}>
+                  <LoadingButton color="primary" onClick={() => submitFilter(filterText)}>
                     <span className="px-3">Search</span>
                   </LoadingButton>
                 </div>
@@ -434,15 +402,7 @@ const CardSearch: React.FC = () => {
           <ModalHeader setOpen={setControlsOpen}>Display Options</ModalHeader>
           <ModalBody>
             <Flexbox direction="col" gap="3">
-              <Select
-                label="Distinct"
-                options={DISTINCT_OPTIONS}
-                value={distinct}
-                setValue={(value) => {
-                  setLoading(true);
-                  setDistinct(toDistinct(value));
-                }}
-              />
+              <Select label="Distinct" options={DISTINCT_OPTIONS} value={distinct} setValue={changeDistinct} />
               <Select
                 label="View"
                 options={[
@@ -450,10 +410,7 @@ const CardSearch: React.FC = () => {
                   { value: 'rows', label: 'Info Rows' },
                 ]}
                 value={view}
-                setValue={(value) => {
-                  setLoading(true);
-                  setView(value as ViewMode);
-                }}
+                setValue={changeView}
               />
               <Select
                 label="Sort"
@@ -476,10 +433,7 @@ const CardSearch: React.FC = () => {
               <Checkbox
                 label="Include extras (tokens, art cards, etc.)"
                 checked={includeExtras}
-                setChecked={(value) => {
-                  setLoading(true);
-                  setIncludeExtras(value);
-                }}
+                setChecked={changeIncludeExtras}
               />
             </Flexbox>
           </ModalBody>
@@ -506,15 +460,7 @@ const CardSearch: React.FC = () => {
                   className="hidden md:flex lg:flex-nowrap"
                 >
                   <div className="w-28">
-                    <Select
-                      dense
-                      options={DISTINCT_OPTIONS}
-                      value={distinct}
-                      setValue={(value) => {
-                        setLoading(true);
-                        setDistinct(toDistinct(value));
-                      }}
-                    />
+                    <Select dense options={DISTINCT_OPTIONS} value={distinct} setValue={changeDistinct} />
                   </div>
                   <span className="text-sm text-button-text/80">as</span>
                   <div className="w-24">
@@ -525,10 +471,7 @@ const CardSearch: React.FC = () => {
                         { value: 'rows', label: 'Rows' },
                       ]}
                       value={view}
-                      setValue={(value) => {
-                        setLoading(true);
-                        setView(value as ViewMode);
-                      }}
+                      setValue={changeView}
                     />
                   </div>
                   <span className="text-sm text-button-text/80 whitespace-nowrap">sorted by</span>
@@ -560,10 +503,7 @@ const CardSearch: React.FC = () => {
                       type="checkbox"
                       className="form-checkbox h-4 w-4 text-primary-button"
                       checked={includeExtras}
-                      onChange={(e) => {
-                        setLoading(true);
-                        setIncludeExtras(e.target.checked);
-                      }}
+                      onChange={(e) => changeIncludeExtras(e.target.checked)}
                     />
                     Include extras
                   </label>

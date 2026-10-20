@@ -9,9 +9,7 @@ import { Request, Response } from '../../types/express';
 
 type SortOrder = 'pop' | 'alpha' | 'cards' | 'date';
 
-// Both entry points receive this as a string: the query string on a page load, and the json
-// body on every in-page search. Every non-empty string is truthy, so passing the body value
-// straight through made "false" sort ascending.
+// Arrives as a string from both the query and the JSON body, where "false" would otherwise be truthy.
 const toAscending = (value: unknown): boolean => value === true || value === 'true';
 
 interface CardQuery {
