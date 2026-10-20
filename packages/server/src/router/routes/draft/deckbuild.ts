@@ -43,7 +43,7 @@ interface DeckbuildSession {
 
 const sessions = new Map<string, DeckbuildSession>();
 
-// Cleanup sessions older than 5 minutes
+// Cleanup sessions older than 5 minutes. Unref'd so it never keeps the process (or jest) alive.
 setInterval(() => {
   const now = Date.now();
   for (const [key, session] of sessions.entries()) {
@@ -51,7 +51,7 @@ setInterval(() => {
       sessions.delete(key);
     }
   }
-}, 60 * 1000);
+}, 60 * 1000).unref();
 
 // ---------------------------------------------------------------------------
 // Helpers
