@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
 import { cdnUrl } from '@utils/cdnUrl';
@@ -22,15 +22,19 @@ import SideBanner from 'components/SideBanner';
 import { CSRFContext } from 'contexts/CSRFContext';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
+import Query from 'utils/Query';
 
 interface SearchPageProps {
   cubes: Cube[];
   lastKey?: string;
   parsedQuery?: string[];
+  /** The query the server rendered with. The url is the source of truth, so this is unused. */
   query?: string;
 }
 
 const PAGE_SIZE = 36;
+
+const DEFAULT_ORDER = 'pop';
 
 const SORT_OPTIONS: { value: string; label: string }[] = [
   { value: 'pop', label: 'Sorted by Popularity' },
@@ -39,7 +43,20 @@ const SORT_OPTIONS: { value: string; label: string }[] = [
   { value: 'date', label: 'Sorted by Last Updated' },
 ];
 
-const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery, query }) => {
+const ASCENDING_OPTIONS: { value: string; label: string }[] = [
+  { value: 'true', label: 'Ascending' },
+  { value: 'false', label: 'Descending' },
+];
+
+// A <select> whose value matches none of its options silently displays the first one, so an
+// unrecognized query param would leave the control disagreeing with the results. Clamp both
+// the way the server reads them: an unknown order falls back to popularity, and only the exact
+// string "true" counts as ascending.
+const toOrder = (value: string): string =>
+  SORT_OPTIONS.some((option) => option.value === value) ? value : DEFAULT_ORDER;
+const toAscending = (value: string): string => (value === 'true' ? 'true' : 'false');
+
+const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) => {
   const [items, setItems] = useState<Cube[]>(cubes);
   const [currentLastKey, setCurrentLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
@@ -47,19 +64,20 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery, qu
   const { csrfFetch } = useContext(CSRFContext);
   const [currentParsedQuery, setCurrentParsedQuery] = useState(parsedQuery || []);
   const [showSyntaxModal, setShowSyntaxModal] = useState(false);
+  const latestRequest = useRef(0);
 
-  const [currentQuery, setCurrentQuery] = useQueryParam('q', query || '');
-  const [currentOrder, setCurrentOrder] = useQueryParam('order', 'pop');
+  const [currentQuery, setCurrentQuery] = useQueryParam('q', '');
+  const [currentOrder, setCurrentOrder] = useQueryParam('order', DEFAULT_ORDER);
   const [currentAscending, setCurrentAscending] = useQueryParam('ascending', 'false');
 
   const [queryText, setQueryText] = useState(currentQuery);
-  const [orderText, setOrderText] = useState(currentOrder);
-  const [ascendingText, setAscendingText] = useState(currentAscending);
+  const [orderText, setOrderText] = useState(toOrder(currentOrder));
+  const [ascendingText, setAscendingText] = useState(toAscending(currentAscending));
 
   useEffect(() => {
     setQueryText(currentQuery);
-    setOrderText(currentOrder);
-    setAscendingText(currentAscending);
+    setOrderText(toOrder(currentOrder));
+    setAscendingText(toAscending(currentAscending));
   }, [currentQuery, currentOrder, currentAscending]);
 
   const pageCount = Math.ceil(items.length / PAGE_SIZE);
@@ -67,27 +85,35 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery, qu
 
   const go = useCallback(
     async (q: string, order: string, ascending: string) => {
+      const safeOrder = toOrder(order);
+      const safeAscending = toAscending(ascending);
+
       setCurrentQuery(q);
       setCurrentParsedQuery([]);
-      setCurrentOrder(order);
-      setCurrentAscending(ascending.toString());
+      setCurrentOrder(safeOrder);
+      setCurrentAscending(safeAscending);
       setLoading(true);
       setItems([]);
       setPage(0);
 
+      const requestId = (latestRequest.current += 1);
       const response = await csrfFetch(`/search/getmoresearchitems`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: q, order, ascending, lastKey: null }),
+        body: JSON.stringify({ query: q, order: safeOrder, ascending: safeAscending, lastKey: null }),
       });
+      const json = response.ok ? await response.json() : null;
 
-      if (response.ok) {
-        const json = await response.json();
-        if (json.success === 'true') {
-          setItems(json.cubes);
-          setCurrentLastKey(json.lastKey);
-          setCurrentParsedQuery(json.parsedQuery);
-        }
+      // A slower earlier search must not land on top of a newer one, and its lastKey would
+      // otherwise leave paging walking the wrong result set.
+      if (requestId !== latestRequest.current) {
+        return;
+      }
+
+      if (json && json.success === 'true') {
+        setItems(json.cubes);
+        setCurrentLastKey(json.lastKey);
+        setCurrentParsedQuery(json.parsedQuery);
       }
       setLoading(false);
     },
@@ -97,6 +123,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery, qu
   const fetchMoreData = useCallback(async () => {
     setLoading(true);
 
+    const requestId = (latestRequest.current += 1);
     const response = await csrfFetch(`/search/getmoresearchitems`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -107,23 +134,40 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery, qu
         ascending: currentAscending,
       }),
     });
+    const json = response.ok ? await response.json() : null;
 
-    if (response.ok) {
-      const json = await response.json();
-      if (json.success === 'true') {
-        const newItems = [...items, ...json.cubes];
-        setItems(newItems);
-        setCurrentParsedQuery(json.parsedQuery);
+    // The appended list is built from the items captured when this started, so a superseded
+    // page would duplicate or drop cubes.
+    if (requestId !== latestRequest.current) {
+      return;
+    }
 
-        const numItemsShowOnLastPage = items.length % PAGE_SIZE;
-        if (numItemsShowOnLastPage === 0 && json.cubes.length > 0) {
-          setPage(page + 1);
-        }
-        setCurrentLastKey(json.lastKey);
+    if (json && json.success === 'true') {
+      const newItems = [...items, ...json.cubes];
+      setItems(newItems);
+      setCurrentParsedQuery(json.parsedQuery);
+
+      const numItemsShowOnLastPage = items.length % PAGE_SIZE;
+      if (numItemsShowOnLastPage === 0 && json.cubes.length > 0) {
+        setPage(page + 1);
       }
+      setCurrentLastKey(json.lastKey);
     }
     setLoading(false);
   }, [csrfFetch, currentAscending, currentLastKey, currentOrder, currentQuery, items, page]);
+
+  // Back/forward restores the query and both dropdowns from the url, but the cubes on screen
+  // are still whatever the last search returned. Re-run it so the results match the url the
+  // browser navigated to. The url already holds these values, so re-applying them adds no
+  // history entry.
+  useEffect(() => {
+    const onPopState = () => {
+      go(Query.get('q', ''), toOrder(Query.get('order', DEFAULT_ORDER)), toAscending(Query.get('ascending', 'false')));
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [go]);
 
   const renderPager = (inverted: boolean) => (
     <Pagination
@@ -207,11 +251,12 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery, qu
                       placeholder="Search cubes..."
                       value={queryText}
                       onChange={(event) => setQueryText(event.target.value)}
-                      onEnter={() => go(queryText, orderText, ascendingText)}
                       className="!bg-white !text-gray-800 !placeholder-gray-500 !border-gray-300"
                       otherInputProps={{ enterKeyHint: 'search', name: 'q' }}
                     />
-                    {/* Hidden submit so mobile virtual keyboards' "Go"/"Search" key submits the form */}
+                    {/* Hidden submit so Enter, and mobile virtual keyboards' "Go"/"Search" key,
+                        submit the form. The input deliberately has no onEnter of its own: it
+                        would run the search a second time alongside this submit. */}
                     <button type="submit" aria-hidden="true" tabIndex={-1} className="hidden" />
                     <div className="hidden md:block">
                       <LoadingButton color="primary" onClick={() => go(queryText, orderText, ascendingText)}>
@@ -228,12 +273,9 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery, qu
                   <div className="w-36">
                     <Select
                       dense
-                      options={[
-                        { value: 'true', label: 'Ascending' },
-                        { value: 'false', label: 'Descending' },
-                      ]}
+                      options={ASCENDING_OPTIONS}
                       value={ascendingText}
-                      setValue={(value) => setAscendingText(value)}
+                      setValue={(value) => setAscendingText(toAscending(value))}
                     />
                   </div>
                 </Flexbox>
