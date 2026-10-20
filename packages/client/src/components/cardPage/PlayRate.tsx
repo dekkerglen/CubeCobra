@@ -15,13 +15,17 @@ interface CardPageProps {
 }
 
 interface rateProps {
-  rate: [number, number];
+  rate?: [number, number];
 }
 
 const Rate: React.FC<rateProps> = ({ rate }) => {
+  if (!rate || rate[1] === 0) {
+    return <Text className="text-text-secondary">No data</Text>;
+  }
+
   return (
     <Text>
-      {rate[1] === 0 ? '0.00%' : `${((rate[0] / rate[1]) * 100).toFixed(2)}%`}
+      {`${((rate[0] / rate[1]) * 100).toFixed(2)}%`}
       <Text sm className="text-text-secondary ml-1">
         {`(${rate[0]} / ${rate[1]})`}
       </Text>
@@ -29,6 +33,8 @@ const Rate: React.FC<rateProps> = ({ rate }) => {
   );
 };
 const CardBreakdownInfo: React.FC<CardPageProps> = ({ card, history }) => {
+  const latest = history[history.length - 1];
+
   return (
     <CardBody>
       {history.length > 1 ? (
@@ -41,11 +47,12 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card, history }) => {
               </Text>
               <Table
                 rows={[
-                  { label: 'Vintage', value: <Rate rate={history[history.length - 1].vintage || [0, 0]} /> },
-                  { label: 'Legacy', value: <Rate rate={history[history.length - 1].legacy || [0, 0]} /> },
-                  { label: 'Modern', value: <Rate rate={history[history.length - 1].modern || [0, 0]} /> },
-                  { label: 'Peasant', value: <Rate rate={history[history.length - 1].peasant || [0, 0]} /> },
-                  { label: 'Pauper', value: <Rate rate={history[history.length - 1].pauper || [0, 0]} /> },
+                  { label: 'Vintage', value: <Rate rate={latest.vintage} /> },
+                  { label: 'Legacy', value: <Rate rate={latest.legacy} /> },
+                  { label: 'Modern', value: <Rate rate={latest.modern} /> },
+                  { label: 'Pioneer', value: <Rate rate={latest.pioneer} /> },
+                  { label: 'Peasant', value: <Rate rate={latest.peasant} /> },
+                  { label: 'Pauper', value: <Rate rate={latest.pauper} /> },
                 ]}
               />
             </Col>
@@ -55,11 +62,11 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card, history }) => {
               </Text>
               <Table
                 rows={[
-                  { label: '1-180', value: <Rate rate={history[history.length - 1].size180 || [0, 0]} /> },
-                  { label: '181-360', value: <Rate rate={history[history.length - 1].size360 || [0, 0]} /> },
-                  { label: '361-450', value: <Rate rate={history[history.length - 1].size450 || [0, 0]} /> },
-                  { label: '451-540', value: <Rate rate={history[history.length - 1].size540 || [0, 0]} /> },
-                  { label: '541+', value: <Rate rate={history[history.length - 1].size720 || [0, 0]} /> },
+                  { label: '1-180', value: <Rate rate={latest.size180} /> },
+                  { label: '181-360', value: <Rate rate={latest.size360} /> },
+                  { label: '361-450', value: <Rate rate={latest.size450} /> },
+                  { label: '451-540', value: <Rate rate={latest.size540} /> },
+                  { label: '541+', value: <Rate rate={latest.size720} /> },
                 ]}
               />
             </Col>

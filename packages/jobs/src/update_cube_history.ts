@@ -9,7 +9,7 @@ dotenv.config({ path: path.resolve(process.cwd(), 'packages', 'jobs', '.env') })
 import { cardHistoryDao, cardMetadataTaskDao, cardUpdateTaskDao, changelogDao } from '@server/dynamo/daos';
 import { initializeCardDb } from '@server/serverutils/cardCatalog';
 import { cardFromId } from '@server/serverutils/carddb';
-import { getCubeTypes } from '@server/serverutils/cubefn';
+import { getCubeTypes, type LegalityFormat } from '@server/serverutils/cubefn';
 import { BoardChanges, DefaultElo } from '@utils/datatypes/Card';
 import type ChangeLogType from '@utils/datatypes/ChangeLog';
 import History, { Period } from '@utils/datatypes/History';
@@ -50,6 +50,17 @@ interface Totals {
   pioneer: number;
   total: number;
 }
+
+// Legality buckets we report, least to most restrictive. Standard is omitted
+// because it rotates: a cube leaves the format without a single card changing.
+// Typed against LegalityFormat so a mistyped name fails to compile rather than
+// silently never matching and emptying the bucket.
+const TRACKED_FORMATS: [LegalityFormat, keyof Totals][] = [
+  ['Vintage', 'vintage'],
+  ['Legacy', 'legacy'],
+  ['Modern', 'modern'],
+  ['Pioneer', 'pioneer'],
+];
 
 const saveCubesHistory = async (cubes: CubeDict, key: string) => {
   const uniqueOracles = [...new Set(Object.values(cubes).flat())];
@@ -111,6 +122,7 @@ const mapTotalsToCardHistory = (
     legacy: [history.legacy, totals.legacy],
     modern: [history.modern, totals.modern],
     vintage: [history.vintage, totals.vintage],
+    pioneer: [history.pioneer, totals.pioneer],
     total: [history.total, totals.total],
     cubeCount: [history.total, totals.total],
     elo: elo || DefaultElo,
@@ -343,15 +355,25 @@ const mapTotalsToCardHistory = (
 
     console.log(`  Calculating card statistics for ${Object.keys(cubes).length} cubes...`);
     let processedCubes = 0;
+    let skippedEmptyCubes = 0;
     const totalCubes = Object.values(cubes).length;
     for (const cube of Object.values(cubes)) {
       processedCubes += 1;
       if (processedCubes % 5000 === 0) {
         console.log(`    Analyzed ${processedCubes} / ${totalCubes} cubes...`);
       }
+
+      // An empty cube plays no cards, so counting it only inflates every
+      // denominator. It would also classify as Standard Pauper, since neither
+      // check has a card to fail against.
+      if (cube.length === 0) {
+        skippedEmptyCubes += 1;
+        continue;
+      }
+
       const cubeCards = cube.map((id) => cardFromId(id));
       const oracles = [...new Set(cubeCards.map((card) => card.oracle_id))];
-      const { pauper, peasant, type } = getCubeTypes(
+      const { pauper, peasant, eligibleFormats } = getCubeTypes(
         cubeCards.map((card) => ({
           cardID: card.scryfall_id,
           status: 'Not Owned',
@@ -385,22 +407,16 @@ const mapTotalsToCardHistory = (
         categories.push('peasant');
       }
 
-      switch (type) {
-        case 0: // vintage
-          categories.push('vintage');
-          break;
-        case 1: // legacy
-          categories.push('legacy');
-          break;
-        case 2: // modern
-          categories.push('modern');
-          break;
-        case 4: // pioneer
-          categories.push('pioneer');
-          break;
-        default:
-          break;
+      // The tightest tracked format the cube actually qualifies for. Standard
+      // is not tracked because it rotates, and legality does not nest, so this
+      // walks the eligible list rather than assuming the next format down.
+      let legalityBucket: keyof Totals = 'vintage';
+      for (const [format, bucket] of TRACKED_FORMATS) {
+        if (eligibleFormats.includes(format)) {
+          legalityBucket = bucket;
+        }
       }
+      categories.push(legalityBucket);
 
       for (const category of categories) {
         totals[category] += 1;
@@ -429,7 +445,10 @@ const mapTotalsToCardHistory = (
         }
       }
     }
-    console.log(`  Completed analysis: found ${Object.keys(data).length} unique cards across all cubes`);
+    console.log(
+      `  Completed analysis: found ${Object.keys(data).length} unique cards across all cubes` +
+        ` (skipped ${skippedEmptyCubes} empty cubes)`,
+    );
 
     const eloFile = await downloadJson(`global_draft_history/${key}.json`);
     if (eloFile) {

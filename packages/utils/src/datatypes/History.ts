@@ -6,6 +6,7 @@ export type CubeType =
   | 'pauper'
   | 'vintage'
   | 'peasant'
+  | 'pioneer'
   | 'size180'
   | 'size360'
   | 'size450'

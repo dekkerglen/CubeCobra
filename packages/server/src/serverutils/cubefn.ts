@@ -35,7 +35,11 @@ interface CubeCard {
 interface CubeTypeResult {
   pauper: boolean;
   peasant: boolean;
-  type: number;
+  /**
+   * Every format the whole cube is legal in, least to most restrictive. The
+   * last entry is therefore the tightest format the cube fits in.
+   */
+  eligibleFormats: LegalityFormat[];
 }
 
 export interface GeneratePackResult {
@@ -68,20 +72,13 @@ function getCubeId(cube: { shortId?: string; id: string }): string {
   return cube.id;
 }
 
-const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'];
+// Least to most restrictive. Declared as a const tuple so LegalityFormat below
+// is derived from it, making a mistyped format name a compile error rather than
+// a silent non-match.
+const FORMATS = ['Vintage', 'Legacy', 'Modern', 'Pioneer', 'Standard'] as const;
+const VINTAGE = 0;
 
-function intToLegality(val: number): string | undefined {
-  return FORMATS[val];
-}
-
-function legalityToInt(legality: string): number | undefined {
-  let res: number | undefined;
-  FORMATS.forEach((format, index) => {
-    if (legality === format) res = index;
-  });
-
-  return res;
-}
+export type LegalityFormat = (typeof FORMATS)[number];
 
 function cardsAreEquivalent(card: CubeCard, details: CubeCard): boolean {
   if (card.cardID !== details.cardID) {
@@ -112,21 +109,36 @@ function cardsAreEquivalent(card: CubeCard, details: CubeCard): boolean {
 }
 
 function cardIsLegal(card: any, legality: string): boolean {
-  return card.legalities[legality] === 'legal' || card.legalities[legality] === 'banned';
+  const status = card.legalities[legality];
+  // Restricted cards are playable (capped at one copy); banned cards are not.
+  // Counting banned as playable would read Deathrite Shaman, banned in Modern,
+  // as a Modern card.
+  return status === 'legal' || status === 'restricted';
 }
 
 function getCubeTypes(cards: CubeCard[]): CubeTypeResult {
   let pauper = true;
   let peasant = false;
-  let type = FORMATS.length - 1;
+  // Each format is evaluated on its own merits rather than by walking down a
+  // chain, because legality does not nest. Deathrite Shaman is playable in
+  // Pioneer yet banned in the wider Modern, and Geological Appraiser is
+  // playable in Standard yet banned in the wider Pioneer.
+  //
+  // Vintage is deliberately never checked, so it stays eligible. A Vintage cube
+  // means "anything goes", making it the floor for cubes that qualify for no
+  // tighter format, including those holding power, custom cards, or un-cards.
+  const eligible = FORMATS.map(() => true);
+
   for (const card of cards) {
-    if (pauper && !cardIsLegal(cardFromId(card.cardID), 'Pauper')) {
+    const details = cardFromId(card.cardID);
+
+    if (pauper && !cardIsLegal(details, 'Pauper')) {
       pauper = false;
       peasant = true;
     }
     if (!pauper && peasant) {
       // check rarities of all card versions
-      const versions = getAllVersionIds(cardFromId(card.cardID));
+      const versions = getAllVersionIds(details);
       if (versions) {
         const rarities = versions.map((id) => cardFromId(id).rarity);
         if (!rarities.includes('common') && !rarities.includes('uncommon')) {
@@ -134,52 +146,17 @@ function getCubeTypes(cards: CubeCard[]): CubeTypeResult {
         }
       }
     }
-    const legality = intToLegality(type);
-    while (type > 0 && legality && !cardIsLegal(cardFromId(card.cardID), legality)) {
-      type -= 1;
-    }
+
+    FORMATS.forEach((format, index) => {
+      if (index !== VINTAGE && eligible[index] && !cardIsLegal(details, format)) {
+        eligible[index] = false;
+      }
+    });
   }
 
-  return { pauper, peasant, type };
-}
+  const eligibleFormats = FORMATS.filter((_format, index) => eligible[index]);
 
-function setCubeType(cube: any): any {
-  const { pauper, peasant, type } = getCubeTypes(cube.cards);
-
-  cube.type = intToLegality(type);
-  if (pauper) {
-    cube.type += ' Pauper';
-  }
-  if (peasant) {
-    cube.type += ' Peasant';
-  }
-
-  if (cube.overrideCategory) {
-    cube.categories = [
-      cube.categoryOverride.toLowerCase(),
-      ...cube.categoryPrefixes.map((c: string) => c.toLowerCase()),
-    ];
-  } else {
-    cube.categories = Array.from(new Set(`${cube.type}`.toLowerCase().split(' ')));
-  }
-
-  cube.cardOracles = Array.from(new Set(cube.cards.map((card: CubeCard) => cardFromId(card.cardID).oracle_id)));
-  cube.keywords = `${cube.type} ${cube.name} ${cube.owner_name}`
-    .replace(/[^\w\s]/gi, '')
-    .toLowerCase()
-    .split(' ')
-    .filter((keyword) => keyword.length > 0);
-  cube.keywords.push(
-    ...(cube.tags || [])
-      .filter((tag: string) => tag && tag.length > 0)
-      .map((tag: string) => tag.replace(/[^\w\s]/gi, '').toLowerCase()),
-  );
-  cube.keywords.push(...cube.categories);
-  cube.keywords = Array.from(new Set(cube.keywords));
-
-  cube.card_count = cube.cards.length;
-
-  return cube;
+  return { pauper, peasant, eligibleFormats };
 }
 
 function cardHtml(card: any): string {
@@ -901,14 +878,11 @@ async function reconstructCubeAtChangelog(
 }
 
 const methods = {
-  setCubeType,
   cardsAreEquivalent,
   sanitize,
   generatePack,
   generateBalancedPack,
   getCubeId,
-  intToLegality,
-  legalityToInt,
   addCardHtml,
   removeCardHtml,
   replaceCardHtml,
@@ -939,14 +913,11 @@ export {
   generatePack,
   getCubeId,
   getCubeTypes,
-  intToLegality,
   isCubeEditable,
   isCubeListed,
   isCubeViewable,
-  legalityToInt,
   reconstructCubeAtChangelog,
   removeCardHtml,
   replaceCardHtml,
   sanitize,
-  setCubeType,
 };

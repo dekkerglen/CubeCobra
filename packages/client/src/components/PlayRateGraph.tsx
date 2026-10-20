@@ -51,6 +51,14 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
       };
     }
 
+    const points = history.map((point) => {
+      const rate = point[type];
+      if (!rate || rate[1] === 0) {
+        return null;
+      }
+      return Math.round((rate[0] / rate[1]) * 10000) / 100;
+    });
+
     const plot = {
       labels: history.map((point) => formatDate(new Date(point.date))),
       datasets: [
@@ -61,20 +69,13 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
           borderColor: '#28A745',
           backgroundColor: '#28A745',
           label: 'Percent',
-          data: history.map((point) => {
-            if ((point[type]?.[1] ?? 0) === 0) {
-              return 0;
-            }
-            return point[type] ? Math.round((point[type][0] / point[type][1]) * 10000) / 100 : 0;
-          }),
+          data: points,
         },
       ],
     };
 
-    const yRange = [
-      Math.min(...plot.datasets[0].data.map((point) => point as number)),
-      Math.max(...plot.datasets[0].data.map((point) => point as number)),
-    ];
+    const observed = points.filter((point): point is number => point !== null);
+    const yRange = observed.length > 0 ? [Math.min(...observed), Math.max(...observed)] : [0, 1];
 
     return {
       options: {
@@ -107,7 +108,7 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
               display: true,
               text: 'Percent',
             },
-            ticks: yRange ? { min: yRange[0], max: yRange[1] } : {},
+            ticks: { min: yRange[0], max: yRange[1] },
           },
         },
       },
@@ -178,6 +179,7 @@ const PlayRateGraph: React.FC<PlayRateGraphProps> = ({ defaultHistories, cardId 
           { value: 'vintage', label: 'Vintage' },
           { value: 'legacy', label: 'Legacy' },
           { value: 'modern', label: 'Modern' },
+          { value: 'pioneer', label: 'Pioneer' },
           { value: 'peasant', label: 'Peasant' },
           { value: 'pauper', label: 'Pauper' },
           { value: 'size180', label: '1-180 cards' },

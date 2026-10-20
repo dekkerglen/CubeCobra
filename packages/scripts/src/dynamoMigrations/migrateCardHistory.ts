@@ -157,35 +157,13 @@ function deleteCheckpoint(): void {
         console.log(`Found ${result.items.length} card history entries in this batch`);
 
         try {
-          // Transform to History format (add cubes field)
-          const historyItems = result.items.map((item) => {
-            // Calculate cubes from cube type data
-            let cubes = 0;
-            const cubeTypes = [
-              'legacy',
-              'modern',
-              'pauper',
-              'vintage',
-              'peasant',
-              'size180',
-              'size360',
-              'size450',
-              'size540',
-              'size720',
-            ] as const;
-
-            for (const type of cubeTypes) {
-              const value = item[type];
-              if (value && Array.isArray(value) && value.length > 0) {
-                cubes += value[0]; // First element is the count
-              }
-            }
-
-            return {
-              ...item,
-              cubes,
-            };
-          });
+          // Transform to History format (add cubes field). The field is derived
+          // on read and dropped by dehydrateItem on write, so this only exists
+          // to satisfy the History type.
+          const historyItems = result.items.map((item) => ({
+            ...item,
+            cubes: item.total?.[0] ?? 0,
+          }));
 
           // Check which entries already exist in new format
           // We'll use a composite key check based on OTComp and date
