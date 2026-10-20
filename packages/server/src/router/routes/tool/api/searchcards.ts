@@ -1,11 +1,10 @@
+import { toDistinct } from '@utils/cardSearchOptions';
 import { makeFilter } from '@utils/filtering/FilterCards';
 import { OrderedSortsType } from '@utils/sorting/Sort';
 import { SortDirectionsType } from '@utils/sorting/sortContext';
 import { searchCards } from 'serverutils/tools';
 
 import { Request, Response } from '../../../../types/express';
-
-type Distinct = 'names' | 'printings';
 
 export const searchCardsHandler = async (req: Request, res: Response) => {
   try {
@@ -25,7 +24,7 @@ export const searchCardsHandler = async (req: Request, res: Response) => {
       req.query.s as OrderedSortsType,
       page,
       req.query.d as SortDirectionsType,
-      req.query.di as Distinct | undefined,
+      toDistinct(req.query.di as string | undefined),
       req?.user?.defaultPrinting,
       includeExtras,
     );

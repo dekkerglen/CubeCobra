@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { DownloadIcon, GearIcon, QuestionIcon } from '@primer/octicons-react';
+import { Distinct, toDistinct } from '@utils/cardSearchOptions';
 import { cardElo, cardId, detailsToCard } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
 import { allFields, CardDetails, FilterValues, isColorField, isNumField } from '@utils/datatypes/Card';
@@ -29,15 +30,15 @@ import AdvancedFilterModal from 'components/modals/AdvancedFilterModal';
 import SideBanner from 'components/SideBanner';
 import withAutocard from 'components/WithAutocard';
 import FilterContext from 'contexts/FilterContext';
+import useLatestRequest from 'hooks/useLatestRequest';
 import Query from 'utils/Query';
 
 const AutocardA = withAutocard(Link);
 
 type ViewMode = 'cards' | 'rows';
-type DistinctMode = 'names' | 'printings';
 type SortDirection = 'ascending' | 'descending';
 
-const DISTINCT_OPTIONS: { value: DistinctMode; label: string }[] = [
+const DISTINCT_OPTIONS: { value: Distinct; label: string }[] = [
   { value: 'names', label: 'Cards' },
   { value: 'printings', label: 'Printings' },
 ];
@@ -52,9 +53,8 @@ const DEFAULT_SORT = 'Elo';
 // A <select> whose value matches none of its options silently displays the first one, so an
 // unrecognized query param would leave a control disagreeing with the results on screen (the
 // sets page used to link with the singular "printing"). Clamp every param to a real option,
-// matching how the search API reads it: anything but "names" is printings, and anything but
-// "descending" is ascending.
-const toDistinct = (value: string): DistinctMode => (value === 'names' ? 'names' : 'printings');
+// matching how the search API reads it: anything but "names" is printings (toDistinct, shared
+// with the server), and anything but "descending" is ascending.
 const toDirection = (value: string): SortDirection => (value === 'descending' ? 'descending' : 'ascending');
 const toSort = (value: string): string => (ORDERED_SORTS.includes(value) ? value : DEFAULT_SORT);
 // The api accepts both spellings of the flag, so links using its "1"/"0" form must work here too.
@@ -67,14 +67,19 @@ const toPage = (value: string): number => {
 
 const PICK_COUNT_BASELINE = 'pickcount>=100';
 
+// The options that change which cards match, and therefore invalidate the current page.
+const resetKey = (filter: string, view: ViewMode, includeExtras: boolean, distinct: Distinct): string =>
+  JSON.stringify([filter, view, includeExtras, distinct]);
+
 const CardSearch: React.FC = () => {
   const { filterInput, setFilterInput, filterValid, cardFilter } = useContext(FilterContext);
   const drag = useCubeTrayDrag();
   const [cards, setCards] = useState<CardDetails[]>([]);
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [page, setPage] = useState(toPage(Query.get('p', '0')));
   const [count, setCount] = useState('');
-  const [distinct, setDistinct] = useState<DistinctMode>(toDistinct(Query.get('di', 'names')));
+  const [distinct, setDistinct] = useState<Distinct>(toDistinct(Query.get('di', 'names')));
   const [includeExtras, setIncludeExtras] = useState(toIncludeExtras(Query.get('ie', 'false')));
   const [sort, setSort] = useState(toSort(Query.get('s', DEFAULT_SORT)));
   const [direction, setDirection] = useState<SortDirection>(toDirection(Query.get('d', 'descending')));
@@ -84,22 +89,29 @@ const CardSearch: React.FC = () => {
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [advancedValues, setAdvancedValues] = useState<Partial<FilterValues>>({});
   const [controlsOpen, setControlsOpen] = useState(false);
-  const latestRequest = useRef(0);
+  const { begin, invalidate } = useLatestRequest();
   const didMountRef = useRef(false);
-  const restoringRef = useRef(false);
+  const restoredKeyRef = useRef<string | null>(null);
 
   // Back/forward swaps the query string out from under the controls. FilterContext already
   // re-reads "f" on popstate; the rest of the options have to follow the restored url too, or
   // they keep describing a search the user navigated away from.
   useEffect(() => {
     const onPopState = () => {
-      restoringRef.current = true;
+      const restoredDistinct = toDistinct(Query.get('di', 'names'));
+      const restoredExtras = toIncludeExtras(Query.get('ie', 'false'));
+      const restoredView = toView(Query.get('v', 'cards'));
+
+      // A restored entry keeps the page it was pushed with, so record the combination this
+      // restore produces and let the page reset recognize and skip it.
+      restoredKeyRef.current = resetKey(Query.get('f', ''), restoredView, restoredExtras, restoredDistinct);
+
       setPage(toPage(Query.get('p', '0')));
       setSort(toSort(Query.get('s', DEFAULT_SORT)));
       setDirection(toDirection(Query.get('d', 'descending')));
-      setDistinct(toDistinct(Query.get('di', 'names')));
-      setIncludeExtras(toIncludeExtras(Query.get('ie', 'false')));
-      setView(toView(Query.get('v', 'cards')));
+      setDistinct(restoredDistinct);
+      setIncludeExtras(restoredExtras);
+      setView(restoredView);
     };
 
     window.addEventListener('popstate', onPopState);
@@ -108,23 +120,18 @@ const CardSearch: React.FC = () => {
 
   // The url has to track the controls on its own rather than as a side effect of searching:
   // in card view with no filter nothing is fetched, so the chosen options would otherwise be
-  // dropped on reload. Values left at their default are removed to keep shared links short.
-  // The filter itself is owned by FilterContext, which writes "f".
+  // dropped on reload. Values left at their default are removed to keep shared links short,
+  // and all six are written together so the url is never observed half updated. The filter
+  // itself is owned by FilterContext, which writes "f".
   useEffect(() => {
-    const sync = (key: string, value: string, defaultValue: string) => {
-      if (value === defaultValue) {
-        Query.del(key);
-      } else {
-        Query.set(key, value);
-      }
-    };
-
-    sync('p', page.toString(), '0');
-    sync('s', sort, DEFAULT_SORT);
-    sync('d', direction, 'descending');
-    sync('di', distinct, 'names');
-    sync('ie', includeExtras ? 'true' : 'false', 'false');
-    sync('v', view, 'cards');
+    Query.setMany({
+      p: page === 0 ? null : page.toString(),
+      s: sort === DEFAULT_SORT ? null : sort,
+      d: direction === 'descending' ? null : direction,
+      di: distinct === 'names' ? null : distinct,
+      ie: includeExtras ? 'true' : null,
+      v: view === 'cards' ? null : view,
+    });
   }, [page, sort, direction, distinct, includeExtras, view]);
 
   useEffect(() => {
@@ -149,23 +156,42 @@ const CardSearch: React.FC = () => {
       ['ie', includeExtras ? '1' : '0'],
     ]);
 
-    const requestId = (latestRequest.current += 1);
-    const response = await fetch(`/tool/api/searchcards/?${params.toString()}`);
-    if (!response.ok) console.error(response);
+    const request = begin();
+    try {
+      const response = await fetch(`/tool/api/searchcards/?${params.toString()}`, { signal: request.signal });
+      if (!response.ok) {
+        throw new Error(`Card search failed with ${response.status}`);
+      }
 
-    const json = await response.json();
+      const json = await response.json();
 
-    // A slower earlier request must not overwrite the results of the one the controls now
-    // describe; options changed while a search is in flight would otherwise be undone by
-    // whichever response happens to land last.
-    if (requestId !== latestRequest.current) {
-      return;
+      // A slower earlier request must not overwrite the results of the one the controls now
+      // describe; options changed while a search is in flight would otherwise be undone by
+      // whichever response happens to land last.
+      if (!request.isCurrent()) {
+        return;
+      }
+
+      setCards(json.data);
+      setCount(json.numResults.toString());
+      setFailed(false);
+    } catch (error) {
+      if (!request.isCurrent()) {
+        return;
+      }
+
+      console.error(error);
+      setCards([]);
+      setCount('0');
+      setFailed(true);
+    } finally {
+      // Only the newest request owns the spinner. An abandoned one clearing it would claim the
+      // search that replaced it had finished.
+      if (request.isCurrent()) {
+        setLoading(false);
+      }
     }
-
-    setCards(json.data);
-    setCount(json.numResults.toString());
-    setLoading(false);
-  }, [page, sort, direction, distinct, includeExtras, effectiveFilter]);
+  }, [page, sort, direction, distinct, includeExtras, effectiveFilter, begin]);
 
   useEffect(() => {
     const shouldFetch = view === 'rows' || (!!filterInput && filterInput !== '');
@@ -175,31 +201,33 @@ const CardSearch: React.FC = () => {
     } else {
       // Clearing the filter has to invalidate anything still in flight, or its response would
       // repopulate the grid after the results were cleared.
-      latestRequest.current += 1;
+      invalidate();
       setLoading(false);
+      setFailed(false);
       setCards([]);
     }
-  }, [page, direction, distinct, includeExtras, sort, filterInput, view, fetchData]);
+  }, [page, direction, distinct, includeExtras, sort, filterInput, view, fetchData, invalidate]);
 
   // Anything that changes which cards match invalidates the current page, so go back to the
   // first one. The mount run is skipped so a shared link's "p" survives the first render, and
   // a restored history entry keeps the page it was pushed with.
   useEffect(() => {
+    const key = resetKey(filterInput ?? '', view, includeExtras, distinct);
+    // Consume the restore on the first commit after it, whichever options it moved. A restore
+    // that changes nothing React commits leaves this holding the current combination, which
+    // can only ever match a commit that changed none of these options.
+    const restored = restoredKeyRef.current;
+    restoredKeyRef.current = null;
+
     if (!didMountRef.current) {
       didMountRef.current = true;
       return;
     }
-    if (restoringRef.current) {
+    if (restored === key) {
       return;
     }
     setPage(0);
   }, [filterInput, view, includeExtras, distinct]);
-
-  // Runs after every commit, so the restore flag is cleared even when the reset above had no
-  // dependency change to react to.
-  useEffect(() => {
-    restoringRef.current = false;
-  });
 
   const updatePage = (index: number) => {
     setLoading(true);
@@ -300,10 +328,15 @@ const CardSearch: React.FC = () => {
       })
     : undefined;
 
-  const emptyMessage = view === 'cards' && !filterInput ? 'Enter a filter above to begin searching.' : 'No cards found';
+  // A failed search reports itself rather than passing as an empty result set.
+  const emptyMessage = failed
+    ? 'Something went wrong. Please try again.'
+    : view === 'cards' && !filterInput
+      ? 'Enter a filter above to begin searching.'
+      : 'No cards found';
   const formattedCount = Number(count || '0').toLocaleString();
   const showSummary = !(view === 'cards' && !filterInput);
-  const headlineCount = loading ? 'Searching…' : `${formattedCount} results`;
+  const headlineCount = loading ? 'Searching…' : failed ? 'Search failed' : `${formattedCount} results`;
 
   return (
     <div className="relative min-h-screen">
@@ -364,11 +397,12 @@ const CardSearch: React.FC = () => {
                   value={filterText}
                   valid={(filterInput?.length ?? 0) > 0 ? filterValid : undefined}
                   onChange={(event) => setFilterText(event.target.value)}
-                  onEnter={() => setFilterInput(filterText)}
                   className="!bg-white !text-gray-800 !placeholder-gray-500 !border-gray-300"
                   otherInputProps={{ enterKeyHint: 'search', name: 'f' }}
                 />
-                {/* Hidden submit so mobile virtual keyboards' "Go"/"Search" key submits the form */}
+                {/* Hidden submit so Enter, and mobile virtual keyboards' "Go"/"Search" key,
+                    submit the form. The input deliberately has no onEnter of its own: it
+                    would run the same search a second time alongside this submit. */}
                 <button type="submit" aria-hidden="true" tabIndex={-1} className="hidden" />
                 <button
                   type="button"

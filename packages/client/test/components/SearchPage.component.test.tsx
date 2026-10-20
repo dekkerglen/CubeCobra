@@ -86,6 +86,84 @@ describe('SearchPage option binding', () => {
     await waitFor(() => expect(mockCsrfFetch).toHaveBeenCalled());
     expect(new URLSearchParams(window.location.search).get('q')).toEqual('demo');
   });
+
+  // Writing the three params one at a time pushed an entry each, so the url in between
+  // described a search that never ran — and Back, which re-runs the url it lands on, ran it.
+  it('pushes a single history entry for a search that changes several params', async () => {
+    renderSearch('q=demo&order=date');
+    const entriesBefore = window.history.length;
+
+    fireEvent.change(screen.getByPlaceholderText('Search cubes...'), { target: { value: 'snake' } });
+    fireEvent.change(screen.getByDisplayValue('Sorted by Last Updated'), { target: { value: 'alpha' } });
+    fireEvent.click(screen.getByText('Search'));
+
+    await waitFor(() => expect(mockCsrfFetch).toHaveBeenCalled());
+    expect(window.history.length).toEqual(entriesBefore + 1);
+    expect(window.location.search).toEqual('?q=snake&order=alpha');
+  });
+
+  it('adds no history entry for a search that changes nothing', async () => {
+    renderSearch('q=demo');
+    const entriesBefore = window.history.length;
+
+    fireEvent.click(screen.getByText('Search'));
+
+    await waitFor(() => expect(mockCsrfFetch).toHaveBeenCalled());
+    expect(window.history.length).toEqual(entriesBefore);
+  });
+
+  it('drops params left at their default rather than spelling them out', async () => {
+    renderSearch('q=demo&order=alpha&ascending=true');
+
+    fireEvent.change(screen.getByDisplayValue('Sorted Alphabetically'), { target: { value: 'pop' } });
+    fireEvent.change(screen.getByDisplayValue('Ascending'), { target: { value: 'false' } });
+    fireEvent.click(screen.getByText('Search'));
+
+    await waitFor(() => expect(mockCsrfFetch).toHaveBeenCalled());
+    expect(window.location.search).toEqual('?q=demo');
+  });
+});
+
+describe('SearchPage failed searches', () => {
+  beforeEach(() => {
+    mockCsrfFetch.mockReset();
+  });
+
+  // Without this the spinner is the only thing the user ever sees: the rejection escapes an
+  // un-awaited call, so loading is never cleared and nothing says the search failed.
+  it('reports a rejected search instead of spinning forever', async () => {
+    mockCsrfFetch.mockRejectedValue(new Error('network down'));
+
+    renderSearch('q=demo');
+    fireEvent.click(screen.getByText('Search'));
+
+    await waitFor(() => expect(screen.getByText('Search failed')).toBeInTheDocument());
+    expect(screen.getByText('Something went wrong. Please try again.')).toBeInTheDocument();
+    expect(screen.queryByText('Searching…')).not.toBeInTheDocument();
+  });
+
+  it('reports an error response the same way', async () => {
+    mockCsrfFetch.mockResolvedValue({ ok: false, json: async () => ({}) });
+
+    renderSearch('q=demo');
+    fireEvent.click(screen.getByText('Search'));
+
+    await waitFor(() => expect(screen.getByText('Search failed')).toBeInTheDocument());
+  });
+
+  it('recovers on the next successful search', async () => {
+    mockCsrfFetch.mockRejectedValueOnce(new Error('network down'));
+
+    renderSearch('q=demo');
+    fireEvent.click(screen.getByText('Search'));
+    await waitFor(() => expect(screen.getByText('Search failed')).toBeInTheDocument());
+
+    mockCsrfFetch.mockResolvedValue(resolved([makeCube('Recovered Cube')]));
+    fireEvent.click(screen.getByText('Search'));
+
+    await waitFor(() => expect(screen.getByText('Recovered Cube')).toBeInTheDocument());
+    expect(screen.queryByText('Search failed')).not.toBeInTheDocument();
+  });
 });
 
 describe('SearchPage history navigation', () => {

@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
 import { cdnUrl } from '@utils/cdnUrl';
@@ -20,7 +20,7 @@ import SearchSyntaxModal from 'components/modals/SearchSyntaxModal';
 import RenderToRoot from 'components/RenderToRoot';
 import SideBanner from 'components/SideBanner';
 import { CSRFContext } from 'contexts/CSRFContext';
-import useQueryParam from 'hooks/useQueryParam';
+import useLatestRequest from 'hooks/useLatestRequest';
 import MainLayout from 'layouts/MainLayout';
 import Query from 'utils/Query';
 
@@ -60,114 +60,179 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
   const [items, setItems] = useState<Cube[]>(cubes);
   const [currentLastKey, setCurrentLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
+  const [failed, setFailed] = useState(false);
   const [page, setPage] = useState(0);
   const { csrfFetch } = useContext(CSRFContext);
   const [currentParsedQuery, setCurrentParsedQuery] = useState(parsedQuery || []);
   const [showSyntaxModal, setShowSyntaxModal] = useState(false);
-  const latestRequest = useRef(0);
+  const { begin } = useLatestRequest();
 
-  const [currentQuery, setCurrentQuery] = useQueryParam('q', '');
-  const [currentOrder, setCurrentOrder] = useQueryParam('order', DEFAULT_ORDER);
-  const [currentAscending, setCurrentAscending] = useQueryParam('ascending', 'false');
+  // Plain state seeded from the url rather than useQueryParam: that hook writes each param from
+  // an effect of its own, so a search that changed both the query and the sort pushed two
+  // history entries, and the one in between described a search that never ran. go() writes all
+  // three at once instead.
+  const [currentQuery, setCurrentQuery] = useState(() => Query.get('q', ''));
+  const [currentOrder, setCurrentOrder] = useState(() => toOrder(Query.get('order', DEFAULT_ORDER)));
+  const [currentAscending, setCurrentAscending] = useState(() => toAscending(Query.get('ascending', 'false')));
 
   const [queryText, setQueryText] = useState(currentQuery);
-  const [orderText, setOrderText] = useState(toOrder(currentOrder));
-  const [ascendingText, setAscendingText] = useState(toAscending(currentAscending));
+  const [orderText, setOrderText] = useState(currentOrder);
+  const [ascendingText, setAscendingText] = useState(currentAscending);
 
+  // The controls follow the search that was actually run, so a restored history entry moves
+  // them too.
   useEffect(() => {
     setQueryText(currentQuery);
-    setOrderText(toOrder(currentOrder));
-    setAscendingText(toAscending(currentAscending));
+    setOrderText(currentOrder);
+    setAscendingText(currentAscending);
   }, [currentQuery, currentOrder, currentAscending]);
 
   const pageCount = Math.ceil(items.length / PAGE_SIZE);
   const hasMore = !!currentLastKey;
 
-  const go = useCallback(
+  // Runs a search and adopts its results, without touching the url. Both pressing Search and
+  // restoring a history entry land here; only the former has a new url to write.
+  const runSearch = useCallback(
     async (q: string, order: string, ascending: string) => {
-      const safeOrder = toOrder(order);
-      const safeAscending = toAscending(ascending);
-
       setCurrentQuery(q);
       setCurrentParsedQuery([]);
-      setCurrentOrder(safeOrder);
-      setCurrentAscending(safeAscending);
+      setCurrentOrder(order);
+      setCurrentAscending(ascending);
+      setFailed(false);
       setLoading(true);
       setItems([]);
       setPage(0);
 
-      const requestId = (latestRequest.current += 1);
-      const response = await csrfFetch(`/search/getmoresearchitems`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ query: q, order: safeOrder, ascending: safeAscending, lastKey: null }),
-      });
-      const json = response.ok ? await response.json() : null;
+      const request = begin();
+      try {
+        const response = await csrfFetch(`/search/getmoresearchitems`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ query: q, order, ascending, lastKey: null }),
+          signal: request.signal,
+        });
+        const json = response.ok ? await response.json() : null;
 
-      // A slower earlier search must not land on top of a newer one, and its lastKey would
-      // otherwise leave paging walking the wrong result set.
-      if (requestId !== latestRequest.current) {
-        return;
-      }
+        // A slower earlier search must not land on top of a newer one, and its lastKey would
+        // otherwise leave paging walking the wrong result set.
+        if (!request.isCurrent()) {
+          return;
+        }
 
-      if (json && json.success === 'true') {
-        setItems(json.cubes);
-        setCurrentLastKey(json.lastKey);
-        setCurrentParsedQuery(json.parsedQuery);
+        if (json && json.success === 'true') {
+          setItems(json.cubes);
+          setCurrentLastKey(json.lastKey);
+          setCurrentParsedQuery(json.parsedQuery);
+        } else {
+          // Keeping the previous lastKey would leave "load more" paging a result set that is
+          // no longer on screen.
+          setCurrentLastKey(undefined);
+          setFailed(true);
+        }
+      } catch {
+        if (request.isCurrent()) {
+          setCurrentLastKey(undefined);
+          setFailed(true);
+        }
+      } finally {
+        // Only the newest request owns the spinner. An abandoned one clearing it would claim
+        // the search that replaced it had finished.
+        if (request.isCurrent()) {
+          setLoading(false);
+        }
       }
-      setLoading(false);
     },
-    [setCurrentQuery, setCurrentOrder, setCurrentAscending, csrfFetch],
+    [begin, csrfFetch],
+  );
+
+  const go = useCallback(
+    (q: string, order: string, ascending: string) => {
+      const safeOrder = toOrder(order);
+      const safeAscending = toAscending(ascending);
+
+      // One search, one history entry, so a single Back returns to the search before it.
+      // Params left at their default are dropped to keep shared links short.
+      Query.setMany(
+        {
+          q: q === '' ? null : q,
+          order: safeOrder === DEFAULT_ORDER ? null : safeOrder,
+          ascending: safeAscending === 'false' ? null : safeAscending,
+        },
+        true,
+      );
+
+      return runSearch(q, safeOrder, safeAscending);
+    },
+    [runSearch],
   );
 
   const fetchMoreData = useCallback(async () => {
     setLoading(true);
+    setFailed(false);
 
-    const requestId = (latestRequest.current += 1);
-    const response = await csrfFetch(`/search/getmoresearchitems`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        lastKey: currentLastKey,
-        query: currentQuery,
-        order: currentOrder,
-        ascending: currentAscending,
-      }),
-    });
-    const json = response.ok ? await response.json() : null;
+    const request = begin();
+    try {
+      const response = await csrfFetch(`/search/getmoresearchitems`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lastKey: currentLastKey,
+          query: currentQuery,
+          order: currentOrder,
+          ascending: currentAscending,
+        }),
+        signal: request.signal,
+      });
+      const json = response.ok ? await response.json() : null;
 
-    // The appended list is built from the items captured when this started, so a superseded
-    // page would duplicate or drop cubes.
-    if (requestId !== latestRequest.current) {
-      return;
-    }
-
-    if (json && json.success === 'true') {
-      const newItems = [...items, ...json.cubes];
-      setItems(newItems);
-      setCurrentParsedQuery(json.parsedQuery);
-
-      const numItemsShowOnLastPage = items.length % PAGE_SIZE;
-      if (numItemsShowOnLastPage === 0 && json.cubes.length > 0) {
-        setPage(page + 1);
+      // The appended list is built from the items captured when this started, so a superseded
+      // page would duplicate or drop cubes.
+      if (!request.isCurrent()) {
+        return;
       }
-      setCurrentLastKey(json.lastKey);
+
+      if (json && json.success === 'true') {
+        const newItems = [...items, ...json.cubes];
+        setItems(newItems);
+        setCurrentParsedQuery(json.parsedQuery);
+
+        const numItemsShowOnLastPage = items.length % PAGE_SIZE;
+        if (numItemsShowOnLastPage === 0 && json.cubes.length > 0) {
+          setPage(page + 1);
+        }
+        setCurrentLastKey(json.lastKey);
+      } else {
+        // Stop the pager rather than leave it offering the page that just failed.
+        setCurrentLastKey(undefined);
+        setFailed(true);
+      }
+    } catch {
+      if (request.isCurrent()) {
+        setCurrentLastKey(undefined);
+        setFailed(true);
+      }
+    } finally {
+      if (request.isCurrent()) {
+        setLoading(false);
+      }
     }
-    setLoading(false);
-  }, [csrfFetch, currentAscending, currentLastKey, currentOrder, currentQuery, items, page]);
+  }, [begin, csrfFetch, currentAscending, currentLastKey, currentOrder, currentQuery, items, page]);
 
   // Back/forward restores the query and both dropdowns from the url, but the cubes on screen
-  // are still whatever the last search returned. Re-run it so the results match the url the
-  // browser navigated to. The url already holds these values, so re-applying them adds no
-  // history entry.
+  // are still whatever the last search returned. Re-run it so they match the url the browser
+  // navigated to.
   useEffect(() => {
     const onPopState = () => {
-      go(Query.get('q', ''), toOrder(Query.get('order', DEFAULT_ORDER)), toAscending(Query.get('ascending', 'false')));
+      runSearch(
+        Query.get('q', ''),
+        toOrder(Query.get('order', DEFAULT_ORDER)),
+        toAscending(Query.get('ascending', 'false')),
+      );
     };
 
     window.addEventListener('popstate', onPopState);
     return () => window.removeEventListener('popstate', onPopState);
-  }, [go]);
+  }, [runSearch]);
 
   const renderPager = (inverted: boolean) => (
     <Pagination
@@ -296,7 +361,11 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
                   <Flexbox direction="row" alignItems="center" justify="between" gap="3" wrap="wrap" className="w-full">
                     <Flexbox direction="col" gap="1" alignItems="start" className="text-left min-w-0">
                       <Text lg semibold className="!text-button-text">
-                        {loading ? 'Searching…' : `${items.length.toLocaleString()}${hasMore ? '+' : ''} cubes found`}
+                        {loading
+                          ? 'Searching…'
+                          : failed
+                            ? 'Search failed'
+                            : `${items.length.toLocaleString()}${hasMore ? '+' : ''} cubes found`}
                       </Text>
                       {(currentParsedQuery || []).length > 0 && (
                         <Text sm semibold italic className="!text-button-text/80 break-all">
@@ -329,7 +398,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
                         <Spinner xl />
                       ) : (
                         <Text semibold lg className="!text-button-text">
-                          No Results
+                          {failed ? 'Something went wrong. Please try again.' : 'No Results'}
                         </Text>
                       )}
                     </Flexbox>

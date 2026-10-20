@@ -409,4 +409,100 @@ describe('CardSearch history navigation', () => {
     await waitFor(() => expect(lastParam('p')).toEqual('0'));
     expect(urlParam('p')).toBeNull();
   });
+
+  // A restore that moves none of these options commits nothing, so nothing post-commit runs to
+  // clear the guard. Recording the combination rather than a bare flag keeps that harmless: a
+  // leftover entry can only match a commit that changed none of the options it names.
+  it('still resets the page after a restore that commits nothing', async () => {
+    window.history.replaceState({}, '', '/tool/searchcards?f=set%3Aotj&p=2');
+
+    const value: FilterContextValue = {
+      filterInput: 'set:otj',
+      setFilterInput: jest.fn(),
+      filterValid: true,
+      cardFilter: { filter: defaultFilter() },
+    };
+
+    const { rerender } = render(
+      <FilterContext.Provider value={value}>
+        <CardSearch />
+      </FilterContext.Provider>,
+    );
+
+    await waitFor(() => expect(lastParam('p')).toEqual('2'));
+
+    act(() => {
+      goBackTo('f=set%3Aotj&p=2');
+    });
+
+    rerender(
+      <FilterContext.Provider value={{ ...value, filterInput: 'type:snake' }}>
+        <CardSearch />
+      </FilterContext.Provider>,
+    );
+
+    await waitFor(() => expect(lastParam('p')).toEqual('0'));
+    expect(urlParam('p')).toBeNull();
+  });
+});
+
+describe('CardSearch failed searches', () => {
+  let consoleError: jest.SpyInstance;
+
+  beforeEach(() => {
+    mockFetch.mockReset();
+    global.fetch = mockFetch as unknown as typeof fetch;
+    consoleError = jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+
+  afterEach(() => {
+    consoleError.mockRestore();
+  });
+
+  // Without this the spinner is the only thing the user ever sees: the rejection escapes an
+  // un-awaited call from the effect, so loading is never cleared.
+  it('reports a rejected search instead of spinning forever', async () => {
+    mockFetch.mockRejectedValue(new Error('network down'));
+
+    renderSearch('f=set%3Aotj');
+
+    await waitFor(() => expect(screen.getByText('Search failed')).toBeInTheDocument());
+    expect(screen.getByText('Something went wrong. Please try again.')).toBeInTheDocument();
+    expect(screen.queryByText('Searching…')).not.toBeInTheDocument();
+  });
+
+  // A non-ok response has no json body to parse, so reading one threw past the old guard.
+  it('reports an error response rather than parsing its body', async () => {
+    mockFetch.mockResolvedValue({ ok: false, status: 500, json: async () => undefined });
+
+    renderSearch('f=set%3Aotj');
+
+    await waitFor(() => expect(screen.getByText('Search failed')).toBeInTheDocument());
+  });
+
+  it('recovers once a search succeeds again', async () => {
+    mockFetch.mockRejectedValueOnce(new Error('network down'));
+
+    const { rerender } = renderSearch('f=set%3Aotj');
+
+    await waitFor(() => expect(screen.getByText('Search failed')).toBeInTheDocument());
+
+    mockFetch.mockResolvedValue({ ok: true, json: async () => ({ data: [], numResults: 7 }) });
+
+    rerender(
+      <FilterContext.Provider
+        value={{
+          filterInput: 'type:snake',
+          setFilterInput: jest.fn(),
+          filterValid: true,
+          cardFilter: { filter: defaultFilter() },
+        }}
+      >
+        <CardSearch />
+      </FilterContext.Provider>,
+    );
+
+    await waitFor(() => expect(screen.getByText('7 results')).toBeInTheDocument());
+    expect(screen.queryByText('Search failed')).not.toBeInTheDocument();
+  });
 });
