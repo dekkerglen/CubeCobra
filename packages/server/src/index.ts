@@ -11,7 +11,6 @@ import compression from 'compression';
 import connectFlash from 'connect-flash';
 import express from 'express';
 import fileUpload from 'express-fileupload';
-import expressMessages from 'express-messages';
 import session from 'express-session';
 import fs from 'fs';
 import http from 'http';
@@ -29,6 +28,7 @@ import { isPatreonHookPath } from './router/routes/patreon';
 import { initializeCardDb, isCardDbReady, whenCardDbReady } from './serverutils/cardCatalog';
 import DynamoDBStore from './serverutils/dynamo-session-store';
 import { logError, logInfo } from './serverutils/errorLog';
+import { flashMessages } from './serverutils/flashMessages';
 import { render } from './serverutils/render';
 import { checkAndUpdateCardbase } from './serverutils/updatecards';
 import { CustomError, Request as AppRequest, Response as AppResponse } from './types/express';
@@ -234,9 +234,8 @@ app.use(
 app.use(connectFlash());
 
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-  res.locals.messages = expressMessages(req, res);
   res.locals.node_env = app.get('env');
-  next();
+  flashMessages(req, res, next);
 });
 
 // Passport config and middleware
