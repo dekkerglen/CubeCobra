@@ -59,18 +59,30 @@ const tokenize = (query: string): string[] => {
   return tokens;
 };
 
+// Only the first colon separates the key from the value; the value itself may contain colons
+// (e.g. card:"Summon: Esper Valigarmanda"). The value is undefined when the token has no colon.
+const splitToken = (token: string): [string, string | undefined] => {
+  const separator = token.indexOf(':');
+
+  if (separator === -1) {
+    return [token, undefined];
+  }
+
+  return [token.slice(0, separator), token.slice(separator + 1)];
+};
+
 const getCardQueries = (tokens: string[], printing: PrintingPreference = DefaultPrintingPreference): CardQuery[] => {
   const queries: CardQuery[] = [];
 
   for (const token of tokens) {
-    const split = token.split(':');
+    const [key, value] = splitToken(token);
 
-    if (split[0] === 'oracle' && split[1]) {
-      queries.push({ type: 'oracle', value: split[1], originalToken: token });
+    if (key === 'oracle' && value) {
+      queries.push({ type: 'oracle', value, originalToken: token });
     }
 
-    if (split[0] === 'card' && split[1]) {
-      const card = getMostReasonable(split[1], printing);
+    if (key === 'card' && value) {
+      const card = getMostReasonable(value, printing);
 
       if (card) {
         queries.push({ type: 'card', value: card.oracle_id, originalToken: token });
@@ -87,10 +99,10 @@ const getUserQueries = (tokens: string[]): UserQuery[] => {
   const queries: UserQuery[] = [];
 
   for (const token of tokens) {
-    const split = token.split(':');
+    const [key, value] = splitToken(token);
 
-    if (split[0] === 'user' && split[1]) {
-      queries.push({ type: 'user', value: split[1], originalToken: token });
+    if (key === 'user' && value) {
+      queries.push({ type: 'user', value, originalToken: token });
     }
   }
 
@@ -101,15 +113,15 @@ const getKeywordQueries = (tokens: string[]): KeywordQuery[] => {
   const queries: KeywordQuery[] = [];
 
   for (const token of tokens) {
-    const split = token.split(':');
+    const [key, value] = splitToken(token);
 
-    if (split[0] === 'keywords' && split[1]) {
-      queries.push({ type: 'keywords', value: split[1], originalToken: token });
+    if (key === 'keywords' && value) {
+      queries.push({ type: 'keywords', value, originalToken: token });
     }
 
     // Only treat as keyword if it doesn't have a colon
-    if (split.length === 1 && split[0] && split[0].length > 0) {
-      queries.push({ type: 'keywords', value: split[0], originalToken: token });
+    if (value === undefined && key.length > 0) {
+      queries.push({ type: 'keywords', value: key, originalToken: token });
     }
   }
 
