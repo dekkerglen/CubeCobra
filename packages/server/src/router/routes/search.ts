@@ -9,6 +9,9 @@ import { Request, Response } from '../../types/express';
 
 type SortOrder = 'pop' | 'alpha' | 'cards' | 'date';
 
+// Arrives as a string from both the query and the JSON body, where "false" would otherwise be truthy.
+const toAscending = (value: unknown): boolean => value === true || value === 'true';
+
 interface CardQuery {
   type: 'card' | 'oracle';
   value: string;
@@ -507,11 +510,10 @@ const searchCubes = async (
 };
 
 export const getHandler = async (req: Request, res: Response) => {
-  const ascending = req.query.ascending || 'false';
   const order = (req.query.order as SortOrder) || 'pop';
   const query = (req.query.q as string) || '';
 
-  const result = await searchCubes(query, order, undefined, ascending === 'true', req.user);
+  const result = await searchCubes(query, order, undefined, toAscending(req.query.ascending), req.user);
 
   if (result.error) {
     req.flash('danger', result.error);
@@ -528,7 +530,7 @@ export const getHandler = async (req: Request, res: Response) => {
 export const getmoresearchitemsHandler = async (req: Request, res: Response) => {
   const { lastKey, query, order, ascending } = req.body;
 
-  const result = await searchCubes(query, order, lastKey, ascending, req.user);
+  const result = await searchCubes(query, order, lastKey, toAscending(ascending), req.user);
 
   // A slow search can exceed the 30s request-timeout middleware, which already sent a
   // response; sending again here would throw ERR_HTTP_HEADERS_SENT (surfacing as an

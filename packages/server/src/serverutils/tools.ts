@@ -1,3 +1,4 @@
+import { Distinct } from '@utils/cardSearchOptions';
 import { CardDetails, DefaultPrintingPreference } from '@utils/datatypes/Card';
 import { filterCardsDetails, FilterFunction, filterIncludesExtras, filterUses } from '@utils/filtering/FilterCards';
 import { ORDERED_SORTS, OrderedSortsType, SortFunctionsOnDetails } from '@utils/sorting/Sort';
@@ -7,8 +8,6 @@ import carddb, { getAllMostReasonable } from './carddb';
 
 /* Page size for results */
 const PAGE_SIZE = 96;
-
-type Distinct = 'names' | 'printing';
 
 // Collect and sort every card matching the filter, without paginating. Used
 // both by the paginated searchCards below and by the CSV export, which needs

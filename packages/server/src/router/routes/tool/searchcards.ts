@@ -1,4 +1,5 @@
 import { cardElo, detailsToCard } from '@utils/cardutil';
+import { toDistinct } from '@utils/cardSearchOptions';
 import { CardDetails } from '@utils/datatypes/Card';
 import { makeFilter } from '@utils/filtering/FilterCards';
 import { OrderedSortsType } from '@utils/sorting/Sort';
@@ -7,8 +8,6 @@ import { render } from 'serverutils/render';
 import { searchAllCards } from 'serverutils/tools';
 
 import { Request, Response } from '../../../types/express';
-
-type Distinct = 'names' | 'printing';
 
 export const getSearchCardsHandler = async (req: Request, res: Response) =>
   render(
@@ -60,7 +59,7 @@ export const csvHandler = async (req: Request, res: Response) => {
       filter,
       req.query.s as OrderedSortsType,
       req.query.d as SortDirectionsType,
-      req.query.di as Distinct | undefined,
+      toDistinct(req.query.di as string | undefined),
       req?.user?.defaultPrinting,
       includeExtras,
     );

@@ -31,10 +31,26 @@ function set(key: string, value: string, push = false): void {
   changeQuery(params, push);
 }
 
+// Apply several changes as one history entry (null removes a key); a no-op change writes nothing.
+function setMany(updates: Record<string, string | null>, push = false): void {
+  const params = new URLSearchParams(query());
+  for (const [key, value] of Object.entries(updates)) {
+    if (value === null) {
+      params.delete(key);
+    } else {
+      params.set(key, value);
+    }
+  }
+  if (params.toString() === new URLSearchParams(query()).toString()) {
+    return;
+  }
+  changeQuery(params, push);
+}
+
 function del(key: string, push = false): void {
   const params = new URLSearchParams(query());
   params.delete(key);
   changeQuery(params, push);
 }
 
-export default { get, set, del };
+export default { get, set, setMany, del };

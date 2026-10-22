@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { DownloadIcon, GearIcon, QuestionIcon } from '@primer/octicons-react';
+import { Distinct, toDistinct } from '@utils/cardSearchOptions';
 import { cardElo, cardId, detailsToCard } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
 import { allFields, CardDetails, FilterValues, isColorField, isNumField } from '@utils/datatypes/Card';
@@ -29,11 +30,35 @@ import AdvancedFilterModal from 'components/modals/AdvancedFilterModal';
 import SideBanner from 'components/SideBanner';
 import withAutocard from 'components/WithAutocard';
 import FilterContext from 'contexts/FilterContext';
+import useLatestRequest from 'hooks/useLatestRequest';
 import Query from 'utils/Query';
 
 const AutocardA = withAutocard(Link);
 
 type ViewMode = 'cards' | 'rows';
+type SortDirection = 'ascending' | 'descending';
+
+const DISTINCT_OPTIONS: { value: Distinct; label: string }[] = [
+  { value: 'names', label: 'Cards' },
+  { value: 'printings', label: 'Printings' },
+];
+
+const DIRECTION_OPTIONS: { value: SortDirection; label: string }[] = [
+  { value: 'ascending', label: 'Ascending' },
+  { value: 'descending', label: 'Descending' },
+];
+
+const DEFAULT_SORT = 'Elo';
+
+// Clamp params to a real option the way the API reads them; a <select> with an unknown value shows its first option.
+const toDirection = (value: string): SortDirection => (value === 'descending' ? 'descending' : 'ascending');
+const toSort = (value: string): string => (ORDERED_SORTS.includes(value) ? value : DEFAULT_SORT);
+const toIncludeExtras = (value: string): boolean => value === 'true' || value === '1';
+const toView = (value: string): ViewMode => (value === 'rows' ? 'rows' : 'cards');
+const toPage = (value: string): number => {
+  const parsed = parseInt(value, 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+};
 
 const PICK_COUNT_BASELINE = 'pickcount>=100';
 
@@ -42,18 +67,47 @@ const CardSearch: React.FC = () => {
   const drag = useCubeTrayDrag();
   const [cards, setCards] = useState<CardDetails[]>([]);
   const [loading, setLoading] = useState(false);
-  const [page, setPage] = useState(parseInt(Query.get('p', '0'), 0));
-  const [count, setCount] = useState(Query.get('m', ''));
-  const [distinct, setDistinct] = useState(Query.get('di', 'names'));
-  const [includeExtras, setIncludeExtras] = useState(Query.get('ie', 'false') === 'true');
-  const [sort, setSort] = useState(Query.get('s', 'Elo'));
-  const [direction, setDirection] = useState(Query.get('d', 'descending'));
-  const [view, setView] = useState<ViewMode>((Query.get('v', 'cards') as ViewMode) === 'rows' ? 'rows' : 'cards');
+  const [failed, setFailed] = useState(false);
+  const [page, setPage] = useState(toPage(Query.get('p', '0')));
+  const [count, setCount] = useState('');
+  const [distinct, setDistinct] = useState<Distinct>(toDistinct(Query.get('di', 'names')));
+  const [includeExtras, setIncludeExtras] = useState(toIncludeExtras(Query.get('ie', 'false')));
+  const [sort, setSort] = useState(toSort(Query.get('s', DEFAULT_SORT)));
+  const [direction, setDirection] = useState<SortDirection>(toDirection(Query.get('d', 'descending')));
+  const [view, setView] = useState<ViewMode>(toView(Query.get('v', 'cards')));
 
   const [filterText, setFilterText] = useState(filterInput || '');
   const [advancedOpen, setAdvancedOpen] = useState(false);
   const [advancedValues, setAdvancedValues] = useState<Partial<FilterValues>>({});
   const [controlsOpen, setControlsOpen] = useState(false);
+  const { begin, invalidate } = useLatestRequest();
+
+  // FilterContext restores "f" on back/forward; restore the other options alongside it.
+  useEffect(() => {
+    const onPopState = () => {
+      setPage(toPage(Query.get('p', '0')));
+      setSort(toSort(Query.get('s', DEFAULT_SORT)));
+      setDirection(toDirection(Query.get('d', 'descending')));
+      setDistinct(toDistinct(Query.get('di', 'names')));
+      setIncludeExtras(toIncludeExtras(Query.get('ie', 'false')));
+      setView(toView(Query.get('v', 'cards')));
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, []);
+
+  // Synced from state rather than from the fetch, which doesn't run in card view without a filter.
+  useEffect(() => {
+    Query.setMany({
+      p: page === 0 ? null : page.toString(),
+      s: sort === DEFAULT_SORT ? null : sort,
+      d: direction === 'descending' ? null : direction,
+      di: distinct === 'names' ? null : distinct,
+      ie: includeExtras ? 'true' : null,
+      v: view === 'cards' ? null : view,
+    });
+  }, [page, sort, direction, distinct, includeExtras, view]);
 
   useEffect(() => {
     setFilterText(filterInput || '');
@@ -77,23 +131,37 @@ const CardSearch: React.FC = () => {
       ['ie', includeExtras ? '1' : '0'],
     ]);
 
-    const response = await fetch(`/tool/api/searchcards/?${params.toString()}`);
-    if (!response.ok) console.error(response);
+    const request = begin();
+    try {
+      const response = await fetch(`/tool/api/searchcards/?${params.toString()}`, { signal: request.signal });
+      if (!response.ok) {
+        throw new Error(`Card search failed with ${response.status}`);
+      }
 
-    Query.set('f', filterInput || '');
-    Query.set('p', page.toString());
-    Query.set('s', sort);
-    Query.set('d', direction);
-    Query.set('di', distinct);
-    Query.set('ie', includeExtras ? 'true' : 'false');
-    Query.set('v', view);
+      const json = await response.json();
 
-    const json = await response.json();
+      if (!request.isCurrent()) {
+        return;
+      }
 
-    setCards(json.data);
-    setCount(json.numResults.toString());
-    setLoading(false);
-  }, [page, filterInput, sort, direction, distinct, includeExtras, view, effectiveFilter]);
+      setCards(json.data);
+      setCount(json.numResults.toString());
+      setFailed(false);
+    } catch (error) {
+      if (!request.isCurrent()) {
+        return;
+      }
+
+      console.error(error);
+      setCards([]);
+      setCount('0');
+      setFailed(true);
+    } finally {
+      if (request.isCurrent()) {
+        setLoading(false);
+      }
+    }
+  }, [page, sort, direction, distinct, includeExtras, effectiveFilter, begin]);
 
   useEffect(() => {
     const shouldFetch = view === 'rows' || (!!filterInput && filterInput !== '');
@@ -101,18 +169,38 @@ const CardSearch: React.FC = () => {
       setLoading(true);
       fetchData();
     } else {
+      // Otherwise an in-flight response would repopulate the cleared grid.
+      invalidate();
       setLoading(false);
+      setFailed(false);
       setCards([]);
     }
-  }, [page, direction, distinct, includeExtras, sort, filterInput, view, fetchData]);
-
-  useEffect(() => {
-    setPage(0);
-  }, [filterInput, view, includeExtras]);
+  }, [page, direction, distinct, includeExtras, sort, filterInput, view, fetchData, invalidate]);
 
   const updatePage = (index: number) => {
     setLoading(true);
     setPage(index);
+  };
+
+  // These change which cards match, so they also return to the first page.
+  const submitFilter = (value: string) => {
+    setPage(0);
+    setFilterInput(value);
+  };
+  const changeDistinct = (value: string) => {
+    setLoading(true);
+    setPage(0);
+    setDistinct(toDistinct(value));
+  };
+  const changeView = (value: string) => {
+    setLoading(true);
+    setPage(0);
+    setView(toView(value));
+  };
+  const changeIncludeExtras = (value: boolean) => {
+    setLoading(true);
+    setPage(0);
+    setIncludeExtras(value);
   };
 
   const applyAdvanced = useCallback(() => {
@@ -134,6 +222,7 @@ const CardSearch: React.FC = () => {
     }
     const filterString = tokens.join(' ');
     setFilterText(filterString);
+    setPage(0);
     setFilterInput(filterString);
     setAdvancedOpen(false);
   }, [advancedValues, setFilterInput]);
@@ -209,10 +298,15 @@ const CardSearch: React.FC = () => {
       })
     : undefined;
 
-  const emptyMessage = view === 'cards' && !filterInput ? 'Enter a filter above to begin searching.' : 'No cards found';
+  // A failed search reports itself rather than passing as an empty result set.
+  const emptyMessage = failed
+    ? 'Something went wrong. Please try again.'
+    : view === 'cards' && !filterInput
+      ? 'Enter a filter above to begin searching.'
+      : 'No cards found';
   const formattedCount = Number(count || '0').toLocaleString();
   const showSummary = !(view === 'cards' && !filterInput);
-  const headlineCount = loading ? 'Searching…' : `${formattedCount} results`;
+  const headlineCount = loading ? 'Searching…' : failed ? 'Search failed' : `${formattedCount} results`;
 
   return (
     <div className="relative min-h-screen">
@@ -255,7 +349,7 @@ const CardSearch: React.FC = () => {
               action="#"
               onSubmit={(e) => {
                 e.preventDefault();
-                setFilterInput(filterText);
+                submitFilter(filterText);
               }}
               className="w-full"
             >
@@ -273,11 +367,10 @@ const CardSearch: React.FC = () => {
                   value={filterText}
                   valid={(filterInput?.length ?? 0) > 0 ? filterValid : undefined}
                   onChange={(event) => setFilterText(event.target.value)}
-                  onEnter={() => setFilterInput(filterText)}
                   className="!bg-white !text-gray-800 !placeholder-gray-500 !border-gray-300"
                   otherInputProps={{ enterKeyHint: 'search', name: 'f' }}
                 />
-                {/* Hidden submit so mobile virtual keyboards' "Go"/"Search" key submits the form */}
+                {/* Hidden submit so Enter and mobile keyboards' "Go" key submit the form. */}
                 <button type="submit" aria-hidden="true" tabIndex={-1} className="hidden" />
                 <button
                   type="button"
@@ -288,7 +381,7 @@ const CardSearch: React.FC = () => {
                   <GearIcon size={20} />
                 </button>
                 <div className="hidden md:block">
-                  <LoadingButton color="primary" onClick={() => setFilterInput(filterText)}>
+                  <LoadingButton color="primary" onClick={() => submitFilter(filterText)}>
                     <span className="px-3">Search</span>
                   </LoadingButton>
                 </div>
@@ -309,18 +402,7 @@ const CardSearch: React.FC = () => {
           <ModalHeader setOpen={setControlsOpen}>Display Options</ModalHeader>
           <ModalBody>
             <Flexbox direction="col" gap="3">
-              <Select
-                label="Distinct"
-                options={[
-                  { value: 'names', label: 'Cards' },
-                  { value: 'printings', label: 'Printings' },
-                ]}
-                value={distinct}
-                setValue={(value) => {
-                  setLoading(true);
-                  setDistinct(value);
-                }}
-              />
+              <Select label="Distinct" options={DISTINCT_OPTIONS} value={distinct} setValue={changeDistinct} />
               <Select
                 label="View"
                 options={[
@@ -328,10 +410,7 @@ const CardSearch: React.FC = () => {
                   { value: 'rows', label: 'Info Rows' },
                 ]}
                 value={view}
-                setValue={(value) => {
-                  setLoading(true);
-                  setView(value as ViewMode);
-                }}
+                setValue={changeView}
               />
               <Select
                 label="Sort"
@@ -339,28 +418,22 @@ const CardSearch: React.FC = () => {
                 value={sort}
                 setValue={(value) => {
                   setLoading(true);
-                  setSort(value);
+                  setSort(toSort(value));
                 }}
               />
               <Select
                 label="Direction"
-                options={[
-                  { value: 'ascending', label: 'Ascending' },
-                  { value: 'descending', label: 'Descending' },
-                ]}
+                options={DIRECTION_OPTIONS}
                 value={direction}
                 setValue={(value) => {
                   setLoading(true);
-                  setDirection(value);
+                  setDirection(toDirection(value));
                 }}
               />
               <Checkbox
                 label="Include extras (tokens, art cards, etc.)"
                 checked={includeExtras}
-                setChecked={(value) => {
-                  setLoading(true);
-                  setIncludeExtras(value);
-                }}
+                setChecked={changeIncludeExtras}
               />
             </Flexbox>
           </ModalBody>
@@ -387,18 +460,7 @@ const CardSearch: React.FC = () => {
                   className="hidden md:flex lg:flex-nowrap"
                 >
                   <div className="w-28">
-                    <Select
-                      dense
-                      options={[
-                        { value: 'names', label: 'Cards' },
-                        { value: 'printings', label: 'Printings' },
-                      ]}
-                      value={distinct}
-                      setValue={(value) => {
-                        setLoading(true);
-                        setDistinct(value);
-                      }}
-                    />
+                    <Select dense options={DISTINCT_OPTIONS} value={distinct} setValue={changeDistinct} />
                   </div>
                   <span className="text-sm text-button-text/80">as</span>
                   <div className="w-24">
@@ -409,10 +471,7 @@ const CardSearch: React.FC = () => {
                         { value: 'rows', label: 'Rows' },
                       ]}
                       value={view}
-                      setValue={(value) => {
-                        setLoading(true);
-                        setView(value as ViewMode);
-                      }}
+                      setValue={changeView}
                     />
                   </div>
                   <span className="text-sm text-button-text/80 whitespace-nowrap">sorted by</span>
@@ -423,7 +482,7 @@ const CardSearch: React.FC = () => {
                       value={sort}
                       setValue={(value) => {
                         setLoading(true);
-                        setSort(value);
+                        setSort(toSort(value));
                       }}
                     />
                   </div>
@@ -431,14 +490,11 @@ const CardSearch: React.FC = () => {
                   <div className="w-32">
                     <Select
                       dense
-                      options={[
-                        { value: 'ascending', label: 'Ascending' },
-                        { value: 'descending', label: 'Descending' },
-                      ]}
+                      options={DIRECTION_OPTIONS}
                       value={direction}
                       setValue={(value) => {
                         setLoading(true);
-                        setDirection(value);
+                        setDirection(toDirection(value));
                       }}
                     />
                   </div>
@@ -447,10 +503,7 @@ const CardSearch: React.FC = () => {
                       type="checkbox"
                       className="form-checkbox h-4 w-4 text-primary-button"
                       checked={includeExtras}
-                      onChange={(e) => {
-                        setLoading(true);
-                        setIncludeExtras(e.target.checked);
-                      }}
+                      onChange={(e) => changeIncludeExtras(e.target.checked)}
                     />
                     Include extras
                   </label>
