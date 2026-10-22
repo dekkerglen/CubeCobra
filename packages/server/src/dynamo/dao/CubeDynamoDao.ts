@@ -175,6 +175,21 @@ export type SortOrder = 'popularity' | 'alphabetical' | 'cards' | 'date';
 const CARD_LIMIT = 10000;
 
 /**
+ * Splits a `type:value` hash string on its first colon. Values such as tag names may themselves
+ * contain colons, so splitting on every colon would silently truncate them. A missing type or an
+ * empty value yields null, so such hashes are skipped rather than queried.
+ */
+const splitHash = (hash: string): { type: string; value: string } | null => {
+  const separator = hash.indexOf(':');
+
+  if (separator <= 0 || separator === hash.length - 1) {
+    return null;
+  }
+
+  return { type: hash.slice(0, separator), value: hash.slice(separator + 1) };
+};
+
+/**
  * Creates a placeholder user for deleted/banned accounts
  */
 const createDeletedUserPlaceholder = (userId: string): User => {
@@ -1736,22 +1751,22 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     if (hashes.length === 1) {
       // Single hash - use the optimized single-hash query
-      const [type, value] = hashes[0]!.split(':');
-      if (!type || !value) {
+      const parsed = splitHash(hashes[0]!);
+      if (!parsed) {
         return { items: [] };
       }
-      const hashString = await this.hash({ type, value });
+      const hashString = await this.hash(parsed);
       return this.queryByHashWithSort(hashString, sortBy, ascending, lastKey);
     }
 
     // Convert all hash strings
     const hashStrings = await Promise.all(
       hashes.map(async (hash) => {
-        const [type, value] = hash.split(':');
-        if (!type || !value) {
+        const parsed = splitHash(hash);
+        if (!parsed) {
           return null;
         }
-        return this.hash({ type, value });
+        return this.hash(parsed);
       }),
     );
 
