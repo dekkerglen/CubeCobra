@@ -340,6 +340,11 @@ interface Cube {
   defaultSorts: string[];
   showUnsorted?: boolean;
   collapseDuplicateCards?: boolean;
+  showInlineTagEmojis?: boolean;
+  showTagQuickFilters?: boolean;
+  showAllBoards?: boolean;
+  useBaseCardData?: boolean;
+  showTagColors?: boolean;
   formats: DraftFormat[];
   /** Denormalized count of users following this cube. Source of truth lives in CUBE_LIKE hash rows. */
   likeCount?: number;
@@ -371,5 +376,38 @@ interface Cube {
   image: CubeImage;
   version: number;
 }
+
+export interface CubeDisplayOptions {
+  showUnsorted: boolean;
+  collapseDuplicateCards: boolean;
+  showInlineTagEmojis: boolean;
+  showTagQuickFilters: boolean;
+  showAllBoards: boolean;
+  useBaseCardData: boolean;
+  showTagColors: boolean;
+}
+
+export const DEFAULT_CUBE_DISPLAY_OPTIONS: CubeDisplayOptions = {
+  showUnsorted: false,
+  collapseDuplicateCards: false,
+  showInlineTagEmojis: false,
+  showTagQuickFilters: true,
+  showAllBoards: false,
+  useBaseCardData: false,
+  showTagColors: true,
+};
+
+export const CUBE_DISPLAY_OPTION_KEYS = Object.keys(DEFAULT_CUBE_DISPLAY_OPTIONS) as (keyof CubeDisplayOptions)[];
+
+export const getCubeDisplayOptions = (cube?: Partial<Cube> | null): CubeDisplayOptions => {
+  const options = { ...DEFAULT_CUBE_DISPLAY_OPTIONS };
+  for (const key of CUBE_DISPLAY_OPTION_KEYS) {
+    const value = cube?.[key];
+    if (typeof value === 'boolean') {
+      options[key] = value;
+    }
+  }
+  return options;
+};
 
 export default Cube;

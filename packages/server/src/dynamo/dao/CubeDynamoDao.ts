@@ -121,6 +121,11 @@ export interface UnhydratedCube {
   defaultSorts: string[];
   showUnsorted?: boolean;
   collapseDuplicateCards?: boolean;
+  showInlineTagEmojis?: boolean;
+  showTagQuickFilters?: boolean;
+  showAllBoards?: boolean;
+  useBaseCardData?: boolean;
+  showTagColors?: boolean;
   formats: any[];
   likeCount?: number;
   /** @deprecated retained on stored rows for the one-time migration to CUBE_LIKE hash rows. */
@@ -301,6 +306,11 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       defaultSorts: item.defaultSorts,
       showUnsorted: item.showUnsorted,
       collapseDuplicateCards: item.collapseDuplicateCards,
+      showInlineTagEmojis: item.showInlineTagEmojis,
+      showTagQuickFilters: item.showTagQuickFilters,
+      showAllBoards: item.showAllBoards,
+      useBaseCardData: item.useBaseCardData,
+      showTagColors: item.showTagColors,
       formats: item.formats,
       likeCount: item.likeCount,
       collaborators: item.collaborators ?? [],
