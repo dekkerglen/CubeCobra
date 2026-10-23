@@ -1,3 +1,5 @@
+import type { Express } from 'express';
+
 import { Request, Response } from '../types/express';
 
 export const createHealthcheckHandler =
@@ -10,3 +12,10 @@ export const createHealthcheckHandler =
       res.status(503).send('Starting');
     }
   };
+
+// GET also answers HEAD in Express.
+export const registerHealthcheck = (app: Express, isReady: () => boolean): void => {
+  const handler = createHealthcheckHandler(isReady);
+  app.get('/healthcheck', handler);
+  app.post('/healthcheck', handler);
+};

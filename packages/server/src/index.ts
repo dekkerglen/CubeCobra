@@ -29,7 +29,7 @@ import { initializeCardDb, isCardDbReady, whenCardDbReady } from './serverutils/
 import DynamoDBStore from './serverutils/dynamo-session-store';
 import { logError, logInfo } from './serverutils/errorLog';
 import { flashMessages } from './serverutils/flashMessages';
-import { createHealthcheckHandler } from './serverutils/healthcheck';
+import { registerHealthcheck } from './serverutils/healthcheck';
 import { render } from './serverutils/render';
 import { checkAndUpdateCardbase } from './serverutils/updatecards';
 import { CustomError, Request as AppRequest, Response as AppResponse } from './types/express';
@@ -82,15 +82,24 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
   next();
 });
 
+// Startup runs two slow tasks concurrently (see the bottom of this file): loading the card
+// catalog and registering the route tree. Both flags only ever go from false to true.
+let routesReady = false;
+let resolveRoutesReady: () => void;
+const routesReadyPromise = new Promise<void>((resolve) => {
+  resolveRoutesReady = resolve;
+});
+const isAppReady = (): boolean => isCardDbReady() && routesReady;
+const whenAppReady = (): Promise<unknown> => Promise.all([whenCardDbReady(), routesReadyPromise]);
+
 // do this before https redirect, and before sessions so load balancer checks never create one
-const healthcheck = createHealthcheckHandler(() => isCardDbReady() && routesReady);
-app.get('/healthcheck', healthcheck);
-app.post('/healthcheck', healthcheck);
+registerHealthcheck(app, isAppReady);
 
 //If this isn't a local developer environment, improve security by only allowing HTTPS
 if (process.env?.NODE_ENV !== 'development' && process.env?.HTTP_ONLY !== 'true') {
   app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-    //Redirect to HTTPS for security, assuming the AWS ALB isn't forwarding the HTTPS request along nor is it the ALB health check request
+    //Redirect to HTTPS for security, unless the AWS ALB forwarded an HTTPS request.
+    //ELB health checks of /healthcheck are answered above; this exemption covers checks of any other path.
     const userAgent = req.get('User-Agent') || '';
     if (req.headers['x-forwarded-proto'] !== 'https' && !userAgent.includes('ELB-HealthChecker')) {
       /* Use DOMAIN environment variable instead of relying on req.headers.host.
@@ -300,22 +309,13 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
   next();
 });
 
-// Startup runs two slow tasks concurrently (see the bottom of this file): loading the card
-// catalog and registering the route tree. In dev the server starts listening before either
-// finishes, so this gate holds app routes until BOTH are ready — early requests wait rather
-// than 404 (routes not mounted yet) or hit an empty catalog. Static assets and /healthcheck
-// are mounted earlier and stay instant. In production we only listen once both are done, so
-// the gate is a no-op and isn't installed.
-let routesReady = false;
-let resolveRoutesReady: () => void;
-const routesReadyPromise = new Promise<void>((resolve) => {
-  resolveRoutesReady = resolve;
-});
-const whenAppReady = (): Promise<unknown> => Promise.all([whenCardDbReady(), routesReadyPromise]);
-
+// In dev the server starts listening before startup finishes, so this gate holds app routes
+// until the app is ready — early requests wait rather than 404 (routes not mounted yet) or hit
+// an empty catalog. Static assets are mounted earlier and stay instant; /healthcheck answers
+// 503 until ready. In production we only listen once ready, so the gate isn't installed.
 if (process.env.NODE_ENV !== 'production') {
   app.use((_req: express.Request, _res: express.Response, next: express.NextFunction) => {
-    if (isCardDbReady() && routesReady) {
+    if (isAppReady()) {
       next();
     } else {
       whenAppReady().then(() => next());
@@ -423,7 +423,7 @@ if (process.env.NODE_ENV === 'production') {
   // Dev: start listening immediately so nodemon restarts are near-instant, then register routes
   // and load the card catalog concurrently in the background (previously the route module graph
   // loaded synchronously *before* the catalog even started). The gate middleware above holds app
-  // requests until both finish; static assets and /healthcheck respond right away.
+  // requests until both finish; static assets respond right away and /healthcheck answers 503.
   startListening();
   Promise.all([
     registerRoutes(app).then(() => console.info('Routes ready.')),
