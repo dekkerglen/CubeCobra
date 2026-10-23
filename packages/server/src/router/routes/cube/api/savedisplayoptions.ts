@@ -1,20 +1,22 @@
+import { CUBE_DISPLAY_OPTION_KEYS } from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
-import { ensureAuth } from 'router/middleware';
+import Joi from 'joi';
+import { bodyValidation, ensureAuthJson } from 'router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
 
-export const savesortsHandler = async (req: Request, res: Response) => {
-  try {
-    if (!req.params.id) {
-      return res.status(400).send({
-        success: 'false',
-        message: 'Cube ID is required',
-      });
-    }
+export const DisplayOptionsSchema = Joi.object({
+  displayOptions: Joi.object(
+    Object.fromEntries(CUBE_DISPLAY_OPTION_KEYS.map((key) => [key, Joi.boolean().strict().required()])),
+  )
+    .unknown(true)
+    .required(),
+});
 
-    const cube = await cubeDao.getById(req.params.id);
-    const { sorts, showUnsorted, collapseDuplicateCards } = req.body;
+export const savedisplayoptionsHandler = async (req: Request, res: Response) => {
+  try {
+    const cube = await cubeDao.getById(req.params.id!);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
       return res.status(404).send({
@@ -30,10 +32,8 @@ export const savesortsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    cube.defaultSorts = sorts || [];
-    cube.showUnsorted = showUnsorted || false;
-    if (collapseDuplicateCards !== undefined) {
-      cube.collapseDuplicateCards = collapseDuplicateCards;
+    for (const key of CUBE_DISPLAY_OPTION_KEYS) {
+      cube[key] = req.body.displayOptions[key];
     }
     await cubeDao.update(cube);
 
@@ -45,7 +45,7 @@ export const savesortsHandler = async (req: Request, res: Response) => {
     req.logger.error(error.message, error.stack);
     return res.status(500).send({
       success: 'false',
-      message: 'Error saving sorts',
+      message: 'Error saving display options',
     });
   }
 };
@@ -54,6 +54,6 @@ export const routes = [
   {
     method: 'post',
     path: '/:id',
-    handler: [ensureAuth, savesortsHandler],
+    handler: [ensureAuthJson, bodyValidation(DisplayOptionsSchema), savedisplayoptionsHandler],
   },
 ];
