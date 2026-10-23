@@ -181,6 +181,11 @@ describe.each([
 });
 
 describe('CubeListSortSidebar horizontal layout', () => {
+  it('explains duplicates below the sort dropdowns', () => {
+    renderSidebar({ canEdit: false, isHorizontal: true, csrfFetch: jest.fn() });
+    const note = screen.getByText(/Cards will appear as duplicates/);
+    expect(gridColumn(note)).toBe(gridColumn(screen.getByText('Ordered Sort')));
+  });
   it.each([false, true])('has no Rotisserie buttons (horizontal: %s)', (isHorizontal) => {
     renderSidebar({ canEdit: true, isHorizontal, csrfFetch: jest.fn() });
     expect(screen.queryByRole('button', { name: /Rotisserie/ })).not.toBeInTheDocument();

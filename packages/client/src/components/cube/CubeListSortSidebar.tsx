@@ -254,6 +254,10 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
                 setValue={setSortQuaternary}
                 options={ORDERED_SORTS.map((sort) => ({ value: sort, label: sort }))}
               />
+              <Text italic sm className="text-text-secondary">
+                Cards will appear as duplicates if they fit in multiple categories. The counts will still only count
+                each item once.
+              </Text>
             </div>
 
             {/* Column 3: Display Options */}
