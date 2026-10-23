@@ -11,16 +11,13 @@ import Link from 'components/base/Link';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import Tooltip from 'components/base/Tooltip';
-import RotisserieDraftModal from 'components/modals/RotisserieDraftModal';
 import TagColorsModal from 'components/modals/TagColorsModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
-import RotoDraftContext from 'contexts/RotoDraftContext';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
 
 const TagColorsModalButton = withModal(Button, TagColorsModal);
-const RotoSetupButton = withModal(Button, RotisserieDraftModal);
 
 const DISPLAY_OPTION_CONTROLS: { key: keyof CubeDisplayOptions; label: string; tooltip: string }[] = [
   {
@@ -134,8 +131,6 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
     setSortQuaternary,
   } = useContext(CubeContext);
 
-  const { url: rotoURL, setUrl: setRotoURL } = useContext(RotoDraftContext);
-
   const sortsModified = useMemo(() => {
     return (
       sortPrimary !== (effectiveDefaultSorts[0] || CUBE_DEFAULT_SORTS[0]) ||
@@ -203,16 +198,6 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
             <Button color="danger" onClick={resetSorts} disabled={!sortsModified} block>
               Reset Sort
             </Button>
-
-            {rotoURL ? (
-              <Button color="secondary" onClick={() => setRotoURL('')} block>
-                Clear Rotisserie Draft
-              </Button>
-            ) : (
-              <RotoSetupButton color="secondary" block>
-                Setup Rotisserie Draft
-              </RotoSetupButton>
-            )}
           </Flexbox>
 
           <Flexbox direction="col" gap="2">
@@ -293,15 +278,6 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               <Button color="danger" onClick={resetSorts} disabled={!sortsModified} block>
                 Reset Sort
               </Button>
-              {rotoURL ? (
-                <Button color="secondary" onClick={() => setRotoURL('')} block>
-                  Clear Rotisserie
-                </Button>
-              ) : (
-                <RotoSetupButton color="secondary" block>
-                  Setup Rotisserie
-                </RotoSetupButton>
-              )}
               <hr className="my-1 border-border" />
               <DisplayOptionActions canEdit={canEdit} />
             </div>

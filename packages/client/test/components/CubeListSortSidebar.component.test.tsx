@@ -181,6 +181,10 @@ describe.each([
 });
 
 describe('CubeListSortSidebar horizontal layout', () => {
+  it.each([false, true])('has no Rotisserie buttons (horizontal: %s)', (isHorizontal) => {
+    renderSidebar({ canEdit: true, isHorizontal, csrfFetch: jest.fn() });
+    expect(screen.queryByRole('button', { name: /Rotisserie/ })).not.toBeInTheDocument();
+  });
   it('puts the options buttons in the Actions column, after the sort buttons and a divider', () => {
     renderSidebar({ canEdit: true, isHorizontal: true, csrfFetch: jest.fn() });
 

@@ -5,17 +5,16 @@ import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
-import RotoDraftContext from 'contexts/RotoDraftContext';
 
 type Props = {
   isOpen: boolean;
   setOpen: (open: boolean) => void;
+  onSubmit: (sheetUrl: string) => void;
 };
 
 //"https://docs.google.com/spreadsheets/d/e/2PACX-1vQDppSsyG4ZaBKAKHmAIHmqKrehXhmibeWKclaQl5EalYbQK_RMXIPrpwRDUoZnSz0vAM91t4iKjgN0/pub?gid=1822506900&single=true&output=csv"
 
-const RotisserieDraftModal: React.FC<Props> = ({ isOpen, setOpen }) => {
-  const { setUrl: setContextUrl } = React.useContext(RotoDraftContext);
+const RotisserieDraftModal: React.FC<Props> = ({ isOpen, setOpen, onSubmit }) => {
   const [url, setUrl] = React.useState('');
 
   return (
@@ -42,6 +41,7 @@ const RotisserieDraftModal: React.FC<Props> = ({ isOpen, setOpen }) => {
             <li>5. Copy the URL it generates in the box and paste it into the box below</li>
           </ol>
           <Input
+            id="roto-sheet-url"
             label="Google Sheet CSV URL:"
             type="text"
             value={url}
@@ -51,8 +51,9 @@ const RotisserieDraftModal: React.FC<Props> = ({ isOpen, setOpen }) => {
       </ModalBody>
       <ModalFooter>
         <Button
+          disabled={url.trim() === ''}
           onClick={() => {
-            setContextUrl(url);
+            onSubmit(url.trim());
             setOpen(false);
           }}
         >
