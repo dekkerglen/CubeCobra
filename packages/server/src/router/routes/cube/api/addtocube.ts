@@ -42,6 +42,7 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
     let tag: string | null = null;
     const autoTag = req.body.autoTag !== false; // Default to true
     const createBlogPost = req.body.createBlogPost !== false; // Default to true
+    const addNotes = req.body.addNotes !== false; // Default to true
     // Opt-in, unlike the two above: callers that don't ask keep the printings they sent.
     const useDefaultPrinting = req.body.useDefaultPrinting === true;
     const printingPreference = isPrintingPreference(cube.defaultPrinting)
@@ -53,12 +54,16 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
     const resolvePrinting = (id: string): string =>
       useDefaultPrinting ? (getMostReasonableById(id, printingPreference)?.scryfall_id ?? id) : id;
 
-    if (req.body.packid && autoTag) {
+    // The package title drives three independent options (tagging, notes, the blog
+    // post), so look it up whenever there's a package rather than only when tagging.
+    let packageTitle: string | null = null;
+    if (req.body.packid) {
       const pack = await packageDao.getById(req.body.packid);
       if (pack) {
-        tag = pack.title;
+        packageTitle = pack.title;
       }
     }
+    tag = autoTag ? packageTitle : null;
 
     const adds: Card[] = req.body.cards.map((cardInput: string | any) => {
       // Handle both legacy format (string ID) and new format (custom card object)
@@ -134,8 +139,8 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
         ...customProperties,
       };
 
-      if (tag) {
-        c.notes = `Added from package "${tag}": ${process.env.DOMAIN}/packages/${req.body.packid}`;
+      if (addNotes && packageTitle) {
+        c.notes = `Added from package "${packageTitle}": ${process.env.DOMAIN}/packages/${req.body.packid}`;
       }
 
       return c;
@@ -170,6 +175,9 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       req.params.id,
     );
 
+    // NOTE: the blog post still requires `tag`, so unchecking "Tag cards with
+    // package name" suppresses it too. That coupling predates the notes option
+    // and is left as-is rather than changed without being asked for.
     if (req.body.packid && createBlogPost && tag) {
       const id = await blogDao.createBlog({
         body: `Add from the package [${tag}](/packages/${req.body.packid})`,

@@ -15,7 +15,7 @@ import { createCardDetails, createCube, createUser } from '../../../server/test/
 jest.mock('utils/cards/getCards');
 jest.mock('utils/analytics', () => ({ trackEvent: jest.fn() }));
 
-const AUTOTAG_LABEL = 'Autotag new cards with package name';
+const AUTOTAG_LABEL = 'Tag cards with package name';
 const PRINTING_LABEL = "Use the cube's default printing";
 
 const PACKAGE_PRINTING_ID = 'pkg-printing';

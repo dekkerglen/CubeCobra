@@ -48,6 +48,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
   const [upvotePackage, setUpvotePackage] = useState(true);
   const { autoTag, setAutoTag, useDefaultPrinting, setUseDefaultPrinting } = usePackageAddOptions();
   const [createBlogPost, setCreateBlogPost] = useLocalStorage<boolean>('addGroupToCubeCreateBlogPost', true);
+  const [addNotes, setAddNotes] = useLocalStorage<boolean>('addGroupToCubeAddNotes', true);
 
   const add = useCallback(async () => {
     setLoadingSubmit(true);
@@ -61,6 +62,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
           autoTag,
           createBlogPost,
           useDefaultPrinting,
+          addNotes,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -96,6 +98,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
     autoTag,
     createBlogPost,
     useDefaultPrinting,
+    addNotes,
   ]);
 
   if (!cubes || cubes.length === 0) {
@@ -143,12 +146,13 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
           />
           {packid && (
             <>
-              <Checkbox label="Autotag new cards with package name" checked={autoTag} setChecked={setAutoTag} />
+              <Checkbox label="Tag cards with package name" checked={autoTag} setChecked={setAutoTag} />
               <Checkbox
                 label="Use the cube's default printing"
                 checked={useDefaultPrinting}
                 setChecked={setUseDefaultPrinting}
               />
+              <Checkbox label="Note the origin package on each card" checked={addNotes} setChecked={setAddNotes} />
               <Checkbox label="Create blog post" checked={createBlogPost} setChecked={setCreateBlogPost} />
             </>
           )}

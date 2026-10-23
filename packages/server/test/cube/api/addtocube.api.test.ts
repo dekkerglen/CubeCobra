@@ -17,7 +17,7 @@ jest.mock('../../../src/dynamo/daos', () => ({
 jest.mock('serverutils/carddb');
 jest.mock('serverutils/cubefn');
 
-import { changelogDao, cubeDao } from '../../../src/dynamo/daos';
+import { changelogDao, cubeDao, packageDao } from '../../../src/dynamo/daos';
 
 // The printing the package itself stores, and the printing the cube's preference should pick instead.
 const PACKAGE_PRINTING_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
@@ -45,6 +45,16 @@ const addedCardIds = (): string[] =>
 
 const addedCardStatuses = (): string[] =>
   ((cubeDao.updateCards as jest.Mock).mock.calls[0][1].mainboard as { status: string }[]).map((card) => card.status);
+
+const addedCardNotes = (): (string | undefined)[] =>
+  ((cubeDao.updateCards as jest.Mock).mock.calls[0][1].mainboard as { notes?: string }[]).map((card) => card.notes);
+
+const addedCardTags = (): string[][] =>
+  ((cubeDao.updateCards as jest.Mock).mock.calls[0][1].mainboard as { tags: string[] }[]).map((card) => card.tags);
+
+const PACK_ID = 'pack-1';
+const PACK_TITLE = 'Sweet Package';
+const withPackage = () => (packageDao.getById as jest.Mock).mockResolvedValue({ id: PACK_ID, title: PACK_TITLE });
 
 describe('POST /cube/api/addtocube/:id', () => {
   afterEach(() => {
@@ -155,5 +165,71 @@ describe('POST /cube/api/addtocube/:id', () => {
       .send();
 
     expect(addedCardStatuses()).toEqual(['Borrowed']);
+  });
+
+  it('notes where a package card came from by default', async () => {
+    const { cube, owner } = setupCube();
+    withPackage();
+
+    await call(addtocubeHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ cards: [PACKAGE_PRINTING_ID], packid: PACK_ID })
+      .send();
+
+    expect(addedCardNotes()[0]).toContain(`Added from package "${PACK_TITLE}"`);
+    expect(addedCardNotes()[0]).toContain(`/packages/${PACK_ID}`);
+  });
+
+  it('omits the note when addNotes is false', async () => {
+    const { cube, owner } = setupCube();
+    withPackage();
+
+    await call(addtocubeHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ cards: [PACKAGE_PRINTING_ID], packid: PACK_ID, addNotes: false })
+      .send();
+
+    expect(addedCardNotes()).toEqual([undefined]);
+  });
+
+  it('still notes the origin package when autotagging is off', async () => {
+    const { cube, owner } = setupCube();
+    withPackage();
+
+    await call(addtocubeHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ cards: [PACKAGE_PRINTING_ID], packid: PACK_ID, autoTag: false })
+      .send();
+
+    expect(addedCardTags()).toEqual([[]]);
+    expect(addedCardNotes()[0]).toContain(`Added from package "${PACK_TITLE}"`);
+  });
+
+  it('still tags with the package name when notes are off', async () => {
+    const { cube, owner } = setupCube();
+    withPackage();
+
+    await call(addtocubeHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ cards: [PACKAGE_PRINTING_ID], packid: PACK_ID, addNotes: false })
+      .send();
+
+    expect(addedCardTags()).toEqual([[PACK_TITLE]]);
+  });
+
+  it('writes no note when the cards did not come from a package', async () => {
+    const { cube, owner } = setupCube();
+
+    await call(addtocubeHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ cards: [PACKAGE_PRINTING_ID] })
+      .send();
+
+    expect(addedCardNotes()).toEqual([undefined]);
   });
 });

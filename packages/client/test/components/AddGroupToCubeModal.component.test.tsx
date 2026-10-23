@@ -11,6 +11,7 @@ import UserContext from 'contexts/UserContext';
 import { createCardDetails, createCube, createUser } from '../../../server/test/test-utils/data';
 
 const PRINTING_CHECKBOX_LABEL = "Use the cube's default printing";
+const NOTES_CHECKBOX_LABEL = 'Note the origin package on each card';
 
 // CardList renders autocards, which probe the pointer type; jsdom has no matchMedia.
 beforeAll(() => {
@@ -91,12 +92,45 @@ describe('AddGroupToCubeModal', () => {
 
     renderModal();
 
-    expect(screen.getByLabelText('Autotag new cards with package name')).not.toBeChecked();
+    expect(screen.getByLabelText('Tag cards with package name')).not.toBeChecked();
   });
 
   it('hides the printing override when there is no package', () => {
     renderModal({ withPackage: false });
 
     expect(screen.queryByLabelText(PRINTING_CHECKBOX_LABEL)).not.toBeInTheDocument();
+  });
+
+  it('offers the origin note checked by default', () => {
+    renderModal();
+
+    expect(screen.getByLabelText(NOTES_CHECKBOX_LABEL)).toBeChecked();
+  });
+
+  it('requests the origin note by default', async () => {
+    const csrfFetch = jest.fn().mockResolvedValue(okResponse);
+    renderModal({ csrfFetch });
+
+    fireEvent.click(screen.getByText('Add'));
+
+    await waitFor(() => expect(csrfFetch).toHaveBeenCalled());
+    expect(bodyOf(csrfFetch).addNotes).toBe(true);
+  });
+
+  it('suppresses the origin note when unchecked', async () => {
+    const csrfFetch = jest.fn().mockResolvedValue(okResponse);
+    renderModal({ csrfFetch });
+
+    fireEvent.click(screen.getByLabelText(NOTES_CHECKBOX_LABEL));
+    fireEvent.click(screen.getByText('Add'));
+
+    await waitFor(() => expect(csrfFetch).toHaveBeenCalled());
+    expect(bodyOf(csrfFetch).addNotes).toBe(false);
+  });
+
+  it('hides the origin note option when there is no package', () => {
+    renderModal({ withPackage: false });
+
+    expect(screen.queryByLabelText(NOTES_CHECKBOX_LABEL)).not.toBeInTheDocument();
   });
 });

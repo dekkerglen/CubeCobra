@@ -212,7 +212,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, setOpen, boar
             </Text>
           )}
 
-          <Checkbox label="Autotag new cards with package name" checked={autoTag} setChecked={setAutoTag} />
+          <Checkbox label="Tag cards with package name" checked={autoTag} setChecked={setAutoTag} />
           <Checkbox
             label="Use the cube's default printing"
             checked={useDefaultPrinting}
