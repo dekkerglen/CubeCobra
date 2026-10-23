@@ -4,7 +4,6 @@ import 'module-alias/register';
 dotenv.config();
 
 import { cdnUrl } from '@utils/cdnUrl';
-import { UserRoles } from '@utils/datatypes/User';
 import { MAX_UPLOAD_BYTES } from '@utils/hostedImagesUtil';
 import bodyParser from 'body-parser';
 import compression from 'compression';
@@ -24,6 +23,7 @@ import './types/express'; // Import the express type extensions
 import configurePassport from './config/passport';
 import dynamoService from './dynamo/client';
 import documentClient from './dynamo/documentClient';
+import { rejectBannedUser } from './router/middleware';
 import { isPatreonHookPath } from './router/routes/patreon';
 import { initializeCardDb, isCardDbReady, whenCardDbReady } from './serverutils/cardCatalog';
 import DynamoDBStore from './serverutils/dynamo-session-store';
@@ -285,19 +285,7 @@ if (process.env.DOWNTIME_ACTIVE === 'true') {
   );
 }
 
-app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
-  if (req.user && req.user.roles && req.user.roles.includes(UserRoles.BANNED)) {
-    req.session.destroy(() => {
-      req.flash(
-        'danger',
-        'Your account has been banned, please contact CubeCobra staff if you believe this is in error.',
-      );
-      return res.redirect('/');
-    });
-  }
-
-  next();
-});
+app.use(rejectBannedUser);
 
 // Startup runs two slow tasks concurrently (see the bottom of this file): loading the card
 // catalog and registering the route tree. In dev the server starts listening before either

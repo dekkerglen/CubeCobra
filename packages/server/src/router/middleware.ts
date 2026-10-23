@@ -30,6 +30,24 @@ export const matchParam =
     return next();
   };
 
+export const rejectBannedUser = (req: Request, res: Response, next: NextFunction): void => {
+  if (!req.user?.roles?.includes(UserRoles.BANNED)) {
+    return next();
+  }
+
+  // logout regenerates the session, so the flash lands in the fresh, logged-out one.
+  req.logout((err) => {
+    if (err) {
+      return next(err);
+    }
+    req.flash(
+      'danger',
+      'Your account has been banned, please contact CubeCobra staff if you believe this is in error.',
+    );
+    return redirect(req, res, '/');
+  });
+};
+
 export const ensureAuth = (req: Request, res: Response, next: NextFunction): void => {
   if (req.isAuthenticated()) {
     return next();
