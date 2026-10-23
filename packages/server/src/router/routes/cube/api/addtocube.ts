@@ -68,11 +68,11 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
 
       if (typeof cardInput === 'string') {
         // Legacy format: just a card ID
-        baseCard = newCard(cardFromId(resolvePrinting(cardInput)), tag ? [tag] : []);
+        baseCard = newCard(cardFromId(resolvePrinting(cardInput)), tag ? [tag] : [], cube.defaultStatus || 'Owned');
       } else {
         // New format: card object with custom properties
         const cardId = cardInput.cardID || cardInput.id;
-        baseCard = newCard(cardFromId(resolvePrinting(cardId)), tag ? [tag] : []);
+        baseCard = newCard(cardFromId(resolvePrinting(cardId)), tag ? [tag] : [], cube.defaultStatus || 'Owned');
 
         // Collect custom tags
         if (cardInput.tags && Array.isArray(cardInput.tags)) {

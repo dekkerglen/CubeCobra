@@ -43,6 +43,9 @@ const setupCube = (overrides?: Parameters<typeof createCube>[0]) => {
 const addedCardIds = (): string[] =>
   ((cubeDao.updateCards as jest.Mock).mock.calls[0][1].mainboard as { cardID: string }[]).map((card) => card.cardID);
 
+const addedCardStatuses = (): string[] =>
+  ((cubeDao.updateCards as jest.Mock).mock.calls[0][1].mainboard as { status: string }[]).map((card) => card.status);
+
 describe('POST /cube/api/addtocube/:id', () => {
   afterEach(() => {
     jest.clearAllMocks();
@@ -116,5 +119,41 @@ describe('POST /cube/api/addtocube/:id', () => {
       .send();
 
     expect(addedCardIds()).toEqual([PREFERRED_PRINTING_ID]);
+  });
+
+  it("gives added cards the cube's default status", async () => {
+    const { cube, owner } = setupCube({ defaultStatus: 'Proxied' });
+
+    await call(addtocubeHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ cards: [PACKAGE_PRINTING_ID] })
+      .send();
+
+    expect(addedCardStatuses()).toEqual(['Proxied']);
+  });
+
+  it('falls back to Owned when the cube has no default status', async () => {
+    const { cube, owner } = setupCube({ defaultStatus: undefined });
+
+    await call(addtocubeHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ cards: [PACKAGE_PRINTING_ID] })
+      .send();
+
+    expect(addedCardStatuses()).toEqual(['Owned']);
+  });
+
+  it('lets a per-card status override the cube default', async () => {
+    const { cube, owner } = setupCube({ defaultStatus: 'Proxied' });
+
+    await call(addtocubeHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ cards: [{ cardID: PACKAGE_PRINTING_ID, status: 'Borrowed' }] })
+      .send();
+
+    expect(addedCardStatuses()).toEqual(['Borrowed']);
   });
 });
