@@ -66,10 +66,21 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
     [cube, activeLink],
   );
 
+  const displayViewDefaults = useMemo(
+    () =>
+      activeLink === 'list'
+        ? Object.fromEntries(
+            getViewDefinitions(cube).map((view) => [viewNameToSlug(view.name), view.displayView || 'table']),
+          )
+        : undefined,
+    [cube, activeLink],
+  );
+
   return (
     <DisplayContextProvider
       cubeID={cube.id}
       viewSlugs={viewSlugs}
+      displayViewDefaults={displayViewDefaults}
       defaultEditSidebarOpen={defaultEditSidebarOpen}
       savedDisplayOptions={getCubeDisplayOptions(cube)}
     >

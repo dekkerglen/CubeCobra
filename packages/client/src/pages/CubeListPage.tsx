@@ -30,7 +30,6 @@ import DisplayContext from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
 import { RotoDraftContextProvider } from 'contexts/RotoDraftContext';
 import UserContext from 'contexts/UserContext';
-import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
@@ -45,6 +44,8 @@ const CubeListPageRaw: React.FC = () => {
   const {
     activeView,
     cubeSidebarExpanded,
+    displayView: cubeView,
+    setDisplayView: setCubeView,
     displayOptions: { showAllBoards },
   } = useContext(DisplayContext);
   const { filterInput, setFilterInput, filterValid, cardFilter } = useContext(FilterContext);
@@ -57,10 +58,6 @@ const CubeListPageRaw: React.FC = () => {
   // Get the current view definition
   const currentView = useMemo(() => findViewBySlug(cube, activeView), [cube, activeView]);
   const viewBoards = useMemo(() => currentView?.boards.map((b) => b.toLowerCase()) || ['mainboard'], [currentView]);
-
-  // Determine the display view (table, spoiler, etc.) from the view settings or URL param
-  const defaultDisplayView = currentView?.displayView || 'table';
-  const [cubeView, setCubeView] = useQueryParam('display', defaultDisplayView);
 
   // Refs to track current values and previous view for conditional view switching.
   // Only apply new view defaults if current settings match the previous view's defaults.

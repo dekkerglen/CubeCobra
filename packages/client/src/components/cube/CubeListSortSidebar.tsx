@@ -19,10 +19,15 @@ import useAlerts, { Alerts } from 'hooks/UseAlerts';
 
 const TagColorsModalButton = withModal(Button, TagColorsModal);
 
+// Curve view groups columns by the Primary sort only; the other sort levels have no effect there.
+const usesPrimarySortOnly = (displayView: string) => displayView === 'curve';
+const CURVE_SORT_NOTE = 'Curve view only uses the Primary sort.';
+
 const HiddenBySortNotice: React.FC = () => {
   const { cube, changedCards, cardsLoading, sortPrimary, sortSecondary, sortTertiary } = useContext(CubeContext);
   const {
     activeView,
+    displayView,
     displayOptions: { showUnsorted, showAllBoards, useBaseCardData },
     setDisplayOption,
   } = useContext(DisplayContext);
@@ -35,17 +40,20 @@ const HiddenBySortNotice: React.FC = () => {
     const shownCards = Object.entries(changedCards ?? {})
       .filter(([board]) => showAllBoards || viewBoards.includes(board.toLowerCase()))
       .flatMap(([, cards]) => cards);
-    const sorts = [
-      sortPrimary || CUBE_DEFAULT_SORTS[0],
-      sortSecondary || CUBE_DEFAULT_SORTS[1],
-      sortTertiary || CUBE_DEFAULT_SORTS[2],
-    ];
+    const sorts = usesPrimarySortOnly(displayView)
+      ? [sortPrimary || CUBE_DEFAULT_SORTS[0]]
+      : [
+          sortPrimary || CUBE_DEFAULT_SORTS[0],
+          sortSecondary || CUBE_DEFAULT_SORTS[1],
+          sortTertiary || CUBE_DEFAULT_SORTS[2],
+        ];
     return countCardsHiddenBySorts(shownCards, sorts, cube, useBaseCardData);
   }, [
     showUnsorted,
     cardsLoading,
     cube,
     activeView,
+    displayView,
     changedCards,
     showAllBoards,
     sortPrimary,
@@ -187,6 +195,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
     setSortTertiary,
     setSortQuaternary,
   } = useContext(CubeContext);
+  const primaryOnly = usesPrimarySortOnly(useContext(DisplayContext).displayView);
 
   const sortsModified = useMemo(() => {
     return (
@@ -224,6 +233,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
             value={sortSecondary || CUBE_DEFAULT_SORTS[1]}
             setValue={setSortSecondary}
             options={allSorts.map((sort) => ({ value: sort, label: sort }))}
+            disabled={primaryOnly}
           />
 
           <Select
@@ -231,6 +241,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
             value={sortTertiary || CUBE_DEFAULT_SORTS[2]}
             setValue={setSortTertiary}
             options={allSorts.map((sort) => ({ value: sort, label: sort }))}
+            disabled={primaryOnly}
           />
 
           <Select
@@ -238,7 +249,14 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
             value={sortQuaternary || CUBE_DEFAULT_SORTS[3]}
             setValue={setSortQuaternary}
             options={ORDERED_SORTS.map((sort) => ({ value: sort, label: sort }))}
+            disabled={primaryOnly}
           />
+
+          {primaryOnly && (
+            <Text sm className="text-text-secondary">
+              {CURVE_SORT_NOTE}
+            </Text>
+          )}
 
           <HiddenBySortNotice />
 
@@ -295,6 +313,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
                     value={sortSecondary || CUBE_DEFAULT_SORTS[1]}
                     setValue={setSortSecondary}
                     options={allSorts.map((sort) => ({ value: sort, label: sort }))}
+                    disabled={primaryOnly}
                   />
                 </div>
                 <div className="flex flex-col gap-3">
@@ -306,15 +325,22 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
                     value={sortTertiary || CUBE_DEFAULT_SORTS[2]}
                     setValue={setSortTertiary}
                     options={allSorts.map((sort) => ({ value: sort, label: sort }))}
+                    disabled={primaryOnly}
                   />
                   <Select
                     label="Ordered Sort"
                     value={sortQuaternary || CUBE_DEFAULT_SORTS[3]}
                     setValue={setSortQuaternary}
                     options={ORDERED_SORTS.map((sort) => ({ value: sort, label: sort }))}
+                    disabled={primaryOnly}
                   />
                 </div>
               </div>
+              {primaryOnly && (
+                <Text sm className="text-text-secondary">
+                  {CURVE_SORT_NOTE}
+                </Text>
+              )}
               <HiddenBySortNotice />
               <Text italic sm className="text-text-secondary">
                 Cards will appear as duplicates if they fit in multiple categories. The counts will still only count

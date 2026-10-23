@@ -30,6 +30,8 @@ const defaultDisplayContext: DisplayContextValue = {
   setActiveBoard: jest.fn(),
   activeView: 'Mainboard',
   setActiveView: jest.fn(),
+  displayView: 'table',
+  setDisplayView: jest.fn(),
 };
 
 export { defaultDisplayContext };

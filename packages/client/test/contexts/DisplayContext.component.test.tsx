@@ -84,3 +84,52 @@ describe('DisplayContext view navigation', () => {
     expect(window.location.search).toBe('?view=r-d');
   });
 });
+
+describe('DisplayContext display view', () => {
+  const DisplayViewConsumer: React.FC = () => {
+    const { displayView, setDisplayView, setActiveView } = useContext(DisplayContext);
+    return (
+      <div>
+        <span data-testid="display-view">{displayView}</span>
+        <button onClick={() => setDisplayView('curve')}>show-curve</button>
+        <button onClick={() => setActiveView('r-d')}>select-r-d</button>
+      </div>
+    );
+  };
+
+  const renderWithDefaults = (displayViewDefaults?: Record<string, string>) =>
+    render(
+      <DisplayContextProvider cubeID="cube-1" viewSlugs={VIEW_SLUGS} displayViewDefaults={displayViewDefaults}>
+        <DisplayViewConsumer />
+      </DisplayContextProvider>,
+    );
+
+  const displayParam = () => new URLSearchParams(window.location.search).get('display');
+
+  beforeEach(() => {
+    window.history.replaceState({}, '', '/cube/list/cube-1');
+  });
+
+  it('falls back to table when no defaults are given', () => {
+    renderWithDefaults();
+    expect(screen.getByTestId('display-view')).toHaveTextContent('table');
+  });
+
+  it("uses the active view's default display", () => {
+    renderWithDefaults({ mainboard: 'spoiler' });
+    expect(screen.getByTestId('display-view')).toHaveTextContent('spoiler');
+  });
+
+  it('reads the display from the URL', () => {
+    window.history.replaceState({}, '', '/cube/list/cube-1?display=stacks');
+    renderWithDefaults({ mainboard: 'spoiler' });
+    expect(screen.getByTestId('display-view')).toHaveTextContent('stacks');
+  });
+
+  it('writes a changed display to the URL', () => {
+    renderWithDefaults();
+    fireEvent.click(screen.getByText('show-curve'));
+    expect(screen.getByTestId('display-view')).toHaveTextContent('curve');
+    expect(displayParam()).toBe('curve');
+  });
+});

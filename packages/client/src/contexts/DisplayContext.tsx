@@ -24,6 +24,8 @@ export interface DisplayContextValue {
   setActiveBoard: (board: string) => void; // Deprecated - use setActiveView instead
   activeView: string; // The currently active view, as its URL slug
   setActiveView: (view: string) => void;
+  displayView: string; // How cards are drawn: table, spoiler, curve, stacks, list
+  setDisplayView: (view: string) => void;
   toggleShowMaybeboard: () => void;
   displayOptions: CubeDisplayOptions;
   setDisplayOption: <K extends keyof CubeDisplayOptions>(key: K, value: CubeDisplayOptions[K]) => void;
@@ -53,6 +55,8 @@ const DisplayContext = React.createContext<DisplayContextValue>({
   setActiveBoard: () => {},
   activeView: 'mainboard',
   setActiveView: () => {},
+  displayView: 'table',
+  setDisplayView: () => {},
   toggleShowCustomImages: () => {},
   toggleShowMaybeboard: () => {},
   displayOptions: DEFAULT_CUBE_DISPLAY_OPTIONS,
@@ -90,6 +94,8 @@ interface DisplayContextProviderProps {
   defaultEditSidebarOpen?: boolean;
   /** The cube's saved display defaults; every page load starts from these. */
   savedDisplayOptions?: CubeDisplayOptions;
+  /** Default display (table, spoiler, …) per view slug; views without one use table. */
+  displayViewDefaults?: Record<string, string>;
   children: ReactNode;
 }
 
@@ -98,6 +104,7 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
   viewSlugs,
   defaultEditSidebarOpen = false,
   savedDisplayOptions: initialSavedDisplayOptions = DEFAULT_CUBE_DISPLAY_OPTIONS,
+  displayViewDefaults,
   ...props
 }) => {
   const { csrfFetch } = useContext(CSRFContext);
@@ -147,6 +154,8 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
     },
     [setViewParam],
   );
+
+  const [displayView, setDisplayView] = useQueryParam('display', displayViewDefaults?.[activeView] || 'table');
 
   // Legacy board-based navigation (deprecated - for backwards compatibility)
   const [boardParam, setBoardParam] = useQueryParam('board', 'mainboard');
@@ -263,6 +272,8 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
     setActiveBoard,
     activeView,
     setActiveView,
+    displayView,
+    setDisplayView,
     toggleShowMaybeboard,
     displayOptions,
     setDisplayOption,

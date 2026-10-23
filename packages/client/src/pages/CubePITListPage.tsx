@@ -21,7 +21,6 @@ import RenderToRoot from 'components/RenderToRoot';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
-import useQueryParam from 'hooks/useQueryParam';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
@@ -38,10 +37,12 @@ interface CubePITListPageProps {
 const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ date, changelogId }) => {
   const cubeContext = useContext(CubeContext);
   const { changedCards, filterResult, cube } = cubeContext;
-  const { showAllBoards } = useContext(DisplayContext).displayOptions;
+  const {
+    displayOptions: { showAllBoards },
+    displayView: cubeView,
+    setDisplayView: setCubeView,
+  } = useContext(DisplayContext);
   const { filterInput } = useContext(FilterContext);
-
-  const [cubeView, setCubeView] = useQueryParam('display', 'table');
 
   // Date picker state — default to the active snapshot's date
   const [dateValue, setDateValue] = useState(() => {

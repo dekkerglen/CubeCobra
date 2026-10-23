@@ -29,15 +29,19 @@ const renderSidebar = ({
   isHorizontal,
   csrfFetch,
   sortPrimary = 'Color Category',
+  sortSecondary = 'Unsorted',
   cards = {},
   cardsLoading = false,
+  displayView,
 }: {
   canEdit: boolean;
   isHorizontal: boolean;
   csrfFetch: jest.Mock;
   sortPrimary?: string;
+  sortSecondary?: string;
   cards?: Record<string, any[]>;
   cardsLoading?: boolean;
+  displayView?: string;
 }) => {
   const cubeValue = {
     cube: { id: 'c1', defaultSorts: [] },
@@ -45,7 +49,7 @@ const renderSidebar = ({
     changedCards: cards,
     cardsLoading,
     sortPrimary,
-    sortSecondary: 'Unsorted',
+    sortSecondary,
     sortTertiary: 'Unsorted',
     sortQuaternary: 'Alphabetical',
     resetSorts: jest.fn(),
@@ -58,7 +62,11 @@ const renderSidebar = ({
   };
   return render(
     <CSRFContext.Provider value={{ csrfToken: 't', csrfFetch, callApi: jest.fn() } as any}>
-      <DisplayContextProvider cubeID="c1" savedDisplayOptions={DEFAULT_CUBE_DISPLAY_OPTIONS}>
+      <DisplayContextProvider
+        cubeID="c1"
+        savedDisplayOptions={DEFAULT_CUBE_DISPLAY_OPTIONS}
+        displayViewDefaults={displayView ? { mainboard: displayView } : undefined}
+      >
         <CubeContext.Provider value={cubeValue as any}>
           <CubeListSortSidebar canEdit={canEdit} isHorizontal={isHorizontal} />
         </CubeContext.Provider>
@@ -272,6 +280,62 @@ describe.each([
 
     expect(checkbox('Show All Boards')).not.toBeChecked();
     expect(button(RESET)).toBeDisabled();
+  });
+});
+
+describe.each([
+  ['vertical', false],
+  ['horizontal', true],
+])('CubeListSortSidebar in Curve view (%s)', (_layout, isHorizontal) => {
+  const CURVE_NOTE = 'Curve view only uses the Primary sort.';
+  const sortSelects = () => screen.getAllByRole('combobox');
+
+  beforeEach(() => {
+    window.history.replaceState({}, '', '/cube/list/c1');
+  });
+
+  it('disables every sort but Primary and says why', () => {
+    renderSidebar({ canEdit: false, isHorizontal, csrfFetch: jest.fn(), displayView: 'curve' });
+    const [primary, secondary, tertiary, ordered] = sortSelects();
+    expect(primary).toBeEnabled();
+    expect(secondary).toBeDisabled();
+    expect(tertiary).toBeDisabled();
+    expect(ordered).toBeDisabled();
+    expect(screen.getByText(CURVE_NOTE)).toBeInTheDocument();
+  });
+
+  it('leaves every sort enabled in other views', () => {
+    renderSidebar({ canEdit: false, isHorizontal, csrfFetch: jest.fn(), displayView: 'table' });
+    for (const select of sortSelects()) {
+      expect(select).toBeEnabled();
+    }
+    expect(screen.queryByText(CURVE_NOTE)).not.toBeInTheDocument();
+  });
+
+  it('counts only cards the Primary sort hides', () => {
+    const cards = { mainboard: [card(0, ['Removal']), card(1, []), card(2, [])] };
+    renderSidebar({
+      canEdit: false,
+      isHorizontal,
+      csrfFetch: jest.fn(),
+      sortSecondary: 'Tags',
+      cards,
+      displayView: 'curve',
+    });
+    expect(screen.queryByText(/hidden/)).not.toBeInTheDocument();
+  });
+
+  it('still counts cards the Primary sort hides', () => {
+    const cards = { mainboard: [card(0, ['Removal']), card(1, []), card(2, [])] };
+    renderSidebar({
+      canEdit: false,
+      isHorizontal,
+      csrfFetch: jest.fn(),
+      sortPrimary: 'Tags',
+      cards,
+      displayView: 'curve',
+    });
+    expect(screen.getByText(/2 cards are hidden/)).toBeInTheDocument();
   });
 });
 
