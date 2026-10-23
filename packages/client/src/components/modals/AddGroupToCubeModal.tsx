@@ -7,6 +7,7 @@ import CubePropType from '@utils/datatypes/Cube';
 import { CSRFContext } from '../../contexts/CSRFContext';
 import UserContext from '../../contexts/UserContext';
 import useLocalStorage from '../../hooks/useLocalStorage';
+import usePackageAddOptions from '../../hooks/usePackageAddOptions';
 import Alert from '../base/Alert';
 import Button from '../base/Button';
 import CardList from '../base/CardList';
@@ -45,7 +46,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
   const [board, setBoard] = useState<'mainboard' | 'maybeboard'>('mainboard');
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [upvotePackage, setUpvotePackage] = useState(true);
-  const [autoTag, setAutoTag] = useLocalStorage<boolean>('addGroupToCubeAutoTag', true);
+  const { autoTag, setAutoTag, useDefaultPrinting, setUseDefaultPrinting } = usePackageAddOptions();
   const [createBlogPost, setCreateBlogPost] = useLocalStorage<boolean>('addGroupToCubeCreateBlogPost', true);
 
   const add = useCallback(async () => {
@@ -59,6 +60,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
           board,
           autoTag,
           createBlogPost,
+          useDefaultPrinting,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -93,6 +95,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
     voters,
     autoTag,
     createBlogPost,
+    useDefaultPrinting,
   ]);
 
   if (!cubes || cubes.length === 0) {
@@ -141,6 +144,11 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
           {packid && (
             <>
               <Checkbox label="Autotag new cards with package name" checked={autoTag} setChecked={setAutoTag} />
+              <Checkbox
+                label="Use the cube's default printing"
+                checked={useDefaultPrinting}
+                setChecked={setUseDefaultPrinting}
+              />
               <Checkbox label="Create blog post" checked={createBlogPost} setChecked={setCreateBlogPost} />
             </>
           )}

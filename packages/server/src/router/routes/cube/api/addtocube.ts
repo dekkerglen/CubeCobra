@@ -1,10 +1,10 @@
-import Card from '@utils/datatypes/Card';
+import Card, { DefaultPrintingPreference, isPrintingPreference } from '@utils/datatypes/Card';
 import { boardNameToKey, getBoardDefinitions } from '@utils/datatypes/Cube';
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { blogDao, changelogDao, cubeDao, feedDao, packageDao, userDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
-import { cardFromId } from 'serverutils/carddb';
+import { cardFromId, getMostReasonableById } from 'serverutils/carddb';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { newCard } from 'serverutils/util';
 
@@ -42,6 +42,16 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
     let tag: string | null = null;
     const autoTag = req.body.autoTag !== false; // Default to true
     const createBlogPost = req.body.createBlogPost !== false; // Default to true
+    // Opt-in, unlike the two above: callers that don't ask keep the printings they sent.
+    const useDefaultPrinting = req.body.useDefaultPrinting === true;
+    const printingPreference = isPrintingPreference(cube.defaultPrinting)
+      ? cube.defaultPrinting
+      : DefaultPrintingPreference;
+
+    // Swap a requested printing for the one the cube prefers, keeping the original
+    // whenever the preference can't resolve a printing (custom cards, unknown ids).
+    const resolvePrinting = (id: string): string =>
+      useDefaultPrinting ? (getMostReasonableById(id, printingPreference)?.scryfall_id ?? id) : id;
 
     if (req.body.packid && autoTag) {
       const pack = await packageDao.getById(req.body.packid);
@@ -58,11 +68,11 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
 
       if (typeof cardInput === 'string') {
         // Legacy format: just a card ID
-        baseCard = newCard(cardFromId(cardInput), tag ? [tag] : []);
+        baseCard = newCard(cardFromId(resolvePrinting(cardInput)), tag ? [tag] : []);
       } else {
         // New format: card object with custom properties
         const cardId = cardInput.cardID || cardInput.id;
-        baseCard = newCard(cardFromId(cardId), tag ? [tag] : []);
+        baseCard = newCard(cardFromId(resolvePrinting(cardId)), tag ? [tag] : []);
 
         // Collect custom tags
         if (cardInput.tags && Array.isArray(cardInput.tags)) {

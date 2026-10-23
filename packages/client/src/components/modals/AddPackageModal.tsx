@@ -1,11 +1,12 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import { AlertIcon } from '@primer/octicons-react';
-import Card, { BoardType } from '@utils/datatypes/Card';
+import Card, { BoardType, DefaultPrintingPreference, isPrintingPreference } from '@utils/datatypes/Card';
 import CardPackage from '@utils/datatypes/CardPackage';
 
 import Alert from 'components/base/Alert';
 import Button from 'components/base/Button';
+import Checkbox from 'components/base/Checkbox';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
@@ -14,7 +15,9 @@ import Text from 'components/base/Text';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
 import UserContext from 'contexts/UserContext';
+import usePackageAddOptions from 'hooks/usePackageAddOptions';
 import { trackEvent } from 'utils/analytics';
+import { getCards } from 'utils/cards/getCards';
 
 const LIMIT = 100;
 
@@ -42,6 +45,7 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, setOpen, boar
   const [selectedLiked, setSelectedLiked] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { autoTag, setAutoTag, useDefaultPrinting, setUseDefaultPrinting } = usePackageAddOptions();
 
   useEffect(() => {
     if (!isOpen || !user) return;
@@ -103,18 +107,45 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, setOpen, boar
   const handleAdd = useCallback(async () => {
     if (!selectedPackage) return;
     const tmsp = Date.now().toString();
-    const cards: Card[] = selectedPackage.cards
-      .filter((card) => !!card?.scryfall_id)
-      .map((card) => ({
-        cardID: card.scryfall_id,
-        addedTmsp: tmsp,
-        status: cube.defaultStatus,
-      }));
+    const packageCards = selectedPackage.cards.filter((card) => !!card?.scryfall_id);
+
+    // The cube's preference wins over the printing the package stored, but only for
+    // cards it can resolve — anything else keeps the package's own printing.
+    let preferredIds: (string | undefined)[] = [];
+    if (useDefaultPrinting && packageCards.length > 0) {
+      const printingPreference = isPrintingPreference(cube.defaultPrinting)
+        ? cube.defaultPrinting
+        : DefaultPrintingPreference;
+      const resolved = await getCards(
+        csrfFetch,
+        printingPreference,
+        packageCards.map((card) => card.name),
+      );
+      preferredIds = resolved.map((card) => card?.scryfall_id);
+    }
+
+    const cards: Card[] = packageCards.map((card, index) => ({
+      cardID: preferredIds[index] ?? card.scryfall_id,
+      addedTmsp: tmsp,
+      status: cube.defaultStatus,
+      tags: autoTag ? [selectedPackage.title] : [],
+    }));
     await bulkAddCard(cards, boardToEdit);
     trackEvent('cube_card_add', { method: 'package', count: cards.length, board: boardToEdit });
     reset();
     setOpen(false);
-  }, [selectedPackage, cube.defaultStatus, bulkAddCard, boardToEdit, reset, setOpen]);
+  }, [
+    selectedPackage,
+    useDefaultPrinting,
+    csrfFetch,
+    cube.defaultPrinting,
+    cube.defaultStatus,
+    autoTag,
+    bulkAddCard,
+    boardToEdit,
+    reset,
+    setOpen,
+  ]);
 
   if (!user) {
     return null;
@@ -180,6 +211,13 @@ const AddPackageModal: React.FC<AddPackageModalProps> = ({ isOpen, setOpen, boar
               {selectedPackage.title}" to the {boardToEdit}.
             </Text>
           )}
+
+          <Checkbox label="Autotag new cards with package name" checked={autoTag} setChecked={setAutoTag} />
+          <Checkbox
+            label="Use the cube's default printing"
+            checked={useDefaultPrinting}
+            setChecked={setUseDefaultPrinting}
+          />
         </Flexbox>
       </ModalBody>
       <ModalFooter>
