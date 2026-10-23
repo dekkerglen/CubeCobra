@@ -35,7 +35,6 @@ const Harness: React.FC<HarnessProps> = ({ csrfFetch, onTagColorsChange, setOpen
   const cubeValue = {
     tagColors,
     setTagColors,
-    canEdit: true,
     cube: { id: 'test-cube-id' },
   };
 
@@ -74,6 +73,13 @@ describe('TagColorsModal', () => {
   it('has no show/hide tag colors control', () => {
     render(<Harness csrfFetch={jest.fn()} />);
     expect(screen.queryByText(/tag colors by default/i)).not.toBeInTheDocument();
+  });
+
+  it('always renders the editor view, since only editors can open it', () => {
+    render(<Harness csrfFetch={jest.fn()} />);
+    expect(screen.getByText('Set Tag Colors')).toBeInTheDocument();
+    expect(screen.getByText(/Drag the tags below/)).toBeInTheDocument();
+    expect(screen.getAllByTitle('Red').length).toBeGreaterThan(0);
   });
 
   it('saves the edited colors and closes the modal on success', async () => {

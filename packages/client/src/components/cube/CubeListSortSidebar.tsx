@@ -61,14 +61,25 @@ const DISPLAY_OPTION_CONTROLS: { key: keyof CubeDisplayOptions; label: string; t
   },
 ];
 
-interface DisplayOptionsControlsProps {
-  canEdit: boolean;
-  tooltipIconClassName?: string;
-}
+const DisplayOptionCheckboxes: React.FC<{ tooltipIconClassName?: string }> = ({ tooltipIconClassName }) => {
+  const { displayOptions, setDisplayOption } = useContext(DisplayContext);
 
-const DisplayOptionsControls: React.FC<DisplayOptionsControlsProps> = ({ canEdit, tooltipIconClassName }) => {
-  const { displayOptions, setDisplayOption, displayOptionsModified, resetDisplayOptions, saveDisplayOptions } =
-    useContext(DisplayContext);
+  return (
+    <Flexbox direction="col" gap="2">
+      {DISPLAY_OPTION_CONTROLS.map(({ key, label, tooltip }) => (
+        <Flexbox key={key} direction="row" gap="2" alignItems="center">
+          <Checkbox label={label} checked={displayOptions[key]} setChecked={(value) => setDisplayOption(key, value)} />
+          <Tooltip text={tooltip}>
+            <QuestionIcon size={16} className={tooltipIconClassName} />
+          </Tooltip>
+        </Flexbox>
+      ))}
+    </Flexbox>
+  );
+};
+
+const DisplayOptionActions: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
+  const { displayOptionsModified, resetDisplayOptions, saveDisplayOptions } = useContext(DisplayContext);
   const { alerts, addAlert, dismissAlerts } = useAlerts();
   const [saving, setSaving] = useState(false);
 
@@ -84,22 +95,14 @@ const DisplayOptionsControls: React.FC<DisplayOptionsControlsProps> = ({ canEdit
 
   return (
     <Flexbox direction="col" gap="2">
-      {DISPLAY_OPTION_CONTROLS.map(({ key, label, tooltip }) => (
-        <Flexbox key={key} direction="row" gap="2" alignItems="center">
-          <Checkbox label={label} checked={displayOptions[key]} setChecked={(value) => setDisplayOption(key, value)} />
-          <Tooltip text={tooltip}>
-            <QuestionIcon size={16} className={tooltipIconClassName} />
-          </Tooltip>
-        </Flexbox>
-      ))}
       <Alerts alerts={alerts} />
       {canEdit && (
         <Button color="primary" onClick={handleSave} disabled={!displayOptionsModified || saving} block>
-          Save as Default Display
+          Save as Default Options
         </Button>
       )}
       <Button color="danger" onClick={resetDisplayOptions} disabled={!displayOptionsModified || saving} block>
-        Reset Display
+        Reset Options
       </Button>
       {canEdit && (
         <TagColorsModalButton color="secondary" block>
@@ -212,7 +215,10 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
             )}
           </Flexbox>
 
-          <DisplayOptionsControls canEdit={canEdit} tooltipIconClassName="hidden md:inline" />
+          <Flexbox direction="col" gap="2">
+            <DisplayOptionCheckboxes tooltipIconClassName="hidden md:inline" />
+            <DisplayOptionActions canEdit={canEdit} />
+          </Flexbox>
 
           {canEdit && (
             <div className="pt-3 mt-2 border-t border-border">
@@ -270,7 +276,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               <Text semibold sm>
                 Display Options
               </Text>
-              <DisplayOptionsControls canEdit={canEdit} />
+              <DisplayOptionCheckboxes />
             </div>
 
             {/* Column 4: Actions */}
@@ -296,6 +302,8 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
                   Setup Rotisserie
                 </RotoSetupButton>
               )}
+              <hr className="my-1 border-border" />
+              <DisplayOptionActions canEdit={canEdit} />
             </div>
           </div>
 

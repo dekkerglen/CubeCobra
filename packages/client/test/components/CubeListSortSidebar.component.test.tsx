@@ -20,6 +20,8 @@ jest.mock('components/modals/RotisserieDraftModal', () => ({
   default: () => null,
 }));
 
+const SAVE = 'Save as Default Options';
+const RESET = 'Reset Options';
 const SAVE_ERROR = "Couldn't save the default display options. Please make sure you're logged in and try again.";
 
 const renderSidebar = ({
@@ -55,6 +57,7 @@ const renderSidebar = ({
 
 const checkbox = (label: string) => screen.getByLabelText(label) as HTMLInputElement;
 const button = (name: string) => screen.getByRole('button', { name });
+const gridColumn = (el: HTMLElement) => el.closest('.grid > *');
 
 describe.each([
   ['vertical', false],
@@ -72,9 +75,10 @@ describe.each([
     expect(labels.indexOf('Show Tag Colors')).toBe(labels.indexOf('Show Inline Emojis') + 1);
   });
 
-  it('groups Set Tag Colors with the Display buttons', () => {
+  it('groups Set Tag Colors with the options buttons', () => {
     renderSidebar({ canEdit: true, isHorizontal, csrfFetch });
-    expect(button('Set Tag Colors').parentElement).toBe(button('Save as Default Display').parentElement);
+    expect(button('Set Tag Colors').parentElement).toBe(button(SAVE).parentElement);
+    expect(button(RESET).parentElement).toBe(button(SAVE).parentElement);
   });
 
   it('disables Save while a save is in flight', async () => {
@@ -83,11 +87,11 @@ describe.each([
     renderSidebar({ canEdit: true, isHorizontal, csrfFetch });
 
     fireEvent.click(checkbox('Show Unsorted Cards'));
-    fireEvent.click(button('Save as Default Display'));
-    fireEvent.click(button('Save as Default Display'));
+    fireEvent.click(button(SAVE));
+    fireEvent.click(button(SAVE));
 
     expect(csrfFetch).toHaveBeenCalledTimes(1);
-    expect(button('Save as Default Display')).toBeDisabled();
+    expect(button(SAVE)).toBeDisabled();
 
     await act(async () => resolveSave({ ok: true }));
     expect(csrfFetch).toHaveBeenCalledTimes(1);
@@ -99,10 +103,10 @@ describe.each([
       'Show Unsorted Cards',
       'Collapse Duplicates',
       'Show Inline Emojis',
+      'Show Tag Colors',
       'Show Tag Quick Filters',
       'Show All Boards',
       'Use Base Card Data',
-      'Show Tag Colors',
     ]) {
       expect(checkbox(label)).toBeInTheDocument();
     }
@@ -110,10 +114,10 @@ describe.each([
     expect(checkbox('Show Tag Quick Filters')).toBeChecked();
   });
 
-  it('non-editors get no Save as Default Display and no Set Tag Colors', () => {
+  it('non-editors get no Save as Default Options and no Set Tag Colors', () => {
     renderSidebar({ canEdit: false, isHorizontal, csrfFetch });
 
-    expect(screen.queryByRole('button', { name: 'Save as Default Display' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: SAVE })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Set Tag Colors' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'View Tag Colors' })).not.toBeInTheDocument();
 
@@ -125,29 +129,28 @@ describe.each([
   it('editors: Save and Reset are disabled until something changes', () => {
     renderSidebar({ canEdit: true, isHorizontal, csrfFetch });
 
-    expect(button('Set Tag Colors')).toBeInTheDocument();
-    expect(button('Save as Default Display')).toBeDisabled();
-    expect(button('Reset Display')).toBeDisabled();
+    expect(button(SAVE)).toBeDisabled();
+    expect(button(RESET)).toBeDisabled();
 
     fireEvent.click(checkbox('Show Tag Colors'));
 
-    expect(button('Save as Default Display')).toBeEnabled();
-    expect(button('Reset Display')).toBeEnabled();
+    expect(button(SAVE)).toBeEnabled();
+    expect(button(RESET)).toBeEnabled();
     expect(csrfFetch).not.toHaveBeenCalled();
   });
 
-  it('Save as Default Display posts once and disables again on success', async () => {
+  it('Save as Default Options posts once and disables again on success', async () => {
     csrfFetch.mockResolvedValue({ ok: true });
     renderSidebar({ canEdit: true, isHorizontal, csrfFetch });
 
     fireEvent.click(checkbox('Show Unsorted Cards'));
     await act(async () => {
-      fireEvent.click(button('Save as Default Display'));
+      fireEvent.click(button(SAVE));
     });
 
     expect(csrfFetch).toHaveBeenCalledTimes(1);
     expect(JSON.parse(csrfFetch.mock.calls[0][1].body).displayOptions.showUnsorted).toBe(true);
-    expect(button('Save as Default Display')).toBeDisabled();
+    expect(button(SAVE)).toBeDisabled();
   });
 
   it('failed save shows the error alert and keeps the button enabled', async () => {
@@ -156,23 +159,41 @@ describe.each([
 
     fireEvent.click(checkbox('Show Unsorted Cards'));
     await act(async () => {
-      fireEvent.click(button('Save as Default Display'));
+      fireEvent.click(button(SAVE));
     });
 
     expect(screen.getByText(SAVE_ERROR)).toBeInTheDocument();
-    expect(button('Save as Default Display')).toBeEnabled();
+    expect(button(SAVE)).toBeEnabled();
     expect(checkbox('Show Unsorted Cards')).toBeChecked();
   });
 
-  it('Reset Display restores the saved values', () => {
+  it('Reset Options restores the saved values', () => {
     renderSidebar({ canEdit: false, isHorizontal, csrfFetch });
 
     fireEvent.click(checkbox('Show All Boards'));
     expect(checkbox('Show All Boards')).toBeChecked();
 
-    fireEvent.click(button('Reset Display'));
+    fireEvent.click(button(RESET));
 
     expect(checkbox('Show All Boards')).not.toBeChecked();
-    expect(button('Reset Display')).toBeDisabled();
+    expect(button(RESET)).toBeDisabled();
+  });
+});
+
+describe('CubeListSortSidebar horizontal layout', () => {
+  it('puts the options buttons in the Actions column, after the sort buttons and a divider', () => {
+    renderSidebar({ canEdit: true, isHorizontal: true, csrfFetch: jest.fn() });
+
+    const actions = gridColumn(button('Reset Sort'))!;
+    expect(gridColumn(button(SAVE))).toBe(actions);
+    expect(gridColumn(button(RESET))).toBe(actions);
+    expect(gridColumn(button('Set Tag Colors'))).toBe(actions);
+    expect(gridColumn(checkbox('Show Tag Colors'))).not.toBe(actions);
+
+    const divider = actions.querySelector('hr');
+    expect(divider).not.toBeNull();
+    const follows = (a: Node, b: Node) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    expect(follows(button('Reset Sort'), divider!)).toBe(true);
+    expect(follows(divider!, button(SAVE))).toBe(true);
   });
 });
