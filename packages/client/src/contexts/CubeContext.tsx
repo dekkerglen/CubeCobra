@@ -463,7 +463,7 @@ export function CubeContextProvider({
       setAddedCardDetails(null);
     }
   }, [modalOpen, modalSelection, changes, csrfFetch]);
-  const [showTagColors, setShowTagColors] = useState(user ? !user.hideTagColors : false);
+  const [showTagColors, setShowTagColors] = useState(user ? !user.hideTagColors : true);
   const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
   const [loading, setLoading] = useState(false);
   const [sortPrimary, setSortPrimary] = useQueryParam('s1', defaultSorts[0]);

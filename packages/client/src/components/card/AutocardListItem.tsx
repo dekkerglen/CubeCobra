@@ -5,11 +5,11 @@ import Card from '@utils/datatypes/Card';
 import cx from 'classnames';
 import emojiRegex from 'emoji-regex';
 
+import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 import RotoDraftContext from 'contexts/RotoDraftContext';
 
 import TagColorContext from '../../contexts/TagColorContext';
-import UserContext from '../../contexts/UserContext';
 import { ListGroupItem } from '../base/ListGroup';
 import useCubeTrayDrag from '../cubetray/useCubeTrayDrag';
 import withAutocard from '../WithAutocard';
@@ -51,7 +51,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   appendChildren = false,
 }) => {
   const tagColors = useContext(TagColorContext);
-  const user = useContext(UserContext);
+  const { showTagColors } = useContext(CubeContext);
   const { showInlineTagEmojis } = useContext(DisplayContext);
   // Auto-enables wherever a CubeTrayProvider is present (cube list pages).
   const drag = useCubeTrayDrag();
@@ -75,7 +75,7 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
     [openCardToolWindow],
   );
 
-  const effectiveTagColors = useMemo(() => (user && user.hideTagColors ? [] : tagColors), [user, tagColors]);
+  const effectiveTagColors = useMemo(() => (showTagColors ? tagColors : []), [showTagColors, tagColors]);
   const colorClassname = useMemo(() => getCardTagColorClass(effectiveTagColors, card), [card, effectiveTagColors]);
   // Custom hex tag colors are applied inline since they have no predefined bg-card class.
   const tagColorStyle = useMemo(() => getCardTagColorStyle(effectiveTagColors, card), [card, effectiveTagColors]);
