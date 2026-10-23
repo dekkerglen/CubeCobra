@@ -35,7 +35,8 @@ export const savedisplayoptionsHandler = async (req: Request, res: Response) => 
     for (const key of CUBE_DISPLAY_OPTION_KEYS) {
       cube[key] = req.body.displayOptions[key];
     }
-    await cubeDao.update(cube);
+    // Display defaults aren't a content edit: keep the cube's date, which also leaves its search rows untouched.
+    await cubeDao.update(cube, { skipTimestampUpdate: true });
 
     return res.status(200).send({
       success: 'true',

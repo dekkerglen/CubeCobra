@@ -107,4 +107,16 @@ describe('savedisplayoptions API', () => {
     expect(saved.views).toBe(views);
     expect(saved.name).toBe(cube.name);
   });
+
+  it('saves without bumping the last-updated date, so search rows are left alone', async () => {
+    (cubeDao.getById as jest.Mock).mockResolvedValue(createCube({ owner }));
+
+    await call(savedisplayoptionsHandler)
+      .as(owner)
+      .withParams({ id: 'c1' })
+      .withBody({ displayOptions: flipped })
+      .send();
+
+    expect(cubeDao.update).toHaveBeenCalledWith(expect.anything(), { skipTimestampUpdate: true });
+  });
 });
