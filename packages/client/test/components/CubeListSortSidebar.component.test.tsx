@@ -66,6 +66,33 @@ describe.each([
     csrfFetch = jest.fn();
   });
 
+  it('lists Show Tag Colors directly below Show Inline Emojis', () => {
+    renderSidebar({ canEdit: false, isHorizontal, csrfFetch });
+    const labels = screen.getAllByRole('checkbox').map((el) => el.closest('label')?.textContent);
+    expect(labels.indexOf('Show Tag Colors')).toBe(labels.indexOf('Show Inline Emojis') + 1);
+  });
+
+  it('groups Set Tag Colors with the Display buttons', () => {
+    renderSidebar({ canEdit: true, isHorizontal, csrfFetch });
+    expect(button('Set Tag Colors').parentElement).toBe(button('Save as Default Display').parentElement);
+  });
+
+  it('disables Save while a save is in flight', async () => {
+    let resolveSave: (value: { ok: boolean }) => void = () => {};
+    csrfFetch.mockReturnValue(new Promise((resolve) => (resolveSave = resolve)));
+    renderSidebar({ canEdit: true, isHorizontal, csrfFetch });
+
+    fireEvent.click(checkbox('Show Unsorted Cards'));
+    fireEvent.click(button('Save as Default Display'));
+    fireEvent.click(button('Save as Default Display'));
+
+    expect(csrfFetch).toHaveBeenCalledTimes(1);
+    expect(button('Save as Default Display')).toBeDisabled();
+
+    await act(async () => resolveSave({ ok: true }));
+    expect(csrfFetch).toHaveBeenCalledTimes(1);
+  });
+
   it('shows seven display checkboxes including Show Tag Colors', () => {
     renderSidebar({ canEdit: false, isHorizontal, csrfFetch });
     for (const label of [

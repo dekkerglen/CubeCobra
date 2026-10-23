@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
 import { CubeDisplayOptions } from '@utils/datatypes/Cube';
@@ -39,6 +39,11 @@ const DISPLAY_OPTION_CONTROLS: { key: keyof CubeDisplayOptions; label: string; t
     tooltip: 'Display emoji tags directly next to card names in the list view.',
   },
   {
+    key: 'showTagColors',
+    label: 'Show Tag Colors',
+    tooltip: 'Color card rows by their highest-priority tag color.',
+  },
+  {
     key: 'showTagQuickFilters',
     label: 'Show Tag Quick Filters',
     tooltip: "Show a row of buttons for this cube's emoji tags below the filter bar. Clicking one filters to that tag.",
@@ -54,11 +59,6 @@ const DISPLAY_OPTION_CONTROLS: { key: keyof CubeDisplayOptions; label: string; t
     tooltip:
       "Sort and filter using a card's original printed attributes, ignoring any overrides you've set (e.g. custom CMC, colors, type).",
   },
-  {
-    key: 'showTagColors',
-    label: 'Show Tag Colors',
-    tooltip: 'Color card rows by their highest-priority tag color.',
-  },
 ];
 
 interface DisplayOptionsControlsProps {
@@ -70,10 +70,14 @@ const DisplayOptionsControls: React.FC<DisplayOptionsControlsProps> = ({ canEdit
   const { displayOptions, setDisplayOption, displayOptionsModified, resetDisplayOptions, saveDisplayOptions } =
     useContext(DisplayContext);
   const { alerts, addAlert, dismissAlerts } = useAlerts();
+  const [saving, setSaving] = useState(false);
 
   const handleSave = useCallback(async () => {
     dismissAlerts();
-    if (!(await saveDisplayOptions())) {
+    setSaving(true);
+    const saved = await saveDisplayOptions();
+    setSaving(false);
+    if (!saved) {
       addAlert('danger', "Couldn't save the default display options. Please make sure you're logged in and try again.");
     }
   }, [saveDisplayOptions, addAlert, dismissAlerts]);
@@ -90,13 +94,18 @@ const DisplayOptionsControls: React.FC<DisplayOptionsControlsProps> = ({ canEdit
       ))}
       <Alerts alerts={alerts} />
       {canEdit && (
-        <Button color="primary" onClick={handleSave} disabled={!displayOptionsModified} block>
+        <Button color="primary" onClick={handleSave} disabled={!displayOptionsModified || saving} block>
           Save as Default Display
         </Button>
       )}
-      <Button color="danger" onClick={resetDisplayOptions} disabled={!displayOptionsModified} block>
+      <Button color="danger" onClick={resetDisplayOptions} disabled={!displayOptionsModified || saving} block>
         Reset Display
       </Button>
+      {canEdit && (
+        <TagColorsModalButton color="secondary" block>
+          Set Tag Colors
+        </TagColorsModalButton>
+      )}
     </Flexbox>
   );
 };
@@ -192,12 +201,6 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               Reset Sort
             </Button>
 
-            {canEdit && (
-              <TagColorsModalButton color="secondary" block>
-                Set Tag Colors
-              </TagColorsModalButton>
-            )}
-
             {rotoURL ? (
               <Button color="secondary" onClick={() => setRotoURL('')} block>
                 Clear Rotisserie Draft
@@ -284,11 +287,6 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               <Button color="danger" onClick={resetSorts} disabled={!sortsModified} block>
                 Reset Sort
               </Button>
-              {canEdit && (
-                <TagColorsModalButton color="secondary" block>
-                  Set Tag Colors
-                </TagColorsModalButton>
-              )}
               {rotoURL ? (
                 <Button color="secondary" onClick={() => setRotoURL('')} block>
                   Clear Rotisserie
