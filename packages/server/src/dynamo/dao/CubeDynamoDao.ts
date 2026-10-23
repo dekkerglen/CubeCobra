@@ -1095,7 +1095,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       allHashes = [...metadataHashes, ...oracleHashes];
     }
 
-    await this.writeHashes(this.partitionKey(cube), allHashes);
+    await this.writeHashRows(cube, allHashes);
   }
 
   /**
@@ -1168,7 +1168,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     }
 
     if (hashesToAdd.length > 0) {
-      await this.writeHashes(this.partitionKey(newCube), hashesToAdd);
+      await this.writeHashRows(newCube, hashesToAdd);
     }
 
     // If GSI data changed, we need to update ALL existing hash rows with new sort keys
@@ -1178,7 +1178,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       // We can just rewrite all existing hashes with the new cube data
       const unchangedHashes = oldHashes.filter((hash) => newHashes.includes(hash));
       if (unchangedHashes.length > 0) {
-        await this.writeHashes(this.partitionKey(newCube), unchangedHashes);
+        await this.writeHashRows(newCube, unchangedHashes);
       }
     }
   }
@@ -1396,21 +1396,11 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   }
 
   /**
-   * Overrides writeHashes to use hash rows with GSI keys.
+   * Writes hash rows with GSI sort keys taken from the given cube.
    */
-  protected async writeHashes(itemPK: string, hashes: string[]): Promise<void> {
+  private async writeHashRows(cube: Cube, hashes: string[]): Promise<void> {
     if (hashes.length === 0) {
       return;
-    }
-
-    // Get the cube to create proper hash rows with metadata
-    const cube = await this.get({
-      PK: itemPK,
-      SK: this.itemType(),
-    });
-
-    if (!cube) {
-      throw new Error('Cube not found when writing hashes');
     }
 
     // Safely access fields that might be undefined
@@ -1420,7 +1410,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     const cubeDate = cube.dateLastUpdated || cube.date || Date.now();
 
     // Use NEW hash row structure: PK = HASH#CUBE#{id}, SK = hashString
-    const hashPK = `HASH#${itemPK}`;
+    const hashPK = `HASH#${this.partitionKey(cube)}`;
 
     const hashRows = hashes.map((hashString) => ({
       PK: hashPK,
@@ -1510,7 +1500,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     }
 
     if (hashesToAdd.length > 0) {
-      await this.writeHashes(this.partitionKey(cube), hashesToAdd);
+      await this.writeHashRows(cube, hashesToAdd);
     }
   }
 
@@ -2300,7 +2290,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     // Add missing hashes
     if (hashesToAdd.length > 0) {
-      await this.writeHashes(this.partitionKey(cube), hashesToAdd);
+      await this.writeHashRows(cube, hashesToAdd);
     }
 
     return {
