@@ -1295,6 +1295,16 @@ export function sortForDownload(
   return sortedCards(groups);
 }
 
+export function countCardsHiddenBySorts(
+  cards: Card[],
+  sorts: string[],
+  cubeObj?: Cube | null,
+  useBaseAttributes?: boolean,
+): number {
+  const shown = new Set(sortedCards(sortDeep(cards, false, 'Alphabetical', sorts, cubeObj, useBaseAttributes)));
+  return cards.filter((card) => !shown.has(card)).length;
+}
+
 export function getCubeSorts(cube: Cube): string[] {
   return [
     cube.defaultSorts?.[0] ?? CUBE_DEFAULT_SORTS[0],

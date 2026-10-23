@@ -1,8 +1,8 @@
 import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
-import { CubeDisplayOptions } from '@utils/datatypes/Cube';
-import { CUBE_DEFAULT_SORTS, getAllSorts, ORDERED_SORTS } from '@utils/sorting/Sort';
+import { CubeDisplayOptions, findViewBySlug } from '@utils/datatypes/Cube';
+import { countCardsHiddenBySorts, CUBE_DEFAULT_SORTS, getAllSorts, ORDERED_SORTS } from '@utils/sorting/Sort';
 
 import Button from 'components/base/Button';
 import Checkbox from 'components/base/Checkbox';
@@ -18,6 +18,63 @@ import DisplayContext from 'contexts/DisplayContext';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
 
 const TagColorsModalButton = withModal(Button, TagColorsModal);
+
+const HiddenBySortNotice: React.FC = () => {
+  const { cube, changedCards, cardsLoading, sortPrimary, sortSecondary, sortTertiary } = useContext(CubeContext);
+  const {
+    activeView,
+    displayOptions: { showUnsorted, showAllBoards, useBaseCardData },
+    setDisplayOption,
+  } = useContext(DisplayContext);
+
+  const hiddenCount = useMemo(() => {
+    if (showUnsorted || cardsLoading) {
+      return 0;
+    }
+    const viewBoards = findViewBySlug(cube, activeView)?.boards.map((b) => b.toLowerCase()) ?? ['mainboard'];
+    const shownCards = Object.entries(changedCards ?? {})
+      .filter(([board]) => showAllBoards || viewBoards.includes(board.toLowerCase()))
+      .flatMap(([, cards]) => cards);
+    const sorts = [
+      sortPrimary || CUBE_DEFAULT_SORTS[0],
+      sortSecondary || CUBE_DEFAULT_SORTS[1],
+      sortTertiary || CUBE_DEFAULT_SORTS[2],
+    ];
+    return countCardsHiddenBySorts(shownCards, sorts, cube, useBaseCardData);
+  }, [
+    showUnsorted,
+    cardsLoading,
+    cube,
+    activeView,
+    changedCards,
+    showAllBoards,
+    sortPrimary,
+    sortSecondary,
+    sortTertiary,
+    useBaseCardData,
+  ]);
+
+  if (hiddenCount === 0) {
+    return null;
+  }
+
+  return (
+    <div role="status" className="p-3 rounded-md bg-yellow-100 text-yellow-800">
+      <Text sm>
+        <strong>{hiddenCount === 1 ? '1 card is hidden' : `${hiddenCount} cards are hidden`}</strong> by the current
+        sorts.{' '}
+        <button
+          type="button"
+          className="underline font-semibold"
+          onClick={() => setDisplayOption('showUnsorted', true)}
+        >
+          Show Unsorted Cards
+        </button>{' '}
+        to see them.
+      </Text>
+    </div>
+  );
+};
 
 const DISPLAY_OPTION_CONTROLS: { key: keyof CubeDisplayOptions; label: string; tooltip: string }[] = [
   {
@@ -183,6 +240,8 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
             options={ORDERED_SORTS.map((sort) => ({ value: sort, label: sort }))}
           />
 
+          <HiddenBySortNotice />
+
           <Text italic sm className="text-text-secondary">
             Cards will appear as duplicates if they fit in multiple categories. The counts will still only count each
             item once.
@@ -256,6 +315,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
                   />
                 </div>
               </div>
+              <HiddenBySortNotice />
               <Text italic sm className="text-text-secondary">
                 Cards will appear as duplicates if they fit in multiple categories. The counts will still only count
                 each item once.

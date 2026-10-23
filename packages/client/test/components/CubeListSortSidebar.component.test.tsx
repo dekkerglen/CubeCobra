@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { act, fireEvent, render, screen, within } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -28,14 +28,26 @@ const renderSidebar = ({
   canEdit,
   isHorizontal,
   csrfFetch,
+  sortPrimary = 'Color Category',
+  cards = {},
+  cardsLoading = false,
 }: {
   canEdit: boolean;
   isHorizontal: boolean;
   csrfFetch: jest.Mock;
+  sortPrimary?: string;
+  cards?: Record<string, any[]>;
+  cardsLoading?: boolean;
 }) => {
   const cubeValue = {
     cube: { id: 'c1', defaultSorts: [] },
     canEdit,
+    changedCards: cards,
+    cardsLoading,
+    sortPrimary,
+    sortSecondary: 'Unsorted',
+    sortTertiary: 'Unsorted',
+    sortQuaternary: 'Alphabetical',
     resetSorts: jest.fn(),
     saveSorts: jest.fn(),
     effectiveDefaultSorts: [],
@@ -58,6 +70,89 @@ const renderSidebar = ({
 const checkbox = (label: string) => screen.getByLabelText(label) as HTMLInputElement;
 const button = (name: string) => screen.getByRole('button', { name });
 const gridColumn = (el: HTMLElement) => el.closest('.grid > *');
+
+const card = (index: number, tags: string[], board = 'mainboard') => ({
+  cardID: `card-${index}`,
+  index,
+  board,
+  tags,
+  details: { name: `Card ${index}`, type: 'Instant', colors: [], color_identity: [] },
+});
+
+describe.each([
+  ['vertical', false],
+  ['horizontal', true],
+])('CubeListSortSidebar hidden-cards notice (%s)', (_layout, isHorizontal) => {
+  const untaggedCube = { mainboard: [card(0, ['Removal']), card(1, []), card(2, [])] };
+
+  it('says how many cards the current sorts hide', () => {
+    renderSidebar({ canEdit: false, isHorizontal, csrfFetch: jest.fn(), sortPrimary: 'Tags', cards: untaggedCube });
+    expect(screen.getByText(/2 cards are hidden/)).toBeInTheDocument();
+    expect(screen.getByText(/by the current sorts/)).toBeInTheDocument();
+    const buttons = within(screen.getByRole('status')).getAllByRole('button');
+    expect(buttons.map((b) => b.textContent)).toEqual(['Show Unsorted Cards']);
+  });
+
+  it('uses the singular for one hidden card', () => {
+    renderSidebar({
+      canEdit: false,
+      isHorizontal,
+      csrfFetch: jest.fn(),
+      sortPrimary: 'Tags',
+      cards: { mainboard: [card(0, ['Removal']), card(1, [])] },
+    });
+    expect(screen.getByText(/1 card is hidden/)).toBeInTheDocument();
+  });
+
+  it('shows nothing when no cards are hidden', () => {
+    renderSidebar({ canEdit: false, isHorizontal, csrfFetch: jest.fn(), cards: untaggedCube });
+    expect(screen.queryByText(/hidden/)).not.toBeInTheDocument();
+  });
+
+  it('waits for card details before counting', () => {
+    const loading = { mainboard: [{ cardID: 'x', index: 0, board: 'mainboard', tags: [] }] };
+    renderSidebar({
+      canEdit: false,
+      isHorizontal,
+      csrfFetch: jest.fn(),
+      sortPrimary: 'Types-Multicolor',
+      cards: loading,
+      cardsLoading: true,
+    });
+    expect(screen.queryByText(/hidden/)).not.toBeInTheDocument();
+  });
+
+  it('ignores boards that are not on screen', () => {
+    renderSidebar({
+      canEdit: false,
+      isHorizontal,
+      csrfFetch: jest.fn(),
+      sortPrimary: 'Tags',
+      cards: { mainboard: [card(0, ['Removal'])], maybeboard: [card(1, [], 'maybeboard')] },
+    });
+    expect(screen.queryByText(/hidden/)).not.toBeInTheDocument();
+  });
+
+  it('Show Unsorted Cards turns the option on for this page and clears the notice', () => {
+    const csrfFetch = jest.fn();
+    renderSidebar({ canEdit: true, isHorizontal, csrfFetch, sortPrimary: 'Tags', cards: untaggedCube });
+
+    fireEvent.click(button('Show Unsorted Cards'));
+
+    expect(checkbox('Show Unsorted Cards')).toBeChecked();
+    expect(screen.queryByText(/cards are hidden/)).not.toBeInTheDocument();
+    expect(csrfFetch).not.toHaveBeenCalled();
+  });
+
+  it('sits with the sort dropdowns, above the duplicates note', () => {
+    renderSidebar({ canEdit: false, isHorizontal, csrfFetch: jest.fn(), sortPrimary: 'Tags', cards: untaggedCube });
+    const notice = screen.getByText(/2 cards are hidden/);
+    const ordered = screen.getByText('Ordered Sort');
+    const note = screen.getByText(/Cards will appear as duplicates/);
+    expect(ordered.compareDocumentPosition(notice) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(notice.compareDocumentPosition(note) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+});
 
 describe.each([
   ['vertical', false],
