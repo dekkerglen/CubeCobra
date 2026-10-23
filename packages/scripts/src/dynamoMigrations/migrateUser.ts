@@ -187,7 +187,6 @@ const deleteCheckpoint = (): void => {
               usernameLower: oldUser.usernameLower || oldUser.username?.toLowerCase(),
               cubes: oldUser.cubes || [],
               about: oldUser.about,
-              hideTagColors: oldUser.hideTagColors,
               followedCubes: oldUser.followedCubes || [],
               followedUsers: oldUser.followedUsers || [],
               following: oldUser.following || [],

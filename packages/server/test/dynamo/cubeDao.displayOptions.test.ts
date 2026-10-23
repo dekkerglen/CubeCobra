@@ -52,8 +52,9 @@ describe('CubeDynamoDao display options', () => {
 
     await dao.update(createCube(flipped));
 
-    const put = send.mock.calls.map(([c]) => c).find((c: any) => c instanceof PutCommand && c.input.Item.SK === 'CUBE')!
-      .input.Item!.item;
+    const put = send.mock.calls
+      .map(([c]) => c)
+      .find((c: any) => c instanceof PutCommand && c.input.Item?.SK === 'CUBE')!.input.Item!.item;
     for (const [key, value] of Object.entries(flipped)) {
       expect(put[key]).toBe(value);
     }

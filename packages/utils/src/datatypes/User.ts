@@ -27,7 +27,6 @@ export interface UnhydratedUser {
   usernameLower?: string;
   cubes?: string[];
   about?: string;
-  hideTagColors?: boolean;
   /** Denormalized counts. Source of truth lives in relationship hash rows. */
   followerCount?: number; // users following this user
   followingCount?: number; // users this user follows

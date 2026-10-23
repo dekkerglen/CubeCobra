@@ -203,7 +203,6 @@ const createDeletedUserPlaceholder = (userId: string): User => {
     username: '[Deleted User]',
     email: '',
     about: '',
-    hideTagColors: false,
     defaultNav: [],
     roles: [],
     theme: 'system',
