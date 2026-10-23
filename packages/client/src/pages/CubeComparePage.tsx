@@ -1,7 +1,7 @@
 import React, { useContext, useMemo, useState } from 'react';
 
 import Card from '@utils/datatypes/Card';
-import Cube from '@utils/datatypes/Cube';
+import Cube, { getCubeDisplayOptions } from '@utils/datatypes/Cube';
 
 import { useCardDetails } from 'hooks/useCardDetails';
 import { applyIndexMap } from 'utils/applyIndexMap';
@@ -135,7 +135,7 @@ const CubeComparePage: React.FC<CubeComparePageProps> = ({
   return (
     <FilterContextProvider>
       <MainLayout>
-        <DisplayContextProvider cubeID={cube.id}>
+        <DisplayContextProvider cubeID={cube.id} savedDisplayOptions={getCubeDisplayOptions(cube)}>
           <ChangesContextProvider cube={cube}>
             <CubeContextProvider initialCube={cube} cards={{ mainboard: hydratedCards, maybeboard: [] }}>
               <CubeComparePageInner

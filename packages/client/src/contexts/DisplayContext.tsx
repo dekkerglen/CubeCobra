@@ -1,11 +1,17 @@
-import React, { ReactNode, useCallback, useEffect, useState } from 'react';
+import React, { ReactNode, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { viewNameToSlug } from '@utils/datatypes/Cube';
+import {
+  CUBE_DISPLAY_OPTION_KEYS,
+  CubeDisplayOptions,
+  DEFAULT_CUBE_DISPLAY_OPTIONS,
+  viewNameToSlug,
+} from '@utils/datatypes/Cube';
 
 import { NumCols } from '../components/base/Layout';
 import useLocalStorage from '../hooks/useLocalStorage';
 import useQueryParam from '../hooks/useQueryParam';
 import Query from '../utils/Query';
+import { CSRFContext } from './CSRFContext';
 
 export type RightSidebarMode = 'none' | 'edit' | 'sort';
 export type RightSidebarPosition = 'right' | 'bottom';
@@ -18,11 +24,12 @@ export interface DisplayContextValue {
   setActiveBoard: (board: string) => void; // Deprecated - use setActiveView instead
   activeView: string; // The currently active view, as its URL slug
   setActiveView: (view: string) => void;
-  showInlineTagEmojis: boolean;
   toggleShowMaybeboard: () => void;
-  toggleShowInlineTagEmojis: () => void;
-  showTagQuickFilters: boolean;
-  toggleShowTagQuickFilters: () => void;
+  displayOptions: CubeDisplayOptions;
+  setDisplayOption: <K extends keyof CubeDisplayOptions>(key: K, value: CubeDisplayOptions[K]) => void;
+  displayOptionsModified: boolean;
+  resetDisplayOptions: () => void;
+  saveDisplayOptions: () => Promise<boolean>;
   openCollapse: string | null;
   setOpenCollapse: React.Dispatch<React.SetStateAction<string | null>>;
   cardsPerRow: NumCols;
@@ -37,10 +44,6 @@ export interface DisplayContextValue {
   setRightSidebarPosition: React.Dispatch<React.SetStateAction<RightSidebarPosition>>;
   cubeSidebarExpanded: boolean;
   toggleCubeSidebarExpanded: () => void;
-  showAllBoards: boolean;
-  setShowAllBoards: React.Dispatch<React.SetStateAction<boolean>>;
-  useBaseCardData: boolean;
-  toggleUseBaseCardData: () => void;
 }
 
 const DisplayContext = React.createContext<DisplayContextValue>({
@@ -50,12 +53,13 @@ const DisplayContext = React.createContext<DisplayContextValue>({
   setActiveBoard: () => {},
   activeView: 'mainboard',
   setActiveView: () => {},
-  showInlineTagEmojis: false,
   toggleShowCustomImages: () => {},
   toggleShowMaybeboard: () => {},
-  toggleShowInlineTagEmojis: () => {},
-  showTagQuickFilters: true,
-  toggleShowTagQuickFilters: () => {},
+  displayOptions: DEFAULT_CUBE_DISPLAY_OPTIONS,
+  setDisplayOption: () => {},
+  displayOptionsModified: false,
+  resetDisplayOptions: () => {},
+  saveDisplayOptions: async () => false,
   openCollapse: null,
   setOpenCollapse: () => {},
   cardsPerRow: 8,
@@ -70,10 +74,6 @@ const DisplayContext = React.createContext<DisplayContextValue>({
   setRightSidebarPosition: () => {},
   cubeSidebarExpanded: true,
   toggleCubeSidebarExpanded: () => {},
-  showAllBoards: false,
-  setShowAllBoards: () => {},
-  useBaseCardData: false,
-  toggleUseBaseCardData: () => {},
 });
 
 interface DisplayContextProviderProps {
@@ -88,6 +88,8 @@ interface DisplayContextProviderProps {
    * cube list page so owners always see the edit panel expanded on desktop.
    */
   defaultEditSidebarOpen?: boolean;
+  /** The cube's saved display defaults; every page load starts from these. */
+  savedDisplayOptions?: CubeDisplayOptions;
   children: ReactNode;
 }
 
@@ -95,8 +97,10 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
   cubeID,
   viewSlugs,
   defaultEditSidebarOpen = false,
+  savedDisplayOptions: initialSavedDisplayOptions = DEFAULT_CUBE_DISPLAY_OPTIONS,
   ...props
 }) => {
+  const { csrfFetch } = useContext(CSRFContext);
   const [showCustomImages, setShowCustomImages] = useLocalStorage<boolean>('showcustomimages', true);
   const [openCollapse, setOpenCollapse] = useState<string | null>(() => {
     return Query.get('f') ? 'filter' : null;
@@ -172,27 +176,42 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
     [setBoardParam],
   );
 
-  const [showInlineTagEmojis, setShowInlineTagEmojis] = useState<boolean>(() => {
-    return (
-      typeof localStorage !== 'undefined' &&
-      typeof cubeID === 'string' &&
-      localStorage.getItem(`inline-tag-emojis-${cubeID}`) === 'true'
-    );
-  });
+  const [savedDisplayOptions, setSavedDisplayOptions] = useState<CubeDisplayOptions>(initialSavedDisplayOptions);
+  const [displayOptions, setDisplayOptions] = useState<CubeDisplayOptions>(initialSavedDisplayOptions);
+
+  const setDisplayOption = useCallback(<K extends keyof CubeDisplayOptions>(key: K, value: CubeDisplayOptions[K]) => {
+    setDisplayOptions((prev) => ({ ...prev, [key]: value }));
+  }, []);
+
+  const displayOptionsModified = useMemo(
+    () => CUBE_DISPLAY_OPTION_KEYS.some((key) => displayOptions[key] !== savedDisplayOptions[key]),
+    [displayOptions, savedDisplayOptions],
+  );
+
+  const resetDisplayOptions = useCallback(() => {
+    setDisplayOptions(savedDisplayOptions);
+  }, [savedDisplayOptions]);
+
+  const saveDisplayOptions = useCallback(async () => {
+    try {
+      const response = await csrfFetch(`/cube/api/savedisplayoptions/${cubeID}`, {
+        method: 'POST',
+        body: JSON.stringify({ displayOptions }),
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (!response.ok) {
+        return false;
+      }
+      setSavedDisplayOptions(displayOptions);
+      return true;
+    } catch {
+      return false;
+    }
+  }, [csrfFetch, cubeID, displayOptions]);
 
   const [showDeckBuilderStatsPanel, setShowDeckBuilderStatsPanel] = useState<boolean>(() => {
     return typeof localStorage !== 'undefined' && localStorage.getItem('show-deckbuilder-stats') === 'true';
   });
-
-  const toggleShowInlineTagEmojis = useCallback(() => {
-    if (cubeID) localStorage.setItem(`inline-tag-emojis-${cubeID}`, (!showInlineTagEmojis).toString());
-    setShowInlineTagEmojis((prev) => !prev);
-  }, [cubeID, showInlineTagEmojis]);
-
-  const [showTagQuickFilters, setShowTagQuickFilters] = useLocalStorage<boolean>(`${cubeID}-showTagQuickFilters`, true);
-  const toggleShowTagQuickFilters = useCallback(() => {
-    setShowTagQuickFilters((prev) => !prev);
-  }, [setShowTagQuickFilters]);
 
   const toggleShowDeckBuilderStatsPanel = useCallback(() => {
     localStorage.setItem('show-deckbuilder-stats', (!showDeckBuilderStatsPanel).toString());
@@ -202,13 +221,6 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
   const toggleCubeSidebarExpanded = useCallback(() => {
     setCubeSidebarExpanded((prev) => !prev);
   }, [setCubeSidebarExpanded]);
-
-  const [showAllBoards, setShowAllBoards] = useLocalStorage<boolean>(`${cubeID}-showAllBoards`, false);
-
-  const [useBaseCardData, setUseBaseCardData] = useLocalStorage<boolean>('useBaseCardData', false);
-  const toggleUseBaseCardData = useCallback(() => {
-    setUseBaseCardData((prev) => !prev);
-  }, [setUseBaseCardData]);
 
   const [rightSidebarMode, setRightSidebarMode] = useState<RightSidebarMode>(() => {
     const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 768;
@@ -252,10 +264,11 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
     activeView,
     setActiveView,
     toggleShowMaybeboard,
-    showInlineTagEmojis,
-    toggleShowInlineTagEmojis,
-    showTagQuickFilters,
-    toggleShowTagQuickFilters,
+    displayOptions,
+    setDisplayOption,
+    displayOptionsModified,
+    resetDisplayOptions,
+    saveDisplayOptions,
     openCollapse,
     setOpenCollapse,
     cardsPerRow,
@@ -270,10 +283,6 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
     setRightSidebarPosition,
     cubeSidebarExpanded,
     toggleCubeSidebarExpanded,
-    showAllBoards,
-    setShowAllBoards,
-    useBaseCardData,
-    toggleUseBaseCardData,
   };
   return <DisplayContext.Provider value={value} {...props} />;
 };
