@@ -287,21 +287,20 @@ describe.each([
   ['vertical', false],
   ['horizontal', true],
 ])('CubeListSortSidebar in Curve view (%s)', (_layout, isHorizontal) => {
-  const CURVE_NOTE = 'Curve view only uses the Primary sort.';
   const sortSelects = () => screen.getAllByRole('combobox');
 
   beforeEach(() => {
     window.history.replaceState({}, '', '/cube/list/c1');
   });
 
-  it('disables every sort but Primary and says why', () => {
+  it('disables every sort but Primary, without an extra note', () => {
     renderSidebar({ canEdit: false, isHorizontal, csrfFetch: jest.fn(), displayView: 'curve' });
     const [primary, secondary, tertiary, ordered] = sortSelects();
     expect(primary).toBeEnabled();
     expect(secondary).toBeDisabled();
     expect(tertiary).toBeDisabled();
     expect(ordered).toBeDisabled();
-    expect(screen.getByText(CURVE_NOTE)).toBeInTheDocument();
+    expect(screen.queryByText(/Curve view/)).not.toBeInTheDocument();
   });
 
   it('leaves every sort enabled in other views', () => {
@@ -309,7 +308,6 @@ describe.each([
     for (const select of sortSelects()) {
       expect(select).toBeEnabled();
     }
-    expect(screen.queryByText(CURVE_NOTE)).not.toBeInTheDocument();
   });
 
   it('counts only cards the Primary sort hides', () => {

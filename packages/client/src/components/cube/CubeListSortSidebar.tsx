@@ -21,7 +21,6 @@ const TagColorsModalButton = withModal(Button, TagColorsModal);
 
 // Curve view groups columns by the Primary sort only; the other sort levels have no effect there.
 const usesPrimarySortOnly = (displayView: string) => displayView === 'curve';
-const CURVE_SORT_NOTE = 'Curve view only uses the Primary sort.';
 
 const HiddenBySortNotice: React.FC = () => {
   const { cube, changedCards, cardsLoading, sortPrimary, sortSecondary, sortTertiary } = useContext(CubeContext);
@@ -252,12 +251,6 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
             disabled={primaryOnly}
           />
 
-          {primaryOnly && (
-            <Text sm className="text-text-secondary">
-              {CURVE_SORT_NOTE}
-            </Text>
-          )}
-
           <HiddenBySortNotice />
 
           <Text italic sm className="text-text-secondary">
@@ -336,11 +329,6 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
                   />
                 </div>
               </div>
-              {primaryOnly && (
-                <Text sm className="text-text-secondary">
-                  {CURVE_SORT_NOTE}
-                </Text>
-              )}
               <HiddenBySortNotice />
               <Text italic sm className="text-text-secondary">
                 Cards will appear as duplicates if they fit in multiple categories. The counts will still only count
