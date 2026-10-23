@@ -175,15 +175,12 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       req.params.id,
     );
 
-    // NOTE: the blog post still requires `tag`, so unchecking "Tag cards with
-    // package name" suppresses it too. That coupling predates the notes option
-    // and is left as-is rather than changed without being asked for.
-    if (req.body.packid && createBlogPost && tag) {
+    if (req.body.packid && createBlogPost && packageTitle) {
       const id = await blogDao.createBlog({
-        body: `Add from the package [${tag}](/packages/${req.body.packid})`,
+        body: `Add from the package [${packageTitle}](/packages/${req.body.packid})`,
         owner: req.user.id,
         cube: cube.id,
-        title: `Added Package "${tag}"`,
+        title: `Added Package "${packageTitle}"`,
         changelist,
       });
 

@@ -17,7 +17,7 @@ jest.mock('../../../src/dynamo/daos', () => ({
 jest.mock('serverutils/carddb');
 jest.mock('serverutils/cubefn');
 
-import { changelogDao, cubeDao, packageDao } from '../../../src/dynamo/daos';
+import { blogDao, changelogDao, cubeDao, feedDao, packageDao, userDao } from '../../../src/dynamo/daos';
 
 // The printing the package itself stores, and the printing the cube's preference should pick instead.
 const PACKAGE_PRINTING_ID = 'aaaaaaaa-0000-0000-0000-000000000001';
@@ -31,6 +31,10 @@ const setupCube = (overrides?: Parameters<typeof createCube>[0]) => {
   (cubeDao.getCards as jest.Mock).mockResolvedValue({ mainboard: [], maybeboard: [] });
   (cubeDao.updateCards as jest.Mock).mockResolvedValue(undefined);
   (changelogDao.createChangelog as jest.Mock).mockResolvedValue('changelog-id');
+  (blogDao.createBlog as jest.Mock).mockResolvedValue('blog-id');
+  (cubeDao.getAllLikers as jest.Mock).mockResolvedValue([]);
+  (userDao.getAllFollowers as jest.Mock).mockResolvedValue([]);
+  (feedDao.batchPutUnhydrated as jest.Mock).mockResolvedValue(undefined);
   (isCubeViewable as jest.Mock).mockReturnValue(true);
   (isCubeEditable as jest.Mock).mockReturnValue(true);
   (cardFromId as jest.Mock).mockImplementation((id: string) =>
@@ -231,5 +235,60 @@ describe('POST /cube/api/addtocube/:id', () => {
       .send();
 
     expect(addedCardNotes()).toEqual([undefined]);
+  });
+
+  it('blogs about the package by default', async () => {
+    const { cube, owner } = setupCube();
+    withPackage();
+
+    await call(addtocubeHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ cards: [PACKAGE_PRINTING_ID], packid: PACK_ID })
+      .send();
+
+    expect(blogDao.createBlog).toHaveBeenCalledWith(
+      expect.objectContaining({ title: `Added Package "${PACK_TITLE}"` }),
+    );
+  });
+
+  it('skips the blog post when createBlogPost is false', async () => {
+    const { cube, owner } = setupCube();
+    withPackage();
+
+    await call(addtocubeHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ cards: [PACKAGE_PRINTING_ID], packid: PACK_ID, createBlogPost: false })
+      .send();
+
+    expect(blogDao.createBlog).not.toHaveBeenCalled();
+  });
+
+  it('still blogs about the package when autotagging is off', async () => {
+    const { cube, owner } = setupCube();
+    withPackage();
+
+    await call(addtocubeHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ cards: [PACKAGE_PRINTING_ID], packid: PACK_ID, autoTag: false })
+      .send();
+
+    expect(blogDao.createBlog).toHaveBeenCalledWith(
+      expect.objectContaining({ title: `Added Package "${PACK_TITLE}"` }),
+    );
+  });
+
+  it('writes no blog post when the cards did not come from a package', async () => {
+    const { cube, owner } = setupCube();
+
+    await call(addtocubeHandler)
+      .as(owner)
+      .withParams({ id: cube.id })
+      .withBody({ cards: [PACKAGE_PRINTING_ID] })
+      .send();
+
+    expect(blogDao.createBlog).not.toHaveBeenCalled();
   });
 });
