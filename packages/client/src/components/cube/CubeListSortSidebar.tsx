@@ -1,6 +1,7 @@
 import React, { useCallback, useContext, useMemo } from 'react';
 
 import { QuestionIcon } from '@primer/octicons-react';
+import { CubeDisplayOptions } from '@utils/datatypes/Cube';
 import { CUBE_DEFAULT_SORTS, getAllSorts, ORDERED_SORTS } from '@utils/sorting/Sort';
 
 import Button from 'components/base/Button';
@@ -21,6 +22,85 @@ import useAlerts, { Alerts } from 'hooks/UseAlerts';
 const TagColorsModalButton = withModal(Button, TagColorsModal);
 const RotoSetupButton = withModal(Button, RotisserieDraftModal);
 
+const DISPLAY_OPTION_CONTROLS: { key: keyof CubeDisplayOptions; label: string; tooltip: string }[] = [
+  {
+    key: 'showUnsorted',
+    label: 'Show Unsorted Cards',
+    tooltip: 'Creates a separate column for cards that would be hidden otherwise.',
+  },
+  {
+    key: 'collapseDuplicateCards',
+    label: 'Collapse Duplicates',
+    tooltip: 'Collapses duplicate cards that appear in multiple categories into a single instance.',
+  },
+  {
+    key: 'showInlineTagEmojis',
+    label: 'Show Inline Emojis',
+    tooltip: 'Display emoji tags directly next to card names in the list view.',
+  },
+  {
+    key: 'showTagQuickFilters',
+    label: 'Show Tag Quick Filters',
+    tooltip: "Show a row of buttons for this cube's emoji tags below the filter bar. Clicking one filters to that tag.",
+  },
+  {
+    key: 'showAllBoards',
+    label: 'Show All Boards',
+    tooltip: "Display all boards at the same time, regardless of the current view's board selection.",
+  },
+  {
+    key: 'useBaseCardData',
+    label: 'Use Base Card Data',
+    tooltip:
+      "Sort and filter using a card's original printed attributes, ignoring any overrides you've set (e.g. custom CMC, colors, type).",
+  },
+  {
+    key: 'showTagColors',
+    label: 'Show Tag Colors',
+    tooltip: 'Color card rows by their highest-priority tag color.',
+  },
+];
+
+interface DisplayOptionsControlsProps {
+  canEdit: boolean;
+  tooltipIconClassName?: string;
+}
+
+const DisplayOptionsControls: React.FC<DisplayOptionsControlsProps> = ({ canEdit, tooltipIconClassName }) => {
+  const { displayOptions, setDisplayOption, displayOptionsModified, resetDisplayOptions, saveDisplayOptions } =
+    useContext(DisplayContext);
+  const { alerts, addAlert, dismissAlerts } = useAlerts();
+
+  const handleSave = useCallback(async () => {
+    dismissAlerts();
+    if (!(await saveDisplayOptions())) {
+      addAlert('danger', "Couldn't save the default display options. Please make sure you're logged in and try again.");
+    }
+  }, [saveDisplayOptions, addAlert, dismissAlerts]);
+
+  return (
+    <Flexbox direction="col" gap="2">
+      {DISPLAY_OPTION_CONTROLS.map(({ key, label, tooltip }) => (
+        <Flexbox key={key} direction="row" gap="2" alignItems="center">
+          <Checkbox label={label} checked={displayOptions[key]} setChecked={(value) => setDisplayOption(key, value)} />
+          <Tooltip text={tooltip}>
+            <QuestionIcon size={16} className={tooltipIconClassName} />
+          </Tooltip>
+        </Flexbox>
+      ))}
+      <Alerts alerts={alerts} />
+      {canEdit && (
+        <Button color="primary" onClick={handleSave} disabled={!displayOptionsModified} block>
+          Save as Default Display
+        </Button>
+      )}
+      <Button color="danger" onClick={resetDisplayOptions} disabled={!displayOptionsModified} block>
+        Reset Display
+      </Button>
+    </Flexbox>
+  );
+};
+
 interface CubeListSortSidebarProps {
   canEdit: boolean;
   isHorizontal?: boolean;
@@ -29,8 +109,6 @@ interface CubeListSortSidebarProps {
 const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHorizontal = false }) => {
   const {
     cube,
-    setShowUnsorted,
-    setCollapseDuplicateCards,
     resetSorts,
     saveSorts,
     effectiveDefaultSorts,
@@ -44,17 +122,6 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
     setSortQuaternary,
   } = useContext(CubeContext);
 
-  const {
-    setRightSidebarMode: _setRightSidebarMode,
-    showInlineTagEmojis,
-    toggleShowInlineTagEmojis,
-    showTagQuickFilters,
-    toggleShowTagQuickFilters,
-    showAllBoards,
-    setShowAllBoards,
-    useBaseCardData,
-    toggleUseBaseCardData,
-  } = useContext(DisplayContext);
   const { url: rotoURL, setUrl: setRotoURL } = useContext(RotoDraftContext);
 
   const sortsModified = useMemo(() => {
@@ -125,9 +192,11 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               Reset Sort
             </Button>
 
-            <TagColorsModalButton color="secondary" block>
-              {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
-            </TagColorsModalButton>
+            {canEdit && (
+              <TagColorsModalButton color="secondary" block>
+                Set Tag Colors
+              </TagColorsModalButton>
+            )}
 
             {rotoURL ? (
               <Button color="secondary" onClick={() => setRotoURL('')} block>
@@ -140,56 +209,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
             )}
           </Flexbox>
 
-          <Flexbox direction="col" gap="2">
-            <Flexbox direction="row" gap="2" alignItems="center">
-              <Checkbox label="Show Unsorted Cards" checked={cube.showUnsorted || false} setChecked={setShowUnsorted} />
-              <Tooltip text="Creates a separate column for cards that would be hidden otherwise.">
-                <QuestionIcon size={16} className="hidden md:inline" />
-              </Tooltip>
-            </Flexbox>
-            <Flexbox direction="row" gap="2" alignItems="center">
-              <Checkbox
-                label="Collapse Duplicates"
-                checked={cube.collapseDuplicateCards || false}
-                setChecked={setCollapseDuplicateCards}
-              />
-              <Tooltip text="Collapses duplicate cards that appear in multiple categories into a single instance.">
-                <QuestionIcon size={16} className="hidden md:inline" />
-              </Tooltip>
-            </Flexbox>
-            <Flexbox direction="row" gap="2" alignItems="center">
-              <Checkbox
-                label="Show Inline Emojis"
-                checked={showInlineTagEmojis}
-                setChecked={toggleShowInlineTagEmojis}
-              />
-              <Tooltip text="Display emoji tags directly next to card names in the list view.">
-                <QuestionIcon size={16} className="hidden md:inline" />
-              </Tooltip>
-            </Flexbox>
-            <Flexbox direction="row" gap="2" alignItems="center">
-              <Checkbox
-                label="Show Tag Quick Filters"
-                checked={showTagQuickFilters}
-                setChecked={toggleShowTagQuickFilters}
-              />
-              <Tooltip text="Show a row of buttons for this cube's emoji tags below the filter bar. Clicking one filters to that tag.">
-                <QuestionIcon size={16} className="hidden md:inline" />
-              </Tooltip>
-            </Flexbox>
-            <Flexbox direction="row" gap="2" alignItems="center">
-              <Checkbox label="Show All Boards" checked={showAllBoards} setChecked={setShowAllBoards} />
-              <Tooltip text="Display all boards at the same time, regardless of the current view's board selection.">
-                <QuestionIcon size={16} className="hidden md:inline" />
-              </Tooltip>
-            </Flexbox>
-            <Flexbox direction="row" gap="2" alignItems="center">
-              <Checkbox label="Use Base Card Data" checked={useBaseCardData} setChecked={toggleUseBaseCardData} />
-              <Tooltip text="Sort and filter using a card's original printed attributes, ignoring any overrides you've set (e.g. custom CMC, colors, type).">
-                <QuestionIcon size={16} className="hidden md:inline" />
-              </Tooltip>
-            </Flexbox>
-          </Flexbox>
+          <DisplayOptionsControls canEdit={canEdit} tooltipIconClassName="hidden md:inline" />
 
           {canEdit && (
             <div className="pt-3 mt-2 border-t border-border">
@@ -247,54 +267,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               <Text semibold sm>
                 Display Options
               </Text>
-              <Flexbox direction="row" gap="2" alignItems="center">
-                <Checkbox label="Show Unsorted" checked={cube.showUnsorted || false} setChecked={setShowUnsorted} />
-                <Tooltip text="Creates a separate column for cards that would be hidden otherwise.">
-                  <QuestionIcon size={16} />
-                </Tooltip>
-              </Flexbox>
-              <Flexbox direction="row" gap="2" alignItems="center">
-                <Checkbox
-                  label="Collapse Duplicates"
-                  checked={cube.collapseDuplicateCards || false}
-                  setChecked={setCollapseDuplicateCards}
-                />
-                <Tooltip text="Collapses duplicate cards that appear in multiple categories into a single instance.">
-                  <QuestionIcon size={16} />
-                </Tooltip>
-              </Flexbox>
-              <Flexbox direction="row" gap="2" alignItems="center">
-                <Checkbox
-                  label="Show Inline Emojis"
-                  checked={showInlineTagEmojis}
-                  setChecked={toggleShowInlineTagEmojis}
-                />
-                <Tooltip text="Display emoji tags directly next to card names in the list view.">
-                  <QuestionIcon size={16} />
-                </Tooltip>
-              </Flexbox>
-              <Flexbox direction="row" gap="2" alignItems="center">
-                <Checkbox
-                  label="Show Tag Quick Filters"
-                  checked={showTagQuickFilters}
-                  setChecked={toggleShowTagQuickFilters}
-                />
-                <Tooltip text="Show a row of buttons for this cube's emoji tags below the filter bar. Clicking one filters to that tag.">
-                  <QuestionIcon size={16} />
-                </Tooltip>
-              </Flexbox>
-              <Flexbox direction="row" gap="2" alignItems="center">
-                <Checkbox label="Show All Boards" checked={showAllBoards} setChecked={setShowAllBoards} />
-                <Tooltip text="Display all boards at the same time, regardless of the current view's board selection.">
-                  <QuestionIcon size={16} />
-                </Tooltip>
-              </Flexbox>
-              <Flexbox direction="row" gap="2" alignItems="center">
-                <Checkbox label="Use Base Card Data" checked={useBaseCardData} setChecked={toggleUseBaseCardData} />
-                <Tooltip text="Sort and filter using a card's original printed attributes, ignoring any overrides you've set (e.g. custom CMC, colors, type).">
-                  <QuestionIcon size={16} />
-                </Tooltip>
-              </Flexbox>
+              <DisplayOptionsControls canEdit={canEdit} />
             </div>
 
             {/* Column 4: Actions */}
@@ -311,9 +284,11 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               <Button color="danger" onClick={resetSorts} disabled={!sortsModified} block>
                 Reset Sort
               </Button>
-              <TagColorsModalButton color="secondary" block>
-                {canEdit ? 'Set Tag Colors' : 'View Tag Colors'}
-              </TagColorsModalButton>
+              {canEdit && (
+                <TagColorsModalButton color="secondary" block>
+                  Set Tag Colors
+                </TagColorsModalButton>
+              )}
               {rotoURL ? (
                 <Button color="secondary" onClick={() => setRotoURL('')} block>
                   Clear Rotisserie

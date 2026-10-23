@@ -35,8 +35,6 @@ const Harness: React.FC<HarnessProps> = ({ csrfFetch, onTagColorsChange, setOpen
   const cubeValue = {
     tagColors,
     setTagColors,
-    showTagColors: true,
-    updateShowTagColors: jest.fn(),
     canEdit: true,
     cube: { id: 'test-cube-id' },
   };
@@ -73,6 +71,11 @@ const findDialogCloseButton = () => {
 };
 
 describe('TagColorsModal', () => {
+  it('has no show/hide tag colors control', () => {
+    render(<Harness csrfFetch={jest.fn()} />);
+    expect(screen.queryByText(/tag colors by default/i)).not.toBeInTheDocument();
+  });
+
   it('saves the edited colors and closes the modal on success', async () => {
     const csrfFetch = jest.fn().mockResolvedValue({ ok: true });
     const setOpen = jest.fn();

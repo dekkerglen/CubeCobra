@@ -59,7 +59,7 @@ interface TagColorsModalProps {
 const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
   const { csrfFetch } = useContext(CSRFContext);
   //Continually update the tagColors in CubeContext as the modal contents change. They won't persist until the actual save
-  const { tagColors, setTagColors, showTagColors, updateShowTagColors, canEdit, cube } = useContext(CubeContext);
+  const { tagColors, setTagColors, canEdit, cube } = useContext(CubeContext);
   const [loading, setLoading] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   //The last-saved colors, so closing the modal without saving can revert the live preview
@@ -169,25 +169,6 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
     <Modal isOpen={isOpen} setOpen={handleSetOpen} md scrollable>
       <ModalHeader setOpen={handleSetOpen}>{canEdit ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
       <ModalBody scrollable>
-        {showTagColors ? (
-          <LoadingButton
-            block
-            color="primary"
-            onClick={async () => await updateShowTagColors(false)}
-            disabled={!canEdit}
-          >
-            Hide tag colors by default
-          </LoadingButton>
-        ) : (
-          <LoadingButton
-            block
-            color="primary"
-            onClick={async () => await updateShowTagColors(true)}
-            disabled={!canEdit}
-          >
-            Show tag colors by default
-          </LoadingButton>
-        )}
         {!canEdit ? (
           ''
         ) : (

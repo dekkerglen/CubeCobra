@@ -1,0 +1,151 @@
+import React from 'react';
+
+import { act, fireEvent, render, screen } from '@testing-library/react';
+
+import '@testing-library/jest-dom';
+
+import { DEFAULT_CUBE_DISPLAY_OPTIONS } from '@utils/datatypes/Cube';
+
+import CubeListSortSidebar from 'components/cube/CubeListSortSidebar';
+import { CSRFContext } from 'contexts/CSRFContext';
+import CubeContext from 'contexts/CubeContext';
+import { DisplayContextProvider } from 'contexts/DisplayContext';
+
+jest.mock('components/modals/TagColorsModal', () => ({
+  __esModule: true,
+  default: () => null,
+}));
+jest.mock('components/modals/RotisserieDraftModal', () => ({
+  __esModule: true,
+  default: () => null,
+}));
+
+const SAVE_ERROR = "Couldn't save the default display options. Please make sure you're logged in and try again.";
+
+const renderSidebar = ({
+  canEdit,
+  isHorizontal,
+  csrfFetch,
+}: {
+  canEdit: boolean;
+  isHorizontal: boolean;
+  csrfFetch: jest.Mock;
+}) => {
+  const cubeValue = {
+    cube: { id: 'c1', defaultSorts: [] },
+    canEdit,
+    resetSorts: jest.fn(),
+    saveSorts: jest.fn(),
+    effectiveDefaultSorts: [],
+    setSortPrimary: jest.fn(),
+    setSortSecondary: jest.fn(),
+    setSortTertiary: jest.fn(),
+    setSortQuaternary: jest.fn(),
+  };
+  return render(
+    <CSRFContext.Provider value={{ csrfToken: 't', csrfFetch, callApi: jest.fn() } as any}>
+      <DisplayContextProvider cubeID="c1" savedDisplayOptions={DEFAULT_CUBE_DISPLAY_OPTIONS}>
+        <CubeContext.Provider value={cubeValue as any}>
+          <CubeListSortSidebar canEdit={canEdit} isHorizontal={isHorizontal} />
+        </CubeContext.Provider>
+      </DisplayContextProvider>
+    </CSRFContext.Provider>,
+  );
+};
+
+const checkbox = (label: string) => screen.getByLabelText(label) as HTMLInputElement;
+const button = (name: string) => screen.getByRole('button', { name });
+
+describe.each([
+  ['vertical', false],
+  ['horizontal', true],
+])('CubeListSortSidebar display options (%s)', (_layout, isHorizontal) => {
+  let csrfFetch: jest.Mock;
+
+  beforeEach(() => {
+    csrfFetch = jest.fn();
+  });
+
+  it('shows seven display checkboxes including Show Tag Colors', () => {
+    renderSidebar({ canEdit: false, isHorizontal, csrfFetch });
+    for (const label of [
+      'Show Unsorted Cards',
+      'Collapse Duplicates',
+      'Show Inline Emojis',
+      'Show Tag Quick Filters',
+      'Show All Boards',
+      'Use Base Card Data',
+      'Show Tag Colors',
+    ]) {
+      expect(checkbox(label)).toBeInTheDocument();
+    }
+    expect(checkbox('Show Tag Colors')).toBeChecked();
+    expect(checkbox('Show Tag Quick Filters')).toBeChecked();
+  });
+
+  it('non-editors get no Save as Default Display and no Set Tag Colors', () => {
+    renderSidebar({ canEdit: false, isHorizontal, csrfFetch });
+
+    expect(screen.queryByRole('button', { name: 'Save as Default Display' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Set Tag Colors' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'View Tag Colors' })).not.toBeInTheDocument();
+
+    fireEvent.click(checkbox('Show Tag Colors'));
+    expect(checkbox('Show Tag Colors')).not.toBeChecked();
+    expect(csrfFetch).not.toHaveBeenCalled();
+  });
+
+  it('editors: Save and Reset are disabled until something changes', () => {
+    renderSidebar({ canEdit: true, isHorizontal, csrfFetch });
+
+    expect(button('Set Tag Colors')).toBeInTheDocument();
+    expect(button('Save as Default Display')).toBeDisabled();
+    expect(button('Reset Display')).toBeDisabled();
+
+    fireEvent.click(checkbox('Show Tag Colors'));
+
+    expect(button('Save as Default Display')).toBeEnabled();
+    expect(button('Reset Display')).toBeEnabled();
+    expect(csrfFetch).not.toHaveBeenCalled();
+  });
+
+  it('Save as Default Display posts once and disables again on success', async () => {
+    csrfFetch.mockResolvedValue({ ok: true });
+    renderSidebar({ canEdit: true, isHorizontal, csrfFetch });
+
+    fireEvent.click(checkbox('Show Unsorted Cards'));
+    await act(async () => {
+      fireEvent.click(button('Save as Default Display'));
+    });
+
+    expect(csrfFetch).toHaveBeenCalledTimes(1);
+    expect(JSON.parse(csrfFetch.mock.calls[0][1].body).displayOptions.showUnsorted).toBe(true);
+    expect(button('Save as Default Display')).toBeDisabled();
+  });
+
+  it('failed save shows the error alert and keeps the button enabled', async () => {
+    csrfFetch.mockResolvedValue({ ok: false });
+    renderSidebar({ canEdit: true, isHorizontal, csrfFetch });
+
+    fireEvent.click(checkbox('Show Unsorted Cards'));
+    await act(async () => {
+      fireEvent.click(button('Save as Default Display'));
+    });
+
+    expect(screen.getByText(SAVE_ERROR)).toBeInTheDocument();
+    expect(button('Save as Default Display')).toBeEnabled();
+    expect(checkbox('Show Unsorted Cards')).toBeChecked();
+  });
+
+  it('Reset Display restores the saved values', () => {
+    renderSidebar({ canEdit: false, isHorizontal, csrfFetch });
+
+    fireEvent.click(checkbox('Show All Boards'));
+    expect(checkbox('Show All Boards')).toBeChecked();
+
+    fireEvent.click(button('Reset Display'));
+
+    expect(checkbox('Show All Boards')).not.toBeChecked();
+    expect(button('Reset Display')).toBeDisabled();
+  });
+});

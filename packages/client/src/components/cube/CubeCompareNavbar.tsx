@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useContext } from 'react';
 
 import { ChevronUpIcon, ThreeBarsIcon } from '@primer/octicons-react';
 import { cardName } from '@utils/cardutil';
@@ -11,6 +11,7 @@ import Text from 'components/base/Text';
 import FilterCollapse from 'components/FilterCollapse';
 import TagColorsModal from 'components/modals/TagColorsModal';
 import SortCollapse from 'components/SortCollapse';
+import CubeContext from 'contexts/CubeContext';
 import useToggle from 'hooks/UseToggle';
 
 import Collapse from '../base/Collapse';
@@ -56,6 +57,7 @@ const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
   changelogId,
 }) => {
   const [expanded, toggleExpanded] = useToggle(false);
+  const { canEdit } = useContext(CubeContext);
   const handleOpenCollapse = useCallback(
     (tab: string) => {
       setOpenCollapse((openCollapseArg) => (openCollapseArg === tab ? null : tab));
@@ -103,7 +105,7 @@ const CubeCompareNavbar: React.FC<CubeCompareNavbarProps> = ({
     <>
       <Link onClick={() => handleOpenCollapse('sort')}>Sort</Link>
       <Link onClick={() => handleOpenCollapse('filter')}>Filter</Link>
-      <TagColorsModalItem>View Tag Colors</TagColorsModalItem>
+      {canEdit && <TagColorsModalItem>Set Tag Colors</TagColorsModalItem>}
       <Link onClick={handleExport}>Export</Link>
     </>
   );

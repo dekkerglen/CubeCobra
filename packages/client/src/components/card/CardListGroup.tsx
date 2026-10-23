@@ -33,7 +33,7 @@ const CardListGroup: React.FC<CardListGroupProps> = ({
   selectedIndex,
   collapseDuplicates: collapseDuplicatesProp,
 }) => {
-  const { cube, canEdit } = useContext(CubeContext);
+  const { canEdit } = useContext(CubeContext);
   const { collapseDuplicateCards } = useContext(DisplayContext).displayOptions;
   const collapseDuplicates = collapseDuplicatesProp ?? collapseDuplicateCards;
 

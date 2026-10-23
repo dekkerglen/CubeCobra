@@ -6,6 +6,7 @@ import Button from '../components/base/Button';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Tooltip from '../components/base/Tooltip';
 import CubeContext from '../contexts/CubeContext';
+import DisplayContext from '../contexts/DisplayContext';
 import Collapse from './base/Collapse';
 import Select from './base/Select';
 import Text from './base/Text';
@@ -18,8 +19,6 @@ interface SortCollapseProps {
 const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit: _canEdit = false }) => {
   const {
     cube,
-    setShowUnsorted,
-    setCollapseDuplicateCards,
     resetSorts,
     effectiveDefaultSorts,
     sortPrimary,
@@ -31,6 +30,10 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit: _canEdit =
     setSortTertiary,
     setSortQuaternary,
   } = useContext(CubeContext);
+  const {
+    displayOptions: { showUnsorted, collapseDuplicateCards },
+    setDisplayOption,
+  } = useContext(DisplayContext);
 
   const sortsModified = useMemo(() => {
     return (
@@ -88,17 +91,20 @@ const SortCollapse: React.FC<SortCollapseProps> = ({ isOpen, canEdit: _canEdit =
           <Button color="danger" onClick={resetSorts} disabled={!sortsModified}>
             Reset Sort
           </Button>
-          <Button color={cube.showUnsorted ? 'danger' : 'primary'} onClick={() => setShowUnsorted(!cube.showUnsorted)}>
+          <Button
+            color={showUnsorted ? 'danger' : 'primary'}
+            onClick={() => setDisplayOption('showUnsorted', !showUnsorted)}
+          >
             <Tooltip text="Creates a separate column for cards that would be hidden otherwise.">
-              {cube.showUnsorted ? 'Hide' : 'Show'} Unsorted cards
+              {showUnsorted ? 'Hide' : 'Show'} Unsorted cards
             </Tooltip>
           </Button>
           <Button
-            color={cube.collapseDuplicateCards ? 'danger' : 'primary'}
-            onClick={() => setCollapseDuplicateCards(!cube.collapseDuplicateCards)}
+            color={collapseDuplicateCards ? 'danger' : 'primary'}
+            onClick={() => setDisplayOption('collapseDuplicateCards', !collapseDuplicateCards)}
           >
             <Tooltip text="Collapses duplicate cards that appear in multiple categories into a single instance.">
-              {cube.collapseDuplicateCards ? 'Separate' : 'Collapse'} Duplicate Cards
+              {collapseDuplicateCards ? 'Separate' : 'Collapse'} Duplicate Cards
             </Tooltip>
           </Button>
         </Flexbox>
