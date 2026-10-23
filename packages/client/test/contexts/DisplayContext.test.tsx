@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useEffect } from 'react';
 
 import { act, render, screen } from '@testing-library/react';
 
@@ -9,11 +9,18 @@ import { CubeDisplayOptions, DEFAULT_CUBE_DISPLAY_OPTIONS } from '@utils/datatyp
 import { CSRFContext } from 'contexts/CSRFContext';
 import DisplayContext, { DisplayContextProvider, DisplayContextValue } from 'contexts/DisplayContext';
 
-let ctx: DisplayContextValue;
+const captured: { ctx?: DisplayContextValue } = {};
 const Probe: React.FC = () => {
-  ctx = useContext(DisplayContext);
-  return <div data-testid="options">{JSON.stringify(ctx.displayOptions)}</div>;
+  const value = useContext(DisplayContext);
+  useEffect(() => {
+    captured.ctx = value;
+  });
+  return <div data-testid="options">{JSON.stringify(value.displayOptions)}</div>;
 };
+// Reads the latest captured context value on each access.
+const ctx = new Proxy({} as DisplayContextValue, {
+  get: (_target, key) => captured.ctx![key as keyof DisplayContextValue],
+});
 
 const options = (): CubeDisplayOptions => JSON.parse(screen.getByTestId('options').textContent || '{}');
 
