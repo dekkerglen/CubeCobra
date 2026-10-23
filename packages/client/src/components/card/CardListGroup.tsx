@@ -4,6 +4,7 @@ import { cardName } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 
 import CubeContext from 'contexts/CubeContext';
+import DisplayContext from 'contexts/DisplayContext';
 
 import { ListGroup, ListGroupItem } from '../base/ListGroup';
 import withGroupModal from '../modals/WithGroupModal';
@@ -33,7 +34,8 @@ const CardListGroup: React.FC<CardListGroupProps> = ({
   collapseDuplicates: collapseDuplicatesProp,
 }) => {
   const { cube, canEdit } = useContext(CubeContext);
-  const collapseDuplicates = collapseDuplicatesProp ?? cube?.collapseDuplicateCards ?? false;
+  const { collapseDuplicateCards } = useContext(DisplayContext).displayOptions;
+  const collapseDuplicates = collapseDuplicatesProp ?? collapseDuplicateCards;
 
   const displayCards = useMemo(() => {
     if (!collapseDuplicates) {

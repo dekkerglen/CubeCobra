@@ -21,20 +21,25 @@ interface CardStacksViewProps {
 const CardStacksView: React.FC<CardStacksViewProps> = ({ cards, formatLabel }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube, setModalSelection, setModalOpen } =
     useContext(CubeContext);
-  const { rightSidebarMode, rightSidebarPosition, cubeSidebarExpanded, stacksPerRow, useBaseCardData } =
-    useContext(DisplayContext);
+  const {
+    rightSidebarMode,
+    rightSidebarPosition,
+    cubeSidebarExpanded,
+    stacksPerRow,
+    displayOptions: { showUnsorted, useBaseCardData },
+  } = useContext(DisplayContext);
 
   const sorted = useMemo(
     () =>
       sortDeep(
         cards,
-        cube.showUnsorted || false,
+        showUnsorted,
         sortQuaternary || 'Alphabetical',
         [sortPrimary || 'Color Category', sortSecondary || 'Types-Multicolor'],
         cube,
         useBaseCardData,
       ) as unknown as [string, [string, Card[]][]][],
-    [cards, cube, sortQuaternary, sortPrimary, sortSecondary, useBaseCardData],
+    [cards, cube, showUnsorted, sortQuaternary, sortPrimary, sortSecondary, useBaseCardData],
   );
 
   // Group cards by tertiary sort within each secondary group

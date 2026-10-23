@@ -1,3 +1,5 @@
+import { DEFAULT_CUBE_DISPLAY_OPTIONS } from '@utils/datatypes/Cube';
+
 import { DisplayContextValue } from '../../../client/src/contexts/DisplayContext';
 
 const defaultDisplayContext: DisplayContextValue = {
@@ -11,10 +13,11 @@ const defaultDisplayContext: DisplayContextValue = {
   toggleShowCustomImages: jest.fn(),
   showMaybeboard: false,
   toggleShowMaybeboard: jest.fn(),
-  showInlineTagEmojis: false,
-  toggleShowInlineTagEmojis: jest.fn(),
-  showTagQuickFilters: false,
-  toggleShowTagQuickFilters: jest.fn(),
+  displayOptions: { ...DEFAULT_CUBE_DISPLAY_OPTIONS, showTagQuickFilters: false },
+  setDisplayOption: jest.fn(),
+  displayOptionsModified: false,
+  resetDisplayOptions: jest.fn(),
+  saveDisplayOptions: jest.fn(),
   showDeckBuilderStatsPanel: false,
   toggleShowDeckBuilderStatsPanel: jest.fn(),
   rightSidebarMode: 'none',
@@ -23,10 +26,6 @@ const defaultDisplayContext: DisplayContextValue = {
   setRightSidebarPosition: jest.fn(),
   cubeSidebarExpanded: true,
   toggleCubeSidebarExpanded: jest.fn(),
-  showAllBoards: false,
-  setShowAllBoards: jest.fn(),
-  useBaseCardData: false,
-  toggleUseBaseCardData: jest.fn(),
   activeBoard: 'mainboard',
   setActiveBoard: jest.fn(),
   activeView: 'Mainboard',

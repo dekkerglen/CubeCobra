@@ -38,7 +38,7 @@ interface CubePITListPageProps {
 const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ date, changelogId }) => {
   const cubeContext = useContext(CubeContext);
   const { changedCards, filterResult, cube } = cubeContext;
-  const { showAllBoards } = useContext(DisplayContext);
+  const { showAllBoards } = useContext(DisplayContext).displayOptions;
   const { filterInput } = useContext(FilterContext);
 
   const [cubeView, setCubeView] = useQueryParam('display', 'table');

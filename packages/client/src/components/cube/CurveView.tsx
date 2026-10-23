@@ -70,17 +70,13 @@ interface CurveViewProps {
 
 const CurveView: React.FC<CurveViewProps> = ({ cards }) => {
   const { sortPrimary, cube } = useContext(CubeContext);
-  const { useBaseCardData } = useContext(DisplayContext);
+  const { showUnsorted, useBaseCardData } = useContext(DisplayContext).displayOptions;
 
   const sorted = fromEntries(
-    sortDeep(
-      cards,
-      cube.showUnsorted || false,
-      'Alphabetical',
-      [sortPrimary || 'Color Category'],
-      cube,
-      useBaseCardData,
-    ) as [string, CardType[]][],
+    sortDeep(cards, showUnsorted, 'Alphabetical', [sortPrimary || 'Color Category'], cube, useBaseCardData) as [
+      string,
+      CardType[],
+    ][],
   );
 
   return (

@@ -42,7 +42,11 @@ interface CubeListPageProps {
 const CubeListPageRaw: React.FC = () => {
   const { versionMismatch } = useContext(ChangesContext);
   const { changedCards, unfilteredChangedCards, filterResult, canEdit, cube, cardsLoading } = useContext(CubeContext);
-  const { showAllBoards, activeView, cubeSidebarExpanded } = useContext(DisplayContext);
+  const {
+    activeView,
+    cubeSidebarExpanded,
+    displayOptions: { showAllBoards },
+  } = useContext(DisplayContext);
   const { filterInput, setFilterInput, filterValid, cardFilter } = useContext(FilterContext);
   const user = useContext(UserContext);
 

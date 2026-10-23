@@ -5,7 +5,6 @@ import Card from '@utils/datatypes/Card';
 import cx from 'classnames';
 import emojiRegex from 'emoji-regex';
 
-import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 import RotoDraftContext from 'contexts/RotoDraftContext';
 
@@ -51,8 +50,9 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
   appendChildren = false,
 }) => {
   const tagColors = useContext(TagColorContext);
-  const { showTagColors } = useContext(CubeContext);
-  const { showInlineTagEmojis } = useContext(DisplayContext);
+  const {
+    displayOptions: { showInlineTagEmojis, showTagColors },
+  } = useContext(DisplayContext);
   // Auto-enables wherever a CubeTrayProvider is present (cube list pages).
   const drag = useCubeTrayDrag();
   const [name, cardId] = useMemo(

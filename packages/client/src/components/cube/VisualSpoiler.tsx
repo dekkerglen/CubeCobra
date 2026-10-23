@@ -17,8 +17,10 @@ interface VisualSpoilerProps {
 const VisualSpoiler: React.FC<VisualSpoilerProps> = ({ cards }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube, canEdit, setModalSelection, setModalOpen } =
     useContext(CubeContext);
-  const { cardsPerRow } = useContext(DisplayContext);
-  const collapseDuplicates = cube?.collapseDuplicateCards ?? false;
+  const {
+    cardsPerRow,
+    displayOptions: { showUnsorted, collapseDuplicateCards: collapseDuplicates },
+  } = useContext(DisplayContext);
 
   const sorted = useMemo(
     () =>
@@ -28,10 +30,10 @@ const VisualSpoiler: React.FC<VisualSpoilerProps> = ({ cards }) => {
         sortSecondary || 'Types-Multicolor',
         sortTertiary || 'CMC',
         sortQuaternary || 'Alphabetical',
-        cube.showUnsorted || false,
+        showUnsorted,
         cube,
       ),
-    [cards, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube],
+    [cards, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, showUnsorted, cube],
   );
 
   // Each entry is every copy shown under one image; the first copy is the one displayed.

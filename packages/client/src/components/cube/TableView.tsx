@@ -17,19 +17,24 @@ interface TableViewProps {
 
 const TableView: React.FC<TableViewProps> = ({ cards }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
-  const { rightSidebarMode, rightSidebarPosition, cubeSidebarExpanded, useBaseCardData } = useContext(DisplayContext);
+  const {
+    rightSidebarMode,
+    rightSidebarPosition,
+    cubeSidebarExpanded,
+    displayOptions: { showUnsorted, useBaseCardData },
+  } = useContext(DisplayContext);
 
   const sorted = useMemo(
     () =>
       sortDeep(
         cards,
-        cube.showUnsorted || false,
+        showUnsorted,
         sortQuaternary || 'Alphabetical',
         [sortPrimary || 'Color Category', sortSecondary || 'Types-Multicolor'],
         cube,
         useBaseCardData,
       ) as unknown as [string, [string, Card[]][]][],
-    [cards, cube, sortQuaternary, sortPrimary, sortSecondary, useBaseCardData],
+    [cards, cube, showUnsorted, sortQuaternary, sortPrimary, sortSecondary, useBaseCardData],
   );
 
   // Helper function to adjust breakpoint based on open sidebars
@@ -290,7 +295,7 @@ const TableView: React.FC<TableViewProps> = ({ cards }) => {
                       cards={row}
                       sort={sortTertiary || 'CMC'}
                       orderedSort={sortQuaternary || 'Alphabetical'}
-                      showOther={cube.showUnsorted}
+                      showOther={showUnsorted}
                     />
                   ))}
                 </Flexbox>
@@ -327,7 +332,7 @@ const TableView: React.FC<TableViewProps> = ({ cards }) => {
                     cards={row}
                     sort={sortTertiary || 'CMC'}
                     orderedSort={sortQuaternary || 'Alphabetical'}
-                    showOther={cube.showUnsorted}
+                    showOther={showUnsorted}
                   />
                 ))}
               </Flexbox>
