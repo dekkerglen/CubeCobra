@@ -218,42 +218,44 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
         // Horizontal layout for bottom card - completely redesigned
         <div className="w-full">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {/* Column 1: Sort Controls */}
-            <div className="flex flex-col gap-3">
-              <Text semibold sm>
-                Sort Controls
-              </Text>
-              <Select
-                label="Primary Sort"
-                value={sortPrimary || CUBE_DEFAULT_SORTS[0]}
-                setValue={setSortPrimary}
-                options={allSorts.map((sort) => ({ value: sort, label: sort }))}
-              />
-              <Select
-                label="Secondary Sort"
-                value={sortSecondary || CUBE_DEFAULT_SORTS[1]}
-                setValue={setSortSecondary}
-                options={allSorts.map((sort) => ({ value: sort, label: sort }))}
-              />
-            </div>
-
-            {/* Column 2: More Sort Controls */}
-            <div className="flex flex-col gap-3">
-              <Text semibold sm>
-                Additional Sorts
-              </Text>
-              <Select
-                label="Tertiary Sort"
-                value={sortTertiary || CUBE_DEFAULT_SORTS[2]}
-                setValue={setSortTertiary}
-                options={allSorts.map((sort) => ({ value: sort, label: sort }))}
-              />
-              <Select
-                label="Ordered Sort"
-                value={sortQuaternary || CUBE_DEFAULT_SORTS[3]}
-                setValue={setSortQuaternary}
-                options={ORDERED_SORTS.map((sort) => ({ value: sort, label: sort }))}
-              />
+            {/* Columns 1-2: Sort Controls, with the duplicates note on its own row below */}
+            <div className="md:col-span-2 flex flex-col gap-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="flex flex-col gap-3">
+                  <Text semibold sm>
+                    Sort Controls
+                  </Text>
+                  <Select
+                    label="Primary Sort"
+                    value={sortPrimary || CUBE_DEFAULT_SORTS[0]}
+                    setValue={setSortPrimary}
+                    options={allSorts.map((sort) => ({ value: sort, label: sort }))}
+                  />
+                  <Select
+                    label="Secondary Sort"
+                    value={sortSecondary || CUBE_DEFAULT_SORTS[1]}
+                    setValue={setSortSecondary}
+                    options={allSorts.map((sort) => ({ value: sort, label: sort }))}
+                  />
+                </div>
+                <div className="flex flex-col gap-3">
+                  <Text semibold sm>
+                    Additional Sorts
+                  </Text>
+                  <Select
+                    label="Tertiary Sort"
+                    value={sortTertiary || CUBE_DEFAULT_SORTS[2]}
+                    setValue={setSortTertiary}
+                    options={allSorts.map((sort) => ({ value: sort, label: sort }))}
+                  />
+                  <Select
+                    label="Ordered Sort"
+                    value={sortQuaternary || CUBE_DEFAULT_SORTS[3]}
+                    setValue={setSortQuaternary}
+                    options={ORDERED_SORTS.map((sort) => ({ value: sort, label: sort }))}
+                  />
+                </div>
+              </div>
               <Text italic sm className="text-text-secondary">
                 Cards will appear as duplicates if they fit in multiple categories. The counts will still only count
                 each item once.
