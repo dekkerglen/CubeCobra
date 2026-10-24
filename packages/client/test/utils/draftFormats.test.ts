@@ -1,7 +1,12 @@
 import Cube from '@utils/datatypes/Cube';
 import { DraftFormat } from '@utils/datatypes/Draft';
 
-import { cubeOffersStandardDraft, getDraftFormatOptions, offersStandardDraft } from '../../src/utils/draftFormats';
+import {
+  cubeOffersStandardDraft,
+  getDefaultDraftFormatValue,
+  getDraftFormatOptions,
+  offersStandardDraft,
+} from '../../src/utils/draftFormats';
 
 const format = (title: string): DraftFormat => ({ title }) as unknown as DraftFormat;
 
@@ -62,5 +67,19 @@ describe('getDraftFormatOptions', () => {
     const second = getDraftFormatOptions([], true);
 
     expect(first[0]).not.toBe(second[0]);
+  });
+});
+
+describe('getDefaultDraftFormatValue', () => {
+  it("uses the cube's default format", () => {
+    expect(getDefaultDraftFormatValue(cube({ defaultFormat: 2 }))).toBe('2');
+  });
+
+  it('falls back to standard draft when the cube has no default', () => {
+    expect(getDefaultDraftFormatValue(cube())).toBe('-1');
+  });
+
+  it('keeps an explicit standard draft default', () => {
+    expect(getDefaultDraftFormatValue(cube({ defaultFormat: -1 }))).toBe('-1');
   });
 });

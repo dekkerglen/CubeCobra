@@ -19,6 +19,11 @@ export const offersStandardDraft = (standardDraftEnabled: boolean, customFormatC
 export const cubeOffersStandardDraft = (cube: Cube): boolean =>
   offersStandardDraft(!cube.disableDraft, cube.formats?.length ?? 0);
 
+/* The format a picker should start on. Matches the draft simulator and the playtest page,
+ * which both treat the cube's own default as the starting point.
+ */
+export const getDefaultDraftFormatValue = (cube: Cube): string => `${cube.defaultFormat ?? STANDARD_DRAFT_FORMAT_ID}`;
+
 export const getDraftFormatOptions = (
   formats: DraftFormat[] | undefined,
   standardDraftEnabled: boolean,

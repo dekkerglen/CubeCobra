@@ -12,12 +12,13 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import { compareStrings, SortableTable } from '../components/SortableTable';
 import CubeContext from '../contexts/CubeContext';
 import useQueryParam from '../hooks/useQueryParam';
+import { getDefaultDraftFormatValue } from '../utils/draftFormats';
 
 const Asfans: React.FC = () => {
   const { cube, changedCards } = useContext(CubeContext);
   const cards = changedCards.mainboard;
   const [sort, setSort] = useQueryParam('sort', 'Color');
-  const [draftFormat, setDraftFormat] = useQueryParam('format', '-1');
+  const [draftFormat, setDraftFormat] = useQueryParam('format', getDefaultDraftFormatValue(cube));
 
   const allSorts = useMemo(() => getAllSorts(cube), [cube]);
 
