@@ -296,4 +296,51 @@ describe('formatRemoveHandler', () => {
     expect(cube.formats).toHaveLength(1);
     expect(cubeDao.update).not.toHaveBeenCalled();
   });
+
+  describe('defaultFormat after removal', () => {
+    const remove = (cube: ReturnType<typeof createCube>, index: string) =>
+      call(formatRemoveHandler).as(cube.owner).withFlash(jest.fn()).withParams({ cubeid: cube.id, index }).send();
+
+    it('reverts to standard draft when the default is removed', async () => {
+      const cube = createCube({ formats: [validFormat() as any, validFormat() as any], defaultFormat: 0 });
+      (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+      await remove(cube, '0');
+
+      expect(cube.defaultFormat).toBe(-1);
+    });
+
+    it('shifts the default down when an earlier format is removed', async () => {
+      const cube = createCube({ formats: [validFormat() as any, validFormat() as any], defaultFormat: 1 });
+      (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+      await remove(cube, '0');
+
+      expect(cube.defaultFormat).toBe(0);
+    });
+
+    it('does not revert to a disabled standard draft when another format remains', async () => {
+      const cube = createCube({
+        formats: [validFormat() as any, validFormat() as any],
+        defaultFormat: 0,
+        disableDraft: true,
+      });
+      (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+      await remove(cube, '0');
+
+      expect(cube.formats).toHaveLength(1);
+      expect(cube.defaultFormat).toBe(0);
+    });
+
+    it('reverts to standard draft when the last format is removed even if it is disabled', async () => {
+      const cube = createCube({ formats: [validFormat() as any], defaultFormat: 0, disableDraft: true });
+      (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+      await remove(cube, '0');
+
+      expect(cube.formats).toHaveLength(0);
+      expect(cube.defaultFormat).toBe(-1);
+    });
+  });
 });

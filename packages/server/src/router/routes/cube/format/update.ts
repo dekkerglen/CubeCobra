@@ -141,6 +141,21 @@ export const sanitizeDraftFormat = (raw: unknown): { format?: DraftFormat; error
   return { format };
 };
 
+/* Settles which format a cube should default to. A default must be in range, and a cube that
+ * turned standard draft off cannot default to it, or the playtest page would hide the very tile
+ * the default points at. Fall back to the first custom format; a cube with no custom format
+ * keeps standard draft, since there is nothing else to point at.
+ */
+export const resolveDefaultFormat = (requested: number, formatCount: number, standardDraftEnabled: boolean): number => {
+  const inRange = requested >= -1 && requested < formatCount ? requested : -1;
+
+  if (inRange === -1 && !standardDraftEnabled && formatCount > 0) {
+    return 0;
+  }
+
+  return inRange;
+};
+
 export const updateDraftFormatsHandler = async (req: Request, res: Response) => {
   try {
     // Parse JSON from form fields
@@ -207,14 +222,7 @@ export const updateDraftFormatsHandler = async (req: Request, res: Response) => 
     cube.deckbuildLands = deckbuildLands;
     cube.defaultDraftSeats = defaultDraftSeats >= 2 && defaultDraftSeats <= 16 ? defaultDraftSeats : 8;
 
-    // Validate defaultFormat is in range
-    const defaultFormatInRange = defaultFormat >= -1 && defaultFormat < formats.length ? defaultFormat : -1;
-
-    /* A cube that turned standard draft off cannot default to it, or the playtest page would
-     * hide the very tile the default points at. Fall back to the first custom format; a cube
-     * with no custom formats keeps standard draft since there is nothing else to pick.
-     */
-    cube.defaultFormat = defaultFormatInRange === -1 && !enableDraft && formats.length > 0 ? 0 : defaultFormatInRange;
+    cube.defaultFormat = resolveDefaultFormat(defaultFormat, formats.length, enableDraft);
 
     await cubeDao.update(cube);
 

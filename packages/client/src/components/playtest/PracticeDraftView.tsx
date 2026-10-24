@@ -13,7 +13,7 @@ import RotisserieDraftModal from 'components/modals/RotisserieDraftModal';
 import SealedCard from 'components/SealedCard';
 import StandardDraftCard from 'components/StandardDraftCard';
 import withModal from 'components/WithModal';
-import { cubeOffersStandardDraft } from 'utils/draftFormats';
+import { standardDraftEnabled } from 'utils/draftFormats';
 import { navigateToRotoList } from 'utils/rotodraft';
 
 const RotoSetupButton = withModal(Button, RotisserieDraftModal);
@@ -24,7 +24,7 @@ interface PracticeDraftViewProps {
 
 const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
   const defaultFormat = cube.defaultFormat ?? -1;
-  const offersStandardDraft = cubeOffersStandardDraft(cube);
+  const showStandardDraft = standardDraftEnabled(cube);
 
   // Sort formats alphabetically.
   const formatsSorted = useMemo(
@@ -48,7 +48,7 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
     const tiles = [];
 
     // Add standard draft card at the beginning if it's default, otherwise at the end
-    if (defaultFormat === -1 && offersStandardDraft) {
+    if (defaultFormat === -1 && showStandardDraft) {
       tiles.push({ type: 'standard', key: 'standard' });
     }
 
@@ -58,7 +58,7 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
     });
 
     // Add standard draft card at the end if it's not default
-    if (defaultFormat !== -1 && offersStandardDraft) {
+    if (defaultFormat !== -1 && showStandardDraft) {
       tiles.push({ type: 'standard', key: 'standard' });
     }
 
@@ -77,14 +77,7 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
     tiles.push({ type: 'simulator', key: 'simulator' });
 
     return tiles;
-  }, [
-    defaultFormat,
-    formatsSorted,
-    offersStandardDraft,
-    cube.disableMultiplayer,
-    cube.disableSealed,
-    cube.disableGrid,
-  ]);
+  }, [defaultFormat, formatsSorted, showStandardDraft, cube.disableMultiplayer, cube.disableSealed, cube.disableGrid]);
 
   // Split tiles into two columns using evens and odds for balanced distribution
   const leftColumnTiles = useMemo(() => allTiles.filter((_, index) => index % 2 === 0), [allTiles]);

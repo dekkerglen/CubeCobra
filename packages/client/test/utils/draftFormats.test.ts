@@ -2,10 +2,10 @@ import Cube from '@utils/datatypes/Cube';
 import { DraftFormat } from '@utils/datatypes/Draft';
 
 import {
-  cubeOffersStandardDraft,
   getDefaultDraftFormatValue,
   getDraftFormatOptions,
   offersStandardDraft,
+  standardDraftEnabled,
 } from '../../src/utils/draftFormats';
 
 const format = (title: string): DraftFormat => ({ title }) as unknown as DraftFormat;
@@ -26,14 +26,15 @@ describe('offersStandardDraft', () => {
   });
 });
 
-describe('cubeOffersStandardDraft', () => {
+describe('standardDraftEnabled', () => {
   it('reads the disable flag off the cube', () => {
-    expect(cubeOffersStandardDraft(cube({ formats: [format('Custom')] }))).toBe(true);
-    expect(cubeOffersStandardDraft(cube({ formats: [format('Custom')], disableDraft: true }))).toBe(false);
+    expect(standardDraftEnabled(cube({ formats: [format('Custom')] }))).toBe(true);
+    expect(standardDraftEnabled(cube({ formats: [format('Custom')], disableDraft: true }))).toBe(false);
   });
 
-  it('treats a missing formats array as no custom formats', () => {
-    expect(cubeOffersStandardDraft(cube({ disableDraft: true }))).toBe(true);
+  it('stays false with no custom formats, unlike the picker rule', () => {
+    expect(standardDraftEnabled(cube({ disableDraft: true }))).toBe(false);
+    expect(offersStandardDraft(standardDraftEnabled(cube({ disableDraft: true })), 0)).toBe(true);
   });
 });
 
