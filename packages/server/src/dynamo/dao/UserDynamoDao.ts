@@ -9,6 +9,7 @@
  * QUERY PATTERNS:
  * - getById(id): Get user by ID
  * - getByIdWithSensitiveData(id): Get user with password hash and email
+ * - getByIdForSession(id): Get user plus their session version (for passport)
  * - getByUsername(username): Get user by username (case-insensitive)
  * - getByEmail(email): Get user by email (case-insensitive)
  * - getByIdOrUsername(idOrUsername): Get user by ID first, fallback to username
@@ -188,9 +189,11 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
     //@ts-expect-error --  Ditto
     delete sanitized.email;
     delete sanitized.token;
+    delete sanitized.emailVerified;
     delete sanitized.pendingEmail;
     delete sanitized.pendingEmailToken;
     delete sanitized.pendingEmailExpires;
+    delete sanitized.sessionVersion;
 
     return sanitized;
   }
@@ -275,6 +278,20 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
     }
 
     return dynamoItem.item;
+  }
+
+  /**
+   * Gets a user by ID for session deserialization: the usual hydrated user (sensitive data
+   * stripped) plus the stored sessionVersion, from a single read.
+   */
+  public async getByIdForSession(id: string): Promise<{ user: User; sessionVersion: number } | undefined> {
+    const stored = await this.getByIdWithSensitiveData(id);
+
+    if (!stored) {
+      return undefined;
+    }
+
+    return { user: await this.hydrateItem(stored), sessionVersion: stored.sessionVersion ?? 0 };
   }
 
   /**

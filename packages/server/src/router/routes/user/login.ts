@@ -1,9 +1,9 @@
-import { userDao } from 'dynamo/daos';
 import passport from 'passport';
 import { redirect, render } from 'serverutils/render';
 import { getSafeReferrer } from 'serverutils/util';
 
-import { Request, Response } from '../../../types/express';
+import { LOGIN_FAILED_MESSAGE } from '../../../config/passport';
+import { NextFunction, Request, Response } from '../../../types/express';
 
 const getLoginRedirect = (req: Request) => {
   const redirectRoute = getSafeReferrer(req) || '/';
@@ -20,38 +20,34 @@ export const getHandler = (req: Request, res: Response) => {
   return render(req, res, 'LoginPage');
 };
 
-export const postHandler = async (req: Request, res: Response) => {
-  let user;
+export const postHandler = (req: Request, res: Response, next: NextFunction) => {
+  const { username, password } = req.body;
 
-  if (!req.body.username || req.body.username.toLowerCase().length === 0) {
-    req.flash('danger', 'Incorrect Username or email address.');
+  if (typeof username !== 'string' || username.length === 0 || typeof password !== 'string' || password.length === 0) {
+    req.flash('danger', 'Please enter your username or email address and your password.');
     return redirect(req, res, '/user/login');
   }
 
-  if (req.body.username.includes('@')) {
-    user = await userDao.getByEmail(req.body.username.toLowerCase());
-  } else {
-    user = await userDao.getByUsername(req.body.username.toLowerCase());
-  }
+  const destination = getLoginRedirect(req);
 
-  if (!user) {
-    req.flash('danger', 'Incorrect Username or email address.');
-    return redirect(req, res, '/user/login');
-  }
-
-  if ((user as any).emailVerified === false) {
-    req.flash('danger', 'Your account is not verified. Please check your email for a verification link.');
-    return redirect(req, res, '/user/login');
-  }
-
-  req.body.username = user.username;
-  passport.authenticate('local', {
-    successRedirect: getLoginRedirect(req),
-    failureRedirect: '/user/login',
-    failureFlash: 'Incorrect username or password.',
-  })(req, res, () => {
-    return redirect(req, res, '/');
-  });
+  // The local strategy (config/passport) resolves the username or email, checks the password,
+  // and only then reports a ban or an unverified email, so a failed guess always gets the same
+  // generic message.
+  return passport.authenticate('local', (err: unknown, user: Express.User | false, info?: { message?: string }) => {
+    if (err) {
+      return next(err);
+    }
+    if (!user) {
+      req.flash('danger', info?.message || LOGIN_FAILED_MESSAGE);
+      return redirect(req, res, '/user/login');
+    }
+    return req.login(user, (loginErr: unknown) => {
+      if (loginErr) {
+        return next(loginErr);
+      }
+      return redirect(req, res, destination);
+    });
+  })(req, res, next);
 };
 
 export const routes = [

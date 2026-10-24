@@ -38,6 +38,11 @@ export const banuserHandler = async (req: Request, res: Response) => {
     let lastKey = blogResponse.lastKey;
     let blogIds = blogResponse.items.map((blog) => blog.id);
 
+    aggregates.blogPostsDeleted += blogResponse.items.length;
+    for (const blog of blogResponse.items) {
+      await blogDao.delete(blog);
+    }
+
     while (lastKey) {
       const nextResponse = await blogDao.queryByOwner(userToBan, lastKey);
       lastKey = nextResponse.lastKey;

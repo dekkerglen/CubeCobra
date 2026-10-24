@@ -66,6 +66,8 @@ export interface UnhydratedUser {
   pendingEmailToken?: string;
   /** Epoch ms after which the pending email change link no longer works. */
   pendingEmailExpires?: number;
+  /** Bumped on every password or email change; sessions created at an older version are signed out. */
+  sessionVersion?: number;
   yourCubesSortOrder?: YourCubesSortOrder;
   disableAnimations?: boolean;
   useTextOverIcons?: boolean;

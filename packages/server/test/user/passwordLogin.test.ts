@@ -4,7 +4,7 @@ import express from 'express';
 import { Passport } from 'passport';
 import request from 'supertest';
 
-import configurePassport from '../../src/config/passport';
+import configurePassport, { LOGIN_FAILED_MESSAGE } from '../../src/config/passport';
 
 jest.mock('dynamo/daos', () => ({
   userDao: {
@@ -64,7 +64,8 @@ describe('password login', () => {
     it('rejects a wrong password', async () => {
       const res = await login('not the password');
 
-      expect(res.body).toEqual({ user: false, message: 'Incorrect password' });
+      // Wrong passwords and unknown accounts get the same message, so login can't reveal which accounts exist.
+      expect(res.body).toEqual({ user: false, message: LOGIN_FAILED_MESSAGE });
     });
   });
 
@@ -80,7 +81,8 @@ describe('password login', () => {
     it('rejects a wrong password', async () => {
       const res = await login('not the password');
 
-      expect(res.body).toEqual({ user: false, message: 'Incorrect password' });
+      // Wrong passwords and unknown accounts get the same message, so login can't reveal which accounts exist.
+      expect(res.body).toEqual({ user: false, message: LOGIN_FAILED_MESSAGE });
     });
   });
 });
