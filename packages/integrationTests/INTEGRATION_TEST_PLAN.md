@@ -101,7 +101,7 @@ Extending the existing auth tests with additional flows.
 | 5.1 | Login with invalid credentials → error message                  | `POST /user/login`         |
 | 5.2 | Register with duplicate username → error message                | `POST /user/register`      |
 | 5.3 | Register with invalid email → validation error                  | `POST /user/register`      |
-| 5.4 | Logout and verify session is cleared                            | `GET /user/logout`         |
+| 5.4 | Logout and verify session is cleared                            | `POST /user/logout`        |
 | 5.5 | Access authenticated route while logged out → redirect to login | `GET /user/account`        |
 | 5.6 | Update user display preferences (theme toggle)                  | `POST /user/changedisplay` |
 | 5.7 | Change password while logged in                                 | `POST /user/resetpassword` |
@@ -144,7 +144,7 @@ Blog posts are auto-generated on cube changes and manually created by cube owner
 | 8.1 | Create a blog post on a cube                         | `POST /cube/blog/post/:id`               |
 | 8.2 | Verify the blog post appears on the cube's blog page | `GET /cube/blog/:id`                     |
 | 8.3 | View a specific blog post                            | `GET /cube/blog/blogpost/:id`            |
-| 8.4 | Delete a blog post                                   | `GET /cube/blog/remove/:id`              |
+| 8.4 | Delete a blog post                                   | `POST /cube/blog/remove/:id`             |
 | 8.5 | Paginate blog posts on a cube                        | `POST /cube/blog/getmoreblogsbycube/:id` |
 
 ### 9. Deck Viewing & Export (`deck-export.spec.ts`)
@@ -184,8 +184,8 @@ Following, notifications, and comments drive community engagement.
 | ---- | ---------------------------- | ------------------------------- |
 | 11.1 | Follow a cube                | `POST /cube/follow/:id`         |
 | 11.2 | Unfollow a cube              | `POST /cube/unfollow/:id`       |
-| 11.3 | Follow a user                | `GET /user/follow/:id`          |
-| 11.4 | Unfollow a user              | `GET /user/unfollow/:id`        |
+| 11.3 | Follow a user                | `POST /user/follow/:id`         |
+| 11.4 | Unfollow a user              | `POST /user/unfollow/:id`       |
 | 11.5 | View social connections page | `GET /user/social`              |
 | 11.6 | View notifications page      | `GET /user/notifications`       |
 | 11.7 | Clear notifications          | `POST /user/clearnotifications` |
@@ -263,12 +263,12 @@ Grid draft is an alternative draft format.
 
 ### 19. Card Packages (`packages.spec.ts`)
 
-| #    | Test Case                   | Route(s) Exercised                                       |
-| ---- | --------------------------- | -------------------------------------------------------- |
-| 19.1 | Browse card packages        | `GET /packages`                                          |
-| 19.2 | View a specific package     | `GET /packages/:id`                                      |
-| 19.3 | Create a new package        | `POST /packages/submit`                                  |
-| 19.4 | Upvote / downvote a package | `GET /packages/upvote/:id`, `GET /packages/downvote/:id` |
+| #    | Test Case                   | Route(s) Exercised                                         |
+| ---- | --------------------------- | ---------------------------------------------------------- |
+| 19.1 | Browse card packages        | `GET /packages`                                            |
+| 19.2 | View a specific package     | `GET /packages/:id`                                        |
+| 19.3 | Create a new package        | `POST /packages/submit`                                    |
+| 19.4 | Upvote / downvote a package | `POST /packages/upvote/:id`, `POST /packages/downvote/:id` |
 
 ### 20. Content Browsing (`content.spec.ts`)
 
@@ -296,7 +296,7 @@ Grid draft is an alternative draft format.
 | ---- | -------------------------------- | ------------------------ |
 | 22.1 | View cube restore page           | `GET /cube/restore/:id`  |
 | 22.2 | Restore cube to a previous state | `POST /cube/restore/:id` |
-| 22.3 | Clone a cube                     | `GET /cube/clone/:id`    |
+| 22.3 | Clone a cube                     | `POST /cube/clone/:id`   |
 
 ### 23. Draft Formats (`draft-formats.spec.ts`)
 

@@ -39,7 +39,7 @@ export const handler = async (req: Request, res: Response) => {
 export const routes = [
   {
     path: '/:id',
-    method: 'get',
+    method: 'post',
     handler: [csrfProtection, ensureAuth, handler],
   },
 ];

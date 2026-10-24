@@ -114,7 +114,7 @@ export const routes = [
   },
   {
     path: '/remove/:cubeid/:index',
-    method: 'get',
+    method: 'post',
     handler: [csrfProtection, ensureAuth, formatRemoveHandler],
   },
 ];

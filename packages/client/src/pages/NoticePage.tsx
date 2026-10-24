@@ -8,6 +8,7 @@ import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Datetime from 'components/base/Datetime';
 import { Col, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import PostButton from 'components/base/PostButton';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import ConfirmActionModal from 'components/modals/ConfirmActionModal';
@@ -67,26 +68,14 @@ const NoticePage: React.FC<NoticePageProps> = ({ notices }) => {
               </p>
               <Row>
                 <Col xs={12} sm={6}>
-                  <Button
-                    type="link"
-                    color="primary"
-                    block
-                    outline
-                    href={`/admin/application/approve/${application.id}`}
-                  >
+                  <PostButton action={`/admin/application/approve/${application.id}`} color="primary" block outline>
                     Approve
-                  </Button>
+                  </PostButton>
                 </Col>
                 <Col xs={12} sm={6}>
-                  <Button
-                    type="link"
-                    color="danger"
-                    block
-                    outline
-                    href={`/admin/application/decline/${application.id}`}
-                  >
+                  <PostButton action={`/admin/application/decline/${application.id}`} color="danger" block outline>
                     Decline
-                  </Button>
+                  </PostButton>
                 </Col>
               </Row>
             </CardBody>
@@ -118,14 +107,14 @@ const NoticePage: React.FC<NoticePageProps> = ({ notices }) => {
               </p>
               <Row>
                 <Col xs={12} sm={6}>
-                  <Button type="link" color="primary" block outline href={`/admin/ignorereport/${report.id}`}>
+                  <PostButton action={`/admin/ignorereport/${report.id}`} color="primary" block outline>
                     Ignore
-                  </Button>
+                  </PostButton>
                 </Col>
                 <Col xs={12} sm={6}>
-                  <Button type="link" color="danger" block outline href={`/admin/removecomment/${report.id}`}>
+                  <PostButton action={`/admin/removecomment/${report.id}`} color="danger" block outline>
                     Remove Comment
-                  </Button>
+                  </PostButton>
                 </Col>
               </Row>
             </CardBody>
@@ -157,9 +146,9 @@ const NoticePage: React.FC<NoticePageProps> = ({ notices }) => {
               </p>
               <Row>
                 <Col xs={12} sm={6}>
-                  <Button type="link" color="primary" block outline href={`/admin/ignorereport/${report.id}`}>
+                  <PostButton action={`/admin/ignorereport/${report.id}`} color="primary" block outline>
                     Ignore
-                  </Button>
+                  </PostButton>
                 </Col>
                 <Col xs={12} sm={6}>
                   <ConfirmActionModalButton

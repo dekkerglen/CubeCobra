@@ -8,6 +8,7 @@ import User from '@utils/datatypes/User';
 import Dropdown from 'components/base/Dropdown';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import PostButton from 'components/base/PostButton';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Select from 'components/base/Select';
 import DeckDeleteModal from 'components/modals/DeckDeleteModal';
@@ -205,12 +206,13 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
               >
                 Sample Hand
               </SampleHandModalLink>
-              <Link
-                href={`/cube/deck/rebuild/${draft.id}/${seatIndex}`}
-                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+              <PostButton
+                action={`/cube/deck/rebuild/${draft.id}/${seatIndex}`}
+                unstyled
+                className="w-full text-left !text-text hover:!text-link-active hover:cursor-pointer font-medium"
               >
                 Clone and Rebuild
-              </Link>
+              </PostButton>
               <Link
                 href="#"
                 onClick={toggleShowCustomImages}
@@ -349,12 +351,13 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
                 >
                   Sample Hand
                 </SampleHandModalLink>
-                <Link
-                  href={`/cube/deck/rebuild/${draft.id}/${seatIndex}`}
-                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                <PostButton
+                  action={`/cube/deck/rebuild/${draft.id}/${seatIndex}`}
+                  unstyled
+                  className="w-full text-left !text-text hover:!text-link-active hover:cursor-pointer font-medium"
                 >
                   Clone and Rebuild
-                </Link>
+                </PostButton>
                 <Link
                   href="#"
                   onClick={toggleShowCustomImages}

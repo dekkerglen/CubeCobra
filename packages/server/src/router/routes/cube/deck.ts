@@ -948,7 +948,7 @@ export const routes = [
   },
   {
     path: '/rebuild/:id/:index',
-    method: 'get',
+    method: 'post',
     handler: [ensureAuth, rebuildHandler],
   },
   {

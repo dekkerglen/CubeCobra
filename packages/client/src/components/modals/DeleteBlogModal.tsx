@@ -5,6 +5,7 @@ import BlogPost from '@utils/datatypes/BlogPost';
 import Button from 'components/base/Button';
 import { Flexbox } from 'components/base/Layout';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
+import PostButton from 'components/base/PostButton';
 import Text from 'components/base/Text';
 
 interface DeleteCubeModalProps {
@@ -22,9 +23,9 @@ const DeleteBlogModal: React.FC<DeleteCubeModalProps> = ({ isOpen, setOpen, post
       </ModalBody>
       <ModalFooter>
         <Flexbox direction="row" gap="2" className="w-full">
-          <Button block type="link" color="danger" href={`/cube/blog/remove/${post.id}`}>
+          <PostButton block color="danger" action={`/cube/blog/remove/${post.id}`}>
             Delete
-          </Button>
+          </PostButton>
           <Button block color="secondary" onClick={() => setOpen(false)}>
             Cancel
           </Button>

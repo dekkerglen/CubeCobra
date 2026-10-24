@@ -40,7 +40,9 @@ const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
     }
 
     setLoading(true);
-    const response = await csrfFetch(`/packages/${voted ? 'downvote' : 'upvote'}/${cardPackage.id}`);
+    const response = await csrfFetch(`/packages/${voted ? 'downvote' : 'upvote'}/${cardPackage.id}`, {
+      method: 'POST',
+    });
     if (response.ok) {
       const json = await response.json();
       if (json.success === 'true') {
@@ -56,7 +58,7 @@ const CardPackage: React.FC<CardPackageProps> = ({ cardPackage }) => {
     }
 
     setLoading(true);
-    const response = await csrfFetch(`/packages/remove/${cardPackage.id}`);
+    const response = await csrfFetch(`/packages/remove/${cardPackage.id}`, { method: 'POST' });
     if (response.ok) {
       const json = await response.json();
       if (json.success === 'true') {

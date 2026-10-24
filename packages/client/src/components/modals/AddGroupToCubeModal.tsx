@@ -73,7 +73,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
         if (json.success === 'true') {
           // If user wants to upvote and hasn't already, upvote the package
           if (upvotePackage && packid && user && !voters.includes(user.id)) {
-            await csrfFetch(`/packages/upvote/${packid}`);
+            await csrfFetch(`/packages/upvote/${packid}`, { method: 'POST' });
           }
           setOpen(false);
         }

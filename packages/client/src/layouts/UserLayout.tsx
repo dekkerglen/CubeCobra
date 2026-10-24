@@ -5,6 +5,7 @@ import User, { UserRoles } from '@utils/datatypes/User';
 
 import Button from 'components/base/Button';
 import { Flexbox } from 'components/base/Layout';
+import PostButton from 'components/base/PostButton';
 import { Tabs } from 'components/base/Tabs';
 import Text from 'components/base/Text';
 import ErrorBoundary from 'components/ErrorBoundary';
@@ -112,13 +113,13 @@ const UserLayout: React.FC<UserLayoutProps> = ({
         ) : (
           <Flexbox direction="col" gap="2">
             {following ? (
-              <Button type="link" color="danger" outline href={`/user/unfollow/${user.id}`} block>
+              <PostButton action={`/user/unfollow/${user.id}`} color="danger" outline block>
                 Unfollow
-              </Button>
+              </PostButton>
             ) : (
-              <Button type="link" color="accent" href={`/user/follow/${user.id}`} block>
+              <PostButton action={`/user/follow/${user.id}`} color="accent" block>
                 Follow
-              </Button>
+              </PostButton>
             )}
             <ConfirmActionModalButton
               color="danger"

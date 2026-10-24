@@ -5,6 +5,7 @@ import Video from '@utils/datatypes/Video';
 
 import Button from 'components/base/Button';
 import { Col, Flexbox, Row } from 'components/base/Layout';
+import PostButton from 'components/base/PostButton';
 import Spinner from 'components/base/Spinner';
 import VideoPreview from 'components/content/VideoPreview';
 import ContentDeleteModal from 'components/modals/ContentDeleteModal';
@@ -64,9 +65,9 @@ const CreatorVideos: React.FC<CreatorVideosProps> = ({ videos, lastKey }) => {
   return (
     <Flexbox direction="col" gap="2" className="mb-2">
       <Flexbox direction="row" justify="between">
-        <Button color="primary" href="/content/newvideo" type="link">
+        <PostButton color="primary" action="/content/newvideo">
           Create New Video
-        </Button>
+        </PostButton>
       </Flexbox>
       <Row className="mx-0">
         {items.map((video) => (

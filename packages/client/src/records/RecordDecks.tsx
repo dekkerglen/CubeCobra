@@ -12,6 +12,7 @@ import { CardBody } from 'components/base/Card';
 import Dropdown from 'components/base/Dropdown';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import PostButton from 'components/base/PostButton';
 import Text from 'components/base/Text';
 import DeckCard from 'components/DeckCard';
 import DraftExportMenu from 'components/draft/DraftExportMenu';
@@ -116,9 +117,13 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
             Sample Hand
           </SampleHandLink>
           {isOwner && (
-            <Link href={`/cube/deck/rebuild/${draft.id}/${selectedUserIndex}`} className={menuLinkClass}>
+            <PostButton
+              action={`/cube/deck/rebuild/${draft.id}/${selectedUserIndex}`}
+              unstyled
+              className={classNames(menuLinkClass, 'w-full text-left')}
+            >
               Clone and Rebuild
-            </Link>
+            </PostButton>
           )}
           <Link href="#" onClick={toggleShowCustomImages} className={menuLinkClass}>
             {showCustomImages ? 'Hide' : 'Show'} Custom Images

@@ -11,7 +11,7 @@ export const handler = (req: Request, res: Response) => {
 export const routes = [
   {
     path: '/',
-    method: 'get',
+    method: 'post',
     handler: [handler],
   },
 ];

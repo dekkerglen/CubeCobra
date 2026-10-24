@@ -680,7 +680,7 @@ describe('Blog Routes', () => {
         path: '/cube/blog/blogpost/:id',
       },
       {
-        method: 'get',
+        method: 'post',
         path: '/cube/blog/remove/:id',
       },
       {

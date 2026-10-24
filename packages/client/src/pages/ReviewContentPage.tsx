@@ -2,10 +2,10 @@ import React from 'react';
 
 import { ContentType } from '@utils/datatypes/Content';
 
-import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Col, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import PostButton from 'components/base/PostButton';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
@@ -48,14 +48,14 @@ const ReviewContentPage: React.FC<ReviewContentPageProps> = ({ content }) => {
                 <Link href={`/content/${typeMap[document.type]}/${document.id}`}>{document.title}</Link>
               </Col>
               <Col xs={12} sm={4}>
-                <Button type="link" color="primary" outline block href={`/admin/publish/${document.id}`}>
+                <PostButton action={`/admin/publish/${document.id}`} color="primary" outline block>
                   Publish
-                </Button>
+                </PostButton>
               </Col>
               <Col xs={12} sm={4}>
-                <Button type="link" color="danger" outline block href={`/admin/removereview/${document.id}`}>
+                <PostButton action={`/admin/removereview/${document.id}`} color="danger" outline block>
                   Remove from Reviews
-                </Button>
+                </PostButton>
               </Col>
             </Row>
           </CardBody>

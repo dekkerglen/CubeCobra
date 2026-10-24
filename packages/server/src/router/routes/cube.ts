@@ -576,7 +576,7 @@ const packImageLimiter = expensiveGetLimiter(60_000, 30);
 export const routes = [
   {
     path: '/report/:id',
-    method: 'get',
+    method: 'post',
     handler: [csrfProtection, ensureAuth, reportHandler],
   },
   {
@@ -591,7 +591,7 @@ export const routes = [
   },
   {
     path: '/:id/defaultdraftformat/:formatId',
-    method: 'get',
+    method: 'post',
     handler: [csrfProtection, ensureAuth, defaultDraftFormatHandler],
   },
   {
@@ -646,12 +646,12 @@ export const routes = [
   },
   {
     path: '/feature/:id',
-    method: 'get',
+    method: 'post',
     handler: [csrfProtection, ensureAuth, featureHandler],
   },
   {
     path: '/unfeature/:id',
-    method: 'get',
+    method: 'post',
     handler: [csrfProtection, ensureAuth, unfeatureHandler],
   },
   {

@@ -78,8 +78,10 @@ test.describe('Authentication Extended', () => {
     // Verify we're logged in first
     await expect(page).toHaveURL(/\/(dashboard)?$/);
 
-    // Navigate to logout
-    await page.goto('/user/logout', { waitUntil: 'domcontentloaded' });
+    // Log out with a same-origin POST, as the navbar's Logout button does
+    await page.evaluate(async () => {
+      await fetch('/user/logout', { method: 'POST', credentials: 'same-origin' });
+    });
 
     // After logout, navigating to dashboard should redirect to landing/login
     await page.goto('/', { waitUntil: 'domcontentloaded' });

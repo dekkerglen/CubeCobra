@@ -321,7 +321,7 @@ export const routes = [
     handler: [csrfProtection, getBlogPostHandler],
   },
   {
-    method: 'get',
+    method: 'post',
     path: '/remove/:id',
     handler: [ensureAuth, csrfProtection, deleteBlogHandler],
   },

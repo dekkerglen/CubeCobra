@@ -37,6 +37,7 @@ import Link from '../base/Link';
 import NavButton from '../base/NavButton';
 import NavLink from '../base/NavLink';
 import NavMenu from '../base/NavMenu';
+import PostButton from '../base/PostButton';
 import ResponsiveDiv from '../base/ResponsiveDiv';
 import LoginModal from '../modals/LoginModal';
 import withQuickCreateCube from '../QuickCreateCubeButton';
@@ -55,6 +56,17 @@ const NavLinkTrigger: React.FC<NavTriggerProps> = ({ onClick, className, childre
   </a>
 );
 const LoginNavLink = withModal(NavLinkTrigger, LoginModal);
+
+// Logging out is a POST, so it is a form button made to look like the NavLinks around it.
+const LogoutNavLink: React.FC = () => (
+  <PostButton
+    action="/user/logout"
+    unstyled
+    className="w-full text-left select-none font-normal transition-colors duration-200 ease-in-out text-text hover:text-text-secondary"
+  >
+    Logout
+  </PostButton>
+);
 
 type MobileIconTriggerProps = { onClick?: () => void; className?: string };
 const MobileLoginIcon: React.FC<MobileIconTriggerProps> = ({ onClick, className }) => (
@@ -330,7 +342,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
           <NavLink href="/content/creators">Content Creator Dashboard</NavLink>
         )}
         <NavLink href="/user/account">Settings</NavLink>
-        <NavLink href="/user/logout">Logout</NavLink>
+        <LogoutNavLink />
       </Flexbox>
     </NavMenu>
   );
@@ -644,7 +656,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
                 <NavLink href="/content/creators">Content Creator Dashboard</NavLink>
               )}
               <NavLink href="/user/account">Settings</NavLink>
-              <NavLink href="/user/logout">Logout</NavLink>
+              <LogoutNavLink />
             </Flexbox>
           </div>
         )}

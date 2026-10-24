@@ -37,6 +37,7 @@ import Container from '../base/Container';
 import Dropdown from '../base/Dropdown';
 import { Flexbox } from '../base/Layout';
 import Link from '../base/Link';
+import PostButton from '../base/PostButton';
 import Text from '../base/Text';
 import Tooltip from '../base/Tooltip';
 import CubeIdModal from '../cube/CubeIdModal';
@@ -298,9 +299,13 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const exportMenuItems = (
     <Flexbox direction="col" gap="2" className="p-3">
       {user && (
-        <a href={`/cube/clone/${cube.id}`} className="!text-text hover:!text-link-active font-medium">
+        <PostButton
+          action={`/cube/clone/${cube.id}`}
+          unstyled
+          className="w-full text-left !text-text hover:!text-link-active font-medium"
+        >
           Clone Cube
-        </a>
+        </PostButton>
       )}
       <a
         href={`/cube/download/plaintext/${cube.id}?${urlSegment}`}

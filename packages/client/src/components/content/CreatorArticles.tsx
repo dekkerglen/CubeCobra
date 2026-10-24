@@ -5,6 +5,7 @@ import { ContentStatus, ContentType } from '@utils/datatypes/Content';
 
 import Button from 'components/base/Button';
 import { Col, Flexbox, Row } from 'components/base/Layout';
+import PostButton from 'components/base/PostButton';
 import Spinner from 'components/base/Spinner';
 import ArticlePreview from 'components/content/ArticlePreview';
 import ContentDeleteModal from 'components/modals/ContentDeleteModal';
@@ -64,9 +65,9 @@ const CreatorArticles: React.FC<CreatorArticlesProps> = ({ articles, lastKey }) 
   return (
     <Flexbox direction="col" gap="2" className="mb-2">
       <Flexbox direction="row" justify="between">
-        <Button color="primary" href="/content/newarticle" type="link">
+        <PostButton color="primary" action="/content/newarticle">
           Create New Article
-        </Button>
+        </PostButton>
       </Flexbox>
       <Row>
         {items.map((article) => (

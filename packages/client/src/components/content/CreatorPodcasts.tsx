@@ -5,6 +5,7 @@ import Podcast from '@utils/datatypes/Podcast';
 
 import Button from 'components/base/Button';
 import { Col, Flexbox, Row } from 'components/base/Layout';
+import PostButton from 'components/base/PostButton';
 import Spinner from 'components/base/Spinner';
 import PodcastPreview from 'components/content/PodcastPreview';
 import ContentDeleteModal from 'components/modals/ContentDeleteModal';
@@ -64,9 +65,9 @@ const CreatorPodcasts: React.FC<CreatorPodcastsProps> = ({ podcasts, lastKey }) 
   return (
     <Flexbox direction="col" gap="2" className="mb-2">
       <Flexbox direction="row" justify="between">
-        <Button color="primary" href="/content/newpodcast" type="link">
+        <PostButton color="primary" action="/content/newpodcast">
           Create New Podcast
-        </Button>
+        </PostButton>
       </Flexbox>
       <Row className="mx-0">
         {items.map((podcast) => (

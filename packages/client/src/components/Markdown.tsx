@@ -3,6 +3,7 @@ import React, { ComponentPropsWithoutRef, ReactNode, useMemo } from 'react';
 import { LinkIcon } from '@primer/octicons-react';
 import { cdnUrl } from '@utils/cdnUrl';
 import { CardDetails } from '@utils/datatypes/Card';
+import { safeHttpUrl } from '@utils/safeUrl';
 import { isInternalURL, isSamePageURL } from '@utils/Util';
 import { slug } from 'github-slugger';
 // @ts-expect-error This library has no types.
@@ -46,10 +47,37 @@ const renderBlockQuote: React.FC<RenderBlockQuoteProps> = (node) => (
   <div className="border border-border bg-bg-active mb-4 p-4">{node.children}</div>
 );
 
+// True when `host` is the page's host or shares a parent/child domain with it (www vs. apex),
+// i.e. a request to it would be same-site and carry the viewer's cookies.
+const isSameSiteHost = (host: string, pageHost: string): boolean =>
+  host === pageHost || host.endsWith(`.${pageHost}`) || pageHost.endsWith(`.${host}`);
+
+/**
+ * The src to load for a user-supplied Markdown image, or null to not load it. Images load with
+ * the viewer's cookies, so a relative or same-site src would let any post fire GET requests at
+ * CubeCobra as whoever views it. Only absolute http(s) images on other sites are loaded.
+ */
+export const safeImageSrc = (src: unknown): string | null => {
+  const href = safeHttpUrl(src);
+  if (!href) {
+    return null;
+  }
+  const pageHost = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
+  if (pageHost && isSameSiteHost(new URL(href).hostname.toLowerCase(), pageHost)) {
+    return null;
+  }
+  return href;
+};
+
 interface RenderImageProps extends React.ImgHTMLAttributes<HTMLImageElement> {}
-const renderImage: React.FC<RenderImageProps> = (node) => (
-  <img className="max-w-full" src={node.src} alt={node.alt} title={node.title} />
-);
+export const renderImage: React.FC<RenderImageProps> = (node) => {
+  const src = safeImageSrc(node.src);
+  if (!src) {
+    // Show the alt text in place of an image we won't load.
+    return <span className="italic text-text-secondary">{node.alt || 'Image not shown'}</span>;
+  }
+  return <img className="max-w-full" src={src} alt={node.alt} title={node.title} />;
+};
 
 interface RenderLinkProps extends React.AnchorHTMLAttributes<HTMLAnchorElement> {}
 const renderLink: React.FC<RenderLinkProps> = (node) => {

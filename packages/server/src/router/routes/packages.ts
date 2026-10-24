@@ -698,17 +698,17 @@ export const routes = [
   },
   {
     path: '/upvote/:id',
-    method: 'get',
+    method: 'post',
     handler: [ensureAuth, csrfProtection, upvoteHandler],
   },
   {
     path: '/downvote/:id',
-    method: 'get',
+    method: 'post',
     handler: [ensureAuth, csrfProtection, downvoteHandler],
   },
   {
     path: '/remove/:id',
-    method: 'get',
+    method: 'post',
     handler: [ensureRole(UserRoles.ADMIN), csrfProtection, removeHandler],
   },
   {

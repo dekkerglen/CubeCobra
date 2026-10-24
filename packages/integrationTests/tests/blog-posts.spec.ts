@@ -111,8 +111,12 @@ test.describe('Blog Posts', () => {
 
     await login(page, testUser.username, testUser.password);
 
-    // Delete the blog post via direct navigation
-    await page.goto(`/cube/blog/remove/${blogPostId}`, { waitUntil: 'domcontentloaded' });
+    // Delete the blog post with a same-origin POST, as the delete button's form does
+    const status = await page.evaluate(async (id: string) => {
+      const resp = await fetch(`/cube/blog/remove/${id}`, { method: 'POST', credentials: 'same-origin' });
+      return resp.status;
+    }, blogPostId);
+    expect(status).toBe(200);
 
     // After deletion, verify the blog post is gone from the blog page
     await navigateToCubeFromNav(page, cubeName);

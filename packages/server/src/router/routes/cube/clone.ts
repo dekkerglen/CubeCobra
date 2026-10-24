@@ -92,7 +92,7 @@ export const cloneHandler = async (req: Request, res: Response) => {
 export const routes = [
   {
     path: '/:id',
-    method: 'get',
+    method: 'post',
     handler: [cloneHandler],
   },
 ];

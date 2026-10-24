@@ -36,7 +36,7 @@ export const rotateHandler = async (req: Request, res: Response) => {
 
 export const routes = [
   {
-    method: 'get',
+    method: 'post',
     path: '/',
     handler: [csrfProtection, ensureRole(UserRoles.ADMIN), rotateHandler],
   },

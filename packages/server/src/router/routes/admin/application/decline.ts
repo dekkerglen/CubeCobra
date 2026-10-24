@@ -30,7 +30,7 @@ export const declineHandler = async (req: Request, res: Response) => {
 
 export const routes = [
   {
-    method: 'get',
+    method: 'post',
     path: '/:id',
     handler: [csrfProtection, ensureRole(UserRoles.ADMIN), declineHandler],
   },

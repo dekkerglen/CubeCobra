@@ -2,6 +2,7 @@ import React from 'react';
 
 import Button from '../base/Button';
 import { Modal, ModalBody, ModalHeader } from '../base/Modal';
+import PostButton from '../base/PostButton';
 import Text from '../base/Text';
 
 interface ConfirmActionModalProps {
@@ -9,6 +10,7 @@ interface ConfirmActionModalProps {
   setOpen: (isOpen: boolean) => void;
   title: string;
   message: string;
+  // Route the confirm button POSTs to
   target?: string;
   onClick?: () => void;
   buttonText: string;
@@ -29,9 +31,9 @@ const ConfirmActionModal: React.FC<ConfirmActionModalProps> = ({
       <ModalBody className="flex flex-col gap-2">
         <Text>{message}</Text>
         {target && (
-          <Button type="link" color="danger" href={target}>
+          <PostButton action={target} color="danger" block>
             {buttonText}
-          </Button>
+          </PostButton>
         )}
         {onClick && (
           <Button color="danger" onClick={onClick}>

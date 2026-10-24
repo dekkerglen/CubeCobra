@@ -420,7 +420,7 @@ export const podcastEditHandler = async (req: Request, res: Response) => {
   return render(req, res, 'EditPodcastPage', { podcast });
 };
 
-// GET /content/podcast/update/:id
+// POST /content/podcast/update/:id
 export const podcastUpdateHandler = async (req: Request, res: Response) => {
   if (!req.params.id) {
     req.flash('danger', 'Invalid podcast ID');
@@ -727,7 +727,7 @@ export const submitVideoHandler = async (req: Request, res: Response) => {
   return redirect(req, res, `/content/video/edit/${video.id}`);
 };
 
-// GET /content/newarticle
+// POST /content/newarticle
 export const newArticleHandler = async (req: Request, res: Response) => {
   if (!req.user) {
     req.flash('danger', 'Please log in to create articles.');
@@ -751,7 +751,7 @@ export const newArticleHandler = async (req: Request, res: Response) => {
   return redirect(req, res, `/content/article/edit/${id}`);
 };
 
-// GET /content/newpodcast
+// POST /content/newpodcast
 export const newPodcastHandler = async (req: Request, res: Response) => {
   if (!req.user) {
     req.flash('danger', 'Please log in to create podcasts.');
@@ -774,7 +774,7 @@ export const newPodcastHandler = async (req: Request, res: Response) => {
   return redirect(req, res, `/content/podcast/edit/${id}`);
 };
 
-// GET /content/newvideo
+// POST /content/newvideo
 export const newVideoHandler = async (req: Request, res: Response) => {
   if (!req.user) {
     req.flash('danger', 'Please log in to create videos.');
@@ -1026,7 +1026,7 @@ export const routes = [
   },
   {
     path: '/podcast/update/:id',
-    method: 'get',
+    method: 'post',
     handler: [csrfProtection, ensureContentCreator, podcastUpdateHandler],
   },
   {
@@ -1066,17 +1066,17 @@ export const routes = [
   },
   {
     path: '/newarticle',
-    method: 'get',
+    method: 'post',
     handler: [csrfProtection, ensureContentCreator, newArticleHandler],
   },
   {
     path: '/newpodcast',
-    method: 'get',
+    method: 'post',
     handler: [csrfProtection, ensureContentCreator, newPodcastHandler],
   },
   {
     path: '/newvideo',
-    method: 'get',
+    method: 'post',
     handler: [csrfProtection, ensureContentCreator, newVideoHandler],
   },
   {
