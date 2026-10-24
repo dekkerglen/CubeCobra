@@ -51,7 +51,14 @@ export const formatAddHandler = async (req: Request, res: Response) => {
       cube.formats.push(format);
       message = 'Custom format successfully added.';
     } else {
-      cube.formats[req.body.id] = format;
+      // Only an existing format can be edited: an arbitrary index would create a huge sparse
+      // array (or mutate the array object itself) when the cube is saved.
+      const index = /^\d+$/.test(String(id)) ? Number.parseInt(String(id), 10) : NaN;
+      if (!Number.isInteger(index) || index < 0 || index >= (cube.formats?.length ?? 0)) {
+        req.flash('danger', 'Invalid format index.');
+        return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id!)}`);
+      }
+      cube.formats[index] = format;
       message = 'Custom format successfully edited.';
     }
 
@@ -78,7 +85,7 @@ export const formatRemoveHandler = async (req: Request, res: Response) => {
       req.flash('danger', 'Not Authorized');
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(cubeid!)}`);
     }
-    if (indexNum < 0 || indexNum >= cube.formats.length) {
+    if (!Number.isInteger(indexNum) || indexNum < 0 || indexNum >= (cube.formats?.length ?? 0)) {
       req.flash('danger', 'Invalid format index.');
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(cubeid!)}`);
     }

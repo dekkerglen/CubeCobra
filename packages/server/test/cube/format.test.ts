@@ -1,3 +1,4 @@
+import { formatAddHandler, formatRemoveHandler } from '../../src/router/routes/cube/format';
 import {
   MAX_FORMAT_PACKS,
   MAX_PACK_SLOTS,
@@ -148,5 +149,85 @@ describe('updateDraftFormatsHandler', () => {
 
     expect(cubeDao.update).not.toHaveBeenCalled();
     expect(flash).toHaveBeenCalledWith('danger', expect.stringContaining('at most'));
+  });
+});
+
+describe('formatAddHandler', () => {
+  const flash = jest.fn();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  const send = (cube: ReturnType<typeof createCube>, id: unknown, format: unknown = validFormat()) =>
+    call(formatAddHandler)
+      .as(cube.owner)
+      .withFlash(flash)
+      .withParams({ id: cube.id })
+      .withBody({ id, serializedFormat: JSON.stringify(format) })
+      .send();
+
+  it.each([['1000000000'], ['length'], ['-2'], ['1'], ['1.5'], ['__proto__']])(
+    'refuses to edit format index %s',
+    async (id) => {
+      const cube = createCube({ formats: [validFormat() as any] });
+      (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+      await send(cube, id);
+
+      expect(cubeDao.update).not.toHaveBeenCalled();
+      expect(flash).toHaveBeenCalledWith('danger', 'Invalid format index.');
+      expect(cube.formats).toHaveLength(1);
+    },
+  );
+
+  it('edits an existing format with the sanitized version', async () => {
+    const cube = createCube({ formats: [validFormat() as any] });
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+    await send(cube, '0', validFormat({ title: 'Edited', html: '<script>x</script>', evil: true }));
+
+    expect(cubeDao.update).toHaveBeenCalledTimes(1);
+    expect(cube.formats).toHaveLength(1);
+    expect(cube.formats[0]!.title).toBe('Edited');
+    expect(cube.formats[0]).not.toHaveProperty('evil');
+    expect(cube.formats[0]).not.toHaveProperty('html');
+  });
+
+  it('adds a new format', async () => {
+    const cube = createCube({ formats: [] });
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+    await send(cube, '-1');
+
+    expect(cubeDao.update).toHaveBeenCalledTimes(1);
+    expect(cube.formats).toHaveLength(1);
+  });
+
+  it('rejects an out-of-range default seat count', async () => {
+    const cube = createCube({ formats: [] });
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+    await send(cube, '-1', validFormat({ defaultSeats: 40 }));
+
+    expect(cubeDao.update).not.toHaveBeenCalled();
+    expect(flash).toHaveBeenCalledWith('danger', 'Default seat count must be between 2 and 16');
+  });
+});
+
+describe('formatRemoveHandler', () => {
+  it('ignores a non-numeric index instead of removing the first format', async () => {
+    const flash = jest.fn();
+    const cube = createCube({ formats: [validFormat() as any] });
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+    await call(formatRemoveHandler)
+      .as(cube.owner)
+      .withFlash(flash)
+      .withParams({ cubeid: cube.id, index: 'abc' })
+      .send();
+
+    expect(cube.formats).toHaveLength(1);
+    expect(cubeDao.update).not.toHaveBeenCalled();
   });
 });
