@@ -154,6 +154,14 @@ describe('PatronDynamoDao Patreon user id', () => {
     ...overrides,
   });
 
+  it('stores and indexes the Patreon user id', async () => {
+    await dao.put(patron({ patreonUserId: 'patreon-9' }));
+
+    const item = send.mock.calls[0][0].input.Item;
+    expect(item.item.patreonUserId).toBe('patreon-9');
+    expect(item.GSI3PK).toBe('PATRON#PATREON_USER#patreon-9');
+  });
+
   it('leaves records without one out of the index', async () => {
     await dao.put(patron());
 

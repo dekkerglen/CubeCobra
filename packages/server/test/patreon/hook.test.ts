@@ -212,6 +212,56 @@ describe('patreon hookHandler', () => {
     }
   });
 
+  it('matches on the Patreon user id, so a Patreon email change cannot strand the record', async () => {
+    (patronDao.getByPatreonUserId as jest.Mock).mockResolvedValue({
+      owner: OWNER,
+      email: 'old-address@example.com',
+      patreonUserId: OWNER,
+      level: PatronLevels['Lotus Cobra'],
+      status: PatronStatuses.ACTIVE,
+      dateCreated: 1,
+      dateLastUpdated: 1,
+    });
+    const req = signed('members:pledge:delete', memberPayload({ status: 'former_patron' }));
+
+    const { status } = await call(hookHandler).withRequest(req).send();
+
+    expect(status).toBe(200);
+    expect(patronDao.getByPatreonUserId).toHaveBeenCalledWith(OWNER);
+    expect(patronDao.getByEmail).not.toHaveBeenCalled();
+    expect(patronDao.update).toHaveBeenCalledWith(
+      expect.objectContaining({ email: 'old-address@example.com', status: PatronStatuses.INACTIVE }),
+    );
+  });
+
+  it('pins a legacy email-matched record to the Patreon user id', async () => {
+    const req = signed('members:pledge:update', memberPayload({ status: 'active_patron' }));
+
+    await call(hookHandler).withRequest(req).send();
+
+    expect(patronDao.getByEmail).toHaveBeenCalledWith(EMAIL);
+    expect(patronDao.update).toHaveBeenCalledWith(expect.objectContaining({ patreonUserId: OWNER }));
+  });
+
+  it('ignores an email match on a record linked to a different Patreon user', async () => {
+    (patronDao.getByEmail as jest.Mock).mockResolvedValue({
+      owner: OWNER,
+      email: EMAIL,
+      patreonUserId: 'some-other-patreon-user',
+      level: PatronLevels['Lotus Cobra'],
+      status: PatronStatuses.ACTIVE,
+      dateCreated: 1,
+      dateLastUpdated: 1,
+    });
+    const req = signed('members:pledge:delete', memberPayload({ status: 'former_patron' }));
+
+    const { status } = await call(hookHandler).withRequest(req).send();
+
+    expect(status).toBe(200);
+    expect(patronDao.update).not.toHaveBeenCalled();
+    expect(userDao.update).not.toHaveBeenCalled();
+  });
+
   it('acknowledges (200) when no patron matches the email so Patreon does not retry', async () => {
     (patronDao.getByEmail as jest.Mock).mockResolvedValue(undefined);
     const req = signed('members:pledge:delete', memberPayload({ status: 'former_patron' }));

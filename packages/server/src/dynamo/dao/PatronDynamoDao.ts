@@ -25,6 +25,7 @@ export class PatronDynamoDao extends BaseDynamoDao<Patron, Patron> {
    * GSI2: Enumerate every patron under a single static partition (`PATRON#ALL`).
    *       Patron volume is low (~1k), so a hot partition is not a concern and no
    *       sharding is needed (unlike users/cubes). Sorted by owner for stable paging.
+   * GSI3: Query by Patreon user id (only on records linked since it was stored)
    */
   protected GSIKeys(item: Patron): {
     GSI1PK: string | undefined;
@@ -41,8 +42,8 @@ export class PatronDynamoDao extends BaseDynamoDao<Patron, Patron> {
       GSI1SK: this.itemType(),
       GSI2PK: PatronDynamoDao.allPartitionKey(),
       GSI2SK: item.owner,
-      GSI3PK: undefined,
-      GSI3SK: undefined,
+      GSI3PK: item.patreonUserId ? `${this.itemType()}#PATREON_USER#${item.patreonUserId}` : undefined,
+      GSI3SK: item.patreonUserId ? this.itemType() : undefined,
       GSI4PK: undefined,
       GSI4SK: undefined,
     };
@@ -64,6 +65,7 @@ export class PatronDynamoDao extends BaseDynamoDao<Patron, Patron> {
       level: item.level,
       status: item.status,
       owner: item.owner,
+      patreonUserId: item.patreonUserId,
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
     };

@@ -72,7 +72,7 @@ const resolveMemberV2 = (action: string, body: any): PledgeState | null => {
   // Prefer the linked user's account email (matches what we store at link time); fall back
   // to the member email attribute.
   let email: string | undefined;
-  const userId = data.relationships?.user?.data?.id;
+  const userId: string | undefined = data.relationships?.user?.data?.id || undefined;
   if (userId && Array.isArray(included)) {
     const user = included.find((item: any) => item.id === userId && item.type === 'user');
     email = user?.attributes?.email;
@@ -80,22 +80,22 @@ const resolveMemberV2 = (action: string, body: any): PledgeState | null => {
   if (!email) {
     email = data.attributes?.email;
   }
-  if (!email) {
+  if (!email && !userId) {
     return null;
   }
-  email = email.toLowerCase();
+  const identity = { patreonUserId: userId, email: email?.toLowerCase() };
 
   // A member (pledge) deletion means the membership is gone → inactive.
   if (action === 'members:delete' || action === 'members:pledge:delete') {
-    return { email, active: false, level: 0 };
+    return { ...identity, active: false, level: 0 };
   }
 
   // For create/update, trust patron_status rather than the event name.
   if (data.attributes?.patron_status !== 'active_patron') {
-    return { email, active: false, level: 0 };
+    return { ...identity, active: false, level: 0 };
   }
 
-  return { email, active: true, level: levelFromEntitledTiers(data, included) };
+  return { ...identity, active: true, level: levelFromEntitledTiers(data, included) };
 };
 
 // Parses the deprecated Patreon API v1 `pledges:*` webhook shape. Retained so any events
@@ -117,7 +117,7 @@ const resolvePledgeV1 = (action: string, body: any): PledgeState | null => {
   }
 
   if (action === 'pledges:delete') {
-    return { email, active: false, level: 0 };
+    return { patreonUserId: patronId, email, active: false, level: 0 };
   }
 
   let level = PatronLevels['Patron'];
@@ -283,9 +283,12 @@ export const hookHandler = async (req: Request, res: Response) => {
     const document = await findPatronForPledge(state);
 
     if (!document) {
-      // The pledging email has no linked Cube Cobra patron record (never linked, or unlinked).
-      // A normal condition, not a server fault — log at info to keep it off the error dashboard.
-      req.logger.info(`Received a patreon hook without a found email: "${state.email}"`);
+      // The pledging Patreon user has no linked Cube Cobra patron record (never linked, or
+      // unlinked). A normal condition, not a server fault — log at info to keep it off the
+      // error dashboard.
+      req.logger.info(
+        `Received a patreon hook without a linked patron: user "${state.patreonUserId ?? ''}", email "${state.email ?? ''}"`,
+      );
 
       return res.status(200).send({
         success: 'false',
@@ -300,6 +303,12 @@ export const hookHandler = async (req: Request, res: Response) => {
       return res.status(200).send({
         success: 'false',
       });
+    }
+
+    // Pin legacy (email-only) records to the Patreon user the signed webhook names, so later
+    // events still match after a Patreon email change.
+    if (!document.patreonUserId && state.patreonUserId) {
+      document.patreonUserId = state.patreonUserId;
     }
 
     if (state.active) {
@@ -412,9 +421,13 @@ export const redirectHandler = async (req: Request, res: Response) => {
       return redirect(req, res, PATREON_PAGE);
     }
     const email = rawEmail.toLowerCase();
+    const patreonUserId: string | undefined = identity.data?.id ? String(identity.data.id) : undefined;
 
-    // if a patron with this email is already linked, we can't use it
-    const document = await patronDao.getByEmail(email);
+    // if this Patreon account (by its id, or by email for records linked before ids were
+    // stored) is already linked, we can't use it
+    const document =
+      (patreonUserId ? await patronDao.getByPatreonUserId(patreonUserId) : undefined) ??
+      (await patronDao.getByEmail(email));
 
     if (document && document.owner !== req.user!.id) {
       req.flash(
@@ -436,6 +449,7 @@ export const redirectHandler = async (req: Request, res: Response) => {
 
     const newPatron: any = {
       email,
+      patreonUserId,
       owner: req.user!.id,
       status: PatronStatuses.ACTIVE,
       level: levelFromEntitledTiers(member, included),

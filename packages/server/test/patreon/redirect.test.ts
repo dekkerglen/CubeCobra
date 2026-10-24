@@ -5,6 +5,7 @@ jest.mock('../../src/dynamo/daos', () => ({
   patronDao: {
     getById: jest.fn(),
     getByEmail: jest.fn(),
+    getByPatreonUserId: jest.fn(),
     update: jest.fn(),
     put: jest.fn(),
   },

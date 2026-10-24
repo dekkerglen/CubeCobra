@@ -1,3 +1,6 @@
+import { PatronStatuses } from '@utils/datatypes/Patron';
+import { UserRoles } from '@utils/datatypes/User';
+
 jest.mock('../../src/dynamo/daos', () => ({
   patronDao: {
     getById: jest.fn(),
@@ -147,6 +150,34 @@ describe('Patreon linking', () => {
       await arrive({ code: 'grant', state: STATE }, {});
 
       expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('links with a matching state and stores the Patreon user id', async () => {
+      mockPatreon(activeIdentity);
+      const session: Record<string, any> = { patreonOAuthState: STATE };
+
+      await arrive({ code: 'grant', state: STATE }, session);
+
+      expect(session.patreonOAuthState).toBeUndefined();
+      expect(patronDao.put).toHaveBeenCalledWith(
+        expect.objectContaining({
+          email: 'patron@example.com',
+          patreonUserId: 'patreon-9',
+          owner: 'user-1',
+          status: PatronStatuses.ACTIVE,
+        }),
+      );
+      expect(userDao.update).toHaveBeenCalledWith(expect.objectContaining({ roles: [UserRoles.PATRON] }));
+    });
+
+    it('refuses a Patreon account already linked elsewhere, matched by its user id', async () => {
+      mockPatreon(activeIdentity);
+      (patronDao.getByPatreonUserId as jest.Mock).mockResolvedValue({ owner: 'someone-else' });
+
+      const { rawRequest } = await arrive({ code: 'grant', state: STATE }, { patreonOAuthState: STATE });
+
+      expect(patronDao.put).not.toHaveBeenCalled();
+      expect(rawRequest.flash).toHaveBeenCalledWith('danger', expect.stringMatching(/already been linked/));
     });
   });
 
