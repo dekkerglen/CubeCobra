@@ -3,6 +3,7 @@ import { canUseImageHosting } from '@utils/hostedImagesUtil';
 import { patronDao, userDao } from 'dynamo/daos';
 import { validationResult } from 'express-validator';
 import Joi from 'joi';
+import { clientIp } from 'serverutils/clientIp';
 import { redirect } from 'serverutils/render';
 
 import { NextFunction, Request, Response } from '../types/express';
@@ -151,6 +152,21 @@ const answers = [
 // that renders <DynamicFlash />, otherwise the message is set but never shown. That gap
 // previously sent failed registrations to the landing page (no DynamicFlash), so users saw
 // no error and assumed signup succeeded. Callers pass the originating form's path.
+// A token solved on another site that uses the same (or a test) site key is still a valid
+// token; Google reports where it was solved, so require it to be this site.
+const isExpectedCaptchaHost = (hostname: unknown): boolean => {
+  if (!process.env.DOMAIN) {
+    return true;
+  }
+  let expected: string;
+  try {
+    expected = new URL(`http://${process.env.DOMAIN}`).hostname;
+  } catch {
+    return true;
+  }
+  return hostname === expected || hostname === `www.${expected}`;
+};
+
 export function recaptcha(redirectTo = '/') {
   return async function recaptchaMiddleware(req: Request, res: Response, next: NextFunction): Promise<void> {
     // Skip bot security checks if disabled (for testing)
@@ -167,27 +183,38 @@ export function recaptcha(redirectTo = '/') {
 
     const index = questions.indexOf(question);
 
-    if (index === -1 || !answer || !answers[index] || answers[index].toLowerCase() !== answer.toLowerCase()) {
+    if (
+      index === -1 ||
+      typeof answer !== 'string' ||
+      !answers[index] ||
+      answers[index].toLowerCase() !== answer.trim().toLowerCase()
+    ) {
       req.flash('danger', 'Incorrect answer to security question');
       return redirect(req, res, redirectTo);
     }
 
-    if (!captcha) {
+    if (!captcha || typeof captcha !== 'string') {
       req.flash('danger', 'Please complete the reCAPTCHA');
       return redirect(req, res, redirectTo);
     }
 
+    // URLSearchParams encodes the client-supplied token, so it can't smuggle extra
+    // parameters (a second `secret`, a forged `remoteip`) into the verification request.
     const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },
-      body: `secret=${process.env.CAPTCHA_SECRET_KEY}&response=${captcha}`,
+      body: new URLSearchParams({
+        secret: process.env.CAPTCHA_SECRET_KEY ?? '',
+        response: captcha,
+        remoteip: clientIp(req),
+      }),
     });
 
     const data = await response.json();
 
-    if (!data.success) {
+    if (!data.success || !isExpectedCaptchaHost(data.hostname)) {
       req.flash('danger', 'Failed reCAPTCHA verification');
       return redirect(req, res, redirectTo);
     }
@@ -222,10 +249,20 @@ export function jsonValidationErrors(req: Request, res: Response, next: NextFunc
   next();
 }
 
+const invalidJsonError = { details: [{ message: 'Invalid request data' }] };
+
 export const bodyValidation =
   (schema: Joi.Schema<any>, redirectUrlFn?: (req: Request) => string, path?: string) =>
   (req: Request, res: Response, next: NextFunction) => {
-    const { error } = path ? schema.validate(JSON.parse(req.body[path])) : schema.validate(req.body);
+    let payload: unknown = req.body;
+    if (path) {
+      try {
+        payload = JSON.parse(req.body[path]);
+      } catch {
+        payload = undefined;
+      }
+    }
+    const { error } = payload === undefined && path ? { error: invalidJsonError } : schema.validate(payload);
 
     if (error) {
       console.error('Validation error:', error);
