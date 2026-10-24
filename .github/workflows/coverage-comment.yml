@@ -6,6 +6,10 @@ on:
     types:
       - completed
 
+# This workflow runs the default branch's code with a PR-write token, but it is triggered by
+# CI runs of PR code (including forks), so everything downloaded from the triggering run is
+# untrusted: only numbers are read from the coverage summaries, the comment is rendered here,
+# and the PR number must match the run's head commit before anything is posted.
 permissions:
   pull-requests: write
   contents: read
@@ -19,10 +23,11 @@ jobs:
       github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     steps:
-      - name: Download coverage report
-        uses: actions/download-artifact@v4
+      - name: Download coverage summaries
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
-          name: coverage-report
+          name: coverage-summaries
+          path: untrusted/coverage
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
@@ -30,18 +35,75 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: pr-number
+          path: untrusted/pr
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
-      - name: Read PR number
+      - name: Validate PR number against the triggering run
         id: pr
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
         run: |
-          PR_NUMBER=$(cat pr-number.txt)
-          echo "number=$PR_NUMBER" >> $GITHUB_OUTPUT
+          PR_NUMBER=$(head -c 32 untrusted/pr/pr-number.txt | tr -d '[:space:]')
+          if ! [[ "$PR_NUMBER" =~ ^[0-9]+$ ]]; then
+            echo "::error::pr-number.txt does not contain a pull request number"
+            exit 1
+          fi
+          PR_HEAD_SHA=$(gh api "repos/$REPO/pulls/$PR_NUMBER" --jq .head.sha)
+          if [ "$PR_HEAD_SHA" != "$RUN_HEAD_SHA" ]; then
+            echo "::notice::PR #$PR_NUMBER head is $PR_HEAD_SHA, not this run's $RUN_HEAD_SHA (newer push or mismatched PR number); not commenting."
+            echo "matches=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "number=$PR_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "matches=true" >> "$GITHUB_OUTPUT"
+
+      - name: Build coverage comment from numeric values
+        if: steps.pr.outputs.matches == 'true'
+        run: |
+          # Numeric value at a fixed jq path of an (untrusted) Jest coverage summary; 0 when the
+          # file is missing, oversized, not JSON, or the value isn't a number.
+          num() {
+            local file="$1" path="$2" value=0
+            if [ -f "$file" ] && [ "$(stat -c %s "$file")" -le 1048576 ]; then
+              value=$(jq -r "($path) | if type == \"number\" then . else 0 end" "$file" 2>/dev/null) || value=0
+            fi
+            if ! [[ "$value" =~ ^-?[0-9]+(\.[0-9]+)?([eE][-+]?[0-9]+)?$ ]]; then
+              value=0
+            fi
+            echo "$value"
+          }
+
+          PR=untrusted/coverage/coverage-pr.json
+          BASE=untrusted/coverage/coverage-base.json
+
+          {
+            echo "## 📊 Server Code Coverage Report"
+            echo
+            echo "| Metric | Coverage % | Coverage Raw | Delta % | Delta Raw |"
+            echo "|--------|------------|--------------|---------|-----------|"
+            for metric in lines statements functions branches; do
+              pr_pct=$(num "$PR" ".total.$metric.pct")
+              pr_covered=$(num "$PR" ".total.$metric.covered")
+              pr_total=$(num "$PR" ".total.$metric.total")
+              base_pct=$(num "$BASE" ".total.$metric.pct")
+              base_covered=$(num "$BASE" ".total.$metric.covered")
+              awk -v metric="$metric" -v pp="$pr_pct" -v pc="$pr_covered" -v pt="$pr_total" -v bp="$base_pct" -v bc="$base_covered" '
+                BEGIN {
+                  name = toupper(substr(metric, 1, 1)) substr(metric, 2)
+                  dp = pp - bp; dc = pc - bc
+                  printf "| %s | %.2f%% | %d/%d | %s%.2f%% | %s%d |\n", name, pp, pc, pt, (dp >= 0 ? "+" : ""), dp, (dc >= 0 ? "+" : ""), dc
+                }'
+            done
+          } > coverage-comment.md
+          cat coverage-comment.md
 
       - name: Comment Coverage on PR
+        if: steps.pr.outputs.matches == 'true'
         uses: marocchino/sticky-pull-request-comment@v2
         with:
           header: coverage
           number: ${{ steps.pr.outputs.number }}
-          path: coverage-report.md
+          path: coverage-comment.md

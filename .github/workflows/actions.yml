@@ -204,12 +204,16 @@ jobs:
 
           cat coverage-report.md >> $GITHUB_STEP_SUMMARY
 
-      - name: Upload coverage report for PR comment
+      # The PR comment is built by coverage-comment.yml (default-branch code, privileged token)
+      # from the numbers in these raw Jest summaries. It never posts markdown produced here.
+      - name: Upload coverage summaries for PR comment
         if: github.event_name == 'pull_request'
         uses: actions/upload-artifact@v4
         with:
-          name: coverage-report
-          path: coverage-report.md
+          name: coverage-summaries
+          path: |
+            coverage-pr.json
+            coverage-base.json
           retention-days: 1
 
       - name: Save PR number
