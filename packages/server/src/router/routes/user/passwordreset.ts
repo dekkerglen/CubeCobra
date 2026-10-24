@@ -1,7 +1,7 @@
-import bcrypt from 'bcryptjs';
 import { passwordResetDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, flashValidationErrors } from 'router/middleware';
+import { hashPassword, newPasswordValidator } from 'serverutils/passwordPolicy';
 import { formLimiter } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
@@ -21,7 +21,7 @@ function checkPasswordsMatch(value: string, { req }: any) {
 
 // Shared by this route and /user/lostpasswordreset, which the reset form posts to.
 export const passwordValidators = [
-  body('password', 'Password must be between 8 and 24 characters.').isLength({ min: 8, max: 24 }),
+  newPasswordValidator('password'),
   body('password', 'New passwords must match.').custom(checkPasswordsMatch),
 ];
 
@@ -48,7 +48,7 @@ export const postHandler = async (req: Request, res: Response) => {
       return render(req, res, 'PasswordResetPage', { code: req.body.code });
     }
 
-    const passwordreset = await passwordResetDao.getById(req.body.code);
+    const passwordreset = typeof req.body.code === 'string' ? await passwordResetDao.getById(req.body.code) : undefined;
 
     // The code is the credential: it was mailed to the address on the account, so it alone
     // decides whose password changes. Resolving the account from anything the form submits
@@ -65,8 +65,7 @@ export const postHandler = async (req: Request, res: Response) => {
       return render(req, res, 'PasswordResetPage', { code: req.body.code });
     }
 
-    const salt = await bcrypt.genSalt(10);
-    user.passwordHash = await bcrypt.hash(req.body.password2, salt);
+    user.passwordHash = await hashPassword(req.body.password);
     // Whoever reset the password owns the inbox; drop any email change they didn't confirm.
     user.pendingEmail = '';
     user.pendingEmailToken = '';

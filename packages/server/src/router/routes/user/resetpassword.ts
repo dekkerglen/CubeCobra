@@ -1,7 +1,7 @@
-import bcrypt from 'bcryptjs';
 import { userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
+import { comparePassword, hashPassword, newPasswordValidator } from 'serverutils/passwordPolicy';
 import { formLimiter } from 'serverutils/rateLimiters';
 import { userOrIpKey } from 'serverutils/rateLimitKeys';
 import { handleRouteError, redirect } from 'serverutils/render';
@@ -30,19 +30,12 @@ export const handler = async (req: Request, res: Response) => {
       return redirect(req, res, PASSWORD_PAGE);
     }
 
-    const isMatch = await bcrypt.compare(req.body.password, user.passwordHash);
-    if (!isMatch) {
+    if (!(await comparePassword(req.body.password, user.passwordHash))) {
       req.flash('danger', 'Password is incorrect');
       return redirect(req, res, PASSWORD_PAGE);
     }
 
-    if (req.body.password2 !== req.body.password3) {
-      req.flash('danger', "New passwords don't match");
-      return redirect(req, res, '/user/account?nav=password');
-    }
-
-    const salt = await bcrypt.genSalt(10);
-    user.passwordHash = await bcrypt.hash(req.body.password2, salt);
+    user.passwordHash = await hashPassword(req.body.password2);
     // Changing the password is the advice for an email change you didn't ask for, so it also
     // cancels any change still waiting on confirmation.
     user.pendingEmail = '';
@@ -65,10 +58,13 @@ export const routes = [
       changePasswordLimiter,
       csrfProtection,
       ensureAuth,
-      body('password', 'Password must be between 8 and 24 characters.').isLength({
-        min: 8,
-        max: 24,
-      }),
+      // The current password is only compared against its hash, so it isn't held to the policy:
+      // accounts with a password set under older rules must still be able to change it.
+      body('password', 'Please enter your current password.').isString().notEmpty(),
+      newPasswordValidator('password2'),
+      body('password3', "New passwords don't match").custom(
+        (value: unknown, { req }: any) => value === req.body.password2,
+      ),
       flashValidationErrors,
       handler,
     ],

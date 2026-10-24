@@ -1,7 +1,7 @@
-import bcrypt from 'bcryptjs';
 import { blogDao, commentDao, cubeDao, draftDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
+import { comparePassword } from 'serverutils/passwordPolicy';
 import { formLimiter } from 'serverutils/rateLimiters';
 import { userOrIpKey } from 'serverutils/rateLimitKeys';
 import { redirect } from 'serverutils/render';
@@ -29,7 +29,7 @@ export const handler = async (req: Request, res: Response) => {
   }
 
   // Verify password
-  const isMatch = await bcrypt.compare(req.body.password, user.passwordHash);
+  const isMatch = await comparePassword(req.body.password, user.passwordHash);
   if (!isMatch) {
     req.flash('danger', 'Password is incorrect');
     return redirect(req, res, '/user/account?tab=5');

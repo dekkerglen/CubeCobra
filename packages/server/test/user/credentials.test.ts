@@ -35,9 +35,15 @@ import {
   LOST_PASSWORD_SENT,
   postHandler as lostPasswordHandler,
 } from '../../src/router/routes/user/lostpassword';
+import { routes as passwordResetRoutes } from '../../src/router/routes/user/passwordreset';
 import { confirmHandler } from '../../src/router/routes/user/register';
 import { postHandler as resendHandler, VERIFICATION_SENT } from '../../src/router/routes/user/resendverification';
+import {
+  handler as changePasswordHandler,
+  routes as changePasswordRoutes,
+} from '../../src/router/routes/user/resetpassword';
 import sendEmail from '../../src/serverutils/email';
+import * as passwordPolicy from '../../src/serverutils/passwordPolicy';
 import { createUser } from '../test-utils/data';
 import { call } from '../test-utils/transport';
 
@@ -52,6 +58,23 @@ const storedUser = (overrides: Record<string, any> = {}) => ({
   emailVerified: true,
   ...overrides,
 });
+
+// Runs a list of express-validator chains (and flashValidationErrors) against a request body
+// and returns the flashed messages.
+const validate = async (handlers: any[], body: Record<string, any>) => {
+  const flash = jest.fn();
+  const req: any = { body, flash };
+  for (const handler of handlers.flat()) {
+    if (typeof handler.run === 'function') {
+      await handler.run(req);
+    } else if (handler.name === 'flashValidationErrors') {
+      handler(req, {}, () => undefined);
+    }
+  }
+  return { validated: req.validated, messages: flash.mock.calls.map((args) => args[1]) };
+};
+
+const postHandlers = (routes: any[]) => routes.find((route) => route.method === 'post').handler;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -153,6 +176,64 @@ describe('lost password', () => {
 
     expect(rawRequest.flash).toHaveBeenCalledWith('success', LOST_PASSWORD_SENT);
     expect(rawRequest.logger.error).toHaveBeenCalled();
+  });
+});
+
+describe('password reset link', () => {
+  it('applies the shared password policy', async () => {
+    const handlers = postHandlers(passwordResetRoutes);
+
+    expect((await validate(handlers, { password: 'short', password2: 'short' })).validated).toBe(false);
+    expect((await validate(handlers, { password: 'a'.repeat(73), password2: 'a'.repeat(73) })).validated).toBe(false);
+    expect((await validate(handlers, { password: 'a'.repeat(40), password2: 'a'.repeat(40) })).validated).toBe(true);
+  });
+});
+
+describe('change password (signed in)', () => {
+  const NEW_PASSWORD = 'brand new password';
+
+  const submit = (body: Record<string, any>) =>
+    call(changePasswordHandler)
+      .as(user)
+      .withFlash(jest.fn())
+      .withRequest({ validated: true, body, login: jest.fn((_user, _options, cb) => cb()) } as any)
+      .send();
+
+  it('checks the current password', async () => {
+    (userDao.getByIdWithSensitiveData as jest.Mock).mockResolvedValue(storedUser());
+
+    const { rawRequest } = await submit({ password: 'wrong', password2: NEW_PASSWORD, password3: NEW_PASSWORD });
+
+    expect(userDao.update).not.toHaveBeenCalled();
+    expect(rawRequest.flash).toHaveBeenCalledWith('danger', 'Password is incorrect');
+  });
+
+  it('responds (instead of hanging) when hashing fails', async () => {
+    (userDao.getByIdWithSensitiveData as jest.Mock).mockResolvedValue(storedUser());
+    const spy = jest.spyOn(passwordPolicy, 'hashPassword').mockRejectedValue(new Error('boom'));
+
+    await submit({ password: PASSWORD, password2: NEW_PASSWORD, password3: NEW_PASSWORD });
+
+    const { handleRouteError } = jest.requireMock('serverutils/render');
+    expect(handleRouteError).toHaveBeenCalled();
+    expect(userDao.update).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('validates the new password, not the current one', async () => {
+    const handlers = postHandlers(changePasswordRoutes);
+    const longCurrent = 'x'.repeat(200);
+
+    // A long legacy password can still be changed...
+    expect(
+      (await validate(handlers, { password: longCurrent, password2: NEW_PASSWORD, password3: NEW_PASSWORD })).validated,
+    ).toBe(true);
+    // ...but the new one has to meet the policy and be confirmed.
+    expect((await validate(handlers, { password: PASSWORD, password2: '', password3: '' })).validated).toBe(false);
+    expect((await validate(handlers, { password: PASSWORD, password2: 'x', password3: 'x' })).validated).toBe(false);
+    expect(
+      (await validate(handlers, { password: PASSWORD, password2: NEW_PASSWORD, password3: 'something else' })).messages,
+    ).toContain("New passwords don't match");
   });
 });
 

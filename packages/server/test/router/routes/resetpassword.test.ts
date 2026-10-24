@@ -1,8 +1,9 @@
 import bcrypt from 'bcryptjs';
 import { userDao } from 'dynamo/daos';
+import { validationResult } from 'express-validator';
 import { handleRouteError, redirect } from 'serverutils/render';
 
-import { handler } from '../../../src/router/routes/user/resetpassword';
+import { handler, routes } from '../../../src/router/routes/user/resetpassword';
 
 jest.mock('dynamo/daos', () => ({
   userDao: {
@@ -80,17 +81,21 @@ describe('resetpassword handler', () => {
     expect(mockUserDao.update).not.toHaveBeenCalled();
   });
 
-  it('rejects mismatched new passwords without updating', async () => {
-    const passwordHash = await bcrypt.hash('current', 10);
-    mockUserDao.getByIdWithSensitiveData.mockResolvedValueOnce({ id: 'user-1', passwordHash } as any);
+  it('rejects mismatched new passwords in the route validators, before the handler runs', async () => {
     const req = buildReq({
       body: { password: 'current', password2: 'new-password', password3: 'different' },
     });
+    const validators = (routes[0]!.handler as any[]).filter((step) => typeof step?.run === 'function');
 
-    await handler(req, res);
+    for (const validator of validators) {
+      await validator.run(req);
+    }
 
-    expect(req.flash).toHaveBeenCalledWith('danger', "New passwords don't match");
-    expect(mockUserDao.update).not.toHaveBeenCalled();
+    expect(
+      validationResult(req)
+        .array()
+        .map((error) => error.msg),
+    ).toContain("New passwords don't match");
   });
 
   it('stores a new verifiable hash when the current password is correct', async () => {
