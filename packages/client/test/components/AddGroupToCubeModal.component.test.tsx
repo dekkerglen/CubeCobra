@@ -44,8 +44,16 @@ const renderModal = ({ csrfFetch = jest.fn().mockResolvedValue(okResponse), with
     </CSRFContext.Provider>,
   );
 
-const bodyOf = (csrfFetch: jest.Mock) =>
-  JSON.parse(csrfFetch.mock.calls.find(([url]: [string]) => url.includes('addtocube'))[1].body);
+const addCall = (csrfFetch: jest.Mock) => csrfFetch.mock.calls.find(([url]: [string]) => url.includes('addtocube'));
+
+const bodyOf = (csrfFetch: jest.Mock) => JSON.parse(addCall(csrfFetch)[1].body);
+
+// Add stays disabled until the selected cube's boards have loaded.
+const clickAdd = async (csrfFetch: jest.Mock) => {
+  await waitFor(() => expect(screen.getByText('Add').closest('button')).toBeEnabled());
+  fireEvent.click(screen.getByText('Add'));
+  await waitFor(() => expect(addCall(csrfFetch)).toBeDefined());
+};
 
 describe('AddGroupToCubeModal', () => {
   beforeEach(() => {
@@ -62,9 +70,7 @@ describe('AddGroupToCubeModal', () => {
     const csrfFetch = jest.fn().mockResolvedValue(okResponse);
     renderModal({ csrfFetch });
 
-    fireEvent.click(screen.getByText('Add'));
-
-    await waitFor(() => expect(csrfFetch).toHaveBeenCalled());
+    await clickAdd(csrfFetch);
     expect(bodyOf(csrfFetch).useDefaultPrinting).toBe(false);
   });
 
@@ -73,9 +79,7 @@ describe('AddGroupToCubeModal', () => {
     renderModal({ csrfFetch });
 
     fireEvent.click(screen.getByLabelText(PRINTING_CHECKBOX_LABEL));
-    fireEvent.click(screen.getByText('Add'));
-
-    await waitFor(() => expect(csrfFetch).toHaveBeenCalled());
+    await clickAdd(csrfFetch);
     expect(bodyOf(csrfFetch).useDefaultPrinting).toBe(true);
   });
 
@@ -111,9 +115,7 @@ describe('AddGroupToCubeModal', () => {
     const csrfFetch = jest.fn().mockResolvedValue(okResponse);
     renderModal({ csrfFetch });
 
-    fireEvent.click(screen.getByText('Add'));
-
-    await waitFor(() => expect(csrfFetch).toHaveBeenCalled());
+    await clickAdd(csrfFetch);
     expect(bodyOf(csrfFetch).addNotes).toBe(true);
   });
 
@@ -122,9 +124,7 @@ describe('AddGroupToCubeModal', () => {
     renderModal({ csrfFetch });
 
     fireEvent.click(screen.getByLabelText(NOTES_CHECKBOX_LABEL));
-    fireEvent.click(screen.getByText('Add'));
-
-    await waitFor(() => expect(csrfFetch).toHaveBeenCalled());
+    await clickAdd(csrfFetch);
     expect(bodyOf(csrfFetch).addNotes).toBe(false);
   });
 
