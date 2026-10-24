@@ -1,4 +1,5 @@
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { getBaseUrl } from 'serverutils/util';
 import Stripe from 'stripe';
 
 import { Request, Response } from '../../types/express';
@@ -10,6 +11,8 @@ const stripe = process.env.STRIPE_SECRET_KEY
   : null;
 
 const products: any[] = [];
+
+const MAX_QUANTITY = 10;
 
 const handler = async (req: Request, res: Response) => {
   try {
@@ -41,13 +44,17 @@ const checkout = async (req: Request, res: Response) => {
         if (!product) {
           throw new Error(`Product with id ${productId} not found`);
         }
+        const count = Number(quantity);
+        if (!Number.isInteger(count) || count < 1 || count > MAX_QUANTITY) {
+          throw new Error(`Please choose a quantity between 1 and ${MAX_QUANTITY}.`);
+        }
         return {
           price_data: {
             currency: 'usd',
             product: productId,
             unit_amount: product.price,
           },
-          quantity: parseInt(quantity as string, 10),
+          quantity: count,
         };
       });
 
@@ -58,8 +65,9 @@ const checkout = async (req: Request, res: Response) => {
       shipping_address_collection: {
         allowed_countries: ['US', 'CA'], // Adjust the allowed countries as needed
       },
-      success_url: `${req.protocol}://${req.get('host')}/merchandise/success`,
-      cancel_url: `${req.protocol}://${req.get('host')}/merchandise/cancel`,
+      // Built from the configured domain, never the request's Host header, which the client controls.
+      success_url: `${getBaseUrl()}/merchandise/success`,
+      cancel_url: `${getBaseUrl()}/merchandise/cancel`,
     });
 
     if (!session.url) {
