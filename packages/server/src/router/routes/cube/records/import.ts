@@ -142,9 +142,10 @@ export const importRecordHandler = async (req: Request, res: Response) => {
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
 
-    // this is either the existing record or the newly created one
-    const record = await recordDao.getById(recordId!);
-    if (!record) {
+    // this is either the existing record or the newly created one. Edit rights were checked
+    // against this cube, so the record (which may come from the request body) must belong to it.
+    const record = typeof recordId === 'string' && recordId ? await recordDao.getById(recordId) : undefined;
+    if (!record || record.cube !== cube.id) {
       req.flash('danger', 'Record not found');
       return redirect(req, res, '/404');
     }
@@ -162,6 +163,12 @@ export const importRecordHandler = async (req: Request, res: Response) => {
     }
 
     const draft = await draftDao.getById(record.draft);
+
+    if (draft && draft.cube !== cube.id) {
+      // A record should only ever point at a draft of its own cube; never write into another.
+      req.flash('danger', 'Record not found');
+      return redirect(req, res, '/404');
+    }
 
     if (!draft) {
       // underlying draft object may have been deleted, we need to create a new one
