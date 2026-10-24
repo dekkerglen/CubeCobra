@@ -42,3 +42,4 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - The All Cards table in Winrate Analytics has two new columns: In Cube, counting the events where a card was in the cube list on the event's date, and Play Rate, showing how often it made a deck in those events.
 - The All Cards table in Winrate Analytics now lists cards in your cube that haven't made a single recorded deck, so you can spot never-played cards at a glance.
 - Draft records can now be exported to a file — one record or a whole cube's worth — and imported into any cube you manage. Anyone who can view a cube can export its records, so you can bring records from a clone of your cube back into the original. The file format is documented so other tools can create records to import too.
+- Imports and decklist uploads now accept at most 100 copies of a card per line.

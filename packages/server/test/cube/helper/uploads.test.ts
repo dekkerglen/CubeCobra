@@ -1,6 +1,7 @@
 import * as carddb from 'serverutils/carddb';
 import { bulkUpload } from 'serverutils/cube';
 import * as cubefn from 'serverutils/cubefn';
+import { IMPORT_TOO_LARGE_MESSAGE, MAX_IMPORT_CARDS, MAX_IMPORT_LINE_COUNT } from 'serverutils/importParsing';
 import * as render from 'serverutils/render';
 
 import { blogDao, changelogDao, cubeDao } from '../../../src/dynamo/daos';
@@ -510,6 +511,47 @@ describe('Bulk Upload', () => {
           addedByBoard: { maybeboard: ['bolt-id'] },
         }),
       );
+    });
+
+    it('caps the copies a single line can add', async () => {
+      const owner = createUser();
+      const cube = createCube({ owner });
+      const plains = createCardDetails({ name: 'Plains', scryfall_id: 'plains-id', error: false });
+
+      setupBasicMocks();
+      (carddb.getMostReasonable as jest.Mock).mockReturnValue(plains);
+      (carddb.cardFromId as jest.Mock).mockReturnValue(plains);
+
+      await bulkUpload(
+        { user: owner, flash: flashMock, params: { id: cube.id }, body: {} } as any,
+        {} as any,
+        '9999 Plains',
+        cube,
+      );
+
+      const props = (render.render as jest.Mock).mock.calls[0][3];
+      expect(props.added).toHaveLength(MAX_IMPORT_LINE_COUNT);
+    });
+
+    it('refuses a text import that would add more cards than a cube can hold', async () => {
+      const owner = createUser();
+      const cube = createCube({ owner });
+      const plains = createCardDetails({ name: 'Plains', scryfall_id: 'plains-id', error: false });
+
+      setupBasicMocks();
+      (carddb.getMostReasonable as jest.Mock).mockReturnValue(plains);
+      (carddb.cardFromId as jest.Mock).mockReturnValue(plains);
+
+      const lines = Array(MAX_IMPORT_CARDS / MAX_IMPORT_LINE_COUNT + 1).fill(`${MAX_IMPORT_LINE_COUNT} Plains`);
+      await expect(
+        bulkUpload(
+          { user: owner, flash: flashMock, params: { id: cube.id }, body: {} } as any,
+          {} as any,
+          lines.join('\n'),
+          cube,
+        ),
+      ).rejects.toThrow(IMPORT_TOO_LARGE_MESSAGE);
+      expect(render.render).not.toHaveBeenCalled();
     });
   });
 });

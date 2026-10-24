@@ -3,6 +3,15 @@
 // Kept dependency-free (and in its own module) so it can be unit tested in isolation and reused
 // without pulling in the rest of the cube/server utilities.
 
+// Most copies of one card a single import line can ask for ("4000 Plains" is clamped to this).
+export const MAX_IMPORT_LINE_COUNT = 100;
+
+// Most cards a single import may add. Mirrors the cube card limit enforced when cards are saved
+// (CARD_LIMIT in CubeDynamoDao), so anything larger could never be saved anyway.
+export const MAX_IMPORT_CARDS = 10000;
+
+export const IMPORT_TOO_LARGE_MESSAGE = `This import has too many cards. A cube can hold at most ${MAX_IMPORT_CARDS.toLocaleString('en-US')} cards.`;
+
 export interface ParsedNonCSVLine {
   count: number;
   name: string;
@@ -21,6 +30,9 @@ export interface ParsedNonCSVLine {
 //   4x Plains              -> { count: 4, name: 'Plains' }
 //   Plains                 -> { count: 1, name: 'Plains' }
 //
+// Counts are at most four digits and are clamped to MAX_IMPORT_LINE_COUNT, so one line can't
+// expand into millions of cards.
+//
 // The set specifier is only recognised when it is a whitespace-free token wrapped in [] or ().
 // Real card names never contain square brackets and set codes never contain whitespace, so a
 // bracketed/parenthesised multi-word suffix (e.g. "B.F.M. (Big Furry Monster)") is left as part of
@@ -32,7 +44,7 @@ export const parseNonCSVLine = (rawLine: string): ParsedNonCSVLine | null => {
   }
 
   //                    | count?     |  name  |            [set] / (set)             |  c.num?  |
-  const match = line.match(/^(?:(\d+)[xX]?\s+)?(.+?)(?:\s+(?:\[([^\s[\]]+)\]|\(([^\s()]+)\))(?:\s+(\S+))?)?$/);
+  const match = line.match(/^(?:(\d{1,4})[xX]?\s+)?(.+?)(?:\s+(?:\[([^\s[\]]+)\]|\(([^\s()]+)\))(?:\s+(\S+))?)?$/);
   if (!match) {
     return null;
   }
@@ -46,6 +58,7 @@ export const parseNonCSVLine = (rawLine: string): ParsedNonCSVLine | null => {
   if (!Number.isInteger(count) || count < 1) {
     count = 1;
   }
+  count = Math.min(count, MAX_IMPORT_LINE_COUNT);
 
   return {
     count,

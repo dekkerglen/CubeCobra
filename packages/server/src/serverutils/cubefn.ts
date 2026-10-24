@@ -10,6 +10,7 @@ import Papa from 'papaparse';
 import sanitizeHtml from 'sanitize-html';
 
 import { cardFromId, getAllVersionIds, reasonableId } from './carddb';
+import { IMPORT_TOO_LARGE_MESSAGE, MAX_IMPORT_CARDS } from './importParsing';
 import { batchDraft } from './ml';
 import * as util from './util';
 
@@ -276,6 +277,9 @@ const importedImageUrl = (value: unknown): string | null => {
 
 function CSVtoCards(csvString: string): CSVResult {
   const { data } = Papa.parse(csvString.trim(), { header: true });
+  if (data.length > MAX_IMPORT_CARDS) {
+    throw new Error(IMPORT_TOO_LARGE_MESSAGE);
+  }
   const camelizedRows = camelizeDataRows(data);
   const missing: string[] = [];
   const newCards: CubeCard[] = [];

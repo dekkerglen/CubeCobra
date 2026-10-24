@@ -9,7 +9,7 @@ import { Request, Response } from '../types/express';
 import { cardFromId, getIdsFromName, getMostReasonable } from './carddb';
 import cloudwatch from './cloudwatch';
 import { CSVtoCards } from './cubefn';
-import { parseNonCSVLine } from './importParsing';
+import { IMPORT_TOO_LARGE_MESSAGE, MAX_IMPORT_CARDS, parseNonCSVLine } from './importParsing';
 import { handleRouteError, redirect, render } from './render';
 
 const CARD_HEIGHT = 680;
@@ -215,6 +215,9 @@ async function bulkUpload(req: Request, res: Response, list: string, cube: Cube)
           if (!details.error) {
             if (!addedByBoard[defaultBoard]) {
               addedByBoard[defaultBoard] = [];
+            }
+            if (added.length + count > MAX_IMPORT_CARDS) {
+              throw new Error(IMPORT_TOO_LARGE_MESSAGE);
             }
             for (let i = 0; i < count; i++) {
               added.push(details);

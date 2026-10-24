@@ -689,4 +689,72 @@ describe('Upload Decklist Handler', () => {
     // Should default to column 0 when CMC is undefined
     expect(mainboard[0][0]).toContain(0);
   });
+
+  describe('decklist size limits', () => {
+    const setupIsland = () => {
+      const owner = createUser({ id: 'owner-id' });
+      const cube = createCube({ owner, id: CUBE_ID });
+      const cardDetail = createCardDetails({ name: 'Island', name_lower: 'island', cmc: 0, type: 'Land' });
+      const cubeCard = createCard({ cardID: 'card-id-1', details: cardDetail });
+
+      (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+      (cubefn.isCubeViewable as jest.Mock).mockReturnValue(true);
+      (cubeDao.getCards as jest.Mock).mockResolvedValue({ mainboard: [cubeCard] });
+      (carddb.getIdsFromName as jest.Mock).mockImplementation((name: string) =>
+        name === 'island' ? ['card-id-1'] : [],
+      );
+      (carddb.cardFromId as jest.Mock).mockReturnValue(cardDetail);
+      (draftDao.createDraft as jest.Mock).mockResolvedValue(DRAFT_ID);
+      return { owner, cube };
+    };
+
+    it('caps the copies a single line can add', async () => {
+      const { owner, cube } = setupIsland();
+
+      await call(uploadDecklistHandler)
+        .withFlash(flashMock)
+        .as(owner)
+        .withParams({ id: cube.id })
+        .withBody({ body: '999x Island' })
+        .send();
+
+      expectSuccess();
+      const draftCall = (draftDao.createDraft as jest.Mock).mock.calls[0][0];
+      expect(draftCall.cards).toHaveLength(100);
+    });
+
+    it('only reads a count at the start of the line', async () => {
+      const { owner, cube } = setupIsland();
+
+      // An unanchored match used to read "100,000" as a count of 0 and drop the card, and to
+      // re-queue "3x island" from "2x 3x island" so expansions compounded.
+      await call(uploadDecklistHandler)
+        .withFlash(flashMock)
+        .as(owner)
+        .withParams({ id: cube.id })
+        .withBody({ body: 'Island 100,000 Arrows\n2x 3x Island\n12345 Island' })
+        .send();
+
+      expectSuccess();
+      expect(carddb.getIdsFromName).toHaveBeenCalledWith('island 100,000 arrows');
+      expect(carddb.getIdsFromName).toHaveBeenCalledWith('3x island');
+      expect(carddb.getIdsFromName).toHaveBeenCalledWith('12345 island');
+      const draftCall = (draftDao.createDraft as jest.Mock).mock.calls[0][0];
+      expect(draftCall.cards).toHaveLength(0);
+    });
+
+    it('refuses decklists over the total card limit', async () => {
+      const { owner, cube } = setupIsland();
+
+      await call(uploadDecklistHandler)
+        .withFlash(flashMock)
+        .as(owner)
+        .withParams({ id: cube.id })
+        .withBody({ body: Array(11).fill('100 Island').join('\n') })
+        .send();
+
+      expectError('Decklists can have at most 1000 cards.', PLAYTEST_REDIRECT_URL);
+      expect(draftDao.createDraft).not.toHaveBeenCalled();
+    });
+  });
 });

@@ -1,4 +1,4 @@
-import { parseNonCSVLine } from 'serverutils/importParsing';
+import { MAX_IMPORT_LINE_COUNT, parseNonCSVLine } from 'serverutils/importParsing';
 
 describe('parseNonCSVLine', () => {
   describe('empty / invalid input', () => {
@@ -57,7 +57,21 @@ describe('parseNonCSVLine', () => {
 
     it('parses multi-digit counts', () => {
       expect(parseNonCSVLine('10 Island')).toMatchObject({ count: 10, name: 'Island' });
-      expect(parseNonCSVLine('123x Swamp')).toMatchObject({ count: 123, name: 'Swamp' });
+      expect(parseNonCSVLine('99x Swamp')).toMatchObject({ count: 99, name: 'Swamp' });
+    });
+
+    it(`clamps counts to ${MAX_IMPORT_LINE_COUNT}`, () => {
+      expect(parseNonCSVLine('123x Swamp')).toMatchObject({ count: MAX_IMPORT_LINE_COUNT, name: 'Swamp' });
+      expect(parseNonCSVLine('9999 Plains')).toMatchObject({ count: MAX_IMPORT_LINE_COUNT, name: 'Plains' });
+    });
+
+    it('does not read a count longer than four digits', () => {
+      // A five-digit "count" can't be a quantity, so it stays part of the name and the line
+      // simply won't match a card.
+      expect(parseNonCSVLine('99999999999999999999 Plains')).toMatchObject({
+        count: 1,
+        name: '99999999999999999999 Plains',
+      });
     });
 
     it('parses counts separated by a tab', () => {

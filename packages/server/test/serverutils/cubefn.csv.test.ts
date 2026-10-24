@@ -12,6 +12,7 @@
 import { Response } from 'express';
 import { CSV_HEADER, writeCard } from 'serverutils/cube';
 import { CSVtoCards } from 'serverutils/cubefn';
+import { IMPORT_TOO_LARGE_MESSAGE, MAX_IMPORT_CARDS } from 'serverutils/importParsing';
 
 import { createCardDetails } from '../test-utils/data';
 
@@ -272,5 +273,12 @@ describe('CSV import — limits', () => {
       [null, null],
       [null, null],
     ]);
+  });
+
+  it('refuses imports with more rows than a cube can hold', () => {
+    const row = 'A,1,Instant,,,,,Colorless,Not Owned,Non-foil,mainboard,false,,,,,,true,false';
+    const csv = [CSV_HEADER, ...Array(MAX_IMPORT_CARDS + 1).fill(row)].join('\r\n');
+
+    expect(() => CSVtoCards(csv)).toThrow(IMPORT_TOO_LARGE_MESSAGE);
   });
 });

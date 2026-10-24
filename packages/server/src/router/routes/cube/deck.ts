@@ -16,6 +16,10 @@ import { Request, Response } from '../../../types/express';
 
 const DECK_CSV_HEADER = 'Quantity,"Name",Scryfall,Zone';
 
+// Decklist uploads: most copies one line may ask for, and most cards in one upload.
+const MAX_DECKLIST_COPIES = 100;
+const MAX_DECKLIST_CARDS = 1000;
+
 export const downloadXmageHandler = async (req: Request, res: Response) => {
   try {
     if (!req.params.id || !req.params.seat) {
@@ -734,66 +738,70 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
         return map;
       }, new Map<string, Card>());
 
-    for (let i = 0; i < cards.length; i += 1) {
-      const item = cards[i].toLowerCase().trim();
-      const numericMatch = item.match(/([0-9]+)x? (.*)/);
-      if (numericMatch) {
-        let count = parseInt(numericMatch[1], 10);
-        if (!Number.isInteger(count)) {
-          count = 1;
-        }
-        for (let j = 0; j < count; j += 1) {
-          cards.push(numericMatch[2]);
-        }
-      } else {
-        let selected = null;
-        // does not have set info
-        const normalizedName = normalizeName(item);
-        const potentialIds = getIdsFromName(normalizedName);
-        if (potentialIds && potentialIds.length > 0) {
-          const inCube = mainboard.find((card: any) => cardFromId(card.cardID).name_lower === normalizedName);
-          if (inCube) {
-            selected = {
-              finish: inCube.finish,
-              imgBackUrl: inCube.imgBackUrl,
-              imgUrl: inCube.imgUrl,
-              cardID: inCube.cardID,
-              details: cardFromId(inCube.cardID),
-            };
-          } else {
-            const reasonableCard = getMostReasonable(normalizedName, cube.defaultPrinting as any);
-            const reasonableId = reasonableCard ? reasonableCard.scryfall_id : null;
-            const selectedId = reasonableId || potentialIds[0];
-            if (selectedId) {
-              selected = {
-                cardID: selectedId,
-                details: cardFromId(selectedId),
-              };
-            }
-          }
-        } else if (customCardNameMap.has(normalizedName)) {
-          const cubeCard = customCardNameMap.get(normalizedName)!;
-          selected = {
-            finish: cubeCard.finish,
-            imgBackUrl: cubeCard.imgBackUrl,
-            imgUrl: cubeCard.imgUrl,
-            cardID: cubeCard.cardID,
-            details: cardFromId(cubeCard.cardID),
-          };
-        }
+    for (const line of cards) {
+      const item = line.toLowerCase().trim();
+      // "3x Name" or "3 Name". Anchored, so digits inside a name ("Borrowing 100,000 Arrows") aren't
+      // read as a count, and capped so a single line can't expand without bound.
+      const numericMatch = item.match(/^(\d{1,3})x?\s+(.*)$/);
+      const count = numericMatch ? Math.min(parseInt(numericMatch[1], 10), MAX_DECKLIST_COPIES) : 1;
+      const name = numericMatch ? numericMatch[2].trim() : item;
+      if (count < 1 || !name) {
+        continue;
+      }
+      if (cardList.length + count > MAX_DECKLIST_CARDS) {
+        req.flash('danger', `Decklists can have at most ${MAX_DECKLIST_CARDS} cards.`);
+        return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id)}`);
+      }
 
-        if (selected) {
-          // push into correct column.
-          const details = selected.details;
-          let column = Math.min(7, details.cmc !== undefined ? details.cmc : 0);
-          if (!details.type.toLowerCase().includes('creature')) {
-            column += 8;
+      let selected = null;
+      // does not have set info
+      const normalizedName = normalizeName(name);
+      const potentialIds = getIdsFromName(normalizedName);
+      if (potentialIds && potentialIds.length > 0) {
+        const inCube = mainboard.find((card: any) => cardFromId(card.cardID).name_lower === normalizedName);
+        if (inCube) {
+          selected = {
+            finish: inCube.finish,
+            imgBackUrl: inCube.imgBackUrl,
+            imgUrl: inCube.imgUrl,
+            cardID: inCube.cardID,
+            details: cardFromId(inCube.cardID),
+          };
+        } else {
+          const reasonableCard = getMostReasonable(normalizedName, cube.defaultPrinting as any);
+          const reasonableId = reasonableCard ? reasonableCard.scryfall_id : null;
+          const selectedId = reasonableId || potentialIds[0];
+          if (selectedId) {
+            selected = {
+              cardID: selectedId,
+              details: cardFromId(selectedId),
+            };
           }
-          const targetColumn = added[column];
+        }
+      } else if (customCardNameMap.has(normalizedName)) {
+        const cubeCard = customCardNameMap.get(normalizedName)!;
+        selected = {
+          finish: cubeCard.finish,
+          imgBackUrl: cubeCard.imgBackUrl,
+          imgUrl: cubeCard.imgUrl,
+          cardID: cubeCard.cardID,
+          details: cardFromId(cubeCard.cardID),
+        };
+      }
+
+      if (selected) {
+        // push into correct column.
+        const details = selected.details;
+        let column = Math.min(7, details.cmc !== undefined ? details.cmc : 0);
+        if (!details.type.toLowerCase().includes('creature')) {
+          column += 8;
+        }
+        const targetColumn = added[column];
+        for (let copy = 0; copy < count; copy += 1) {
           if (targetColumn) {
             targetColumn.push(cardList.length);
           }
-          cardList.push(selected);
+          cardList.push({ ...selected });
         }
       }
     }
