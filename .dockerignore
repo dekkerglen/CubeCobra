@@ -1,0 +1,26 @@
+# Build-context ignore rules for packages/jobs/Dockerfile, which is built from the repository
+# root (`docker build -f packages/jobs/Dockerfile .` in packages/cdk/lib/deployment-pipeline.ts).
+# Docker only reads .dockerignore from the root of the build context (BuildKit also accepts a
+# <Dockerfile>.dockerignore, but the legacy builder doesn't), so the rules live here and use
+# **/ to match inside packages/*.
+#
+# Host dependencies and build output: the image installs and builds its own, and copying the
+# host's would overwrite them.
+**/node_modules
+**/dist
+**/coverage
+**/*.log
+**/temp
+
+# Secrets and local data must never enter the build context.
+**/.env
+**/.env.*
+**/private
+**/model
+**/.venv
+
+# VCS / editor / OS noise
+.git
+**/.DS_Store
+**/.vscode
+**/.idea
