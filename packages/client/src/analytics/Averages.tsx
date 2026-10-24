@@ -14,6 +14,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import { compareStrings, SortableTable } from '../components/SortableTable';
 import CubeContext from '../contexts/CubeContext';
 import useQueryParam from '../hooks/useQueryParam';
+import { getDefaultDraftFormatValue } from '../utils/draftFormats';
 
 interface Characteristic {
   get: (card: Card) => number | string;
@@ -28,16 +29,17 @@ interface AveragesProps {
 const DEFAULT_SORT = 'Color';
 const DEFAULT_CHARACTERISTIC = 'Mana Value';
 const DEFAULT_USE_ASFANS = 'false';
-const DEFAULT_DRAFT_FORMAT = '-1';
 
 const Averages: React.FC<AveragesProps> = ({ characteristics }) => {
   const { cube, changedCards } = useContext(CubeContext);
   const cards = changedCards.mainboard;
 
+  const defaultDraftFormat = getDefaultDraftFormatValue(cube);
+
   const [sort, setSort] = useQueryParam('sort', DEFAULT_SORT);
   const [characteristic, setCharacteristic] = useQueryParam('field', DEFAULT_CHARACTERISTIC);
   const [useAsfans, setUseAsfans] = useQueryParam('asfans', DEFAULT_USE_ASFANS);
-  const [draftFormat, setDraftFormat] = useQueryParam('format', DEFAULT_DRAFT_FORMAT);
+  const [draftFormat, setDraftFormat] = useQueryParam('format', defaultDraftFormat);
 
   const allSorts = useMemo(() => getAllSorts(cube), [cube]);
 
@@ -48,17 +50,17 @@ const Averages: React.FC<AveragesProps> = ({ characteristics }) => {
       return {};
     }
     try {
-      return calculateAsfans(cube, cards, parseInt(draftFormat || '-1', 10));
+      return calculateAsfans(cube, cards, parseInt(draftFormat || defaultDraftFormat, 10));
     } catch (e) {
       console.error(
         'Invalid Draft Format',
         draftFormat,
-        cube.formats[parseInt(draftFormat || DEFAULT_DRAFT_FORMAT, 10)],
+        cube.formats[parseInt(draftFormat || defaultDraftFormat, 10)],
         e,
       );
       return {};
     }
-  }, [cube, cards, draftFormat, useAsfans]);
+  }, [cube, cards, draftFormat, defaultDraftFormat, useAsfans]);
 
   const counts = useMemo(
     () =>
@@ -118,7 +120,7 @@ const Averages: React.FC<AveragesProps> = ({ characteristics }) => {
       </Row>
       <AsfanDropdown
         cube={cube}
-        draftFormat={draftFormat || DEFAULT_DRAFT_FORMAT}
+        draftFormat={draftFormat || defaultDraftFormat}
         setDraftFormat={(value) => setDraftFormat(value)}
         useAsfans={useAsfans === 'true'}
         setUseAsfans={(value) => setUseAsfans(`${value}`)}
