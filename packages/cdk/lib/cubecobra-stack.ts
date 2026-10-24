@@ -4,8 +4,6 @@ import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import { CfnInstanceProfile, ManagedPolicy, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import * as iam from 'aws-cdk-lib/aws-iam';
-import * as ssm from 'aws-cdk-lib/aws-ssm';
-import { ParameterValueType } from 'aws-cdk-lib/aws-ssm';
 
 import { BotDeckbuildLambda } from './bot-deckbuild-lambda';
 import { CardUpdateMonitorLambda } from './card-update-monitor-lambda';
@@ -214,17 +212,12 @@ export class CubeCobraStack extends cdk.Stack {
     // Create the ECS cluster where we'll schedule jobs
     const fargateCluster = new ecs.Cluster(this, 'SharedFargateCluster', { vpc });
 
-    const roleArn = ssm.StringParameter.valueForTypedStringParameterV2(
-      this,
-      '/cdk/bootstrap/github-actions-role-arn',
-      ParameterValueType.STRING,
-    );
-
-    const githubRole = iam.Role.fromRoleArn(this, 'ImportedGitHubActionsRole', roleArn, { mutable: true }) as iam.Role;
-    const ecr = new ECR(this, 'Ecr', githubRole);
+    // Images are pushed only by the deployment pipeline's CodeBuild projects. The GitHub Actions
+    // OIDC role that used to get push access here was unused and has been removed (M-14).
+    const ecr = new ECR(this, 'Ecr');
 
     // Create ECR repository for jobs container
-    const jobsEcr = new ECR(this, 'JobsEcr', githubRole);
+    const jobsEcr = new ECR(this, 'JobsEcr');
 
     // Create the jobs ECS task with environment variables
     const jobsEnvVars = createJobsEnvironmentVariables(params, props, dynamoTables.table.tableName);

@@ -80,6 +80,12 @@ const buildTemplate = (recommenderSharedSecret: string, options: BuildOptions = 
   return Template.fromStack(stack);
 };
 
+test('The stack no longer references the GitHub Actions role or grants it ECR access', () => {
+  const template = buildTemplate('');
+  expect(JSON.stringify(template.toJSON())).not.toContain('github-actions-role-arn');
+  template.hasResourceProperties('AWS::ECR::Repository', { ImageScanningConfiguration: { ScanOnPush: true } });
+});
+
 test('The daily jobs lambda has no wildcard DynamoDB or S3 access', () => {
   const template = buildTemplate('');
   const policies = template.findResources('AWS::IAM::Policy');

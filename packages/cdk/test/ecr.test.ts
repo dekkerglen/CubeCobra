@@ -1,6 +1,5 @@
 import * as cdk from 'aws-cdk-lib';
-import { Match, Template } from 'aws-cdk-lib/assertions';
-import * as iam from 'aws-cdk-lib/aws-iam';
+import { Template } from 'aws-cdk-lib/assertions';
 import { Construct } from 'constructs';
 
 import { ECR } from '../lib/ecr';
@@ -10,11 +9,7 @@ class TestStack extends BaseTestStack {
   constructor(scope: Construct, id: string) {
     super(scope, id);
 
-    const pipelineRole = new iam.Role(this, 'PipelineRole', {
-      assumedBy: new iam.ServicePrincipal('codepipeline.amazonaws.com'),
-    });
-
-    new ECR(this, 'TestECR', pipelineRole);
+    new ECR(this, 'TestECR');
   }
 }
 
@@ -24,6 +19,16 @@ test('ECR repository is created', () => {
   const template = Template.fromStack(stack);
 
   template.resourceCountIs('AWS::ECR::Repository', 1);
+});
+
+test('ECR repository scans images on push', () => {
+  const app = new cdk.App();
+  const stack = new TestStack(app, 'TestStack');
+  const template = Template.fromStack(stack);
+
+  template.hasResourceProperties('AWS::ECR::Repository', {
+    ImageScanningConfiguration: { ScanOnPush: true },
+  });
 });
 
 test('CloudFormation outputs are created', () => {
@@ -38,44 +43,10 @@ test('CloudFormation outputs are created', () => {
   expect(Object.keys(outputs).some((key) => key.includes('RepositoryUri'))).toBeTruthy();
 });
 
-test('IAM Role has ECR push permissions', () => {
+test('No IAM grants are attached to external roles', () => {
   const app = new cdk.App();
   const stack = new TestStack(app, 'TestStack');
   const template = Template.fromStack(stack);
 
-  template.hasResourceProperties('AWS::IAM::Policy', {
-    PolicyDocument: {
-      Statement: Match.arrayWith([
-        Match.objectLike({
-          Effect: 'Allow',
-          Action: [
-            'ecr:GetAuthorizationToken',
-            'ecr:BatchCheckLayerAvailability',
-            'ecr:InitiateLayerUpload',
-            'ecr:UploadLayerPart',
-            'ecr:CompleteLayerUpload',
-            'ecr:PutImage',
-          ],
-        }),
-      ]),
-    },
-  });
-});
-
-test('IAM Role has CloudFormation permissions', () => {
-  const app = new cdk.App();
-  const stack = new TestStack(app, 'TestStack');
-  const template = Template.fromStack(stack);
-
-  template.hasResourceProperties('AWS::IAM::Policy', {
-    PolicyDocument: {
-      Statement: Match.arrayWith([
-        Match.objectLike({
-          Action: 'cloudformation:DescribeStacks',
-          Effect: 'Allow',
-          Resource: { Ref: 'AWS::StackId' },
-        }),
-      ]),
-    },
-  });
+  template.resourceCountIs('AWS::IAM::Policy', 0);
 });
