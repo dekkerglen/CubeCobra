@@ -238,6 +238,10 @@ export enum PrintingPreference {
 }
 export const DefaultPrintingPreference = PrintingPreference.DEFAULT;
 
+// Cube.defaultPrinting is persisted as a bare string, so narrow it before use.
+export const isPrintingPreference = (value: unknown): value is PrintingPreference =>
+  Object.values(PrintingPreference).includes(value as PrintingPreference);
+
 /**
  * A card contained within a Voucher. When a voucher is drafted,
  * these cards are added to the player's picks instead of the voucher itself.
