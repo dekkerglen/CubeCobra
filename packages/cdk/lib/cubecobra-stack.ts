@@ -314,6 +314,8 @@ export class CubeCobraStack extends cdk.Stack {
       version: params.version,
       subdomain: params.domain.split('.')[0],
       stage: params.env,
+      table: dynamoTables.table,
+      dataBucket: params.dataBucket,
       environmentVariables: lambdaEnvVars,
     });
 

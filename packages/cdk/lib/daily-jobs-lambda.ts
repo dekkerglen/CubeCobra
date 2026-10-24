@@ -1,5 +1,6 @@
 import * as cdk from 'aws-cdk-lib';
 import { StackProps } from 'aws-cdk-lib';
+import * as dynamodb from 'aws-cdk-lib/aws-dynamodb';
 import * as events from 'aws-cdk-lib/aws-events';
 import * as targets from 'aws-cdk-lib/aws-events-targets';
 import * as iam from 'aws-cdk-lib/aws-iam';
@@ -13,6 +14,10 @@ export interface DailyJobsLambdaConstructProps extends StackProps {
   subdomain: string;
   stage: string;
   environmentVariables: { [key: string]: string };
+  // This stage's single table (DYNAMO_TABLE) and data bucket (DATA_BUCKET) -- the only DynamoDB
+  // and S3 resources the lambda's code touches.
+  table: dynamodb.ITable;
+  dataBucket: string;
 }
 
 export class DailyJobsLambdaConstruct extends Construct {
@@ -40,19 +45,33 @@ export class DailyJobsLambdaConstruct extends Construct {
       role: executionRole,
     });
 
-    // Grant the Lambda function permissions to read/write to DynamoDB tables
+    // DynamoDB: item-level read/write on this stage's table and its GSIs only. The jobs go through
+    // the server's DAO layer (dynamo/dao/BaseDynamoDao.ts), which issues Get/Put/Update/Delete,
+    // Query, Scan, BatchGet/BatchWrite and TransactWrite (covered by the item actions plus
+    // ConditionCheckItem). No table-management actions (CreateTable/DeleteTable/...).
     executionRole.addToPolicy(
       new iam.PolicyStatement({
-        actions: ['dynamodb:*'],
-        resources: ['*'],
+        actions: [
+          'dynamodb:GetItem',
+          'dynamodb:PutItem',
+          'dynamodb:UpdateItem',
+          'dynamodb:DeleteItem',
+          'dynamodb:Query',
+          'dynamodb:Scan',
+          'dynamodb:BatchGetItem',
+          'dynamodb:BatchWriteItem',
+          'dynamodb:ConditionCheckItem',
+        ],
+        resources: [props.table.tableArn, `${props.table.tableArn}/index/*`],
       }),
     );
 
-    // Grant the Lambda function permissions to read/write S3 (for cube cards and P1P1 packs)
+    // S3: this stage's data bucket only (cube cards, drafts, P1P1 packs). Every S3 call in the
+    // bundled code (server dynamo/s3client.ts helpers) targets DATA_BUCKET.
     executionRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ['s3:GetObject', 's3:PutObject', 's3:ListBucket'],
-        resources: ['*'], // You may want to restrict this to specific buckets
+        resources: [`arn:aws:s3:::${props.dataBucket}`, `arn:aws:s3:::${props.dataBucket}/*`],
       }),
     );
 
