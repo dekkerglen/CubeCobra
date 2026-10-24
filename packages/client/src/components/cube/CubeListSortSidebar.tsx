@@ -11,13 +11,16 @@ import Link from 'components/base/Link';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import Tooltip from 'components/base/Tooltip';
+import RotisserieDraftModal from 'components/modals/RotisserieDraftModal';
 import TagColorsModal from 'components/modals/TagColorsModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
+import RotoDraftContext from 'contexts/RotoDraftContext';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
 
 const TagColorsModalButton = withModal(Button, TagColorsModal);
+const RotoSetupButton = withModal(Button, RotisserieDraftModal);
 
 // Curve view groups columns by the Primary sort only; the other sort levels have no effect there.
 const usesPrimarySortOnly = (displayView: string) => displayView === 'curve';
@@ -174,6 +177,28 @@ const DisplayOptionActions: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
   );
 };
 
+const RotisserieDraftButton: React.FC = () => {
+  const { hasProvider, url, setUrl } = useContext(RotoDraftContext);
+
+  if (!hasProvider) {
+    return null;
+  }
+
+  if (url !== '') {
+    return (
+      <Button color="secondary" onClick={() => setUrl('')} block>
+        Clear Rotisserie Draft
+      </Button>
+    );
+  }
+
+  return (
+    <RotoSetupButton color="secondary" block modalprops={{ onSubmit: (sheetUrl: string) => setUrl(sheetUrl) }}>
+      Set Up Rotisserie Draft
+    </RotoSetupButton>
+  );
+};
+
 interface CubeListSortSidebarProps {
   canEdit: boolean;
   isHorizontal?: boolean;
@@ -273,6 +298,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
           <Flexbox direction="col" gap="2">
             <DisplayOptionCheckboxes tooltipIconClassName="hidden md:inline" />
             <DisplayOptionActions canEdit={canEdit} />
+            <RotisserieDraftButton />
           </Flexbox>
 
           {canEdit && (
@@ -360,6 +386,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               </Button>
               <hr className="my-1 border-border" />
               <DisplayOptionActions canEdit={canEdit} />
+              <RotisserieDraftButton />
             </div>
           </div>
 

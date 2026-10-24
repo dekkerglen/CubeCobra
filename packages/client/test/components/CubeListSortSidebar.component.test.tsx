@@ -10,14 +10,19 @@ import CubeListSortSidebar from 'components/cube/CubeListSortSidebar';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
+import RotoDraftContext from 'contexts/RotoDraftContext';
 
 jest.mock('components/modals/TagColorsModal', () => ({
   __esModule: true,
   default: () => null,
 }));
+const mockRotoModalProps: any[] = [];
 jest.mock('components/modals/RotisserieDraftModal', () => ({
   __esModule: true,
-  default: () => null,
+  default: (props: any) => {
+    mockRotoModalProps.push(props);
+    return null;
+  },
 }));
 
 const SAVE = 'Save as Default Options';
@@ -33,6 +38,7 @@ const renderSidebar = ({
   cards = {},
   cardsLoading = false,
   displayView,
+  roto,
 }: {
   canEdit: boolean;
   isHorizontal: boolean;
@@ -42,6 +48,7 @@ const renderSidebar = ({
   cards?: Record<string, any[]>;
   cardsLoading?: boolean;
   displayView?: string;
+  roto?: { url: string; setUrl: jest.Mock };
 }) => {
   const cubeValue = {
     cube: { id: 'c1', defaultSorts: [] },
@@ -60,6 +67,7 @@ const renderSidebar = ({
     setSortTertiary: jest.fn(),
     setSortQuaternary: jest.fn(),
   };
+  const sidebar = <CubeListSortSidebar canEdit={canEdit} isHorizontal={isHorizontal} />;
   return render(
     <CSRFContext.Provider value={{ csrfToken: 't', csrfFetch, callApi: jest.fn() } as any}>
       <DisplayContextProvider
@@ -68,7 +76,13 @@ const renderSidebar = ({
         displayViewDefaults={displayView ? { mainboard: displayView } : undefined}
       >
         <CubeContext.Provider value={cubeValue as any}>
-          <CubeListSortSidebar canEdit={canEdit} isHorizontal={isHorizontal} />
+          {roto ? (
+            <RotoDraftContext.Provider value={{ hasProvider: true, ...roto } as any}>
+              {sidebar}
+            </RotoDraftContext.Provider>
+          ) : (
+            sidebar
+          )}
         </CubeContext.Provider>
       </DisplayContextProvider>
     </CSRFContext.Provider>,
@@ -350,7 +364,7 @@ describe('CubeListSortSidebar horizontal layout', () => {
     expect(gridColumn(note)).toContainElement(ordered);
     expect(note.compareDocumentPosition(ordered) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
   });
-  it.each([false, true])('has no Rotisserie buttons (horizontal: %s)', (isHorizontal) => {
+  it.each([false, true])('has no Rotisserie button outside a roto provider (horizontal: %s)', (isHorizontal) => {
     renderSidebar({ canEdit: true, isHorizontal, csrfFetch: jest.fn() });
     expect(screen.queryByRole('button', { name: /Rotisserie/ })).not.toBeInTheDocument();
   });
@@ -368,5 +382,36 @@ describe('CubeListSortSidebar horizontal layout', () => {
     const follows = (a: Node, b: Node) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
     expect(follows(button('Reset Sort'), divider!)).toBe(true);
     expect(follows(divider!, button(SAVE))).toBe(true);
+  });
+});
+
+describe.each([
+  ['vertical', false],
+  ['horizontal', true],
+])('CubeListSortSidebar Rotisserie button (%s)', (_layout, isHorizontal) => {
+  beforeEach(() => {
+    mockRotoModalProps.length = 0;
+  });
+
+  it.each([true, false])('offers the setup button when nothing is connected (canEdit: %s)', (canEdit) => {
+    const setUrl = jest.fn();
+    renderSidebar({ canEdit, isHorizontal, csrfFetch: jest.fn(), roto: { url: '', setUrl } });
+
+    fireEvent.click(button('Set Up Rotisserie Draft'));
+    act(() => {
+      mockRotoModalProps[mockRotoModalProps.length - 1].onSubmit('https://sheet.csv');
+    });
+
+    expect(setUrl).toHaveBeenCalledWith('https://sheet.csv');
+  });
+
+  it('clears a connected draft instead', () => {
+    const setUrl = jest.fn();
+    renderSidebar({ canEdit: true, isHorizontal, csrfFetch: jest.fn(), roto: { url: 'https://sheet.csv', setUrl } });
+
+    expect(screen.queryByRole('button', { name: 'Set Up Rotisserie Draft' })).not.toBeInTheDocument();
+    fireEvent.click(button('Clear Rotisserie Draft'));
+
+    expect(setUrl).toHaveBeenCalledWith('');
   });
 });
