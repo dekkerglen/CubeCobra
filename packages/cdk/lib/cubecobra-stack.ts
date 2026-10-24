@@ -148,10 +148,10 @@ export class CubeCobraStack extends cdk.Stack {
       }),
     );
 
-    // Grant the instance role permissions to write logs to CloudWatch, and to run
+    // Grant the instance role permissions to write logs to CloudWatch, and to fetch/stop
     // CloudWatch Logs Insights queries (used by the admin Errors/Performance dashboards).
-    // StartQuery/GetQueryResults/StopQuery are account-level actions, so they are granted
-    // on all log groups.
+    // The role is shared by the web server and the recommender, which write to several
+    // /cubecobra/<env>/... groups.
     role.addToPolicy(
       new iam.PolicyStatement({
         effect: iam.Effect.ALLOW,
@@ -160,11 +160,31 @@ export class CubeCobraStack extends cdk.Stack {
           'logs:CreateLogStream',
           'logs:PutLogEvents',
           'logs:DescribeLogStreams',
-          'logs:StartQuery',
           'logs:GetQueryResults',
           'logs:StopQuery',
         ],
         resources: [`arn:aws:logs:${props?.env?.region}:${props?.env?.account}:log-group:*`],
+      }),
+    );
+
+    // StartQuery is what reads log data, and it is authorized per log group, so limit it to the
+    // groups the admin dashboards query (serverutils/cloudwatchInsights.ts logGroupFor():
+    // `${AWS_LOG_GROUP}/info`, `${AWS_LOG_GROUP}/error` and AWS_CLIENT_ERROR_LOG_GROUP, all set in
+    // createEnvironmentVariables below). Both ARN forms are listed because the log-group ARN is
+    // reported both with and without the trailing `:*`.
+    const insightsLogGroups = [
+      `/cubecobra/${params.environmentName}/server/info`,
+      `/cubecobra/${params.environmentName}/server/error`,
+      `/cubecobra/${params.environmentName}/client/error`,
+    ];
+    role.addToPolicy(
+      new iam.PolicyStatement({
+        effect: iam.Effect.ALLOW,
+        actions: ['logs:StartQuery'],
+        resources: insightsLogGroups.flatMap((name) => [
+          `arn:aws:logs:${props?.env?.region}:${props?.env?.account}:log-group:${name}`,
+          `arn:aws:logs:${props?.env?.region}:${props?.env?.account}:log-group:${name}:*`,
+        ]),
       }),
     );
 

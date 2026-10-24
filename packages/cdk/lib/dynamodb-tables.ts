@@ -7,6 +7,11 @@ import { toResourceName } from './utils';
 
 interface DynamodbTablesProps {
   prefix: string;
+  /**
+   * Point-in-time recovery and deletion protection. Default true; the LocalStack stack turns
+   * them off since they only matter for real data.
+   */
+  dataProtection?: boolean;
 }
 
 export class DynamodbTables extends Construct {
@@ -16,6 +21,7 @@ export class DynamodbTables extends Construct {
     super(scope, id);
 
     const tableName = `${props.prefix}_CUBECOBRA`;
+    const dataProtection = props.dataProtection ?? true;
 
     // Create single table with partition key (PK) and sort key (SK)
     const table = new dynamodb.Table(this, toResourceName('cubecobra-table'), {
@@ -23,7 +29,13 @@ export class DynamodbTables extends Construct {
       sortKey: { name: 'SK', type: AttributeType.STRING },
       billingMode: BillingMode.PAY_PER_REQUEST,
       tableName,
+      // RETAIN only covers CloudFormation deletes. Deletion protection also blocks a direct
+      // DeleteTable call, and PITR (35-day continuous backups) allows recovery from a bad write
+      // or a compromised principal. Both are in-place updates on an existing table.
       removalPolicy: RemovalPolicy.RETAIN,
+      // Left unset (not false) when disabled so the LocalStack template is unchanged.
+      deletionProtection: dataProtection ? true : undefined,
+      pointInTimeRecoverySpecification: dataProtection ? { pointInTimeRecoveryEnabled: true } : undefined,
     });
 
     // Add Global Secondary Indexes

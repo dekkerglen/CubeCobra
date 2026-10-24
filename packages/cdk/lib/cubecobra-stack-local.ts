@@ -8,6 +8,6 @@ export class CubeCobraStackLocal extends cdk.Stack {
     super(scope, id, props);
 
     // Create DynamoDB single table
-    new DynamodbTables(this, 'DynamoDBTables', { prefix: params.dynamoPrefix });
+    new DynamodbTables(this, 'DynamoDBTables', { prefix: params.dynamoPrefix, dataProtection: false });
   }
 }

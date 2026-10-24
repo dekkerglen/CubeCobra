@@ -135,6 +135,26 @@ test('The stack no longer references the GitHub Actions role or grants it ECR ac
   template.hasResourceProperties('AWS::ECR::Repository', { ImageScanningConfiguration: { ScanOnPush: true } });
 });
 
+test('Logs Insights StartQuery is limited to the log groups the admin dashboards query', () => {
+  const template = buildTemplate('');
+  const statements = Object.values(template.findResources('AWS::IAM::Policy')).flatMap(
+    (policy: any) => policy.Properties.PolicyDocument.Statement,
+  );
+  const startQuery = statements.filter((s) => [s.Action].flat().includes('logs:StartQuery'));
+  expect(startQuery).toHaveLength(1);
+  const base = 'arn:aws:logs:us-east-2:123456789012:log-group:/cubecobra/production';
+  expect([startQuery[0].Resource].flat().sort()).toEqual(
+    [
+      `${base}/server/info`,
+      `${base}/server/info:*`,
+      `${base}/server/error`,
+      `${base}/server/error:*`,
+      `${base}/client/error`,
+      `${base}/client/error:*`,
+    ].sort(),
+  );
+});
+
 test('The daily jobs lambda has no wildcard DynamoDB or S3 access', () => {
   const template = buildTemplate('');
   const policies = template.findResources('AWS::IAM::Policy');

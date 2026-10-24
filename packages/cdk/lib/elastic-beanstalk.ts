@@ -153,6 +153,15 @@ export class ElasticBeanstalk extends Construct {
           optionName: 'IamInstanceProfile',
           value: props.instanceProfile.ref,
         },
+        // Require IMDSv2 (session tokens) so an SSRF can't read the instance role credentials
+        // through a plain GET. Expected to already be the default on Amazon Linux 2023 platforms,
+        // so this pins it; if an environment still allowed IMDSv1, EB applies the change by
+        // replacing that environment's instances.
+        {
+          namespace: 'aws:autoscaling:launchconfiguration',
+          optionName: 'DisableIMDSv1',
+          value: 'true',
+        },
         {
           namespace: 'aws:autoscaling:asg',
           optionName: 'MinSize',
@@ -203,6 +212,13 @@ export class ElasticBeanstalk extends Construct {
           namespace: 'aws:elbv2:listener:443',
           optionName: 'Protocol',
           value: 'HTTPS',
+        },
+        // TLS 1.2+ only (TLS 1.3 preferred) with forward-secret ciphers, instead of the ELB
+        // default ELBSecurityPolicy-2016-08, which still allows TLS 1.0/1.1.
+        {
+          namespace: 'aws:elbv2:listener:443',
+          optionName: 'SSLPolicy',
+          value: 'ELBSecurityPolicy-TLS13-1-2-2021-06',
         },
         ...loadBalancerSecurityGroupSettings,
         {

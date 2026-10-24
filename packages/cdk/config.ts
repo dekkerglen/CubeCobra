@@ -58,6 +58,9 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     stackName: 'CubeCobraDevStack',
     account: '816705121310',
     region: 'us-east-2',
+    // WARNING: this is the PRODUCTION data bucket. Anything deployed or run with
+    // environment=development reads and writes production S3 data (the IAM grants in
+    // cubecobra-stack.ts follow dataBucket). Point it at a dev/beta bucket before using it.
     dataBucket: 'cubecobra-data-production',
     appBucket: 'cubecobra',
     domain: 'cubecobradev.com',

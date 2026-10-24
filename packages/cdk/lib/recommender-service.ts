@@ -70,6 +70,12 @@ export class RecommenderService extends Construct {
           optionName: 'IamInstanceProfile',
           value: props.instanceProfile.ref,
         },
+        // Require IMDSv2; same instance role as the web server (see elastic-beanstalk.ts).
+        {
+          namespace: 'aws:autoscaling:launchconfiguration',
+          optionName: 'DisableIMDSv1',
+          value: 'true',
+        },
         {
           namespace: 'aws:autoscaling:asg',
           optionName: 'MinSize',
