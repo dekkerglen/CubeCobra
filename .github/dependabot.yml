@@ -1,0 +1,28 @@
+version: 2
+updates:
+  # One root lockfile covers every workspace under packages/*.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 10
+    # Don't propose releases younger than a week: compromised npm versions are usually caught
+    # and unpublished within days.
+    cooldown:
+      default-days: 7
+    groups:
+      npm-minor-and-patch:
+        update-types:
+          - minor
+          - patch
+
+  # Actions are pinned to commit SHAs with a version comment; Dependabot updates both.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      github-actions:
+        patterns:
+          - '*'

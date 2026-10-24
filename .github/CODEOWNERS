@@ -1,0 +1,5 @@
+# Changes to infrastructure, CI, and the request-security middleware need an owner review.
+/packages/cdk/ @dekkerglen
+/.github/ @dekkerglen
+/packages/server/src/router/middleware.ts @dekkerglen
+/packages/server/src/serverutils/csrf.ts @dekkerglen

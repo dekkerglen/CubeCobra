@@ -8,9 +8,10 @@ on:
     branches:
       - 'master'
 
+# These jobs run PR code, so they get a read-only token. The coverage comment is posted by
+# coverage-comment.yml, which runs from the default branch.
 permissions:
   contents: read
-  pull-requests: write
 
 jobs:
   lint:
@@ -19,12 +20,13 @@ jobs:
     timeout-minutes: 10
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           # To use with eslint script
           fetch-depth: 0
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
 
@@ -32,7 +34,7 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run linting (Prettier + ESLint)
         run: npm run lint:check
@@ -41,14 +43,14 @@ jobs:
     if: github.repository == 'dekkerglen/CubeCobra'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    permissions:
-      contents: read
-      pull-requests: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          # The base-branch fetch below works anonymously (public repository).
+          persist-credentials: false
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: 22
 
@@ -56,7 +58,7 @@ jobs:
         run: corepack enable
 
       - name: Install dependencies
-        run: npm install
+        run: npm ci
 
       - name: Run tests
         run: npm run test:ci
@@ -73,19 +75,24 @@ jobs:
 
       - name: Switch to base branch and get base coverage
         if: github.event_name == 'pull_request'
+        env:
+          BASE_REF: ${{ github.base_ref }}
         run: |
-          git fetch origin ${{ github.base_ref }}
+          git fetch origin "$BASE_REF"
           git reset --hard
           git clean -fd
-          git checkout origin/${{ github.base_ref }}
+          git checkout "origin/$BASE_REF"
           # node_modules still holds the PR's tree. Reinstalling the base branch's lockfile
           # over the top makes npm reify a large in-place downgrade, and on a big dependency
           # diff that trips an arborist bug ("The \"from\" argument must be of type string").
           # Installing from a clean directory avoids it. This whole step is best-effort - it
           # falls back to a zero baseline - so a failure here must not fail the job.
           rm -rf node_modules packages/*/node_modules
-          npm install || echo "Base branch install failed, will use zero baseline"
-          npm run test:ci || echo "Base branch tests failed, will use zero baseline"
+          if npm ci; then
+            npm run test:ci || echo "Base branch tests failed, will use zero baseline"
+          else
+            echo "Base branch install failed, will use zero baseline"
+          fi
           if [ -f "packages/server/coverage/coverage-summary.json" ]; then
             cp packages/server/coverage/coverage-summary.json /tmp/coverage-base.json
             echo "Saved base coverage to /tmp"
@@ -104,7 +111,7 @@ jobs:
       - name: Upload Jest Coverage Report
         if: success()
         continue-on-error: true
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: jest-coverage
           path: packages/server/coverage
@@ -208,7 +215,7 @@ jobs:
       # from the numbers in these raw Jest summaries. It never posts markdown produced here.
       - name: Upload coverage summaries for PR comment
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: coverage-summaries
           path: |
@@ -218,11 +225,13 @@ jobs:
 
       - name: Save PR number
         if: github.event_name == 'pull_request'
-        run: echo ${{ github.event.pull_request.number }} > pr-number.txt
+        env:
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: echo "$PR_NUMBER" > pr-number.txt
 
       - name: Upload PR number
         if: github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
         with:
           name: pr-number
           path: pr-number.txt
