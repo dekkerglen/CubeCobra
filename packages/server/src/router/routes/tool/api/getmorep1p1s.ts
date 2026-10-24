@@ -1,4 +1,5 @@
-import { p1p1PackDao } from 'dynamo/daos';
+import { cubeDao, p1p1PackDao } from 'dynamo/daos';
+import { isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -11,7 +12,13 @@ export const getMoreP1P1sHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ error: 'Cube ID is required' });
     }
 
-    const result = await p1p1PackDao.queryByCube(cubeId, lastKey, 10);
+    const cube = await cubeDao.getById(cubeId);
+    if (!cube || !isCubeViewable(cube, req.user)) {
+      return res.status(404).json({ error: 'Cube not found' });
+    }
+
+    const startKey = typeof lastKey === 'object' && lastKey !== null && !Array.isArray(lastKey) ? lastKey : undefined;
+    const result = await p1p1PackDao.queryByCube(cube.id, startKey, 10);
 
     return res.status(200).json({
       success: true,

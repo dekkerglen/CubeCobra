@@ -3,6 +3,7 @@ import { CardDetails } from '@utils/datatypes/Card';
 import { makeFilter, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId, getAllMostReasonable } from 'serverutils/carddb';
+import { isCubeViewable } from 'serverutils/cubefn';
 import { jsonLimiter } from 'serverutils/rateLimiters';
 import { recommendOrThrow } from 'serverutils/ml';
 
@@ -31,10 +32,20 @@ export const addsHandler = async (req: Request, res: Response) => {
     let { skip, limit } = req.body;
     const { cubeID, filterText, printingPreference } = req.body;
 
-    if (!cubeID) {
+    if (!cubeID || typeof cubeID !== 'string') {
       return res.status(400).send({
         success: 'false',
         message: 'Cube ID is required',
+        cardIDs: [],
+        hasMoreAdds: false,
+      });
+    }
+
+    const cube = await cubeDao.getById(cubeID);
+    if (!cube || !isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found',
         cardIDs: [],
         hasMoreAdds: false,
       });
@@ -66,7 +77,7 @@ export const addsHandler = async (req: Request, res: Response) => {
     // The cube's own cards. Fetched concurrently with the (synchronous) catalog
     // filter below; needed so we can exclude cards already in the cube from the
     // suggestions, and to give the model cube context.
-    const cubeCardsPromise = cubeDao.getCards(cubeID, undefined, { populate: false });
+    const cubeCardsPromise = cubeDao.getCards(cube.id, cube, { populate: false });
 
     // Apply the user's filter to the whole catalog here on the server — it has
     // the card catalog and filter module. getAllMostReasonable already drops

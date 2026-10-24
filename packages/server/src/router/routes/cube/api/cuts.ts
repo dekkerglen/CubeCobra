@@ -1,6 +1,7 @@
 import { makeFilter, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
 import { cubeDao } from 'dynamo/daos';
 import { getAllMostReasonable, getReasonableCardByOracleWithPrintingPreference } from 'serverutils/carddb';
+import { isCubeViewable } from 'serverutils/cubefn';
 import { jsonLimiter } from 'serverutils/rateLimiters';
 import { recommend } from 'serverutils/ml';
 
@@ -10,7 +11,7 @@ export const cutsHandler = async (req: Request, res: Response) => {
   try {
     const { cubeID, filterText, printingPreference } = req.body;
 
-    if (!cubeID) {
+    if (!cubeID || typeof cubeID !== 'string') {
       return res.status(400).send({
         success: 'false',
         message: 'Cube ID is required',
@@ -18,7 +19,16 @@ export const cutsHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cards = await cubeDao.getCards(cubeID);
+    const cube = await cubeDao.getById(cubeID);
+    if (!cube || !isCubeViewable(cube, req.user)) {
+      return res.status(404).send({
+        success: 'false',
+        message: 'Cube not found',
+        cuts: [],
+      });
+    }
+
+    const cards = await cubeDao.getCards(cube.id, cube);
 
     const oracles = cards.mainboard.map((card: any) => card.details?.oracle_id).filter(Boolean);
 

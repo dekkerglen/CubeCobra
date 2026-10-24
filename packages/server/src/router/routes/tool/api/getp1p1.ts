@@ -1,5 +1,6 @@
-import { p1p1PackDao } from 'dynamo/daos';
+import { cubeDao, p1p1PackDao } from 'dynamo/daos';
 import Joi from 'joi';
+import { isCubeViewable } from 'serverutils/cubefn';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
 
@@ -30,6 +31,12 @@ export const getP1P1Handler = async (req: Request, res: Response) => {
     // Get the pack
     const pack = await p1p1PackDao.getById(packId);
     if (!pack) {
+      return res.status(404).json({ error: 'P1P1 pack not found' });
+    }
+
+    // A pack is only as visible as the cube it was generated from.
+    const cube = await cubeDao.getById(pack.cubeId);
+    if (!cube || !isCubeViewable(cube, user)) {
       return res.status(404).json({ error: 'P1P1 pack not found' });
     }
 

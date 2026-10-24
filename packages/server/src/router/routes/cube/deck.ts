@@ -20,26 +20,62 @@ const DECK_CSV_HEADER = 'Quantity,"Name",Scryfall,Zone';
 const MAX_DECKLIST_COPIES = 100;
 const MAX_DECKLIST_CARDS = 1000;
 
+type Deck = NonNullable<Awaited<ReturnType<typeof draftDao.getById>>>;
+type DeckSeat = Deck['seats'][number];
+type NamedDeckSeat = DeckSeat & { name: string };
+
+/**
+ * Loads the deck and seat a download route asks for. Decks are only as visible as their cube, so
+ * a deck from a cube the viewer can't see is reported as not found. Returns null after
+ * redirecting when anything is missing.
+ */
+async function loadDownloadSeat(
+  req: Request,
+  res: Response,
+  requireSeatName: true,
+): Promise<{ deck: Deck; seat: NamedDeckSeat; seatIndex: number } | null>;
+async function loadDownloadSeat(
+  req: Request,
+  res: Response,
+  requireSeatName: false,
+): Promise<{ deck: Deck; seat: DeckSeat; seatIndex: number } | null>;
+async function loadDownloadSeat(
+  req: Request,
+  res: Response,
+  requireSeatName: boolean,
+): Promise<{ deck: Deck; seat: DeckSeat; seatIndex: number } | null> {
+  if (!req.params.id || !req.params.seat) {
+    req.flash('danger', 'Invalid deck or seat ID');
+    redirect(req, res, '/404');
+    return null;
+  }
+
+  const deck = await draftDao.getById(req.params.id);
+  const cube = deck ? await cubeDao.getById(deck.cube) : null;
+  if (!deck || !cube || !isCubeViewable(cube, req.user)) {
+    req.flash('danger', 'Deck not found');
+    redirect(req, res, '/404');
+    return null;
+  }
+
+  const seatIndex = parseInt(req.params.seat, 10);
+  const seat = Number.isInteger(seatIndex) && seatIndex >= 0 ? deck.seats[seatIndex] : undefined;
+  if (!seat || (requireSeatName && !seat.name)) {
+    req.flash('danger', 'Invalid seat');
+    redirect(req, res, '/404');
+    return null;
+  }
+
+  return { deck, seat, seatIndex };
+}
+
 export const downloadXmageHandler = async (req: Request, res: Response) => {
   try {
-    if (!req.params.id || !req.params.seat) {
-      req.flash('danger', 'Invalid deck or seat ID');
-      return redirect(req, res, '/404');
+    const loaded = await loadDownloadSeat(req, res, true);
+    if (!loaded) {
+      return undefined;
     }
-
-    const deck = await draftDao.getById(req.params.id);
-
-    if (!deck) {
-      req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return redirect(req, res, '/404');
-    }
-
-    const seat = deck.seats[parseInt(req.params.seat, 10)];
-
-    if (!seat || !seat.name) {
-      req.flash('danger', 'Invalid seat');
-      return redirect(req, res, '/404');
-    }
+    const { deck, seat } = loaded;
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -92,22 +128,11 @@ export const downloadXmageHandler = async (req: Request, res: Response) => {
 
 export const downloadForgeHandler = async (req: Request, res: Response) => {
   try {
-    if (!req.params.id || !req.params.seat) {
-      req.flash('danger', 'Invalid deck or seat ID');
-      return redirect(req, res, '/404');
+    const loaded = await loadDownloadSeat(req, res, true);
+    if (!loaded) {
+      return undefined;
     }
-
-    const deck = await draftDao.getById(req.params.id);
-    if (!deck) {
-      req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return redirect(req, res, '/404');
-    }
-    const seat = deck.seats[parseInt(req.params.seat, 10)];
-
-    if (!seat || !seat.name) {
-      req.flash('danger', 'Invalid seat');
-      return redirect(req, res, '/404');
-    }
+    const { deck, seat } = loaded;
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -164,21 +189,11 @@ export const downloadForgeHandler = async (req: Request, res: Response) => {
 
 export const downloadTxtHandler = async (req: Request, res: Response) => {
   try {
-    if (!req.params.id || !req.params.seat) {
-      req.flash('danger', 'Invalid deck or seat ID');
-      return redirect(req, res, '/404');
+    const loaded = await loadDownloadSeat(req, res, true);
+    if (!loaded) {
+      return undefined;
     }
-
-    const deck = await draftDao.getById(req.params.id);
-    if (!deck) {
-      req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return redirect(req, res, '/404');
-    }
-    const seat = deck.seats[parseInt(req.params.seat, 10)];
-    if (!seat || !seat.name) {
-      req.flash('danger', 'Invalid seat');
-      return redirect(req, res, '/404');
-    }
+    const { deck, seat } = loaded;
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -201,21 +216,11 @@ export const downloadTxtHandler = async (req: Request, res: Response) => {
 
 export const downloadMtgoHandler = async (req: Request, res: Response) => {
   try {
-    if (!req.params.id || !req.params.seat) {
-      req.flash('danger', 'Invalid deck or seat ID');
-      return redirect(req, res, '/404');
+    const loaded = await loadDownloadSeat(req, res, true);
+    if (!loaded) {
+      return undefined;
     }
-
-    const deck = await draftDao.getById(req.params.id);
-    if (!deck) {
-      req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return redirect(req, res, '/404');
-    }
-    const seat = deck.seats[parseInt(req.params.seat, 10)];
-    if (!seat || !seat.name) {
-      req.flash('danger', 'Invalid seat');
-      return redirect(req, res, '/404');
-    }
+    const { deck, seat } = loaded;
     return exportToMtgo(res, seat.name, seat.mainboard.flat(), seat.sideboard.flat(), deck.cards);
   } catch (err) {
     return handleRouteError(req, res, err as Error, '/404');
@@ -224,21 +229,11 @@ export const downloadMtgoHandler = async (req: Request, res: Response) => {
 
 export const downloadArenaHandler = async (req: Request, res: Response) => {
   try {
-    if (!req.params.id || !req.params.seat) {
-      req.flash('danger', 'Invalid deck or seat ID');
-      return redirect(req, res, '/404');
+    const loaded = await loadDownloadSeat(req, res, true);
+    if (!loaded) {
+      return undefined;
     }
-
-    const deck = await draftDao.getById(req.params.id);
-    if (!deck) {
-      req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return redirect(req, res, '/404');
-    }
-    const seat = deck.seats[parseInt(req.params.seat, 10)];
-    if (!seat || !seat.name) {
-      req.flash('danger', 'Invalid seat');
-      return redirect(req, res, '/404');
-    }
+    const { deck, seat } = loaded;
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -293,21 +288,11 @@ export const downloadArenaHandler = async (req: Request, res: Response) => {
 
 export const downloadCockatriceHandler = async (req: Request, res: Response) => {
   try {
-    if (!req.params.id || !req.params.seat) {
-      req.flash('danger', 'Invalid deck or seat ID');
-      return redirect(req, res, '/404');
+    const loaded = await loadDownloadSeat(req, res, true);
+    if (!loaded) {
+      return undefined;
     }
-
-    const deck = await draftDao.getById(req.params.id);
-    if (!deck) {
-      req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return redirect(req, res, '/404');
-    }
-    const seat = deck.seats[parseInt(req.params.seat, 10)];
-    if (!seat || !seat.name) {
-      req.flash('danger', 'Invalid seat');
-      return redirect(req, res, '/404');
-    }
+    const { deck, seat } = loaded;
 
     res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -361,23 +346,14 @@ export const downloadCockatriceHandler = async (req: Request, res: Response) => 
 
 export const downloadTopdeckedHandler = async (req: Request, res: Response) => {
   try {
-    if (!req.params.id || !req.params.seat) {
-      req.flash('danger', 'Invalid deck or seat ID');
-      return redirect(req, res, '/404');
+    const loaded = await loadDownloadSeat(req, res, false);
+    if (!loaded) {
+      return undefined;
     }
+    const { deck, seat, seatIndex } = loaded;
 
-    const deck = await draftDao.getById(req.params.id);
-    if (!deck) {
-      req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return redirect(req, res, '/404');
-    }
-    const seat = deck.seats[parseInt(req.params.seat, 10)];
-    if (!seat) {
-      req.flash('danger', 'Invalid seat');
-      return redirect(req, res, '/404');
-    }
-
-    res.setHeader('Content-disposition', `attachment; filename=${req.params.id}_${req.params.seat}.csv`);
+    // Build the filename from the loaded deck and parsed seat, never the raw route params.
+    res.attachment(`${deck.id}_${seatIndex}.csv`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
 
@@ -437,25 +413,14 @@ export const downloadTopdeckedHandler = async (req: Request, res: Response) => {
 
 export const downloadCsvHandler = async (req: Request, res: Response) => {
   try {
-    if (!req.params.id || !req.params.seat) {
-      req.flash('danger', 'Invalid deck or seat ID');
-      return redirect(req, res, '/404');
+    const loaded = await loadDownloadSeat(req, res, false);
+    if (!loaded) {
+      return undefined;
     }
+    const { deck, seat, seatIndex } = loaded;
 
-    const deck = await draftDao.getById(req.params.id);
-    if (!deck) {
-      req.flash('danger', `Deck ID ${req.params.id} not found/`);
-      return redirect(req, res, '/404');
-    }
-
-    const seat = deck.seats[parseInt(req.params.seat, 10)];
-    if (!seat) {
-      req.flash('danger', 'Invalid seat');
-      return redirect(req, res, '/404');
-    }
-
-    const fileName = seat.name ? seat.name.replace(/\W/g, '') : `${req.params.id}_${req.params.seat}`;
-    res.setHeader('Content-disposition', `attachment; filename=${fileName}.csv`);
+    const fileName = seat.name ? seat.name.replace(/\W/g, '') : `${deck.id}_${seatIndex}`;
+    res.attachment(`${fileName}.csv`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write(`${CSV_HEADER}\r\n`);

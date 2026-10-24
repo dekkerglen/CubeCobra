@@ -1,5 +1,6 @@
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId } from 'serverutils/carddb';
+import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
@@ -13,7 +14,13 @@ export const getCardImageForCubeHandler = async (req: Request, res: Response) =>
       return redirect(req, res, '/404');
     }
 
-    const cards = await cubeDao.getCards(cubeid);
+    const cube = await cubeDao.getById(cubeid);
+    if (!cube || !isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Cube not found.');
+      return redirect(req, res, '/404');
+    }
+
+    const cards = await cubeDao.getCards(cube.id, cube);
     const main = cards.mainboard;
 
     const found = main

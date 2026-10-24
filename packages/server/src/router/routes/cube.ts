@@ -213,12 +213,36 @@ export const historyHandler = async (req: Request, res: Response) => {
   }
 };
 
+const isPlainObject = (value: unknown): value is Record<string, any> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
 export const getMoreChangelogsHandler = async (req: Request, res: Response) => {
   const { lastKey, cubeId } = req.body;
-  if (!cubeId && !lastKey) {
+  // The cube always comes from cubeId, never from the paging key, so a crafted key can't
+  // select another cube's history.
+  if (!cubeId || typeof cubeId !== 'string') {
     return res.status(400).send({ success: 'false', message: 'cubeId is required' });
   }
-  const query = await changelogDao.queryByCubeWithData(cubeId, lastKey, 18);
+
+  const cube = await cubeDao.getById(cubeId);
+  if (!cube || !isCubeViewable(cube, req.user)) {
+    return res.status(404).send({ success: 'false', message: 'Cube not found' });
+  }
+
+  let startKey: Record<string, any> | undefined;
+  if (lastKey !== undefined && lastKey !== null) {
+    if (
+      !isPlainObject(lastKey) ||
+      typeof lastKey.GSI1PK !== 'string' ||
+      !lastKey.GSI1PK.endsWith(`#CUBE#${cube.id}`) ||
+      Object.values(lastKey).some((value) => typeof value !== 'string' && typeof value !== 'number')
+    ) {
+      return res.status(400).send({ success: 'false', message: 'Invalid page key' });
+    }
+    startKey = lastKey;
+  }
+
+  const query = await changelogDao.queryByCubeWithData(cube.id, startKey, 18);
 
   for (const entry of query.items) {
     if (entry.changelog) sanitizeChangelog(entry.changelog);
@@ -233,9 +257,14 @@ export const getMoreChangelogsHandler = async (req: Request, res: Response) => {
 
 export const getMoreDecksHandler = async (req: Request, res: Response) => {
   try {
+    const cube = await cubeDao.getById(req.params.id!);
+    if (!cube || !isCubeViewable(cube, req.user)) {
+      return res.status(404).send({ success: 'false', message: 'Cube not found' });
+    }
+
     const { lastKey } = req.body;
     // Use unhydrated query to avoid loading cards/seats from S3 for better performance
-    const query = await draftDao.queryByCubeUnhydrated(req.params.id!, lastKey);
+    const query = await draftDao.queryByCubeUnhydrated(cube.id, isPlainObject(lastKey) ? lastKey : undefined);
 
     return res.status(200).send({
       success: 'true',
@@ -496,8 +525,8 @@ export const p1p1Handler = async (req: Request, res: Response) => {
 
     // Get cube data
     const cube = await cubeDao.getById(pack.cubeId);
-    if (!cube) {
-      req.flash('danger', 'Associated cube not found');
+    if (!cube || !isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'P1P1 pack not found');
       return redirect(req, res, '/404');
     }
 

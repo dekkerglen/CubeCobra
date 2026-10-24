@@ -1,6 +1,7 @@
 import { P1P1Pack } from '@utils/datatypes/P1P1Pack';
 
 import { getP1P1Handler } from '../../../src/router/routes/tool/api/getp1p1';
+import { createCube, createUser } from '../../test-utils/data';
 import { call } from '../../test-utils/transport';
 
 const uuid = jest.requireActual('uuid');
@@ -12,9 +13,12 @@ jest.mock('../../../src/dynamo/daos', () => ({
     getById: jest.fn(),
     getVoteSummary: jest.fn(),
   },
+  cubeDao: {
+    getById: jest.fn(),
+  },
 }));
 
-import { p1p1PackDao } from '../../../src/dynamo/daos';
+import { cubeDao, p1p1PackDao } from '../../../src/dynamo/daos';
 
 const createP1P1Pack = (overrides?: Partial<P1P1Pack>): P1P1Pack => ({
   id: uuid.v4(),
@@ -37,6 +41,7 @@ const createP1P1Pack = (overrides?: Partial<P1P1Pack>): P1P1Pack => ({
 describe('Get P1P1 Pack API', () => {
   beforeEach(() => {
     jest.clearAllMocks();
+    (cubeDao.getById as jest.Mock).mockResolvedValue(createCube());
   });
 
   it('should return 404 if pack is not found', async () => {
@@ -75,6 +80,19 @@ describe('Get P1P1 Pack API', () => {
       pack,
       votes: voteSummary,
     });
+  });
+
+  it('should return 404 if the pack belongs to a private cube', async () => {
+    const packId = uuid.v4();
+    const pack = createP1P1Pack({ id: packId });
+    (p1p1PackDao.getById as jest.Mock).mockResolvedValue(pack);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(createCube({ id: pack.cubeId, visibility: 'pr' }));
+
+    const res = await call(getP1P1Handler).as(createUser()).withParams({ packId }).send();
+
+    expect(cubeDao.getById).toHaveBeenCalledWith(pack.cubeId);
+    expect(res.status).toEqual(404);
+    expect(res.body).toEqual({ error: 'P1P1 pack not found' });
   });
 
   it('should handle pack fetch error gracefully', async () => {
