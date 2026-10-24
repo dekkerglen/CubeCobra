@@ -3,7 +3,8 @@
  *
  * STORAGE STRATEGY:
  * - User data: Stored in DynamoDB with PK = USER#{id}, SK = USER
- * - Sensitive data (password hash, email) is preserved but stripped for most operations
+ * - Sensitive data (password hash, email, verification and email-change tokens, session version)
+ *   is preserved but stripped for most operations
  *
  * QUERY PATTERNS:
  * - getById(id): Get user by ID
@@ -176,7 +177,9 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
   }
 
   /**
-   * Strips sensitive data from a user object.
+   * Strips sensitive data from a user object. Hydrated users end up in page props and API
+   * responses about other people, so anything that proves control of the account (the
+   * verification and email-change tokens) or describes its security state stays out.
    */
   private stripSensitiveData(user: StoredUserWithSensitiveInfo): UnhydratedUser & BaseObject {
     const sanitized = { ...user };
@@ -184,6 +187,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
     delete sanitized.passwordHash;
     //@ts-expect-error --  Ditto
     delete sanitized.email;
+    delete sanitized.token;
     delete sanitized.pendingEmail;
     delete sanitized.pendingEmailToken;
     delete sanitized.pendingEmailExpires;

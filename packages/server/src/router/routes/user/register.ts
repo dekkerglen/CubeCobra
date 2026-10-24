@@ -1,14 +1,13 @@
 import { DefaultPrintingPreference } from '@utils/datatypes/Card';
 import { DefaultGridTightnessPreference } from '@utils/datatypes/User';
-import bcrypt from 'bcryptjs';
 import { userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, flashValidationErrors, recaptcha } from 'router/middleware';
 import { trackServerEvent } from 'serverutils/analytics';
 import sendEmail from 'serverutils/email';
+import { hashPassword, newAccountToken, newPasswordValidator, tokensMatch } from 'serverutils/passwordPolicy';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { hasProfanity, validateEmail } from 'serverutils/util';
-import { v4 as uuid } from 'uuid';
 
 import { Request, Response } from '../../../types/express';
 
@@ -87,7 +86,7 @@ export const postHandler = async (req: Request, res: Response) => {
       roles: [],
       theme: 'system',
       emailVerified: skipVerification,
-      token: uuid(),
+      token: newAccountToken(),
       dateCreated: new Date().valueOf(),
       defaultPrinting: DefaultPrintingPreference,
       gridTightness: DefaultGridTightnessPreference,
@@ -95,8 +94,7 @@ export const postHandler = async (req: Request, res: Response) => {
       disableAnimations: false,
     };
 
-    const salt = await bcrypt.genSalt(10);
-    (newUser as any).passwordHash = await bcrypt.hash(password, salt);
+    (newUser as any).passwordHash = await hashPassword(password);
     const id = await userDao.createUser(newUser);
 
     trackServerEvent('sign_up', { method: 'email' }, { clientId: id, logger: req.logger });
@@ -120,26 +118,23 @@ export const postHandler = async (req: Request, res: Response) => {
   }
 };
 
+// One answer for every failure (unknown user, wrong token, link already used), so the link
+// can't be used to probe accounts.
+const INVALID_CONFIRMATION =
+  'This verification link is no longer valid. If you have already verified your email, you can log in.';
+
 export const confirmHandler = async (req: Request, res: Response) => {
   try {
-    if (!req.params.id || !req.params.token) {
-      req.flash('danger', 'Invalid confirmation link');
-      return redirect(req, res, '/user/login');
-    }
+    const user = req.params.id ? await userDao.getByIdWithSensitiveData(req.params.id) : undefined;
 
-    const user = await userDao.getByIdWithSensitiveData(req.params.id);
-
-    if (!user) {
-      req.flash('danger', 'User not found');
-      return redirect(req, res, '/user/login');
-    }
-
-    if (user.token !== req.params.token) {
-      req.flash('danger', 'Invalid token');
+    // The token is cleared once used, so a verified account never matches.
+    if (!user || !tokensMatch(user.token, req.params.token)) {
+      req.flash('danger', INVALID_CONFIRMATION);
       return redirect(req, res, '/user/login');
     }
 
     user.emailVerified = true;
+    user.token = '';
     await userDao.update(user);
 
     req.flash('success', 'Email verified. You can now login.');
@@ -167,10 +162,7 @@ export const routes = [
         max: 100,
       }),
       body('password', 'Password is required').notEmpty(),
-      body('password', 'Password must be between 8 and 1024 characters.').isLength({
-        min: 8,
-        max: 1024,
-      }),
+      newPasswordValidator('password'),
       body('password2', 'Confirm Password is required').notEmpty(),
       body('password2', 'Confirm Password must match password.').custom((value: string, { req }: any) => {
         return value === req.body.password;

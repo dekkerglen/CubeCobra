@@ -100,7 +100,7 @@ const EditPlayerList: React.FC<EditPlayerListProps> = ({ players, setPlayers, se
         return { name: lookupName };
       }
       try {
-        const response = await csrfFetch(`/api/user/getByUsername/${lookupName}`, {
+        const response = await csrfFetch(`/api/user/getByUsername/${encodeURIComponent(lookupName)}`, {
           method: 'GET',
         });
         const { user } = await response.json();

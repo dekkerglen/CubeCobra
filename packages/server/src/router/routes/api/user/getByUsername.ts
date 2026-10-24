@@ -19,7 +19,9 @@ export const handler = async (req: Request, res: Response) => {
       return;
     }
 
-    res.status(200).send({ user });
+    // Public lookup: return only what callers need to link a player to an account, never
+    // the stored user (which carries account details).
+    res.status(200).send({ user: { id: user.id, username: user.username } });
   } catch {
     res.status(500).send({ error: 'Error' });
   }

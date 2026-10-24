@@ -8,15 +8,16 @@ import { Request, Response } from '../../../types/express';
 
 export const postHandler = async (req: Request, res: Response) => {
   try {
-    const email = req.body.email.toLowerCase();
-
     if (!req.validated) {
       req.flash('danger', 'Please provide a valid email address.');
       return redirect(req, res, '/user/login');
     }
 
-    // Find user by email
-    const user = await userDao.getByEmail(email);
+    const email = req.body.email.toLowerCase();
+
+    // The verification token is sensitive data, so it's only on the full record.
+    const found = await userDao.getByEmail(email);
+    const user = found ? await userDao.getByIdWithSensitiveData(found.id) : undefined;
 
     if (!user) {
       // Don't reveal whether the email exists or not for security

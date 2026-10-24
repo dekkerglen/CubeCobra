@@ -1,11 +1,52 @@
 import bcrypt from 'bcryptjs';
+import express from 'express';
+import { validationResult } from 'express-validator';
 
 import {
   comparePassword,
   DUMMY_PASSWORD_HASH,
   newAccountToken,
+  newPasswordValidator,
+  passwordPolicyError,
   tokensMatch,
 } from '../../src/serverutils/passwordPolicy';
+
+const runValidator = async (field: string, value: unknown) => {
+  const req = { body: { [field]: value } } as unknown as express.Request;
+  await newPasswordValidator(field).run(req);
+  return validationResult(req)
+    .array()
+    .map((error) => error.msg);
+};
+
+describe('passwordPolicyError', () => {
+  it('accepts a password between 8 characters and 72 bytes', () => {
+    expect(passwordPolicyError('correct horse')).toBeNull();
+    expect(passwordPolicyError('a'.repeat(8))).toBeNull();
+    expect(passwordPolicyError('a'.repeat(72))).toBeNull();
+  });
+
+  it('rejects short, missing and non-string passwords', () => {
+    expect(passwordPolicyError('a'.repeat(7))).toMatch(/at least 8/);
+    expect(passwordPolicyError('')).toMatch(/at least 8/);
+    expect(passwordPolicyError(undefined)).toMatch(/at least 8/);
+    expect(passwordPolicyError(['longenough'])).toMatch(/at least 8/);
+  });
+
+  it('measures the upper limit in bytes, which is what bcrypt reads', () => {
+    expect(passwordPolicyError('a'.repeat(73))).toMatch(/too long/);
+    // 25 three-byte characters: only 25 characters long, but 75 bytes.
+    expect(passwordPolicyError('€'.repeat(25))).toMatch(/too long/);
+    expect(passwordPolicyError('€'.repeat(24))).toBeNull();
+  });
+});
+
+describe('newPasswordValidator', () => {
+  it('reports the policy message for the named field', async () => {
+    expect(await runValidator('password2', 'short')).toEqual(['Password must be at least 8 characters long.']);
+    expect(await runValidator('password2', 'long enough')).toEqual([]);
+  });
+});
 
 describe('comparePassword', () => {
   const hash = bcrypt.hashSync('right password', 4);
