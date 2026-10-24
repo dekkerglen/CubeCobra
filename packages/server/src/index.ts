@@ -32,6 +32,7 @@ import { flashMessages } from './serverutils/flashMessages';
 import { registerHealthcheck } from './serverutils/healthcheck';
 import { render } from './serverutils/render';
 import { checkAndUpdateCardbase } from './serverutils/updatecards';
+import { csrfGuard } from './serverutils/csrf';
 import { CustomError, Request as AppRequest, Response as AppResponse } from './types/express';
 
 // global listeners for promise rejections
@@ -236,6 +237,13 @@ app.use(
     saveUninitialized: false, // Changed from true - don't save empty sessions
     cookie: {
       maxAge: 1000 * 60 * 60 * 24 * 30, // 30 days - reduced from 1 year
+      httpOnly: true,
+      // Lax keeps the cookie off cross-site subresource requests and cross-site POSTs, while
+      // still logging people in when they follow a link to the site.
+      sameSite: 'lax',
+      // Secure whenever the request arrived over HTTPS (trust proxy resolves that behind
+      // the ALB), so plain-HTTP local development keeps working.
+      secure: 'auto',
     },
   }),
 );
@@ -296,6 +304,9 @@ if (process.env.DOWNTIME_ACTIVE === 'true') {
 }
 
 app.use(rejectBannedUser);
+
+// Cross-site request forgery protection for every state-changing request (see serverutils/csrf).
+app.use(csrfGuard as express.RequestHandler);
 
 // In dev the server starts listening before startup finishes, so this gate holds app routes
 // until the app is ready — early requests wait rather than 404 (routes not mounted yet) or hit

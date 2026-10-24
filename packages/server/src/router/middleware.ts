@@ -1,6 +1,5 @@
 import { UserRoles } from '@utils/datatypes/User';
 import { canUseImageHosting } from '@utils/hostedImagesUtil';
-// import csurf from 'csurf';
 import { patronDao, userDao } from 'dynamo/daos';
 import { validationResult } from 'express-validator';
 import Joi from 'joi';
@@ -98,8 +97,10 @@ export const ensureImageHosting = async (req: Request, res: Response, next: Next
   return next();
 };
 
+// Cross-site request forgery is blocked globally by serverutils/csrf (Origin / Sec-Fetch-Site
+// checks), so this no longer issues tokens. It remains on form routes for the honeypot field
+// that catches naive bots, and keeps res.locals.csrfToken defined for the client props.
 export const csrfProtection = [
-  // csurf(),
   (req: Request, res: Response, next: NextFunction): void => {
     const { nickname } = req.body;
 
@@ -110,7 +111,7 @@ export const csrfProtection = [
       return redirect(req, res, '/');
     }
 
-    res.locals.csrfToken = ''; // req.csrfToken();
+    res.locals.csrfToken = '';
     return next();
   },
 ];
