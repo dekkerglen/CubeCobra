@@ -2,9 +2,14 @@ import bcrypt from 'bcryptjs';
 import { blogDao, commentDao, cubeDao, draftDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
+import { formLimiter } from 'serverutils/rateLimiters';
+import { userOrIpKey } from 'serverutils/rateLimitKeys';
 import { redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
+
+// Requires the password, so this also caps password guessing from a hijacked session.
+const deleteAccountLimiter = formLimiter(15 * 60 * 1000, 5, '/user/account?nav=delete', userOrIpKey);
 
 export const handler = async (req: Request, res: Response) => {
   if (!req.validated) {
@@ -126,6 +131,7 @@ export const routes = [
     path: '/',
     method: 'post',
     handler: [
+      deleteAccountLimiter,
       csrfProtection,
       ensureAuth,
       body('password', 'Password must be provided').notEmpty(),

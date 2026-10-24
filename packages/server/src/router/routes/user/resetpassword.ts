@@ -2,32 +2,38 @@ import bcrypt from 'bcryptjs';
 import { userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
+import { formLimiter } from 'serverutils/rateLimiters';
+import { userOrIpKey } from 'serverutils/rateLimitKeys';
 import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
 
+const PASSWORD_PAGE = '/user/account?nav=password';
+
+const changePasswordLimiter = formLimiter(15 * 60 * 1000, 10, PASSWORD_PAGE, userOrIpKey);
+
 export const handler = async (req: Request, res: Response) => {
-  if (!req.validated) {
-    return redirect(req, res, '/user/account');
-  }
-
-  if (!req.user) {
-    req.flash('danger', 'User not found');
-    return redirect(req, res, '/user/account?nav=password');
-  }
-
   try {
+    if (!req.validated) {
+      return redirect(req, res, PASSWORD_PAGE);
+    }
+
+    if (!req.user) {
+      req.flash('danger', 'User not found');
+      return redirect(req, res, PASSWORD_PAGE);
+    }
+
     const user = await userDao.getByIdWithSensitiveData(req.user.id);
 
     if (!user) {
       req.flash('danger', 'User not found');
-      return redirect(req, res, '/user/account?nav=password');
+      return redirect(req, res, PASSWORD_PAGE);
     }
 
     const isMatch = await bcrypt.compare(req.body.password, user.passwordHash);
     if (!isMatch) {
       req.flash('danger', 'Password is incorrect');
-      return redirect(req, res, '/user/account?nav=password');
+      return redirect(req, res, PASSWORD_PAGE);
     }
 
     if (req.body.password2 !== req.body.password3) {
@@ -45,9 +51,9 @@ export const handler = async (req: Request, res: Response) => {
     await userDao.update(user as any);
 
     req.flash('success', 'Password updated successfully');
-    return redirect(req, res, '/user/account?nav=password');
+    return redirect(req, res, PASSWORD_PAGE);
   } catch (err) {
-    return handleRouteError(req, res, err as Error, '/user/account?nav=password');
+    return handleRouteError(req, res, err, PASSWORD_PAGE);
   }
 };
 
@@ -56,6 +62,7 @@ export const routes = [
     path: '/',
     method: 'post',
     handler: [
+      changePasswordLimiter,
       csrfProtection,
       ensureAuth,
       body('password', 'Password must be between 8 and 24 characters.').isLength({

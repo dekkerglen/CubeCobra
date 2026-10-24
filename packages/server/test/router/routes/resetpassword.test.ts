@@ -20,7 +20,6 @@ const mockUserDao = userDao as jest.Mocked<typeof userDao>;
 const mockRedirect = redirect as jest.MockedFunction<typeof redirect>;
 const mockHandleRouteError = handleRouteError as jest.MockedFunction<typeof handleRouteError>;
 
-const ACCOUNT = '/user/account';
 const PASSWORD_TAB = '/user/account?nav=password';
 
 const buildReq = (overrides: any = {}) =>
@@ -45,7 +44,7 @@ describe('resetpassword handler', () => {
 
     await handler(req, res);
 
-    expect(mockRedirect).toHaveBeenCalledWith(req, res, ACCOUNT);
+    expect(mockRedirect).toHaveBeenCalledWith(req, res, PASSWORD_TAB);
     expect(mockUserDao.getByIdWithSensitiveData).not.toHaveBeenCalled();
   });
 

@@ -1,9 +1,21 @@
+import type { Request as ExpressRequest } from 'express';
 import passport from 'passport';
+import { formLimiter, ipKey } from 'serverutils/rateLimiters';
 import { redirect, render } from 'serverutils/render';
 import { getSafeReferrer } from 'serverutils/util';
 
 import { LOGIN_FAILED_MESSAGE } from '../../../config/passport';
 import { NextFunction, Request, Response } from '../../../types/express';
+
+const LOGIN_WINDOW_MS = 15 * 60 * 1000;
+
+// Guessing passwords for one account from one address.
+export const loginAccountKey = (req: ExpressRequest): string =>
+  `${ipKey(req)}:${String(req.body?.username ?? '').toLowerCase()}`;
+
+const accountLimiter = formLimiter(LOGIN_WINDOW_MS, 10, '/user/login', loginAccountKey);
+// A looser cap on one address spraying guesses across many accounts.
+const ipLimiter = formLimiter(LOGIN_WINDOW_MS, 50, '/user/login');
 
 const getLoginRedirect = (req: Request) => {
   const redirectRoute = getSafeReferrer(req) || '/';
@@ -59,6 +71,6 @@ export const routes = [
   {
     path: '/',
     method: 'post',
-    handler: [postHandler],
+    handler: [ipLimiter, accountLimiter, postHandler],
   },
 ];

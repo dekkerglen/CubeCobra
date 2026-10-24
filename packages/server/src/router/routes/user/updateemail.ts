@@ -3,6 +3,8 @@ import { body } from 'express-validator';
 import { csrfProtection, ensureAuth, flashValidationErrors } from 'router/middleware';
 import sendEmail from 'serverutils/email';
 import { comparePassword, newAccountToken } from 'serverutils/passwordPolicy';
+import { formLimiter } from 'serverutils/rateLimiters';
+import { userOrIpKey } from 'serverutils/rateLimitKeys';
 import { handleRouteError, redirect } from 'serverutils/render';
 import { validateEmail } from 'serverutils/util';
 
@@ -12,6 +14,9 @@ export const EMAIL_PAGE = '/user/account?nav=email';
 
 // How long the confirmation link sent to the new address keeps working.
 export const EMAIL_CHANGE_TTL_MS = 24 * 60 * 60 * 1000;
+
+// Requires the password and sends mail to an address of the requester's choosing.
+const updateEmailLimiter = formLimiter(60 * 60 * 1000, 5, EMAIL_PAGE, userOrIpKey);
 
 // Nothing changes here: the new address is held as pending and only swapped in by
 // /user/confirmemailchange once someone with access to that inbox clicks the link.
@@ -90,6 +95,7 @@ export const routes = [
     path: '/',
     method: 'post',
     handler: [
+      updateEmailLimiter,
       csrfProtection,
       ensureAuth,
       body('email', 'Please enter a valid email address.').isString().trim().isEmail().isLength({ max: 254 }),

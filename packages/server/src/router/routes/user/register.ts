@@ -6,6 +6,7 @@ import { csrfProtection, flashValidationErrors, recaptcha } from 'router/middlew
 import { trackServerEvent } from 'serverutils/analytics';
 import sendEmail from 'serverutils/email';
 import { hashPassword, newAccountToken, newPasswordValidator, tokensMatch } from 'serverutils/passwordPolicy';
+import { formLimiter } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { hasProfanity, validateEmail } from 'serverutils/util';
 
@@ -144,6 +145,10 @@ export const confirmHandler = async (req: Request, res: Response) => {
   }
 };
 
+// Generous enough for a group signing up from one venue's network.
+const registerLimiter = formLimiter(60 * 60 * 1000, 20, '/user/register');
+const confirmLimiter = formLimiter(15 * 60 * 1000, 30, '/user/login');
+
 export const routes = [
   {
     path: '/',
@@ -154,6 +159,7 @@ export const routes = [
     path: '/',
     method: 'post',
     handler: [
+      registerLimiter,
       csrfProtection,
       body('email', 'email is required').notEmpty(),
       body('email', 'email is not valid').isEmail(),
@@ -178,6 +184,6 @@ export const routes = [
   {
     path: '/confirm/:id/:token',
     method: 'get',
-    handler: [csrfProtection, confirmHandler],
+    handler: [confirmLimiter, csrfProtection, confirmHandler],
   },
 ];

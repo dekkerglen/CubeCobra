@@ -2,6 +2,7 @@ import bcrypt from 'bcryptjs';
 import { passwordResetDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, flashValidationErrors } from 'router/middleware';
+import { formLimiter } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
@@ -23,6 +24,9 @@ export const passwordValidators = [
   body('password', 'Password must be between 8 and 24 characters.').isLength({ min: 8, max: 24 }),
   body('password', 'New passwords must match.').custom(checkPasswordsMatch),
 ];
+
+// Shared with /user/lostpasswordreset. Codes are random UUIDs, so this mostly limits load.
+export const resetLimiter = formLimiter(15 * 60 * 1000, 20, '/user/lostpassword');
 
 export const getHandler = async (req: Request, res: Response) => {
   if (!req.params.id) {
@@ -83,11 +87,11 @@ export const routes = [
   {
     path: '/:id',
     method: 'get',
-    handler: [csrfProtection, getHandler],
+    handler: [resetLimiter, csrfProtection, getHandler],
   },
   {
     path: '/',
     method: 'post',
-    handler: [csrfProtection, ...passwordValidators, flashValidationErrors, postHandler],
+    handler: [resetLimiter, csrfProtection, ...passwordValidators, flashValidationErrors, postHandler],
   },
 ];

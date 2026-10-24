@@ -1,10 +1,20 @@
+import type { Request as ExpressRequest } from 'express';
 import { passwordResetDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, flashValidationErrors } from 'router/middleware';
 import sendEmail from 'serverutils/email';
+import { formLimiter, ipKey } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
+
+// Requests about one address from one client: caps how often a mailbox can be sent our emails.
+export const emailRequestKey = (req: ExpressRequest): string =>
+  `${ipKey(req)}:${String(req.body?.email ?? '').toLowerCase()}`;
+
+const HOUR_MS = 60 * 60 * 1000;
+const addressLimiter = formLimiter(HOUR_MS, 3, '/user/lostpassword', emailRequestKey);
+const ipLimiter = formLimiter(HOUR_MS, 10, '/user/lostpassword');
 
 export const getHandler = (req: Request, res: Response) => {
   return render(req, res, 'LostPasswordPage');
@@ -58,6 +68,13 @@ export const routes = [
   {
     path: '/',
     method: 'post',
-    handler: [csrfProtection, body('email', 'email is required').isEmail(), flashValidationErrors, postHandler],
+    handler: [
+      ipLimiter,
+      addressLimiter,
+      csrfProtection,
+      body('email', 'email is required').isEmail(),
+      flashValidationErrors,
+      postHandler,
+    ],
   },
 ];

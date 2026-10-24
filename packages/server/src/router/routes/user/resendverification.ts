@@ -2,9 +2,15 @@ import { userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, flashValidationErrors } from 'router/middleware';
 import sendEmail from 'serverutils/email';
+import { formLimiter } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
+import { emailRequestKey } from './lostpassword';
+
+const HOUR_MS = 60 * 60 * 1000;
+const addressLimiter = formLimiter(HOUR_MS, 3, '/user/login', emailRequestKey);
+const ipLimiter = formLimiter(HOUR_MS, 10, '/user/login');
 
 export const postHandler = async (req: Request, res: Response) => {
   try {
@@ -49,6 +55,8 @@ export const routes = [
     path: '/',
     method: 'post',
     handler: [
+      ipLimiter,
+      addressLimiter,
       csrfProtection,
       body('email', 'Email is required').notEmpty(),
       body('email', 'Email is not valid').isEmail(),
