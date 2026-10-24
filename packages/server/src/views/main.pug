@@ -24,7 +24,7 @@ html(lang='en' class=htmlClasses)
 				gtag('js', new Date());
 				gtag('config', '#{gaMeasurementId}');
 		//- Align with the version of katex installed via rehype-katex
-		link(href='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.css', rel='stylesheet')
+		link(href='https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.css', rel='stylesheet', integrity='sha384-NFTC4wvyQKLwuJ8Ez9AvPNBv8zcC2XaQzXSMvtORKw28BdJbB2QE8Ka+OyrIHcQJ', crossorigin='anonymous')
 		link(href='https://code.cdn.mozilla.net/fonts/fira.css' rel='stylesheet')
 		//- App CSS. In prod these are the hashed files Vite extracted (resolved from its manifest),
 		//- plus modulepreload hints for the shared JS chunks. In dev, Vite injects CSS through the
