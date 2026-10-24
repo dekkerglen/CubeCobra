@@ -1,3 +1,9 @@
-numpy
-umap-learn
-hdbscan
+# Pinned to the exact versions installed (and working together) in
+# packages/archetypeAnnotater/.venv. This pins only the top-level packages; to
+# pin the full tree with hashes, generate a lockfile with pip-tools and install
+# with --require-hashes:
+#   pip-compile --generate-hashes requirements.txt -o requirements.lock
+#   pip install --require-hashes -r requirements.lock
+numpy==2.4.4
+umap-learn==0.5.12
+hdbscan==0.8.42

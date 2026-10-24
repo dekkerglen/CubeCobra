@@ -1,3 +1,10 @@
 # Install torch matching your CUDA first if the default wheel doesn't fit your
 # driver:  https://pytorch.org/get-started/locally/
-ultralytics>=8.3.0
+#
+# Pinned to the exact version installed in packages/annotator/.venv. Ranges here
+# previously admitted the compromised ultralytics 8.3.41/8.3.42 releases. This
+# pins only the top-level package; to pin the full tree with hashes, generate a
+# lockfile with pip-tools and install with --require-hashes:
+#   pip-compile --generate-hashes requirements.txt -o requirements.lock
+#   pip install --require-hashes -r requirements.lock
+ultralytics==8.4.61
