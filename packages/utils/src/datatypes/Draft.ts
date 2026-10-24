@@ -123,3 +123,78 @@ export default interface Draft {
   // writes (a deck save) must not refresh it, which is why it isn't `dateLastUpdated`.
   botDecksPendingSince?: number;
 }
+
+// Deck-building fields a client may submit for a seat when it finishes a draft in the browser
+// (grid and Housman drafts). Everything else on a seat (owner, bot, name) stays server-side.
+export type SubmittedSeatField = 'mainboard' | 'sideboard' | 'pickorder' | 'trashorder' | 'pickedIndices';
+
+const DECK_BOARD_FIELDS: readonly SubmittedSeatField[] = ['mainboard', 'sideboard'];
+
+// A deck board is rows of columns of card indices; real boards are 1-2 rows of 8 columns.
+const MAX_DECK_BOARD_ROWS = 16;
+const MAX_DECK_BOARD_COLUMNS = 32;
+
+const isCardIndex = (value: unknown, cardCount: number): value is number =>
+  typeof value === 'number' && Number.isInteger(value) && value >= 0 && value < cardCount;
+
+/** True when `value` is a list of indices into a draft's `cards`. */
+export const isDraftIndexList = (value: unknown, cardCount: number): value is number[] =>
+  Array.isArray(value) && value.length <= cardCount && value.every((index) => isCardIndex(index, cardCount));
+
+/** True when `value` is a deck board (rows of columns of card indices) for a draft's `cards`. */
+export const isDraftDeckBoard = (value: unknown, cardCount: number): value is number[][][] => {
+  if (!Array.isArray(value) || value.length > MAX_DECK_BOARD_ROWS) {
+    return false;
+  }
+  let total = 0;
+  for (const row of value) {
+    if (!Array.isArray(row) || row.length > MAX_DECK_BOARD_COLUMNS) {
+      return false;
+    }
+    for (const column of row) {
+      if (!Array.isArray(column) || !column.every((index) => isCardIndex(index, cardCount))) {
+        return false;
+      }
+      total += column.length;
+    }
+  }
+  return total <= cardCount;
+};
+
+/**
+ * Applies client-submitted seats to a draft's seats, copying only `fields` after checking their
+ * shape. The submission must have one entry per seat. Fields the client leaves out keep their
+ * stored value. Returns null when anything is malformed.
+ */
+export const mergeSubmittedSeats = (
+  seats: DraftSeat[],
+  submitted: unknown,
+  cardCount: number,
+  fields: readonly SubmittedSeatField[],
+): DraftSeat[] | null => {
+  if (!Array.isArray(submitted) || submitted.length !== seats.length) {
+    return null;
+  }
+
+  const merged: DraftSeat[] = [];
+  for (const [index, seat] of seats.entries()) {
+    const entry = submitted[index];
+    if (typeof entry !== 'object' || entry === null || Array.isArray(entry)) {
+      return null;
+    }
+    const updated: DraftSeat = { ...seat };
+    for (const field of fields) {
+      const value = (entry as Record<string, unknown>)[field];
+      if (value === undefined) continue;
+      if (DECK_BOARD_FIELDS.includes(field)) {
+        if (!isDraftDeckBoard(value, cardCount)) return null;
+        updated[field as 'mainboard' | 'sideboard'] = value;
+      } else {
+        if (!isDraftIndexList(value, cardCount)) return null;
+        updated[field as 'pickorder' | 'trashorder' | 'pickedIndices'] = value;
+      }
+    }
+    merged.push(updated);
+  }
+  return merged;
+};
