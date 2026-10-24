@@ -5,6 +5,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import '@testing-library/jest-dom';
 
 import Card from '@utils/datatypes/Card';
+import { DEFAULT_CUBE_DISPLAY_OPTIONS } from '@utils/datatypes/Cube';
 
 import VisualSpoiler from 'components/cube/VisualSpoiler';
 import CubeContext from 'contexts/CubeContext';
@@ -41,15 +42,19 @@ const renderSpoiler = ({ collapse, canEdit = true }: { collapse: boolean; canEdi
   const setModalSelection = jest.fn();
   const setModalOpen = jest.fn();
   const cubeValue = {
-    cube: { id: 'cube-1', collapseDuplicateCards: collapse },
+    cube: { id: 'cube-1' },
     canEdit,
     setModalSelection,
     setModalOpen,
   };
+  const displayValue = {
+    cardsPerRow: 4,
+    displayOptions: { ...DEFAULT_CUBE_DISPLAY_OPTIONS, collapseDuplicateCards: collapse },
+  };
 
   render(
     <CubeContext.Provider value={cubeValue as any}>
-      <DisplayContext.Provider value={{ cardsPerRow: 4 } as any}>
+      <DisplayContext.Provider value={displayValue as any}>
         <VisualSpoiler cards={cards} />
       </DisplayContext.Provider>
     </CubeContext.Provider>,

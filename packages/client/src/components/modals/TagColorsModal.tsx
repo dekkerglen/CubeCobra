@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
 
 import { GrabberIcon } from '@primer/octicons-react';
 import { TagColor } from '@utils/datatypes/Cube';
@@ -59,7 +59,7 @@ interface TagColorsModalProps {
 const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
   const { csrfFetch } = useContext(CSRFContext);
   //Continually update the tagColors in CubeContext as the modal contents change. They won't persist until the actual save
-  const { tagColors, setTagColors, showTagColors, updateShowTagColors, canEdit, cube } = useContext(CubeContext);
+  const { tagColors, setTagColors, cube } = useContext(CubeContext);
   const [loading, setLoading] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
   //The last-saved colors, so closing the modal without saving can revert the live preview
@@ -152,67 +152,27 @@ const TagColorsModal: React.FC<TagColorsModalProps> = ({ isOpen, setOpen }) => {
     [tagColors, setTagColors],
   );
 
-  const staticRows = useMemo(
-    () =>
-      tagColors.map(({ tag }) => {
-        const tagClass = `me-2 tag ${getTagColorClass(tagColors, tag)}`;
-        return (
-          <span key={tag} className={tagClass} style={getTagColorStyle(tagColors, tag)}>
-            {tag}
-          </span>
-        );
-      }),
-    [tagColors],
-  );
-
   return (
     <Modal isOpen={isOpen} setOpen={handleSetOpen} md scrollable>
-      <ModalHeader setOpen={handleSetOpen}>{canEdit ? 'Set Tag Colors' : 'Tag Colors'}</ModalHeader>
+      <ModalHeader setOpen={handleSetOpen}>Set Tag Colors</ModalHeader>
       <ModalBody scrollable>
-        {showTagColors ? (
-          <LoadingButton
-            block
-            color="primary"
-            onClick={async () => await updateShowTagColors(false)}
-            disabled={!canEdit}
-          >
-            Hide tag colors by default
-          </LoadingButton>
-        ) : (
-          <LoadingButton
-            block
-            color="primary"
-            onClick={async () => await updateShowTagColors(true)}
-            disabled={!canEdit}
-          >
-            Show tag colors by default
-          </LoadingButton>
-        )}
-        {!canEdit ? (
-          ''
-        ) : (
-          <em>(Drag the tags below into a priority order to use for cards that have more than one tag)</em>
-        )}
-        {!canEdit ? (
-          staticRows
-        ) : (
-          <SortableList onDragEnd={handleSortEnd} items={tagColors.map(({ tag }) => tag)}>
-            {tagColors.map(({ tag, color }) => {
-              const tagClass = `tag ${getTagColorClass(tagColors, tag)}`;
-              return (
-                <TagColorRow
-                  key={tag}
-                  tag={tag}
-                  tagClass={tagClass}
-                  tagStyle={getTagColorStyle(tagColors, tag)}
-                  value={color}
-                  onChange={(color) => handleChangeColor(color, tag)}
-                  id={tag}
-                />
-              );
-            })}
-          </SortableList>
-        )}
+        <em>(Drag the tags below into a priority order to use for cards that have more than one tag)</em>
+        <SortableList onDragEnd={handleSortEnd} items={tagColors.map(({ tag }) => tag)}>
+          {tagColors.map(({ tag, color }) => {
+            const tagClass = `tag ${getTagColorClass(tagColors, tag)}`;
+            return (
+              <TagColorRow
+                key={tag}
+                tag={tag}
+                tagClass={tagClass}
+                tagStyle={getTagColorStyle(tagColors, tag)}
+                value={color}
+                onChange={(color) => handleChangeColor(color, tag)}
+                id={tag}
+              />
+            );
+          })}
+        </SortableList>
       </ModalBody>
       <ModalFooter>
         <Flexbox direction="col" gap="2" className="w-full">

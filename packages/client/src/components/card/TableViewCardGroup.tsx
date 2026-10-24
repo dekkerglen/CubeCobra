@@ -41,8 +41,7 @@ const TableViewCardGroup: React.FC<TableViewCardGroupProps> = ({
   showOther = false,
 }) => {
   const { canEdit, cube } = useContext(CubeContext) ?? {};
-  const { useBaseCardData } = useContext(DisplayContext) ?? {};
-  const collapseDuplicates = cube?.collapseDuplicateCards ?? false;
+  const { useBaseCardData, collapseDuplicateCards: collapseDuplicates } = useContext(DisplayContext).displayOptions;
   const sorted = useMemo(
     () => sortDeep(cards, showOther, orderedSort, [sort], cube ?? null, useBaseCardData),
     [cards, showOther, orderedSort, sort, cube, useBaseCardData],

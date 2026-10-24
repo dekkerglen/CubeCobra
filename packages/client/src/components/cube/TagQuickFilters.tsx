@@ -15,7 +15,7 @@ const tagFilter = (tag: string): string => `tag:${JSON.stringify(tag)}`;
  */
 const TagQuickFilters: React.FC = () => {
   const { tagColors } = useContext(CubeContext);
-  const { showTagQuickFilters } = useContext(DisplayContext);
+  const { showTagQuickFilters } = useContext(DisplayContext).displayOptions;
   const { filterInput, setFilterInput } = useContext(FilterContext);
 
   // tagColors holds every active tag in the owner's chosen order.

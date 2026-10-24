@@ -30,6 +30,7 @@ import PagedTable from 'components/PagedTable';
 import TagInput from 'components/TagInput';
 import withAutocard from 'components/WithAutocard';
 import CubeContext from 'contexts/CubeContext';
+import DisplayContext from 'contexts/DisplayContext';
 import useLocalStorage from 'hooks/useLocalStorage';
 
 import ListViewSettingsModal, { ListViewColumn } from '../modals/ListViewSettingsModal';
@@ -123,6 +124,7 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
   const [loadingVersions, setLoadingVersions] = useState<Set<string>>(new Set());
 
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext);
+  const { showUnsorted } = useContext(DisplayContext).displayOptions;
 
   // Reset checked state when card indices change structurally (e.g., after a commit
   // that removes cards and reassigns indices), so stale index keys don't incorrectly
@@ -148,10 +150,10 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
         sortSecondary || 'Types-Multicolor',
         sortTertiary || 'CMC',
         sortQuaternary || 'Alphabetical',
-        cube.showUnsorted || false,
+        showUnsorted,
         cube,
       ),
-    [cards, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube],
+    [cards, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, showUnsorted, cube],
   );
 
   const handleCheck = useCallback(

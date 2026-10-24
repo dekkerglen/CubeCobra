@@ -21,7 +21,7 @@ const CardModalLink = withCardModal(AutocardListItem);
 const RotisserieDraftPanel = () => {
   const { changedCards } = React.useContext(CubeContext);
   usePollGoogleSheet();
-  const { url, rotoInfo, assignCardIndexes } = React.useContext(RotoDraftContext);
+  const { url, setUrl, rotoInfo, assignCardIndexes } = React.useContext(RotoDraftContext);
   const [hidden, setHidden] = React.useState(true);
 
   // Assign card indexes when roto info changes
@@ -31,9 +31,11 @@ const RotisserieDraftPanel = () => {
     }
   }, [rotoInfo.picks, changedCards.mainboard, assignCardIndexes]);
 
-  if (url === '' || Object.keys(rotoInfo.picksByPlayer).length === 0 || Object.keys(rotoInfo.players).length === 0) {
+  if (url === '') {
     return null;
   }
+
+  const picksLoaded = Object.keys(rotoInfo.picksByPlayer).length > 0 && Object.keys(rotoInfo.players).length > 0;
 
   const cardsByPlayer: Record<string, { card: CardType | undefined; pick: any }[]> = {};
   Object.keys(rotoInfo.picksByPlayer).forEach((player) => {
@@ -65,17 +67,30 @@ const RotisserieDraftPanel = () => {
           <Text semibold md>
             Rotisserie Draft Picks
           </Text>
-          {hidden ? (
-            <Button color="primary" onClick={() => setHidden(false)}>
-              Show Picks
+          <Flexbox direction="row" gap="2">
+            {picksLoaded &&
+              (hidden ? (
+                <Button color="primary" onClick={() => setHidden(false)}>
+                  Show Picks
+                </Button>
+              ) : (
+                <Button color="primary" onClick={() => setHidden(true)}>
+                  Hide Picks
+                </Button>
+              ))}
+            <Button color="secondary" onClick={() => setUrl('')}>
+              Disconnect
             </Button>
-          ) : (
-            <Button color="primary" onClick={() => setHidden(true)}>
-              Hide Picks
-            </Button>
-          )}
+          </Flexbox>
         </Flexbox>
       </CardHeader>
+      {!picksLoaded && (
+        <CardBody>
+          <Text sm className="text-text-secondary">
+            Waiting for picks from the connected spreadsheet.
+          </Text>
+        </CardBody>
+      )}
       <Collapse isOpen={!hidden} className="transition-all duration-300">
         <CardBody>
           {Object.keys(rotoInfo.players).length !== 0 && (

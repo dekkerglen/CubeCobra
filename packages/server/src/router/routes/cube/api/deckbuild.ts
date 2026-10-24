@@ -106,13 +106,13 @@ const SESSION_TTL_MS = 5 * 60 * 1000;
 const sessions = new Map<string, DeckbuildSessionState>();
 
 // Drop sessions older than 5 minutes so a forgotten in-progress build can't
-// leak memory.
+// leak memory. Unref'd so it never keeps the process (or jest) alive.
 setInterval(() => {
   const now = Date.now();
   for (const [key, s] of sessions.entries()) {
     if (now - s.createdAt > SESSION_TTL_MS) sessions.delete(key);
   }
-}, 60 * 1000);
+}, 60 * 1000).unref();
 
 const oracleIsLand = (oracle: string): boolean => {
   const oracleIds = carddb.oracleToId[oracle];

@@ -90,9 +90,7 @@ export interface CubeContextValue {
   >;
   setModalOpen: Dispatch<SetStateAction<boolean>>;
   tagColors: TagColor[];
-  showTagColors: boolean;
   setTagColors: Dispatch<SetStateAction<TagColor[]>>;
-  updateShowTagColors: (showColors: boolean) => Promise<void>;
   bulkEditCard: (list: { index: number; board: BoardType; [key: string]: unknown }[]) => void;
   bulkRevertEdit: (list: { index: number; board: BoardType }[]) => void;
   bulkRemoveCard: (list: { index: number; board: BoardType }[]) => void;
@@ -102,8 +100,6 @@ export interface CubeContextValue {
   setAlerts: Dispatch<SetStateAction<UncontrolledAlertProps[]>>;
   loading: boolean;
   cardsLoading: boolean;
-  setShowUnsorted: (value: boolean) => Promise<void>;
-  setCollapseDuplicateCards: (value: boolean) => Promise<void>;
   saveSorts: () => Promise<boolean>;
   resetSorts: () => void;
   effectiveDefaultSorts: string[];
@@ -152,9 +148,7 @@ const CubeContext = createContext<CubeContextValue>({
   setModalSelection: defaultFn,
   setModalOpen: defaultFn,
   tagColors: [],
-  showTagColors: false,
   setTagColors: defaultFn,
-  updateShowTagColors: defaultFn,
   bulkEditCard: defaultFn,
   bulkRevertEdit: defaultFn,
   bulkRemoveCard: defaultFn,
@@ -164,8 +158,6 @@ const CubeContext = createContext<CubeContextValue>({
   setAlerts: defaultFn,
   loading: false,
   cardsLoading: false,
-  setShowUnsorted: defaultFn,
-  setCollapseDuplicateCards: defaultFn,
   saveSorts: defaultFn,
   resetSorts: defaultFn,
   effectiveDefaultSorts: [],
@@ -225,7 +217,11 @@ export function CubeContextProvider({
   const { changes, setChanges, clearChanges, version, setVersion, setValidationCards } = useContext(ChangesContext);
   const { filterInput, cardFilter } = useContext(FilterContext)!;
 
-  const { setOpenCollapse, activeView, useBaseCardData } = useContext(DisplayContext);
+  const {
+    setOpenCollapse,
+    activeView,
+    displayOptions: { useBaseCardData },
+  } = useContext(DisplayContext);
 
   // Cube card payloads now ship without `details` populated (the server has the
   // catalog in memory but doesn't include it in the cube response). Hydrate
@@ -463,7 +459,6 @@ export function CubeContextProvider({
       setAddedCardDetails(null);
     }
   }, [modalOpen, modalSelection, changes, csrfFetch]);
-  const [showTagColors, setShowTagColors] = useState(user ? !user.hideTagColors : false);
   const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
   const [loading, setLoading] = useState(false);
   const [sortPrimary, setSortPrimary] = useQueryParam('s1', defaultSorts[0]);
@@ -591,26 +586,6 @@ export function CubeContextProvider({
       setOpenCollapse('edit');
     }
   });
-
-  const updateShowTagColors = useCallback(
-    async (showColors: boolean) => {
-      const response = await csrfFetch('/cube/api/saveshowtagcolors', {
-        method: 'POST',
-        body: JSON.stringify({
-          show_tag_colors: showColors,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-      if (response.ok) {
-        setShowTagColors(showColors);
-      } else {
-        console.error('Request failed.');
-      }
-    },
-    [csrfFetch, setShowTagColors],
-  );
 
   const addCard = useCallback(
     async (card: Card, board: BoardType) => {
@@ -1515,55 +1490,6 @@ export function CubeContextProvider({
     [changedCards],
   );
 
-  const setShowUnsorted = useCallback(
-    async (value: boolean) => {
-      setLoading(true);
-      setCube({
-        ...cube,
-        showUnsorted: value,
-      });
-
-      await csrfFetch(`/cube/api/savesorts/${cube.id}`, {
-        method: 'POST',
-        body: JSON.stringify({
-          sorts: cube.defaultSorts,
-          showUnsorted: value,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      setLoading(false);
-    },
-    [csrfFetch, cube, setCube],
-  );
-
-  const setCollapseDuplicateCards = useCallback(
-    async (value: boolean) => {
-      setLoading(true);
-      setCube({
-        ...cube,
-        collapseDuplicateCards: value,
-      });
-
-      await csrfFetch(`/cube/api/savesorts/${cube.id}`, {
-        method: 'POST',
-        body: JSON.stringify({
-          sorts: cube.defaultSorts,
-          showUnsorted: cube.showUnsorted,
-          collapseDuplicateCards: value,
-        }),
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      });
-
-      setLoading(false);
-    },
-    [csrfFetch, cube, setCube],
-  );
-
   const saveSorts = useCallback(async () => {
     const currentSorts = [
       sortPrimary ?? defaultSorts[0],
@@ -1647,9 +1573,7 @@ export function CubeContextProvider({
       setModalSelection,
       setModalOpen,
       tagColors,
-      showTagColors,
       setTagColors,
-      updateShowTagColors,
       bulkEditCard,
       bulkRevertEdit,
       bulkRemoveCard,
@@ -1659,8 +1583,6 @@ export function CubeContextProvider({
       setAlerts,
       loading,
       cardsLoading,
-      setShowUnsorted,
-      setCollapseDuplicateCards,
       saveSorts,
       resetSorts,
       effectiveDefaultSorts,
@@ -1704,9 +1626,7 @@ export function CubeContextProvider({
       setModalSelection,
       setModalOpen,
       tagColors,
-      showTagColors,
       setTagColors,
-      updateShowTagColors,
       bulkEditCard,
       bulkRevertEdit,
       bulkRemoveCard,
@@ -1716,8 +1636,6 @@ export function CubeContextProvider({
       setAlerts,
       loading,
       cardsLoading,
-      setShowUnsorted,
-      setCollapseDuplicateCards,
       saveSorts,
       resetSorts,
       effectiveDefaultSorts,

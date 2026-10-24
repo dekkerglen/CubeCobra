@@ -5,6 +5,7 @@ import Cube from '@utils/datatypes/Cube';
 import { getLabels, sortDeep, sortIntoGroups } from '@utils/sorting/Sort';
 
 import CubeContext from '../contexts/CubeContext';
+import DisplayContext from '../contexts/DisplayContext';
 import { Card, CardBody } from './base/Card';
 import { Col, Flexbox, Row } from './base/Layout';
 import { ListGroup, ListGroupItem } from './base/ListGroup';
@@ -175,8 +176,9 @@ const CompareView: React.FC<CompareViewProps> = ({
   comparisonLabel = 'Comparison Cube',
 }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext) ?? {};
+  const { showUnsorted } = useContext(DisplayContext).displayOptions;
 
-  const columnsPrimary = sortIntoGroups(cards, sortPrimary ?? 'Unsorted', !!cube?.showUnsorted, cube);
+  const columnsPrimary = sortIntoGroups(cards, sortPrimary ?? 'Unsorted', showUnsorted, cube);
   const columnsSecondary: Record<string, Record<string, CardType[]>> = {};
   const columnCounts: Record<string, number> = {};
   const bothCounts: Record<string, number> = { total: 0 };
@@ -216,7 +218,7 @@ const CompareView: React.FC<CompareViewProps> = ({
     columnsSecondary[columnLabel] = sortIntoGroups(
       columnsPrimary[columnLabel],
       sortSecondary ?? 'Unsorted',
-      !!cube?.showUnsorted,
+      showUnsorted,
       cube,
     );
   }
@@ -238,7 +240,7 @@ const CompareView: React.FC<CompareViewProps> = ({
           />
         </CardBody>
       </Card>
-      {getLabels(cards, sortPrimary ?? 'Unsorted', cube?.showUnsorted, cube)
+      {getLabels(cards, sortPrimary ?? 'Unsorted', showUnsorted, cube)
         .filter((columnLabel) => columnsPrimary[columnLabel])
         .map((columnLabel) => {
           const column = columnsSecondary[columnLabel];
@@ -256,7 +258,7 @@ const CompareView: React.FC<CompareViewProps> = ({
                   />
                 </CardBody>
               </Card>
-              {getLabels(Object.values(column).flat(), sortSecondary ?? 'Unsorted', cube?.showUnsorted, cube)
+              {getLabels(Object.values(column).flat(), sortSecondary ?? 'Unsorted', showUnsorted, cube)
                 .filter((label) => column[label])
                 .map((label) => {
                   const group = column[label];
@@ -288,7 +290,7 @@ const CompareView: React.FC<CompareViewProps> = ({
                       onlyB={onlyBGroup}
                       sortTertiary={sortTertiary ?? 'Mana Value'}
                       sortQuaternary={sortQuaternary ?? 'Alphabetical'}
-                      showUnsorted={!!cube?.showUnsorted}
+                      showUnsorted={showUnsorted}
                       cube={cube}
                     />
                   );

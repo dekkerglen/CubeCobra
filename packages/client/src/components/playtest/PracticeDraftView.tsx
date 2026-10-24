@@ -9,8 +9,13 @@ import Text from 'components/base/Text';
 import CustomDraftCard from 'components/CustomDraftCard';
 import GridDraftCard from 'components/GridDraftCard';
 import HousmanDraftCard from 'components/HousmanDraftCard';
+import RotisserieDraftModal from 'components/modals/RotisserieDraftModal';
 import SealedCard from 'components/SealedCard';
 import StandardDraftCard from 'components/StandardDraftCard';
+import withModal from 'components/WithModal';
+import { navigateToRotoList } from 'utils/rotodraft';
+
+const RotoSetupButton = withModal(Button, RotisserieDraftModal);
 
 interface PracticeDraftViewProps {
   cube: Cube;
@@ -125,15 +130,23 @@ const PracticeDraftView: React.FC<PracticeDraftViewProps> = ({ cube }) => {
             <CardBody>
               <Text>
                 A rotisserie draft is a slow, open draft where players take turns picking cards one at a time from a
-                shared pool, usually tracked in a spreadsheet. Learn how to run one on Lucky Paper. Once you have a
-                spreadsheet going, you can connect it back to CubeCobra from the list page under Display &rarr; Setup
-                Rotisserie Draft.
+                shared pool, usually tracked in a spreadsheet. Learn how to run one on Lucky Paper, then connect your
+                spreadsheet to see each pick on the cube list.
               </Text>
             </CardBody>
             <CardFooter>
-              <Button block type="link" color="primary" href="https://luckypaper.co/resources/formats/rotisserie/">
-                Learn about Rotisserie Draft
-              </Button>
+              <Flexbox direction="col" gap="2">
+                <RotoSetupButton
+                  block
+                  color="primary"
+                  modalprops={{ onSubmit: (sheetUrl: string) => navigateToRotoList(cube.id, sheetUrl) }}
+                >
+                  Set Up Rotisserie Draft
+                </RotoSetupButton>
+                <Button block type="link" color="secondary" href="https://luckypaper.co/resources/formats/rotisserie/">
+                  Learn about Rotisserie Draft
+                </Button>
+              </Flexbox>
             </CardFooter>
           </Card>
         );

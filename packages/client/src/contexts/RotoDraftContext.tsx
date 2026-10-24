@@ -13,6 +13,8 @@ interface RotoInfo {
 }
 
 interface RotoDraftContextType {
+  // False outside of a RotoDraftContextProvider, where there is nowhere to show picks.
+  hasProvider: boolean;
   url: string;
   setUrl: Dispatch<SetStateAction<string>>;
   rotoInfo: RotoInfo;
@@ -26,6 +28,7 @@ const defaultFn = () => {
 };
 
 const RotoDraftContext = React.createContext<RotoDraftContextType>({
+  hasProvider: false,
   url: '',
   setUrl: defaultFn,
   rotoInfo: { picks: {}, players: {}, picksByPlayer: {} },
@@ -109,6 +112,7 @@ export const RotoDraftContextProvider = ({ children }: { children: ReactNode }) 
   );
 
   const value = {
+    hasProvider: true,
     url,
     setUrl,
     rotoInfo,

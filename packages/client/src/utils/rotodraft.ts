@@ -1,5 +1,12 @@
 import Papa from 'papaparse';
 
+export const rotoListUrl = (cubeId: string, sheetUrl: string): string =>
+  `/cube/list/${encodeURIComponent(cubeId)}?${new URLSearchParams({ rotoURL: sheetUrl }).toString()}`;
+
+export const navigateToRotoList = (cubeId: string, sheetUrl: string): void => {
+  window.location.assign(rotoListUrl(cubeId, sheetUrl));
+};
+
 export interface RotoPlayer {
   name: string;
   index: number;

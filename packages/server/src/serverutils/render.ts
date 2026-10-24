@@ -207,7 +207,6 @@ interface ReactProps {
     profileImageUrl?: string;
     theme?: string;
     hideFeatured?: boolean;
-    hideTagColors?: boolean;
     cubes: Pick<CubeType, 'id' | 'shortId' | 'name'>[];
     collaboratingCubes?: Pick<CubeType, 'id' | 'shortId' | 'name'>[];
     notifications?: any[];
@@ -267,7 +266,6 @@ const render = (
         profileImageUrl: req.user.profileImageUrl,
         theme: req.user.theme,
         hideFeatured: req.user.hideFeatured,
-        hideTagColors: req.user.hideTagColors,
         cubes: cubes.map(trimCube),
         collaboratingCubes: collaboratingCubes.map(trimCube),
         notifications: notifications.items,

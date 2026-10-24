@@ -1,3 +1,4 @@
+import { DEFAULT_CUBE_DISPLAY_OPTIONS } from '@utils/datatypes/Cube';
 import * as render from 'serverutils/render';
 
 import { cubeDao } from '../../src/dynamo/daos';
@@ -54,5 +55,17 @@ describe('Clone Cube Handler', () => {
       expect.anything(),
       `/cube/about/${clone.id}?view=primer`,
     );
+  });
+
+  it('copies every display option from the source cube', async () => {
+    const flipped = Object.fromEntries(Object.entries(DEFAULT_CUBE_DISPLAY_OPTIONS).map(([k, v]) => [k, !v]));
+    (cubeDao.getById as jest.Mock).mockResolvedValue({ ...source, ...flipped });
+
+    await call(cloneHandler).as(user).withFlash(flashMock).withParams({ id: source.id }).send();
+
+    const [clone] = (cubeDao.putNewCube as jest.Mock).mock.calls[0];
+    for (const [key, value] of Object.entries(flipped)) {
+      expect(clone[key]).toBe(value);
+    }
   });
 });

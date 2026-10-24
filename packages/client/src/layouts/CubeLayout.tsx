@@ -1,7 +1,7 @@
 import React, { ReactNode, useContext, useMemo } from 'react';
 
 import Card, { BoardType } from '@utils/datatypes/Card';
-import Cube, { getViewDefinitions, viewNameToSlug } from '@utils/datatypes/Cube';
+import Cube, { getCubeDisplayOptions, getViewDefinitions, viewNameToSlug } from '@utils/datatypes/Cube';
 
 import Banner from '../components/Banner';
 import CubeBottomNav from '../components/cube/CubeBottomNav';
@@ -66,8 +66,24 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
     [cube, activeLink],
   );
 
+  const displayViewDefaults = useMemo(
+    () =>
+      activeLink === 'list'
+        ? Object.fromEntries(
+            getViewDefinitions(cube).map((view) => [viewNameToSlug(view.name), view.displayView || 'table']),
+          )
+        : undefined,
+    [cube, activeLink],
+  );
+
   return (
-    <DisplayContextProvider cubeID={cube.id} viewSlugs={viewSlugs} defaultEditSidebarOpen={defaultEditSidebarOpen}>
+    <DisplayContextProvider
+      cubeID={cube.id}
+      viewSlugs={viewSlugs}
+      displayViewDefaults={displayViewDefaults}
+      defaultEditSidebarOpen={defaultEditSidebarOpen}
+      savedDisplayOptions={getCubeDisplayOptions(cube)}
+    >
       <FilterContextProvider>
         <ChangesContextProvider cube={cube} cards={cards as any}>
           <CubeContextProvider

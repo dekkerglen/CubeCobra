@@ -35,7 +35,10 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
   const { cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
-  const { activeView } = useContext(DisplayContext);
+  const {
+    activeView,
+    displayOptions: { showUnsorted },
+  } = useContext(DisplayContext);
   const { cardFilter } = useContext(FilterContext)!;
 
   // Derive boards to export
@@ -113,7 +116,7 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
         sortSecondary ?? undefined,
         sortTertiary ?? undefined,
         sortQuaternary ?? undefined,
-        cube.showUnsorted,
+        showUnsorted,
         cube,
       );
     }

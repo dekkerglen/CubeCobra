@@ -1,3 +1,4 @@
+import { getCubeDisplayOptions } from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
 import { buildTagColors, isCubeViewable } from 'serverutils/cubefn';
 
@@ -45,7 +46,7 @@ export const cubetagcolorsHandler = async (req: Request, res: Response) => {
       }
     }
 
-    const showTagColors = req.user ? !req.user.hideTagColors : true;
+    const { showTagColors } = getCubeDisplayOptions(cube);
 
     return res.status(200).send({
       success: 'true',

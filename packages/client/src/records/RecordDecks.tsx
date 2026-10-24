@@ -1,6 +1,7 @@
 import React, { useContext } from 'react';
 
 import { KebabHorizontalIcon } from '@primer/octicons-react';
+import { getCubeDisplayOptions } from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
 import Record, { formatRecord, playerRecord } from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
@@ -276,7 +277,7 @@ const RecordDecks: React.FC<RecordDecksProps> = ({ record, draft, players }) => 
   const { cube } = useContext(CubeContext);
 
   return (
-    <DisplayContextProvider cubeID={cube?.id || ''}>
+    <DisplayContextProvider cubeID={cube?.id || ''} savedDisplayOptions={getCubeDisplayOptions(cube)}>
       <RecordDecksContent record={record} draft={draft} players={players} />
     </DisplayContextProvider>
   );

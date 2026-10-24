@@ -83,7 +83,6 @@ export const postHandler = async (req: Request, res: Response) => {
       followingCount: 0,
       likedCubesCount: 0,
       hideFeatured: false,
-      hideTagColors: false,
       imageName: 'Ambush Viper',
       roles: [],
       theme: 'system',

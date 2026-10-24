@@ -32,7 +32,10 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({
   const { alerts, addAlert, dismissAlerts } = useAlerts();
   const [text, setText] = useState('');
   const { cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
-  const { activeView } = useContext(DisplayContext);
+  const {
+    activeView,
+    displayOptions: { showUnsorted },
+  } = useContext(DisplayContext);
   const { cardFilter } = useContext(FilterContext)!;
 
   // Derive boards to export
@@ -82,7 +85,7 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({
           sortSecondary ?? undefined,
           sortTertiary ?? undefined,
           sortQuaternary ?? undefined,
-          cube.showUnsorted,
+          showUnsorted,
           cube,
         );
       }
@@ -127,7 +130,7 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({
     sortSecondary,
     sortTertiary,
     sortQuaternary,
-    cube.showUnsorted,
+    showUnsorted,
     cube,
     exportAllBoards,
     currentViewBoards,

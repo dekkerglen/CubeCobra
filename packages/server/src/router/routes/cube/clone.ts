@@ -1,4 +1,4 @@
-import { CUBE_VISIBILITY, PRICE_VISIBILITY } from '@utils/datatypes/Cube';
+import { CUBE_VISIBILITY, getCubeDisplayOptions, PRICE_VISIBILITY } from '@utils/datatypes/Cube';
 import Cube from '@utils/datatypes/Cube';
 import { prependToPrimaryTab } from '@utils/primerTabs';
 import { cubeDao } from 'dynamo/daos';
@@ -56,8 +56,7 @@ export const cloneHandler = async (req: Request, res: Response) => {
       defaultFormat: source.defaultFormat,
       numDecks: 0,
       defaultSorts: source.defaultSorts,
-      showUnsorted: source.showUnsorted,
-      collapseDuplicateCards: source.collapseDuplicateCards,
+      ...getCubeDisplayOptions(source),
       formats: source.formats,
       likeCount: 0,
       collaborators: [],

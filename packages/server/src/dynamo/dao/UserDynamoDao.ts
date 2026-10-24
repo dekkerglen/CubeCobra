@@ -134,7 +134,6 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       usernameLower: item.username?.toLowerCase(),
       cubes: item.cubes?.map((cube) => (typeof cube === 'string' ? cube : cube.id)),
       about: item.about,
-      hideTagColors: item.hideTagColors,
       followerCount: item.followerCount,
       followingCount: item.followingCount,
       likedCubesCount: item.likedCubesCount,
