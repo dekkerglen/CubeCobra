@@ -114,7 +114,7 @@
     "rollup-plugin-commonjs": "^10.1.0",
     "rollup-plugin-node-resolve": "^5.2.0",
     "rollup-plugin-peer-deps-external": "^2.2.4",
-    "rollup-plugin-typescript2": "^0.36.0",
+    "rollup-plugin-typescript2": "^0.37.0",
     "start-server-and-test": "^2.0.3",
     "tsc-alias": "^1.9.0",
     "tsconfig-paths": "^4.2.0",
