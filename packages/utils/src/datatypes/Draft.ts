@@ -37,6 +37,10 @@ export interface DraftFormat {
   packs: Pack[];
   multiples: boolean;
   markdown?: string;
+  /**
+   * @deprecated Legacy description from before formats used markdown. Only kept for formats
+   * without markdown, sanitized to basic formatting on save and again when rendered.
+   */
   html?: string;
   defaultSeats: number;
   basicsBoard?: string; // New: which board to pull basics from (e.g., "Basics")

@@ -4,6 +4,7 @@ import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
+import { sanitizeDraftFormat } from './format/update';
 
 export const formatAddHandler = async (req: Request, res: Response) => {
   try {
@@ -20,16 +21,30 @@ export const formatAddHandler = async (req: Request, res: Response) => {
 
     let message = '';
     const { id, serializedFormat } = req.body;
-    const format = JSON.parse(serializedFormat);
+    let rawFormat: any;
+    try {
+      rawFormat = JSON.parse(serializedFormat);
+    } catch {
+      rawFormat = null;
+    }
+    if (!rawFormat || typeof rawFormat !== 'object') {
+      req.flash('danger', 'Invalid format data.');
+      return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id!)}`);
+    }
 
-    format.defaultSeats = Number.parseInt(format.defaultSeats, 10);
-    if (Number.isNaN(format.defaultSeats)) format.defaultSeats = 8;
-    if (format.defaultSeats < 2 || format.defaultSeats > 16) {
+    const defaultSeats = Number.parseInt(rawFormat.defaultSeats, 10);
+    if (!Number.isNaN(defaultSeats) && (defaultSeats < 2 || defaultSeats > 16)) {
       req.flash('danger', 'Default seat count must be between 2 and 16');
       return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id!)}`);
     }
 
-    if (id === '-1') {
+    const { format, error } = sanitizeDraftFormat(rawFormat);
+    if (!format) {
+      req.flash('danger', error || 'Invalid format data.');
+      return redirect(req, res, `/cube/playtest/${encodeURIComponent(req.params.id!)}`);
+    }
+
+    if (String(id) === '-1') {
       if (!cube.formats) {
         cube.formats = [];
       }

@@ -1,6 +1,7 @@
 import React, { useContext, useMemo, useState } from 'react';
 
 import { DraftFormat } from '@utils/datatypes/Draft';
+import DOMPurify from 'dompurify';
 
 import CubeContext from '../contexts/CubeContext';
 import Button from './base/Button';
@@ -18,10 +19,24 @@ interface CustomDraftCardProps {
 
 const range = (lo: number, hi: number): number[] => Array.from(Array(hi - lo).keys()).map((n) => n + lo);
 
+// Formats saved before markdown descriptions carry a raw `html` description written by the cube
+// owner. It is sanitized when saved, and again here because it renders on public pages.
+const LEGACY_HTML_CONFIG = {
+  ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'u', 's', 'strike', 'a', 'ul', 'ol', 'li', 'h5', 'h6', 'div'],
+  ALLOWED_ATTR: ['href'],
+};
+
+const sanitizeLegacyFormatHtml = (html: string | undefined): string =>
+  html && DOMPurify.isSupported ? DOMPurify.sanitize(html, LEGACY_HTML_CONFIG) : '';
+
 const CustomDraftCard: React.FC<CustomDraftCardProps> = ({ format, defaultFormat, formatIndex }) => {
   const { cube } = useContext(CubeContext);
   const [seats, setSeats] = useState((format?.defaultSeats ?? cube.defaultDraftSeats ?? 8).toString());
   const formRef = React.createRef<HTMLFormElement>();
+  const legacyHtml = useMemo(
+    () => (format.markdown ? '' : sanitizeLegacyFormatHtml(format.html)),
+    [format.markdown, format.html],
+  );
 
   const formData = useMemo(
     () => ({
@@ -46,7 +61,7 @@ const CustomDraftCard: React.FC<CustomDraftCardProps> = ({ format, defaultFormat
               <Markdown markdown={format.markdown} />
             </div>
           ) : (
-            <div className="description-area" dangerouslySetInnerHTML={{ __html: format.html ?? '' }} />
+            <div className="description-area" dangerouslySetInnerHTML={{ __html: legacyHtml }} />
           )}
           <Select
             label="Total Seats"
