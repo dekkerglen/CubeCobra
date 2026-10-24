@@ -45,6 +45,7 @@ import RenderToRoot from '../components/RenderToRoot';
 import withAutocard from '../components/WithAutocard';
 import { CSRFContext } from '../contexts/CSRFContext';
 import useClusteringPipeline from '../hooks/useClusteringPipeline';
+import useCoercedSelection from '../hooks/useCoercedSelection';
 import useDraftSimulatorFocus from '../hooks/useDraftSimulatorFocus';
 import useDraftSimulatorPresentation from '../hooks/useDraftSimulatorPresentation';
 import useDraftSimulatorSelection from '../hooks/useDraftSimulatorSelection';
@@ -66,6 +67,7 @@ import {
   WebGLInferenceError,
 } from '../utils/draftBot';
 import { prefetchClientSimulationResources } from '../utils/draftSimulatorSetup';
+import { getDraftFormatOptions } from '../utils/draftFormats';
 import {
   archetypeFullName,
   computeClusterThemes,
@@ -685,15 +687,13 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
   );
 
   const availableFormats = useMemo(
-    () => [
-      { value: '-1', label: 'Standard Draft' },
-      ...(cube.formats ?? []).map((format: any, index: number) => ({
-        value: `${index}`,
-        label: format.title || `Format ${index + 1}`,
-      })),
-    ],
-    [cube.formats],
+    () => getDraftFormatOptions(cube.formats, !cube.disableDraft),
+    [cube.formats, cube.disableDraft],
   );
+
+  const selectFormat = useCallback((value: string) => setSelectedFormatId(parseInt(value, 10)), []);
+
+  useCoercedSelection(availableFormats, `${selectedFormatId}`, selectFormat);
 
   useEffect(() => {
     void prefetchClientSimulationResources(csrfFetch, cubeId);
@@ -1369,7 +1369,7 @@ const CubeDraftSimulatorPage: React.FC<CubeDraftSimulatorPageProps> = ({ cube })
                     id="draftSimulatorFormat"
                     options={availableFormats}
                     value={`${selectedFormatId}`}
-                    setValue={(value) => setSelectedFormatId(parseInt(value, 10))}
+                    setValue={selectFormat}
                     disabled={isRunning}
                   />
                 </div>

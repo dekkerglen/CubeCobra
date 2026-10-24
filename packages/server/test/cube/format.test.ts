@@ -150,6 +150,72 @@ describe('updateDraftFormatsHandler', () => {
     expect(cubeDao.update).not.toHaveBeenCalled();
     expect(flash).toHaveBeenCalledWith('danger', expect.stringContaining('at most'));
   });
+
+  describe('defaultFormat', () => {
+    const save = (cube: ReturnType<typeof createCube>, body: Record<string, unknown>) =>
+      call(updateDraftFormatsHandler)
+        .as(cube.owner)
+        .withFlash(flash)
+        .withParams({ id: cube.id })
+        .withBody({ formats: JSON.stringify([validFormat()]), ...body })
+        .send();
+
+    it('does not leave standard draft as the default when it is disabled', async () => {
+      const cube = createCube();
+      (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+      await save(cube, { enableDraft: 'false', defaultFormat: '-1' });
+
+      const saved = (cubeDao.update as jest.Mock).mock.calls[0][0];
+      expect(saved.disableDraft).toBe(true);
+      expect(saved.defaultFormat).toBe(0);
+    });
+
+    it('keeps standard draft as the default when it is enabled', async () => {
+      const cube = createCube();
+      (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+      await save(cube, { enableDraft: 'true', defaultFormat: '-1' });
+
+      const saved = (cubeDao.update as jest.Mock).mock.calls[0][0];
+      expect(saved.defaultFormat).toBe(-1);
+    });
+
+    it('leaves a custom default alone when standard draft is disabled', async () => {
+      const cube = createCube();
+      (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+      await save(cube, { enableDraft: 'false', defaultFormat: '0' });
+
+      const saved = (cubeDao.update as jest.Mock).mock.calls[0][0];
+      expect(saved.defaultFormat).toBe(0);
+    });
+
+    it('allows standard draft as the default when there is no other format', async () => {
+      const cube = createCube();
+      (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+      await call(updateDraftFormatsHandler)
+        .as(cube.owner)
+        .withFlash(flash)
+        .withParams({ id: cube.id })
+        .withBody({ formats: JSON.stringify([]), enableDraft: 'false', defaultFormat: '-1' })
+        .send();
+
+      const saved = (cubeDao.update as jest.Mock).mock.calls[0][0];
+      expect(saved.defaultFormat).toBe(-1);
+    });
+
+    it('falls back to standard draft for an out-of-range default', async () => {
+      const cube = createCube();
+      (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+
+      await save(cube, { enableDraft: 'true', defaultFormat: '7' });
+
+      const saved = (cubeDao.update as jest.Mock).mock.calls[0][0];
+      expect(saved.defaultFormat).toBe(-1);
+    });
+  });
 });
 
 describe('formatAddHandler', () => {
