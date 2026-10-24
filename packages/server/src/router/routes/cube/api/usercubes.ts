@@ -1,5 +1,5 @@
 import { cubeDao } from 'dynamo/daos';
-import { isCubeViewable } from 'serverutils/cubefn';
+import { isCubeListed } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -15,7 +15,8 @@ export const usercubesHandler = async (req: Request, res: Response) => {
 
   return res.status(200).send({
     success: 'true',
-    cubes: cubes.items.filter((cube) => isCubeViewable(cube, req.user)),
+    // Unlisted and private cubes are only enumerable by their owner (and admins).
+    cubes: cubes.items.filter((cube) => isCubeListed(cube, req.user)),
   });
 };
 

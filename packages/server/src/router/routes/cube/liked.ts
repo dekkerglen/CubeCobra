@@ -1,6 +1,7 @@
 import { PatronStatuses } from '@utils/datatypes/Patron';
 import { cubeDao, packageDao, patronDao, userDao } from 'dynamo/daos';
 import { csrfProtection } from 'router/middleware';
+import { isCubeListed, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
@@ -20,7 +21,12 @@ export const handler = async (req: Request, res: Response) => {
     }
 
     const likedIds = await cubeDao.queryCubesLikedBy(owner.id, undefined, 200);
-    const followedCubes = (await cubeDao.batchGet(likedIds.cubeIds)).filter((cube: any) => cube.visibility !== 'pr');
+    // Other visitors only see listed cubes; the liker also sees unlisted (or private) cubes they
+    // can open themselves.
+    const isOwnPage = !!req.user && req.user.id === owner.id;
+    const followedCubes = (await cubeDao.batchGet(likedIds.cubeIds)).filter((cube: any) =>
+      isOwnPage ? isCubeViewable(cube, req.user) : isCubeListed(cube, req.user),
+    );
 
     const following = !!req.user && (await userDao.getFollow(req.user.id, owner.id));
 
