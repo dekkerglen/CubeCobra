@@ -6,7 +6,7 @@ import { csrfProtection, ensureAuth, ensureRole } from 'router/middleware';
 import generateMeta from 'serverutils/meta';
 import { sanitizePodcastDescription, updatePodcast } from 'serverutils/podcast';
 import { redirect, render } from 'serverutils/render';
-import { getFeedData } from 'serverutils/rss';
+import { FeedError, getFeedData } from 'serverutils/rss';
 import { getBaseUrl } from 'serverutils/util';
 
 import { Request, Response } from '../../types/express';
@@ -17,6 +17,26 @@ const ensureContentCreator = ensureRole(UserRoles.CONTENT_CREATOR);
 const canViewContent = (content: Pick<Content, 'status' | 'owner'>, user?: User): boolean =>
   content.status === ContentStatus.PUBLISHED ||
   (!!user && (user.id === content.owner?.id || !!user.roles?.includes(UserRoles.ADMIN)));
+
+// Reads a podcast feed for the edit/submit forms. On failure, flashes a message that is safe to
+// show (no fetch details) and returns null.
+const readPodcastFeed = async (req: Request, rss: unknown) => {
+  if (typeof rss !== 'string' || !rss.trim()) {
+    req.flash('danger', 'Please enter the RSS URL of your podcast.');
+    return null;
+  }
+  try {
+    return await getFeedData(rss.trim());
+  } catch (err) {
+    req.logger.error('Failed to read podcast feed', err instanceof FeedError ? err.reason : err);
+    req.flash(
+      'danger',
+      err instanceof FeedError ? err.message : "We couldn't read that podcast feed. Please try again.",
+    );
+    return null;
+  }
+};
+
 // GET /content/application
 export const applicationHandler = async (req: Request, res: Response) => {
   if (!req.user) {
@@ -453,7 +473,14 @@ export const podcastUpdateHandler = async (req: Request, res: Response) => {
     return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
 
-  await updatePodcast(podcast);
+  try {
+    await updatePodcast(podcast);
+  } catch (err) {
+    if (!(err instanceof FeedError)) throw err;
+    req.logger.error('Failed to read podcast feed', err.reason);
+    req.flash('danger', err.message);
+    return redirect(req, res, `/content/podcast/${podcast.id}`);
+  }
 
   req.flash('success', 'Podcast has been updated with all episodes.');
 
@@ -554,8 +581,12 @@ export const editPodcastHandler = async (req: Request, res: Response) => {
     return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
 
-  podcast.url = rss;
-  const fields = await getFeedData(rss);
+  const fields = await readPodcastFeed(req, rss);
+  if (!fields) {
+    return redirect(req, res, `/content/podcast/edit/${podcast.id}`);
+  }
+
+  podcast.url = rss.trim();
   podcast.title = fields.title;
   // The feed's description is rendered as HTML, so it is reduced to basic formatting.
   (podcast as any).description = sanitizePodcastDescription(fields.description);
@@ -671,8 +702,12 @@ export const submitPodcastHandler = async (req: Request, res: Response) => {
     return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
 
-  podcast.url = rss;
-  const fields = await getFeedData(rss);
+  const fields = await readPodcastFeed(req, rss);
+  if (!fields) {
+    return redirect(req, res, `/content/podcast/edit/${podcast.id}`);
+  }
+
+  podcast.url = rss.trim();
   podcast.title = fields.title;
   // The feed's description is rendered as HTML, so it is reduced to basic formatting.
   (podcast as any).description = sanitizePodcastDescription(fields.description);

@@ -1,5 +1,7 @@
 import RSSParser from 'rss-parser';
 
+import { safeFetch } from './safeFetch';
+
 interface CustomFeed {
   image?: {
     $: {
@@ -22,6 +24,48 @@ const parser: RSSParser<CustomFeed, CustomItem> = new RSSParser({
     item: [['enclosure', 'source'] as [string, string]],
   },
 } as any);
+
+// Podcast feeds can be long (years of episode notes), but nothing legitimate comes near this.
+const MAX_FEED_BYTES = 5 * 1024 * 1024;
+const FEED_TIMEOUT_MS = 10_000;
+
+/** Thrown for any feed that can't be fetched or parsed. The message is safe to show users. */
+export class FeedError extends Error {
+  /** The underlying fetch or parse failure, for logging. */
+  reason: unknown;
+
+  constructor(reason: unknown) {
+    super("We couldn't read that podcast feed. Please check the RSS URL and try again.");
+    this.name = 'FeedError';
+    this.reason = reason;
+  }
+}
+
+/**
+ * Fetches and parses a podcast feed. Feed URLs come from content creators, so the fetch goes
+ * through safeFetch (public http(s) hosts only, bounded size and time) rather than letting
+ * rss-parser follow the URL itself.
+ */
+const fetchFeed = async (url: string) => {
+  try {
+    const res = await safeFetch(url, {
+      maxBytes: MAX_FEED_BYTES,
+      timeoutMs: FEED_TIMEOUT_MS,
+      maxRedirects: 5,
+      headers: {
+        'User-Agent': 'CubeCobra podcast fetcher',
+        Accept: 'application/rss+xml, application/xml;q=0.9, text/xml;q=0.9, */*;q=0.8',
+      },
+    });
+    if (res.status < 200 || res.status >= 300) {
+      throw new Error(`Feed responded with status ${res.status}`);
+    }
+    return await parser.parseString(res.body.toString('utf8'));
+  } catch (err) {
+    throw new FeedError(err);
+  }
+};
+
 interface FeedData {
   title: string;
   description: string;
@@ -40,7 +84,7 @@ interface FeedData {
 
 */
 const getFeedData = async (url: string): Promise<FeedData> => {
-  const feed = await parser.parseURL(url);
+  const feed = await fetchFeed(url);
 
   return {
     title: feed.title || '',
@@ -72,7 +116,7 @@ interface FeedEpisode {
 
 */
 const getFeedEpisodes = async (url: string): Promise<FeedEpisode[]> => {
-  const feed = await parser.parseURL(url);
+  const feed = await fetchFeed(url);
 
   return feed.items.map((episode) => ({
     title: episode.title || '',

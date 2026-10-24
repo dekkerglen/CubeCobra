@@ -8,6 +8,7 @@ import {
   submitPodcastHandler,
   videoHandler,
 } from '../../src/router/routes/content';
+import { FeedError } from '../../src/serverutils/rss';
 import { createEpisode, createPodcast, createUser, createVideo } from '../test-utils/data';
 import { call } from '../test-utils/transport';
 
@@ -104,5 +105,22 @@ describe.each([
 
     expect(podcastDao.update).toHaveBeenCalledTimes(1);
     expect(podcast.description).toBe('<p>Weekly <b>cube</b> talk<a>x</a><a href="https://example.com">site</a></p>');
+  });
+
+  it('shows a generic message when the feed cannot be read', async () => {
+    (getFeedData as jest.Mock).mockRejectedValue(new FeedError(new Error('connect ECONNREFUSED 10.0.0.1:80')));
+
+    const { flash } = await send('http://10.0.0.1/feed');
+
+    expect(podcastDao.update).not.toHaveBeenCalled();
+    expect(flash).toHaveBeenCalledWith('danger', expect.not.stringContaining('10.0.0.1'));
+  });
+
+  it('asks for an RSS URL when none is given', async () => {
+    const { flash } = await send(['https://example.com']);
+
+    expect(getFeedData).not.toHaveBeenCalled();
+    expect(podcastDao.update).not.toHaveBeenCalled();
+    expect(flash).toHaveBeenCalledWith('danger', expect.any(String));
   });
 });
