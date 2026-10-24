@@ -82,6 +82,8 @@ test('No CodeBuild role statement grants broad actions on Resource *', () => {
     'acm:*',
     'cloudfront:*',
     'route53:*',
+    'ecr:*',
+    'ecr-public:*',
   ]) {
     expect(allActions).not.toContain(forbidden);
   }

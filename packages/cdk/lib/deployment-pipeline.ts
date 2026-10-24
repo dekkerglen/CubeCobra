@@ -349,13 +349,9 @@ export class DeploymentPipeline extends Construct {
       },
     });
 
-    // Grant Docker permissions for LocalStack
-    integrationTestProject.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: ['ecr:*', 'ecr-public:*'],
-        resources: ['*'],
-      }),
-    );
+    // No extra role permissions for the integration tests: they only drive a browser against the
+    // public beta site (no ECR/ECR Public pulls, no LocalStack container), and the AWS_* variables
+    // above are LocalStack dummies. CodeBuild/CodePipeline add the log and artifact-bucket grants.
 
     // Create CodeBuild project for deploying to production
     const prodDeployProject = new codebuild.PipelineProject(this, 'ProdDeployProject', {
