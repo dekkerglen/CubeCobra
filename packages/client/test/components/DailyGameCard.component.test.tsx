@@ -97,7 +97,8 @@ describe('DailyGameCard', () => {
     const { container } = render(<DailyGameCard dailyGame={CROSSWORD} />);
 
     expect(screen.getByText(/Crossword/)).toBeInTheDocument();
-    expect(screen.getByText(/5 clues/)).toBeInTheDocument();
+    // The clue count lives in the grid's accessible name; the visible blurb no longer repeats it.
+    expect(screen.getByRole('img', { name: /5 clues/ })).toBeInTheDocument();
     expect(container.querySelector('a[href="/tool/crossword"]')).toBeInTheDocument();
 
     // Nine cells, one of them black, and no letters anywhere — the card is handed a

@@ -35,6 +35,7 @@ const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
           xxl={10}
           cardProps={{ autocard: true, className: 'clickable' }}
           hrefFn={(card) => `/tool/card/${cardId(card)}`}
+          cubeTrayDraggable
         />
         <hr className="text-border" />
         <Text xl semibold>
@@ -48,6 +49,7 @@ const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
           xxl={10}
           cardProps={{ autocard: true, className: 'clickable' }}
           hrefFn={(card) => `/tool/card/${cardId(card)}`}
+          cubeTrayDraggable
         />
         <hr className="text-border" />
         <Text xl semibold>
@@ -61,6 +63,7 @@ const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
           xxl={10}
           cardProps={{ autocard: true, className: 'clickable' }}
           hrefFn={(card) => `/tool/card/${cardId(card)}`}
+          cubeTrayDraggable
         />
         <hr className="text-border" />
         <Text xl semibold>
@@ -74,6 +77,7 @@ const Content: React.FC<ContentProps> = ({ top, creatures, spells, other }) => {
           xxl={10}
           cardProps={{ autocard: true, className: 'clickable' }}
           hrefFn={(card) => `/tool/card/${cardId(card)}`}
+          cubeTrayDraggable
         />
       </Flexbox>
     </CardBody>

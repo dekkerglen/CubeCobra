@@ -48,3 +48,5 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - After several failed login attempts in a row, logging in is paused for a few minutes; password reset and verification emails are limited the same way.
 - Imports and decklist uploads now accept at most 100 copies of a card per line.
 - Images in comments, blog posts and descriptions that point back at Cube Cobra pages are no longer shown; images hosted elsewhere display as before.
+- When adding a card or package to a cube, the Board menu now lists the boards that cube actually has, including any custom boards, instead of the same default list for every cube.
+- Cards on a card page — the Often Drafted With, Often Cubed With and Synergistic Cards lists, plus the other printings — can now be dragged onto the cube tray to add them to your cube boards.

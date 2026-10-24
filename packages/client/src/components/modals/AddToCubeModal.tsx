@@ -1,13 +1,14 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
 import { cardId, cardImageUrl, cardName, isCustomOrVoucher } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
-import Cube, { boardNameToKey, getBoardDefinitions } from '@utils/datatypes/Cube';
+import Cube from '@utils/datatypes/Cube';
 import User from '@utils/datatypes/User';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
 import UserContext from '../../contexts/UserContext';
+import useCubeBoardOptions, { resolveBoard } from '../../hooks/useCubeBoardOptions';
 import useLocalStorage from '../../hooks/useLocalStorage';
 import Alert from '../base/Alert';
 import Button from '../base/Button';
@@ -96,22 +97,11 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
     });
   }, [cubes, cubeContext]);
 
-  // Get board options for the selected cube
-  const boardOptions = useMemo(() => {
-    const cube = cubes.find((c) => c.id === selectedCube);
-    if (!cube) {
-      return [
-        { value: 'mainboard', label: 'Mainboard' },
-        { value: 'maybeboard', label: 'Maybeboard' },
-      ];
-    }
-    // Cards not available in this context, getBoardDefinitions will use defaults
-    const boards = getBoardDefinitions(cube, undefined);
-    return boards.map((board) => ({
-      value: boardNameToKey(board.name),
-      label: board.name,
-    }));
-  }, [cubes, selectedCube]);
+  // The selected cube's real boards. The remembered board is kept as a
+  // preference: a cube without it falls back to mainboard for display and
+  // submission, without overwriting what was remembered.
+  const { boardOptions } = useCubeBoardOptions(selectedCube);
+  const board = boardOptions ? resolveBoard(boardOptions, selectedBoard) : selectedBoard;
 
   const add = async (): Promise<void> => {
     setLoading(true);
@@ -146,7 +136,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
         method: 'POST',
         body: JSON.stringify({
           cards: [cardData],
-          board: selectedBoard,
+          board,
         }),
         headers: {
           'Content-Type': 'application/json',
@@ -240,9 +230,10 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
           />
           <Select
             label="Board"
-            options={boardOptions}
-            value={selectedBoard}
+            options={boardOptions ?? []}
+            value={board}
             setValue={(val) => setSelectedBoard(val)}
+            loading={!boardOptions}
           />
         </Flexbox>
       </ModalBody>
@@ -253,7 +244,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
               Analytics
             </Button>
           )}
-          <LoadingButton block loading={loading} color="primary" onClick={add}>
+          <LoadingButton block loading={loading} disabled={!boardOptions} color="primary" onClick={add}>
             Add
           </LoadingButton>
         </Flexbox>

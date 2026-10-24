@@ -6,6 +6,7 @@ import { CardDetails } from '@utils/datatypes/Card';
 import { Card, CardBody } from '../base/Card';
 import Link from '../base/Link';
 import PagedTable from '../base/PagedTable';
+import useCubeTrayDrag from '../cubetray/useCubeTrayDrag';
 import withAutocard from '../WithAutocard';
 
 const AutocardA = withAutocard(Link);
@@ -23,6 +24,7 @@ const capStringLength = (str: string, maxLength: number) => {
 };
 
 const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
+  const drag = useCubeTrayDrag();
   const sortedVersions = versions.sort((a, b) => {
     const date1 = new Date(a.released_at);
     const date2 = new Date(b.released_at);
@@ -39,6 +41,23 @@ const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
   const filteredVersions = sortedVersions.filter((version) => {
     return version.scryfall_id !== card.scryfall_id;
   });
+
+  // Make each row a cube-tray drag source (mirrors the card search table).
+  const getRowProps = drag.active
+    ? (rowIndex: number) => ({
+        className: 'cursor-grab active:cursor-grabbing',
+        onPointerDown: (e: React.PointerEvent<HTMLTableRowElement>) =>
+          drag.start(detailsToCard(filteredVersions[rowIndex]), e),
+        onDragStart: (e: React.DragEvent<HTMLTableRowElement>) => e.preventDefault(),
+        // Capture so a drag's trailing click doesn't follow the Version link.
+        onClickCapture: (e: React.MouseEvent<HTMLTableRowElement>) => {
+          if (drag.suppressClick()) {
+            e.preventDefault();
+            e.stopPropagation();
+          }
+        },
+      })
+    : undefined;
 
   return (
     <Card>
@@ -57,6 +76,7 @@ const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
             TIX: version.prices.tix ? `${version.prices.tix}` : '',
           }))}
           className="m-2 ml-4"
+          getRowProps={getRowProps}
         />
       ) : (
         <CardBody>

@@ -6,6 +6,7 @@ import CubePropType from '@utils/datatypes/Cube';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
 import UserContext from '../../contexts/UserContext';
+import useCubeBoardOptions, { resolveBoard } from '../../hooks/useCubeBoardOptions';
 import useLocalStorage from '../../hooks/useLocalStorage';
 import usePackageAddOptions from '../../hooks/usePackageAddOptions';
 import Alert from '../base/Alert';
@@ -43,7 +44,9 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
   const user = useContext(UserContext);
   const [selectedCube, setSelectedCube] = useState<string | null>(cubes && cubes.length > 0 ? cubes[0].id : null);
   const [alerts, setAlerts] = useState<AlertProps[]>([]);
-  const [board, setBoard] = useState<'mainboard' | 'maybeboard'>('mainboard');
+  const [selectedBoard, setSelectedBoard] = useState('mainboard');
+  const { boardOptions } = useCubeBoardOptions(selectedCube);
+  const board = boardOptions ? resolveBoard(boardOptions, selectedBoard) : selectedBoard;
   const [loadingSubmit, setLoadingSubmit] = useState(false);
   const [upvotePackage, setUpvotePackage] = useState(true);
   const { autoTag, setAutoTag, useDefaultPrinting, setUseDefaultPrinting } = usePackageAddOptions();
@@ -138,11 +141,9 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
           <Select
             label="Board"
             value={board}
-            setValue={(value) => setBoard(value as 'mainboard' | 'maybeboard')}
-            options={[
-              { value: 'mainboard', label: 'Mainboard' },
-              { value: 'maybeboard', label: 'Maybeboard' },
-            ]}
+            setValue={setSelectedBoard}
+            options={boardOptions ?? []}
+            loading={!boardOptions}
           />
           {packid && (
             <>
@@ -163,7 +164,7 @@ const AddGroupToCubeModal: React.FC<AddGroupToCubeModalProps> = ({
       </ModalBody>
       <ModalFooter>
         <Flexbox direction="row" gap="2" className="w-full">
-          <LoadingButton block loading={loadingSubmit} color="primary" onClick={() => add()}>
+          <LoadingButton block loading={loadingSubmit} disabled={!boardOptions} color="primary" onClick={() => add()}>
             Add
           </LoadingButton>
           <Button block color="secondary" onClick={() => setOpen(false)}>

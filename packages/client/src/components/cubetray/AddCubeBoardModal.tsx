@@ -1,13 +1,14 @@
-import React, { useContext, useEffect, useMemo, useState } from 'react';
+import React, { useContext, useEffect, useState } from 'react';
 
 import { ChevronDownIcon, ChevronUpIcon } from '@primer/octicons-react';
 import { CARD_STATUSES } from '@utils/datatypes/Card';
-import Cube, { boardNameToKey, getBoardDefinitions } from '@utils/datatypes/Cube';
+import Cube from '@utils/datatypes/Cube';
 import TagData from '@utils/datatypes/TagData';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
 import { CubeBoardCombo, useCubeTray } from '../../contexts/CubeTrayContext';
 import UserContext from '../../contexts/UserContext';
+import useCubeBoardOptions, { BoardOption, resolveBoard } from '../../hooks/useCubeBoardOptions';
 import Button from '../base/Button';
 import Collapse from '../base/Collapse';
 import { Flexbox } from '../base/Layout';
@@ -22,17 +23,6 @@ interface AddCubeBoardModalProps {
   isOpen: boolean;
   setOpen: (open: boolean) => void;
 }
-
-interface BoardOption {
-  value: string;
-  label: string;
-}
-
-// Stable identity so the board-validity effect doesn't churn every render.
-const DEFAULT_BOARD_OPTIONS: BoardOption[] = [
-  { value: 'mainboard', label: 'Mainboard' },
-  { value: 'maybeboard', label: 'Maybeboard' },
-];
 
 // The empty first option is the default — cards keep the cube's normal status.
 const STATUS_OPTIONS: BoardOption[] = [
@@ -50,11 +40,6 @@ const AddCubeBoardModal: React.FC<AddCubeBoardModalProps> = ({ isOpen, setOpen }
   const [cubesLoading, setCubesLoading] = useState(false);
   const [selectedCube, setSelectedCube] = useState('');
   const [selectedBoard, setSelectedBoard] = useState('mainboard');
-  // Real boards per cube, fetched lazily from cubeJSON and cached so switching
-  // back to an already-seen cube is instant. mycubes has no card data, so it
-  // can't tell us the boards on its own.
-  const [boardsByCube, setBoardsByCube] = useState<Record<string, BoardOption[]>>({});
-  const [boardsLoading, setBoardsLoading] = useState(false);
 
   // Advanced defaults applied to cards dropped on this board. Empty by default.
   const [advancedOpen, setAdvancedOpen] = useState(false);
@@ -107,53 +92,12 @@ const AddCubeBoardModal: React.FC<AddCubeBoardModalProps> = ({ isOpen, setOpen }
     setSelectedCube((prev) => (prev && cubes.some((c) => c.id === prev) ? prev : cubes[0].id));
   }, [cubes]);
 
-  // Fetch the selected cube's actual boards (mainboard/maybeboard plus any
-  // custom boards) the first time it's selected.
-  useEffect(() => {
-    if (!selectedCube || boardsByCube[selectedCube]) return;
-    const cube = cubes.find((c) => c.id === selectedCube);
-    if (!cube) return;
-    let cancelled = false;
-    (async () => {
-      setBoardsLoading(true);
-      try {
-        const res = await csrfFetch(`/cube/api/cubeJSON/${encodeURIComponent(selectedCube)}`);
-        if (cancelled) return;
-        let options: BoardOption[] | undefined;
-        if (res.ok) {
-          const json = await res.json();
-          if (cancelled) return;
-          options = getBoardDefinitions(cube, json?.cards).map((board) => ({
-            value: boardNameToKey(board.name),
-            label: board.name,
-          }));
-        }
-        setBoardsByCube((prev) => ({
-          ...prev,
-          [selectedCube]: options && options.length > 0 ? options : DEFAULT_BOARD_OPTIONS,
-        }));
-      } catch {
-        setBoardsByCube((prev) => ({ ...prev, [selectedCube]: DEFAULT_BOARD_OPTIONS }));
-      } finally {
-        if (!cancelled) setBoardsLoading(false);
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [selectedCube, cubes, boardsByCube, csrfFetch]);
-
-  const boardOptions = useMemo(() => boardsByCube[selectedCube] || DEFAULT_BOARD_OPTIONS, [boardsByCube, selectedCube]);
-
-  // Keep the selected board valid for the chosen cube.
-  useEffect(() => {
-    if (boardOptions.length === 0) return;
-    setSelectedBoard((prev) => (boardOptions.some((b) => b.value === prev) ? prev : boardOptions[0].value));
-  }, [boardOptions]);
+  const { boardOptions } = useCubeBoardOptions(selectedCube);
+  const boardKey = boardOptions ? resolveBoard(boardOptions, selectedBoard) : selectedBoard;
 
   const save = () => {
     const cube = cubes.find((c) => c.id === selectedCube);
-    const board = boardOptions.find((b) => b.value === selectedBoard) || boardOptions[0];
+    const board = boardOptions?.find((b) => b.value === boardKey);
     if (!cube || !board) return;
     const combo: CubeBoardCombo = {
       cubeId: cube.id,
@@ -206,10 +150,10 @@ const AddCubeBoardModal: React.FC<AddCubeBoardModalProps> = ({ isOpen, setOpen }
           />
           <Select
             label="Board"
-            options={boardOptions}
-            value={selectedBoard}
+            options={boardOptions ?? []}
+            value={boardKey}
             setValue={setSelectedBoard}
-            loading={boardsLoading && !boardsByCube[selectedCube]}
+            loading={!boardOptions}
           />
 
           <div className="border-t border-border pt-2">
@@ -251,7 +195,7 @@ const AddCubeBoardModal: React.FC<AddCubeBoardModalProps> = ({ isOpen, setOpen }
         </Flexbox>
       </ModalBody>
       <ModalFooter>
-        <Button block color="primary" onClick={save}>
+        <Button block color="primary" onClick={save} disabled={!boardOptions}>
           Add to Tray
         </Button>
       </ModalFooter>
