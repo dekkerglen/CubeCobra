@@ -47,7 +47,29 @@ export interface DeploymentPipelineProps {
    * AWS region
    */
   region: string;
+
+  /**
+   * CloudFormation stack names deployed by the beta / production projects (config.ts stackName)
+   */
+  betaStackName: string;
+  productionStackName: string;
+
+  /**
+   * S3 bucket the build bundles (server, recommender, lambdas) are published to (config.ts appBucket)
+   */
+  appBucket: string;
 }
+
+// Key prefixes in the app bucket that the deploy projects write build bundles to:
+// packages/scripts/src/publish.ts (builds/<version>.zip), packages/recommenderService/publish.js
+// (builds/recommender-<version>.zip) and the three lambda publish.js scripts (<lambda>/<version>.zip).
+const APP_BUCKET_PUBLISH_PREFIXES = ['builds', 'dailyJobsLambda', 'cardUpdateMonitorLambda', 'botDeckbuildLambda'];
+
+// Bootstrap roles `cdk deploy` assumes. The account is bootstrapped with the default qualifier
+// (cdk.json sets no @aws-cdk/core:bootstrapQualifier; the synthesized manifest references
+// /cdk-bootstrap/hnb659fds/version). The cfn-exec role is deliberately absent: only
+// CloudFormation can assume it, and the deploy role passes it.
+const CDK_BOOTSTRAP_ROLE_KINDS = ['deploy', 'file-publishing', 'image-publishing', 'lookup'];
 
 export class DeploymentPipeline extends Construct {
   public readonly pipeline: codepipeline.Pipeline;
@@ -65,6 +87,16 @@ export class DeploymentPipeline extends Construct {
 
     // Source artifact
     const sourceOutput = new codepipeline.Artifact('SourceOutput');
+
+    // SECURITY NOTE (H-07 / M-12): the deploy projects below still run `npm ci` (with dependency
+    // lifecycle scripts) and the package builds in the same CodeBuild project, with the same role,
+    // that later runs `cdk deploy`, and every PARAMETER_STORE secret below is in the build
+    // environment from the start of the build. The role is scoped to what the buildspec calls
+    // directly (see grantDeployPermissions), but it can still assume the CDK deploy role, which is
+    // admin-equivalent through the CloudFormation execution role. Remaining work:
+    //   1. split each stage into an unprivileged build project (no secrets, no deploy role) that
+    //      emits the bundles as artifacts, and a deploy project that only uploads them and runs
+    //      `cdk deploy` (and `npm ci --ignore-scripts` + `npm rebuild <vetted native pkgs>` there);
     const betaBuildOutput = new codepipeline.Artifact('BetaBuildOutput');
 
     // Create CodeBuild project for deploying to beta
@@ -73,6 +105,7 @@ export class DeploymentPipeline extends Construct {
       environment: {
         buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
         computeType: codebuild.ComputeType.MEDIUM,
+        // Required for `docker build` of the jobs image.
         privileged: true,
       },
       buildSpec: codebuild.BuildSpec.fromObject({
@@ -87,7 +120,9 @@ export class DeploymentPipeline extends Construct {
             commands: [
               'node --version',
               'echo Installing dependencies...',
-              'npm install',
+              // npm ci installs exactly what the root package-lock.json pins (and fails if it is
+              // out of sync with package.json) instead of re-resolving semver ranges.
+              'npm ci',
               'echo Building application...',
               'npm run ci-build',
               'echo Publishing server artifact...',
@@ -98,21 +133,21 @@ export class DeploymentPipeline extends Construct {
               'echo Building and publishing Lambda function...',
               'cd packages/dailyJobsLambda',
               'npm run build',
-              'export CUBECOBRA_APP_BUCKET=cubecobra',
+              `export CUBECOBRA_APP_BUCKET=${props.appBucket}`,
               'export LAMBDA_VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION',
               'node publish.js',
               'cd ../..',
               'echo Building and publishing Card Update Monitor Lambda...',
               'cd packages/cardUpdateMonitorLambda',
               'npm run build',
-              'export CUBECOBRA_APP_BUCKET=cubecobra',
+              `export CUBECOBRA_APP_BUCKET=${props.appBucket}`,
               'export LAMBDA_VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION',
               'node publish.js',
               'cd ../..',
               'echo Building and publishing Bot Deckbuild Lambda...',
               'cd packages/botDeckbuildLambda',
               'npm run build',
-              'export CUBECOBRA_APP_BUCKET=cubecobra',
+              `export CUBECOBRA_APP_BUCKET=${props.appBucket}`,
               'export LAMBDA_VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION',
               'node publish.js',
               'cd ../..',
@@ -130,10 +165,10 @@ export class DeploymentPipeline extends Construct {
               // per-deploy step.
               'echo Deploying to Beta environment...',
               'cd packages/cdk',
-              'npx cdk deploy CubeCobraBetaStack --require-approval never --context environment=beta --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              `npx cdk deploy ${props.betaStackName} --require-approval never --context environment=beta --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION`,
               'cd ../..',
               'echo Building and pushing jobs Docker image...',
-              'export JOBS_ECR_REPO=$(aws cloudformation describe-stacks --stack-name CubeCobraBetaStack --query "Stacks[0].Outputs[?contains(OutputKey, \\`JobsEcr\\`) && contains(OutputKey, \\`RepositoryUri\\`)].OutputValue | [0]" --output text)',
+              `export JOBS_ECR_REPO=$(aws cloudformation describe-stacks --stack-name ${props.betaStackName} --query "Stacks[0].Outputs[?contains(OutputKey, \\\`JobsEcr\\\`) && contains(OutputKey, \\\`RepositoryUri\\\`)].OutputValue | [0]" --output text)`,
               'echo Jobs ECR Repository: $JOBS_ECR_REPO',
               "export ECR_REGISTRY=$(echo $JOBS_ECR_REPO | cut -d'/' -f1)",
               'aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY',
@@ -232,24 +267,7 @@ export class DeploymentPipeline extends Construct {
       },
     });
 
-    // Grant permissions to deploy
-    betaDeployProject.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: [
-          'sts:AssumeRole',
-          'iam:PassRole',
-          'cloudformation:*',
-          'ec2:*',
-          'elasticbeanstalk:*',
-          's3:*',
-          // Assets stack provisions these in us-east-1; CodeBuild deploys it.
-          'acm:*',
-          'cloudfront:*',
-          'route53:*',
-        ],
-        resources: ['*'],
-      }),
-    );
+    this.grantDeployPermissions(betaDeployProject, props, props.betaStackName);
 
     // Grant permissions to push to ECR
     betaDeployProject.addToRolePolicy(
@@ -290,7 +308,7 @@ export class DeploymentPipeline extends Construct {
             'runtime-versions': {
               nodejs: 22,
             },
-            commands: ['node --version', 'echo Installing Node.js dependencies...', 'npm install'],
+            commands: ['node --version', 'echo Installing Node.js dependencies...', 'npm ci'],
           },
           build: {
             commands: [
@@ -345,6 +363,7 @@ export class DeploymentPipeline extends Construct {
       environment: {
         buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
         computeType: codebuild.ComputeType.MEDIUM,
+        // Required for `docker build` of the jobs image.
         privileged: true,
       },
       buildSpec: codebuild.BuildSpec.fromObject({
@@ -359,7 +378,7 @@ export class DeploymentPipeline extends Construct {
             commands: [
               'node --version',
               'echo Installing dependencies...',
-              'npm install',
+              'npm ci',
               'echo Building application...',
               'npm run ci-build',
               'echo Publishing server artifact...',
@@ -370,21 +389,21 @@ export class DeploymentPipeline extends Construct {
               'echo Building and publishing Lambda function...',
               'cd packages/dailyJobsLambda',
               'npm run build',
-              'export CUBECOBRA_APP_BUCKET=cubecobra',
+              `export CUBECOBRA_APP_BUCKET=${props.appBucket}`,
               'export LAMBDA_VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION',
               'node publish.js',
               'cd ../..',
               'echo Building and publishing Card Update Monitor Lambda...',
               'cd packages/cardUpdateMonitorLambda',
               'npm run build',
-              'export CUBECOBRA_APP_BUCKET=cubecobra',
+              `export CUBECOBRA_APP_BUCKET=${props.appBucket}`,
               'export LAMBDA_VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION',
               'node publish.js',
               'cd ../..',
               'echo Building and publishing Bot Deckbuild Lambda...',
               'cd packages/botDeckbuildLambda',
               'npm run build',
-              'export CUBECOBRA_APP_BUCKET=cubecobra',
+              `export CUBECOBRA_APP_BUCKET=${props.appBucket}`,
               'export LAMBDA_VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION',
               'node publish.js',
               'cd ../..',
@@ -400,10 +419,10 @@ export class DeploymentPipeline extends Construct {
               // per-deploy step.
               'echo Deploying to Production environment...',
               'cd packages/cdk',
-              'npx cdk deploy CubeCobraProdStack --require-approval never --context environment=production --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              `npx cdk deploy ${props.productionStackName} --require-approval never --context environment=production --context version=$CODEBUILD_RESOLVED_SOURCE_VERSION`,
               'cd ../..',
               'echo Building and pushing jobs Docker image...',
-              'export JOBS_ECR_REPO=$(aws cloudformation describe-stacks --stack-name CubeCobraProdStack --query "Stacks[0].Outputs[?contains(OutputKey, \\`JobsEcr\\`) && contains(OutputKey, \\`RepositoryUri\\`)].OutputValue | [0]" --output text)',
+              `export JOBS_ECR_REPO=$(aws cloudformation describe-stacks --stack-name ${props.productionStackName} --query "Stacks[0].Outputs[?contains(OutputKey, \\\`JobsEcr\\\`) && contains(OutputKey, \\\`RepositoryUri\\\`)].OutputValue | [0]" --output text)`,
               'echo Jobs ECR Repository: $JOBS_ECR_REPO',
               "export ECR_REGISTRY=$(echo $JOBS_ECR_REPO | cut -d'/' -f1)",
               'aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY',
@@ -504,41 +523,7 @@ export class DeploymentPipeline extends Construct {
       },
     });
 
-    // Grant permissions to deploy
-    prodDeployProject.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: [
-          'sts:AssumeRole',
-          'iam:PassRole',
-          'cloudformation:*',
-          'ec2:*',
-          'elasticbeanstalk:*',
-          's3:*',
-          // Assets stack provisions these in us-east-1; CodeBuild deploys it.
-          'acm:*',
-          'cloudfront:*',
-          'route53:*',
-        ],
-        resources: ['*'],
-      }),
-    );
-
-    // Grant permissions to push to ECR
-    prodDeployProject.addToRolePolicy(
-      new iam.PolicyStatement({
-        actions: [
-          'ecr:GetAuthorizationToken',
-          'ecr:BatchCheckLayerAvailability',
-          'ecr:GetDownloadUrlForLayer',
-          'ecr:BatchGetImage',
-          'ecr:PutImage',
-          'ecr:InitiateLayerUpload',
-          'ecr:UploadLayerPart',
-          'ecr:CompleteLayerUpload',
-        ],
-        resources: ['*'],
-      }),
-    );
+    this.grantDeployPermissions(prodDeployProject, props, props.productionStackName);
 
     // Grant permissions to read Parameter Store
     prodDeployProject.addToRolePolicy(
@@ -625,5 +610,79 @@ export class DeploymentPipeline extends Construct {
       value: this.pipeline.pipelineArn,
       description: 'The ARN of the deployment pipeline',
     });
+  }
+
+  /**
+   * Grants a deploy project only the AWS calls its buildspec makes with the project role itself.
+   *
+   * The CloudFormation, Elastic Beanstalk, EC2, IAM, ACM and Route 53 work all happens inside
+   * `cdk deploy`, which assumes the CDK bootstrap roles (deploy role -> CloudFormation execution
+   * role) rather than using these credentials, so this role no longer gets `cloudformation:*`,
+   * `ec2:*`, `elasticbeanstalk:*`, `iam:PassRole`, `s3:*`, `acm:*`, `cloudfront:*` or `route53:*`.
+   * (The CloudFront assets stack these used to cover has been removed; the Route 53 hosted-zone
+   * and VPC lookups are served from cdk.context.json, or the lookup role if the cache misses.)
+   * If `cdk deploy` ever logs "could not be used to assume ... Proceeding anyway", it fell back to
+   * these credentials and the beta deploy will fail on permissions -- fix the bootstrap role trust
+   * rather than re-widening this role.
+   *
+   * What the role still calls directly:
+   *  - sts:AssumeRole on the bootstrap roles (`cdk deploy`);
+   *  - s3:PutObject for the bundle uploads (publish.ts, recommenderService/publish.js, the lambda
+   *    publish.js scripts; AbortMultipartUpload for lib-storage's multipart cleanup);
+   *  - cloudformation:DescribeStacks on its own stack (reads the jobs ECR repository output);
+   *  - ECR login + push of the jobs image. The repositories have CloudFormation-generated names,
+   *    so the push is scoped to this account/region's repositories rather than one ARN.
+   * Reading the PARAMETER_STORE environment variables is granted separately per stage.
+   */
+  private grantDeployPermissions(
+    project: codebuild.PipelineProject,
+    props: DeploymentPipelineProps,
+    stackName: string,
+  ) {
+    project.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['sts:AssumeRole'],
+        resources: CDK_BOOTSTRAP_ROLE_KINDS.map(
+          (kind) => `arn:aws:iam::${props.account}:role/cdk-hnb659fds-${kind}-role-${props.account}-*`,
+        ),
+      }),
+    );
+
+    project.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['s3:PutObject', 's3:AbortMultipartUpload'],
+        resources: APP_BUCKET_PUBLISH_PREFIXES.map((prefix) => `arn:aws:s3:::${props.appBucket}/${prefix}/*`),
+      }),
+    );
+
+    project.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['cloudformation:DescribeStacks'],
+        resources: [`arn:aws:cloudformation:${props.region}:${props.account}:stack/${stackName}/*`],
+      }),
+    );
+
+    // GetAuthorizationToken has no resource-level permissions.
+    project.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: ['ecr:GetAuthorizationToken'],
+        resources: ['*'],
+      }),
+    );
+
+    project.addToRolePolicy(
+      new iam.PolicyStatement({
+        actions: [
+          'ecr:BatchCheckLayerAvailability',
+          'ecr:GetDownloadUrlForLayer',
+          'ecr:BatchGetImage',
+          'ecr:PutImage',
+          'ecr:InitiateLayerUpload',
+          'ecr:UploadLayerPart',
+          'ecr:CompleteLayerUpload',
+        ],
+        resources: [`arn:aws:ecr:${props.region}:${props.account}:repository/*`],
+      }),
+    );
   }
 }

@@ -31,7 +31,7 @@ test('Creates an ACM Certificate with DNS Validation', () => {
 
   template.hasResourceProperties('AWS::CertificateManager::Certificate', {
     DomainName: 'example.com',
-    SubjectAlternativeNames: ['www.example.com'],
+    SubjectAlternativeNames: ['www.example.com', 'ml.example.com'],
     ValidationMethod: 'DNS',
   });
 });

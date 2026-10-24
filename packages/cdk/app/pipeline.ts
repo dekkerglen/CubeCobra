@@ -43,6 +43,9 @@ new DeploymentPipeline(pipelineStack, 'DeploymentPipeline', {
   productionDomain: environments.production.domain,
   account: pipelineConfig.account,
   region: pipelineConfig.region,
+  betaStackName: environments.beta.stackName,
+  productionStackName: environments.production.stackName,
+  appBucket: pipelineConfig.appBucket,
 });
 
 app.synth();

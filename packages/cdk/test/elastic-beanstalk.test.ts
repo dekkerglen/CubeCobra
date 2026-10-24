@@ -1,6 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import * as acm from 'aws-cdk-lib/aws-certificatemanager';
+import * as ec2 from 'aws-cdk-lib/aws-ec2';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
@@ -24,11 +25,18 @@ class TestStack extends BaseTestStack {
       roles: ['mock-role'],
     });
 
+    const vpc = ec2.Vpc.fromVpcAttributes(this, 'MockVpc', {
+      vpcId: 'vpc-12345678',
+      availabilityZones: ['us-east-1a', 'us-east-1b'],
+      publicSubnetIds: ['subnet-11111111', 'subnet-22222222'],
+    });
+
     new ElasticBeanstalk(this, 'TestElasticBeanstalk', {
       appBucket: mockBucket,
       appVersion: 'v1.0.0',
       environmentName: 'test',
       certificate: mockCertificate,
+      vpc,
       fleetSize: 2,
       instanceProfile: instanceProfile,
       environmentVariables: {
@@ -70,7 +78,7 @@ test('Creates an Elastic Beanstalk Environment with correct settings', () => {
   const template = Template.fromStack(stack);
 
   template.hasResourceProperties('AWS::ElasticBeanstalk::Environment', {
-    EnvironmentName: 'cubecobra-test-env',
+    EnvironmentName: 'cubecobra-test-v2-env',
     ApplicationName: { Ref: Match.anyValue() },
     SolutionStackName: '64bit Amazon Linux 2023 v6.4.0 running Node.js 20',
     OptionSettings: Match.arrayWith([
