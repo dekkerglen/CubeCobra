@@ -158,8 +158,14 @@ app.use(
 app.use(cspHeaders);
 
 // upload file middleware. Cap uploads to the hosted-image input limit and abort oversized
-// requests rather than buffering them.
-app.use(fileUpload({ limits: { fileSize: MAX_UPLOAD_BYTES }, abortOnLimit: true }));
+// requests rather than buffering them. Only one route takes a file and a couple post
+// multipart fields, so the part counts are tight.
+app.use(
+  fileUpload({
+    limits: { fileSize: MAX_UPLOAD_BYTES, files: 1, fields: 50, parts: 51 },
+    abortOnLimit: true,
+  }),
+);
 
 // JSON.parse keeps "__proto__" as an ordinary key, which code that indexes objects with
 // request-supplied keys can turn into prototype pollution. Drop those keys at parse time.
@@ -169,13 +175,13 @@ const dropPrototypeKeys = (key: string, value: unknown) =>
 // body parser middleware
 app.use(
   bodyParser.urlencoded({
-    limit: '50mb',
+    limit: '10mb',
     extended: true,
   }),
 );
 app.use(
   bodyParser.json({
-    limit: '50mb',
+    limit: '10mb',
     reviver: dropPrototypeKeys,
     // Capture the raw request bytes for routes that verify an HMAC signature over the
     // exact payload the sender signed (the Patreon webhook). Re-serializing the parsed
