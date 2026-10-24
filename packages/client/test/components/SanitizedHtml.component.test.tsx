@@ -7,6 +7,7 @@ import '@testing-library/jest-dom';
 import { DraftFormat } from '@utils/datatypes/Draft';
 
 import CustomDraftCard from '../../src/components/CustomDraftCard';
+import Podcast from '../../src/components/content/Podcast';
 
 jest.mock('../../src/components/Markdown', () => ({ markdown }: { markdown: string }) => <div>{markdown}</div>);
 jest.mock('components/comments/CommentsSection', () => () => <div>Comments</div>);
@@ -46,5 +47,17 @@ describe('CustomDraftCard legacy html', () => {
     );
     expect(container.querySelector('.description-area')).toBeNull();
     expect(container.querySelector('script')).toBeNull();
+  });
+});
+
+describe('Podcast description', () => {
+  it('sanitizes the feed description', () => {
+    const { container } = render(
+      <Podcast
+        podcast={{ id: 'p1', title: 'A Podcast', description: XSS, owner: { id: 'u1' } } as any}
+        episodes={[]}
+      />,
+    );
+    expectSanitized(container);
   });
 });

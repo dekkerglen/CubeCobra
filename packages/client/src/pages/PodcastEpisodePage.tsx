@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import Episode from '@utils/datatypes/Episode';
+import DOMPurify from 'dompurify';
 import ReactAudioPlayer from 'react-audio-player';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
@@ -18,7 +19,16 @@ interface PodcastEpisodePageProps {
   episode: Episode;
 }
 
+// Episode notes come from the podcast's RSS feed. They are sanitized when the feed is synced;
+// this is defense in depth (no styles, scripts or event handlers).
+const BODY_CONFIG = { USE_PROFILES: { html: true }, FORBID_TAGS: ['style', 'form'], FORBID_ATTR: ['style'] };
+
 const PodcastEpisodePage: React.FC<PodcastEpisodePageProps> = ({ episode }) => {
+  const body = useMemo(
+    () => (episode.body && DOMPurify.isSupported ? DOMPurify.sanitize(episode.body, BODY_CONFIG) : ''),
+    [episode.body],
+  );
+
   return (
     <MainLayout>
       <DynamicFlash />
@@ -52,7 +62,7 @@ const PodcastEpisodePage: React.FC<PodcastEpisodePageProps> = ({ episode }) => {
               />
             </CardBody>
             <CardBody className="border-top">
-              <div dangerouslySetInnerHTML={{ __html: episode.body || '' }} />
+              <div dangerouslySetInnerHTML={{ __html: body }} />
             </CardBody>
           </Col>
         </Row>

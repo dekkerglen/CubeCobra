@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 
 import Episode from '@utils/datatypes/Episode';
 import PodcastType from '@utils/datatypes/Podcast';
+import DOMPurify from 'dompurify';
 
 import AspectRatioBox from 'components/base/AspectRatioBox';
 import { CardBody, CardHeader } from 'components/base/Card';
@@ -16,7 +17,20 @@ interface PodcastProps {
   episodes: Episode[];
 }
 
+// The description comes from the podcast's RSS feed. The server reduces it to basic formatting
+// when the feed is read; it is sanitized again here as defense in depth.
+const DESCRIPTION_CONFIG = {
+  ALLOWED_TAGS: ['p', 'br', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li'],
+  ALLOWED_ATTR: ['href'],
+};
+
 const Podcast: React.FC<PodcastProps> = ({ podcast, episodes }) => {
+  const description = useMemo(
+    () =>
+      podcast.description && DOMPurify.isSupported ? DOMPurify.sanitize(podcast.description, DESCRIPTION_CONFIG) : '',
+    [podcast.description],
+  );
+
   return (
     <>
       <CardHeader>
@@ -37,7 +51,7 @@ const Podcast: React.FC<PodcastProps> = ({ podcast, episodes }) => {
         </Col>
         <Col xs={12} sm={8}>
           <CardBody>
-            <div dangerouslySetInnerHTML={{ __html: podcast.description || '' }} />
+            <div dangerouslySetInnerHTML={{ __html: description }} />
           </CardBody>
         </Col>
       </Row>

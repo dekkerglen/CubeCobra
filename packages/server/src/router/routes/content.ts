@@ -4,7 +4,7 @@ import { UserRoles } from '@utils/datatypes/User';
 import { articleDao, episodeDao, noticeDao, podcastDao, videoDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth, ensureRole } from 'router/middleware';
 import generateMeta from 'serverutils/meta';
-import { updatePodcast } from 'serverutils/podcast';
+import { sanitizePodcastDescription, updatePodcast } from 'serverutils/podcast';
 import { redirect, render } from 'serverutils/render';
 import { getFeedData } from 'serverutils/rss';
 import { getBaseUrl } from 'serverutils/util';
@@ -553,7 +553,8 @@ export const editPodcastHandler = async (req: Request, res: Response) => {
   podcast.url = rss;
   const fields = await getFeedData(rss);
   podcast.title = fields.title;
-  (podcast as any).description = fields.description;
+  // The feed's description is rendered as HTML, so it is reduced to basic formatting.
+  (podcast as any).description = sanitizePodcastDescription(fields.description);
   (podcast as any).podcastLink = fields.url;
   (podcast as any).image = fields.image;
 
@@ -669,7 +670,8 @@ export const submitPodcastHandler = async (req: Request, res: Response) => {
   podcast.url = rss;
   const fields = await getFeedData(rss);
   podcast.title = fields.title;
-  (podcast as any).description = fields.description;
+  // The feed's description is rendered as HTML, so it is reduced to basic formatting.
+  (podcast as any).description = sanitizePodcastDescription(fields.description);
   (podcast as any).podcastLink = fields.url;
   (podcast as any).image = fields.image;
   podcast.status = ContentStatus.IN_REVIEW;

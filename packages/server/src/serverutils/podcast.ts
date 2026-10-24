@@ -10,6 +10,18 @@ const removeSpan = (text: string): string =>
     allowedTags: sanitizeHtml.defaults.allowedTags.filter((tag: string) => tag !== 'span'),
   });
 
+/**
+ * A podcast's description comes straight from its RSS feed and is rendered as HTML, so only
+ * basic formatting and http(s)/mailto links survive.
+ */
+export const sanitizePodcastDescription = (text: string): string =>
+  sanitizeHtml(text, {
+    allowedTags: ['p', 'br', 'b', 'i', 'em', 'strong', 'a', 'ul', 'ol', 'li'],
+    allowedAttributes: { a: ['href'] },
+    allowedSchemes: ['http', 'https', 'mailto'],
+    allowProtocolRelative: false,
+  });
+
 export const updatePodcast = async (podcast: any): Promise<void> => {
   console.log(`[updatePodcast] Starting update for podcast: ${podcast.title} (ID: ${podcast.id})`);
   console.log(
