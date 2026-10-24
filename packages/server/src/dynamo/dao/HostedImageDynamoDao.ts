@@ -106,8 +106,10 @@ export class HostedImageDynamoDao extends BaseDynamoDao<HostedImage, UnhydratedH
 
   /**
    * Returns the total image count and stored bytes for a user, for quota enforcement.
+   * `excludeId` leaves one image out of the totals (used to re-check the quota right after an
+   * upload, counting that upload explicitly rather than relying on the index having caught up).
    */
-  public async getUsageForOwner(ownerId: string): Promise<{ count: number; bytes: number }> {
+  public async getUsageForOwner(ownerId: string, excludeId?: string): Promise<{ count: number; bytes: number }> {
     let count = 0;
     let bytes = 0;
     let lastKey: Record<string, any> | undefined;
@@ -115,6 +117,7 @@ export class HostedImageDynamoDao extends BaseDynamoDao<HostedImage, UnhydratedH
     do {
       const result = await this.queryByOwner(ownerId, lastKey);
       for (const image of result.items) {
+        if (excludeId !== undefined && image.id === excludeId) continue;
         count += 1;
         bytes += image.bytes || 0;
       }
