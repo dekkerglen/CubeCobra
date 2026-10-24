@@ -1,7 +1,7 @@
 import CubeFn from 'serverutils/cubefn';
 
 import { cubeJSONHandler } from '../../../src/router/routes/cube/api/cubeJSON';
-import { createCube, createUser } from '../../test-utils/data';
+import { createCard, createCardDetails, createCube, createCustomCard, createUser } from '../../test-utils/data';
 import { call } from '../../test-utils/transport';
 
 jest.mock('../../../src/dynamo/daos', () => ({
@@ -68,5 +68,46 @@ describe('GET /cube/api/cubeJSON/:id', () => {
     const body = JSON.parse(res.body);
     expect(body.primerTabs).toEqual(primerTabs);
     expect(body).not.toHaveProperty('description');
+  });
+});
+
+describe('GET /cube/api/cubeJSON/:id returns every card', () => {
+  // A custom card with no type line lands outside every Types-Multicolor bucket. The API is a data
+  // export, so it must still return it regardless of the cube's "show unsorted" display setting.
+  const typelessCustom = createCustomCard('My Custom', { details: undefined });
+  const regular = createCard({
+    details: createCardDetails({ name: 'Grizzly Bears', type: 'Creature — Bear', color_identity: ['G'] }),
+  });
+
+  const exportedNames = async (showUnsorted: boolean, cards = [typelessCustom, regular], cubeOverrides = {}) => {
+    const cube = createCube({ id: 'cube-1', showUnsorted, ...cubeOverrides });
+    (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getCards as jest.Mock).mockResolvedValue({ mainboard: cards });
+
+    const res = await call(cubeJSONHandler).as(createUser()).withParams({ id: cube.id }).send();
+
+    expect(res.status).toBe(200);
+    return JSON.parse(res.body).cards.mainboard.map((c: any) => c.custom_name ?? c.details?.name);
+  };
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it.each([true, false])('includes unsorted cards at the end when showUnsorted is %s', async (showUnsorted) => {
+    await expect(exportedNames(showUnsorted)).resolves.toEqual(['Grizzly Bears', 'My Custom']);
+  });
+
+  it('lists a card once even when the default sort puts it in several groups', async () => {
+    const tagged = createCard({
+      tags: ['a', 'b'],
+      details: createCardDetails({ name: 'Tagged', type: 'Instant', color_identity: ['R'] }),
+    });
+
+    const names = await exportedNames(false, [tagged], {
+      defaultSorts: ['Tags', 'Types-Multicolor', 'Mana Value', 'Alphabetical'],
+    });
+    expect(names).toEqual(['Tagged']);
   });
 });

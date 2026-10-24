@@ -32,6 +32,7 @@ import UserContext from '../../contexts/UserContext';
 import useAlerts from '../../hooks/UseAlerts';
 import useLocalStorage from '../../hooks/useLocalStorage';
 import { cardKingdomBulkLink, getBulkManaPoolLink, tcgMassEntryUrl, tcgplayerAffiliate } from '../../utils/Affiliate';
+import { buildExportParams } from '../../utils/buildExportParams';
 import Checkbox from '../base/Checkbox';
 import Container from '../base/Container';
 import Dropdown from '../base/Dropdown';
@@ -70,7 +71,8 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const isCubeOwner = !!user && cube.owner.id === user.id;
 
   // Get current filter and sort values from contexts
-  const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
+  // The cube prop is the initial page data; the context copy reflects toggles made on the page.
+  const { cube: liveCube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
   const { filterInput } = useContext(FilterContext);
 
   // State for collapsed hero, stored per page
@@ -261,39 +263,34 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
     return view?.boards.map((b) => b.toLowerCase()) || ['mainboard'];
   }, [cube, activeView]);
 
-  // Build URL segment for export links with filter, sort, and board parameters
-  const urlSegment = useMemo(() => {
-    const params = new URLSearchParams();
-
-    if (isFilterUsed && filterInput) {
-      params.set('filter', filterInput);
-    }
-
-    if (isSortUsed) {
-      if (sortPrimary) params.set('primary', sortPrimary);
-      if (sortSecondary) params.set('secondary', sortSecondary);
-      if (sortTertiary) params.set('tertiary', sortTertiary);
-      if (sortQuaternary) params.set('quaternary', sortQuaternary);
-    }
-
-    if (exportAllBoards) {
-      params.set('allBoards', '1');
-    } else {
-      params.set('boards', currentViewBoards.join(','));
-    }
-
-    return params.toString();
-  }, [
-    isFilterUsed,
-    filterInput,
-    isSortUsed,
-    sortPrimary,
-    sortSecondary,
-    sortTertiary,
-    sortQuaternary,
-    exportAllBoards,
-    currentViewBoards,
-  ]);
+  // Build URL segment for export links with filter, sort, board and unsorted-visibility parameters
+  const urlSegment = useMemo(
+    () =>
+      buildExportParams({
+        isFilterUsed,
+        filterInput,
+        isSortUsed,
+        sortPrimary,
+        sortSecondary,
+        sortTertiary,
+        sortQuaternary,
+        exportAllBoards,
+        currentViewBoards,
+        showUnsorted: liveCube.showUnsorted || false,
+      }),
+    [
+      isFilterUsed,
+      filterInput,
+      isSortUsed,
+      sortPrimary,
+      sortSecondary,
+      sortTertiary,
+      sortQuaternary,
+      exportAllBoards,
+      currentViewBoards,
+      liveCube.showUnsorted,
+    ],
+  );
 
   const exportMenuItems = (
     <Flexbox direction="col" gap="2" className="p-3">

@@ -48,6 +48,21 @@ export const createMockResponse = (locals: Record<string, any>): MockResponse =>
       this.writeEnabled = false;
       return this as MockResponse;
     },
+    setHeader(): MockResponse {
+      return this as MockResponse;
+    },
+    // File download handlers stream their payload rather than calling send/json, so accumulate it.
+    write(chunk: any): boolean {
+      this.responseBody = `${this.responseBody ?? ''}${chunk}`;
+      return true;
+    },
+    end(chunk?: any): MockResponse {
+      if (chunk !== undefined) {
+        this.responseBody = `${this.responseBody ?? ''}${chunk}`;
+      }
+      this.writeEnabled = false;
+      return this as MockResponse;
+    },
     contentType(): MockResponse {
       return this as MockResponse;
     },

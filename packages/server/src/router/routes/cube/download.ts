@@ -1,8 +1,8 @@
 import { cardCollectorNumber, cardName, cardSet } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
-import { CubeCards } from '@utils/datatypes/Cube';
+import Cube, { CubeCards } from '@utils/datatypes/Cube';
 import filterutil from '@utils/filtering/FilterCards';
-import { sortForDownload } from '@utils/sorting/Sort';
+import { getCubeSorts, sortForDownload } from '@utils/sorting/Sort';
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId } from 'serverutils/carddb';
 import { CSV_HEADER, exportToMtgo, writeCard } from 'serverutils/cube';
@@ -31,7 +31,7 @@ const getBoardsToExport = (req: Request, cards: CubeCards): string[] => {
   return ['mainboard'];
 };
 
-const sortCardsByQuery = (req: Request, cards: Card[]): Card[] => {
+const sortCardsByQuery = (req: Request, cards: Card[], cube: Cube, sortByDefault = true): Card[] => {
   let filteredCards = cards;
 
   if (req.query.filter) {
@@ -44,13 +44,21 @@ const sortCardsByQuery = (req: Request, cards: Card[]): Card[] => {
     }
   }
 
+  if (req.query.nosort === 'true' || (!sortByDefault && req.query.primary === undefined)) {
+    return filteredCards;
+  }
+
+  const showOther = req.query.showother !== undefined ? req.query.showother === 'true' : cube.showUnsorted || false;
+  const [primary, secondary, tertiary, quaternary] = getCubeSorts(cube);
+
   return sortForDownload(
     filteredCards,
-    req.query.primary as string | undefined,
-    req.query.secondary as string | undefined,
-    req.query.tertiary as string | undefined,
-    req.query.quaternary as string | undefined,
-    req.query.showother === 'true', // Coerce string parameter to boolean
+    (req.query.primary as string | undefined) ?? primary,
+    (req.query.secondary as string | undefined) ?? secondary,
+    (req.query.tertiary as string | undefined) ?? tertiary,
+    (req.query.quaternary as string | undefined) ?? quaternary,
+    showOther,
+    cube,
   );
 };
 
@@ -80,7 +88,7 @@ export const cubecobraHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards);
+    allCards = sortCardsByQuery(req, allCards, cube);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -133,7 +141,8 @@ export const csvHandler = async (req: Request, res: Response) => {
     for (const boardKey of boardsToExport) {
       const boardCards = cards[boardKey];
       if (!Array.isArray(boardCards)) continue;
-      for (const card of boardCards as Card[]) {
+      // Bare CSV URLs serve as backups, so keep every card in stored order unless a sort is requested.
+      for (const card of sortCardsByQuery(req, boardCards as Card[], cube, false)) {
         writeCard(res, card, boardKey);
       }
     }
@@ -171,7 +180,7 @@ export const forgeHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards);
+    allCards = sortCardsByQuery(req, allCards, cube);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -215,7 +224,7 @@ export const mtgoHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards);
+    allCards = sortCardsByQuery(req, allCards, cube);
 
     // MTGO format uses main/side split; put all selected boards in main
     return exportToMtgo(res, cube.name, allCards, []);
@@ -251,7 +260,7 @@ export const xmageHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards);
+    allCards = sortCardsByQuery(req, allCards, cube);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -294,7 +303,7 @@ export const versionedHandler = async (req: Request, res: Response) => {
         const details = cardFromId(card.cardID);
         card.details = details;
       }
-      const sorted = sortCardsByQuery(req, list as Card[]);
+      const sorted = sortCardsByQuery(req, list as Card[], cube);
 
       // Put all selected boards in main
       // Moxfield/Archidekt/Draftmancer all use different rules
@@ -356,7 +365,7 @@ export const plaintextHandler = async (req: Request, res: Response) => {
         const details = cardFromId(card.cardID);
         card.details = details;
       }
-      const sorted = sortCardsByQuery(req, list as Card[]);
+      const sorted = sortCardsByQuery(req, list as Card[], cube);
 
       res.write(`# ${boardname}\r\n`);
       for (const card of sorted) {
