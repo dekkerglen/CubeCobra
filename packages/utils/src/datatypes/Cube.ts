@@ -1,6 +1,7 @@
 import type { PrimerTab } from '../primerTabs';
+import { safeHttpUrl } from '../safeUrl';
 import { slugify } from '../slugify';
-import Card, { CardStatus } from './Card';
+import Card, { CardStatus, VoucherCard } from './Card';
 import { DraftFormat } from './Draft';
 import User from './User';
 
@@ -162,6 +163,42 @@ export function validateBoardDefinitions(boards: BoardDefinition[]): { valid: bo
   }
 
   return { valid: true };
+}
+
+// Longest custom image URL a cube editor can store on a card.
+export const MAX_CARD_IMAGE_URL_LENGTH = 2048;
+
+/**
+ * Returns the normalized URL when `value` is an absolute http(s) URL short enough to store as a
+ * custom card image, otherwise undefined. Custom images are fetched by the server when pack
+ * images are rendered, so nothing else may be persisted.
+ */
+export function safeCardImageUrl(value: unknown): string | undefined {
+  const url = safeHttpUrl(value);
+  return url && url.length <= MAX_CARD_IMAGE_URL_LENGTH ? url : undefined;
+}
+
+/**
+ * Drops custom image URLs that aren't safe http(s) URLs from a card and its voucher cards, in
+ * place. Empty values are kept so an edit can still clear a custom image.
+ */
+export function sanitizeCardImageUrls(card: Pick<Card, 'imgUrl' | 'imgBackUrl'> & { voucher_cards?: VoucherCard[] }) {
+  for (const field of ['imgUrl', 'imgBackUrl'] as const) {
+    if (!card[field]) continue;
+    const url = safeCardImageUrl(card[field]);
+    if (url) {
+      card[field] = url;
+    } else {
+      delete card[field];
+    }
+  }
+  if (Array.isArray(card.voucher_cards)) {
+    for (const voucherCard of card.voucher_cards) {
+      if (voucherCard && typeof voucherCard === 'object') {
+        sanitizeCardImageUrls(voucherCard);
+      }
+    }
+  }
 }
 
 // Maximum number of views allowed per cube

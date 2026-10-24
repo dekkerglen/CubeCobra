@@ -92,6 +92,21 @@ describe('addtocube', () => {
   const add = (body: Record<string, unknown>) =>
     call(addtocubeHandler).as(cube.owner).withParams({ id: cube.id }).withBody(body).send();
 
+  it('only stores http(s) custom image URLs', async () => {
+    const res = await add({
+      cards: [
+        { cardID: 'a', imgUrl: 'https://example.com/a.png', imgBackUrl: 'file:///etc/passwd' },
+        { cardID: 'b', imgUrl: `https://example.com/${'x'.repeat(3000)}` },
+      ],
+    });
+
+    expect(res.status).toBe(200);
+    const [a, b] = (cubeDao.updateCards as jest.Mock).mock.calls[0][1].mainboard;
+    expect(a.imgUrl).toBe('https://example.com/a.png');
+    expect(a.imgBackUrl).toBeUndefined();
+    expect(b.imgUrl).toBeUndefined();
+  });
+
   it.each([['__proto__'], ['constructor'], [['mainboard']]])('rejects the board %p', async (board) => {
     const res = await add({ cards: ['a'], board });
 

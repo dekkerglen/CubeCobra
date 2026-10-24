@@ -58,7 +58,6 @@
     "lodash": "^4.17.21",
     "module-alias": "^2.2.3",
     "nearley": "^2.20.1",
-    "node-cache": "^5.1.2",
     "node-schedule": "^2.1.1",
     "nodemailer": "^10.2.1",
     "papaparse": "^5.5.3",

@@ -523,6 +523,26 @@ describe('generatePack', () => {
 
       expect(result.pack).toHaveLength(8);
     });
+
+    it('trims an absurdly large custom format before generating a sample pack', async () => {
+      const hugeFormat = {
+        title: 'Huge',
+        packs: Array.from({ length: 500 }, () => ({ slots: Array(1000).fill('*'), steps: null })),
+      };
+      mockGetDraftFormat.mockReturnValue(hugeFormat as any);
+
+      await generatePack(mockCube, mockCards, 'test-seed');
+      await generateBalancedPack(mockCube, mockCards, 'test-seed', 2, 1);
+
+      expect(mockCreateDraft).toHaveBeenCalledTimes(3);
+      for (const [, format] of mockCreateDraft.mock.calls) {
+        expect(format.title).toBe('Huge');
+        expect(format.packs).toHaveLength(100);
+        expect(format.packs.every((pack) => pack.slots.length === 30)).toBe(true);
+      }
+      // The cube's own format is left untouched.
+      expect(hugeFormat.packs[0]!.slots).toHaveLength(1000);
+    });
   });
 });
 

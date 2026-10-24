@@ -23,6 +23,7 @@ import {
 import { isInFeaturedQueue } from 'serverutils/featuredQueue';
 import { generatePackImage } from 'serverutils/imageUtils';
 import generateMeta from 'serverutils/meta';
+import { expensiveGetLimiter } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification, getBaseUrl, isAdmin } from 'serverutils/util';
 
@@ -568,6 +569,10 @@ export const p1p1PackImageHandler = async (req: Request, res: Response) => {
   }
 };
 
+// Pack images are composited from up to a full pack of fetched card images each, and a fresh
+// seed defeats the cache, so both image routes are throttled per client.
+const packImageLimiter = expensiveGetLimiter(60_000, 30);
+
 export const routes = [
   {
     path: '/report/:id',
@@ -652,7 +657,7 @@ export const routes = [
   {
     path: '/samplepackimage/:id/:seed',
     method: 'get',
-    handler: [samplePackImageHandler],
+    handler: [packImageLimiter, samplePackImageHandler],
   },
   {
     path: '/p1p1/:packId',
@@ -662,6 +667,6 @@ export const routes = [
   {
     path: '/p1p1packimage/:packId',
     method: 'get',
-    handler: [p1p1PackImageHandler],
+    handler: [packImageLimiter, p1p1PackImageHandler],
   },
 ];

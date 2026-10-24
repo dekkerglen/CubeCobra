@@ -2,9 +2,10 @@ import { cardNameLower, cardOracleId, convertFromLegacyCardColorCategory, isCust
 import type { CardDetails } from '@utils/datatypes/Card';
 import Card, { BoardChanges, Changes } from '@utils/datatypes/Card';
 import { CUBE_VISIBILITY, type CubeCards, type TagColor } from '@utils/datatypes/Cube';
+import type { DraftFormat } from '@utils/datatypes/Draft';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
+import { safeHttpUrl } from '@utils/safeUrl';
 import _ from 'lodash';
-import NodeCache from 'node-cache';
 import Papa from 'papaparse';
 import sanitizeHtml from 'sanitize-html';
 
@@ -264,6 +265,15 @@ interface CSVResult {
   missing: string[];
 }
 
+const MAX_IMAGE_URL_LENGTH = 2048;
+
+// Custom image URLs end up in <img src> and are fetched server-side for pack images, so only
+// absolute http(s) URLs of a sane length are kept.
+const importedImageUrl = (value: unknown): string | null => {
+  const url = safeHttpUrl(value);
+  return url && url.length <= MAX_IMAGE_URL_LENGTH ? url : null;
+};
+
 function CSVtoCards(csvString: string): CSVResult {
   const { data } = Papa.parse(csvString.trim(), { header: true });
   const camelizedRows = camelizeDataRows(data);
@@ -309,8 +319,8 @@ function CSVtoCards(csvString: string): CSVResult {
         collector_number: collectorNumber && collectorNumber.toUpperCase(),
         status: status || 'Not Owned',
         finish: finish || 'Non-foil',
-        imgUrl: (imageUrl || null) && imageUrl !== 'undefined' ? imageUrl : null,
-        imgBackUrl: (imageBackUrl || null) && imageBackUrl !== 'undefined' ? imageBackUrl : null,
+        imgUrl: importedImageUrl(imageUrl),
+        imgBackUrl: importedImageUrl(imageBackUrl),
         tags: tags && tags.length > 0 ? tags.split(';').map((t: string) => t.trim()) : [],
         notes: notes || '',
         rarity: rarity || null,
@@ -510,21 +520,74 @@ async function compareCubes(cardsA: CubeCards, cardsB: CubeCards): Promise<Compa
 
 // A cache for promises that are expensive to compute and will always produce
 // the same value, such as pack images. If a promise produces an error, it's
-// removed from the cache. Each promise lives five minutes by default.
-// maxKeys limit prevents unbounded memory growth
-const promiseCache = new NodeCache({ stdTTL: 60 * 5, useClones: false, maxKeys: 10000 });
+// removed from the cache. Each promise lives five minutes. The cache is a small
+// LRU bounded both by entry count and by the bytes of resolved Buffers, so a
+// flood of distinct keys (e.g. fresh pack seeds) evicts old entries instead of
+// growing memory or failing the request.
+const PROMISE_CACHE_TTL_MS = 5 * 60 * 1000;
+const PROMISE_CACHE_MAX_ENTRIES = 2000;
+const PROMISE_CACHE_MAX_BYTES = 128 * 1024 * 1024;
+
+interface PromiseCacheEntry {
+  promise: Promise<unknown>;
+  expires: number;
+  bytes: number;
+}
+
+// Map iteration order is insertion order, so the first key is the least recently used.
+const promiseCache = new Map<string, PromiseCacheEntry>();
+let promiseCacheBytes = 0;
+
+const evictPromise = (key: string): void => {
+  const entry = promiseCache.get(key);
+  if (entry) {
+    promiseCacheBytes -= entry.bytes;
+    promiseCache.delete(key);
+  }
+};
+
+const trimPromiseCache = (): void => {
+  for (const key of promiseCache.keys()) {
+    if (promiseCache.size <= PROMISE_CACHE_MAX_ENTRIES && promiseCacheBytes <= PROMISE_CACHE_MAX_BYTES) {
+      return;
+    }
+    evictPromise(key);
+  }
+};
 
 // / Caches the result of the given callback in `promiseCache` with the given
 // / key.
 function cachePromise<T>(key: string, callback: () => Promise<T>): Promise<T> {
-  const existingPromise = promiseCache.get(key);
-  if (existingPromise) return existingPromise as Promise<T>;
+  const now = Date.now();
+  const existing = promiseCache.get(key);
+  if (existing && existing.expires > now) {
+    // Mark as most recently used.
+    promiseCache.delete(key);
+    promiseCache.set(key, existing);
+    return existing.promise as Promise<T>;
+  }
+  evictPromise(key);
 
-  const newPromise = callback().catch((error: any) => {
-    promiseCache.del(key);
-    throw error;
-  });
-  promiseCache.set(key, newPromise);
+  const entry: PromiseCacheEntry = { promise: Promise.resolve(), expires: now + PROMISE_CACHE_TTL_MS, bytes: 0 };
+  const newPromise = callback().then(
+    (value) => {
+      if (promiseCache.get(key) === entry && Buffer.isBuffer(value)) {
+        entry.bytes = value.length;
+        promiseCacheBytes += value.length;
+        trimPromiseCache();
+      }
+      return value;
+    },
+    (error: any) => {
+      if (promiseCache.get(key) === entry) {
+        evictPromise(key);
+      }
+      throw error;
+    },
+  );
+  entry.promise = newPromise;
+  promiseCache.set(key, entry);
+  trimPromiseCache();
   return newPromise;
 }
 
@@ -600,6 +663,32 @@ function isCubeListed(cube: any, user: any): boolean {
  * @param {number} candidateCount - Number of pack candidates to generate (default: 10)
  * @returns {Promise<Object>} The selected pack result with bot data
  */
+// Sample packs only ever show the first pack, and the pack image renders every card in it. A
+// custom format can declare arbitrarily many or arbitrarily large packs, so formats beyond these
+// sizes are trimmed before generating a sample. Formats within them are used unchanged, so a
+// given seed keeps producing the same pack.
+const MAX_SAMPLE_FORMAT_PACKS = 100;
+const MAX_SAMPLE_PACK_SLOTS = 30;
+
+const samplePackFormat = (cube: any): DraftFormat => {
+  const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
+  const format = getDraftFormat({ id: formatId, packs: 1, players: 1 }, cube);
+  const packs = Array.isArray(format.packs) ? format.packs : [];
+  const oversized =
+    packs.length > MAX_SAMPLE_FORMAT_PACKS ||
+    packs.some((pack) => Array.isArray(pack?.slots) && pack.slots.length > MAX_SAMPLE_PACK_SLOTS);
+  if (!oversized) {
+    return format;
+  }
+  return {
+    ...format,
+    packs: packs.slice(0, MAX_SAMPLE_FORMAT_PACKS).map((pack) => ({
+      ...pack,
+      slots: Array.isArray(pack?.slots) ? pack.slots.slice(0, MAX_SAMPLE_PACK_SLOTS) : [],
+    })),
+  };
+};
+
 async function generateBalancedPack(
   cube: any,
   cards: any,
@@ -615,8 +704,7 @@ async function generateBalancedPack(
   const candidates: { packResult: any; oracleIds: string[] }[] = [];
   for (let i = 0; i < candidateCount; i++) {
     const seed = `${seedPrefix}-${baseSeed}-${i}`;
-    const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
-    const format = getDraftFormat({ id: formatId, packs: 1, players: 1 }, cube);
+    const format = samplePackFormat(cube);
 
     // Build board cards map for multi-board support (custom draft formats may reference non-mainboard boards)
     const boardCards: Record<string, any[]> = {};
@@ -707,8 +795,7 @@ async function generatePack(cube: any, cards: any, seed?: string): Promise<Gener
   if (!seed) {
     seed = Date.now().toString();
   }
-  const formatId = cube.defaultFormat === undefined ? -1 : cube.defaultFormat;
-  const format = getDraftFormat({ id: formatId, packs: 1, players: 1 }, cube);
+  const format = samplePackFormat(cube);
 
   // Build board cards map for multi-board support (custom draft formats may reference non-mainboard boards)
   const boardCards: Record<string, any[]> = {};

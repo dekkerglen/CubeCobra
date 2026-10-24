@@ -97,4 +97,26 @@ describe('POST /cube/api/commit', () => {
     expect(res.status).toBe(200);
     expect((cubeDao.commitCards as jest.Mock).mock.calls[0][1].mainboard.map((c: any) => c.cardID)).toEqual(['b']);
   });
+
+  it('drops custom image URLs that are not http(s)', async () => {
+    const res = await commit({
+      mainboard: {
+        adds: [
+          { cardID: 'd', imgUrl: 'http://example.com/d.png', imgBackUrl: 'file:///etc/passwd' },
+          { cardID: 'e', imgUrl: `https://example.com/${'a'.repeat(3000)}.png` },
+          { cardID: 'f', voucher_cards: [{ cardID: 'g', imgUrl: 'javascript:alert(1)' }] },
+        ],
+        edits: [{ index: 0, newCard: { cardID: 'a', imgUrl: 'gopher://internal', imgBackUrl: '' } }],
+      },
+    });
+
+    expect(res.status).toBe(200);
+    const [a, , d, e, f] = (cubeDao.commitCards as jest.Mock).mock.calls[0][1].mainboard;
+    expect(d.imgUrl).toBe('http://example.com/d.png');
+    expect(d).not.toHaveProperty('imgBackUrl');
+    expect(e).not.toHaveProperty('imgUrl');
+    expect(f.voucher_cards[0]).not.toHaveProperty('imgUrl');
+    expect(a).not.toHaveProperty('imgUrl');
+    expect(a.imgBackUrl).toBe('');
+  });
 });

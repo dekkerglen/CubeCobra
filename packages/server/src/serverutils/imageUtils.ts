@@ -1,8 +1,22 @@
 import Card from '@utils/datatypes/Card';
 import sharp from 'sharp';
 
+import { safeFetch } from './safeFetch';
+
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
+
+// Tile sources are user-editable (a card's imgUrl), so every fetch is bounded: SSRF-safe,
+// size- and time-capped, and only ordinary raster formats reach sharp. The number of tiles per
+// image is capped too, since a custom format can request an arbitrarily large pack.
+export const MAX_PACK_IMAGE_TILES = 30;
+const MAX_TILE_BYTES = 5 * 1024 * 1024;
+const TILE_FETCH_TIMEOUT_MS = 5000;
+const TILE_MAX_REDIRECTS = 3;
+const MAX_TILE_PIXELS = 25_000_000;
+const ALLOWED_TILE_FORMATS = new Set(['jpeg', 'png', 'webp', 'gif']);
+// Tiles fetched and decoded at once, so one pack can't hold dozens of decoded images in memory.
+const TILE_CONCURRENCY = 6;
 
 // Optimal dimensions for common pack sizes [width, height]
 const PACK_DIMENSIONS: Record<number, [number, number]> = {
@@ -33,7 +47,8 @@ const PACK_DIMENSIONS: Record<number, [number, number]> = {
   25: [5, 5],
 };
 
-export const generatePackImage = async (pack: Card[]): Promise<Buffer> => {
+export const generatePackImage = async (fullPack: Card[]): Promise<Buffer> => {
+  const pack = fullPack.slice(0, MAX_PACK_IMAGE_TILES);
   let width: number;
   let height: number;
 
@@ -79,39 +94,64 @@ const blankTile = (width: number, height: number): Promise<Buffer> =>
     .png()
     .toBuffer();
 
+const fetchTile = async (src: string, width: number, height: number): Promise<Buffer> => {
+  // Imgur returns 429 for the default node-fetch user agent but is happy
+  // with curl; every other host gets our descriptive application UA.
+  const userAgent = src.includes('imgur') ? 'curl/8.5.0' : DEFAULT_USER_AGENT;
+
+  const res = await safeFetch(src, {
+    maxBytes: MAX_TILE_BYTES,
+    timeoutMs: TILE_FETCH_TIMEOUT_MS,
+    maxRedirects: TILE_MAX_REDIRECTS,
+    headers: { 'User-Agent': userAgent },
+  });
+  if (res.status < 200 || res.status >= 300) {
+    throw new Error(`HTTP ${res.status}`);
+  }
+
+  const image = sharp(res.body, { limitInputPixels: MAX_TILE_PIXELS });
+  const { format } = await image.metadata();
+  if (!format || !ALLOWED_TILE_FORMATS.has(format)) {
+    throw new Error(`unsupported image format ${format ?? 'unknown'}`);
+  }
+  return image.resize({ width, height }).toBuffer();
+};
+
+/** Maps over `items` with at most `limit` calls in flight, preserving order. */
+const mapWithConcurrency = async <T, R>(items: T[], limit: number, fn: (item: T) => Promise<R>): Promise<R[]> => {
+  const results: R[] = new Array(items.length);
+  let next = 0;
+  const worker = async () => {
+    while (next < items.length) {
+      const index = next++;
+      results[index] = await fn(items[index]!);
+    }
+  };
+  await Promise.all(Array.from({ length: Math.min(limit, items.length) }, worker));
+  return results;
+};
+
 export const generateSamplepackImage = async (
   sources: Array<{ src: string; x: number; y: number; width: number; height: number }> = [],
   width: number,
   height: number,
 ): Promise<Buffer> => {
-  const images = await Promise.all(
-    sources.map(async (source) => {
-      // Imgur returns 429 for the default node-fetch user agent but is happy
-      // with curl; every other host gets our descriptive application UA.
-      const userAgent = source.src.includes('imgur') ? 'curl/8.5.0' : DEFAULT_USER_AGENT;
+  const images = await mapWithConcurrency(sources.slice(0, MAX_PACK_IMAGE_TILES), TILE_CONCURRENCY, async (source) => {
+    let input: Buffer;
+    try {
+      input = await fetchTile(source.src, source.width, source.height);
+    } catch (err) {
+      // Fall back to a blank tile so one bad image can't fail the whole pack.
+      console.log(`Failed to fetch image: ${source.src}. ${err instanceof Error ? err.message : err}`);
+      input = await blankTile(source.width, source.height);
+    }
 
-      let input: Buffer;
-      try {
-        const res = await fetch(source.src, { headers: { 'User-Agent': userAgent } });
-        if (!res.ok) {
-          throw new Error(`${res.status} ${res.statusText}`);
-        }
-        input = await sharp(Buffer.from(await res.arrayBuffer()))
-          .resize({ width: source.width, height: source.height })
-          .toBuffer();
-      } catch (err) {
-        // Fall back to a blank tile so one bad image can't fail the whole pack.
-        console.log(`Failed to fetch image: ${source.src}. ${err instanceof Error ? err.message : err}`);
-        input = await blankTile(source.width, source.height);
-      }
-
-      return {
-        input,
-        top: source.y,
-        left: source.x,
-      };
-    }),
-  );
+    return {
+      input,
+      top: source.y,
+      left: source.x,
+    };
+  });
 
   const options = {
     create: {

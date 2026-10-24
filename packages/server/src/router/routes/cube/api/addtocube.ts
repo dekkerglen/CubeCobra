@@ -1,5 +1,11 @@
 import Card, { DefaultPrintingPreference, isPrintingPreference } from '@utils/datatypes/Card';
-import { boardNameToKey, getBoardDefinitions, isReservedBoardKey } from '@utils/datatypes/Cube';
+import {
+  boardNameToKey,
+  getBoardDefinitions,
+  isReservedBoardKey,
+  safeCardImageUrl,
+  sanitizeCardImageUrls,
+} from '@utils/datatypes/Cube';
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { blogDao, changelogDao, cubeDao, feedDao, packageDao, userDao } from 'dynamo/daos';
@@ -124,17 +130,22 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
         if (cardInput.custom_name) {
           customProperties.custom_name = cardInput.custom_name;
         }
-        if (cardInput.imgUrl) {
-          customProperties.imgUrl = cardInput.imgUrl;
+        // Custom images are fetched server-side when pack images are rendered, so only plain
+        // http(s) URLs are accepted; anything else is dropped.
+        const imgUrl = safeCardImageUrl(cardInput.imgUrl);
+        if (imgUrl) {
+          customProperties.imgUrl = imgUrl;
         }
-        if (cardInput.imgBackUrl) {
-          customProperties.imgBackUrl = cardInput.imgBackUrl;
+        const imgBackUrl = safeCardImageUrl(cardInput.imgBackUrl);
+        if (imgBackUrl) {
+          customProperties.imgBackUrl = imgBackUrl;
         }
         if (cardInput.colorCategory) {
           customProperties.colorCategory = cardInput.colorCategory;
         }
         if (cardInput.voucher_cards && Array.isArray(cardInput.voucher_cards)) {
           customProperties.voucher_cards = cardInput.voucher_cards;
+          sanitizeCardImageUrls(customProperties);
         }
       }
 

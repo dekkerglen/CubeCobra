@@ -1,5 +1,11 @@
 import { BoardChanges } from '@utils/datatypes/Card';
-import { boardNameToKey, CUBE_VISIBILITY, DEFAULT_BOARDS, isReservedBoardKey } from '@utils/datatypes/Cube';
+import {
+  boardNameToKey,
+  CUBE_VISIBILITY,
+  DEFAULT_BOARDS,
+  isReservedBoardKey,
+  sanitizeCardImageUrls,
+} from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { blogDao, cubeDao, feedDao, userDao } from 'dynamo/daos';
 import { isCubeEditable } from 'serverutils/cubefn';
@@ -130,6 +136,17 @@ export const commitHandler = async (req: Request, res: Response) => {
           success: 'false',
           message: error,
         });
+      }
+
+      // Custom images are fetched server-side when pack images are rendered, so only plain
+      // http(s) URLs may be stored.
+      const boardChanges = changes[board] as BoardChanges;
+      for (const card of [
+        ...(boardChanges.adds ?? []),
+        ...(boardChanges.swaps ?? []).map((swap) => swap.card),
+        ...(boardChanges.edits ?? []).map((edit) => edit.newCard),
+      ]) {
+        sanitizeCardImageUrls(card);
       }
     }
 

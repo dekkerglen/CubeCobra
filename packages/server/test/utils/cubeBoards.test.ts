@@ -1,4 +1,10 @@
-import { isReservedBoardKey, validateBoardDefinitions } from '@utils/datatypes/Cube';
+import {
+  isReservedBoardKey,
+  MAX_CARD_IMAGE_URL_LENGTH,
+  safeCardImageUrl,
+  sanitizeCardImageUrls,
+  validateBoardDefinitions,
+} from '@utils/datatypes/Cube';
 
 describe('isReservedBoardKey', () => {
   it.each(['__proto__', 'constructor', 'prototype', 'id', 'version', 'hasOwnProperty', 'toString'])(
@@ -31,4 +37,29 @@ describe('validateBoardDefinitions', () => {
       expect(validateBoardDefinitions(boards as any).valid).toBe(false);
     },
   );
+});
+
+describe('card image URLs', () => {
+  it('accepts http(s) URLs up to the length limit', () => {
+    expect(safeCardImageUrl('https://example.com/a.png')).toBe('https://example.com/a.png');
+    expect(safeCardImageUrl(`https://example.com/${'a'.repeat(MAX_CARD_IMAGE_URL_LENGTH)}`)).toBeUndefined();
+  });
+
+  it.each(['javascript:alert(1)', 'file:///etc/passwd', 'data:image/png;base64,AAAA', '/relative.png', 42, null])(
+    'rejects %p',
+    (value) => expect(safeCardImageUrl(value)).toBeUndefined(),
+  );
+
+  it('drops unsafe values in place but keeps empty ones', () => {
+    const card: any = {
+      cardID: 'x',
+      imgUrl: 'ftp://example.com/a.png',
+      imgBackUrl: '',
+      voucher_cards: [{ cardID: 'y', imgUrl: 'https://example.com/b.png', imgBackUrl: 'javascript:1' }],
+    };
+    sanitizeCardImageUrls(card);
+    expect(card).not.toHaveProperty('imgUrl');
+    expect(card.imgBackUrl).toBe('');
+    expect(card.voucher_cards[0]).toEqual({ cardID: 'y', imgUrl: 'https://example.com/b.png' });
+  });
 });

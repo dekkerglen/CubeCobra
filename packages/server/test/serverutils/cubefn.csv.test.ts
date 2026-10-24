@@ -255,3 +255,22 @@ describe('writeCard — round-trip', () => {
     expect(names).toEqual(tricky);
   });
 });
+
+describe('CSV import — limits', () => {
+  it('keeps only absolute http(s) image URLs of a sane length', () => {
+    const longUrl = `https://example.com/${'a'.repeat(2100)}.png`;
+    const csv = [
+      CSV_HEADER,
+      'A,1,Instant,,,,,Colorless,Not Owned,Non-foil,mainboard,false,https://i.imgur.com/a.png,http://example.com/b.png,,,,true,false',
+      'B,1,Instant,,,,,Colorless,Not Owned,Non-foil,mainboard,false,javascript:alert(1),/relative.png,,,,true,false',
+      `C,1,Instant,,,,,Colorless,Not Owned,Non-foil,mainboard,false,${longUrl},undefined,,,,true,false`,
+    ].join('\r\n');
+
+    const main = CSVtoCards(csv).cardsByBoard.mainboard!;
+    expect(main.map((c: any) => [c.imgUrl, c.imgBackUrl])).toEqual([
+      ['https://i.imgur.com/a.png', 'http://example.com/b.png'],
+      [null, null],
+      [null, null],
+    ]);
+  });
+});
