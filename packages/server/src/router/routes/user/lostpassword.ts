@@ -8,6 +8,11 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
 
+// The same answer whether or not the address has an account, so this form can't be used to
+// find out who is registered.
+export const LOST_PASSWORD_SENT =
+  "If an account exists for that email address, we've sent it a link to reset your password.";
+
 // Requests about one address from one client: caps how often a mailbox can be sent our emails.
 export const emailRequestKey = (req: ExpressRequest): string =>
   `${ipKey(req)}:${String(req.body?.email ?? '').toLowerCase()}`;
@@ -28,31 +33,21 @@ export const postHandler = async (req: Request, res: Response) => {
     const recoveryEmail = req.body.email.toLowerCase();
 
     const userByEmail = await userDao.getByEmail(recoveryEmail);
+    const user = userByEmail ? await userDao.getByIdWithSensitiveData(userByEmail.id) : undefined;
 
-    if (!userByEmail) {
-      req.flash('danger', 'No user with that email found.');
-      return render(req, res, 'LostPasswordPage');
+    if (user) {
+      const id = await passwordResetDao.putAndReturnId({
+        owner: user.id,
+        date: new Date().valueOf(),
+      });
+
+      // Not awaited: the time the send takes would otherwise reveal that the account exists.
+      sendEmail(user.email, 'Password Reset', 'password_reset', { id }).catch((err: Error) => {
+        req.logger.error(`Failed to send password reset email: ${err.message}`, err.stack);
+      });
     }
 
-    const user = await userDao.getByIdWithSensitiveData(userByEmail.id);
-
-    if (!user) {
-      req.flash('danger', 'User not found.');
-      return render(req, res, 'LostPasswordPage');
-    }
-
-    const passwordReset = {
-      owner: user.id,
-      date: new Date().valueOf(),
-    };
-
-    const id = await passwordResetDao.putAndReturnId(passwordReset);
-
-    await sendEmail(user.email, 'Password Reset', 'password_reset', {
-      id,
-    });
-
-    req.flash('success', `Password recovery email sent to ${recoveryEmail}`);
+    req.flash('success', LOST_PASSWORD_SENT);
     return redirect(req, res, '/user/lostpassword');
   } catch (err) {
     return handleRouteError(req, res, err, `/user/lostpassword`);
