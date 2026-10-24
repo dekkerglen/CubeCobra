@@ -143,4 +143,15 @@ describe('Deck downloads', () => {
 
     expect(stream.headers['content-disposition']).toBe('attachment; filename="deck-1_0.csv"');
   });
+
+  it('quotes and neutralizes every TopDecked CSV cell', async () => {
+    (cubefn.isCubeViewable as jest.Mock).mockReturnValue(true);
+    const stream = createStreamingResponse();
+
+    await downloadTopdeckedHandler(createRequest({ id: 'deck-1', seat: '0' }), stream.res);
+
+    const lines = stream.body().trim().split('\r\n');
+    expect(lines[0]).toBe('Quantity,"Name",Scryfall,Zone');
+    expect(lines[1]).toBe('"1","\'=cmd|""/c calc""!A1","card-1","main"');
+  });
 });

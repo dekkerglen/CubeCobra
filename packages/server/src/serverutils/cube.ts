@@ -8,6 +8,7 @@ import { blogDao, changelogDao, cubeDao, feedDao, userDao } from 'dynamo/daos';
 import { Request, Response } from '../types/express';
 import { cardFromId, getIdsFromName, getMostReasonable } from './carddb';
 import cloudwatch from './cloudwatch';
+import { csvRow } from './csv';
 import { CSVtoCards } from './cubefn';
 import { IMPORT_TOO_LARGE_MESSAGE, MAX_IMPORT_CARDS, parseNonCSVLine } from './importParsing';
 import { handleRouteError, redirect, render } from './render';
@@ -249,46 +250,37 @@ function writeCard(res: Response, card: Card, boardName: string) {
   }
   //Explicitly not using cardutil functions here so that we get override images or nothing.
   //Using cardutil would default to the Scryfall image URLs
-  let { imgUrl, imgBackUrl } = card;
-  if (imgUrl) {
-    imgUrl = `"${imgUrl}"`;
-  } else {
-    imgUrl = '';
-  }
-  if (imgBackUrl) {
-    imgBackUrl = `"${imgBackUrl}"`;
-  } else {
-    imgBackUrl = '';
-  }
+  const { imgUrl, imgBackUrl } = card;
 
   const colorColors = cardutil.cardColors(card);
   const colorCategory = cardutil.convertFromLegacyCardColorCategory(card.colorCategory || '');
 
-  res.write(`"${cardutil.cardName(card).replace(/"/g, '""')}",`);
-  res.write(`${cardutil.cardCmc(card)},`);
-  res.write(`"${cardutil.cardType(card).replace('—', '-')}",`);
-  res.write(`${colorColors.join('')},`);
-  res.write(`"${cardutil.cardSet(card)}",`);
-  res.write(`"${cardutil.cardCollectorNumber(card)}",`);
-  res.write(`${cardutil.cardRarity(card)},`);
-  res.write(`${colorCategory},`);
-  res.write(`${cardutil.cardStatus(card) || ''},`);
-  res.write(`${cardutil.cardFinish(card)},`);
-  res.write(`${boardName},`);
-  res.write(`${boardName === 'maybeboard'},`);
-  res.write(`${imgUrl},`);
-  res.write(`${imgBackUrl},"`);
-  cardutil.cardTags(card).forEach((tag, tagIndex) => {
-    if (tagIndex !== 0) {
-      res.write(';');
-    }
-    res.write(tag);
-  });
-  res.write(`","${cardutil.cardNotes(card)}",`);
-  res.write(`${cardutil.cardMtgoId(card)},`);
-  res.write(`${cardutil.isCustomCard(card) ? 'true' : 'false'},`);
-  res.write(`${cardutil.isVoucher(card) ? 'true' : 'false'},`);
-  res.write(`"${cardutil.cardArtist(card).replace(/"/g, '""')}"`);
+  // Every cell goes through csvCell: most of these are user-editable (custom names, tags, notes,
+  // image URLs), and spreadsheets would otherwise run a cell starting with = + - @ as a formula.
+  res.write(
+    csvRow([
+      cardutil.cardName(card),
+      cardutil.cardCmc(card),
+      cardutil.cardType(card).replace('—', '-'),
+      colorColors.join(''),
+      cardutil.cardSet(card),
+      cardutil.cardCollectorNumber(card),
+      cardutil.cardRarity(card),
+      colorCategory,
+      cardutil.cardStatus(card) || '',
+      cardutil.cardFinish(card),
+      boardName,
+      boardName === 'maybeboard',
+      imgUrl || '',
+      imgBackUrl || '',
+      cardutil.cardTags(card).join(';'),
+      cardutil.cardNotes(card),
+      cardutil.cardMtgoId(card),
+      cardutil.isCustomCard(card) ? 'true' : 'false',
+      cardutil.isVoucher(card) ? 'true' : 'false',
+      cardutil.cardArtist(card),
+    ]),
+  );
   res.write('\r\n');
 }
 

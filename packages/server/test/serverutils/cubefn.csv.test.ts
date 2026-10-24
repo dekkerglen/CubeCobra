@@ -257,6 +257,72 @@ describe('writeCard — round-trip', () => {
   });
 });
 
+describe('CSV export — formula neutralization and quoting', () => {
+  const customCard = (overrides: Record<string, unknown>) =>
+    ({
+      cardID: 'custom-card',
+      name: 'custom-card',
+      custom_name: 'Plain Name',
+      cmc: 1,
+      type_line: 'Instant',
+      colors: [],
+      colorCategory: 'Colorless',
+      status: 'Not Owned',
+      finish: 'Non-foil',
+      tags: [],
+      notes: '',
+      ...overrides,
+    }) as any;
+
+  it('neutralizes cells that a spreadsheet would run as formulas', () => {
+    const { res, body } = makeResStub();
+    writeCard(
+      res,
+      customCard({
+        custom_name: '=HYPERLINK("https://evil.example","click")',
+        tags: ['@SUM(A1)', 'fine'],
+        notes: '+cmd|/c calc!A1',
+        imgUrl: '-2+3',
+      }),
+      'mainboard',
+    );
+
+    const row = body();
+    expect(row).toContain('"\'=HYPERLINK(""https://evil.example"",""click"")"');
+    expect(row).toContain('"\'@SUM(A1);fine"');
+    expect(row).toContain('"\'+cmd|/c calc!A1"');
+    expect(row).toContain('"\'-2+3"');
+    // Numbers are not text, so a missing MTGO ID (-1) is left as a number.
+    expect(row).toContain(',"-1",');
+  });
+
+  it('quotes embedded quotes and commas in every user-editable column', () => {
+    const { res, body } = makeResStub();
+    res.write(`${CSV_HEADER}\r\n`);
+    writeCard(
+      res,
+      customCard({ tags: ['a "quoted", tag'], notes: 'notes, with "quotes"', type_line: 'Creature, "Weird"' }),
+      'mainboard',
+    );
+
+    const [card] = CSVtoCards(body()).cardsByBoard.mainboard!;
+    expect(card!.tags).toEqual(['a "quoted", tag']);
+    expect(card!.notes).toBe('notes, with "quotes"');
+    expect(card!.type_line).toBe('Creature, "Weird"');
+  });
+
+  it('round-trips neutralized values back to their original text on import', () => {
+    const { res, body } = makeResStub();
+    res.write(`${CSV_HEADER}\r\n`);
+    writeCard(res, customCard({ custom_name: '+2 Mace', tags: ['-removal'], notes: '=not a formula' }), 'mainboard');
+
+    const [card] = CSVtoCards(body()).cardsByBoard.mainboard!;
+    expect(card!.custom_name).toBe('+2 Mace');
+    expect(card!.tags).toEqual(['-removal']);
+    expect(card!.notes).toBe('=not a formula');
+  });
+});
+
 describe('CSV import — limits', () => {
   it('keeps only absolute http(s) image URLs of a sane length', () => {
     const longUrl = `https://example.com/${'a'.repeat(2100)}.png`;

@@ -7,6 +7,7 @@ import { ensureAuth } from 'router/middleware';
 import { resolveBotDeckStatus } from 'serverutils/botDeckStatus';
 import { cardFromId, getIdsFromName, getMostReasonable } from 'serverutils/carddb';
 import { addBasics, createPool, CSV_HEADER, exportToMtgo, getBasicCardsFromCube, writeCard } from 'serverutils/cube';
+import { csvRow } from 'serverutils/csv';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -379,7 +380,7 @@ export const downloadTopdeckedHandler = async (req: Request, res: Response) => {
       }
     }
     for (const [oracleId, value] of Object.entries(main)) {
-      res.write(`${value},"${mainCardName[oracleId]}",${mainCardID[oracleId]},main\r\n`);
+      res.write(`${csvRow([value, mainCardName[oracleId], mainCardID[oracleId], 'main'])}\r\n`);
     }
 
     const side: Record<string, number> = {};
@@ -402,7 +403,7 @@ export const downloadTopdeckedHandler = async (req: Request, res: Response) => {
       }
     }
     for (const [oracleId, value] of Object.entries(side)) {
-      res.write(`${value},"${sideCardName[oracleId]}",${sideCardID[oracleId]},side\r\n`);
+      res.write(`${csvRow([value, sideCardName[oracleId], sideCardID[oracleId], 'side'])}\r\n`);
     }
 
     return res.end();

@@ -10,6 +10,7 @@ import Papa from 'papaparse';
 import sanitizeHtml from 'sanitize-html';
 
 import { cardFromId, getAllVersionIds, reasonableId } from './carddb';
+import { fromCsvCell } from './csv';
 import { IMPORT_TOO_LARGE_MESSAGE, MAX_IMPORT_CARDS } from './importParsing';
 import { batchDraft } from './ml';
 import * as util from './util';
@@ -255,7 +256,7 @@ function cubeCardTags(cubeCards: CubeCards): string[] {
 
 function camelizeDataRows(data: any[]): any[] {
   return data.map((row: any) =>
-    Object.fromEntries(Object.entries(row).map(([key, value]) => [_.camelCase(key), value])),
+    Object.fromEntries(Object.entries(row).map(([key, value]) => [_.camelCase(key), fromCsvCell(value)])),
   );
 }
 
