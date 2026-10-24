@@ -10,6 +10,7 @@ import compression from 'compression';
 import connectFlash from 'connect-flash';
 import express from 'express';
 import fileUpload from 'express-fileupload';
+import helmet from 'helmet';
 import session from 'express-session';
 import fs from 'fs';
 import http from 'http';
@@ -33,6 +34,7 @@ import { registerHealthcheck } from './serverutils/healthcheck';
 import { render } from './serverutils/render';
 import { checkAndUpdateCardbase } from './serverutils/updatecards';
 import { csrfGuard } from './serverutils/csrf';
+import { cspHeaders } from './serverutils/csp';
 import { CustomError, Request as AppRequest, Response as AppResponse } from './types/express';
 
 // global listeners for promise rejections
@@ -44,6 +46,7 @@ process.on('unhandledRejection', (reason: unknown) => {
 
 // Init app
 const app = express();
+app.disable('x-powered-by');
 
 // We sit behind Cloudflare, the ALB (private address) and the instance's nginx (loopback).
 // Trusting the two internal hops is what keeps req.protocol correct behind the ALB's TLS
@@ -130,6 +133,22 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
   });
   next();
 });
+
+// Security headers. CSP is handled by cspHeaders below; HSTS by the HTTPS block above.
+// Cross-origin resource policy stays open because other sites hotlink card and pack images,
+// and the referrer policy must still send same-origin referrers (login redirects back to the
+// referring page).
+app.use(
+  helmet({
+    contentSecurityPolicy: false,
+    strictTransportSecurity: false,
+    crossOriginResourcePolicy: { policy: 'cross-origin' },
+    crossOriginOpenerPolicy: { policy: 'same-origin-allow-popups' },
+    referrerPolicy: { policy: 'strict-origin-when-cross-origin' },
+    frameguard: { action: 'sameorigin' },
+  }),
+);
+app.use(cspHeaders);
 
 // upload file middleware. Cap uploads to the hosted-image input limit and abort oversized
 // requests rather than buffering them.
