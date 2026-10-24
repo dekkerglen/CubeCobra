@@ -16,7 +16,32 @@ const PUBLIC_MODEL_BASE = `https://cubecobra-public.s3.us-east-2.amazonaws.com/m
  * public S3 bucket is laid out flat (model/...). Strip the leading version
  * segment so dev keeps resolving against that flat source.
  */
-const modelHandler = async (req: Request, res: Response) => {
+// Model files are plain relative paths. Rejecting anything else (notably `%`) matters because the
+// path is pasted into a URL, and the URL parser treats "%2e%2e" segments as "..".
+const SAFE_MODEL_PATH = /^[A-Za-z0-9_.\-/]+$/;
+
+/** The model path to fetch, or null when it isn't a plain relative path inside the model folder. */
+export const sanitizeModelPath = (modelPath: string | undefined): string | null => {
+  if (!modelPath) {
+    return null;
+  }
+  let decoded: string;
+  try {
+    decoded = decodeURIComponent(modelPath);
+  } catch {
+    return null;
+  }
+  if (!SAFE_MODEL_PATH.test(modelPath) || !SAFE_MODEL_PATH.test(decoded)) {
+    return null;
+  }
+  const normalized = decoded.replace(/^\/+/, '');
+  if (!normalized || normalized.split('/').some((segment) => segment === '..' || segment === '.')) {
+    return null;
+  }
+  return normalized;
+};
+
+export const modelHandler = async (req: Request, res: Response) => {
   // Express 5 captures `*splat` as an array of path segments; rejoin to recover the model path.
   const splat = (req.params as unknown as { splat?: string | string[] }).splat;
   const modelPath = Array.isArray(splat) ? splat.join('/') : splat;
@@ -24,7 +49,10 @@ const modelHandler = async (req: Request, res: Response) => {
     return res.status(400).json({ error: 'Model path required' });
   }
 
-  let normalized = modelPath.replace(/\.\./g, '').replace(/^\/+/, '');
+  let normalized = sanitizeModelPath(modelPath);
+  if (!normalized) {
+    return res.status(400).json({ error: 'Invalid model path' });
+  }
   if (normalized.startsWith(`${MODEL_VERSION}/`)) {
     normalized = normalized.slice(MODEL_VERSION.length + 1);
   }

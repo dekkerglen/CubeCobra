@@ -28,6 +28,13 @@ const MIME: Record<string, string> = {
 
 const cleanName = (url: string): string => decodeURIComponent((url || '').split('?')[0].replace(/^\/+/, ''));
 
+// True when `file` is strictly inside `dir`. A bare startsWith(dir) also accepts sibling folders
+// that share the prefix (e.g. "images-private" next to "images").
+const isInside = (dir: string, file: string): boolean => {
+  const relative = path.relative(dir, file);
+  return relative !== '' && relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
+};
+
 // Dev-server middleware that serves the local image folder and reads/writes
 // annotation JSON — keeps everything to a single `vite` process, no separate API.
 function annotatorApiPlugin() {
@@ -75,7 +82,7 @@ function annotatorApiPlugin() {
       server.middlewares.use('/img', (req: any, res: any, next: any) => {
         if (req.method !== 'GET') return next();
         const filePath = path.join(IMAGES_DIR, cleanName(req.url));
-        if (!filePath.startsWith(IMAGES_DIR) || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+        if (!isInside(IMAGES_DIR, filePath) || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
           res.statusCode = 404;
           return res.end('Not found');
         }
@@ -87,7 +94,7 @@ function annotatorApiPlugin() {
       server.middlewares.use('/api/annotations', (req: any, res: any) => {
         const name = cleanName(req.url);
         const file = path.join(ANNOTATIONS_DIR, `${name}.json`);
-        if (!file.startsWith(ANNOTATIONS_DIR)) {
+        if (!isInside(ANNOTATIONS_DIR, file)) {
           res.statusCode = 403;
           return res.end('Forbidden');
         }
@@ -142,7 +149,7 @@ function annotatorApiPlugin() {
       server.middlewares.use('/api/synthetic/annotations', (req: any, res: any) => {
         const name = cleanName(req.url);
         const file = path.join(SYNTH_ANN_DIR, `${name}.json`);
-        if (!file.startsWith(SYNTH_ANN_DIR)) {
+        if (!isInside(SYNTH_ANN_DIR, file)) {
           res.statusCode = 403;
           return res.end('Forbidden');
         }
@@ -155,7 +162,7 @@ function annotatorApiPlugin() {
       server.middlewares.use('/synthimg', (req: any, res: any, next: any) => {
         if (req.method !== 'GET') return next();
         const filePath = path.join(SYNTH_IMAGES_DIR, cleanName(req.url));
-        if (!filePath.startsWith(SYNTH_IMAGES_DIR) || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
+        if (!isInside(SYNTH_IMAGES_DIR, filePath) || !fs.existsSync(filePath) || !fs.statSync(filePath).isFile()) {
           res.statusCode = 404;
           return res.end('Not found');
         }
