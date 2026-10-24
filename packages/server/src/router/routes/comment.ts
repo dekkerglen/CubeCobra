@@ -11,6 +11,7 @@ import {
   draftDao,
   episodeDao,
   noticeDao,
+  p1p1PackDao,
   packageDao,
   podcastDao,
   recordDao,
@@ -18,12 +19,80 @@ import {
   videoDao,
 } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
+import { isCubeViewable } from 'serverutils/cubefn';
 import { getImageData } from 'serverutils/imageutil';
 import generateMeta, { truncateForMeta } from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 import { addNotification, getBaseUrl } from 'serverutils/util';
 
 import { Request, Response } from '../../types/express';
+
+// Comment parents that belong to a cube. Their comment threads are only as visible as the cube.
+// Each resolver returns the parent's cube ID (null when it isn't attached to a cube), or
+// undefined when the parent doesn't exist.
+const cubeIdForParent: Partial<Record<string, (id: string) => Promise<string | null | undefined>>> = {
+  blog: async (id) => {
+    const blog = await blogDao.getById(id);
+    if (!blog) return undefined;
+    return blog.cube && blog.cube !== 'DEVBLOG' ? blog.cube : null;
+  },
+  deck: async (id) => {
+    const deck = await draftDao.getById(id);
+    if (!deck) return undefined;
+    return deck.cube || null;
+  },
+  record: async (id) => {
+    const record = await recordDao.getById(id);
+    if (!record) return undefined;
+    return record.cube || null;
+  },
+  p1p1: async (id) => {
+    const pack = await p1p1PackDao.getMetadataById(id);
+    if (!pack) return undefined;
+    return pack.cubeId || null;
+  },
+};
+
+// Replies nest comment-on-comment; deeper chains than this are refused rather than walked.
+const MAX_REPLY_DEPTH = 25;
+
+/**
+ * Whether `user` may see (or, with `forWrite`, add to) the comment thread of a parent. Parents
+ * that belong to a cube follow the cube's visibility; replies follow the comment they answer.
+ * Parent types that aren't cube-scoped are always allowed. A missing parent is allowed for
+ * reads (orphaned threads stay readable) but refused for writes.
+ */
+export const canAccessCommentParent = async (
+  type: unknown,
+  parent: unknown,
+  user: User | undefined,
+  forWrite = false,
+  depth = 0,
+): Promise<boolean> => {
+  if (type === 'comment') {
+    if (typeof parent !== 'string' || !parent) return !forWrite;
+    if (depth >= MAX_REPLY_DEPTH) return false;
+    const comment = await commentDao.getById(parent);
+    if (!comment) return !forWrite;
+    return canAccessCommentParent(comment.type, comment.parent, user, forWrite, depth + 1);
+  }
+
+  const resolve =
+    typeof type === 'string' && Object.prototype.hasOwnProperty.call(cubeIdForParent, type)
+      ? cubeIdForParent[type]
+      : undefined;
+  if (!resolve) {
+    return true;
+  }
+  if (typeof parent !== 'string' || !parent) return !forWrite;
+
+  const cubeId = await resolve(parent);
+  if (cubeId === undefined) return !forWrite;
+  if (cubeId === null) return true;
+
+  const cube = await cubeDao.getById(cubeId);
+  return isCubeViewable(cube, user);
+};
 
 export const getHandler = async (req: Request, res: Response) => {
   try {
@@ -34,7 +103,7 @@ export const getHandler = async (req: Request, res: Response) => {
 
     const comment = await commentDao.getById(req.params.id);
 
-    if (!comment) {
+    if (!comment || !(await canAccessCommentParent(comment.type, comment.parent, req.user))) {
       req.flash('danger', 'Comment not found.');
       return redirect(req, res, '/404');
     }
@@ -148,9 +217,17 @@ export const getCommentsHandler = async (req: Request, res: Response) => {
     const { parent, lastKey } = req.body;
     const comments = await commentDao.queryByParent(parent, lastKey);
 
+    // Every comment in the page shares this parent, but each records its own parent type, so
+    // check each type present (a comment filed under the wrong type can't unlock the thread).
+    const types = [...new Set(comments.items.map((comment) => comment.type))];
+    const allowed = new Map<string, boolean>();
+    for (const type of types) {
+      allowed.set(type, await canAccessCommentParent(type, parent, req.user));
+    }
+
     return res.status(200).send({
       success: 'true',
-      comments: comments.items,
+      comments: comments.items.filter((comment) => allowed.get(comment.type)),
       lastKey: comments.lastKey,
     });
   } catch (err) {
@@ -203,6 +280,20 @@ export const addCommentHandler = async (req: Request, res: Response) => {
     return res.status(400).send({
       success: 'false',
       message: 'Invalid comment parent type.',
+    });
+  }
+
+  if (typeof body !== 'string' || typeof parent !== 'string' || typeof mentions !== 'string') {
+    return res.status(400).send({
+      success: 'false',
+      message: 'Invalid comment.',
+    });
+  }
+
+  if (!(await canAccessCommentParent(type, parent, user, true))) {
+    return res.status(404).send({
+      success: 'false',
+      message: 'The page you are commenting on could not be found.',
     });
   }
 
