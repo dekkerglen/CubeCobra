@@ -24,10 +24,11 @@
   "dependencies": {
     "@aws-sdk/client-cloudwatch-logs": "^3.529.1",
     "@aws-sdk/client-s3": "^3.927.0",
+    "@aws-sdk/client-ssm": "^3.1156.0",
     "@aws-sdk/credential-providers": "^3.927.0",
     "@tensorflow/tfjs-node": "^4.22.0",
     "@types/node": "^20.11.0",
-    "compression": "^1.8.1",
+    "compression": "^1.8.2",
     "dotenv": "^16.3.1",
     "express": "^5.3.0",
     "forever-monitor": "^3.0.3",

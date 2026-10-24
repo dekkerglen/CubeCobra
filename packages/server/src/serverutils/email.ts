@@ -43,7 +43,9 @@ export const sendEmail = async (
         images: true,
       },
     },
-    transport: transporter,
+    // email-templates' bundled type definitions predate nodemailer's native TypeScript types;
+    // it only ever calls transporter.sendMail, which is unchanged.
+    transport: transporter as unknown as Email.NodeMailerTransportOptions,
     views: {
       root: path.join(__dirname, '..', 'emails'),
     },
