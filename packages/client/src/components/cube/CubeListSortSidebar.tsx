@@ -177,6 +177,8 @@ const DisplayOptionActions: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
   );
 };
 
+const SectionDivider: React.FC = () => <hr className="my-1 border-border" />;
+
 const RotisserieDraftButton: React.FC<{ withDivider?: boolean }> = ({ withDivider = false }) => {
   const { hasProvider, url, setUrl } = useContext(RotoDraftContext);
 
@@ -186,7 +188,7 @@ const RotisserieDraftButton: React.FC<{ withDivider?: boolean }> = ({ withDivide
 
   return (
     <>
-      {withDivider && <hr className="my-1 border-border" />}
+      {withDivider && <SectionDivider />}
       {url !== '' ? (
         <Button color="secondary" onClick={() => setUrl('')} block>
           Clear Rotisserie Draft
@@ -296,10 +298,12 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
             </Button>
           </Flexbox>
 
+          <SectionDivider />
+
           <Flexbox direction="col" gap="2">
             <DisplayOptionCheckboxes tooltipIconClassName="hidden md:inline" />
             <DisplayOptionActions canEdit={canEdit} />
-            <RotisserieDraftButton />
+            <RotisserieDraftButton withDivider />
           </Flexbox>
 
           {canEdit && (
@@ -385,7 +389,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               <Button color="danger" onClick={resetSorts} disabled={!sortsModified} block>
                 Reset Sort
               </Button>
-              <hr className="my-1 border-border" />
+              <SectionDivider />
               <DisplayOptionActions canEdit={canEdit} />
               <RotisserieDraftButton withDivider />
             </div>

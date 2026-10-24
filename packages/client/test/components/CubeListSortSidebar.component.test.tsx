@@ -416,28 +416,41 @@ describe.each([
   });
 });
 
-describe('CubeListSortSidebar Rotisserie button (horizontal dividers)', () => {
-  const dividers = () => Array.from(gridColumn(button('Reset Sort'))!.querySelectorAll('hr'));
+describe.each([
+  ['vertical', false],
+  ['horizontal', true],
+])('CubeListSortSidebar section dividers (%s)', (_layout, isHorizontal) => {
+  const follows = (a: Node, b: Node) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 
-  it('separates the Rotisserie button from the options buttons', () => {
-    renderSidebar({
+  it('separates the sort, display option and Rotisserie sections', () => {
+    const { container } = renderSidebar({
       canEdit: true,
-      isHorizontal: true,
+      isHorizontal,
       csrfFetch: jest.fn(),
       roto: { url: '', setUrl: jest.fn() },
     });
 
-    const follows = (a: Node, b: Node) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
-    const [optionsDivider, rotoDivider] = dividers();
+    const [optionsDivider, rotoDivider] = Array.from(container.querySelectorAll('hr'));
     expect(rotoDivider).toBeDefined();
-    expect(follows(button(SAVE), rotoDivider)).toBe(true);
+
+    expect(follows(button('Reset Sort'), optionsDivider)).toBe(true);
+    expect(follows(optionsDivider, button(SAVE))).toBe(true);
+
     expect(follows(button('Set Tag Colors'), rotoDivider)).toBe(true);
     expect(follows(rotoDivider, button('Set Up Rotisserie Draft'))).toBe(true);
-    expect(follows(optionsDivider, rotoDivider)).toBe(true);
   });
 
-  it('leaves no dangling divider when the button is hidden', () => {
-    renderSidebar({ canEdit: true, isHorizontal: true, csrfFetch: jest.fn() });
-    expect(dividers()).toHaveLength(1);
+  it('leaves no dangling divider when the Rotisserie button is hidden', () => {
+    const { container } = renderSidebar({ canEdit: true, isHorizontal, csrfFetch: jest.fn() });
+    expect(container.querySelectorAll('hr')).toHaveLength(1);
+  });
+});
+
+describe('CubeListSortSidebar section dividers (vertical)', () => {
+  it('puts the display option checkboxes below the sort divider', () => {
+    const { container } = renderSidebar({ canEdit: true, isHorizontal: false, csrfFetch: jest.fn() });
+    const [optionsDivider] = Array.from(container.querySelectorAll('hr'));
+    const position = optionsDivider.compareDocumentPosition(checkbox('Show Unsorted Cards'));
+    expect(position & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 });
