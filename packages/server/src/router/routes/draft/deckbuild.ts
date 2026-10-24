@@ -130,9 +130,6 @@ export const startHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ success: false, message: 'Draft ID required' });
     }
 
-    // Clean up any stale session for this draft
-    sessions.delete(draftId);
-
     const draft = await draftDao.getById(draftId);
     if (!draft) {
       return res.status(404).json({ success: false, message: 'Draft not found' });
@@ -142,6 +139,10 @@ export const startHandler = async (req: Request, res: Response) => {
     if (draftOwnerId !== req.user.id) {
       return res.status(401).json({ success: false, message: 'Not authorized' });
     }
+
+    // Clean up any stale session for this draft (only once we know the caller owns it, so
+    // nobody else can cancel an in-progress build)
+    sessions.delete(draftId);
 
     const { state } = req.body;
     if (!state?.seats) {
