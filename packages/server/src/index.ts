@@ -135,6 +135,11 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
 // requests rather than buffering them.
 app.use(fileUpload({ limits: { fileSize: MAX_UPLOAD_BYTES }, abortOnLimit: true }));
 
+// JSON.parse keeps "__proto__" as an ordinary key, which code that indexes objects with
+// request-supplied keys can turn into prototype pollution. Drop those keys at parse time.
+const dropPrototypeKeys = (key: string, value: unknown) =>
+  key === '__proto__' || key === 'constructor' || key === 'prototype' ? undefined : value;
+
 // body parser middleware
 app.use(
   bodyParser.urlencoded({
@@ -145,6 +150,7 @@ app.use(
 app.use(
   bodyParser.json({
     limit: '50mb',
+    reviver: dropPrototypeKeys,
     // Capture the raw request bytes for routes that verify an HMAC signature over the
     // exact payload the sender signed (the Patreon webhook). Re-serializing the parsed
     // body is not byte-exact, so the signature must be checked against these raw bytes.

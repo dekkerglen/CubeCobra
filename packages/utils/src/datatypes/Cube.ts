@@ -102,6 +102,18 @@ export function boardNameToKey(boardName: string): string {
   return boardName.toLowerCase().replace(/\s+/g, '');
 }
 
+// Card containers are plain objects indexed by board key, so a board key must never collide
+// with an Object.prototype member (e.g. `__proto__` or `constructor`) or with the non-board
+// entries that travel alongside the boards (`id` on stored cards, `version` on change sets).
+const RESERVED_BOARD_KEYS = new Set(['__proto__', 'constructor', 'prototype', 'id', 'version']);
+
+/**
+ * True when `key` can't be used as a board key.
+ */
+export function isReservedBoardKey(key: string): boolean {
+  return RESERVED_BOARD_KEYS.has(key) || key in Object.prototype;
+}
+
 /**
  * Gets the default boards for a new cube
  */
@@ -113,6 +125,10 @@ export function getNewCubeBoards(): BoardDefinition[] {
  * Validates board definitions
  */
 export function validateBoardDefinitions(boards: BoardDefinition[]): { valid: boolean; error?: string } {
+  if (!Array.isArray(boards) || boards.some((b) => !b || typeof b.name !== 'string')) {
+    return { valid: false, error: 'Invalid board configuration' };
+  }
+
   if (boards.length > MAX_BOARDS) {
     return { valid: false, error: `Cannot have more than ${MAX_BOARDS} boards` };
   }
@@ -138,6 +154,11 @@ export function validateBoardDefinitions(boards: BoardDefinition[]): { valid: bo
   // Check for empty names
   if (boards.some((b) => !b.name.trim())) {
     return { valid: false, error: 'Board names cannot be empty' };
+  }
+
+  const reserved = boards.find((b) => isReservedBoardKey(boardNameToKey(b.name)));
+  if (reserved) {
+    return { valid: false, error: `"${reserved.name}" can't be used as a board name. Please choose a different name.` };
   }
 
   return { valid: true };

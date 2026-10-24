@@ -1,5 +1,5 @@
 import Card, { DefaultPrintingPreference, isPrintingPreference } from '@utils/datatypes/Card';
-import { boardNameToKey, getBoardDefinitions } from '@utils/datatypes/Cube';
+import { boardNameToKey, getBoardDefinitions, isReservedBoardKey } from '@utils/datatypes/Cube';
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { blogDao, changelogDao, cubeDao, feedDao, packageDao, userDao } from 'dynamo/daos';
@@ -37,7 +37,22 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const cubeCards = await cubeDao.getCards(req.params.id);
+    if (!Array.isArray(req.body.cards)) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'No cards to add',
+      });
+    }
+
+    const boardParam = req.body.board;
+    if (boardParam !== undefined && boardParam !== null && typeof boardParam !== 'string') {
+      return res.status(400).send({
+        success: 'false',
+        message: 'Invalid board',
+      });
+    }
+
+    const cubeCards = await cubeDao.getCards(cube.id);
 
     let tag: string | null = null;
     const autoTag = req.body.autoTag !== false; // Default to true
@@ -146,12 +161,11 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       return c;
     });
 
-    const boardParam = req.body.board as string;
     const boardKey = boardParam ? boardNameToKey(boardParam) : 'mainboard';
 
     // Validate board against cube's boards
     const boardDefs = getBoardDefinitions(cube, cubeCards);
-    const validBoardKeys = boardDefs.map((b) => boardNameToKey(b.name));
+    const validBoardKeys = boardDefs.map((b) => boardNameToKey(b.name)).filter((key) => !isReservedBoardKey(key));
 
     if (!validBoardKeys.includes(boardKey)) {
       return res.status(400).send({
@@ -160,19 +174,19 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       });
     }
 
-    if (!cubeCards[boardKey]) {
+    if (!Object.prototype.hasOwnProperty.call(cubeCards, boardKey) || !Array.isArray(cubeCards[boardKey])) {
       cubeCards[boardKey] = [];
     }
 
     cubeCards[boardKey].push(...adds);
 
-    await cubeDao.updateCards(req.params.id, cubeCards);
+    await cubeDao.updateCards(cube.id, cubeCards);
 
     const changelist = await changelogDao.createChangelog(
       {
         [boardKey]: { adds },
       },
-      req.params.id,
+      cube.id,
     );
 
     if (req.body.packid && createBlogPost && packageTitle) {

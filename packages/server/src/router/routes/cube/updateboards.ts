@@ -60,8 +60,10 @@ export const updateBoardsHandler = async (req: Request, res: Response) => {
 
     for (const board of boards) {
       const key = boardNameToKey(board.name);
-      // Keep existing cards for this board, or initialize empty array
-      newCards[key] = currentCards[key] || [];
+      // Keep existing cards for this board, or initialize empty array. validateBoardDefinitions
+      // rejects reserved keys, so `key` can't reach Object.prototype here.
+      const existing = Object.prototype.hasOwnProperty.call(currentCards, key) ? currentCards[key] : undefined;
+      newCards[key] = Array.isArray(existing) ? existing : [];
     }
 
     // Handle cards from removed boards - move them to mainboard

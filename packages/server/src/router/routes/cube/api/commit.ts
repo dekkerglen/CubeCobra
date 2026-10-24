@@ -1,4 +1,5 @@
-import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
+import { BoardChanges } from '@utils/datatypes/Card';
+import { boardNameToKey, CUBE_VISIBILITY, DEFAULT_BOARDS, isReservedBoardKey } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import { blogDao, cubeDao, feedDao, userDao } from 'dynamo/daos';
 import { isCubeEditable } from 'serverutils/cubefn';
@@ -6,6 +7,43 @@ import { isCubeEditable } from 'serverutils/cubefn';
 import { AppError } from '../../../../../errors/AppError';
 import { ErrorCode } from '../../../../../errors/errorCodes';
 import { Request, Response } from '../../../../types/express';
+
+const isPlainObject = (value: unknown): value is Record<string, any> =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isValidIndex = (index: unknown, length: number): boolean =>
+  typeof index === 'number' && Number.isInteger(index) && index >= 0 && index < length;
+
+/**
+ * Checks one board's change set against the board's current length. Swap, edit and remove
+ * indices must address existing cards (adds always append), and every card must be an object
+ * with a card ID. Returns a user-facing error, or null when the changes are well-formed.
+ */
+const validateBoardChanges = (boardChanges: Record<string, any>, length: number): string | null => {
+  for (const op of ['adds', 'swaps', 'edits', 'removes'] as const) {
+    if (boardChanges[op] !== undefined && boardChanges[op] !== null && !Array.isArray(boardChanges[op])) {
+      return 'Invalid changes';
+    }
+  }
+
+  const { adds = [], swaps = [], edits = [], removes = [] } = boardChanges as BoardChanges;
+
+  for (const op of [...swaps, ...edits, ...removes]) {
+    if (!isPlainObject(op) || !isValidIndex(op.index, length)) {
+      return 'One of your changes refers to a card that is no longer in the cube. Refresh the page and try again.';
+    }
+  }
+
+  const cards = [...adds, ...swaps.map((swap) => swap.card)];
+  if (cards.some((card) => !isPlainObject(card) || typeof card.cardID !== 'string' || !card.cardID)) {
+    return 'Invalid card in changes';
+  }
+  if (edits.some((edit) => !isPlainObject(edit.newCard))) {
+    return 'Invalid card in changes';
+  }
+
+  return null;
+};
 
 export const commitHandler = async (req: Request, res: Response) => {
   try {
@@ -18,20 +56,21 @@ export const commitHandler = async (req: Request, res: Response) => {
       });
     }
 
+    if (!isPlainObject(changes)) {
+      return res.status(400).send({
+        success: 'false',
+        message: 'No changes',
+      });
+    }
+
     let changeCount = 0;
 
-    for (const [board] of Object.entries(changes)) {
-      if ((changes as any)[board].swaps) {
-        changeCount += (changes as any)[board].swaps.length;
-      }
-      if ((changes as any)[board].adds) {
-        changeCount += (changes as any)[board].adds.length;
-      }
-      if ((changes as any)[board].removes) {
-        changeCount += (changes as any)[board].removes.length;
-      }
-      if ((changes as any)[board].edits) {
-        changeCount += (changes as any)[board].edits.length;
+    for (const [board, boardChanges] of Object.entries(changes)) {
+      if (board === 'version' || !isPlainObject(boardChanges)) continue;
+      for (const op of ['swaps', 'adds', 'removes', 'edits'] as const) {
+        if (Array.isArray(boardChanges[op])) {
+          changeCount += boardChanges[op].length;
+        }
       }
     }
 
@@ -68,12 +107,38 @@ export const commitHandler = async (req: Request, res: Response) => {
 
     const cards = await cubeDao.getCards(cube.id);
 
+    // Every key in `changes` except 'version' must name one of the cube's boards (or a default
+    // board that hasn't been created yet, like 'basics'). Board keys are used for bracket
+    // access below, so anything else (e.g. '__proto__') is rejected before touching `cards`.
+    const validBoards = new Set(
+      [...Object.keys(cards), ...DEFAULT_BOARDS.map((board) => boardNameToKey(board.name))].filter(
+        (key) => !isReservedBoardKey(key),
+      ),
+    );
+    for (const board of Object.keys(changes)) {
+      if (board === 'version') continue;
+      if (!validBoards.has(board) || !isPlainObject(changes[board])) {
+        return res.status(400).send({
+          success: 'false',
+          message: 'Your changes refer to a board that does not exist in this cube. Refresh the page and try again.',
+        });
+      }
+      const existing = Object.prototype.hasOwnProperty.call(cards, board) ? (cards as any)[board] : [];
+      const error = validateBoardChanges(changes[board], Array.isArray(existing) ? existing.length : 0);
+      if (error) {
+        return res.status(400).send({
+          success: 'false',
+          message: error,
+        });
+      }
+    }
+
     for (const [board] of Object.entries(changes)) {
       // Skip non-board keys like 'version'
-      if (typeof (changes as any)[board] !== 'object' || (changes as any)[board] === null) continue;
+      if (board === 'version') continue;
 
       // Ensure the board array exists (e.g., when adding cards to a new board like 'basics')
-      if (!(cards as any)[board]) {
+      if (!Object.prototype.hasOwnProperty.call(cards, board) || !Array.isArray((cards as any)[board])) {
         (cards as any)[board] = [];
       }
 
