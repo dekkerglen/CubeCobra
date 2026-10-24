@@ -2,6 +2,7 @@ import { draftDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 
 import { Request, Response } from '../../../types/express';
+import { filterViewableDrafts } from './decks';
 
 export const handler = async (req: Request, res: Response) => {
   if (!req.user) {
@@ -16,7 +17,7 @@ export const handler = async (req: Request, res: Response) => {
 
   return res.status(200).send({
     success: 'true',
-    decks: decks.items,
+    decks: await filterViewableDrafts(decks.items, req.user),
     lastKey: decks.lastKey,
   });
 };
