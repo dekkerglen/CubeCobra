@@ -1,6 +1,7 @@
 import Joi from 'joi';
 import { getOracleForMl } from 'serverutils/carddb';
 import { draft } from 'serverutils/ml';
+import { jsonLimiter } from 'serverutils/rateLimiters';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
 
@@ -13,9 +14,14 @@ const OracleIDSchema = Joi.string().uuid();
 const CustomCard = Joi.string().valid('custom-card');
 const VoucherCard = Joi.string().valid('voucher');
 
+// Generous for real drafts (vouchers expand into their sub-cards, and custom formats can have big
+// packs and pools) while bounding what one anonymous request can make the recommender do.
+const MAX_PACK_CARDS = 200;
+const MAX_PICKS = 500;
+
 const PredictBodySchema = Joi.object({
-  pack: Joi.array().items(OracleIDSchema, CustomCard, VoucherCard).required(),
-  picks: Joi.array().items(OracleIDSchema, CustomCard, VoucherCard).required(),
+  pack: Joi.array().items(OracleIDSchema, CustomCard, VoucherCard).max(MAX_PACK_CARDS).required(),
+  picks: Joi.array().items(OracleIDSchema, CustomCard, VoucherCard).max(MAX_PICKS).required(),
 });
 
 // Sentinel oracle ids that aren't real cards in the ML vocabulary. We strip
@@ -77,6 +83,7 @@ export const routes = [
   {
     path: '/',
     method: 'post',
-    handler: [validatePredictBody, handler],
+    // Public and unauthenticated, and every call reaches the recommender.
+    handler: [jsonLimiter(60_000, 120), validatePredictBody, handler],
   },
 ];

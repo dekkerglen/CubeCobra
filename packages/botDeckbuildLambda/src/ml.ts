@@ -8,6 +8,13 @@ const ML_TIMEOUT_MS = 10_000;
 const ML_MAX_ATTEMPTS = 3;
 const ML_RETRY_BASE_MS = 150;
 
+// Shared secret the recommender requires (as X-Internal-Token) once RECOMMENDER_SHARED_SECRET is
+// set; unset, no header is sent.
+const authHeaders = (): Record<string, string> => {
+  const secret = process.env.RECOMMENDER_SHARED_SECRET;
+  return secret ? { 'X-Internal-Token': secret } : {};
+};
+
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 async function mlRequestOnce<T>(endpoint: string, body: unknown): Promise<T> {
@@ -16,7 +23,7 @@ async function mlRequestOnce<T>(endpoint: string, body: unknown): Promise<T> {
   try {
     const res = await fetch(`${ML_SERVICE_URL}/${endpoint}`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify(body),
       signal: controller.signal,
     });

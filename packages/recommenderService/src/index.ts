@@ -18,6 +18,7 @@ import { v4 as uuid } from 'uuid';
 
 import './types/express'; // Import the express type extensions
 
+import { requireInternalToken } from './internalAuth';
 import { initializeCardCatalog } from './mlutils/cardCatalog';
 import cloudwatch from './mlutils/cloudwatch';
 import { downloadModelsFromS3 } from './mlutils/downloadModel';
@@ -44,6 +45,10 @@ app.get('/healthcheck', (_req: express.Request, res: express.Response) => {
   res.status(200).send('OK');
 });
 
+// Everything past the health check needs the shared secret once RECOMMENDER_SHARED_SECRET is set.
+// Checked before body parsing so unauthenticated requests never get their bodies read.
+app.use(requireInternalToken());
+
 // request timeout middleware
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
   req.setTimeout(30 * 1000, () => {
@@ -65,9 +70,10 @@ app.use((req: express.Request, _res: express.Response, next: express.NextFunctio
   next();
 });
 
-// Parse JSON bodies
-app.use(express.json({ limit: '50mb' }));
-app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+// Parse JSON bodies. The largest legitimate payload is a filtered /recommend call, whose
+// eligibleOracles list can approach the whole catalog (~35k oracle ids, about 1.5 MB).
+app.use(express.json({ limit: '5mb' }));
+app.use(express.urlencoded({ extended: true, limit: '5mb' }));
 
 // Attach logger to each request
 app.use((req: express.Request, _res: express.Response, next: express.NextFunction) => {
@@ -86,8 +92,13 @@ app.use((_req: express.Request, res: express.Response) => {
   });
 });
 
-// Error handler
-app.use((err: CustomError, req: express.Request, res: express.Response) => {
+// Error handler. Express only treats a middleware as an error handler when it takes four
+// arguments, so `next` must stay in the signature.
+app.use((err: CustomError, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (res.headersSent) {
+    next(err);
+    return;
+  }
   const status = err.status || 500;
   const message = err.message || 'Internal Server Error';
 

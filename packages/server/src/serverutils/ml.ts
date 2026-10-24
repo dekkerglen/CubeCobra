@@ -5,6 +5,13 @@ import { info } from './cloudwatch';
 const ML_SERVICE_URL = process.env.ML_SERVICE_URL || 'http://localhost:5002';
 const ML_TIMEOUT_MS = 10_000; // 10 second timeout for ML service calls
 
+// Shared secret the recommender requires (as X-Internal-Token) once RECOMMENDER_SHARED_SECRET is
+// set on both sides. Unset, no header is sent and the recommender accepts the request as before.
+const mlAuthHeaders = (): Record<string, string> => {
+  const secret = process.env.RECOMMENDER_SHARED_SECRET;
+  return secret ? { 'X-Internal-Token': secret } : {};
+};
+
 // Marker set on any error originating from an ML-service call (timeout, network failure,
 // non-2xx, or a `success: false` body). Lets route handlers distinguish a transient upstream
 // dependency outage — which should surface as a 503, not a 500 — from a genuine bug.
@@ -25,6 +32,7 @@ async function mlServiceRequest<T>(endpoint: string, body: any): Promise<T> {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
+        ...mlAuthHeaders(),
       },
       body: JSON.stringify(body),
       signal: controller.signal,

@@ -19,6 +19,9 @@ export interface BotDeckbuildLambdaProps extends StackProps {
   environmentVariables: { [key: string]: string };
   // Internal ALB URL for the ML recommender — the lambda calls it directly from the VPC.
   mlServiceUrl: string;
+  // Shared secret sent to the recommender; empty = recommender auth disabled. Leave unset when the
+  // secret is loaded from SSM at runtime (ssmSecrets).
+  recommenderSharedSecret?: string;
   vpc: ec2.IVpc;
   // Whether THIS environment owns the shared default VPC's S3/DynamoDB gateway endpoints.
   // dev/beta/production share one default VPC (same account + region) and a gateway endpoint
@@ -132,6 +135,9 @@ export class BotDeckbuildLambda extends Construct {
       environment: {
         ...props.environmentVariables,
         ML_SERVICE_URL: props.mlServiceUrl,
+        ...(props.recommenderSharedSecret !== undefined
+          ? { RECOMMENDER_SHARED_SECRET: props.recommenderSharedSecret }
+          : {}),
       },
       // Many sequential ML calls, but no card data to load — modest memory, generous timeout,
       // and reserved concurrency 1 to bound ML load and keep the container warm across batches.
