@@ -63,6 +63,10 @@ export const postHandler = async (req: Request, res: Response) => {
 
     const salt = await bcrypt.genSalt(10);
     user.passwordHash = await bcrypt.hash(req.body.password2, salt);
+    // Whoever reset the password owns the inbox; drop any email change they didn't confirm.
+    user.pendingEmail = '';
+    user.pendingEmailToken = '';
+    user.pendingEmailExpires = 0;
     await userDao.update(user as any);
 
     // Burn the code so the link can't be replayed.

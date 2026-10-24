@@ -48,6 +48,11 @@ export const handler = async (req: Request, res: Response) => {
       patron,
       featured: myFeatured,
       userEmail: userWithEmail?.email,
+      // Shown to the owner only, so they know a change is still waiting on its confirmation link.
+      pendingEmail:
+        userWithEmail?.pendingEmail && (userWithEmail.pendingEmailExpires ?? 0) > Date.now()
+          ? userWithEmail.pendingEmail
+          : undefined,
     },
     {
       title: 'Account',

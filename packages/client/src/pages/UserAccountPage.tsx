@@ -36,6 +36,7 @@ interface UserAccountPageProps {
     position: number;
   };
   userEmail?: string;
+  pendingEmail?: string;
 }
 
 interface AccountSection {
@@ -66,7 +67,7 @@ const SECTIONS: AccountSection[] = [
     label: 'Update Email',
     description: 'Change the email address associated with your account.',
     Icon: MailIcon,
-    render: ({ userEmail }) => <UserEmailForm currentEmail={userEmail} />,
+    render: ({ userEmail, pendingEmail }) => <UserEmailForm currentEmail={userEmail} pendingEmail={pendingEmail} />,
   },
   {
     key: 'display',

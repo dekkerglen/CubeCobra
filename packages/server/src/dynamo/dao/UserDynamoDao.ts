@@ -150,8 +150,13 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       consentToHashedEmail: item.consentToHashedEmail,
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
-      token: item?.token,
+      // update() skips undefined fields, so callers clear these by setting '' / 0; dropping
+      // falsy values here keeps the cleared attributes off the stored row.
+      token: item?.token || undefined,
       emailVerified: item?.emailVerified,
+      pendingEmail: item.pendingEmail || undefined,
+      pendingEmailToken: item.pendingEmailToken || undefined,
+      pendingEmailExpires: item.pendingEmailExpires || undefined,
       yourCubesSortOrder: item?.yourCubesSortOrder,
       disableAnimations: item.disableAnimations,
       useTextOverIcons: item.useTextOverIcons,
@@ -179,6 +184,9 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
     delete sanitized.passwordHash;
     //@ts-expect-error --  Ditto
     delete sanitized.email;
+    delete sanitized.pendingEmail;
+    delete sanitized.pendingEmailToken;
+    delete sanitized.pendingEmailExpires;
 
     return sanitized;
   }

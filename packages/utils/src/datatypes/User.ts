@@ -61,6 +61,11 @@ export interface UnhydratedUser {
   consentToHashedEmail?: boolean;
   token?: string;
   emailVerified?: boolean;
+  /** An email change waiting on the link sent to the new address. Only swapped in once confirmed. */
+  pendingEmail?: string;
+  pendingEmailToken?: string;
+  /** Epoch ms after which the pending email change link no longer works. */
+  pendingEmailExpires?: number;
   yourCubesSortOrder?: YourCubesSortOrder;
   disableAnimations?: boolean;
   useTextOverIcons?: boolean;

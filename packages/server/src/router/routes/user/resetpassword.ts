@@ -37,6 +37,11 @@ export const handler = async (req: Request, res: Response) => {
 
     const salt = await bcrypt.genSalt(10);
     user.passwordHash = await bcrypt.hash(req.body.password2, salt);
+    // Changing the password is the advice for an email change you didn't ask for, so it also
+    // cancels any change still waiting on confirmation.
+    user.pendingEmail = '';
+    user.pendingEmailToken = '';
+    user.pendingEmailExpires = 0;
     await userDao.update(user as any);
 
     req.flash('success', 'Password updated successfully');
