@@ -54,6 +54,16 @@ describe('getSafeReferrer', () => {
     expect(result).toBe('/cube/view/123');
   });
 
+  it('returns null for a same-site path that is a protocol-relative URL', () => {
+    for (const referrer of ['https://cubecobra.com//evil.com', 'https://cubecobra.com/\\evil.com']) {
+      const req = {
+        header: jest.fn().mockReturnValue(referrer),
+      } as any;
+
+      expect(getSafeReferrer(req)).toBeNull();
+    }
+  });
+
   it('handles non-root relative urls', () => {
     const req = {
       header: jest.fn().mockReturnValue('not-a-url'),

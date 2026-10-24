@@ -431,8 +431,14 @@ export const getSafeReferrer = (req: Request) => {
     return null;
   }
 
-  //Only if its a valid URL and isn't to some other website, then return the pathname (so no query string etc)
-  return url.pathname;
+  //Only if its a valid URL and isn't to some other website, then return the pathname (so no query string etc).
+  //A pathname that starts with "//" or "/\\" is itself a protocol-relative URL that browsers send to another
+  //host, so it is never a safe redirect target.
+  const { pathname } = url;
+  if (!pathname.startsWith('/') || pathname.startsWith('//') || pathname.startsWith('/\\')) {
+    return null;
+  }
+  return pathname;
 };
 
 export function shuffle(array: any[], seed?: number) {
