@@ -52,12 +52,22 @@ export function defaultFilter(): FilterFunction {
 
 export type FilterResult = { err: any; filter: FilterFunction | null };
 
+// Hard ceiling on filter text, as a backstop against parser blow-ups. Saved filters (draft format
+// slots, custom sort categories) have never had a length limit, so this is set well above anything
+// hand-written; endpoints that parse anonymous input apply the tighter MAX_SEARCH_FILTER_LENGTH.
+export const MAX_FILTER_LENGTH = 4000;
+export const MAX_SEARCH_FILTER_LENGTH = 1000;
+
 export function makeFilter(filterText: string): FilterResult {
   if (!filterText || filterText.trim() === '') {
     return {
       err: false,
       filter: null,
     };
+  }
+
+  if (filterText.length > MAX_FILTER_LENGTH) {
+    return { err: 'Filter is too long', filter: null };
   }
 
   const filterParser: Parser = new Parser(compiledGrammar);

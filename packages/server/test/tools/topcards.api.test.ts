@@ -1,4 +1,5 @@
 import * as filterCards from '@utils/filtering/FilterCards';
+import { MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
 import * as tools from 'serverutils/tools';
 
 import { getTopCardsPage, validateQuery } from '../../src/router/routes/tool/api/topcards';
@@ -143,5 +144,10 @@ describe('Top Cards validation', () => {
 
   it('page must be an integer', async () => {
     await assertFailingValidation({ f: '', d: 'ascending', s: 'Elo', p: 1.5 });
+  });
+
+  it('should reject filters over the search length limit', async () => {
+    await assertPassingValidation({ f: 'a'.repeat(MAX_SEARCH_FILTER_LENGTH), d: 'ascending', s: 'Elo', p: 0 });
+    await assertFailingValidation({ f: 'a'.repeat(MAX_SEARCH_FILTER_LENGTH + 1), d: 'ascending', s: 'Elo', p: 0 });
   });
 });

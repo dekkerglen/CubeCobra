@@ -1,14 +1,26 @@
 import { toDistinct } from '@utils/cardSearchOptions';
-import { makeFilter } from '@utils/filtering/FilterCards';
+import { makeFilter, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
 import { OrderedSortsType } from '@utils/sorting/Sort';
 import { SortDirectionsType } from '@utils/sorting/sortContext';
+import { expensiveGetLimiter } from 'serverutils/rateLimiters';
 import { searchCards } from 'serverutils/tools';
 
 import { Request, Response } from '../../../../types/express';
 
 export const searchCardsHandler = async (req: Request, res: Response) => {
   try {
-    const { err, filter } = makeFilter(req.query.f as string);
+    const filterText = req.query.f;
+    const tooLong = typeof filterText === 'string' && filterText.length > MAX_SEARCH_FILTER_LENGTH;
+    if ((filterText !== undefined && typeof filterText !== 'string') || tooLong) {
+      res.status(400).send({
+        success: 'false',
+        numResults: 0,
+        data: [],
+      });
+      return;
+    }
+
+    const { err, filter } = makeFilter(filterText as string);
     if (err) {
       res.status(400).send({
         success: 'false',
@@ -48,6 +60,6 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: searchCardsHandler,
+    handler: [expensiveGetLimiter(60_000, 120), searchCardsHandler],
   },
 ];

@@ -1,12 +1,14 @@
 import { cardCollectorNumber, cardName, cardSet } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import { CubeCards } from '@utils/datatypes/Cube';
-import filterutil from '@utils/filtering/FilterCards';
+import filterutil, { FilterFunction, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
 import { sortForDownload } from '@utils/sorting/Sort';
 import { cubeDao } from 'dynamo/daos';
+import type { NextFunction, Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import { cardFromId } from 'serverutils/carddb';
 import { CSV_HEADER, exportToMtgo, writeCard } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
+import { expensiveGetLimiter } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
@@ -22,27 +24,46 @@ const getBoardsToExport = (req: Request, cards: CubeCards): string[] => {
     return Object.keys(cards).filter((k) => k !== 'id');
   }
   if (typeof req.query.boards === 'string' && req.query.boards.length > 0) {
-    return req.query.boards
-      .split(',')
-      .map((b) => b.trim())
-      .filter((b) => b && b !== 'id' && cards[b] !== undefined);
+    // Deduplicate: each listed board is filtered and written, so repeats only multiply work.
+    return [
+      ...new Set(
+        req.query.boards
+          .split(',')
+          .map((b) => b.trim())
+          .filter((b) => b && b !== 'id' && cards[b] !== undefined),
+      ),
+    ];
   }
   // Default: mainboard only
   return ['mainboard'];
 };
 
-const sortCardsByQuery = (req: Request, cards: Card[]): Card[] => {
-  let filteredCards = cards;
-
-  if (req.query.filter) {
-    const { filter, err } = filterutil.makeFilter(req.query.filter as string);
-    if (err) {
-      throw err;
-    }
-    if (filter) {
-      filteredCards = cards.filter(filter);
-    }
+/**
+ * Parses the optional `?filter=` once per request. Throws a user-facing error when it is
+ * malformed or too long, before any cube data is loaded.
+ */
+const getQueryFilter = (req: Request): FilterFunction | null => {
+  const filterText = req.query.filter;
+  if (!filterText) {
+    return null;
   }
+  if (typeof filterText !== 'string' || filterText.length > MAX_SEARCH_FILTER_LENGTH) {
+    throw new Error('The filter for this download is not valid.');
+  }
+  const { filter, err } = filterutil.makeFilter(filterText);
+  if (err) {
+    throw new Error('The filter for this download is not valid.');
+  }
+  return filter;
+};
+
+// Only downloads that carry a filter run the filter parser, so only those are throttled.
+const filterLimiter = expensiveGetLimiter(60_000, 30);
+const limitFilteredDownloads = (req: ExpressRequest, res: ExpressResponse, next: NextFunction) =>
+  req.query.filter ? filterLimiter(req, res, next) : next();
+
+const sortCardsByQuery = (req: Request, cards: Card[], filter: FilterFunction | null): Card[] => {
+  const filteredCards = filter ? cards.filter(filter) : cards;
 
   return sortForDownload(
     filteredCards,
@@ -60,6 +81,8 @@ export const cubecobraHandler = async (req: Request, res: Response) => {
       req.flash('danger', 'Invalid cube ID');
       return redirect(req, res, '/404');
     }
+
+    const filter = getQueryFilter(req);
 
     const cube = await cubeDao.getById(req.params.id);
     if (!cube || !isCubeViewable(cube, req.user)) {
@@ -80,7 +103,7 @@ export const cubecobraHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards);
+    allCards = sortCardsByQuery(req, allCards, filter);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
     res.setHeader('Content-type', 'text/plain');
@@ -151,6 +174,8 @@ export const forgeHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
+    const filter = getQueryFilter(req);
+
     const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
@@ -171,7 +196,7 @@ export const forgeHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards);
+    allCards = sortCardsByQuery(req, allCards, filter);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -195,6 +220,8 @@ export const mtgoHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
+    const filter = getQueryFilter(req);
+
     const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
@@ -215,7 +242,7 @@ export const mtgoHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards);
+    allCards = sortCardsByQuery(req, allCards, filter);
 
     // MTGO format uses main/side split; put all selected boards in main
     return exportToMtgo(res, cube.name, allCards, []);
@@ -231,6 +258,8 @@ export const xmageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
+    const filter = getQueryFilter(req);
+
     const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
@@ -251,7 +280,7 @@ export const xmageHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards);
+    allCards = sortCardsByQuery(req, allCards, filter);
 
     res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
     res.setHeader('Content-type', 'text/plain');
@@ -271,6 +300,8 @@ export const versionedHandler = async (req: Request, res: Response) => {
       req.flash('danger', 'Invalid cube ID');
       return redirect(req, res, '/404');
     }
+
+    const filter = getQueryFilter(req);
 
     const cube = await cubeDao.getById(req.params.id);
 
@@ -294,7 +325,7 @@ export const versionedHandler = async (req: Request, res: Response) => {
         const details = cardFromId(card.cardID);
         card.details = details;
       }
-      const sorted = sortCardsByQuery(req, list as Card[]);
+      const sorted = sortCardsByQuery(req, list as Card[], filter);
 
       // Put all selected boards in main
       // Moxfield/Archidekt/Draftmancer all use different rules
@@ -333,6 +364,8 @@ export const plaintextHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
+    const filter = getQueryFilter(req);
+
     const cube = await cubeDao.getById(req.params.id);
 
     if (!cube || !isCubeViewable(cube, req.user)) {
@@ -356,7 +389,7 @@ export const plaintextHandler = async (req: Request, res: Response) => {
         const details = cardFromId(card.cardID);
         card.details = details;
       }
-      const sorted = sortCardsByQuery(req, list as Card[]);
+      const sorted = sortCardsByQuery(req, list as Card[], filter);
 
       res.write(`# ${boardname}\r\n`);
       for (const card of sorted) {
@@ -375,7 +408,7 @@ export const routes = [
   {
     path: '/cubecobra/:id',
     method: 'get',
-    handler: [cubecobraHandler],
+    handler: [limitFilteredDownloads, cubecobraHandler],
   },
   {
     path: '/csv/:id',
@@ -385,26 +418,26 @@ export const routes = [
   {
     path: '/forge/:id',
     method: 'get',
-    handler: [forgeHandler],
+    handler: [limitFilteredDownloads, forgeHandler],
   },
   {
     path: '/mtgo/:id',
     method: 'get',
-    handler: [mtgoHandler],
+    handler: [limitFilteredDownloads, mtgoHandler],
   },
   {
     path: '/xmage/:id',
     method: 'get',
-    handler: [xmageHandler],
+    handler: [limitFilteredDownloads, xmageHandler],
   },
   {
     path: '/versioned/:id',
     method: 'get',
-    handler: [versionedHandler],
+    handler: [limitFilteredDownloads, versionedHandler],
   },
   {
     path: '/plaintext/:id',
     method: 'get',
-    handler: [plaintextHandler],
+    handler: [limitFilteredDownloads, plaintextHandler],
   },
 ];

@@ -1,8 +1,9 @@
 import { typeIsSpecialZoneType } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
-import { makeFilter } from '@utils/filtering/FilterCards';
+import { makeFilter, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId, getAllMostReasonable } from 'serverutils/carddb';
+import { jsonLimiter } from 'serverutils/rateLimiters';
 import { recommendOrThrow } from 'serverutils/ml';
 
 import { Request, Response } from '../../../../types/express';
@@ -50,7 +51,10 @@ export const addsHandler = async (req: Request, res: Response) => {
       return res.status(200).send({ cardIDs: [], hasMoreAdds: false });
     }
 
-    const { err, filter } = makeFilter(`${filterText}`);
+    const { err, filter } =
+      `${filterText}`.length > MAX_SEARCH_FILTER_LENGTH
+        ? { err: 'Filter is too long', filter: null }
+        : makeFilter(`${filterText}`);
     if (err || !filter) {
       return res.status(400).send({
         success: 'false',
@@ -142,6 +146,7 @@ export const routes = [
   {
     method: 'post',
     path: '',
-    handler: [addsHandler],
+    // Each call runs a recommender query plus a filter parse, so keep anonymous callers in check.
+    handler: [jsonLimiter(60_000, 60), addsHandler],
   },
 ];

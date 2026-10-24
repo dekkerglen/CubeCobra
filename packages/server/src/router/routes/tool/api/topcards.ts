@@ -1,7 +1,8 @@
-import { makeFilter } from '@utils/filtering/FilterCards';
+import { makeFilter, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
 import { OrderedSortsType, SortFunctions } from '@utils/sorting/Sort';
 import { SortDirections, SortDirectionsType } from '@utils/sorting/sortContext';
 import Joi from 'joi';
+import { expensiveGetLimiter } from 'serverutils/rateLimiters';
 import { searchCards } from 'serverutils/tools';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
@@ -9,7 +10,7 @@ import { NextFunction, Request, Response } from '../../../../types/express';
 const validSortNames = Object.keys(SortFunctions);
 
 const TopCardsQuerySchema = Joi.object({
-  f: Joi.string().allow('').required(),
+  f: Joi.string().allow('').max(MAX_SEARCH_FILTER_LENGTH).required(),
   s: Joi.string()
     .valid(...validSortNames)
     .required(),
@@ -68,6 +69,6 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [validateQuery, getTopCardsPage],
+    handler: [expensiveGetLimiter(60_000, 120), validateQuery, getTopCardsPage],
   },
 ];

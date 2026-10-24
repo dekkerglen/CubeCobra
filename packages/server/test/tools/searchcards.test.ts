@@ -1,10 +1,12 @@
 import * as filterCards from '@utils/filtering/FilterCards';
 import * as tools from 'serverutils/tools';
 
+import { searchCardsHandler } from '../../src/router/routes/tool/api/searchcards';
 import { csvHandler } from '../../src/router/routes/tool/searchcards';
 import { Request, Response } from '../../src/types/express';
 import { createCardDetails } from '../test-utils/data';
 import { expectRegisteredRoutes } from '../test-utils/route';
+import { call } from '../test-utils/transport';
 
 // The CSV handler streams via res.setHeader/write/end, which the shared mock
 // response doesn't support, so capture output with a purpose-built response.
@@ -129,6 +131,50 @@ describe('Search cards CSV export', () => {
 
     expect(searchAllCards).not.toHaveBeenCalled();
     expect((res as any).statusCode).toEqual(400);
+  });
+
+  it('returns 400 without parsing when the filter is too long or not a single value', async () => {
+    const makeFilter = jest.spyOn(filterCards, 'makeFilter');
+    const searchAllCards = jest.spyOn(tools, 'searchAllCards');
+
+    for (const f of ['a'.repeat(filterCards.MAX_SEARCH_FILTER_LENGTH + 1), ['t:creature', 'c:r']]) {
+      const { res } = createStreamingResponse();
+      await csvHandler(createRequest({ f, s: 'Elo', d: 'descending' }), res);
+      expect((res as any).statusCode).toEqual(400);
+    }
+
+    expect(makeFilter).not.toHaveBeenCalled();
+    expect(searchAllCards).not.toHaveBeenCalled();
+  });
+});
+
+describe('Search cards API', () => {
+  afterEach(() => {
+    jest.restoreAllMocks();
+  });
+
+  it('returns 400 without parsing when the filter is too long or not a single value', async () => {
+    const makeFilter = jest.spyOn(filterCards, 'makeFilter');
+    const searchCards = jest.spyOn(tools, 'searchCards');
+
+    for (const f of ['a'.repeat(filterCards.MAX_SEARCH_FILTER_LENGTH + 1), ['t:creature', 'c:r']]) {
+      const res = await call(searchCardsHandler).withQuery({ f, s: 'Elo', d: 'descending', p: '0' }).send();
+      expect(res.status).toEqual(400);
+      expect(res.body).toEqual({ success: 'false', numResults: 0, data: [] });
+    }
+
+    expect(makeFilter).not.toHaveBeenCalled();
+    expect(searchCards).not.toHaveBeenCalled();
+  });
+
+  it('searches with a filter at the length limit', async () => {
+    jest.spyOn(tools, 'searchCards').mockImplementation(() => ({ data: [], numResults: 0 }));
+
+    const f = 'a'.repeat(filterCards.MAX_SEARCH_FILTER_LENGTH);
+    const res = await call(searchCardsHandler).withQuery({ f, s: 'Elo', d: 'descending', p: '0' }).send();
+
+    expect(res.status).toEqual(200);
+    expect(res.body).toEqual({ success: 'true', data: [], numResults: 0 });
   });
 });
 

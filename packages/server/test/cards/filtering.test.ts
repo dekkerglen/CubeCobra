@@ -123,13 +123,12 @@ describe('Name filter syntax', () => {
     assertValidNameFilter(makeFilter(`n:'Urza\\'s Bauble'`));
   });
 
-  const failingNamesWithInterestingCharacters = [
-    'Hazmat Suit (Used)', //The brackets get interpreted as another clause and we only want a single filter
-  ];
-
-  it.each(failingNamesWithInterestingCharacters)('Failing names with interesting characters (%s)', async (name) => {
-    const result = makeFilter(name);
-    expect(result.err).toBeTruthy();
+  it('Names with parentheses parse as grouped name clauses unless quoted', async () => {
+    // A bare word can't start with a parenthesis, so the brackets here are a group: this is
+    // "Hazmat AND Suit AND (Used)", which still only uses the name field.
+    assertValidNameFilter(makeFilter('Hazmat Suit (Used)'));
+    assertValidNameFilter(makeFilter('"Hazmat Suit (Used)"'));
+    assertValidNameFilter(makeFilter("name:'Hazmat Suit (Used)'"));
   });
 });
 

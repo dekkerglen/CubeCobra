@@ -489,16 +489,27 @@ nameStringOpValue -> equalityOperator stringValue {% ([op, value]) => nameString
 
 stringValue -> (noQuoteStringValue | dqstring | sqstring) {% ([[value]]) => value.toLowerCase() %}
 
-# anything that isn't a special character and isn't "and" or "or"
+# anything that isn't a special character and isn't "and" or "or".
+# A bare word can never start with a parenthesis, and any parentheses inside it must come in
+# balanced pairs (wordParens), so "tag:removal(cheap)" is one word but a paren that could be a
+# grouping paren never is. If words could absorb grouping parens, every "(word)" would have several
+# parses and the parse count grows combinatorially with the number of groups (a DoS). Anything else
+# with parentheses must be quoted, e.g. name:"Erase (Not the Urza's Legacy One)".
 noQuoteStringValue -> 
   ("a"i | "an"i | "o"i) {% ([[value]]) => value.toLowerCase() %}
-  | ([^aAoO\- \t\n"'\\=<>:] 
-    | "a"i [^nN \t\n"'\\=<>:] 
-    | "an"i [^dD \t\n"'\\=<>:] 
-    | "and"i [^ \t\n"'\\=<>:] 
-    | "o"i [^rR \t\n"'\\=<>:]
-    | "or"i [^ \t\n"'\\=<>:]
-    ) [^ \t\n"\\=<>:]:* {% ([startChars, chars]) => startChars.concat(chars).join('').toLowerCase() %}
+  | ([^aAoO\- \t\n"'\\=<>:()] 
+    | "a"i ([^nN \t\n"'\\=<>:()] | wordParens)
+    | "an"i ([^dD \t\n"'\\=<>:()] | wordParens)
+    | "and"i ([^ \t\n"'\\=<>:()] | wordParens)
+    | "o"i ([^rR \t\n"'\\=<>:()] | wordParens)
+    | "or"i ([^ \t\n"'\\=<>:()] | wordParens)
+    ) wordTail {% ([startChars, tail]) => (startChars.flat(Infinity).join('') + tail).toLowerCase() %}
+
+# Plain characters, then any number of balanced (...) segments each followed by more plain
+# characters. Splitting it this way keeps parsing a word without parentheses as cheap as before.
+wordTail -> [^ \t\n"\\=<>:()]:* (wordParens [^ \t\n"\\=<>:()]:*):* {% ([chars, segments]) => chars.join('') + segments.map(([parens, rest]) => parens + rest.join('')).join('') %}
+
+wordParens -> "(" wordTail ")" {% ([, inner]) => `(${inner})` %}
 # "
 
 manaCostOpValue -> equalityOperator manaCostValue {% ([op, value]) => manaCostOperation(op, value) %}

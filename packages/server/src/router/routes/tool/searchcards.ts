@@ -1,9 +1,10 @@
 import { cardElo, detailsToCard } from '@utils/cardutil';
 import { toDistinct } from '@utils/cardSearchOptions';
 import { CardDetails } from '@utils/datatypes/Card';
-import { makeFilter } from '@utils/filtering/FilterCards';
+import { makeFilter, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
 import { OrderedSortsType } from '@utils/sorting/Sort';
 import { SortDirectionsType } from '@utils/sorting/sortContext';
+import { expensiveGetLimiter } from 'serverutils/rateLimiters';
 import { render } from 'serverutils/render';
 import { searchAllCards } from 'serverutils/tools';
 
@@ -48,7 +49,13 @@ const cardToCsvRow = (card: CardDetails): string => {
 
 export const csvHandler = async (req: Request, res: Response) => {
   try {
-    const { err, filter } = makeFilter(`${req.query.f ?? ''}`);
+    const filterText = req.query.f ?? '';
+    if (typeof filterText !== 'string' || filterText.length > MAX_SEARCH_FILTER_LENGTH) {
+      res.status(400).send('Invalid filter');
+      return;
+    }
+
+    const { err, filter } = makeFilter(filterText);
     if (err || !filter) {
       res.status(400).send('Invalid filter');
       return;
@@ -89,6 +96,7 @@ export const routes = [
   {
     method: 'get',
     path: '/csv',
-    handler: [csvHandler],
+    // Exports every matching card, so it is far heavier than a page of results.
+    handler: [expensiveGetLimiter(60_000, 10), csvHandler],
   },
 ];

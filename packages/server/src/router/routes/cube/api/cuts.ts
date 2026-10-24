@@ -1,6 +1,7 @@
-import { makeFilter } from '@utils/filtering/FilterCards';
+import { makeFilter, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
 import { cubeDao } from 'dynamo/daos';
 import { getAllMostReasonable, getReasonableCardByOracleWithPrintingPreference } from 'serverutils/carddb';
+import { jsonLimiter } from 'serverutils/rateLimiters';
 import { recommend } from 'serverutils/ml';
 
 import { Request, Response } from '../../../../types/express';
@@ -26,7 +27,10 @@ export const cutsHandler = async (req: Request, res: Response) => {
     let slice = cuts || [];
 
     if (filterText && filterText.length > 0) {
-      const { err, filter } = makeFilter(`${filterText}`);
+      const { err, filter } =
+        `${filterText}`.length > MAX_SEARCH_FILTER_LENGTH
+          ? { err: 'Filter is too long', filter: null }
+          : makeFilter(`${filterText}`);
 
       if (err || !filter) {
         return res.status(400).send({
@@ -66,6 +70,7 @@ export const routes = [
   {
     method: 'post',
     path: '',
-    handler: [cutsHandler],
+    // Each call runs a recommender query plus a filter parse, so keep anonymous callers in check.
+    handler: [jsonLimiter(60_000, 60), cutsHandler],
   },
 ];
