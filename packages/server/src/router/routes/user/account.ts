@@ -43,8 +43,6 @@ export const handler = async (req: Request, res: Response) => {
     'UserAccountPage',
     {
       defaultNav: req.query.nav || '',
-      patreonRedirectUri: process.env.PATREON_REDIRECT || '',
-      patreonClientId: process.env.PATREON_CLIENT_ID || '',
       patron,
       featured: myFeatured,
       userEmail: userWithEmail?.email,

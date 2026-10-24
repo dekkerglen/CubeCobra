@@ -4,7 +4,10 @@ import { fireEvent, render, screen } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
+import { PatronLevels, PatronStatuses } from '@utils/datatypes/Patron';
+
 import UserEmailForm from 'components/user/UserEmailForm';
+import UserPatreonConfig from 'components/user/UserPatreonConfig';
 
 const hiddenValue = (form: HTMLFormElement, name: string) =>
   (form.querySelector(`input[type="hidden"][name="${name}"]`) as HTMLInputElement | null)?.value;
@@ -29,5 +32,27 @@ describe('UserEmailForm', () => {
 
     expect(screen.getByText('new@example.com')).toBeInTheDocument();
     expect(screen.getByText(/We sent a confirmation link to/)).toBeInTheDocument();
+  });
+});
+
+describe('UserPatreonConfig', () => {
+  it('unlinks with a POST form rather than a link', () => {
+    const patron = {
+      email: 'patron@example.com',
+      level: PatronLevels['Cobra Hatchling'],
+      status: PatronStatuses.ACTIVE,
+      owner: 'user-1',
+      dateCreated: 1,
+      dateLastUpdated: 1,
+    };
+    render(<UserPatreonConfig patron={patron} />);
+
+    const button = screen.getByRole('button', { name: 'Unlink Patreon Account' });
+    const form = button.closest('form');
+
+    expect(button).toHaveAttribute('type', 'submit');
+    expect(form).toHaveAttribute('action', '/patreon/unlink');
+    expect(form).toHaveAttribute('method', 'POST');
+    expect(document.querySelector('a[href="/patreon/unlink"]')).toBeNull();
   });
 });

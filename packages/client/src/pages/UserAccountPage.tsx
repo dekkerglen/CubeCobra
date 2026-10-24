@@ -28,8 +28,6 @@ import MainLayout from 'layouts/MainLayout';
 
 interface UserAccountPageProps {
   defaultNav: string;
-  patreonClientId: string;
-  patreonRedirectUri: string;
   patron?: Patron;
   featured?: {
     cube: Cube;
@@ -88,21 +86,14 @@ const SECTIONS: AccountSection[] = [
     label: 'Patreon Integration',
     description: 'Link your Patreon account and manage supporter perks.',
     Icon: HeartIcon,
-    render: ({ patron, featured, patreonClientId, patreonRedirectUri }) =>
+    render: ({ patron, featured }) =>
       patron ? (
         <UserPatreonConfig patron={patron} featured={featured} />
       ) : (
         <Flexbox direction="col" gap="3">
           <p>Your account is currently not linked to your Patreon account.</p>
-          <Button
-            type="link"
-            block
-            outline
-            color="primary"
-            href={`https://www.patreon.com/oauth2/authorize?response_type=code&scope=${encodeURIComponent('identity identity[email]')}&client_id=${patreonClientId}&redirect_uri=${encodeURIComponent(
-              patreonRedirectUri,
-            )}`}
-          >
+          {/* The server builds the Patreon authorize URL, with a state tied to this session. */}
+          <Button type="link" block outline color="primary" href="/patreon/link">
             Link Patreon Account
           </Button>
         </Flexbox>

@@ -3,6 +3,8 @@ export type UnhydratedPatron = {
   level: number;
   status: string;
   owner: string;
+  /** Patreon's id for the linked Patreon user. Unlike the email, it never changes. Absent on records linked before it was stored. */
+  patreonUserId?: string;
   dateCreated: number;
   dateLastUpdated: number;
 };

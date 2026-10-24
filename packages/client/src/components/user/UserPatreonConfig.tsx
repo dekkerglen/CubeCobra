@@ -8,6 +8,7 @@ import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
 import { Col, Flexbox, Row } from '../base/Layout';
 import Text from '../base/Text';
+import CSRFForm from '../CSRFForm';
 import CubePreview from '../cube/CubePreview';
 import AddFeaturedModal from '../modals/AddFeaturedModal';
 import RemoveFeaturedCubeModal from '../modals/RemoveFeaturedCubeModal';
@@ -80,9 +81,11 @@ const UserPatreonConfig: React.FC<UserPatreonConfigProps> = ({ patron, featured 
           </p>
         )}
       </div>
-      <Button type="link" block outline color="danger" href="/patreon/unlink">
-        Unlink Patreon Account
-      </Button>
+      <CSRFForm method="POST" action="/patreon/unlink" formData={{}}>
+        <Button type="submit" block outline color="danger">
+          Unlink Patreon Account
+        </Button>
+      </CSRFForm>
     </Flexbox>
   );
 };

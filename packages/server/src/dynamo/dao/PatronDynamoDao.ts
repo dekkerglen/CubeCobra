@@ -111,6 +111,24 @@ export class PatronDynamoDao extends BaseDynamoDao<Patron, Patron> {
   }
 
   /**
+   * Gets a patron by the linked Patreon user's id. Records linked before the id was stored
+   * aren't indexed; look those up by email.
+   */
+  public async getByPatreonUserId(patreonUserId: string): Promise<Patron | undefined> {
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI3',
+      KeyConditionExpression: 'GSI3PK = :patreonUser',
+      ExpressionAttributeValues: {
+        ':patreonUser': `${this.itemType()}#PATREON_USER#${patreonUserId}`,
+      },
+      Limit: 1,
+    };
+
+    return this.queryOne(params);
+  }
+
+  /**
    * Enumerates a single page of all patrons via the GSI2 (`PATRON#ALL`) index.
    * Requires the GSI2 keys to have been backfilled onto existing rows.
    */

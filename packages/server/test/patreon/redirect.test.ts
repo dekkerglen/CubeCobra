@@ -26,6 +26,8 @@ import { call } from '../test-utils/transport';
 
 const OWNER = 'user-123';
 const EMAIL = 'patron@example.com';
+// The OAuth state that /patreon/link stored in the session and Patreon echoes back.
+const STATE = '0123456789abcdef0123456789abcdef';
 
 const identity = (email: string) => ({
   data: { attributes: { email } },
@@ -73,7 +75,8 @@ describe('patreon redirectHandler', () => {
     call(redirectHandler)
       .as(createUser({ id: OWNER }))
       .withFlash(flash)
-      .withQuery({ code: 'grant' })
+      .withRequest({ session: { patreonOAuthState: STATE } } as any)
+      .withQuery({ code: 'grant', state: STATE })
       .send();
 
   it('creates a new patron record when the user has never linked', async () => {

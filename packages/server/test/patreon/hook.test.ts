@@ -7,6 +7,7 @@ import crypto from 'crypto';
 jest.mock('../../src/dynamo/daos', () => ({
   patronDao: {
     getByEmail: jest.fn(),
+    getByPatreonUserId: jest.fn(),
     update: jest.fn(),
     put: jest.fn(),
   },
@@ -87,6 +88,8 @@ describe('patreon hookHandler', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    // Records linked before the Patreon user id was stored are only reachable by email.
+    (patronDao.getByPatreonUserId as jest.Mock).mockResolvedValue(undefined);
     (patronDao.getByEmail as jest.Mock).mockResolvedValue({
       owner: OWNER,
       email: EMAIL,
@@ -189,6 +192,24 @@ describe('patreon hookHandler', () => {
     expect(status).toBe(200);
     expect(patronDao.getByEmail).not.toHaveBeenCalled();
     expect(patronDao.update).not.toHaveBeenCalled();
+  });
+
+  it('fails closed when the hook secret is not configured', async () => {
+    // A request "signed" with the empty key used to verify when the secret was missing.
+    process.env.PATREON_HOOK_SECRET = '';
+    const req = signed('members:pledge:create', memberPayload({ status: 'active_patron' }));
+
+    try {
+      const { status, rawRequest } = await call(hookHandler).withRequest(req).send();
+
+      expect(status).toBe(503);
+      expect(rawRequest.logger.error).toHaveBeenCalled();
+      expect(patronDao.getByPatreonUserId).not.toHaveBeenCalled();
+      expect(patronDao.update).not.toHaveBeenCalled();
+      expect(userDao.update).not.toHaveBeenCalled();
+    } finally {
+      process.env.PATREON_HOOK_SECRET = HOOK_SECRET;
+    }
   });
 
   it('acknowledges (200) when no patron matches the email so Patreon does not retry', async () => {

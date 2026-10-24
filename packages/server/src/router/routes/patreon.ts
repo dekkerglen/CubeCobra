@@ -1,4 +1,4 @@
-import { PatronLevels, PatronStatuses } from '@utils/datatypes/Patron';
+import Patron, { PatronLevels, PatronStatuses } from '@utils/datatypes/Patron';
 import { UserRoles } from '@utils/datatypes/User';
 import crypto from 'crypto';
 import { patronDao, userDao } from 'dynamo/daos';
@@ -40,7 +40,9 @@ const isValidPatreonSignature = (
 };
 
 // The normalized state we derive from a webhook payload, regardless of API version.
-type PledgeState = { email: string; active: boolean; level: number };
+// `patreonUserId` is Patreon's stable id for the pledging user; `email` is only the fallback
+// for patron records linked before that id was stored.
+type PledgeState = { patreonUserId?: string; email?: string; active: boolean; level: number };
 
 // Maps a v2 member's highest currently entitled tier (resolved from `included`) to a
 // PatronLevel. Falls back to the base 'Patron' level when no tier maps.
@@ -129,7 +131,77 @@ const resolvePledgeV1 = (action: string, body: any): PledgeState | null => {
       }
     }
   }
-  return { email, active: true, level };
+  return { patreonUserId: patronId, email, active: true, level };
+};
+
+// Finds the patron record a webhook is about. The Patreon user id is the reliable key: the
+// email on a Patreon account can change, after which an email match would miss (leaving perks
+// active after a cancellation). Records linked before the id was stored can only be found by
+// email, and an email match on a record pinned to a different Patreon user is not this one.
+const findPatronForPledge = async (state: PledgeState): Promise<Patron | undefined> => {
+  if (state.patreonUserId) {
+    const byId = await patronDao.getByPatreonUserId(state.patreonUserId);
+    if (byId) {
+      return byId;
+    }
+  }
+
+  if (!state.email) {
+    return undefined;
+  }
+
+  const byEmail = await patronDao.getByEmail(state.email);
+  if (byEmail?.patreonUserId && state.patreonUserId && byEmail.patreonUserId !== state.patreonUserId) {
+    return undefined;
+  }
+  return byEmail;
+};
+
+const PATREON_PAGE = '/user/account?nav=patreon';
+
+// The OAuth `state` round-trips through Patreon and must come back to the session that started
+// the link, so an attacker can't get their own Patreon grant attached to someone else's account.
+type PatreonSession = { patreonOAuthState?: string };
+
+// Starts linking: remembers a fresh `state` in the session and sends the user to Patreon.
+export const linkHandler = async (req: Request, res: Response) => {
+  const clientId = process.env.PATREON_CLIENT_ID;
+  const redirectUri = process.env.PATREON_REDIRECT;
+  if (!clientId || !redirectUri) {
+    req.logger.error('Patreon linking is not configured (PATREON_CLIENT_ID / PATREON_REDIRECT)');
+    req.flash('danger', `Linking Patreon accounts isn't available right now. Please try again later.`);
+    return redirect(req, res, PATREON_PAGE);
+  }
+
+  const state = crypto.randomBytes(16).toString('hex');
+  (req.session as unknown as PatreonSession).patreonOAuthState = state;
+
+  const authorizeUrl =
+    'https://www.patreon.com/oauth2/authorize?response_type=code' +
+    `&scope=${encodeURIComponent('identity identity[email]')}` +
+    `&client_id=${encodeURIComponent(clientId)}` +
+    `&redirect_uri=${encodeURIComponent(redirectUri)}` +
+    `&state=${state}`;
+
+  // redirect() saves the session first, so the state is stored before the user comes back.
+  return redirect(req, res, authorizeUrl);
+};
+
+// Single use: whatever came back, the stored state is consumed.
+const consumeOAuthState = (req: Request): boolean => {
+  const session = req.session as unknown as PatreonSession | undefined;
+  const expected = session?.patreonOAuthState;
+  if (session) {
+    delete session.patreonOAuthState;
+  }
+
+  const provided = req.query.state;
+  if (!expected || typeof provided !== 'string') {
+    return false;
+  }
+  const expectedBuffer = Buffer.from(expected);
+  const providedBuffer = Buffer.from(provided);
+  return expectedBuffer.length === providedBuffer.length && crypto.timingSafeEqual(expectedBuffer, providedBuffer);
 };
 
 export const unlinkHandler = async (req: Request, res: Response) => {
@@ -144,9 +216,9 @@ export const unlinkHandler = async (req: Request, res: Response) => {
     }
 
     req.flash('success', `Patron account has been unlinked.`);
-    return redirect(req, res, '/user/account?nav=patreon');
+    return redirect(req, res, PATREON_PAGE);
   } catch (err) {
-    return handleRouteError(req, res, err as Error, '/user/account?nav=patreon');
+    return handleRouteError(req, res, err as Error, PATREON_PAGE);
   }
 };
 
@@ -208,7 +280,7 @@ export const hookHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const document = await patronDao.getByEmail(state.email);
+    const document = await findPatronForPledge(state);
 
     if (!document) {
       // The pledging email has no linked Cube Cobra patron record (never linked, or unlinked).
@@ -305,10 +377,18 @@ const fetchPatreonIdentity = async (accessToken: string): Promise<any> => {
 
 export const redirectHandler = async (req: Request, res: Response) => {
   try {
+    if (!consumeOAuthState(req)) {
+      req.flash(
+        'danger',
+        `Your Patreon link request expired or didn't come from this browser. Please try linking again.`,
+      );
+      return redirect(req, res, PATREON_PAGE);
+    }
+
     const oauthGrantCode = req.query.code as string;
-    if (!oauthGrantCode) {
+    if (!oauthGrantCode || typeof oauthGrantCode !== 'string') {
       req.flash('danger', `Patreon did not return an authorization code. Please try linking again.`);
-      return redirect(req, res, '/user/account?nav=patreon');
+      return redirect(req, res, PATREON_PAGE);
     }
 
     const patron = await patronDao.getById(req.user!.id);
@@ -316,7 +396,7 @@ export const redirectHandler = async (req: Request, res: Response) => {
     // if this user is already a patron, error
     if (patron && patron.status === PatronStatuses.ACTIVE) {
       req.flash('danger', `A Patreon account has already been linked.`);
-      return redirect(req, res, '/user/account?nav=patreon');
+      return redirect(req, res, PATREON_PAGE);
     }
 
     const accessToken = await exchangePatreonCode(oauthGrantCode);
@@ -329,7 +409,7 @@ export const redirectHandler = async (req: Request, res: Response) => {
         'danger',
         `Patreon did not share an email address for this account. Please make sure your Patreon email is verified and try again.`,
       );
-      return redirect(req, res, '/user/account?nav=patreon');
+      return redirect(req, res, PATREON_PAGE);
     }
     const email = rawEmail.toLowerCase();
 
@@ -341,7 +421,7 @@ export const redirectHandler = async (req: Request, res: Response) => {
         'danger',
         `This Patreon account has already been linked to another Cube Cobra account. If you think this was done by mistake, please contact us.`,
       );
-      return redirect(req, res, '/user/account?nav=patreon');
+      return redirect(req, res, PATREON_PAGE);
     }
 
     const included = Array.isArray(identity.included) ? identity.included : [];
@@ -351,7 +431,7 @@ export const redirectHandler = async (req: Request, res: Response) => {
 
     if (!member) {
       req.flash('danger', `This Patreon account does not appear to currently support Cube Cobra.`);
-      return redirect(req, res, '/user/account?nav=patreon');
+      return redirect(req, res, PATREON_PAGE);
     }
 
     const newPatron: any = {
@@ -380,20 +460,26 @@ export const redirectHandler = async (req: Request, res: Response) => {
       );
     }
     req.flash('success', `Your Patreon account has successfully been linked.`);
-    return redirect(req, res, '/user/account?nav=patreon');
+    return redirect(req, res, PATREON_PAGE);
   } catch (err) {
     const error = err instanceof Error ? err : new Error(String(err));
     req.logger.error(error.message, error.stack);
 
     req.flash('danger', `There was an error linking your Patreon account. Please try again or contact us.`);
-    return redirect(req, res, '/user/account?nav=patreon');
+    return redirect(req, res, PATREON_PAGE);
   }
 };
 
 export const routes = [
   {
-    path: '/unlink',
+    path: '/link',
     method: 'get',
+    handler: [ensureAuth, linkHandler],
+  },
+  {
+    // POST, not GET: a GET could be fired by an image tag in someone else's Markdown.
+    path: '/unlink',
+    method: 'post',
     handler: [ensureAuth, unlinkHandler],
   },
   {
