@@ -1,6 +1,6 @@
-import { ContentStatus } from '@utils/datatypes/Content';
+import Content, { ContentStatus } from '@utils/datatypes/Content';
 import { NoticeStatus, NoticeType } from '@utils/datatypes/Notice';
-import { UserRoles } from '@utils/datatypes/User';
+import User, { UserRoles } from '@utils/datatypes/User';
 import { articleDao, episodeDao, noticeDao, podcastDao, videoDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth, ensureRole } from 'router/middleware';
 import generateMeta from 'serverutils/meta';
@@ -13,6 +13,10 @@ import { Request, Response } from '../../types/express';
 
 const ensureContentCreator = ensureRole(UserRoles.CONTENT_CREATOR);
 
+// Unpublished content (drafts and items in review) is only visible to its owner and to admins.
+const canViewContent = (content: Pick<Content, 'status' | 'owner'>, user?: User): boolean =>
+  content.status === ContentStatus.PUBLISHED ||
+  (!!user && (user.id === content.owner?.id || !!user.roles?.includes(UserRoles.ADMIN)));
 // GET /content/application
 export const applicationHandler = async (req: Request, res: Response) => {
   if (!req.user) {
@@ -265,7 +269,7 @@ export const podcastHandler = async (req: Request, res: Response) => {
 
   const podcast = await podcastDao.getById(req.params.id);
 
-  if (!podcast) {
+  if (!podcast || !canViewContent(podcast, req.user)) {
     req.flash('danger', 'Podcast not found');
     return redirect(req, res, '/content/browse');
   }
@@ -301,7 +305,7 @@ export const episodeHandler = async (req: Request, res: Response) => {
 
   const episode = await episodeDao.getById(req.params.id);
 
-  if (!episode) {
+  if (!episode || !canViewContent(episode, req.user)) {
     req.flash('danger', 'Podcast episode not found');
     return redirect(req, res, '/content/browse');
   }
@@ -333,7 +337,7 @@ export const videoHandler = async (req: Request, res: Response) => {
 
   const video = await videoDao.getById(req.params.id);
 
-  if (!video) {
+  if (!video || !canViewContent(video, req.user)) {
     req.flash('danger', 'Video not found');
     return redirect(req, res, '/content/browse');
   }
