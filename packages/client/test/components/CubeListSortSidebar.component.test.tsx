@@ -415,3 +415,29 @@ describe.each([
     expect(setUrl).toHaveBeenCalledWith('');
   });
 });
+
+describe('CubeListSortSidebar Rotisserie button (horizontal dividers)', () => {
+  const dividers = () => Array.from(gridColumn(button('Reset Sort'))!.querySelectorAll('hr'));
+
+  it('separates the Rotisserie button from the options buttons', () => {
+    renderSidebar({
+      canEdit: true,
+      isHorizontal: true,
+      csrfFetch: jest.fn(),
+      roto: { url: '', setUrl: jest.fn() },
+    });
+
+    const follows = (a: Node, b: Node) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const [optionsDivider, rotoDivider] = dividers();
+    expect(rotoDivider).toBeDefined();
+    expect(follows(button(SAVE), rotoDivider)).toBe(true);
+    expect(follows(button('Set Tag Colors'), rotoDivider)).toBe(true);
+    expect(follows(rotoDivider, button('Set Up Rotisserie Draft'))).toBe(true);
+    expect(follows(optionsDivider, rotoDivider)).toBe(true);
+  });
+
+  it('leaves no dangling divider when the button is hidden', () => {
+    renderSidebar({ canEdit: true, isHorizontal: true, csrfFetch: jest.fn() });
+    expect(dividers()).toHaveLength(1);
+  });
+});

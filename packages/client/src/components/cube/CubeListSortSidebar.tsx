@@ -177,25 +177,26 @@ const DisplayOptionActions: React.FC<{ canEdit: boolean }> = ({ canEdit }) => {
   );
 };
 
-const RotisserieDraftButton: React.FC = () => {
+const RotisserieDraftButton: React.FC<{ withDivider?: boolean }> = ({ withDivider = false }) => {
   const { hasProvider, url, setUrl } = useContext(RotoDraftContext);
 
   if (!hasProvider) {
     return null;
   }
 
-  if (url !== '') {
-    return (
-      <Button color="secondary" onClick={() => setUrl('')} block>
-        Clear Rotisserie Draft
-      </Button>
-    );
-  }
-
   return (
-    <RotoSetupButton color="secondary" block modalprops={{ onSubmit: (sheetUrl: string) => setUrl(sheetUrl) }}>
-      Set Up Rotisserie Draft
-    </RotoSetupButton>
+    <>
+      {withDivider && <hr className="my-1 border-border" />}
+      {url !== '' ? (
+        <Button color="secondary" onClick={() => setUrl('')} block>
+          Clear Rotisserie Draft
+        </Button>
+      ) : (
+        <RotoSetupButton color="secondary" block modalprops={{ onSubmit: (sheetUrl: string) => setUrl(sheetUrl) }}>
+          Set Up Rotisserie Draft
+        </RotoSetupButton>
+      )}
+    </>
   );
 };
 
@@ -386,7 +387,7 @@ const CubeListSortSidebar: React.FC<CubeListSortSidebarProps> = ({ canEdit, isHo
               </Button>
               <hr className="my-1 border-border" />
               <DisplayOptionActions canEdit={canEdit} />
-              <RotisserieDraftButton />
+              <RotisserieDraftButton withDivider />
             </div>
           </div>
 
