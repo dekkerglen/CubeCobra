@@ -82,6 +82,7 @@ if (bootstrap && bootstrap === 'true') {
       r2Bucket: process.env.R2_BUCKET || '',
       cardImageBaseUrl: process.env.CARD_IMAGE_BASE_URL || '',
       manageSharedVpcEndpoints: config.manageSharedVpcEndpoints,
+      restrictAlbToCloudflare: config.restrictAlbToCloudflare,
     },
     {
       env: { account: config.account, region: config.region },

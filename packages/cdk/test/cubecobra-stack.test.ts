@@ -73,6 +73,7 @@ const buildTemplate = (recommenderSharedSecret: string, options: BuildOptions = 
       r2Bucket: options.r2 ? 'r2-bucket' : '',
       cardImageBaseUrl: options.r2 ? 'https://images.example.com' : '',
       manageSharedVpcEndpoints: false,
+      restrictAlbToCloudflare: false,
     },
     { env: { account: '123456789012', region: 'us-east-2' } },
   );

@@ -6,7 +6,7 @@ import * as iam from 'aws-cdk-lib/aws-iam';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
-import { ElasticBeanstalk } from '../lib/elastic-beanstalk';
+import { CLOUDFLARE_IPV4_RANGES, CLOUDFLARE_IPV6_RANGES, ElasticBeanstalk } from '../lib/elastic-beanstalk';
 import { BaseTestStack } from './base-test-stack';
 
 const mockBucket: s3.IBucket = {
@@ -18,7 +18,7 @@ const mockCertificate: acm.Certificate = {
 } as unknown as acm.Certificate;
 
 class TestStack extends BaseTestStack {
-  constructor(scope: Construct, id: string) {
+  constructor(scope: Construct, id: string, restrictIngressToCloudflare?: boolean) {
     super(scope, id);
 
     const instanceProfile = new iam.CfnInstanceProfile(this, 'MockInstanceProfile', {
@@ -43,14 +43,22 @@ class TestStack extends BaseTestStack {
         NODE_ENV: 'production',
         SOME_ENV_VAR: 'MyValue',
       },
+      restrictIngressToCloudflare,
     });
   }
 }
 
-test('Creates an Elastic Beanstalk Application', () => {
+const buildTemplate = (restrictIngressToCloudflare?: boolean): Template => {
   const app = new cdk.App();
-  const stack = new TestStack(app, 'TestStack');
-  const template = Template.fromStack(stack);
+  const stack = new TestStack(app, 'TestStack', restrictIngressToCloudflare);
+  return Template.fromStack(stack);
+};
+
+const optionSettings = (template: Template): any[] =>
+  (Object.values(template.findResources('AWS::ElasticBeanstalk::Environment'))[0] as any).Properties.OptionSettings;
+
+test('Creates an Elastic Beanstalk Application', () => {
+  const template = buildTemplate();
 
   template.hasResourceProperties('AWS::ElasticBeanstalk::Application', {
     ApplicationName: 'CubeCobra-test-app',
@@ -58,9 +66,7 @@ test('Creates an Elastic Beanstalk Application', () => {
 });
 
 test('Creates an Application Version with the correct S3 source', () => {
-  const app = new cdk.App();
-  const stack = new TestStack(app, 'TestStack');
-  const template = Template.fromStack(stack);
+  const template = buildTemplate();
 
   template.hasResourceProperties('AWS::ElasticBeanstalk::ApplicationVersion', {
     ApplicationName: { Ref: Match.anyValue() }, // Matches dynamically generated references
@@ -73,9 +79,7 @@ test('Creates an Application Version with the correct S3 source', () => {
 });
 
 test('Creates an Elastic Beanstalk Environment with correct settings', () => {
-  const app = new cdk.App();
-  const stack = new TestStack(app, 'TestStack');
-  const template = Template.fromStack(stack);
+  const template = buildTemplate();
 
   template.hasResourceProperties('AWS::ElasticBeanstalk::Environment', {
     EnvironmentName: 'cubecobra-test-v2-env',
@@ -98,6 +102,45 @@ test('Creates an Elastic Beanstalk Environment with correct settings', () => {
         OptionName: 'SOME_ENV_VAR',
         Value: 'MyValue',
       },
+    ]),
+  });
+});
+
+test('Load balancer keeps the EB-managed security group by default', () => {
+  const template = buildTemplate();
+
+  template.resourceCountIs('AWS::EC2::SecurityGroup', 0);
+  expect(optionSettings(template).filter((o) => o.Namespace === 'aws:elbv2:loadbalancer')).toEqual([]);
+});
+
+test('Opt-in Cloudflare restriction puts a Cloudflare-only security group on the load balancer', () => {
+  const template = buildTemplate(true);
+
+  template.resourceCountIs('AWS::EC2::SecurityGroup', 1);
+  const securityGroup: any = Object.values(template.findResources('AWS::EC2::SecurityGroup'))[0];
+  const ingress: any[] = securityGroup.Properties.SecurityGroupIngress;
+
+  // Exactly ports 80 and 443 for every published range, and nothing else (in particular no 0.0.0.0/0).
+  const expected = [
+    ...CLOUDFLARE_IPV4_RANGES.flatMap((cidr) => [`${cidr}|443`, `${cidr}|80`]),
+    ...CLOUDFLARE_IPV6_RANGES.flatMap((cidr) => [`${cidr}|443`, `${cidr}|80`]),
+  ].sort();
+  const actual = ingress
+    .map((rule) => {
+      expect(rule.IpProtocol).toBe('tcp');
+      expect(rule.FromPort).toBe(rule.ToPort);
+      return `${rule.CidrIp ?? rule.CidrIpv6}|${rule.FromPort}`;
+    })
+    .sort();
+  expect(actual).toEqual(expected);
+
+  const lbSettings = optionSettings(template).filter((o) => o.Namespace === 'aws:elbv2:loadbalancer');
+  const sgRef = { 'Fn::GetAtt': [Match.stringLikeRegexp('CloudflareOnlyAlbSecurityGroup'), 'GroupId'] };
+  expect(lbSettings).toHaveLength(2);
+  template.hasResourceProperties('AWS::ElasticBeanstalk::Environment', {
+    OptionSettings: Match.arrayWith([
+      { Namespace: 'aws:elbv2:loadbalancer', OptionName: 'SecurityGroups', Value: sgRef },
+      { Namespace: 'aws:elbv2:loadbalancer', OptionName: 'ManagedSecurityGroup', Value: sgRef },
     ]),
   });
 });

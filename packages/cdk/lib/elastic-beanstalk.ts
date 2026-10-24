@@ -15,7 +15,43 @@ interface ElasticBeanstalkApplicationProps {
   fleetSize: number;
   instanceProfile: CfnInstanceProfile;
   environmentVariables: { [key: string]: string };
+  /**
+   * Opt-in (default false): replace the EB-managed load balancer security group (open to
+   * 0.0.0.0/0) with one that only admits Cloudflare's published ranges on 80/443. See
+   * restrictAlbToCloudflare in config.ts for the prerequisites.
+   */
+  restrictIngressToCloudflare?: boolean;
 }
+
+// Cloudflare's published edge ranges (https://www.cloudflare.com/ips-v4 and /ips-v6). Re-check
+// them when enabling restrictIngressToCloudflare; Cloudflare announces changes in advance.
+export const CLOUDFLARE_IPV4_RANGES = [
+  '173.245.48.0/20',
+  '103.21.244.0/22',
+  '103.22.200.0/22',
+  '103.31.4.0/22',
+  '141.101.64.0/18',
+  '108.162.192.0/18',
+  '190.93.240.0/20',
+  '188.114.96.0/20',
+  '197.234.240.0/22',
+  '198.41.128.0/17',
+  '162.158.0.0/15',
+  '104.16.0.0/13',
+  '104.24.0.0/14',
+  '172.64.0.0/13',
+  '131.0.72.0/22',
+];
+
+export const CLOUDFLARE_IPV6_RANGES = [
+  '2400:cb00::/32',
+  '2606:4700::/32',
+  '2803:f800::/32',
+  '2405:b500::/32',
+  '2405:8100::/32',
+  '2a06:98c0::/29',
+  '2c0f:f248::/32',
+];
 
 export class ElasticBeanstalk extends Construct {
   public readonly application: CfnApplication;
@@ -68,6 +104,39 @@ export class ElasticBeanstalk extends Construct {
     });
 
     this.appVersion.addDependency(this.application);
+
+    // Optional Cloudflare-only load balancer security group. EB attaches it to the ALB in place of
+    // the security group it would otherwise create (ManagedSecurityGroup + SecurityGroups), and adds
+    // the instance-side rule allowing traffic from it, so instances stay reachable only via the ALB.
+    const loadBalancerSecurityGroupSettings: CfnEnvironment.OptionSettingProperty[] = [];
+    if (props.restrictIngressToCloudflare) {
+      const albSecurityGroup = new ec2.SecurityGroup(this, 'CloudflareOnlyAlbSecurityGroup', {
+        vpc: props.vpc,
+        description: `CubeCobra ${props.environmentName} ALB: HTTP/HTTPS from Cloudflare only`,
+        // The ALB must reach the instances (and run health checks) on the instance port.
+        allowAllOutbound: true,
+      });
+      for (const cidr of CLOUDFLARE_IPV4_RANGES) {
+        albSecurityGroup.addIngressRule(ec2.Peer.ipv4(cidr), ec2.Port.tcp(443), 'Cloudflare HTTPS');
+        albSecurityGroup.addIngressRule(ec2.Peer.ipv4(cidr), ec2.Port.tcp(80), 'Cloudflare HTTP');
+      }
+      for (const cidr of CLOUDFLARE_IPV6_RANGES) {
+        albSecurityGroup.addIngressRule(ec2.Peer.ipv6(cidr), ec2.Port.tcp(443), 'Cloudflare HTTPS');
+        albSecurityGroup.addIngressRule(ec2.Peer.ipv6(cidr), ec2.Port.tcp(80), 'Cloudflare HTTP');
+      }
+      loadBalancerSecurityGroupSettings.push(
+        {
+          namespace: 'aws:elbv2:loadbalancer',
+          optionName: 'SecurityGroups',
+          value: albSecurityGroup.securityGroupId,
+        },
+        {
+          namespace: 'aws:elbv2:loadbalancer',
+          optionName: 'ManagedSecurityGroup',
+          value: albSecurityGroup.securityGroupId,
+        },
+      );
+    }
 
     this.environment = new CfnEnvironment(scope, 'EnvironmentV2', {
       environmentName: `cubecobra-${props.environmentName}-v2-env`,
@@ -135,6 +204,7 @@ export class ElasticBeanstalk extends Construct {
           optionName: 'Protocol',
           value: 'HTTPS',
         },
+        ...loadBalancerSecurityGroupSettings,
         {
           namespace: 'aws:elasticbeanstalk:environment:process:default',
           optionName: 'HealthCheckPath',

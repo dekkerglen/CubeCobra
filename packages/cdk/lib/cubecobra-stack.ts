@@ -64,6 +64,8 @@ interface CubeCobraStackParams {
   cardImageBaseUrl: string;
   // Whether this environment owns the shared default VPC's gateway endpoints (see config.ts).
   manageSharedVpcEndpoints: boolean;
+  // Opt-in: restrict the web ALB's ingress to Cloudflare's IP ranges (see config.ts).
+  restrictAlbToCloudflare: boolean;
 }
 
 export type Environment = 'production' | 'development';
@@ -266,6 +268,7 @@ export class CubeCobraStack extends cdk.Stack {
       instanceProfile: instanceProfile,
       appBucket: s3Buckets.appBucket,
       appVersion: params.version,
+      restrictIngressToCloudflare: params.restrictAlbToCloudflare,
     });
 
     // Grant the server's instance role permissions to run and monitor ECS tasks

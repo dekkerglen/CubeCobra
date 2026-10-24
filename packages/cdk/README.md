@@ -26,6 +26,13 @@ npx cdk deploy --context environment=<environment> --context bootstrap=true
 
 This should create all the required resources to then deploy the main stack.
 
+## Environment flags
+
+Per-environment settings live in [`config.ts`](./config.ts). Security-relevant flags, all off by default:
+
+- `restrictAlbToCloudflare`: limit the web load balancer's ingress to Cloudflare's IP ranges (prerequisites in the
+  comment in `config.ts`).
+
 ## Manual Deployment
 
 The following environment variables must be set:

@@ -19,6 +19,12 @@ export interface EnvironmentConfiguration {
   // owner has this true (beta, which already created them). If beta is ever decommissioned,
   // flip this to another shared-VPC env.
   manageSharedVpcEndpoints: boolean;
+  // Opt-in (M-11): restrict the public web ALB's 80/443 ingress to Cloudflare's published IP
+  // ranges (see CLOUDFLARE_IPV4/IPV6_RANGES in lib/elastic-beanstalk.ts), so the origin can't be
+  // reached around Cloudflare and the server's trust in CF-Connecting-IP holds. Before enabling:
+  // confirm every DNS record that points at this environment is proxied (orange cloud) and that
+  // nothing calls the ALB / EB hostname directly; then flip it on for beta, verify, then prod.
+  restrictAlbToCloudflare: boolean;
 }
 
 export const environments: { [key: string]: EnvironmentConfiguration } = {
@@ -38,6 +44,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     fleetSize: 1,
     maintainCubeCardHashes: true,
     manageSharedVpcEndpoints: false,
+    restrictAlbToCloudflare: false,
   },
 
   development: {
@@ -56,6 +63,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     fleetSize: 1,
     maintainCubeCardHashes: true,
     manageSharedVpcEndpoints: false,
+    restrictAlbToCloudflare: false,
   },
 
   beta: {
@@ -74,6 +82,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     fleetSize: 1,
     maintainCubeCardHashes: true,
     manageSharedVpcEndpoints: true,
+    restrictAlbToCloudflare: false,
   },
 
   production: {
@@ -92,5 +101,6 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     fleetSize: 3,
     maintainCubeCardHashes: true,
     manageSharedVpcEndpoints: false,
+    restrictAlbToCloudflare: false,
   },
 };
