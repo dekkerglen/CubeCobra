@@ -19,15 +19,16 @@ export const isPatreonHookPath = (originalUrl: string): boolean =>
 // Patreon signs the webhook with HMAC-MD5 over the exact raw bytes of the request body.
 // We must verify against those raw bytes (captured by the body-parser `verify` hook) — a
 // re-serialization of the parsed body (JSON.stringify) is not byte-exact and fails to match.
-const isValidPatreonSignature = (signature: string | undefined, rawBody: Buffer | undefined): boolean => {
-  if (!signature || !rawBody) {
+const isValidPatreonSignature = (
+  secret: string,
+  signature: string | undefined,
+  rawBody: Buffer | undefined,
+): boolean => {
+  if (!secret || !signature || !rawBody) {
     return false;
   }
 
-  const digest = crypto
-    .createHmac('md5', process.env.PATREON_HOOK_SECRET || '')
-    .update(rawBody)
-    .digest('hex');
+  const digest = crypto.createHmac('md5', secret).update(rawBody).digest('hex');
 
   // Constant-time comparison to avoid leaking timing information.
   const expected = Buffer.from(digest, 'hex');
@@ -164,7 +165,12 @@ export const hookHandler = async (req: Request, res: Response) => {
       });
     }
 
-    if (!isValidPatreonSignature(signature, req.rawBody)) {
+    // While the webhook secret is being rotated in Patreon's portal, hooks may arrive signed with
+    // either value; PATREON_HOOK_SECRET_PREVIOUS (when set) covers that window.
+    const secrets = [secret, process.env.PATREON_HOOK_SECRET_PREVIOUS].filter(
+      (value): value is string => !!value?.trim(),
+    );
+    if (!secrets.some((candidate) => isValidPatreonSignature(candidate, signature, req.rawBody))) {
       return res.status(401).send({
         success: 'false',
       });

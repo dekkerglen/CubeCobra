@@ -1,8 +1,6 @@
 import { ScheduledJobProps } from './scheduled-job';
 
 export interface CubeCobraStackParams {
-  accessKey: string;
-  secretKey: string;
   domain: string;
   version: string;
   environmentName: string;
@@ -13,14 +11,12 @@ export interface CubeCobraStackParams {
   downTimeActive: boolean;
   dynamoPrefix: string;
   env: Environment;
-  jobsToken: string;
   nitroPayEnabled: boolean;
   patreonClientId: string;
   patreonClientSecret: string;
   patreonHookSecret: string;
   patreonRedirect: string;
   sessionToken: string;
-  sessionSecret: string;
   fleetSize: number;
   jobs?: Map<string, ScheduledJobProps>;
   captchaSiteKey: string;
@@ -43,8 +39,13 @@ export interface CubeCobraStackParams {
   cardImageBaseUrl: string;
   // Whether this environment owns the shared default VPC's gateway endpoints (see config.ts).
   manageSharedVpcEndpoints: boolean;
+  // Shared secret for server/lambda -> recommender requests; empty disables recommender auth.
+  recommenderSharedSecret: string;
   // Opt-in: restrict the web ALB's ingress to Cloudflare's IP ranges (see config.ts).
   restrictAlbToCloudflare: boolean;
+  // Load secrets at runtime from SSM instead of synthesizing them (see config.ts, lib/secrets.ts).
+  // When true the secret params above are ignored.
+  secretsFromSsm: boolean;
 }
 
 export type Environment = 'production' | 'development' | 'local';

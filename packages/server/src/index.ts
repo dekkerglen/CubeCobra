@@ -250,7 +250,12 @@ app.use(
 // Express session middleware
 app.use(
   session({
-    secret: process.env.SESSION || 'default-secret',
+    // Production refuses to start without SESSION (assertRequiredSecrets); the fallback only
+    // ever applies to local development. New cookies are signed with SESSION; SESSION_PREVIOUS
+    // (set only while rotating) still verifies existing cookies, so a rotation logs no one out.
+    secret: process.env.SESSION
+      ? [process.env.SESSION, ...(process.env.SESSION_PREVIOUS ? [process.env.SESSION_PREVIOUS] : [])]
+      : 'local-development-session-secret',
     store: new DynamoDBStore({
       table: {
         name: `${process.env.DYNAMO_PREFIX}_SESSIONS`,

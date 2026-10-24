@@ -46,6 +46,10 @@ new DeploymentPipeline(pipelineStack, 'DeploymentPipeline', {
   betaStackName: environments.beta.stackName,
   productionStackName: environments.production.stackName,
   appBucket: pipelineConfig.appBucket,
+  // A stage's build gets no application secrets once its services load them from SSM. Redeploy this
+  // stack (npm run deploy:pipeline) after flipping secretsFromSsm in config.ts.
+  betaSecretsFromSsm: environments.beta.secretsFromSsm,
+  productionSecretsFromSsm: environments.production.secretsFromSsm,
 });
 
 app.synth();

@@ -8,6 +8,8 @@ import * as lambda from 'aws-cdk-lib/aws-lambda';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
+import { grantReadSecrets, SsmSecrets, ssmSecretsEnvironment } from './secrets';
+
 export interface DailyJobsLambdaConstructProps extends StackProps {
   codeArtifactsBucket: string;
   version: string;
@@ -18,6 +20,8 @@ export interface DailyJobsLambdaConstructProps extends StackProps {
   // and S3 resources the lambda's code touches.
   table: dynamodb.ITable;
   dataBucket: string;
+  // Secrets the handler loads from SSM at startup (config.ts secretsFromSsm); unset = none.
+  ssmSecrets?: SsmSecrets;
 }
 
 export class DailyJobsLambdaConstruct extends Construct {
@@ -39,11 +43,18 @@ export class DailyJobsLambdaConstruct extends Construct {
       runtime: lambda.Runtime.NODEJS_22_X,
       code: lambda.Code.fromBucket(codeBucket, `dailyJobsLambda/${props.version}.zip`),
       handler: 'handler.handler',
-      environment: props.environmentVariables,
+      environment: {
+        ...props.environmentVariables,
+        ...(props.ssmSecrets ? ssmSecretsEnvironment(props.ssmSecrets) : {}),
+      },
       timeout: cdk.Duration.minutes(15), // Jobs may take longer
       memorySize: 1024,
       role: executionRole,
     });
+
+    if (props.ssmSecrets) {
+      grantReadSecrets(executionRole, this, props.ssmSecrets);
+    }
 
     // DynamoDB: item-level read/write on this stage's table and its GSIs only. The jobs go through
     // the server's DAO layer (dynamo/dao/BaseDynamoDao.ts), which issues Get/Put/Update/Delete,

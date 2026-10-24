@@ -12,6 +12,8 @@ import {
   runBatchDeckbuild,
 } from '@utils/drafting/deckbuildCore';
 
+import { loadSecretsOnce } from '@utils/ssmSecrets';
+
 import { assembleSeat, assessColors } from './assemble';
 import { classifyDecks } from './classify';
 import { batchBuild, batchDraft } from './ml';
@@ -73,6 +75,10 @@ interface SeatRef {
 }
 
 export const handler = async (event: SQSEvent): Promise<SQSBatchResponse> => {
+  // RECOMMENDER_SHARED_SECRET lives in SSM in deployed environments. If it can't be loaded the
+  // whole batch throws and SQS redelivers it.
+  await loadSecretsOnce();
+
   const records = event?.Records ?? [];
   const failures = new Set<string>();
   const recordById = new Map(records.map((r) => [r.messageId, r]));

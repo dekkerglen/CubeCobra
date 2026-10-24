@@ -2,6 +2,7 @@ import { synergyConnectPuzzleDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
 import { whenCardDbReady } from 'serverutils/cardCatalog';
+import { matchesSecret } from 'serverutils/passwordPolicy';
 import { generatePuzzle } from 'serverutils/synergyconnect/generate';
 
 import { Request, Response } from '../../../../../types/express';
@@ -27,8 +28,8 @@ const targetDateString = (): string => new Date(Date.now() + 6 * 60 * 60 * 1000)
  * has. Idempotent: re-running for a date that already has a puzzle returns it.
  */
 export const rotateSynergyConnectHandler = async (req: Request, res: Response) => {
-  const apiKey = process.env.MANAMATRIX_API_KEY;
-  if (!apiKey || req.body.apiKey !== apiKey) {
+  // Constant-time, never matches when MANAMATRIX_API_KEY is unset, and accepts MANAMATRIX_API_KEY_PREVIOUS during a rotation.
+  if (!matchesSecret('MANAMATRIX_API_KEY', req.body.apiKey)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 

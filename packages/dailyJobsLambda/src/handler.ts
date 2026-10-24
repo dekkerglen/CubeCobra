@@ -1,3 +1,5 @@
+import { loadSecretsOnce } from '@utils/ssmSecrets';
+
 import { rotateCrossword } from './jobs/rotateCrossword';
 import { rotateP1P1 } from './jobs/rotateDailyP1P1';
 import { rotateQueue } from './jobs/rotateFeaturedQueue';
@@ -17,6 +19,10 @@ const WEEKLY_JOBS = [{ name: 'rotateFeaturedQueue', fn: rotateQueue }];
 
 export const handler = async (event: any) => {
   console.log('Daily jobs lambda triggered', { event });
+
+  // The rotation jobs authenticate to the server with MANAMATRIX_API_KEY, which deployed
+  // environments keep in SSM rather than in the function's configuration.
+  await loadSecretsOnce();
 
   const now = new Date();
   const dayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday

@@ -25,6 +25,12 @@ export interface EnvironmentConfiguration {
   // confirm every DNS record that points at this environment is proxied (orange cloud) and that
   // nothing calls the ALB / EB hostname directly; then flip it on for beta, verify, then prod.
   restrictAlbToCloudflare: boolean;
+  // Load application secrets at runtime from SSM SecureStrings under
+  // /cubecobra/<beta|prod>/secrets/<ENV_VAR_NAME> instead of synthesizing them into the
+  // CloudFormation/EB/Lambda/ECS configuration and the CodeBuild environment (see lib/secrets.ts).
+  // Create every parameter before flipping this on; beta first, then production, following
+  // packages/docs/maintenance/secrets-migration.md.
+  secretsFromSsm: boolean;
 }
 
 export const environments: { [key: string]: EnvironmentConfiguration } = {
@@ -45,6 +51,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     maintainCubeCardHashes: true,
     manageSharedVpcEndpoints: false,
     restrictAlbToCloudflare: false,
+    secretsFromSsm: false,
   },
 
   development: {
@@ -64,6 +71,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     maintainCubeCardHashes: true,
     manageSharedVpcEndpoints: false,
     restrictAlbToCloudflare: false,
+    secretsFromSsm: false,
   },
 
   beta: {
@@ -83,6 +91,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     maintainCubeCardHashes: true,
     manageSharedVpcEndpoints: true,
     restrictAlbToCloudflare: false,
+    secretsFromSsm: false,
   },
 
   production: {
@@ -102,5 +111,6 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     maintainCubeCardHashes: true,
     manageSharedVpcEndpoints: false,
     restrictAlbToCloudflare: false,
+    secretsFromSsm: false,
   },
 };

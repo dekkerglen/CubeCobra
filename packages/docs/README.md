@@ -35,3 +35,4 @@ This directory contains comprehensive documentation for setting up, developing, 
 - [Analytics](./maintenance/analytics.md) - Card analytics and data exports
 - [Scheduled Jobs](./maintenance/scheduled-jobs.md) - Automated maintenance tasks
 - [DynamoDB Migration](./maintenance/dynamodb-migration.md) - Single table design migration status and guide
+- [Secrets Migration](./maintenance/secrets-migration.md) - Moving application secrets to SSM Parameter Store at runtime, and rotating them

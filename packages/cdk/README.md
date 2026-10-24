@@ -30,6 +30,12 @@ This should create all the required resources to then deploy the main stack.
 
 Per-environment settings live in [`config.ts`](./config.ts). Security-relevant flags, all off by default:
 
+- `secretsFromSsm`: the services load their secrets at runtime from SSM SecureStrings under
+  `/cubecobra/<beta|prod>/secrets/<ENV_VAR_NAME>` instead of having them synthesized into CloudFormation and passed
+  through the CodeBuild environment (see [`lib/secrets.ts`](./lib/secrets.ts) for the per-service lists). Create the
+  parameters first and enable it beta-then-production following
+  [`packages/docs/maintenance/secrets-migration.md`](../docs/maintenance/secrets-migration.md); redeploy the pipeline
+  stack (`npm run deploy:pipeline`) afterwards so that stage's build stops receiving secrets.
 - `restrictAlbToCloudflare`: limit the web load balancer's ingress to Cloudflare's IP ranges (prerequisites in the
   comment in `config.ts`).
 
@@ -39,18 +45,23 @@ The following environment variables must be set:
 
 | Name                    |
 | ----------------------- |
-| `JOBS_TOKEN`            |
 | `PATREON_CLIENT_ID`     |
 | `PATREON_CLIENT_SECRET` |
 | `PATREON_HOOK_SECRET`   |
 | `SESSION_TOKEN`         |
-| `SESSION_SECRET`        |
 | `CAPTCHA_SITE_KEY`      |
 | `CAPTCHA_SECRET_KEY`    |
 | `DRAFTMANCER_API_KEY`   |
 | `MANAMATRIX_API_KEY`    |
 | `STRIPE_SECRET_KEY`     |
 | `STRIPE_PUBLIC_KEY`     |
+
+Optional: `RECOMMENDER_SHARED_SECRET` (the pipeline reads it from SSM `/cubecobra/<beta|prod>/recommender-shared-secret`
+when that parameter exists). Leave it unset to deploy with recommender authentication disabled.
+
+For an environment with `secretsFromSsm` enabled, the secret variables above are ignored (only `PATREON_CLIENT_ID`,
+`CAPTCHA_SITE_KEY`, `STRIPE_PUBLIC_KEY`, `GA_MEASUREMENT_ID` and the non-secret `R2_*`/`CARD_IMAGE_BASE_URL` values are
+read).
 
 You'll also need the app version which must match an app bundle on S3 (_v1.2.3_).
 

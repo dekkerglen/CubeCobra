@@ -112,6 +112,28 @@ describe('patreon hookHandler', () => {
     expect(userDao.update).not.toHaveBeenCalled();
   });
 
+  it('accepts hooks signed with the previous secret during a rotation', async () => {
+    const req = signed('members:pledge:delete', memberPayload({ status: 'former_patron' }));
+    process.env.PATREON_HOOK_SECRET_PREVIOUS = HOOK_SECRET;
+    process.env.PATREON_HOOK_SECRET = 'rotated-hook-secret';
+    try {
+      const { status } = await call(hookHandler).withRequest(req).send();
+      expect(status).toBe(200);
+    } finally {
+      process.env.PATREON_HOOK_SECRET = HOOK_SECRET;
+      delete process.env.PATREON_HOOK_SECRET_PREVIOUS;
+    }
+
+    // Once the rotation is finished the old signature is rejected again.
+    process.env.PATREON_HOOK_SECRET = 'rotated-hook-secret';
+    try {
+      const { status } = await call(hookHandler).withRequest(req).send();
+      expect(status).toBe(401);
+    } finally {
+      process.env.PATREON_HOOK_SECRET = HOOK_SECRET;
+    }
+  });
+
   it('deactivates the patron on members:pledge:delete', async () => {
     const req = signed('members:pledge:delete', memberPayload({ status: 'former_patron' }));
 

@@ -567,6 +567,25 @@ describe('Publish', () => {
       .post('/api/draftmancer/publish')
       .send(createRequest({ apiKey: 'invalid api key' }));
     expect(response.status).toBe(401);
+
+    // A key sharing a prefix (or of a different length) is still rejected.
+    response = await request(app)
+      .post('/api/draftmancer/publish')
+      .send(createRequest({ apiKey: 'api-key-plus' }));
+    expect(response.status).toBe(401);
+  });
+
+  it('rejects every key when DRAFTMANCER_API_KEY is not configured', async () => {
+    const configured = process.env.DRAFTMANCER_API_KEY;
+    delete process.env.DRAFTMANCER_API_KEY;
+    try {
+      const response = await request(app)
+        .post('/api/draftmancer/publish')
+        .send(createRequest({ apiKey: 'api-key' }));
+      expect(response.status).toBe(401);
+    } finally {
+      process.env.DRAFTMANCER_API_KEY = configured;
+    }
   });
 });
 

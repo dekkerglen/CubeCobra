@@ -38,12 +38,19 @@ if (bootstrap && bootstrap === 'true') {
 
   const StackClass = isLocal ? CubeCobraStackLocal : CubeCobraStack;
 
+  // Secret values only come from the deploy environment when the stage still synthesizes them into
+  // its configuration. With secretsFromSsm the services load them from SSM at runtime, so they are
+  // never read here (and the pipeline no longer puts them in the build environment).
+  const secret = (name: string): string => (config.secretsFromSsm ? '' : process.env[name] || '');
+
   new StackClass(
     app,
     config.stackName,
     {
-      accessKey: process.env.AWS_ACCESS_KEY_ID || '',
-      secretKey: process.env.AWS_SECRET_ACCESS_KEY || '',
+      // No AWS_ACCESS_KEY_ID / AWS_SECRET_ACCESS_KEY here on purpose: the services get AWS
+      // credentials from their instance/task/execution roles. Copying the deployer's keys into
+      // the runtime environment would make whatever credentials ran `cdk deploy` the server's
+      // identity.
       domain: config.domain,
       environmentName: environment,
       version: version,
@@ -54,22 +61,20 @@ if (bootstrap && bootstrap === 'true') {
       downTimeActive: config.downTimeActive,
       dynamoPrefix: config.dynamoPrefix,
       env: environment,
-      jobsToken: process.env.JOBS_TOKEN || '',
       nitroPayEnabled: config.nitroPayEnabled,
       patreonClientId: process.env.PATREON_CLIENT_ID || '',
-      patreonClientSecret: process.env.PATREON_CLIENT_SECRET || '',
-      patreonHookSecret: process.env.PATREON_HOOK_SECRET || '',
+      patreonClientSecret: secret('PATREON_CLIENT_SECRET'),
+      patreonHookSecret: secret('PATREON_HOOK_SECRET'),
       patreonRedirect: config.patreonRedirectUri,
-      sessionToken: process.env.SESSION_TOKEN || '',
-      sessionSecret: process.env.SESSION_SECRET || '',
+      sessionToken: secret('SESSION_TOKEN'),
       fleetSize: config.fleetSize,
       captchaSiteKey: process.env.CAPTCHA_SITE_KEY || '',
-      captchaSecretKey: process.env.CAPTCHA_SECRET_KEY || '',
+      captchaSecretKey: secret('CAPTCHA_SECRET_KEY'),
       gaMeasurementId: process.env.GA_MEASUREMENT_ID || '',
-      gaApiSecret: process.env.GA_API_SECRET || '',
-      draftmancerApiKey: process.env.DRAFTMANCER_API_KEY || '',
-      manaMatrixApiKey: process.env.MANAMATRIX_API_KEY || '',
-      stripeSecretKey: process.env.STRIPE_SECRET_KEY || '',
+      gaApiSecret: secret('GA_API_SECRET'),
+      draftmancerApiKey: secret('DRAFTMANCER_API_KEY'),
+      manaMatrixApiKey: secret('MANAMATRIX_API_KEY'),
+      stripeSecretKey: secret('STRIPE_SECRET_KEY'),
       stripePublicKey: process.env.STRIPE_PUBLIC_KEY || '',
       enableBotSecurity: environment === 'production',
       // Temporary: evicts browser caches poisoned on 2026-08-20. Set back to false once the
@@ -77,12 +82,18 @@ if (bootstrap && bootstrap === 'true') {
       clearSiteCache: false,
       maintainCubeCardHashes: config.maintainCubeCardHashes,
       r2Endpoint: process.env.R2_ENDPOINT || '',
-      r2AccessKeyId: process.env.R2_ACCESS_KEY_ID || '',
-      r2SecretAccessKey: process.env.R2_SECRET_ACCESS_KEY || '',
+      r2AccessKeyId: secret('R2_ACCESS_KEY_ID'),
+      r2SecretAccessKey: secret('R2_SECRET_ACCESS_KEY'),
       r2Bucket: process.env.R2_BUCKET || '',
       cardImageBaseUrl: process.env.CARD_IMAGE_BASE_URL || '',
       manageSharedVpcEndpoints: config.manageSharedVpcEndpoints,
+      // Optional shared secret the web server and bot-deckbuild lambda send to the recommender
+      // (and the recommender requires). Without secretsFromSsm the pipeline reads it from SSM
+      // /cubecobra/<beta|prod>/recommender-shared-secret when that parameter exists; empty
+      // (the default until it is created) means recommender auth is disabled.
+      recommenderSharedSecret: secret('RECOMMENDER_SHARED_SECRET'),
       restrictAlbToCloudflare: config.restrictAlbToCloudflare,
+      secretsFromSsm: config.secretsFromSsm,
     },
     {
       env: { account: config.account, region: config.region },

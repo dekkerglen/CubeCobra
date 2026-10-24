@@ -10,6 +10,8 @@ import * as snsSubscriptions from 'aws-cdk-lib/aws-sns-subscriptions';
 import * as sqs from 'aws-cdk-lib/aws-sqs';
 import { Construct } from 'constructs';
 
+import { grantReadSecrets, SsmSecrets, ssmSecretsEnvironment } from './secrets';
+
 export interface BotDeckbuildLambdaProps extends StackProps {
   codeArtifactsBucket: string;
   version: string;
@@ -22,6 +24,8 @@ export interface BotDeckbuildLambdaProps extends StackProps {
   // Shared secret sent to the recommender; empty = recommender auth disabled. Leave unset when the
   // secret is loaded from SSM at runtime (ssmSecrets).
   recommenderSharedSecret?: string;
+  // Secrets the handler loads from SSM at startup (config.ts secretsFromSsm); unset = none.
+  ssmSecrets?: SsmSecrets;
   vpc: ec2.IVpc;
   // Whether THIS environment owns the shared default VPC's S3/DynamoDB gateway endpoints.
   // dev/beta/production share one default VPC (same account + region) and a gateway endpoint
@@ -127,6 +131,39 @@ export class BotDeckbuildLambda extends Construct {
     const usePublicSubnets = props.vpc.privateSubnets.length === 0;
     const subnets = usePublicSubnets ? props.vpc.publicSubnets : props.vpc.privateSubnets;
 
+    // Runtime secrets from SSM (config.ts secretsFromSsm). SSM has no gateway endpoint and this
+    // lambda has no internet route, so it gets its own SSM interface endpoint, reachable only from
+    // the lambda's security group. Private DNS stays off: it would apply VPC-wide, and only one
+    // endpoint per service may have it in the shared default VPC. The SDK is pointed at the
+    // endpoint's own DNS name with AWS_ENDPOINT_URL_SSM instead (affects only SSM calls).
+    const ssmEnvironment: { [key: string]: string } = {};
+    if (props.ssmSecrets) {
+      grantReadSecrets(executionRole, this, props.ssmSecrets);
+
+      const ssmEndpointSecurityGroup = new ec2.SecurityGroup(this, 'BotDeckbuildSsmEndpointSg', {
+        vpc: props.vpc,
+        description: 'Bot-deckbuild SSM interface endpoint: HTTPS from the bot-deckbuild lambda only',
+        allowAllOutbound: false,
+      });
+      ssmEndpointSecurityGroup.addIngressRule(securityGroup, ec2.Port.tcp(443), 'Bot-deckbuild lambda');
+      const ssmEndpoint = new ec2.InterfaceVpcEndpoint(this, 'BotDeckbuildSsmEndpoint', {
+        vpc: props.vpc,
+        service: ec2.InterfaceVpcEndpointAwsService.SSM,
+        subnets: { subnets },
+        securityGroups: [ssmEndpointSecurityGroup],
+        privateDnsEnabled: false,
+        open: false,
+      });
+      // DnsEntries are "<hosted zone id>:<dns name>"; the first is the endpoint's regional name.
+      const ssmEndpointDnsName = cdk.Fn.select(
+        1,
+        cdk.Fn.split(':', cdk.Fn.select(0, ssmEndpoint.vpcEndpointDnsEntries)),
+      );
+      Object.assign(ssmEnvironment, ssmSecretsEnvironment(props.ssmSecrets), {
+        AWS_ENDPOINT_URL_SSM: cdk.Fn.join('', ['https://', ssmEndpointDnsName]),
+      });
+    }
+
     this.lambdaFunction = new lambda.Function(this, 'BotDeckbuildLambda', {
       functionName: `BotDeckbuild-${props.subdomain}-${props.stage}`,
       runtime: lambda.Runtime.NODEJS_22_X,
@@ -138,6 +175,7 @@ export class BotDeckbuildLambda extends Construct {
         ...(props.recommenderSharedSecret !== undefined
           ? { RECOMMENDER_SHARED_SECRET: props.recommenderSharedSecret }
           : {}),
+        ...ssmEnvironment,
       },
       // Many sequential ML calls, but no card data to load — modest memory, generous timeout,
       // and reserved concurrency 1 to bound ML load and keep the container warm across batches.
@@ -149,8 +187,9 @@ export class BotDeckbuildLambda extends Construct {
       vpcSubnets: { subnets },
       securityGroups: [securityGroup],
       // Public-subnet ENIs can't reach the public internet, which CDK guards against — but
-      // this lambda only needs the internal ML ALB (same-VPC route) and S3/DynamoDB (gateway
-      // endpoints), never the internet, so acknowledge the guard.
+      // this lambda only needs the internal ML ALB (same-VPC route), S3/DynamoDB (gateway
+      // endpoints) and, with secretsFromSsm, SSM (interface endpoint above), never the
+      // internet, so acknowledge the guard.
       allowPublicSubnet: usePublicSubnets,
     });
 

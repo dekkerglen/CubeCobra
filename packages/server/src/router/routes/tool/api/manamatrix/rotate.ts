@@ -3,6 +3,7 @@ import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
 import { whenCardDbReady } from 'serverutils/cardCatalog';
 import { generatePuzzle } from 'serverutils/manamatrix/generate';
+import { matchesSecret } from 'serverutils/passwordPolicy';
 
 import { Request, Response } from '../../../../../types/express';
 
@@ -28,8 +29,8 @@ const targetDateString = (): string => new Date(Date.now() + 6 * 60 * 60 * 1000)
  * puzzle returns it unchanged.
  */
 export const rotateManaMatrixHandler = async (req: Request, res: Response) => {
-  const apiKey = process.env.MANAMATRIX_API_KEY;
-  if (!apiKey || req.body.apiKey !== apiKey) {
+  // Constant-time, never matches when MANAMATRIX_API_KEY is unset, and accepts MANAMATRIX_API_KEY_PREVIOUS during a rotation.
+  if (!matchesSecret('MANAMATRIX_API_KEY', req.body.apiKey)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 

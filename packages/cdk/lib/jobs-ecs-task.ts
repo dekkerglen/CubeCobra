@@ -4,7 +4,10 @@ import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as ecs from 'aws-cdk-lib/aws-ecs';
 import * as iam from 'aws-cdk-lib/aws-iam';
 import * as logs from 'aws-cdk-lib/aws-logs';
+import * as ssm from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
+
+import { secretName, SsmSecrets } from './secrets';
 
 export interface JobsEcsTaskProps {
   /**
@@ -26,6 +29,13 @@ export interface JobsEcsTaskProps {
    * Environment variables for the task
    */
   environmentVariables: { [key: string]: string };
+
+  /**
+   * SecureString parameters ECS injects as environment variables when the container starts
+   * (config.ts secretsFromSsm). All are required: ECS has no optional secrets, so a missing
+   * parameter stops the task from starting.
+   */
+  ssmSecrets?: SsmSecrets;
 
   /**
    * VPC to run the task in (optional, will use cluster VPC if not provided)
@@ -135,6 +145,20 @@ export class JobsEcsTask extends Construct {
       executionRole: this.executionRole,
     });
 
+    // Task-definition secrets: ECS reads them with the execution role (Secret.fromSsmParameter
+    // grants it ssm:GetParameters on exactly these parameters). No kms:Decrypt: the parameters use
+    // the AWS-managed aws/ssm key; a customer-managed key would need kms:Decrypt for the role.
+    const secrets: { [key: string]: ecs.Secret } = {};
+    for (const entry of props.ssmSecrets?.names ?? []) {
+      if (entry.endsWith('?')) {
+        throw new Error(`ECS task secrets can't be optional: ${entry}`);
+      }
+      const parameter = ssm.StringParameter.fromSecureStringParameterAttributes(this, `${entry}Parameter`, {
+        parameterName: `${props.ssmSecrets!.prefix}${secretName(entry)}`,
+      });
+      secrets[entry] = ecs.Secret.fromSsmParameter(parameter);
+    }
+
     // Add container
     this.taskDefinition.addContainer('JobsContainer', {
       image: ecs.ContainerImage.fromEcrRepository(props.repository, 'latest'),
@@ -143,6 +167,7 @@ export class JobsEcsTask extends Construct {
         logGroup: logGroup,
       }),
       environment: props.environmentVariables,
+      secrets: Object.keys(secrets).length > 0 ? secrets : undefined,
       // Allow command to be overridden when running the task
       command: undefined,
     });

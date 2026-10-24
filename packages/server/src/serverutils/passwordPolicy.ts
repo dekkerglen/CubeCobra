@@ -69,3 +69,12 @@ export const tokensMatch = (stored: unknown, provided: unknown): boolean => {
   const actual = Buffer.from(provided);
   return expected.length === actual.length && crypto.timingSafeEqual(expected, actual);
 };
+
+/**
+ * Checks a presented API key against the secret in process.env[name], and also against
+ * process.env[`${name}_PREVIOUS`] when that is set. Setting the old value as _PREVIOUS while
+ * the new one is rolled out to the callers lets a key be rotated without rejecting requests in
+ * between (see packages/docs/maintenance/secrets-migration.md).
+ */
+export const matchesSecret = (name: string, provided: unknown): boolean =>
+  [process.env[name], process.env[`${name}_PREVIOUS`]].some((stored) => tokensMatch(stored, provided));

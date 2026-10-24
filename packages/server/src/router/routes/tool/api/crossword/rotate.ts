@@ -4,6 +4,7 @@ import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
 import { whenCardDbReady } from 'serverutils/cardCatalog';
 import { buildDailyGrid, isBuildFailure } from 'serverutils/crossword/puzzle';
+import { matchesSecret } from 'serverutils/passwordPolicy';
 
 import { Request, Response } from '../../../../../types/express';
 
@@ -46,8 +47,8 @@ const summarize = (puzzle: CrosswordPuzzle) => ({
  * shipping this needs no new secret and no pipeline change.
  */
 export const rotateCrosswordHandler = async (req: Request, res: Response) => {
-  const apiKey = process.env.MANAMATRIX_API_KEY;
-  if (!apiKey || req.body.apiKey !== apiKey) {
+  // Constant-time, never matches when MANAMATRIX_API_KEY is unset, and accepts MANAMATRIX_API_KEY_PREVIOUS during a rotation.
+  if (!matchesSecret('MANAMATRIX_API_KEY', req.body.apiKey)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 

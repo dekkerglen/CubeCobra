@@ -5,6 +5,7 @@ import { validationResult } from 'express-validator';
 import {
   comparePassword,
   DUMMY_PASSWORD_HASH,
+  matchesSecret,
   newAccountToken,
   newPasswordValidator,
   passwordPolicyError,
@@ -91,5 +92,31 @@ describe('account tokens', () => {
     expect(tokensMatch('', '')).toBe(false);
     expect(tokensMatch(undefined, undefined)).toBe(false);
     expect(tokensMatch(token, undefined)).toBe(false);
+  });
+});
+
+describe('matchesSecret', () => {
+  const OLD_ENV = process.env;
+
+  afterEach(() => {
+    process.env = OLD_ENV;
+  });
+
+  it('accepts the current key, and the previous key only while it is set', () => {
+    process.env = { ...OLD_ENV, TEST_API_KEY: 'new-key', TEST_API_KEY_PREVIOUS: 'old-key' };
+    expect(matchesSecret('TEST_API_KEY', 'new-key')).toBe(true);
+    expect(matchesSecret('TEST_API_KEY', 'old-key')).toBe(true);
+    expect(matchesSecret('TEST_API_KEY', 'other')).toBe(false);
+
+    delete process.env.TEST_API_KEY_PREVIOUS;
+    expect(matchesSecret('TEST_API_KEY', 'old-key')).toBe(false);
+  });
+
+  it('never matches when the key is unset', () => {
+    process.env = { ...OLD_ENV };
+    delete process.env.TEST_API_KEY;
+    delete process.env.TEST_API_KEY_PREVIOUS;
+    expect(matchesSecret('TEST_API_KEY', '')).toBe(false);
+    expect(matchesSecret('TEST_API_KEY', undefined)).toBe(false);
   });
 });

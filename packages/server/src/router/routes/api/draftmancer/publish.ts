@@ -15,6 +15,7 @@ import { getBasicsFromCube } from 'serverutils/cube';
 import { buildDeckbuildJob, writeDeckbuildJob } from 'serverutils/deckbuildJob';
 import { publishBotDeckBuild } from 'serverutils/deckbuildQueue';
 import { formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
+import { matchesSecret } from 'serverutils/passwordPolicy';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -59,7 +60,8 @@ export const PublishDraftBodySchema = Joi.object({
 export const handler = async (req: Request, res: Response) => {
   const publishDraftBody = req.body as PublishDraftBody;
 
-  if (publishDraftBody.apiKey !== process.env.DRAFTMANCER_API_KEY) {
+  // Constant-time, never matches when DRAFTMANCER_API_KEY is unset, and accepts DRAFTMANCER_API_KEY_PREVIOUS during a rotation.
+  if (!matchesSecret('DRAFTMANCER_API_KEY', publishDraftBody.apiKey)) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
