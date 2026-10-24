@@ -389,9 +389,22 @@ const handleRouteError = function (req: Request, res: Response, err: any, rerout
   }
 
   req.logger.error(err.message, err.stack);
-  req.flash('danger', err.message);
+  req.flash('danger', userFacingMessage(err, req.uuid));
   redirect(req, res, reroute);
 };
+
+/**
+ * Plain `new Error('Cube not found')` messages are written for users. Anything else — AWS SDK
+ * exceptions (which name tables, roles and account IDs), TypeErrors and other runtime errors —
+ * is an internal detail, so users get a generic message with the request ID instead.
+ */
+function userFacingMessage(err: Error, requestId?: string): string {
+  const isPlainError = err?.name === 'Error' && !(err as any).$metadata;
+  if (isPlainError && err.message) {
+    return err.message;
+  }
+  return `Something went wrong. If this keeps happening, contact us with request ID ${requestId ?? 'unknown'}.`;
+}
 
 export { handleRouteError, redirect, render };
 

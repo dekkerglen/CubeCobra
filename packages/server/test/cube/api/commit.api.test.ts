@@ -119,4 +119,13 @@ describe('POST /cube/api/commit', () => {
     expect(a).not.toHaveProperty('imgUrl');
     expect(a.imgBackUrl).toBe('');
   });
+
+  it('does not leak internal error details', async () => {
+    (cubeDao.commitCards as jest.Mock).mockRejectedValue(new Error('arn:aws:secret-table'));
+
+    const res = await commit({ mainboard: { adds: [{ cardID: 'd' }] } });
+
+    expect(res.status).toBe(500);
+    expect(res.body.message).not.toContain('arn:aws');
+  });
 });

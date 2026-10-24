@@ -272,9 +272,10 @@ export const getMoreDecksHandler = async (req: Request, res: Response) => {
       lastKey: (query as any).lastKey || null,
     });
   } catch (e) {
+    req.logger.error((e as Error).message, (e as Error).stack);
     return res.status(500).send({
-      error: e,
       success: 'false',
+      message: 'Error loading decks',
     });
   }
 };

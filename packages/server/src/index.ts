@@ -436,13 +436,16 @@ export async function registerRoutes(expressApp: express.Express): Promise<void>
       console.error('Error occurred before logger middleware:', err?.message, err?.stack);
     }
 
-    res.status(typeof err?.status === 'number' ? err.status : 500);
+    const status = typeof err?.status === 'number' ? err.status : 500;
+    res.status(status);
     return render(
       req,
       res,
       'ErrorPage',
       {
-        error: err?.message,
+        // Only client errors carry a message meant for users; server errors can include AWS
+        // resource names and other internals, so they show the request ID instead.
+        error: status < 500 ? err?.message : undefined,
         requestId: req.uuid,
         title: 'Oops! Something went wrong.',
       },

@@ -254,7 +254,7 @@ export const commitHandler = async (req: Request, res: Response) => {
       req.logger.error(error.message, error.stack);
       return res.status(500).send({
         success: 'false',
-        message: `Changes and history were saved, but creating the blog/feed post failed: ${error.message}\n${error.stack}`,
+        message: 'Your changes were saved, but the blog post for them could not be created.',
         updateApplied: true,
         version: newVersion,
       });
@@ -264,7 +264,7 @@ export const commitHandler = async (req: Request, res: Response) => {
     req.logger.error(error.message, error.stack);
     return res.status(500).send({
       success: 'false',
-      message: `Failed to commit cube changes. ${error.message}\n${error.stack}`,
+      message: 'Failed to commit cube changes. Please try again.',
       updateApplied: false,
     });
   }
