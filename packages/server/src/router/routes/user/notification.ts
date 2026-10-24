@@ -1,4 +1,5 @@
 import { NotificationStatus } from '@utils/datatypes/Notification';
+import { safeRelativePath } from '@utils/safeUrl';
 import { notificationDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { redirect } from 'serverutils/render';
@@ -14,7 +15,8 @@ export const handler = async (req: Request, res: Response) => {
 
     const notification = await notificationDao.getById(req.params.id);
 
-    if (!notification) {
+    // Someone else's notification gets the same answer as a missing one.
+    if (!notification || notification.to !== req.user?.id) {
       req.flash('danger', 'Not Found');
       return redirect(req, res, '/404');
     }
@@ -24,7 +26,8 @@ export const handler = async (req: Request, res: Response) => {
       await notificationDao.update(notification);
     }
 
-    return redirect(req, res, notification.url || '/');
+    // Notification URLs are always paths on this site; never follow one anywhere else.
+    return redirect(req, res, safeRelativePath(notification.url) ?? '/');
   } catch (err) {
     req.logger.error((err as Error).message, (err as Error).stack);
     return res.status(500).send({
