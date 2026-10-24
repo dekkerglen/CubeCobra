@@ -4,7 +4,7 @@ import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
-import { sanitizeDraftFormat } from './format/update';
+import { resolveDefaultFormat, sanitizeDraftFormat } from './format/update';
 
 export const formatAddHandler = async (req: Request, res: Response) => {
   try {
@@ -91,16 +91,20 @@ export const formatRemoveHandler = async (req: Request, res: Response) => {
     }
 
     cube.formats.splice(indexNum, 1);
-    // update defaultFormat if necessary
-    if (indexNum === cube.defaultFormat) {
-      //When the current default format is deleted, revert to no default specified
-      cube.defaultFormat = -1;
-    } else if (indexNum < cube.defaultFormat) {
-      /* If the format deleted isn't the default but is a custom format before it in the list, shift
-       * the default format index to keep the alignment
-       */
-      cube.defaultFormat -= 1;
+
+    /* Keep the default pointing at the same format: it is gone if it was the one removed, and
+     * shifts down if it sat after it. resolveDefaultFormat then settles the result, so removing
+     * the default on a cube with standard draft disabled lands on a format that still exists
+     * rather than on a disabled standard draft.
+     */
+    let nextDefault = cube.defaultFormat ?? -1;
+    if (indexNum === nextDefault) {
+      nextDefault = -1;
+    } else if (indexNum < nextDefault) {
+      nextDefault -= 1;
     }
+
+    cube.defaultFormat = resolveDefaultFormat(nextDefault, cube.formats.length, !cube.disableDraft);
 
     await cubeDao.update(cube);
 

@@ -1,0 +1,86 @@
+import Cube from '@utils/datatypes/Cube';
+import { DraftFormat } from '@utils/datatypes/Draft';
+
+import {
+  getDefaultDraftFormatValue,
+  getDraftFormatOptions,
+  offersStandardDraft,
+  standardDraftEnabled,
+} from '../../src/utils/draftFormats';
+
+const format = (title: string): DraftFormat => ({ title }) as unknown as DraftFormat;
+
+const cube = (overrides: Partial<Cube> = {}): Cube => ({ id: 'cube-1', ...overrides }) as unknown as Cube;
+
+describe('offersStandardDraft', () => {
+  it('offers standard draft when it is enabled', () => {
+    expect(offersStandardDraft(true, 2)).toBe(true);
+  });
+
+  it('withholds standard draft when it is disabled and a custom format can take its place', () => {
+    expect(offersStandardDraft(false, 1)).toBe(false);
+  });
+
+  it('keeps standard draft when it is disabled but there is no custom format to fall back to', () => {
+    expect(offersStandardDraft(false, 0)).toBe(true);
+  });
+});
+
+describe('standardDraftEnabled', () => {
+  it('reads the disable flag off the cube', () => {
+    expect(standardDraftEnabled(cube({ formats: [format('Custom')] }))).toBe(true);
+    expect(standardDraftEnabled(cube({ formats: [format('Custom')], disableDraft: true }))).toBe(false);
+  });
+
+  it('stays false with no custom formats, unlike the picker rule', () => {
+    expect(standardDraftEnabled(cube({ disableDraft: true }))).toBe(false);
+    expect(offersStandardDraft(standardDraftEnabled(cube({ disableDraft: true })), 0)).toBe(true);
+  });
+});
+
+describe('getDraftFormatOptions', () => {
+  it('prepends standard draft to the custom formats', () => {
+    expect(getDraftFormatOptions([format('Powered'), format('Peasant')], true)).toEqual([
+      { value: '-1', label: 'Standard Draft' },
+      { value: '0', label: 'Powered' },
+      { value: '1', label: 'Peasant' },
+    ]);
+  });
+
+  it('drops standard draft when it is disabled', () => {
+    expect(getDraftFormatOptions([format('Powered')], false)).toEqual([{ value: '0', label: 'Powered' }]);
+  });
+
+  it('never returns an empty list', () => {
+    expect(getDraftFormatOptions([], false)).toEqual([{ value: '-1', label: 'Standard Draft' }]);
+    expect(getDraftFormatOptions(undefined, false)).toEqual([{ value: '-1', label: 'Standard Draft' }]);
+  });
+
+  it('falls back to a positional label for an untitled format', () => {
+    expect(getDraftFormatOptions([format('')], true)).toEqual([
+      { value: '-1', label: 'Standard Draft' },
+      { value: '0', label: 'Format 1' },
+    ]);
+  });
+
+  it('returns a fresh standard draft option each call', () => {
+    const first = getDraftFormatOptions([], true);
+    const second = getDraftFormatOptions([], true);
+
+    expect(first[0]).not.toBe(second[0]);
+  });
+});
+
+describe('getDefaultDraftFormatValue', () => {
+  it("uses the cube's default format", () => {
+    expect(getDefaultDraftFormatValue(cube({ defaultFormat: 2 }))).toBe('2');
+  });
+
+  it('falls back to standard draft when the cube has no default', () => {
+    expect(getDefaultDraftFormatValue(cube())).toBe('-1');
+  });
+
+  it('keeps an explicit standard draft default', () => {
+    expect(getDefaultDraftFormatValue(cube({ defaultFormat: -1 }))).toBe('-1');
+  });
+});

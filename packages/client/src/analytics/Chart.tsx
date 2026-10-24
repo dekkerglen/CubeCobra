@@ -22,6 +22,7 @@ import Select from '../components/base/Select';
 import Text from '../components/base/Text';
 import CubeContext from '../contexts/CubeContext';
 import useQueryParam from '../hooks/useQueryParam';
+import { getDefaultDraftFormatValue } from '../utils/draftFormats';
 
 console.log('ChartJS', ChartJS);
 
@@ -64,7 +65,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
   const [sort, setSort] = useQueryParam('sort', 'Color Identity');
   const [characteristic, setCharacteristic] = useQueryParam('field', 'Mana Value');
   const [useAsfans, setUseAsfans] = useQueryParam('asfans', 'false');
-  const [draftFormat, setDraftFormat] = useQueryParam('format', '-1');
+  const [draftFormat, setDraftFormat] = useQueryParam('format', getDefaultDraftFormatValue(cube));
 
   const allSorts = useMemo(() => getAllSorts(cube), [cube]);
 

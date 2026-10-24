@@ -24,6 +24,8 @@ import CustomPackCard from 'components/CustomPackCard';
 import LoadingButton from 'components/LoadingButton';
 import TextEntry from 'components/TextEntry';
 import CubeContext from 'contexts/CubeContext';
+import useCoercedSelection from 'hooks/useCoercedSelection';
+import { getDraftFormatOptions } from 'utils/draftFormats';
 
 const DraftFormatsSettings: React.FC = () => {
   const { cube, unfilteredChangedCards } = useContext(CubeContext);
@@ -41,6 +43,16 @@ const DraftFormatsSettings: React.FC = () => {
 
   // Default format: -1 means standard draft, 0+ means custom format index
   const [defaultFormat, setDefaultFormat] = useState<number>(cube.defaultFormat ?? -1);
+
+  /* Driven by the live checkbox rather than the saved cube so the list reflects the pending
+   * edit: turning standard draft off here drops it as a choice of default, which keeps the
+   * form from saving a default that the playtest page would then refuse to show.
+   */
+  const defaultFormatOptions = useMemo(() => getDraftFormatOptions(formats, enableDraft), [formats, enableDraft]);
+
+  const selectDefaultFormat = useCallback((value: string) => setDefaultFormat(parseInt(value, 10)), []);
+
+  useCoercedSelection(defaultFormatOptions, `${defaultFormat}`, selectDefaultFormat);
 
   // Get available boards
   const availableBoards = useMemo(() => {
@@ -420,12 +432,9 @@ const DraftFormatsSettings: React.FC = () => {
               <Select
                 label="Default format"
                 id="defaultFormat"
-                options={[
-                  { value: '-1', label: 'Standard Draft' },
-                  ...formats.map((f, i) => ({ value: `${i}`, label: f.title || `Format ${i + 1}` })),
-                ]}
+                options={defaultFormatOptions}
                 value={`${defaultFormat}`}
-                setValue={(value) => setDefaultFormat(parseInt(value, 10))}
+                setValue={selectDefaultFormat}
               />
             </Flexbox>
 
