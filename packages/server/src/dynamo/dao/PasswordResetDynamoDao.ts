@@ -28,6 +28,7 @@ export class PasswordResetDynamoDao extends BaseDynamoDao<PasswordReset, Passwor
       id: item.id,
       owner: item.owner,
       date: item.date,
+      sessionVersion: item.sessionVersion,
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
     };
@@ -84,6 +85,7 @@ export class PasswordResetDynamoDao extends BaseDynamoDao<PasswordReset, Passwor
       id,
       owner: document.owner,
       date: document.date,
+      sessionVersion: document.sessionVersion,
       dateCreated: document.dateCreated ?? now,
       dateLastUpdated: document.dateLastUpdated ?? now,
     };

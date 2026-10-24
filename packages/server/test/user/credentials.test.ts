@@ -28,6 +28,7 @@ jest.mock('passport', () => ({
 
 import passport from 'passport';
 
+import { LOGIN_FAILED_MESSAGE } from '../../src/config/passport';
 import { passwordResetDao, userDao } from '../../src/dynamo/daos';
 import { loginAccountKey, postHandler as loginHandler } from '../../src/router/routes/user/login';
 import {
@@ -35,7 +36,11 @@ import {
   LOST_PASSWORD_SENT,
   postHandler as lostPasswordHandler,
 } from '../../src/router/routes/user/lostpassword';
-import { routes as passwordResetRoutes } from '../../src/router/routes/user/passwordreset';
+import {
+  getHandler as resetPageHandler,
+  postHandler as resetHandler,
+  routes as passwordResetRoutes,
+} from '../../src/router/routes/user/passwordreset';
 import { confirmHandler } from '../../src/router/routes/user/register';
 import { postHandler as resendHandler, VERIFICATION_SENT } from '../../src/router/routes/user/resendverification';
 import {
@@ -44,6 +49,7 @@ import {
 } from '../../src/router/routes/user/resetpassword';
 import sendEmail from '../../src/serverutils/email';
 import * as passwordPolicy from '../../src/serverutils/passwordPolicy';
+import { redirect, render } from '../../src/serverutils/render';
 import { createUser } from '../test-utils/data';
 import { call } from '../test-utils/transport';
 
@@ -58,6 +64,11 @@ const storedUser = (overrides: Record<string, any> = {}) => ({
   emailVerified: true,
   ...overrides,
 });
+
+const redirectedTo = () => {
+  const calls = (redirect as jest.Mock).mock.calls;
+  return calls[calls.length - 1]?.[2];
+};
 
 // Runs a list of express-validator chains (and flashValidationErrors) against a request body
 // and returns the flashed messages.
@@ -165,6 +176,31 @@ describe('lost password', () => {
   const send = (email: string) =>
     call(lostPasswordHandler).withFlash(jest.fn()).withRequest({ validated: true, body: { email } }).send();
 
+  it('gives the same answer whether or not the account exists', async () => {
+    (userDao.getByEmail as jest.Mock).mockResolvedValue(null);
+    const unknown = await send('nobody@example.com');
+
+    expect(passwordResetDao.putAndReturnId).not.toHaveBeenCalled();
+    expect(sendEmail).not.toHaveBeenCalled();
+    expect(unknown.rawRequest.flash).toHaveBeenCalledWith('success', LOST_PASSWORD_SENT);
+    expect(redirectedTo()).toBe('/user/lostpassword');
+  });
+
+  it('ties the reset link to the current session version', async () => {
+    (userDao.getByEmail as jest.Mock).mockResolvedValue(user);
+    (userDao.getByIdWithSensitiveData as jest.Mock).mockResolvedValue(storedUser({ sessionVersion: 4 }));
+    (passwordResetDao.putAndReturnId as jest.Mock).mockResolvedValue('reset-1');
+    (sendEmail as jest.Mock).mockResolvedValue(undefined);
+
+    const known = await send('alice@example.com');
+
+    expect(passwordResetDao.putAndReturnId).toHaveBeenCalledWith(
+      expect.objectContaining({ owner: 'user-1', sessionVersion: 4 }),
+    );
+    expect(sendEmail).toHaveBeenCalledWith('alice@example.com', 'Password Reset', 'password_reset', { id: 'reset-1' });
+    expect(known.rawRequest.flash).toHaveBeenCalledWith('success', LOST_PASSWORD_SENT);
+  });
+
   it('logs (instead of failing the request) when the email cannot be sent', async () => {
     (userDao.getByEmail as jest.Mock).mockResolvedValue(user);
     (userDao.getByIdWithSensitiveData as jest.Mock).mockResolvedValue(storedUser());
@@ -180,6 +216,95 @@ describe('lost password', () => {
 });
 
 describe('password reset link', () => {
+  const NEW_PASSWORD = 'brand new password';
+  const reset = (overrides: Record<string, any> = {}) => ({
+    id: 'reset-1',
+    owner: 'user-1',
+    date: Date.now(),
+    sessionVersion: 2,
+    ...overrides,
+  });
+
+  const submit = (signedIn = false) =>
+    call(resetHandler)
+      .withFlash(jest.fn())
+      .withRequest({
+        validated: true,
+        body: { code: 'reset-1', password: NEW_PASSWORD, password2: NEW_PASSWORD },
+        login: jest.fn((_user, _options, cb) => cb()),
+        ...(signedIn ? { user } : {}),
+      } as any)
+      .send();
+
+  it('sets the password, signs out every session and retires other links', async () => {
+    (passwordResetDao.getById as jest.Mock).mockResolvedValue(reset());
+    (userDao.getByIdWithSensitiveData as jest.Mock).mockResolvedValue(
+      storedUser({ sessionVersion: 2, pendingEmail: 'attacker@example.com', pendingEmailToken: 't' }),
+    );
+
+    await submit();
+
+    const updated = (userDao.update as jest.Mock).mock.calls[0][0];
+    expect(await bcrypt.compare(NEW_PASSWORD, updated.passwordHash)).toBe(true);
+    expect(updated.sessionVersion).toBe(3);
+    expect(updated.pendingEmail).toBe('');
+    expect(updated.pendingEmailToken).toBe('');
+    expect(passwordResetDao.deleteById).toHaveBeenCalledWith('reset-1');
+    expect(redirectedTo()).toBe('/user/login');
+  });
+
+  it('keeps the acting session signed in when the owner resets while logged in', async () => {
+    (passwordResetDao.getById as jest.Mock).mockResolvedValue(reset());
+    (userDao.getByIdWithSensitiveData as jest.Mock).mockResolvedValue(storedUser({ sessionVersion: 2 }));
+
+    const { rawRequest } = await submit(true);
+
+    expect((rawRequest as any).login).toHaveBeenCalledWith(
+      expect.objectContaining({ sessionVersion: 3 }),
+      expect.anything(),
+      expect.any(Function),
+    );
+  });
+
+  it('refuses a link issued before a later password or email change', async () => {
+    (passwordResetDao.getById as jest.Mock).mockResolvedValue(reset({ sessionVersion: 1 }));
+    (userDao.getByIdWithSensitiveData as jest.Mock).mockResolvedValue(storedUser({ sessionVersion: 2 }));
+
+    await submit();
+
+    expect(userDao.update).not.toHaveBeenCalled();
+    expect(passwordResetDao.deleteById).toHaveBeenCalledWith('reset-1');
+    expect(redirectedTo()).toBe('/user/lostpassword');
+  });
+
+  it('treats links from before versioning as version 0', async () => {
+    (passwordResetDao.getById as jest.Mock).mockResolvedValue(reset({ sessionVersion: undefined }));
+    (userDao.getByIdWithSensitiveData as jest.Mock).mockResolvedValue(storedUser());
+
+    await submit();
+
+    expect(userDao.update).toHaveBeenCalledWith(expect.objectContaining({ sessionVersion: 1 }));
+  });
+
+  it('does not show the reset form for a superseded link', async () => {
+    (passwordResetDao.getById as jest.Mock).mockResolvedValue(reset({ sessionVersion: 1 }));
+    (userDao.getByIdWithSensitiveData as jest.Mock).mockResolvedValue(storedUser({ sessionVersion: 2 }));
+
+    await call(resetPageHandler).withFlash(jest.fn()).withParams({ id: 'reset-1' }).send();
+
+    expect(render).not.toHaveBeenCalled();
+    expect(redirectedTo()).toBe('/');
+  });
+
+  it('shows the reset form for a current link', async () => {
+    (passwordResetDao.getById as jest.Mock).mockResolvedValue(reset());
+    (userDao.getByIdWithSensitiveData as jest.Mock).mockResolvedValue(storedUser({ sessionVersion: 2 }));
+
+    await call(resetPageHandler).withFlash(jest.fn()).withParams({ id: 'reset-1' }).send();
+
+    expect(render).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'PasswordResetPage', { code: 'reset-1' });
+  });
+
   it('applies the shared password policy', async () => {
     const handlers = postHandlers(passwordResetRoutes);
 
@@ -206,6 +331,22 @@ describe('change password (signed in)', () => {
 
     expect(userDao.update).not.toHaveBeenCalled();
     expect(rawRequest.flash).toHaveBeenCalledWith('danger', 'Password is incorrect');
+  });
+
+  it('sets the new password, signs out other sessions and keeps this one', async () => {
+    (userDao.getByIdWithSensitiveData as jest.Mock).mockResolvedValue(storedUser({ sessionVersion: 5 }));
+
+    const { rawRequest } = await submit({ password: PASSWORD, password2: NEW_PASSWORD, password3: NEW_PASSWORD });
+
+    const updated = (userDao.update as jest.Mock).mock.calls[0][0];
+    expect(await bcrypt.compare(NEW_PASSWORD, updated.passwordHash)).toBe(true);
+    expect(updated.sessionVersion).toBe(6);
+    expect((rawRequest as any).login).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'user-1', sessionVersion: 6 }),
+      expect.anything(),
+      expect.any(Function),
+    );
+    expect(rawRequest.flash).toHaveBeenCalledWith('success', 'Password updated successfully');
   });
 
   it('responds (instead of hanging) when hashing fails', async () => {
@@ -250,5 +391,36 @@ describe('login', () => {
 
     expect(passport.authenticate).not.toHaveBeenCalled();
     expect(flash).toHaveBeenCalledWith('danger', expect.stringMatching(/username or email address and your password/));
+  });
+
+  it('flashes the strategy message as danger on failure', async () => {
+    (passport.authenticate as jest.Mock).mockImplementation(
+      (_name: string, cb: any) => () => cb(null, false, { message: LOGIN_FAILED_MESSAGE }),
+    );
+    const flash = jest.fn();
+    const req: any = { body: { username: 'alice', password: 'nope' }, flash, headers: {}, header: () => undefined };
+
+    await (loginHandler as any)(req, {}, jest.fn());
+
+    expect(flash).toHaveBeenCalledWith('danger', LOGIN_FAILED_MESSAGE);
+    expect(redirectedTo()).toBe('/user/login');
+  });
+
+  it('logs in and redirects on success', async () => {
+    const authenticated = { ...user, sessionVersion: 0 };
+    (passport.authenticate as jest.Mock).mockImplementation((_name: string, cb: any) => () => cb(null, authenticated));
+    const login = jest.fn((_user, cb) => cb());
+    const req: any = {
+      body: { username: 'alice', password: PASSWORD },
+      flash: jest.fn(),
+      headers: {},
+      header: () => undefined,
+      login,
+    };
+
+    await (loginHandler as any)(req, {}, jest.fn());
+
+    expect(login).toHaveBeenCalledWith(authenticated, expect.any(Function));
+    expect(redirectedTo()).toBe('/');
   });
 });

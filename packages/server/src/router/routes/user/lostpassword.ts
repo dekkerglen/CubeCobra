@@ -39,6 +39,9 @@ export const postHandler = async (req: Request, res: Response) => {
       const id = await passwordResetDao.putAndReturnId({
         owner: user.id,
         date: new Date().valueOf(),
+        // Ties the link to the account's current credentials: once the password or email
+        // changes, every link issued before it stops working.
+        sessionVersion: user.sessionVersion ?? 0,
       });
 
       // Not awaited: the time the send takes would otherwise reveal that the account exists.

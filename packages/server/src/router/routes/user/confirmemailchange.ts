@@ -3,6 +3,7 @@ import { tokensMatch } from 'serverutils/passwordPolicy';
 import { formLimiter } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect } from 'serverutils/render';
 
+import { renewSession } from '../../../config/passport';
 import { Request, Response } from '../../../types/express';
 import { EMAIL_PAGE } from './updateemail';
 
@@ -44,7 +45,11 @@ export const handler = async (req: Request, res: Response) => {
     user.email = newEmail;
     user.emailVerified = true;
     user.token = '';
+    // Signs out every other session and retires reset links mailed to the old address.
+    user.sessionVersion = (user.sessionVersion ?? 0) + 1;
     await userDao.update(user as any);
+
+    await renewSession(req, user.id, user.sessionVersion);
 
     if (signedInAsOwner) {
       req.flash(

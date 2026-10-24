@@ -30,6 +30,8 @@ const buildReq = (overrides: any = {}) =>
     body: { password: 'current', password2: 'new-password', password3: 'new-password' },
     flash: jest.fn(),
     logger: { error: jest.fn() },
+    // A password change re-issues the acting session (see renewSession in config/passport).
+    login: jest.fn((_user: unknown, _options: unknown, done: (err?: unknown) => void) => done()),
     ...overrides,
   }) as any;
 
@@ -111,6 +113,8 @@ describe('resetpassword handler', () => {
     expect(saved.passwordHash).not.toEqual(passwordHash);
     await expect(bcrypt.compare('new-password', saved.passwordHash)).resolves.toBe(true);
     await expect(bcrypt.compare('current', saved.passwordHash)).resolves.toBe(false);
+    expect(saved.sessionVersion).toBe(1);
+    expect(req.login).toHaveBeenCalled();
     expect(req.flash).toHaveBeenCalledWith('success', 'Password updated successfully');
     expect(mockRedirect).toHaveBeenCalledWith(req, res, PASSWORD_TAB);
   });

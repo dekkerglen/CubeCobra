@@ -159,6 +159,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       pendingEmail: item.pendingEmail || undefined,
       pendingEmailToken: item.pendingEmailToken || undefined,
       pendingEmailExpires: item.pendingEmailExpires || undefined,
+      sessionVersion: item.sessionVersion,
       yourCubesSortOrder: item?.yourCubesSortOrder,
       disableAnimations: item.disableAnimations,
       useTextOverIcons: item.useTextOverIcons,
@@ -196,6 +197,17 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
     delete sanitized.sessionVersion;
 
     return sanitized;
+  }
+
+  /**
+   * sessionVersion only ever goes up. A writer holding an older copy of the user must not roll
+   * it back, or sessions that a password or email change just signed out would come back.
+   */
+  protected refreshFromStored(stored: StoredUserWithSensitiveInfo, item: UserWithBaseFields): void {
+    const storedVersion = stored.sessionVersion ?? 0;
+    if ((item.sessionVersion ?? 0) < storedVersion) {
+      item.sessionVersion = storedVersion;
+    }
   }
 
   /**

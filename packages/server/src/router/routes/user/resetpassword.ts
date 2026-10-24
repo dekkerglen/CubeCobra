@@ -6,6 +6,7 @@ import { formLimiter } from 'serverutils/rateLimiters';
 import { userOrIpKey } from 'serverutils/rateLimitKeys';
 import { handleRouteError, redirect } from 'serverutils/render';
 
+import { renewSession } from '../../../config/passport';
 import { Request, Response } from '../../../types/express';
 
 const PASSWORD_PAGE = '/user/account?nav=password';
@@ -36,12 +37,16 @@ export const handler = async (req: Request, res: Response) => {
     }
 
     user.passwordHash = await hashPassword(req.body.password2);
+    // Signs out every other session (and retires outstanding reset links); this one is renewed below.
+    user.sessionVersion = (user.sessionVersion ?? 0) + 1;
     // Changing the password is the advice for an email change you didn't ask for, so it also
     // cancels any change still waiting on confirmation.
     user.pendingEmail = '';
     user.pendingEmailToken = '';
     user.pendingEmailExpires = 0;
     await userDao.update(user as any);
+
+    await renewSession(req, user.id, user.sessionVersion);
 
     req.flash('success', 'Password updated successfully');
     return redirect(req, res, PASSWORD_PAGE);

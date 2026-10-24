@@ -142,6 +142,31 @@ describe('GET /user/confirmemailchange/:id/:token', () => {
       .withRequest({ params, login, ...(signedIn ? { user } : {}) } as any)
       .send();
 
+  it('swaps in the new address, clears the pending change and signs out other sessions', async () => {
+    (userDao.getByIdWithSensitiveData as jest.Mock).mockResolvedValue(pending());
+
+    await open({ id: 'user-1', token: TOKEN });
+
+    expect(userDao.update).toHaveBeenCalledWith(
+      expect.objectContaining({
+        email: 'new@example.com',
+        emailVerified: true,
+        pendingEmail: '',
+        pendingEmailToken: '',
+        pendingEmailExpires: 0,
+        sessionVersion: 2,
+      }),
+    );
+    // The browser that confirmed stays signed in at the new version.
+    expect(login).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'user-1', sessionVersion: 2 }),
+      expect.anything(),
+      expect.any(Function),
+    );
+    expect(flash).toHaveBeenCalledWith('success', expect.stringMatching(/updated/));
+    expect(redirectedTo()).toBe(EMAIL_PAGE);
+  });
+
   it('works from a browser that is not signed in, and asks the user to log in again', async () => {
     (userDao.getByIdWithSensitiveData as jest.Mock).mockResolvedValue(pending());
 

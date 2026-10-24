@@ -1,3 +1,4 @@
+import PasswordReset from '@utils/datatypes/PasswordReset';
 import { passwordResetDao, userDao } from 'dynamo/daos';
 import { body } from 'express-validator';
 import { csrfProtection, flashValidationErrors } from 'router/middleware';
@@ -5,12 +6,18 @@ import { hashPassword, newPasswordValidator } from 'serverutils/passwordPolicy';
 import { formLimiter } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
+import { renewSession } from '../../../config/passport';
 import { Request, Response } from '../../../types/express';
 
 // A reset link is single use and good for six hours from the moment it was issued.
 export const PASSWORD_RESET_TTL_MS = 6 * 60 * 60 * 1000;
 
 const isExpired = (issuedAt: number): boolean => Date.now() > issuedAt + PASSWORD_RESET_TTL_MS;
+
+// A link issued before the account's latest password or email change has been superseded.
+// Versions only go up, so a stored version below the link's is just an eventually consistent read.
+const isSuperseded = (reset: PasswordReset, sessionVersion: number | undefined): boolean =>
+  (reset.sessionVersion ?? 0) < (sessionVersion ?? 0);
 
 function checkPasswordsMatch(value: string, { req }: any) {
   if (value !== req.body.password2) {
@@ -35,7 +42,9 @@ export const getHandler = async (req: Request, res: Response) => {
   }
 
   const document = await passwordResetDao.getById(req.params.id);
-  if (!document || isExpired(document.date)) {
+  const owner =
+    document && !isExpired(document.date) ? await userDao.getByIdWithSensitiveData(document.owner) : undefined;
+  if (!document || !owner || isSuperseded(document, owner.sessionVersion)) {
     req.flash('danger', 'Password recovery link expired');
     return redirect(req, res, '/');
   }
@@ -65,7 +74,15 @@ export const postHandler = async (req: Request, res: Response) => {
       return render(req, res, 'PasswordResetPage', { code: req.body.code });
     }
 
+    if (isSuperseded(passwordreset, user.sessionVersion)) {
+      await passwordResetDao.deleteById(passwordreset.id);
+      req.flash('danger', 'Password recovery link expired. Please request a new one.');
+      return redirect(req, res, '/user/lostpassword');
+    }
+
     user.passwordHash = await hashPassword(req.body.password);
+    // Signs out every existing session and retires every other outstanding reset link.
+    user.sessionVersion = (user.sessionVersion ?? 0) + 1;
     // Whoever reset the password owns the inbox; drop any email change they didn't confirm.
     user.pendingEmail = '';
     user.pendingEmailToken = '';
@@ -74,6 +91,8 @@ export const postHandler = async (req: Request, res: Response) => {
 
     // Burn the code so the link can't be replayed.
     await passwordResetDao.deleteById(passwordreset.id);
+
+    await renewSession(req, user.id, user.sessionVersion);
 
     req.flash('success', 'Password updated successfully');
     return redirect(req, res, '/user/login');

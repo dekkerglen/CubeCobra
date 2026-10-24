@@ -299,6 +299,24 @@ configurePassport(passport);
 app.use(passport.initialize());
 app.use(passport.session());
 
+// The session store slides a session forward on every visit, so without a cap a stolen cookie
+// would stay valid for as long as someone keeps using it. Limit any one login to 90 days.
+const MAX_LOGIN_AGE_MS = 1000 * 60 * 60 * 24 * 90;
+app.use((req: express.Request, _res: express.Response, next: express.NextFunction) => {
+  if (!req.user) {
+    return next();
+  }
+  const session = req.session as typeof req.session & { loginAt?: number };
+  if (!session.loginAt) {
+    session.loginAt = Date.now();
+    return next();
+  }
+  if (Date.now() - session.loginAt <= MAX_LOGIN_AGE_MS) {
+    return next();
+  }
+  return req.logout((err) => next(err));
+});
+
 // per-request logging configuration
 app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
   req.uuid = uuid();
