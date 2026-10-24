@@ -6,7 +6,7 @@ import { redirect } from 'serverutils/render';
 
 import cloudwatch from '../serverutils/cloudwatch';
 import { clientIp } from '../serverutils/clientIp';
-import { sanitizeHttpBody } from '../serverutils/logging';
+import { sanitizeHttpBody, sanitizeUrl } from '../serverutils/logging';
 import { Request, Response } from '../types/express';
 import { asyncHandler, wrapHandlers } from './asyncHandler';
 
@@ -26,8 +26,8 @@ const responseTimer = responseTime((req: express.Request, res: express.Response,
       {
         id: req.uuid,
         method: req.method,
-        path: req.originalUrl,
-        matchedPath: req.route?.path ?? req.originalUrl, // Get matched route path
+        path: sanitizeUrl(req.originalUrl),
+        matchedPath: req.route?.path ?? sanitizeUrl(req.originalUrl), // Get matched route path
         user_id: req.user ? req.user.id : null,
         username: req.user ? req.user.username : null,
         remoteAddr: clientIp(req),

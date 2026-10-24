@@ -35,6 +35,7 @@ import { render } from './serverutils/render';
 import { checkAndUpdateCardbase } from './serverutils/updatecards';
 import { csrfGuard } from './serverutils/csrf';
 import { cspHeaders } from './serverutils/csp';
+import { sanitizeHttpBody, sanitizeUrl } from './serverutils/logging';
 import { CustomError, Request as AppRequest, Response as AppResponse } from './types/express';
 
 // global listeners for promise rejections
@@ -78,7 +79,8 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
 
   res.setHeader = (name: string, value: string | string[] | number) => {
     if (res.headersSent) {
-      console.warn(`Headers already set at path: ${req.path} with body ${JSON.stringify(req.body)}`);
+      // Path only: the body can hold passwords and API keys.
+      console.warn(`Headers already set at path: ${req.path}`);
     }
     return originalSetHeader.call(res, name, value);
   };
@@ -295,8 +297,8 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
     requestId: req.uuid,
     method: req.method,
     path: req.path,
-    originalUrl: req.originalUrl,
-    query: req.query,
+    originalUrl: sanitizeUrl(req.originalUrl),
+    query: sanitizeHttpBody(req.query as Record<string, any>),
     authenticated: !!req.user,
     userId: req.user?.id ?? null,
     username: req.user?.username ?? null,
