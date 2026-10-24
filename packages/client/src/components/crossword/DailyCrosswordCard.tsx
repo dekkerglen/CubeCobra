@@ -45,8 +45,7 @@ const DailyCrosswordCard: React.FC<DailyCrosswordCardProps> = ({ shape }) => {
       <CardBody>
         <Flexbox direction="col" gap="2">
           <Text sm className="text-text-secondary">
-            {shape.width}×{shape.height}, <span className="font-semibold text-text">{shape.clueCount} clues</span>, all
-            of them Magic. The clock starts when you open it.
+            Challenge your MTG knowledge with our daily themed crossword puzzle
           </Text>
 
           <a href="/tool/crossword" className="block no-underline-hover">
