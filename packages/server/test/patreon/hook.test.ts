@@ -22,6 +22,8 @@ import { call } from '../test-utils/transport';
 
 const EMAIL = 'patron@example.com';
 const OWNER = 'user-123';
+const HOOK_SECRET = 'test-hook-secret';
+const ORIGINAL_HOOK_SECRET = process.env.PATREON_HOOK_SECRET;
 
 // Build a request partial with a valid Patreon signature over the raw JSON bytes.
 const signed = (event: string, payload: any) => {
@@ -71,6 +73,18 @@ const pledgePayload = (opts: { reward?: { id: string; title: string } }) => ({
 });
 
 describe('patreon hookHandler', () => {
+  beforeAll(() => {
+    process.env.PATREON_HOOK_SECRET = HOOK_SECRET;
+  });
+
+  afterAll(() => {
+    if (ORIGINAL_HOOK_SECRET === undefined) {
+      delete process.env.PATREON_HOOK_SECRET;
+    } else {
+      process.env.PATREON_HOOK_SECRET = ORIGINAL_HOOK_SECRET;
+    }
+  });
+
   beforeEach(() => {
     jest.clearAllMocks();
     (patronDao.getByEmail as jest.Mock).mockResolvedValue({

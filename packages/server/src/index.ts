@@ -36,6 +36,7 @@ import { checkAndUpdateCardbase } from './serverutils/updatecards';
 import { csrfGuard } from './serverutils/csrf';
 import { cspHeaders } from './serverutils/csp';
 import { sanitizeHttpBody, sanitizeUrl } from './serverutils/logging';
+import { assertRequiredSecrets } from './serverutils/requiredSecrets';
 import { CustomError, Request as AppRequest, Response as AppResponse } from './types/express';
 
 // global listeners for promise rejections
@@ -44,6 +45,10 @@ process.on('unhandledRejection', (reason: unknown) => {
   // structured record still captures the error type + originating app frame.
   logError([reason], undefined, { unhandledRejection: true });
 });
+
+// Refuse to boot in production with a missing secret rather than silently falling back to a
+// guessable default (session forgery, forgeable webhooks).
+assertRequiredSecrets();
 
 // Init app
 const app = express();

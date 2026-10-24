@@ -154,6 +154,16 @@ export const hookHandler = async (req: Request, res: Response) => {
     const action = req.headers['x-patreon-event'] as string;
     const signature = req.headers['x-patreon-signature'] as string;
 
+    // Without a secret every signature check would be an HMAC under an empty key, which anyone
+    // can forge. Refuse instead; 503 lets Patreon retry once the secret is configured.
+    const secret = process.env.PATREON_HOOK_SECRET ?? '';
+    if (!secret.trim()) {
+      req.logger.error('Rejected a patreon hook: PATREON_HOOK_SECRET is not set');
+      return res.status(503).send({
+        success: 'false',
+      });
+    }
+
     if (!isValidPatreonSignature(signature, req.rawBody)) {
       return res.status(401).send({
         success: 'false',
