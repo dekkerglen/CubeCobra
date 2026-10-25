@@ -10,11 +10,12 @@ import 'module-alias/register';
 dotenv.config();
 
 import compression from 'compression';
+// Not the uuid package: uuid@14 is ESM-only, and this platform's Node (20.18) can't require() it.
+import { randomUUID } from 'crypto';
 import express from 'express';
 import fs from 'fs';
 import http from 'http';
 import path from 'path';
-import { v4 as uuid } from 'uuid';
 
 import './types/express'; // Import the express type extensions
 
@@ -66,7 +67,7 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
 
 // Add UUID to each request for tracking
 app.use((req: express.Request, _res: express.Response, next: express.NextFunction) => {
-  (req as any).uuid = uuid();
+  (req as any).uuid = randomUUID();
   next();
 });
 
