@@ -96,6 +96,10 @@
     --card-colorless: 233 231 235;
     --card-lands: 255 224 192;
     --hero-bg: 8 119 21;
+    --hero-text: 255 255 255;
+    --hero-text-hover: 209 213 219;
+    --hero-badge-bg: 34 139 34;
+    --hero-badge-text: 255 255 255;
     --category-badge-bg: 34 139 34;
     --category-badge-text: 255 255 255;
     --tag-badge-bg: 108 117 125;
@@ -140,6 +144,10 @@
     --card-colorless: 233 231 235;
     --card-lands: 255 224 192;
     --hero-bg: 8 119 21;
+    --hero-text: 255 255 255;
+    --hero-text-hover: 209 213 219;
+    --hero-badge-bg: 34 139 34;
+    --hero-badge-text: 255 255 255;
     --category-badge-bg: 34 139 34;
     --category-badge-text: 255 255 255;
     --tag-badge-bg: 108 117 125;
@@ -183,6 +191,10 @@
     --card-colorless: 60 58 64;
     --card-lands: 95 58 36;
     --hero-bg: 73 95 52;
+    --hero-text: 255 255 255;
+    --hero-text-hover: 209 213 219;
+    --hero-badge-bg: 76 175 80;
+    --hero-badge-text: 33 37 41;
     --category-badge-bg: 76 175 80;
     --category-badge-text: 33 37 41;
     --tag-badge-bg: 149 165 166;
@@ -228,6 +240,10 @@
       --card-colorless: 60 58 64;
       --card-lands: 95 58 36;
       --hero-bg: 73 95 52;
+      --hero-text: 255 255 255;
+      --hero-text-hover: 209 213 219;
+      --hero-badge-bg: 76 175 80;
+      --hero-badge-text: 33 37 41;
       --category-badge-bg: 76 175 80;
       --category-badge-text: 33 37 41;
       --tag-badge-bg: 149 165 166;
@@ -756,5 +772,146 @@ img.mana-symbol-sm {
   .synergy-solve-in,
   .synergy-tile-in {
     animation: none;
+  }
+}
+
+/* Cube hero themes.
+ *
+ * Each theme is three rules: an unqualified one carrying the LIGHT values (matching :root,
+ * which also holds light defaults), then two dark overrides that outrank it by specificity.
+ * Adding a theme means one entry in packages/utils/src/heroTheme.ts and one group below --
+ * nothing else. A test (packages/client/test/css/heroThemePalette.test.ts) parses this file
+ * and fails if a registered theme is missing a variable or falls below the contrast bars.
+ *
+ * Green's values are the pre-existing --hero-bg / --category-badge-bg, so a cube that has
+ * never chosen a theme renders exactly as it always has. */
+
+.hero-theme-white {
+  --hero-bg: 107 84 16;
+  --hero-text: 255 255 255;
+  --hero-text-hover: 209 213 219;
+  --hero-badge-bg: 141 110 20;
+  --hero-badge-text: 255 255 255;
+}
+
+:root[class~='dark'] .hero-theme-white {
+  --hero-bg: 95 95 75;
+  --hero-text: 255 255 255;
+  --hero-text-hover: 209 213 219;
+  --hero-badge-bg: 212 184 87;
+  --hero-badge-text: 33 37 41;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[class~='system'] .hero-theme-white {
+    --hero-bg: 95 95 75;
+    --hero-text: 255 255 255;
+    --hero-text-hover: 209 213 219;
+    --hero-badge-bg: 212 184 87;
+    --hero-badge-text: 33 37 41;
+  }
+}
+
+.hero-theme-blue {
+  --hero-bg: 14 77 139;
+  --hero-text: 255 255 255;
+  --hero-text-hover: 209 213 219;
+  --hero-badge-bg: 21 101 192;
+  --hero-badge-text: 255 255 255;
+}
+
+:root[class~='dark'] .hero-theme-blue {
+  --hero-bg: 52 77 95;
+  --hero-text: 255 255 255;
+  --hero-text-hover: 209 213 219;
+  --hero-badge-bg: 100 181 246;
+  --hero-badge-text: 33 37 41;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[class~='system'] .hero-theme-blue {
+    --hero-bg: 52 77 95;
+    --hero-text: 255 255 255;
+    --hero-text-hover: 209 213 219;
+    --hero-badge-bg: 100 181 246;
+    --hero-badge-text: 33 37 41;
+  }
+}
+
+.hero-theme-black {
+  --hero-bg: 62 50 78;
+  --hero-text: 255 255 255;
+  --hero-text-hover: 209 213 219;
+  --hero-badge-bg: 93 78 109;
+  --hero-badge-text: 255 255 255;
+}
+
+:root[class~='dark'] .hero-theme-black {
+  --hero-bg: 62 50 78;
+  --hero-text: 255 255 255;
+  --hero-text-hover: 209 213 219;
+  --hero-badge-bg: 179 157 219;
+  --hero-badge-text: 33 37 41;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[class~='system'] .hero-theme-black {
+    --hero-bg: 62 50 78;
+    --hero-text: 255 255 255;
+    --hero-text-hover: 209 213 219;
+    --hero-badge-bg: 179 157 219;
+    --hero-badge-text: 33 37 41;
+  }
+}
+
+.hero-theme-red {
+  --hero-bg: 142 22 0;
+  --hero-text: 255 255 255;
+  --hero-text-hover: 209 213 219;
+  --hero-badge-bg: 181 45 22;
+  --hero-badge-text: 255 255 255;
+}
+
+:root[class~='dark'] .hero-theme-red {
+  --hero-bg: 95 56 68;
+  --hero-text: 255 255 255;
+  --hero-text-hover: 209 213 219;
+  --hero-badge-bg: 239 138 122;
+  --hero-badge-text: 33 37 41;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[class~='system'] .hero-theme-red {
+    --hero-bg: 95 56 68;
+    --hero-text: 255 255 255;
+    --hero-text-hover: 209 213 219;
+    --hero-badge-bg: 239 138 122;
+    --hero-badge-text: 33 37 41;
+  }
+}
+
+.hero-theme-green {
+  --hero-bg: 8 119 21;
+  --hero-text: 255 255 255;
+  --hero-text-hover: 209 213 219;
+  --hero-badge-bg: 34 139 34;
+  --hero-badge-text: 255 255 255;
+}
+
+:root[class~='dark'] .hero-theme-green {
+  --hero-bg: 73 95 52;
+  --hero-text: 255 255 255;
+  --hero-text-hover: 209 213 219;
+  --hero-badge-bg: 76 175 80;
+  --hero-badge-text: 33 37 41;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root[class~='system'] .hero-theme-green {
+    --hero-bg: 73 95 52;
+    --hero-text: 255 255 255;
+    --hero-text-hover: 209 213 219;
+    --hero-badge-bg: 76 175 80;
+    --hero-badge-text: 33 37 41;
   }
 }
