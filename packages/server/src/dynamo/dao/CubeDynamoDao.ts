@@ -111,6 +111,8 @@ export interface UnhydratedCube {
   /** @deprecated legacy single-string primer */
   description?: string;
   brief?: string;
+  /** Hero banner theme key. Absent means the default. See `@utils/heroTheme`. */
+  heroTheme?: string;
   imageName: string;
   // Lotus Cobra perk: uploaded custom cube image. See utils Cube.ts for semantics.
   imgHostedImageId?: string;
@@ -296,6 +298,9 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       // Cubes that never got primerTabs keep their stored description rather than losing it.
       description: item.primerTabs ? undefined : (item as any).description,
       brief: item.brief,
+      // Spread rather than assign: an unset theme leaves no key at all, so choosing the
+      // default removes the field instead of storing an empty value.
+      ...(item.heroTheme ? { heroTheme: item.heroTheme } : {}),
       imageName: item.imageName,
       imgHostedImageId: item.imgHostedImageId,
       imgHostedImageUrl: item.imgHostedImageUrl,

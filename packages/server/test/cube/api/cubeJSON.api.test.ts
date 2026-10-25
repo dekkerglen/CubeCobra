@@ -69,4 +69,22 @@ describe('GET /cube/api/cubeJSON/:id', () => {
     expect(body.primerTabs).toEqual(primerTabs);
     expect(body).not.toHaveProperty('description');
   });
+
+  it('exposes heroTheme on the public cube JSON', async () => {
+    (cubeDao.getById as jest.Mock).mockResolvedValue(createCube({ id: cube.id, heroTheme: 'blue' }));
+
+    const res = await call(cubeJSONHandler).withParams({ id: cube.id }).send();
+
+    expect(res.status).toEqual(200);
+    expect(JSON.parse(res.body).heroTheme).toBe('blue');
+  });
+
+  it('omits heroTheme for a cube without one', async () => {
+    (cubeDao.getById as jest.Mock).mockResolvedValue(createCube({ id: cube.id }));
+
+    const res = await call(cubeJSONHandler).withParams({ id: cube.id }).send();
+
+    expect(res.status).toEqual(200);
+    expect(JSON.parse(res.body)).not.toHaveProperty('heroTheme');
+  });
 });

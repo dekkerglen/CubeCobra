@@ -51,6 +51,7 @@ export const cloneHandler = async (req: Request, res: Response) => {
       priceVisibility: PRICE_VISIBILITY.PUBLIC,
       featured: false,
       categoryOverride: source.categoryOverride,
+      heroTheme: source.heroTheme,
       categoryPrefixes: source.categoryPrefixes || [],
       tagColors: source.tagColors,
       defaultFormat: source.defaultFormat,

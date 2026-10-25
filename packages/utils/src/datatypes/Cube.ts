@@ -1,4 +1,5 @@
 import type { PrimerTab } from '../primerTabs';
+import type { HeroThemeKey } from '../heroTheme';
 import { safeHttpUrl } from '../safeUrl';
 import { slugify } from '../slugify';
 import Card, { CardStatus, VoucherCard } from './Card';
@@ -386,6 +387,8 @@ interface Cube {
   numDecks: number;
   primerTabs: PrimerTab[];
   brief?: string;
+  /** Hero banner theme key. Absent means the default. See `@utils/heroTheme`. */
+  heroTheme?: HeroThemeKey;
   imageName: string;
   // Lotus Cobra perk: an uploaded custom cube image. When set, this takes precedence over the
   // card-art `imageName`. `imgHostedImageUrl` is the stored relative path (cdnUrl applied on read),
