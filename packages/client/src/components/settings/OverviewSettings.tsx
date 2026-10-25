@@ -14,6 +14,7 @@ import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import RadioButtonGroup from 'components/base/RadioButtonGroup';
 import Text from 'components/base/Text';
+import HeroThemePicker from 'components/cube/HeroThemePicker';
 import ImageUploadWidget from 'components/ImageUploadWidget';
 import LoadingButton from 'components/LoadingButton';
 import MtgImage from 'components/MtgImage';
@@ -76,6 +77,9 @@ const OverviewSettings: React.FC = () => {
           image: state.image,
           imgHostedImageId: state.imgHostedImageId ?? '',
           brief: state.brief,
+          // Always sent, so choosing the default reaches the server as an explicit clear.
+          // The endpoint preserves the stored theme when the field is absent.
+          heroTheme: state.heroTheme ?? '',
           categoryOverride: state.categoryOverride,
           categoryPrefixes: state.categoryPrefixes,
         },
@@ -245,6 +249,16 @@ const OverviewSettings: React.FC = () => {
                 </Flexbox>
               )}
             </div>
+
+            <Flexbox direction="col" gap="2">
+              <Text semibold md>
+                Hero Theme
+              </Text>
+              <HeroThemePicker
+                value={state.heroTheme}
+                setValue={(value) => setState((prev) => ({ ...prev, heroTheme: value || undefined }))}
+              />
+            </Flexbox>
 
             <Flexbox direction="col" gap="2">
               <Text semibold md>

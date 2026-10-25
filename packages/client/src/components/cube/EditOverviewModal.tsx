@@ -18,6 +18,7 @@ import Link from '../base/Link';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import RadioButtonGroup from '../base/RadioButtonGroup';
 import Text from '../base/Text';
+import HeroThemePicker from './HeroThemePicker';
 import LoadingButton from '../LoadingButton';
 import MtgImage from '../MtgImage';
 import TextEntry from '../TextEntry';
@@ -66,6 +67,7 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
   const [openSections, setOpenSections] = useState({
     category: false,
     image: false,
+    heroTheme: false,
     description: false,
     url: false,
   });
@@ -77,7 +79,7 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
       setState(JSON.parse(JSON.stringify(cube)));
       setImagename(cube.imageName);
       setAlerts([]);
-      setOpenSections({ category: false, image: false, description: false, url: false });
+      setOpenSections({ category: false, image: false, heroTheme: false, description: false, url: false });
     }
   }, [isOpen, cube]);
 
@@ -107,6 +109,9 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
             imageName: state.imageName,
             image: state.image,
             brief: state.brief,
+            // Always sent, so choosing the default reaches the server as an explicit clear.
+            // The endpoint preserves the stored theme when the field is absent.
+            heroTheme: state.heroTheme ?? '',
             categoryOverride: state.categoryOverride,
             categoryPrefixes: state.categoryPrefixes,
           },
@@ -219,6 +224,13 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
                 setValue={changeImage}
                 placeholder="Cardname for image"
                 autoComplete="off"
+              />
+            </Section>
+
+            <Section title="Hero Theme" isOpen={openSections.heroTheme} toggle={() => toggleSection('heroTheme')}>
+              <HeroThemePicker
+                value={state.heroTheme}
+                setValue={(value) => setState((prev) => ({ ...prev, heroTheme: value || undefined }))}
               />
             </Section>
 
