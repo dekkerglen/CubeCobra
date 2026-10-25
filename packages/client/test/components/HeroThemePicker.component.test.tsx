@@ -50,4 +50,11 @@ describe('HeroThemePicker', () => {
     render(<HeroThemePicker value="" setValue={setValue} />);
     expect(screen.getByRole('radio', { name: 'Blue' })).toHaveClass('hero-theme-blue');
   });
+
+  // The selected swatch is the one the owner is looking at, so it must keep showing its
+  // accent colour; the ring and check already carry the selected state.
+  it('keeps the accent border on the selected swatch', () => {
+    render(<HeroThemePicker value="blue" setValue={setValue} />);
+    expect(screen.getByRole('radio', { name: 'Blue' })).toHaveClass('border-hero-badge-bg');
+  });
 });

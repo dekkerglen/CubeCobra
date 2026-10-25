@@ -47,13 +47,44 @@ const deltaE76 = (a: Rgb, b: Rgb): number => {
   return Math.hypot(la - lb, aa - ab, ba - bb);
 };
 
-/** Pulls the declaration block that follows `selector`, or null when the selector is absent. */
-const blockFor = (selector: string): string | null => {
-  const index = STYLESHEET.indexOf(selector);
-  if (index === -1) return null;
-  const open = STYLESHEET.indexOf('{', index);
-  const close = STYLESHEET.indexOf('}', open);
-  return open === -1 || close === -1 ? null : STYLESHEET.slice(open + 1, close);
+/** Returns the body of the brace block that opens at or after `from`, via brace matching. */
+const blockAt = (from: number): string | null => {
+  const open = STYLESHEET.indexOf('{', from);
+  if (open === -1) return null;
+  let depth = 0;
+  for (let i = open; i < STYLESHEET.length; i += 1) {
+    if (STYLESHEET[i] === '{') depth += 1;
+    else if (STYLESHEET[i] === '}') {
+      depth -= 1;
+      if (depth === 0) return STYLESHEET.slice(open + 1, i);
+    }
+  }
+  return null;
+};
+
+/**
+ * Finds a rule whose selector *begins a line*, so `.hero-theme-blue` cannot be satisfied by
+ * the tail of `:root[class~='dark'] .hero-theme-blue`. A plain substring search silently
+ * accepts a stylesheet whose light rule has been deleted, which is the one failure this
+ * whole test exists to catch.
+ */
+const ruleBlock = (selector: string): string | null => {
+  const pattern = new RegExp(`^[ \\t]*${selector.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\{`, 'm');
+  const match = pattern.exec(STYLESHEET);
+  return match ? blockAt(match.index) : null;
+};
+
+/** The body of every `@media (prefers-color-scheme: dark)` block in the stylesheet. */
+const prefersDarkBlocks = (): string[] => {
+  const blocks: string[] = [];
+  const pattern = /@media \(prefers-color-scheme: dark\)/g;
+  let match = pattern.exec(STYLESHEET);
+  while (match) {
+    const body = blockAt(match.index);
+    if (body) blocks.push(body);
+    match = pattern.exec(STYLESHEET);
+  }
+  return blocks;
 };
 
 const varsIn = (block: string): Partial<Record<HeroVar, Rgb>> => {
@@ -66,23 +97,40 @@ const varsIn = (block: string): Partial<Record<HeroVar, Rgb>> => {
 };
 
 // The base rule carries the light values (matching :root); the two dark selectors outrank it.
-const selectorsFor = (key: string) => ({
-  light: `.hero-theme-${key} {`,
-  dark: `:root[class~='dark'] .hero-theme-${key}`,
-  darkSystem: `:root[class~='system'] .hero-theme-${key}`,
-});
+const lightSelector = (key: string) => `.hero-theme-${key}`;
+const darkSelector = (key: string) => `:root[class~='dark'] .hero-theme-${key}`;
+const systemSelector = (key: string) => `:root[class~='system'] .hero-theme-${key}`;
+
+/**
+ * The system-dark rule only applies inside a `prefers-color-scheme: dark` media query, so
+ * finding the selector anywhere in the file is not enough — it has to be inside one.
+ */
+const systemDarkBlock = (key: string): string | null => {
+  const selector = systemSelector(key);
+  for (const media of prefersDarkBlocks()) {
+    const index = media.indexOf(selector);
+    if (index === -1) continue;
+    const open = media.indexOf('{', index);
+    const close = media.indexOf('}', open);
+    if (open !== -1 && close !== -1) return media.slice(open + 1, close);
+  }
+  return null;
+};
 
 const paletteFor = (mode: 'light' | 'dark') =>
   HERO_THEMES.map(({ key }) => {
-    const selector = mode === 'light' ? selectorsFor(key).light : selectorsFor(key).dark;
-    const block = blockFor(selector);
+    const block = ruleBlock(mode === 'light' ? lightSelector(key) : darkSelector(key));
     return { key, vars: block ? varsIn(block) : {} };
   });
 
 describe('hero theme palette', () => {
   describe.each(HERO_THEMES.map((t) => t.key))('%s', (key) => {
-    it.each(Object.entries(selectorsFor(key)))('defines all five variables in its %s rule', (_mode, selector) => {
-      const block = blockFor(selector);
+    it.each([
+      ['light', () => ruleBlock(lightSelector(key))],
+      ['explicit dark', () => ruleBlock(darkSelector(key))],
+      ['system dark', () => systemDarkBlock(key)],
+    ] as const)('defines all five variables in its %s rule', (_mode, lookup) => {
+      const block = lookup();
       expect(block).not.toBeNull();
       expect(Object.keys(varsIn(block as string)).sort()).toEqual([...HERO_VARS].sort());
     });

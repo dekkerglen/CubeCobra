@@ -75,6 +75,7 @@ import { VIEW_DEFAULT_SORTS } from '@utils/datatypes/Cube';
 import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 import User from '@utils/datatypes/User';
 import { normalizeDraftFormatSteps } from '@utils/draftutil';
+import { DEFAULT_HERO_THEME } from '@utils/heroTheme';
 import { hostedImageToImageData } from '@utils/hostedImagesUtil';
 import { PrimerTab, primerTabsFromLegacy } from '@utils/primerTabs';
 import { cardFromId, getPlaceholderCard } from 'serverutils/carddb';
@@ -298,9 +299,9 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       // Cubes that never got primerTabs keep their stored description rather than losing it.
       description: item.primerTabs ? undefined : (item as any).description,
       brief: item.brief,
-      // Spread rather than assign: an unset theme leaves no key at all, so choosing the
-      // default removes the field instead of storing an empty value.
-      ...(item.heroTheme ? { heroTheme: item.heroTheme } : {}),
+      // Spread rather than assign, and drop the default: an unset theme and an explicitly
+      // chosen default are the same state, so neither leaves a key behind.
+      ...(item.heroTheme && item.heroTheme !== DEFAULT_HERO_THEME ? { heroTheme: item.heroTheme } : {}),
       imageName: item.imageName,
       imgHostedImageId: item.imgHostedImageId,
       imgHostedImageUrl: item.imgHostedImageUrl,

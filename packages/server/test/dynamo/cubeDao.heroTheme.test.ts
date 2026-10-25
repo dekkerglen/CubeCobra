@@ -77,6 +77,14 @@ describe('CubeDynamoDao heroTheme', () => {
     expect(storedCubeItem()).not.toHaveProperty('heroTheme');
   });
 
+  it('omits heroTheme when it is the default', async () => {
+    buildDao();
+
+    await dao.update(createCube({ owner, heroTheme: 'green' }));
+
+    expect(storedCubeItem()).not.toHaveProperty('heroTheme');
+  });
+
   it('omits heroTheme when it is an empty string', async () => {
     buildDao();
 

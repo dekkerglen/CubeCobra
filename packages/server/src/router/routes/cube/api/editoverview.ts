@@ -1,5 +1,5 @@
 import CubeType, { CUBE_CATEGORIES, CUBE_PREFIXES } from '@utils/datatypes/Cube';
-import { normalizeHeroTheme } from '@utils/heroTheme';
+import { DEFAULT_HERO_THEME, normalizeHeroTheme } from '@utils/heroTheme';
 import { cubeDao, hostedImageDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { getCubeId, isCubeViewable } from 'serverutils/cubefn';
@@ -101,7 +101,10 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
           return;
         }
 
-        cube.heroTheme = heroTheme;
+        // The default is stored as absence, so a client that posts the default key by name
+        // lands in the same state as one that posts an empty value. Without this there are
+        // two indistinguishable stored states and the public JSON reports both.
+        cube.heroTheme = heroTheme === DEFAULT_HERO_THEME ? undefined : heroTheme;
       }
     }
 

@@ -13,28 +13,33 @@
  * and fails if a key here has no matching block, or if its contrast falls below the bar.
  */
 
-export type HeroThemeKey = 'white' | 'blue' | 'black' | 'red' | 'green';
-
 export interface HeroTheme {
-  key: HeroThemeKey;
+  key: string;
   label: string;
 }
 
 /**
- * The theme a cube gets when it has chosen nothing. An unset cube and a cube that picked
- * Green are the same state: the control publishes an empty value for Green, the endpoint
- * clears the field, and `heroThemeClass` returns null so the hero renders from the
- * stylesheet's `:root` defaults with no theme class at all.
+ * The registry. Adding a theme means one entry here and one block of colours per mode in the
+ * stylesheet — nothing else. `HeroThemeKey` is derived from these entries rather than written
+ * out separately, so a new theme does not also need a hand-edited union.
  */
-export const DEFAULT_HERO_THEME: HeroThemeKey = 'green';
-
-export const HERO_THEMES: readonly HeroTheme[] = [
+export const HERO_THEMES = [
   { key: 'white', label: 'White' },
   { key: 'blue', label: 'Blue' },
   { key: 'black', label: 'Black' },
   { key: 'red', label: 'Red' },
   { key: 'green', label: 'Green' },
-];
+] as const satisfies readonly HeroTheme[];
+
+export type HeroThemeKey = (typeof HERO_THEMES)[number]['key'];
+
+/**
+ * The theme a cube gets when it has chosen nothing. An unset cube and a cube that picked
+ * Green are the same state: the control publishes an empty value for Green, the endpoint
+ * normalizes the default to "no theme", and `heroThemeClass` returns null so the hero renders
+ * from the stylesheet's `:root` defaults with no theme class at all.
+ */
+export const DEFAULT_HERO_THEME: HeroThemeKey = 'green';
 
 /**
  * Returns `input` when it is a registry key, otherwise null.
@@ -45,7 +50,6 @@ export const HERO_THEMES: readonly HeroTheme[] = [
  */
 export const normalizeHeroTheme = (input: unknown): HeroThemeKey | null =>
   HERO_THEMES.find((theme) => theme.key === input)?.key ?? null;
-
 /**
  * The CSS class that applies a theme, or null when none should be applied.
  *

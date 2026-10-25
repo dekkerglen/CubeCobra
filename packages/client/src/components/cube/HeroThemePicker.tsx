@@ -37,8 +37,10 @@ const HeroThemePicker: React.FC<HeroThemePickerProps> = ({ value, setValue }) =>
               // the real colours rather than a separate preview that could drift from them.
               className={classNames(
                 `hero-theme-${key}`,
-                'w-7 h-7 rounded border-2 flex items-center justify-center bg-hero-bg text-hero-text',
-                isSelected ? 'border-text ring-2 ring-focus-ring' : 'border-hero-badge-bg',
+                'w-7 h-7 rounded border-2 border-hero-badge-bg flex items-center justify-center bg-hero-bg text-hero-text',
+                // Selection is the ring and the check glyph; the accent border stays on every
+                // swatch so the selected one still previews all three of its colours.
+                isSelected && 'ring-2 ring-focus-ring',
               )}
               onClick={() => setValue(key === DEFAULT_HERO_THEME ? '' : key)}
             >

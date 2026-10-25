@@ -476,6 +476,16 @@ describe('Edit overview API', () => {
       expect((cubeDao.update as jest.Mock).mock.calls[0][0].heroTheme).toBeUndefined();
     });
 
+    // The bundled UI sends '' for the default, but a direct API client can post 'green'.
+    // Both must land in the same stored state, or the public JSON reports a theme for some
+    // green cubes and nothing for others.
+    it('clears the theme when the default is posted explicitly', async () => {
+      const res = await post('green', 'blue');
+
+      expect(res.status).toEqual(200);
+      expect((cubeDao.update as jest.Mock).mock.calls[0][0].heroTheme).toBeUndefined();
+    });
+
     it('rejects an unknown theme without updating', async () => {
       const res = await post('purple');
 
