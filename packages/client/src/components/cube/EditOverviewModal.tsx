@@ -255,18 +255,23 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
             </Section>
 
             <Section title="Custom URL" isOpen={openSections.url} toggle={() => toggleSection('url')}>
-              <Input
-                id="shortId"
-                name="shortId"
-                type="text"
-                value={state.shortId}
-                onChange={(event) => setState({ ...state, shortId: event.target.value })}
-                required
-                placeholder="Give this cube an easy to remember URL."
-              />
-              <Text semibold sm className="text-muted mt-1">
-                Changing the short ID may break existing links to your cube.
-              </Text>
+              <Flexbox direction="col" gap="2">
+                <Text sm className="text-text-secondary">
+                  Linked as: /cube/list/{state.shortId || cube.id}
+                </Text>
+                <Input
+                  id="shortId"
+                  name="shortId"
+                  type="text"
+                  value={state.shortId}
+                  onChange={(event) => setState({ ...state, shortId: event.target.value })}
+                  required
+                  placeholder="my-cube"
+                />
+                <Text semibold sm className="text-muted">
+                  Changing the short ID may break existing links to your cube.
+                </Text>
+              </Flexbox>
             </Section>
 
             <Flexbox direction="col" gap="1" className="pt-1 pl-4">

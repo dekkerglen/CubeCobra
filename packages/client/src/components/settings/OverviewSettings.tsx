@@ -288,6 +288,9 @@ const OverviewSettings: React.FC = () => {
               <Text semibold md>
                 Custom URL
               </Text>
+              <Text sm className="text-text-secondary">
+                Linked as: /cube/list/{state.shortId || cube.id}
+              </Text>
               <Input
                 id="shortId"
                 name="shortId"
@@ -295,9 +298,9 @@ const OverviewSettings: React.FC = () => {
                 value={state.shortId}
                 onChange={(event) => setState({ ...state, shortId: event.target.value })}
                 required
-                placeholder="Give this cube an easy to remember URL."
+                placeholder="my-cube"
               />
-              <Text semibold sm className="text-muted mt-1">
+              <Text semibold sm className="text-muted">
                 Changing the short ID may break existing links to your cube.
               </Text>
             </Flexbox>
