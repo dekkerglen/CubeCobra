@@ -291,9 +291,6 @@ const OverviewSettings: React.FC = () => {
               <Text sm className="text-text-secondary">
                 A short identifier used to link to this cube
               </Text>
-              <Text sm className="text-text-secondary">
-                Linked as: /cube/list/{state.shortId || cube.id}
-              </Text>
               <Input
                 id="shortId"
                 name="shortId"
