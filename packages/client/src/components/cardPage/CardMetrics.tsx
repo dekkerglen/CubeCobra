@@ -135,7 +135,9 @@ const MetricSection: React.FC<MetricSectionProps> = ({ name, value, detail, seri
   <section aria-label={name}>
     <div className="flex items-baseline justify-between gap-2">
       <span className="text-xs uppercase tracking-wide text-text-secondary">{name}</span>
-      <span className="flex items-baseline gap-1.5">
+      {/* Stacked and right-aligned so every metric's headline number shares a right edge,
+          whether or not it carries a secondary detail. */}
+      <span className="flex flex-col items-end leading-tight">
         <span className="text-lg font-bold text-text">{value}</span>
         {detail && <span className="text-xs text-text-secondary">{detail}</span>}
       </span>
