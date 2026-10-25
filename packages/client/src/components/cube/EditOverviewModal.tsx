@@ -210,10 +210,10 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
             </Section>
 
             <Section title="Categories" isOpen={openSections.categories} toggle={() => toggleSection('categories')}>
-              <Text semibold md className="mb-2">
-                Category: {getCubeDescription(state)}
+              <Text sm className="text-text-secondary">
+                Displayed as: {getCubeDescription(state)}
               </Text>
-              <Row>
+              <Row className="mt-2">
                 <Col xs={12} md={6}>
                   <RadioButtonGroup
                     selected={state.categoryOverride || ''}
@@ -250,7 +250,6 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
 
             <Section title="Custom URL" isOpen={openSections.url} toggle={() => toggleSection('url')}>
               <Input
-                label="Short ID"
                 id="shortId"
                 name="shortId"
                 type="text"

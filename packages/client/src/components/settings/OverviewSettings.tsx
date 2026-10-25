@@ -142,12 +142,18 @@ const OverviewSettings: React.FC = () => {
         </CardHeader>
         <CardBody>
           <Flexbox direction="col" gap="3">
-            <Input
-              label="Cube Name"
-              value={state.name}
-              required
-              onChange={(event) => setState({ ...state, name: event.target.value })}
-            />
+            <Flexbox direction="col" gap="2">
+              <Text semibold md>
+                Cube Name
+              </Text>
+              <Input
+                id="cubeName"
+                name="cubeName"
+                value={state.name}
+                required
+                onChange={(event) => setState({ ...state, name: event.target.value })}
+              />
+            </Flexbox>
 
             <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
               <Text semibold md>
@@ -164,11 +170,11 @@ const OverviewSettings: React.FC = () => {
               />
             </Flexbox>
 
-            <div className="pt-4 border-t border-border">
-              <Text semibold md className="mb-2">
+            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
+              <Text semibold md>
                 Image
               </Text>
-              <Row className="mb-3">
+              <Row>
                 <Col xs={12} sm={6} md={4}>
                   <Card>
                     <CardHeader>
@@ -224,7 +230,7 @@ const OverviewSettings: React.FC = () => {
                   )}
                 </Flexbox>
               )}
-            </div>
+            </Flexbox>
 
             <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
               <Text semibold md>
@@ -236,12 +242,12 @@ const OverviewSettings: React.FC = () => {
               />
             </Flexbox>
 
-            <div className="pt-4 border-t border-border">
+            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
               <Text semibold md>
                 Categories
               </Text>
-              <Text sm className="text-text-secondary mb-2">
-                Currently shown as: {getCubeDescription(state)}
+              <Text sm className="text-text-secondary">
+                Displayed as: {getCubeDescription(state)}
               </Text>
               <Row>
                 <Col xs={12} md={6}>
@@ -276,14 +282,13 @@ const OverviewSettings: React.FC = () => {
                   </Flexbox>
                 </Col>
               </Row>
-            </div>
+            </Flexbox>
 
-            <div className="pt-4 border-t border-border">
-              <Text semibold md className="mb-2">
+            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
+              <Text semibold md>
                 Custom URL
               </Text>
               <Input
-                label="Short ID"
                 id="shortId"
                 name="shortId"
                 type="text"
@@ -295,7 +300,7 @@ const OverviewSettings: React.FC = () => {
               <Text semibold sm className="text-muted mt-1">
                 Changing the short ID may break existing links to your cube.
               </Text>
-            </div>
+            </Flexbox>
           </Flexbox>
         </CardBody>
       </Card>
