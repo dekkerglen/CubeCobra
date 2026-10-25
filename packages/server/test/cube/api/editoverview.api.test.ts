@@ -434,6 +434,64 @@ describe('Edit overview API', () => {
     });
     expect(res.status).toEqual(200);
   });
+
+  describe('hero theme', () => {
+    const owner = createUser({ id: '12345' });
+
+    const post = async (heroTheme: unknown, storedHeroTheme?: string) => {
+      const existingCube = createCube({ shortId: 'foo', owner, heroTheme: storedHeroTheme as any });
+      const updatedCube = { ...createCube({ ...existingCube, owner }) } as Record<string, unknown>;
+      if (typeof heroTheme === 'undefined') {
+        delete updatedCube.heroTheme;
+      } else {
+        updatedCube.heroTheme = heroTheme;
+      }
+
+      (cubeDao.getById as jest.Mock).mockResolvedValue(existingCube);
+      (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
+      (Util.hasProfanity as jest.Mock).mockReturnValue(false);
+      (CubeFn.getCubeId as jest.Mock).mockReturnValue(existingCube.id);
+
+      return call(editOverviewHandler).as(owner).withBody({ cube: updatedCube }).send();
+    };
+
+    it('stores a valid theme', async () => {
+      const res = await post('blue');
+
+      expect(res.status).toEqual(200);
+      expect(cubeDao.update).toHaveBeenCalledWith(expect.objectContaining({ heroTheme: 'blue' }));
+    });
+
+    it('preserves the existing theme when the field is absent', async () => {
+      const res = await post(undefined, 'blue');
+
+      expect(res.status).toEqual(200);
+      expect(cubeDao.update).toHaveBeenCalledWith(expect.objectContaining({ heroTheme: 'blue' }));
+    });
+
+    it('clears the theme on an explicit empty string', async () => {
+      const res = await post('', 'blue');
+
+      expect(res.status).toEqual(200);
+      expect((cubeDao.update as jest.Mock).mock.calls[0][0].heroTheme).toBeUndefined();
+    });
+
+    it('rejects an unknown theme without updating', async () => {
+      const res = await post('purple');
+
+      expect(res.status).toEqual(400);
+      expect(res.body).toEqual({ error: 'Not a valid hero theme.' });
+      expect(cubeDao.update).not.toHaveBeenCalled();
+    });
+
+    it('rejects a non-string theme without updating', async () => {
+      const res = await post(42);
+
+      expect(res.status).toEqual(400);
+      expect(res.body).toEqual({ error: 'Not a valid hero theme.' });
+      expect(cubeDao.update).not.toHaveBeenCalled();
+    });
+  });
 });
 
 describe('Edit overview Routes', () => {
