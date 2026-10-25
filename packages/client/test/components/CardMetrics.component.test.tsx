@@ -120,7 +120,7 @@ describe('CardMetrics', () => {
   it('explains the elo swing in points for a screen reader', () => {
     render(<CardMetrics card={cardWith()} history={buildHistory(50, 1265)} />);
 
-    expect(chip('Elo', '4w').querySelector('.sr-only')).toHaveTextContent('+65 elo points over the last 4 weeks');
+    expect(chip('Elo', '4w').querySelector('.sr-only')).toHaveTextContent('+65 points over the last 4 weeks');
   });
 
   it('says why a window it cannot compute is blank', () => {

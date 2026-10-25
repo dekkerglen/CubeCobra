@@ -121,7 +121,7 @@ const eloChip = (window: string, momentum: Momentum | null) => {
     <TrendChip
       window={window}
       direction={directionOf(momentum.change, STEADY_ELO_POINTS)}
-      description={`${signed(momentum.change, 0)} elo points over ${WINDOW_LABELS[window] ?? window}`}
+      description={`${signed(momentum.change, 0)} points over ${WINDOW_LABELS[window] ?? window}`}
       value={signed(momentum.change, 0)}
     />
   );
