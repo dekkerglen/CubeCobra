@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { ArrowSwitchIcon } from '@primer/octicons-react';
 import {
@@ -16,6 +16,8 @@ import { cdnUrl } from '@utils/cdnUrl';
 import { CardDetails } from '@utils/datatypes/Card';
 import HistoryType from '@utils/datatypes/History';
 
+import { eloMomentum, playRateMomentum } from 'utils/cardMomentum';
+
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
@@ -24,6 +26,7 @@ import ImageFallback from '../ImageFallback';
 import AddToCubeModal from '../modals/AddToCubeModal';
 import TextBadge from '../TextBadge';
 import withModal from '../WithModal';
+import { EloMomentumBadge, PlayRateMomentumBadge } from './MomentumBadge';
 
 const AddModal = withModal(Button, AddToCubeModal);
 
@@ -40,8 +43,12 @@ interface CardPageProps {
   history: HistoryType[];
 }
 
-const CardBreakdownStats: React.FC<CardPageProps> = ({ card }) => {
+const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
   const [imageUsed, setImageUsed] = useState(card.image_normal);
+
+  const shortTermPlayRate = useMemo(() => playRateMomentum(history, 28), [history]);
+  const longTermPlayRate = useMemo(() => playRateMomentum(history, 84), [history]);
+  const shortTermElo = useMemo(() => eloMomentum(history, 28), [history]);
 
   return (
     <Flexbox direction="col" className="my-2 ml-2" gap="2">
@@ -111,11 +118,14 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card }) => {
           {formatPrice(cardTix(detailsToCard(card)))}
         </TextBadge>
       )}
+      <PlayRateMomentumBadge name="Play Rate 4w" momentum={shortTermPlayRate} />
+      <PlayRateMomentumBadge name="Play Rate 12w" momentum={longTermPlayRate} />
       {Number.isFinite(cardElo(detailsToCard(card))) && (
         <TextBadge name="Elo" className="mt-1">
           {cardElo(detailsToCard(card)).toFixed(0)}
         </TextBadge>
       )}
+      <EloMomentumBadge name="Elo 4w" momentum={shortTermElo} />
     </Flexbox>
   );
 };
