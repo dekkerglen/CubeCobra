@@ -149,44 +149,20 @@ const OverviewSettings: React.FC = () => {
               onChange={(event) => setState({ ...state, name: event.target.value })}
             />
 
-            <div className="pt-4 border-t border-border">
-              <Text semibold md className="mb-2">
-                Category: {getCubeDescription(state)}
+            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
+              <Text semibold md>
+                Brief
               </Text>
-              <Row>
-                <Col xs={12} md={6}>
-                  <RadioButtonGroup
-                    selected={state.categoryOverride || ''}
-                    setSelected={(value) => setState({ ...state, categoryOverride: value })}
-                    options={[
-                      { value: '', label: 'None' },
-                      ...CUBE_CATEGORIES.map((item) => ({ value: item, label: item })),
-                    ]}
-                  />
-                </Col>
-                <Col xs={12} md={6}>
-                  <Flexbox direction="col" gap="2">
-                    {CUBE_PREFIXES.map((label) => (
-                      <Checkbox
-                        key={label}
-                        label={label}
-                        checked={(state.categoryPrefixes || []).includes(label)}
-                        setChecked={(checked) => {
-                          if (checked) {
-                            setState({ ...state, categoryPrefixes: [...(state.categoryPrefixes || []), label] });
-                          } else {
-                            setState({
-                              ...state,
-                              categoryPrefixes: (state.categoryPrefixes || []).filter((x) => x !== label),
-                            });
-                          }
-                        }}
-                      />
-                    ))}
-                  </Flexbox>
-                </Col>
-              </Row>
-            </div>
+              <Text sm className="text-text-secondary">
+                A short description displayed in the cube hero (max 500 characters)
+              </Text>
+              <TextEntry
+                name="brief"
+                value={state.brief || ''}
+                setValue={(value) => setState({ ...state, brief: value })}
+                maxLength={500}
+              />
+            </Flexbox>
 
             <div className="pt-4 border-t border-border">
               <Text semibold md className="mb-2">
@@ -260,22 +236,52 @@ const OverviewSettings: React.FC = () => {
               />
             </Flexbox>
 
-            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
+            <div className="pt-4 border-t border-border">
               <Text semibold md>
-                Brief
+                Categories
               </Text>
-              <Text sm className="text-text-secondary">
-                A short description displayed in the cube hero (max 500 characters)
+              <Text sm className="text-text-secondary mb-2">
+                Currently shown as: {getCubeDescription(state)}
               </Text>
-              <TextEntry
-                name="brief"
-                value={state.brief || ''}
-                setValue={(value) => setState({ ...state, brief: value })}
-                maxLength={500}
-              />
-            </Flexbox>
+              <Row>
+                <Col xs={12} md={6}>
+                  <RadioButtonGroup
+                    selected={state.categoryOverride || ''}
+                    setSelected={(value) => setState({ ...state, categoryOverride: value })}
+                    options={[
+                      { value: '', label: 'None' },
+                      ...CUBE_CATEGORIES.map((item) => ({ value: item, label: item })),
+                    ]}
+                  />
+                </Col>
+                <Col xs={12} md={6}>
+                  <Flexbox direction="col" gap="2">
+                    {CUBE_PREFIXES.map((label) => (
+                      <Checkbox
+                        key={label}
+                        label={label}
+                        checked={(state.categoryPrefixes || []).includes(label)}
+                        setChecked={(checked) => {
+                          if (checked) {
+                            setState({ ...state, categoryPrefixes: [...(state.categoryPrefixes || []), label] });
+                          } else {
+                            setState({
+                              ...state,
+                              categoryPrefixes: (state.categoryPrefixes || []).filter((x) => x !== label),
+                            });
+                          }
+                        }}
+                      />
+                    ))}
+                  </Flexbox>
+                </Col>
+              </Row>
+            </div>
 
             <div className="pt-4 border-t border-border">
+              <Text semibold md className="mb-2">
+                Custom URL
+              </Text>
               <Input
                 label="Short ID"
                 id="shortId"

@@ -65,10 +65,10 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
   const [alerts, setAlerts] = useState<AlertProps[]>([]);
   const [loading, setLoading] = useState(false);
   const [openSections, setOpenSections] = useState({
-    category: false,
+    brief: false,
     image: false,
     heroTheme: false,
-    description: false,
+    categories: false,
     url: false,
   });
 
@@ -79,7 +79,7 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
       setState(JSON.parse(JSON.stringify(cube)));
       setImagename(cube.imageName);
       setAlerts([]);
-      setOpenSections({ category: false, image: false, heroTheme: false, description: false, url: false });
+      setOpenSections({ brief: false, image: false, heroTheme: false, categories: false, url: false });
     }
   }, [isOpen, cube]);
 
@@ -166,7 +166,50 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
               onChange={(event) => setState({ ...state, name: event.target.value })}
             />
 
-            <Section title="Category & Tags" isOpen={openSections.category} toggle={() => toggleSection('category')}>
+            <Section title="Brief" isOpen={openSections.brief} toggle={() => toggleSection('brief')}>
+              <Flexbox direction="col" gap="2">
+                <Text sm className="text-text-secondary">
+                  A short description displayed in the cube hero (max 500 characters)
+                </Text>
+                <TextEntry
+                  name="brief"
+                  value={state.brief || ''}
+                  setValue={(value) => setState({ ...state, brief: value })}
+                  maxLength={500}
+                />
+              </Flexbox>
+            </Section>
+
+            <Section title="Image" isOpen={openSections.image} toggle={() => toggleSection('image')}>
+              <Row className="mb-3">
+                <Col xs={12} sm={6} md={4}>
+                  <Card>
+                    <CardHeader>
+                      <Text semibold>Preview</Text>
+                    </CardHeader>
+                    <MtgImage image={state.image} showArtist />
+                  </Card>
+                </Col>
+              </Row>
+              <AutocompleteInput
+                getMatches={cardNameMatches(true)}
+                type="text"
+                name="image"
+                value={imagename}
+                setValue={changeImage}
+                placeholder="Cardname for image"
+                autoComplete="off"
+              />
+            </Section>
+
+            <Section title="Hero Theme" isOpen={openSections.heroTheme} toggle={() => toggleSection('heroTheme')}>
+              <HeroThemePicker
+                value={state.heroTheme}
+                setValue={(value) => setState((prev) => ({ ...prev, heroTheme: value || undefined }))}
+              />
+            </Section>
+
+            <Section title="Categories" isOpen={openSections.categories} toggle={() => toggleSection('categories')}>
               <Text semibold md className="mb-2">
                 Category: {getCubeDescription(state)}
               </Text>
@@ -203,49 +246,6 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
                   </Flexbox>
                 </Col>
               </Row>
-            </Section>
-
-            <Section title="Image" isOpen={openSections.image} toggle={() => toggleSection('image')}>
-              <Row className="mb-3">
-                <Col xs={12} sm={6} md={4}>
-                  <Card>
-                    <CardHeader>
-                      <Text semibold>Preview</Text>
-                    </CardHeader>
-                    <MtgImage image={state.image} showArtist />
-                  </Card>
-                </Col>
-              </Row>
-              <AutocompleteInput
-                getMatches={cardNameMatches(true)}
-                type="text"
-                name="image"
-                value={imagename}
-                setValue={changeImage}
-                placeholder="Cardname for image"
-                autoComplete="off"
-              />
-            </Section>
-
-            <Section title="Hero Theme" isOpen={openSections.heroTheme} toggle={() => toggleSection('heroTheme')}>
-              <HeroThemePicker
-                value={state.heroTheme}
-                setValue={(value) => setState((prev) => ({ ...prev, heroTheme: value || undefined }))}
-              />
-            </Section>
-
-            <Section title="Description" isOpen={openSections.description} toggle={() => toggleSection('description')}>
-              <Flexbox direction="col" gap="2">
-                <Text sm className="text-text-secondary">
-                  A short description displayed in the cube hero (max 500 characters)
-                </Text>
-                <TextEntry
-                  name="brief"
-                  value={state.brief || ''}
-                  setValue={(value) => setState({ ...state, brief: value })}
-                  maxLength={500}
-                />
-              </Flexbox>
             </Section>
 
             <Section title="Custom URL" isOpen={openSections.url} toggle={() => toggleSection('url')}>
