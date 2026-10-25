@@ -64,12 +64,6 @@
     "test:coverage": "npx jest --coverage",
     "test:ci": "npx jest --coverage --coverageReporters json-summary text"
   },
-  "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
   "browserslist": [
     ">0.2%",
     "not dead",

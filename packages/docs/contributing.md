@@ -85,11 +85,14 @@ CubeCobra uses automated code formatting and linting:
 
 ```bash
 # Check formatting and linting
-npm run lint
+npm run lint:check
 
 # Auto-fix issues (when possible)
+npm run lint
+
+# ...or run the tools individually
 npx prettier --write .
-npx eslint --fix .
+npx oxlint --fix .
 ```
 
 ### Languages and Tools
@@ -255,7 +258,7 @@ Instead:
 
 All pull requests run automated checks:
 
-- **Linting**: ESLint for code quality
+- **Linting**: oxlint for code quality
 - **Formatting**: Prettier for consistent style
 - **Tests**: Jest test suite
 - **Build**: Ensure the application builds successfully

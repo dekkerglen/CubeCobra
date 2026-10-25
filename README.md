@@ -76,7 +76,7 @@ CubeCobra is a modern web platform that enables Magic: The Gathering players to:
 
 ### Development Tools
 
-- **ESLint** and **Prettier** for code quality
+- **oxlint** and **Prettier** for code quality
 - **Jest** for testing
 - **GitHub Actions** for CI/CD
 - **Nearley** for card filter parsing
@@ -152,7 +152,7 @@ Our developers are happy to help get new folks started with the project - don't 
 
 1. Set up your development environment using our guides
 2. Create a feature branch for your changes
-3. Follow our coding standards (ESLint + Prettier)
+3. Follow our coding standards (oxlint + Prettier)
 4. Write tests for new functionality
 5. Submit a pull request with a clear description
 

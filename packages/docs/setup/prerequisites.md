@@ -8,10 +8,10 @@ Before setting up CubeCobra, you'll need to install and configure several tools 
 
 ### Recommended VSCode Extensions
 
-- **ESLint Extension**: https://marketplace.visualstudio.com/items?itemName=dbaeumer.vscode-eslint
+- **Oxc Extension** (oxlint): https://marketplace.visualstudio.com/items?itemName=oxc.oxc-vscode
 - **Prettier Extension**: https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode
 
-When using VSCode, make sure your selected workspace is the root folder that you have cloned. This ensures the ESLint plugin can work with our linting rules. Prettier will automatically apply standard formatting to your code, making adherence to linting and code formatting rules significantly easier.
+When using VSCode, make sure your selected workspace is the root folder that you have cloned. This ensures the Oxc plugin picks up our `.oxlintrc.json` linting rules. Prettier will automatically apply standard formatting to your code, making adherence to linting and code formatting rules significantly easier.
 
 ## reCAPTCHA Account
 
