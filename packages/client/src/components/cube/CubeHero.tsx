@@ -611,24 +611,24 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 <div className="flex items-center gap-1">
                   {isCubeOwner && (
                     <EditOverviewButton
-                      className="inline-flex items-center border-0 bg-transparent p-0 text-white/80 transition-colors hover:text-white"
+                      className="inline-flex items-center border-0 bg-transparent p-0 text-hero-text/80 transition-colors hover:text-hero-text"
                       aria-label="Edit cube overview"
                       stopPropagation
                     >
                       <PencilIcon size={16} />
                     </EditOverviewButton>
                   )}
-                  <h1 className="text-white font-semibold text-xl">{cube.name}</h1>
+                  <h1 className="text-hero-text font-semibold text-xl">{cube.name}</h1>
                 </div>
-                <Text sm className="text-white/80">
+                <Text sm className="text-hero-text/80">
                   {getCubeCardCountSnippet(cube, unfilteredChangedCards)} Cube
                 </Text>
-                <Text sm className="text-white/80">
+                <Text sm className="text-hero-text/80">
                   •
                 </Text>
-                <Text sm className="text-white/80">
+                <Text sm className="text-hero-text/80">
                   by{' '}
-                  <a href={`/user/view/${cube.owner.id}`} className="text-white hover:underline">
+                  <a href={`/user/view/${cube.owner.id}`} className="text-hero-text hover:underline">
                     {cube.owner.username}
                   </a>
                 </Text>
@@ -641,11 +641,11 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   {user && !isCubeOwner && (
                     <button
                       onClick={handleFollowToggle}
-                      className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                      className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap"
                       aria-label={followedState ? 'Unlike cube' : 'Like cube'}
                     >
                       {followedState ? <HeartFillIcon size={20} className="text-red-500" /> : <HeartIcon size={20} />}
-                      <Text sm className="text-white">
+                      <Text sm className="text-hero-text">
                         {followedState ? 'Liked' : 'Like'}
                       </Text>
                     </button>
@@ -653,17 +653,17 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   {user && isCubeOwner && (
                     <button
                       onClick={handlePinToggle}
-                      className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                      className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap"
                       aria-label={pinnedState ? 'Unpin cube' : 'Pin cube'}
                     >
                       {pinnedState ? <PinSlashIcon size={20} /> : <PinIcon size={20} />}
-                      <Text sm className="text-white">
+                      <Text sm className="text-hero-text">
                         {pinnedState ? 'Unpin' : 'Pin'}
                       </Text>
                     </button>
                   )}
                   <ShareCubeButton
-                    className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+                    className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
                     aria-label="Share cube"
                     modalprops={{
                       shortId: cube.shortId,
@@ -674,16 +674,16 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                     }}
                   >
                     <LinkIcon size={20} />
-                    <Text sm className="text-white">
+                    <Text sm className="text-hero-text">
                       Share
                     </Text>
                   </ShareCubeButton>
                   <div className="flex items-center whitespace-nowrap">
                     <Dropdown
                       trigger={
-                        <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
+                        <button className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors">
                           <PackageIcon size={20} />
-                          <Text sm className="text-white">
+                          <Text sm className="text-hero-text">
                             Purchase
                           </Text>
                         </button>
@@ -697,9 +697,9 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   <div className="flex items-center whitespace-nowrap">
                     <Dropdown
                       trigger={
-                        <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
+                        <button className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors">
                           <DownloadIcon size={20} />
-                          <Text sm className="text-white">
+                          <Text sm className="text-hero-text">
                             Export
                           </Text>
                         </button>
@@ -711,21 +711,21 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                     </Dropdown>
                   </div>
                   <CompareModalButton
-                    className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+                    className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
                     aria-label="Compare cubes"
                   >
                     <ArrowSwitchIcon size={20} />
-                    <Text sm className="text-white">
+                    <Text sm className="text-hero-text">
                       Compare
                     </Text>
                   </CompareModalButton>
                   <a
                     href={`/cube/rss/${cube.id}`}
-                    className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                    className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap"
                     aria-label="RSS Feed"
                   >
                     <RssIcon size={20} />
-                    <Text sm className="text-white">
+                    <Text sm className="text-hero-text">
                       RSS
                     </Text>
                   </a>
@@ -733,16 +733,16 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                     href={`https://luckypaper.co/resources/cube-map/?cube=${cube.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                    className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap"
                     aria-label="View in Cube Map"
                   >
                     <GlobeIcon size={20} />
-                    <Text sm className="text-white">
+                    <Text sm className="text-hero-text">
                       Cube Map
                     </Text>
                   </a>
                   <ReportCubeButton
-                    className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+                    className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
                     aria-label="Report cube"
                     modalprops={{
                       title: 'Report Cube',
@@ -753,7 +753,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                     }}
                   >
                     <StopIcon size={20} />
-                    <Text sm className="text-white">
+                    <Text sm className="text-hero-text">
                       Report
                     </Text>
                   </ReportCubeButton>
@@ -764,11 +764,11 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   {user && !isCubeOwner && (
                     <button
                       onClick={handleFollowToggle}
-                      className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                      className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap"
                       aria-label={followedState ? 'Unlike cube' : 'Like cube'}
                     >
                       {followedState ? <HeartFillIcon size={20} className="text-red-500" /> : <HeartIcon size={20} />}
-                      <Text xs className="text-white">
+                      <Text xs className="text-hero-text">
                         {followedState ? 'Liked' : 'Like'}
                       </Text>
                     </button>
@@ -776,11 +776,11 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   {user && isCubeOwner && (
                     <button
                       onClick={handlePinToggle}
-                      className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                      className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap"
                       aria-label={pinnedState ? 'Unpin cube' : 'Pin cube'}
                     >
                       {pinnedState ? <PinSlashIcon size={20} /> : <PinIcon size={20} />}
-                      <Text xs className="text-white">
+                      <Text xs className="text-hero-text">
                         {pinnedState ? 'Unpin' : 'Pin'}
                       </Text>
                     </button>
@@ -788,9 +788,9 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   <div className="flex items-center whitespace-nowrap">
                     <Dropdown
                       trigger={
-                        <button className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors">
+                        <button className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors">
                           <PackageIcon size={20} />
-                          <Text xs className="text-white">
+                          <Text xs className="text-hero-text">
                             Purchase
                           </Text>
                         </button>
@@ -804,9 +804,9 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   <div className="flex items-center whitespace-nowrap">
                     <Dropdown
                       trigger={
-                        <button className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors">
+                        <button className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors">
                           <DownloadIcon size={20} />
-                          <Text xs className="text-white">
+                          <Text xs className="text-hero-text">
                             Export
                           </Text>
                         </button>
@@ -818,20 +818,20 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                     </Dropdown>
                   </div>
                   <CompareModalButton
-                    className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+                    className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
                     aria-label="Compare cubes"
                   >
                     <ArrowSwitchIcon size={20} />
-                    <Text xs className="text-white">
+                    <Text xs className="text-hero-text">
                       Compare
                     </Text>
                   </CompareModalButton>
                   <div ref={moreMenuRef} className="flex items-center whitespace-nowrap">
                     <Dropdown
                       trigger={
-                        <button className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors">
+                        <button className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors">
                           <KebabHorizontalIcon size={20} />
-                          <Text xs className="text-white">
+                          <Text xs className="text-hero-text">
                             More
                           </Text>
                         </button>
@@ -910,7 +910,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 style={{ width: '32px', height: '32px' }}
                 aria-label="Expand cube hero"
               >
-                <ChevronDownIcon size={20} className="text-white" />
+                <ChevronDownIcon size={20} className="text-hero-text" />
               </button>
             </div>
           </div>
@@ -974,18 +974,21 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                     <div className="flex items-center gap-2">
                       {isCubeOwner && (
                         <EditOverviewButton
-                          className="inline-flex items-center border-0 bg-transparent p-0 text-white/80 transition-colors hover:text-white"
+                          className="inline-flex items-center border-0 bg-transparent p-0 text-hero-text/80 transition-colors hover:text-hero-text"
                           aria-label="Edit cube overview"
                           stopPropagation
                         >
                           <PencilIcon size={20} />
                         </EditOverviewButton>
                       )}
-                      <h1 className="text-white font-semibold text-3xl">{cube.name}</h1>
+                      <h1 className="text-hero-text font-semibold text-3xl">{cube.name}</h1>
                     </div>
-                    <Text md className="text-white/80 mt-1">
+                    <Text md className="text-hero-text/80 mt-1">
                       {getCubeCardCountSnippet(cube, unfilteredChangedCards)} Cube •{' '}
-                      <a href={`/cube/followers/${cube.id}`} className="text-white/80 hover:text-white hover:underline">
+                      <a
+                        href={`/cube/followers/${cube.id}`}
+                        className="text-hero-text/80 hover:text-hero-text hover:underline"
+                      >
                         {cube.likeCount ?? 0} {cube.likeCount === 1 ? 'like' : 'likes'}
                       </a>
                     </Text>
@@ -1001,9 +1004,9 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                         />
                       </a>
                     )}
-                    <Text md className="text-white">
+                    <Text md className="text-hero-text">
                       Designed by{' '}
-                      <a href={`/user/view/${cube.owner.id}`} className="text-white font-semibold hover:underline">
+                      <a href={`/user/view/${cube.owner.id}`} className="text-hero-text font-semibold hover:underline">
                         {cube.owner.username}
                       </a>
                     </Text>
@@ -1019,7 +1022,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                       <a
                         key={`prefix-${index}`}
                         href={`/search?q=category:"${encodeURIComponent(prefix)}"`}
-                        className="px-3 py-1 bg-category-badge-bg hover:bg-category-badge-bg/80 text-category-badge-text text-sm rounded-full transition-colors font-medium"
+                        className="px-3 py-1 bg-hero-badge-bg hover:bg-hero-badge-bg/80 text-hero-badge-text text-sm rounded-full transition-colors font-medium"
                       >
                         {prefix}
                       </a>
@@ -1027,7 +1030,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   {cube.categoryOverride && (
                     <a
                       href={`/search?q=category:"${encodeURIComponent(cube.categoryOverride)}"`}
-                      className="px-3 py-1 bg-category-badge-bg hover:bg-category-badge-bg/80 text-category-badge-text text-sm rounded-full transition-colors font-medium"
+                      className="px-3 py-1 bg-hero-badge-bg hover:bg-hero-badge-bg/80 text-hero-badge-text text-sm rounded-full transition-colors font-medium"
                     >
                       {cube.categoryOverride}
                     </a>
@@ -1038,7 +1041,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               {/* Brief */}
               {cube.brief && (
                 <Container lg disableCenter className="mb-4">
-                  <div className="text-white">
+                  <div className="text-hero-text">
                     <SafeMarkdown markdown={cube.brief} />
                   </div>
                 </Container>
@@ -1053,11 +1056,11 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               {user && !isCubeOwner && (
                 <button
                   onClick={handleFollowToggle}
-                  className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                  className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap"
                   aria-label={followedState ? 'Unlike cube' : 'Like cube'}
                 >
                   {followedState ? <HeartFillIcon size={20} className="text-red-500" /> : <HeartIcon size={20} />}
-                  <Text sm className="text-white">
+                  <Text sm className="text-hero-text">
                     {followedState ? 'Liked' : 'Like'}
                   </Text>
                 </button>
@@ -1065,17 +1068,17 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               {user && isCubeOwner && (
                 <button
                   onClick={handlePinToggle}
-                  className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                  className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap"
                   aria-label={pinnedState ? 'Unpin cube' : 'Pin cube'}
                 >
                   {pinnedState ? <PinSlashIcon size={20} /> : <PinIcon size={20} />}
-                  <Text sm className="text-white">
+                  <Text sm className="text-hero-text">
                     {pinnedState ? 'Unpin' : 'Pin'}
                   </Text>
                 </button>
               )}
               <ShareCubeButton
-                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+                className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
                 aria-label="Share cube"
                 modalprops={{
                   shortId: cube.shortId,
@@ -1086,16 +1089,16 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 }}
               >
                 <LinkIcon size={20} />
-                <Text sm className="text-white">
+                <Text sm className="text-hero-text">
                   Share
                 </Text>
               </ShareCubeButton>
               <div className="flex items-center whitespace-nowrap">
                 <Dropdown
                   trigger={
-                    <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
+                    <button className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors">
                       <PackageIcon size={20} />
-                      <Text sm className="text-white">
+                      <Text sm className="text-hero-text">
                         Purchase
                       </Text>
                     </button>
@@ -1109,9 +1112,9 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               <div className="flex items-center whitespace-nowrap">
                 <Dropdown
                   trigger={
-                    <button className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors">
+                    <button className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors">
                       <DownloadIcon size={20} />
-                      <Text sm className="text-white">
+                      <Text sm className="text-hero-text">
                         Export
                       </Text>
                     </button>
@@ -1123,21 +1126,21 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 </Dropdown>
               </div>
               <CompareModalButton
-                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+                className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
                 aria-label="Compare cubes"
               >
                 <ArrowSwitchIcon size={20} />
-                <Text sm className="text-white">
+                <Text sm className="text-hero-text">
                   Compare
                 </Text>
               </CompareModalButton>
               <a
                 href={`/cube/rss/${cube.id}`}
-                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap"
                 aria-label="RSS Feed"
               >
                 <RssIcon size={20} />
-                <Text sm className="text-white">
+                <Text sm className="text-hero-text">
                   RSS
                 </Text>
               </a>
@@ -1145,16 +1148,16 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 href={`https://luckypaper.co/resources/cube-map/?cube=${cube.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap"
                 aria-label="View in Cube Map"
               >
                 <GlobeIcon size={20} />
-                <Text sm className="text-white">
+                <Text sm className="text-hero-text">
                   Cube Map
                 </Text>
               </a>
               <ReportCubeButton
-                className="flex items-center gap-2 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+                className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
                 aria-label="Report cube"
                 modalprops={{
                   title: 'Report Cube',
@@ -1165,7 +1168,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 }}
               >
                 <StopIcon size={20} />
-                <Text sm className="text-white">
+                <Text sm className="text-hero-text">
                   Report
                 </Text>
               </ReportCubeButton>
@@ -1176,11 +1179,11 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               {user && !isCubeOwner && (
                 <button
                   onClick={handleFollowToggle}
-                  className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                  className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap"
                   aria-label={followedState ? 'Unlike cube' : 'Like cube'}
                 >
                   {followedState ? <HeartFillIcon size={20} className="text-red-500" /> : <HeartIcon size={20} />}
-                  <Text xs className="text-white">
+                  <Text xs className="text-hero-text">
                     {followedState ? 'Liked' : 'Like'}
                   </Text>
                 </button>
@@ -1188,11 +1191,11 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               {user && isCubeOwner && (
                 <button
                   onClick={handlePinToggle}
-                  className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors whitespace-nowrap"
+                  className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap"
                   aria-label={pinnedState ? 'Unpin cube' : 'Pin cube'}
                 >
                   {pinnedState ? <PinSlashIcon size={20} /> : <PinIcon size={20} />}
-                  <Text xs className="text-white">
+                  <Text xs className="text-hero-text">
                     {pinnedState ? 'Unpin' : 'Pin'}
                   </Text>
                 </button>
@@ -1200,9 +1203,9 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               <div className="flex items-center whitespace-nowrap">
                 <Dropdown
                   trigger={
-                    <button className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors">
+                    <button className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors">
                       <PackageIcon size={20} />
-                      <Text xs className="text-white">
+                      <Text xs className="text-hero-text">
                         Purchase
                       </Text>
                     </button>
@@ -1216,9 +1219,9 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               <div className="flex items-center whitespace-nowrap">
                 <Dropdown
                   trigger={
-                    <button className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors">
+                    <button className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors">
                       <DownloadIcon size={20} />
-                      <Text xs className="text-white">
+                      <Text xs className="text-hero-text">
                         Export
                       </Text>
                     </button>
@@ -1230,20 +1233,20 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 </Dropdown>
               </div>
               <CompareModalButton
-                className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
+                className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors bg-transparent border-0 p-0 cursor-pointer whitespace-nowrap"
                 aria-label="Compare cubes"
               >
                 <ArrowSwitchIcon size={20} />
-                <Text xs className="text-white">
+                <Text xs className="text-hero-text">
                   Compare
                 </Text>
               </CompareModalButton>
               <div ref={moreMenuRef} className="flex items-center whitespace-nowrap">
                 <Dropdown
                   trigger={
-                    <button className="flex items-center gap-1 text-white hover:text-gray-300 transition-colors">
+                    <button className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors">
                       <KebabHorizontalIcon size={20} />
-                      <Text xs className="text-white">
+                      <Text xs className="text-hero-text">
                         More
                       </Text>
                     </button>
@@ -1322,7 +1325,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
             style={{ width: '40px', height: '40px' }}
             aria-label="Collapse cube hero"
           >
-            <ChevronUpIcon size={24} className="text-white" />
+            <ChevronUpIcon size={24} className="text-hero-text" />
           </button>
         </div>
       </div>

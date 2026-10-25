@@ -2,6 +2,8 @@ import React, { ReactNode, useContext, useMemo } from 'react';
 
 import Card, { BoardType } from '@utils/datatypes/Card';
 import Cube, { getCubeDisplayOptions, getViewDefinitions, viewNameToSlug } from '@utils/datatypes/Cube';
+import { heroThemeClass } from '@utils/heroTheme';
+import classNames from 'classnames';
 
 import Banner from '../components/Banner';
 import CubeBottomNav from '../components/cube/CubeBottomNav';
@@ -66,6 +68,8 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
     [cube, activeLink],
   );
 
+  const heroTheme = useMemo(() => heroThemeClass(cube.heroTheme), [cube.heroTheme]);
+
   const displayViewDefaults = useMemo(
     () =>
       activeLink === 'list'
@@ -94,7 +98,9 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
           >
             <div className="flex flex-grow pb-20 sm:pb-0">
               <CubeSidebar cube={cube} activeLink={activeLink} controls={controls} />
-              <div className="flex-1 flex flex-col min-w-0">
+              {/* The theme class sits here, on the common ancestor of the hero and the mobile
+                  sub-nav, so both pick up the theme's custom properties through the cascade. */}
+              <div className={classNames('flex-1 flex flex-col min-w-0', heroTheme)}>
                 <CubeHero cube={cube} minified={!showFullHero} activeLink={activeLink} />
                 <MobileSubNav cube={cube} activeLink={activeLink} />
                 <Banner />
