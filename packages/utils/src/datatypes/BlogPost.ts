@@ -1,5 +1,6 @@
 import { BaseObject } from './BaseObject';
 import { Changes } from './Card';
+import { CubeImage } from './Cube';
 import Commentable from './Commentable';
 import User from './User';
 
@@ -24,6 +25,7 @@ type BlogPost = Commentable &
     owner: User;
     date: number;
     cubeName: string;
+    cubeImage?: CubeImage;
     cubeVisibility?: string; // Cube visibility setting for privacy checks
     changelist?: string; // Keep the changelog ID reference for dehydration
     Changelog?: Partial<Changes>;
