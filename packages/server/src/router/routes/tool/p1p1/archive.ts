@@ -34,11 +34,17 @@ export const getArchiveHandler = async (req: Request, res: Response) => {
       lastKey = result.lastKey ? JSON.stringify(result.lastKey) : null;
     }
 
-    return render(req, res, 'DailyP1P1HistoryPage', {
-      history,
-      hasMore,
-      lastKey,
-    });
+    return render(
+      req,
+      res,
+      'DailyP1P1HistoryPage',
+      {
+        history,
+        hasMore,
+        lastKey,
+      },
+      { title: 'Daily Pack 1 Pick 1 Archive' },
+    );
   } catch (err) {
     const error = err as Error;
     req.logger.error('Error loading daily P1P1 archive page:', error);

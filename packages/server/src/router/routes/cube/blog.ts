@@ -227,9 +227,9 @@ export const getBlogPostHandler = async (req: Request, res: Response) => {
       'BlogPostPage',
       { post },
       {
+        title: post.title || 'Blog Post',
         noindex: true,
         metadata: generateMeta(
-          post.title || 'Blog Post',
           description,
           cube?.image?.uri || '',
           `${getBaseUrl()}/cube/blog/blogpost/${req.params.id}`,

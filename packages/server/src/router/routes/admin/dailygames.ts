@@ -278,11 +278,17 @@ const cacheStore = (key: string, series: DailyGameSeries[]): void => {
 
 export const dailyGamesPageHandler = async (req: Request, res: Response) => {
   try {
-    return render(req, res, 'AdminDailyGamesPage', {
-      defaultStartDate: utcDay(-13),
-      defaultEndDate: utcDay(0),
-      maxRangeDays: MAX_RANGE_DAYS,
-    });
+    return render(
+      req,
+      res,
+      'AdminDailyGamesPage',
+      {
+        defaultStartDate: utcDay(-13),
+        defaultEndDate: utcDay(0),
+        maxRangeDays: MAX_RANGE_DAYS,
+      },
+      { title: 'Daily Games - Admin' },
+    );
   } catch (err) {
     return handleRouteError(req, res, err, '/');
   }

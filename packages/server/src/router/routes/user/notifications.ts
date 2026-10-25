@@ -11,10 +11,16 @@ export const handler = async (req: Request, res: Response) => {
 
   const notifications = await notificationDao.getByTo(`${req.user.id}`);
 
-  return render(req, res, 'NotificationsPage', {
-    notifications: notifications.items,
-    lastKey: notifications.lastKey,
-  });
+  return render(
+    req,
+    res,
+    'NotificationsPage',
+    {
+      notifications: notifications.items,
+      lastKey: notifications.lastKey,
+    },
+    { title: 'Notifications' },
+  );
 };
 
 export const routes = [

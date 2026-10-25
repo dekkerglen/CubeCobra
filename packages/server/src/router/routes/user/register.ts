@@ -24,7 +24,7 @@ const usernameValid = [
 ];
 
 export const getHandler = (req: Request, res: Response) => {
-  return render(req, res, 'RegisterPage');
+  return render(req, res, 'RegisterPage', {}, { title: 'Register' });
 };
 
 export const postHandler = async (req: Request, res: Response) => {
@@ -32,15 +32,21 @@ export const postHandler = async (req: Request, res: Response) => {
     // Validate that required fields are strings
     if (typeof req.body.email !== 'string' || !req.body.email) {
       req.flash('danger', 'Email must not be empty.');
-      return render(req, res, 'RegisterPage', {});
+      return render(req, res, 'RegisterPage', {}, { title: 'Register' });
     }
     if (typeof req.body.username !== 'string' || !req.body.username) {
       req.flash('danger', 'Username must not be empty.');
-      return render(req, res, 'RegisterPage', { email: req.body.email });
+      return render(req, res, 'RegisterPage', { email: req.body.email }, { title: 'Register' });
     }
     if (typeof req.body.password !== 'string' || !req.body.password) {
       req.flash('danger', 'Password must not be empty.');
-      return render(req, res, 'RegisterPage', { email: req.body.email, username: req.body.username });
+      return render(
+        req,
+        res,
+        'RegisterPage',
+        { email: req.body.email, username: req.body.username },
+        { title: 'Register' },
+      );
     }
 
     const email = req.body.email.toLowerCase();
@@ -49,21 +55,21 @@ export const postHandler = async (req: Request, res: Response) => {
     const attempt = { email, username };
 
     if (!req.validated) {
-      return render(req, res, 'RegisterPage', attempt);
+      return render(req, res, 'RegisterPage', attempt, { title: 'Register' });
     }
 
     try {
       validateEmail(email);
     } catch (err) {
       req.flash('danger', (err as Error).message);
-      return render(req, res, 'RegisterPage', attempt);
+      return render(req, res, 'RegisterPage', attempt, { title: 'Register' });
     }
 
     const userByName = await userDao.getByUsername(req.body.username.toLowerCase());
 
     if (userByName) {
       req.flash('danger', 'username already taken.');
-      return render(req, res, 'RegisterPage', attempt);
+      return render(req, res, 'RegisterPage', attempt, { title: 'Register' });
     }
 
     // check if user exists
@@ -71,7 +77,7 @@ export const postHandler = async (req: Request, res: Response) => {
 
     if (user) {
       req.flash('danger', 'email already associated with an existing account.');
-      return render(req, res, 'RegisterPage', attempt);
+      return render(req, res, 'RegisterPage', attempt, { title: 'Register' });
     }
 
     const skipVerification = process.env.ENABLE_BOT_SECURITY === 'false';

@@ -37,7 +37,7 @@ const getLoginRedirect = (req: Request) => {
 };
 
 export const getHandler = (req: Request, res: Response) => {
-  return render(req, res, 'LoginPage');
+  return render(req, res, 'LoginPage', {}, { title: 'Log In' });
 };
 
 export const postHandler = (req: Request, res: Response, next: NextFunction) => {

@@ -60,7 +60,6 @@ export const analysisHandler = async (req: Request, res: Response) => {
       },
       {
         metadata: generateMeta(
-          `Cube Cobra Analysis: ${cube.name}`,
           miscutil.getCubeDescription(cube),
           cube.image.uri,
           `${baseUrl}/cube/analysis/${req.params.id}`,

@@ -27,11 +27,17 @@ const pathFilter = (routePath: string): string => `filter matchedPath = ${JSON.s
 const requestedPath = (req: Request): string => String(req.body?.path ?? '').trim();
 
 export const pathAnalysisHandler = async (req: Request, res: Response) => {
-  return render(req, res, 'AdminPathAnalysisPage', {
-    defaultWindow: DEFAULT_WINDOW,
-    initialPath: typeof req.query.path === 'string' ? req.query.path : '',
-    groupings: Object.entries(GROUPINGS).map(([key, def]) => ({ key, label: def.label })),
-  });
+  return render(
+    req,
+    res,
+    'AdminPathAnalysisPage',
+    {
+      defaultWindow: DEFAULT_WINDOW,
+      initialPath: typeof req.query.path === 'string' ? req.query.path : '',
+      groupings: Object.entries(GROUPINGS).map(([key, def]) => ({ key, label: def.label })),
+    },
+    { title: 'Path Analysis - Admin' },
+  );
 };
 
 export const pathAnalysisTimeseriesHandler = async (req: Request, res: Response) => {

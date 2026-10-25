@@ -21,10 +21,16 @@ export const featuredcubesHandler = async (req: Request, res: Response) => {
     .map((f: any) => cubes.find((c: any) => c.id === f.cube))
     .filter((c): c is NonNullable<typeof c> => c !== undefined && c !== null);
 
-  return render(req, res, 'FeaturedCubesQueuePage', {
-    cubes: sortedCubes,
-    lastRotation: featured.length > 0 ? featured[0].featuredOn : new Date(0).valueOf(),
-  });
+  return render(
+    req,
+    res,
+    'FeaturedCubesQueuePage',
+    {
+      cubes: sortedCubes,
+      lastRotation: featured.length > 0 ? featured[0].featuredOn : new Date(0).valueOf(),
+    },
+    { title: 'Featured Cubes Queue - Admin' },
+  );
 };
 
 export const routes = [

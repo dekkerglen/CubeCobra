@@ -8,17 +8,23 @@ export const getArchiveHandler = async (req: Request, res: Response) => {
     const limit = 30;
     const result = await crosswordPuzzleDao.getHistory(undefined, limit);
 
-    return render(req, res, 'CrosswordArchivePage', {
-      // Dates and sizes only — the grids stay server-side so past puzzles are
-      // still playable.
-      history: result.items.map((puzzle) => ({
-        date: puzzle.date,
-        size: puzzle.grid.width,
-        slots: puzzle.grid.slots.length,
-      })),
-      hasMore: !!result.lastKey,
-      lastKey: result.lastKey ? JSON.stringify(result.lastKey) : null,
-    });
+    return render(
+      req,
+      res,
+      'CrosswordArchivePage',
+      {
+        // Dates and sizes only — the grids stay server-side so past puzzles are
+        // still playable.
+        history: result.items.map((puzzle) => ({
+          date: puzzle.date,
+          size: puzzle.grid.width,
+          slots: puzzle.grid.slots.length,
+        })),
+        hasMore: !!result.lastKey,
+        lastKey: result.lastKey ? JSON.stringify(result.lastKey) : null,
+      },
+      { title: 'Crossword Archive' },
+    );
   } catch (err) {
     const error = err as Error;
     req.logger.error('Error loading crossword archive page:', error);

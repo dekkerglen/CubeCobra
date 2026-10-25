@@ -7,9 +7,15 @@ import { Request, Response } from '../../types/express';
 const resourcesHandler = async (req: Request, res: Response) => {
   const podcasts = await podcastDao.queryByStatus(ContentStatus.PUBLISHED);
 
-  return render(req, res, 'ResourcesPage', {
-    podcasts: podcasts.items || [],
-  });
+  return render(
+    req,
+    res,
+    'ResourcesPage',
+    {
+      podcasts: podcasts.items || [],
+    },
+    { title: 'Resources' },
+  );
 };
 
 export const routes = [

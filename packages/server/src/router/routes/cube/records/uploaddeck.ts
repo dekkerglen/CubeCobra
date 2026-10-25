@@ -11,7 +11,7 @@ import { bodyValidation } from 'router/middleware';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from 'serverutils/carddb';
 import { addBasics, createPool, getBasicCardsFromCube } from 'serverutils/cube';
-import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../../types/express';
@@ -32,7 +32,7 @@ export const uploadDeckPageHandler = async (req: Request, res: Response) => {
 
     const cube = await cubeDao.getById(record.cube);
 
-    if (!isCubeViewable(cube, req.user)) {
+    if (!isCubeViewable(cube, req.user) || !cube) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
     }
@@ -42,11 +42,17 @@ export const uploadDeckPageHandler = async (req: Request, res: Response) => {
       draft = await draftDao.getById(record.draft);
     }
 
-    return render(req, res, 'RecordUploadDeckPage', {
-      cube,
-      record,
-      draft,
-    });
+    return render(
+      req,
+      res,
+      'RecordUploadDeckPage',
+      {
+        cube,
+        record,
+        draft,
+      },
+      { title: `${abbreviate(cube.name)} - Upload Deck` },
+    );
   } catch (err) {
     return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }

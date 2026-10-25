@@ -41,7 +41,6 @@ export const restorePageHandler = async (req: Request, res: Response) => {
       {
         title: `${abbreviate(cube.name)} - Restore`,
         metadata: generateMeta(
-          `Restore ${cube.name}`,
           `View and restore previous versions of ${cube.name}`,
           cube.image.uri,
           `${baseUrl}/cube/restore/${req.params.id}`,

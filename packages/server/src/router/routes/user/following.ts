@@ -45,7 +45,7 @@ export const handler = async (req: Request, res: Response) => {
         likedCubesCount,
         likedPackagesCount,
       },
-      { title: `${user.username} is following` },
+      { title: `${user.username}'s Following` },
     );
   } catch (err) {
     return handleRouteError(req, res, err as Error, '/404');

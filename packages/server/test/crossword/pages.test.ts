@@ -93,7 +93,13 @@ describe('crossword page handlers', () => {
   it('renders a board with no letters and no entry texts', async () => {
     await call(crosswordPageHandler).send();
 
-    expect(render).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'CrosswordPage', expect.anything());
+    expect(render).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      'CrosswordPage',
+      expect.anything(),
+      expect.objectContaining({ title: 'Crossword' }),
+    );
     const props = renderedProps();
     const serialized = JSON.stringify(props);
     expect(serialized).not.toContain('CAT');
@@ -187,6 +193,7 @@ describe('crossword page handlers', () => {
         ],
         hasMore: false,
       }),
+      expect.objectContaining({ title: 'Crossword Archive' }),
     );
     expect(JSON.stringify(renderedProps())).not.toContain('CAT');
   });

@@ -31,13 +31,20 @@ const renderPuzzlePage = async (
     }
   }
 
-  return render(req, res, 'SynergyConnectPage', {
-    board: puzzle ? toBoard(puzzle, submission) : null,
-    submission,
-    userStats,
-    revealed,
-    isArchive,
-  });
+  return render(
+    req,
+    res,
+    'SynergyConnectPage',
+    {
+      board: puzzle ? toBoard(puzzle, submission) : null,
+      submission,
+      userStats,
+      revealed,
+      isArchive,
+    },
+    // Archived puzzles are dated so several open tabs stay tellable apart.
+    { title: isArchive && puzzle ? `Synergy Connect - ${puzzle.date}` : 'Synergy Connect' },
+  );
 };
 
 export const synergyConnectPageHandler = async (req: Request, res: Response) => {

@@ -22,7 +22,7 @@ const handler = async (req: Request, res: Response) => {
       'MerchandisePage',
       {},
       {
-        title: `Cube Cobra Merchandise`,
+        title: 'Merchandise',
       },
     );
   } catch (err) {
@@ -81,27 +81,41 @@ const checkout = async (req: Request, res: Response) => {
 };
 
 const success = async (req: Request, res: Response) => {
-  return render(req, res, 'InfoPage', {
-    title: 'Order Success',
-    content: [
-      {
-        label: 'Your order has been received',
-        text: `Thank you for your purchase! Your order has been received and is being processed. You will receive an email confirmation shortly.`,
-      },
-    ],
-  });
+  const title = 'Order Success';
+  return render(
+    req,
+    res,
+    'InfoPage',
+    {
+      title,
+      content: [
+        {
+          label: 'Your order has been received',
+          text: `Thank you for your purchase! Your order has been received and is being processed. You will receive an email confirmation shortly.`,
+        },
+      ],
+    },
+    { title },
+  );
 };
 
 const cancel = async (req: Request, res: Response) => {
-  return render(req, res, 'InfoPage', {
-    title: 'Order Cancelled',
-    content: [
-      {
-        label: 'Your order has been cancelled',
-        text: `Your order has been cancelled. If you have any questions, please contact us.`,
-      },
-    ],
-  });
+  const title = 'Order Cancelled';
+  return render(
+    req,
+    res,
+    'InfoPage',
+    {
+      title,
+      content: [
+        {
+          label: 'Your order has been cancelled',
+          text: `Your order has been cancelled. If you have any questions, please contact us.`,
+        },
+      ],
+    },
+    { title },
+  );
 };
 
 export const routes = [

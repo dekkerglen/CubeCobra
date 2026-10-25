@@ -294,6 +294,19 @@ const render = (
     if (!options.metadata) {
       options.metadata = [];
     }
+    // One string drives the <title>, og:title and twitter:title, so a page can never
+    // present one name to the tab and a different one to a link preview. Routes supply
+    // only the page-specific part and the site name is appended here; a route that
+    // passes no title at all falls back to the bare site name (the landing page).
+    const pageTitle = options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra';
+    for (const property of ['og:title', 'twitter:title']) {
+      const existing = options.metadata.find((data) => data.property === property);
+      if (!existing) {
+        options.metadata.push({ property, content: pageTitle });
+      } else if (!existing.content) {
+        existing.content = pageTitle;
+      }
+    }
     // Every page is an Open Graph "website" unless a route said otherwise. Beyond
     // spec correctness, some in-app browsers / link-preview scrapers inject a script
     // that reads meta[property='og:type'].content and throws when it's absent.
@@ -350,7 +363,7 @@ const render = (
         viteBase: VITE_BASE,
         pageAssets: getPageAssets(page),
         metadata: options.metadata,
-        title: options.title ? `${options.title} - Cube Cobra` : 'Cube Cobra',
+        title: pageTitle,
         patron: req.user && (req.user.roles || []).includes(UserRoles.PATRON),
         notice: process.env.NOTICE,
         theme,

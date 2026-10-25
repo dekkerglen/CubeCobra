@@ -46,7 +46,6 @@ export const hedronImportPageHandler = async (req: Request, res: Response) => {
       {
         title: `${abbreviate(cube.name)} - Import from Hedron Network`,
         metadata: generateMeta(
-          `Cube Cobra Import from Hedron Network: ${cube.name}`,
           cube.brief,
           cube.image.uri,
           `${req.protocol}://${req.get('host')}/cube/records/hedron/${cube.id}`,

@@ -34,7 +34,7 @@ export const importRecordPageHandler = async (req: Request, res: Response) => {
         sideboard: sideboardDetails,
       },
       {
-        title: `Import Record`,
+        title: 'Import Record',
       },
     );
   } catch (err) {

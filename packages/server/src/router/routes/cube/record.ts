@@ -55,12 +55,7 @@ export const handler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - ${record.name}`,
-        metadata: generateMeta(
-          `Cube Cobra Record: ${record.name}`,
-          record.description,
-          cube.image.uri,
-          `${baseUrl}/cube/record/${req.params.id}`,
-        ),
+        metadata: generateMeta(record.description, cube.image.uri, `${baseUrl}/cube/record/${req.params.id}`),
       },
     );
   } catch (err) {

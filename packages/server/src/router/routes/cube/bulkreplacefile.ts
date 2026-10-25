@@ -3,7 +3,7 @@ import Card from '@utils/datatypes/Card';
 import { cubeDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
 import { cardFromId } from 'serverutils/carddb';
-import { CSVtoCards, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { CSVtoCards, abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
@@ -159,16 +159,22 @@ export const bulkReplaceFileHandler = async (req: Request, res: Response) => {
       }
 
       // Route to the confirmation page so the user can review adds AND removes
-      return render(req, res, 'BulkUploadPage', {
-        cube,
-        cards,
-        canEdit: true,
-        cubeID: req.params.id,
-        missing,
-        added: [],
-        addedByBoard: {},
-        changelog,
-      });
+      return render(
+        req,
+        res,
+        'BulkUploadPage',
+        {
+          cube,
+          cards,
+          canEdit: true,
+          cubeID: req.params.id,
+          missing,
+          added: [],
+          addedByBoard: {},
+          changelog,
+        },
+        { title: `${abbreviate(cube.name)} - Bulk Upload` },
+      );
     }
 
     // The upload didn't contain a recognizable CSV (empty, or fewer than the expected

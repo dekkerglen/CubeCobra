@@ -39,12 +39,7 @@ export const gridDraftHandler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - Grid Draft`,
-        metadata: generateMeta(
-          `Cube Cobra Grid Draft: ${cube.name}`,
-          cube.brief,
-          cube.image.uri,
-          `${baseUrl}/cube/griddraft/${req.params.id}`,
-        ),
+        metadata: generateMeta(cube.brief, cube.image.uri, `${baseUrl}/cube/griddraft/${req.params.id}`),
       },
     );
   } catch (err) {

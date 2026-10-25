@@ -159,12 +159,7 @@ export const listHandler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - List`,
-        metadata: generateMeta(
-          `Cube Cobra List: ${cube.name}`,
-          cube.brief,
-          cube.image.uri,
-          `${baseUrl}/cube/list/${req.params.id}`,
-        ),
+        metadata: generateMeta(cube.brief, cube.image.uri, `${baseUrl}/cube/list/${req.params.id}`),
       },
     );
   } catch (err) {
@@ -200,12 +195,7 @@ export const historyHandler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - List`,
-        metadata: generateMeta(
-          `Cube Cobra List: ${cube.name}`,
-          cube.brief,
-          cube.image.uri,
-          `${baseUrl}/cube/list/${req.params.id}`,
-        ),
+        metadata: generateMeta(cube.brief, cube.image.uri, `${baseUrl}/cube/list/${req.params.id}`),
       },
     );
   } catch (err) {
@@ -547,7 +537,6 @@ export const p1p1Handler = async (req: Request, res: Response) => {
       {
         title: 'Pack 1 Pick 1',
         metadata: generateMeta(
-          'Pack 1 Pick 1 - Cube Cobra',
           'Vote on your first pick from this pack!',
           `${baseUrl}/cube/p1p1packimage/${packId}.png`,
           `${baseUrl}/cube/p1p1/${packId}`,

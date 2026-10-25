@@ -9,13 +9,19 @@ export const leaveHandler = (req: Request, res: Response) => {
   const url = safeHttpUrl(req.query.url);
   if (!url) {
     res.status(400);
-    return render(req, res, 'ErrorPage', {
-      title: 'Invalid link',
-      error: 'This link is not a valid web address.',
-    });
+    return render(
+      req,
+      res,
+      'ErrorPage',
+      {
+        title: 'Invalid link',
+        error: 'This link is not a valid web address.',
+      },
+      { title: 'Invalid Link' },
+    );
   }
 
-  return render(req, res, 'LeaveWarningPage', { url });
+  return render(req, res, 'LeaveWarningPage', { url }, { title: 'External Link' });
 };
 
 export const routes = [

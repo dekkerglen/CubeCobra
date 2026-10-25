@@ -41,12 +41,7 @@ export const changelogDetailHandler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - Changelog`,
-        metadata: generateMeta(
-          `Cube Cobra Changelog: ${cube.name}`,
-          cube.brief,
-          cube.image.uri,
-          `${baseUrl}/cube/changelog/${cubeId}/${changelogId}`,
-        ),
+        metadata: generateMeta(cube.brief, cube.image.uri, `${baseUrl}/cube/changelog/${cubeId}/${changelogId}`),
       },
     );
   } catch (err) {
@@ -153,7 +148,6 @@ export const pitCompareHandler = async (req: Request, res: Response) => {
       {
         title: `${abbreviate(cube.name)} - Point in Time Compare (${dateStr})`,
         metadata: generateMeta(
-          `Cube Cobra PIT Compare: ${cube.name}`,
           `Comparing "${cube.name}" at ${dateStr} to present`,
           cube.image.uri,
           `${baseUrl}/cube/changelog/${cubeId}/${changelogId}/compare`,
@@ -212,7 +206,6 @@ export const pitListHandler = async (req: Request, res: Response) => {
       {
         title: `${abbreviate(cube.name)} - Point in Time List (${dateStr})`,
         metadata: generateMeta(
-          `Cube Cobra PIT List: ${cube.name}`,
           `${cube.name} card list at ${dateStr}`,
           cube.image.uri,
           `${baseUrl}/cube/changelog/${cubeId}/${changelogId}/list`,

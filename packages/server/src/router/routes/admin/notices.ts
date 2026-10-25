@@ -7,7 +7,7 @@ import { Request, Response } from 'types/express';
 
 export const noticesHandler = async (req: Request, res: Response) => {
   const notices = await noticeDao.getByStatus(NoticeStatus.ACTIVE);
-  return render(req, res, 'NoticePage', { notices: notices.items });
+  return render(req, res, 'NoticePage', { notices: notices.items }, { title: 'Notices - Admin' });
 };
 
 export const routes = [
