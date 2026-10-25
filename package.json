@@ -26,17 +26,6 @@
     "publish": "npm run build --workspace=packages/client && npm run build --workspace=packages/server && npm run build --workspace=packages/recommenderService && npm run publish --workspace=packages/dailyJobsLambda && cd packages/scripts && npx tsx src/publish.ts",
     "write-git-info": "npm run write-git-info --workspace=packages/scripts"
   },
-  "husky": {
-    "hooks": {
-      "pre-commit": "lint-staged"
-    }
-  },
-  "lint-staged": {
-    "*.{ts,tsx}": [
-      "prettier --write",
-      "oxlint --fix"
-    ]
-  },
   "_moduleAliases": {
     "analytics": "build/client/analytics",
     "components": "build/client/components",
