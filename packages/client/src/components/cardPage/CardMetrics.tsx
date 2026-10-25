@@ -1,6 +1,5 @@
 import React, { useMemo } from 'react';
 
-import { DashIcon, TriangleDownIcon, TriangleUpIcon } from '@primer/octicons-react';
 import { cardCubeCount, cardElo, cardPopularity, detailsToCard } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
 import HistoryType from '@utils/datatypes/History';
@@ -25,7 +24,7 @@ const DIRECTION_COLOR: Record<Direction, string> = {
   steady: 'text-text-secondary',
 };
 
-const DIRECTION_ICON = { up: TriangleUpIcon, down: TriangleDownIcon, steady: DashIcon };
+const WINDOW_LABELS: Record<string, string> = { '4w': 'the last 4 weeks', '12w': 'the last 12 weeks' };
 
 const signed = (value: number, digits: number): string => `${value >= 0 ? '+' : ''}${value.toFixed(digits)}`;
 
@@ -44,26 +43,28 @@ interface TrendChipProps {
   window: string;
   direction: Direction;
   value: string;
-  detail?: string;
+  title: string;
 }
 
-const TrendChip: React.FC<TrendChipProps> = ({ window, direction, value, detail }) => {
-  const Icon = DIRECTION_ICON[direction];
-
-  return (
-    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-border bg-bg px-1.5 py-0.5 text-xs">
-      <span className="text-text-secondary">{window}</span>
-      <span className={DIRECTION_COLOR[direction]}>
-        <Icon size={12} />
-      </span>
-      <span className={DIRECTION_COLOR[direction]}>{value}</span>
-      {detail && <span className="text-text-secondary">{detail}</span>}
-    </span>
-  );
-};
+/**
+ * Direction is carried by the sign and the colour. The sign is the one that survives
+ * red-green colour blindness and a screen reader, so there is no separate arrow.
+ */
+const TrendChip: React.FC<TrendChipProps> = ({ window, direction, value, title }) => (
+  <span
+    title={title}
+    className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-border bg-bg px-1.5 py-0.5 text-xs"
+  >
+    <span className="text-text-secondary">{window}</span>
+    <span className={DIRECTION_COLOR[direction]}>{value}</span>
+  </span>
+);
 
 const EmptyChip: React.FC<{ window: string }> = ({ window }) => (
-  <span className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-border bg-bg px-1.5 py-0.5 text-xs text-text-secondary">
+  <span
+    title={`Not enough history to compare ${WINDOW_LABELS[window] ?? window}`}
+    className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-border bg-bg px-1.5 py-0.5 text-xs text-text-secondary"
+  >
     <span>{window}</span>
     <span>No data</span>
   </span>
@@ -75,6 +76,8 @@ const playRateChip = (window: string, momentum: Momentum | null) => {
   }
 
   const { change, relativeChange } = momentum;
+  // "pp" is jargon, so the absolute move is spelled out here rather than shown in the chip.
+  const title = `${signed(change, 2)} percentage points over ${WINDOW_LABELS[window] ?? window}`;
 
   // Without a baseline there is no relative swing to lead with, so the raw move stands alone.
   if (relativeChange === null) {
@@ -84,6 +87,7 @@ const playRateChip = (window: string, momentum: Momentum | null) => {
       <TrendChip
         window={window}
         direction={direction}
+        title={title}
         value={direction === 'steady' ? 'Steady' : `${signed(change, 2)}pp`}
       />
     );
@@ -91,16 +95,12 @@ const playRateChip = (window: string, momentum: Momentum | null) => {
 
   const direction = directionOf(relativeChange, STEADY_RELATIVE_CHANGE);
 
-  if (direction === 'steady') {
-    return <TrendChip window={window} direction={direction} value="Steady" />;
-  }
-
   return (
     <TrendChip
       window={window}
       direction={direction}
-      value={signedPercent(relativeChange)}
-      detail={`${signed(change, 2)}pp`}
+      title={title}
+      value={direction === 'steady' ? 'Steady' : signedPercent(relativeChange)}
     />
   );
 };
@@ -117,6 +117,7 @@ const eloChip = (window: string, momentum: Momentum | null) => {
     <TrendChip
       window={window}
       direction={direction}
+      title={`${signed(momentum.change, 0)} elo points over ${WINDOW_LABELS[window] ?? window}`}
       value={direction === 'steady' ? 'Steady' : signed(momentum.change, 0)}
     />
   );

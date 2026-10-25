@@ -81,9 +81,37 @@ describe('CardMetrics', () => {
     render(<CardMetrics card={cardWith()} history={buildHistory(60, 1200)} />);
 
     expect(chip('Play Rate', '4w')).toHaveTextContent('+20.0%');
-    expect(chip('Play Rate', '4w')).toHaveTextContent('+1.00pp');
     expect(chip('Play Rate', '12w')).toHaveTextContent('+10.0%');
-    expect(chip('Play Rate', '12w')).toHaveTextContent('+0.50pp');
+  });
+
+  it('states the direction in the sign, not an icon', () => {
+    render(<CardMetrics card={cardWith()} history={buildHistory(40, 1200)} />);
+
+    // Colour alone fails red-green colour blindness and screen readers; the sign does not.
+    expect(chip('Play Rate', '4w')).toHaveTextContent('-20.0%');
+    expect(chip('Play Rate', '4w').querySelector('svg')).not.toBeInTheDocument();
+  });
+
+  it('keeps the absolute move in the tooltip, spelled out rather than as "pp"', () => {
+    render(<CardMetrics card={cardWith()} history={buildHistory(60, 1200)} />);
+
+    expect(chip('Play Rate', '4w')).toHaveAttribute('title', '+1.00 percentage points over the last 4 weeks');
+    expect(chip('Play Rate', '12w')).toHaveAttribute('title', '+0.50 percentage points over the last 12 weeks');
+    expect(chip('Play Rate', '4w')).not.toHaveTextContent('pp');
+  });
+
+  it('explains the elo swing in points in its tooltip', () => {
+    render(<CardMetrics card={cardWith()} history={buildHistory(50, 1265)} />);
+
+    expect(chip('Elo', '4w')).toHaveAttribute('title', '+65 elo points over the last 4 weeks');
+  });
+
+  it('says why a window it cannot compute is blank', () => {
+    const history = span(0, 3).map((week) => weeklyEntry(week, 50, 1200));
+
+    render(<CardMetrics card={cardWith()} history={history} />);
+
+    expect(chip('Play Rate', '12w')).toHaveAttribute('title', 'Not enough history to compare the last 12 weeks');
   });
 
   it('reports the elo trend in points rather than a percentage', () => {
@@ -101,7 +129,7 @@ describe('CardMetrics', () => {
     expect(chip('Play Rate', '4w')).not.toHaveTextContent('+400.0%');
   });
 
-  it('calls a negligible move steady rather than drawing an arrow', () => {
+  it('calls a negligible move steady rather than reporting a percentage', () => {
     render(<CardMetrics card={cardWith()} history={buildHistory(50, 1203)} />);
 
     expect(chip('Play Rate', '4w')).toHaveTextContent('Steady');
