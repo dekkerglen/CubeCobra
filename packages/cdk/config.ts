@@ -24,6 +24,8 @@ export interface EnvironmentConfiguration {
   // reached around Cloudflare and the server's trust in CF-Connecting-IP holds. Before enabling:
   // confirm every DNS record that points at this environment is proxied (orange cloud) and that
   // nothing calls the ALB / EB hostname directly; then flip it on for beta, verify, then prod.
+  // Immutable deploys can't carry load balancer changes: see "Elastic Beanstalk settings and
+  // immutable deploys" in the README for how to roll it out.
   restrictAlbToCloudflare: boolean;
   // Load application secrets at runtime from SSM SecureStrings under
   // /cubecobra/<beta|prod>/secrets/<ENV_VAR_NAME> instead of synthesizing them into the

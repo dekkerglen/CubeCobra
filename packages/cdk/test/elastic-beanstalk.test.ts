@@ -106,28 +106,14 @@ test('Creates an Elastic Beanstalk Environment with correct settings', () => {
   });
 });
 
-test('HTTPS listener uses a TLS 1.2+ security policy', () => {
+// EB rejects an immutable app deployment that also changes one of these (CloudFormation still reports
+// success), and every pipeline deploy ships a new app version, so they're managed outside the template.
+test('Does not set options an immutable deployment cannot change alongside a new app version', () => {
   const template = buildTemplate();
 
-  template.hasResourceProperties('AWS::ElasticBeanstalk::Environment', {
-    OptionSettings: Match.arrayWith([
-      {
-        Namespace: 'aws:elbv2:listener:443',
-        OptionName: 'SSLPolicy',
-        Value: 'ELBSecurityPolicy-TLS13-1-2-2021-06',
-      },
-    ]),
-  });
-});
-
-test('Instances require IMDSv2', () => {
-  const template = buildTemplate();
-
-  template.hasResourceProperties('AWS::ElasticBeanstalk::Environment', {
-    OptionSettings: Match.arrayWith([
-      { Namespace: 'aws:autoscaling:launchconfiguration', OptionName: 'DisableIMDSv1', Value: 'true' },
-    ]),
-  });
+  const names = optionSettings(template).map((o) => `${o.Namespace}:${o.OptionName}`);
+  expect(names).not.toContain('aws:autoscaling:launchconfiguration:DisableIMDSv1');
+  expect(names).not.toContain('aws:elbv2:listener:443:SSLPolicy');
 });
 
 test('Load balancer keeps the EB-managed security group by default', () => {

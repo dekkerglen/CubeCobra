@@ -153,15 +153,9 @@ export class ElasticBeanstalk extends Construct {
           optionName: 'IamInstanceProfile',
           value: props.instanceProfile.ref,
         },
-        // Require IMDSv2 (session tokens) so an SSRF can't read the instance role credentials
-        // through a plain GET. Expected to already be the default on Amazon Linux 2023 platforms,
-        // so this pins it; if an environment still allowed IMDSv1, EB applies the change by
-        // replacing that environment's instances.
-        {
-          namespace: 'aws:autoscaling:launchconfiguration',
-          optionName: 'DisableIMDSv1',
-          value: 'true',
-        },
+        // IMDSv2 is required (DisableIMDSv1 = true) by default on Amazon Linux 2023 platforms, and
+        // every environment runs that way. It isn't pinned here because it is an instance-replacing
+        // setting; see "Elastic Beanstalk settings and immutable deploys" in the README.
         {
           namespace: 'aws:autoscaling:asg',
           optionName: 'MinSize',
@@ -213,13 +207,8 @@ export class ElasticBeanstalk extends Construct {
           optionName: 'Protocol',
           value: 'HTTPS',
         },
-        // TLS 1.2+ only (TLS 1.3 preferred) with forward-secret ciphers, instead of the ELB
-        // default ELBSecurityPolicy-2016-08, which still allows TLS 1.0/1.1.
-        {
-          namespace: 'aws:elbv2:listener:443',
-          optionName: 'SSLPolicy',
-          value: 'ELBSecurityPolicy-TLS13-1-2-2021-06',
-        },
+        // The listener's TLS policy (SSLPolicy) is set on each environment outside this template; see
+        // "Elastic Beanstalk settings and immutable deploys" in the README.
         ...loadBalancerSecurityGroupSettings,
         {
           namespace: 'aws:elasticbeanstalk:environment:process:default',
@@ -246,6 +235,10 @@ export class ElasticBeanstalk extends Construct {
           optionName: 'UnhealthyThresholdCount',
           value: '10',
         },
+        // Every pipeline deploy ships a new application version, and EB rejects an immutable deployment
+        // that also changes an instance-replacing or load balancer setting, while CloudFormation still
+        // reports success. Settings in those groups can't change through this template; see
+        // "Elastic Beanstalk settings and immutable deploys" in the README.
         {
           namespace: 'aws:elasticbeanstalk:command',
           optionName: 'DeploymentPolicy',
