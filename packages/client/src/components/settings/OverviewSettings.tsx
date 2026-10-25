@@ -14,6 +14,7 @@ import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import RadioButtonGroup from 'components/base/RadioButtonGroup';
 import Text from 'components/base/Text';
+import BannerThemePicker from 'components/cube/BannerThemePicker';
 import ImageUploadWidget from 'components/ImageUploadWidget';
 import LoadingButton from 'components/LoadingButton';
 import MtgImage from 'components/MtgImage';
@@ -76,6 +77,9 @@ const OverviewSettings: React.FC = () => {
           image: state.image,
           imgHostedImageId: state.imgHostedImageId ?? '',
           brief: state.brief,
+          // Always sent, so choosing the default reaches the server as an explicit clear.
+          // The endpoint preserves the stored theme when the field is absent.
+          bannerTheme: state.bannerTheme ?? '',
           categoryOverride: state.categoryOverride,
           categoryPrefixes: state.categoryPrefixes,
         },
@@ -138,57 +142,39 @@ const OverviewSettings: React.FC = () => {
         </CardHeader>
         <CardBody>
           <Flexbox direction="col" gap="3">
-            <Input
-              label="Cube Name"
-              value={state.name}
-              required
-              onChange={(event) => setState({ ...state, name: event.target.value })}
-            />
-
-            <div>
-              <Text semibold md className="mb-2">
-                Category: {getCubeDescription(state)}
+            <Flexbox direction="col" gap="2">
+              <Text semibold md>
+                Cube Name
               </Text>
-              <Row>
-                <Col xs={12} md={6}>
-                  <RadioButtonGroup
-                    selected={state.categoryOverride || ''}
-                    setSelected={(value) => setState({ ...state, categoryOverride: value })}
-                    options={[
-                      { value: '', label: 'None' },
-                      ...CUBE_CATEGORIES.map((item) => ({ value: item, label: item })),
-                    ]}
-                  />
-                </Col>
-                <Col xs={12} md={6}>
-                  <Flexbox direction="col" gap="2">
-                    {CUBE_PREFIXES.map((label) => (
-                      <Checkbox
-                        key={label}
-                        label={label}
-                        checked={(state.categoryPrefixes || []).includes(label)}
-                        setChecked={(checked) => {
-                          if (checked) {
-                            setState({ ...state, categoryPrefixes: [...(state.categoryPrefixes || []), label] });
-                          } else {
-                            setState({
-                              ...state,
-                              categoryPrefixes: (state.categoryPrefixes || []).filter((x) => x !== label),
-                            });
-                          }
-                        }}
-                      />
-                    ))}
-                  </Flexbox>
-                </Col>
-              </Row>
-            </div>
+              <Input
+                id="cubeName"
+                name="cubeName"
+                value={state.name}
+                required
+                onChange={(event) => setState({ ...state, name: event.target.value })}
+              />
+            </Flexbox>
 
-            <div>
-              <Text semibold md className="mb-2">
+            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
+              <Text semibold md>
+                Brief Description
+              </Text>
+              <Text sm className="text-text-secondary">
+                A short description displayed in the cube banner (max 500 characters)
+              </Text>
+              <TextEntry
+                name="brief"
+                value={state.brief || ''}
+                setValue={(value) => setState({ ...state, brief: value })}
+                maxLength={500}
+              />
+            </Flexbox>
+
+            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
+              <Text semibold md>
                 Image
               </Text>
-              <Row className="mb-3">
+              <Row>
                 <Col xs={12} sm={6} md={4}>
                   <Card>
                     <CardHeader>
@@ -244,38 +230,81 @@ const OverviewSettings: React.FC = () => {
                   )}
                 </Flexbox>
               )}
-            </div>
+            </Flexbox>
 
-            <Flexbox direction="col" gap="2">
+            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
               <Text semibold md>
-                Brief
+                Banner Color
               </Text>
-              <Text sm className="text-text-secondary">
-                A short description displayed in the cube hero (max 500 characters)
-              </Text>
-              <TextEntry
-                name="brief"
-                value={state.brief || ''}
-                setValue={(value) => setState({ ...state, brief: value })}
-                maxLength={500}
+              <BannerThemePicker
+                value={state.bannerTheme}
+                setValue={(value) => setState((prev) => ({ ...prev, bannerTheme: value || undefined }))}
               />
             </Flexbox>
 
-            <div>
+            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
+              <Text semibold md>
+                Categories
+              </Text>
+              <Text sm className="text-text-secondary">
+                Displayed as: {getCubeDescription(state)}
+              </Text>
+              <Row>
+                <Col xs={12} md={6}>
+                  <RadioButtonGroup
+                    selected={state.categoryOverride || ''}
+                    setSelected={(value) => setState({ ...state, categoryOverride: value })}
+                    options={[
+                      { value: '', label: 'None' },
+                      ...CUBE_CATEGORIES.map((item) => ({ value: item, label: item })),
+                    ]}
+                  />
+                </Col>
+                <Col xs={12} md={6}>
+                  <Flexbox direction="col" gap="2">
+                    {CUBE_PREFIXES.map((label) => (
+                      <Checkbox
+                        key={label}
+                        label={label}
+                        checked={(state.categoryPrefixes || []).includes(label)}
+                        setChecked={(checked) => {
+                          if (checked) {
+                            setState({ ...state, categoryPrefixes: [...(state.categoryPrefixes || []), label] });
+                          } else {
+                            setState({
+                              ...state,
+                              categoryPrefixes: (state.categoryPrefixes || []).filter((x) => x !== label),
+                            });
+                          }
+                        }}
+                      />
+                    ))}
+                  </Flexbox>
+                </Col>
+              </Row>
+            </Flexbox>
+
+            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
+              <Text semibold md>
+                Custom URL
+              </Text>
+              <Text sm className="text-text-secondary">
+                A short identifier used to link to this cube
+              </Text>
               <Input
-                label="Short ID"
                 id="shortId"
                 name="shortId"
                 type="text"
                 value={state.shortId}
                 onChange={(event) => setState({ ...state, shortId: event.target.value })}
                 required
-                placeholder="Give this cube an easy to remember URL."
+                placeholder="my-cube"
+                otherInputProps={{ 'aria-label': 'Custom URL' }}
               />
-              <Text semibold sm className="text-muted mt-1">
+              <Text semibold sm className="text-muted">
                 Changing the short ID may break existing links to your cube.
               </Text>
-            </div>
+            </Flexbox>
           </Flexbox>
         </CardBody>
       </Card>

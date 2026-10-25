@@ -75,6 +75,7 @@ import { VIEW_DEFAULT_SORTS } from '@utils/datatypes/Cube';
 import CubeAnalytic from '@utils/datatypes/CubeAnalytic';
 import User from '@utils/datatypes/User';
 import { normalizeDraftFormatSteps } from '@utils/draftutil';
+import { DEFAULT_BANNER_THEME } from '@utils/bannerTheme';
 import { hostedImageToImageData } from '@utils/hostedImagesUtil';
 import { PrimerTab, primerTabsFromLegacy } from '@utils/primerTabs';
 import { cardFromId, getPlaceholderCard } from 'serverutils/carddb';
@@ -111,6 +112,8 @@ export interface UnhydratedCube {
   /** @deprecated legacy single-string primer */
   description?: string;
   brief?: string;
+  /** Hero banner theme key. Absent means the default. See `@utils/bannerTheme`. */
+  bannerTheme?: string;
   imageName: string;
   // Lotus Cobra perk: uploaded custom cube image. See utils Cube.ts for semantics.
   imgHostedImageId?: string;
@@ -296,6 +299,9 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       // Cubes that never got primerTabs keep their stored description rather than losing it.
       description: item.primerTabs ? undefined : (item as any).description,
       brief: item.brief,
+      // Spread rather than assign, and drop the default: an unset theme and an explicitly
+      // chosen default are the same state, so neither leaves a key behind.
+      ...(item.bannerTheme && item.bannerTheme !== DEFAULT_BANNER_THEME ? { bannerTheme: item.bannerTheme } : {}),
       imageName: item.imageName,
       imgHostedImageId: item.imgHostedImageId,
       imgHostedImageUrl: item.imgHostedImageUrl,

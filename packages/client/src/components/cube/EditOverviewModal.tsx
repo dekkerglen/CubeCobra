@@ -18,6 +18,7 @@ import Link from '../base/Link';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import RadioButtonGroup from '../base/RadioButtonGroup';
 import Text from '../base/Text';
+import BannerThemePicker from './BannerThemePicker';
 import LoadingButton from '../LoadingButton';
 import MtgImage from '../MtgImage';
 import TextEntry from '../TextEntry';
@@ -64,9 +65,10 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
   const [alerts, setAlerts] = useState<AlertProps[]>([]);
   const [loading, setLoading] = useState(false);
   const [openSections, setOpenSections] = useState({
-    category: false,
+    brief: false,
     image: false,
-    description: false,
+    bannerTheme: false,
+    categories: false,
     url: false,
   });
 
@@ -77,7 +79,7 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
       setState(JSON.parse(JSON.stringify(cube)));
       setImagename(cube.imageName);
       setAlerts([]);
-      setOpenSections({ category: false, image: false, description: false, url: false });
+      setOpenSections({ brief: false, image: false, bannerTheme: false, categories: false, url: false });
     }
   }, [isOpen, cube]);
 
@@ -107,6 +109,9 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
             imageName: state.imageName,
             image: state.image,
             brief: state.brief,
+            // Always sent, so choosing the default reaches the server as an explicit clear.
+            // The endpoint preserves the stored theme when the field is absent.
+            bannerTheme: state.bannerTheme ?? '',
             categoryOverride: state.categoryOverride,
             categoryPrefixes: state.categoryPrefixes,
           },
@@ -154,18 +159,67 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
               </Alert>
             )}
 
-            <Input
-              label="Cube Name"
-              value={state.name}
-              required
-              onChange={(event) => setState({ ...state, name: event.target.value })}
-            />
-
-            <Section title="Category & Tags" isOpen={openSections.category} toggle={() => toggleSection('category')}>
-              <Text semibold md className="mb-2">
-                Category: {getCubeDescription(state)}
+            <Flexbox direction="col" gap="2">
+              <Text semibold md>
+                Cube Name
               </Text>
-              <Row>
+              <Input
+                id="cubeName"
+                name="cubeName"
+                value={state.name}
+                required
+                onChange={(event) => setState({ ...state, name: event.target.value })}
+              />
+            </Flexbox>
+
+            <Section title="Brief Description" isOpen={openSections.brief} toggle={() => toggleSection('brief')}>
+              <Flexbox direction="col" gap="2">
+                <Text sm className="text-text-secondary">
+                  A short description displayed in the cube banner (max 500 characters)
+                </Text>
+                <TextEntry
+                  name="brief"
+                  value={state.brief || ''}
+                  setValue={(value) => setState({ ...state, brief: value })}
+                  maxLength={500}
+                />
+              </Flexbox>
+            </Section>
+
+            <Section title="Image" isOpen={openSections.image} toggle={() => toggleSection('image')}>
+              <Row className="mb-3">
+                <Col xs={12} sm={6} md={4}>
+                  <Card>
+                    <CardHeader>
+                      <Text semibold>Preview</Text>
+                    </CardHeader>
+                    <MtgImage image={state.image} showArtist />
+                  </Card>
+                </Col>
+              </Row>
+              <AutocompleteInput
+                getMatches={cardNameMatches(true)}
+                type="text"
+                name="image"
+                value={imagename}
+                setValue={changeImage}
+                placeholder="Cardname for image"
+                autoComplete="off"
+              />
+            </Section>
+
+            <Section title="Banner Color" isOpen={openSections.bannerTheme} toggle={() => toggleSection('bannerTheme')}>
+              <BannerThemePicker
+                value={state.bannerTheme}
+                setValue={(value) => setState((prev) => ({ ...prev, bannerTheme: value || undefined }))}
+              />
+            </Section>
+
+            <Section title="Categories" isOpen={openSections.categories} toggle={() => toggleSection('categories')}>
+              <Text sm className="text-text-secondary">
+                Displayed as: {getCubeDescription(state)}
+              </Text>
+              <Row className="mt-2">
                 <Col xs={12} md={6}>
                   <RadioButtonGroup
                     selected={state.categoryOverride || ''}
@@ -200,56 +254,25 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
               </Row>
             </Section>
 
-            <Section title="Image" isOpen={openSections.image} toggle={() => toggleSection('image')}>
-              <Row className="mb-3">
-                <Col xs={12} sm={6} md={4}>
-                  <Card>
-                    <CardHeader>
-                      <Text semibold>Preview</Text>
-                    </CardHeader>
-                    <MtgImage image={state.image} showArtist />
-                  </Card>
-                </Col>
-              </Row>
-              <AutocompleteInput
-                getMatches={cardNameMatches(true)}
-                type="text"
-                name="image"
-                value={imagename}
-                setValue={changeImage}
-                placeholder="Cardname for image"
-                autoComplete="off"
-              />
-            </Section>
-
-            <Section title="Description" isOpen={openSections.description} toggle={() => toggleSection('description')}>
+            <Section title="Custom URL" isOpen={openSections.url} toggle={() => toggleSection('url')}>
               <Flexbox direction="col" gap="2">
                 <Text sm className="text-text-secondary">
-                  A short description displayed in the cube hero (max 500 characters)
+                  A short identifier used to link to this cube
                 </Text>
-                <TextEntry
-                  name="brief"
-                  value={state.brief || ''}
-                  setValue={(value) => setState({ ...state, brief: value })}
-                  maxLength={500}
+                <Input
+                  id="shortId"
+                  name="shortId"
+                  type="text"
+                  value={state.shortId}
+                  onChange={(event) => setState({ ...state, shortId: event.target.value })}
+                  required
+                  placeholder="my-cube"
+                  otherInputProps={{ 'aria-label': 'Custom URL' }}
                 />
+                <Text semibold sm className="text-muted">
+                  Changing the short ID may break existing links to your cube.
+                </Text>
               </Flexbox>
-            </Section>
-
-            <Section title="Custom URL" isOpen={openSections.url} toggle={() => toggleSection('url')}>
-              <Input
-                label="Short ID"
-                id="shortId"
-                name="shortId"
-                type="text"
-                value={state.shortId}
-                onChange={(event) => setState({ ...state, shortId: event.target.value })}
-                required
-                placeholder="Give this cube an easy to remember URL."
-              />
-              <Text semibold sm className="text-muted mt-1">
-                Changing the short ID may break existing links to your cube.
-              </Text>
             </Section>
 
             <Flexbox direction="col" gap="1" className="pt-1 pl-4">

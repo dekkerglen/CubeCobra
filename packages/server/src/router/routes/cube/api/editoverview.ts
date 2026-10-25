@@ -1,4 +1,5 @@
 import CubeType, { CUBE_CATEGORIES, CUBE_PREFIXES } from '@utils/datatypes/Cube';
+import { DEFAULT_BANNER_THEME, normalizeBannerTheme } from '@utils/bannerTheme';
 import { cubeDao, hostedImageDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { getCubeId, isCubeViewable } from 'serverutils/cubefn';
@@ -79,6 +80,32 @@ export const editOverviewHandler = async (req: Request, res: Response) => {
 
     if (updatedCube.brief !== undefined) {
       cube.brief = updatedCube.brief;
+    }
+
+    // Hero banner theme. This endpoint mixes two conventions — `brief` is preserved when
+    // absent, `categoryOverride` is cleared when null — and the banner theme follows `brief`:
+    // several forms post a partial field list, and an absent field must never silently wipe a
+    // theme the owner chose elsewhere. Choosing the default sends an explicit empty value.
+    //
+    // Read as `unknown`: `updatedCube` is request body cast to CubeType, so its declared
+    // literal-union type is a claim about well-behaved clients, not about the wire.
+    const submittedBannerTheme: unknown = updatedCube.bannerTheme;
+    if (submittedBannerTheme !== undefined) {
+      if (submittedBannerTheme === '') {
+        cube.bannerTheme = undefined;
+      } else {
+        const bannerTheme = normalizeBannerTheme(submittedBannerTheme);
+
+        if (!bannerTheme) {
+          res.status(400).json({ error: 'Not a valid banner theme.' });
+          return;
+        }
+
+        // The default is stored as absence, so a client that posts the default key by name
+        // lands in the same state as one that posts an empty value. Without this there are
+        // two indistinguishable stored states and the public JSON reports both.
+        cube.bannerTheme = bannerTheme === DEFAULT_BANNER_THEME ? undefined : bannerTheme;
+      }
     }
 
     cube.date = Date.now().valueOf();
