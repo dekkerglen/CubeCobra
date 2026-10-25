@@ -22,13 +22,14 @@ import UserContext from 'contexts/UserContext';
 export interface BlogPostProps {
   post: BlogPostData;
   noScroll?: boolean;
+  showCubeImage?: boolean;
   className?: string;
 }
 
 const EditBlogButton = withModal(Button, EditBlogModal);
 const DeleteBlogButton = withModal(Button, DeleteBlogModal);
 
-const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false }) => {
+const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false, showCubeImage = false }) => {
   const user: User | null = useContext(UserContext);
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
   const canEdit = user && (typeof post.owner === 'object' ? user.id === post.owner.id : user.id === post.owner);
@@ -39,46 +40,58 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false }
   return (
     <Card className={className}>
       <CardHeader className="p-2">
-        <Flexbox direction="col" alignItems="start">
-          <Flexbox direction="row" justify="between" className="w-full">
-            <Text lg semibold>
-              <Flexbox direction="row" justify="between">
-                <Link href={`/cube/blog/blogpost/${post.id}`}>{post.title}</Link>
+        <Flexbox direction="row" gap="2" alignItems="start">
+          {showCubeImage && post.cubeImage && (
+            <a href={`/cube/list/${post.cube}`} className="shrink-0">
+              <img
+                src={post.cubeImage.uri}
+                alt={`Art by ${post.cubeImage.artist}`}
+                title={post.cubeName}
+                className="w-20 h-14 rounded object-cover object-top border border-border"
+              />
+            </a>
+          )}
+          <Flexbox direction="col" alignItems="start" className="grow min-w-0">
+            <Flexbox direction="row" justify="between" className="w-full">
+              <Text lg semibold>
+                <Flexbox direction="row" justify="between">
+                  <Link href={`/cube/blog/blogpost/${post.id}`}>{post.title}</Link>
+                </Flexbox>
+              </Text>
+              <Flexbox direction="row" gap="2">
+                {post.changelist && (
+                  <Tooltip text="View cube at this point in time" wrapperTag="span">
+                    <Link href={`/cube/changelog/${post.cube}/${post.changelist}/list`}>
+                      <Button color="accent">
+                        <EyeIcon size={16} />
+                      </Button>
+                    </Link>
+                  </Tooltip>
+                )}
+                {canEdit && (
+                  <>
+                    <EditBlogButton color="primary" modalprops={{ cubeID: post.cube, post }}>
+                      <PencilIcon size={16} />
+                    </EditBlogButton>
+                    <DeleteBlogButton color="danger" modalprops={{ post }}>
+                      <TrashIcon size={16} />
+                    </DeleteBlogButton>
+                  </>
+                )}
               </Flexbox>
-            </Text>
-            <Flexbox direction="row" gap="2">
-              {post.changelist && (
-                <Tooltip text="View cube at this point in time" wrapperTag="span">
-                  <Link href={`/cube/changelog/${post.cube}/${post.changelist}/list`}>
-                    <Button color="accent">
-                      <EyeIcon size={16} />
-                    </Button>
-                  </Link>
-                </Tooltip>
-              )}
-              {canEdit && (
-                <>
-                  <EditBlogButton color="primary" modalprops={{ cubeID: post.cube, post }}>
-                    <PencilIcon size={16} />
-                  </EditBlogButton>
-                  <DeleteBlogButton color="danger" modalprops={{ post }}>
-                    <TrashIcon size={16} />
-                  </DeleteBlogButton>
-                </>
-              )}
             </Flexbox>
+            <Text md className=" text-text-secondary">
+              <Username user={post.owner} />
+              {' posted to '}
+              {post.cube === 'DEVBLOG' ? (
+                <Link href="/dev/blog">Developer Blog</Link>
+              ) : (
+                <Link href={`/cube/list/${post.cube}`}>{post.cubeName}</Link>
+              )}
+              {' - '}
+              <Datetime date={post.date} />
+            </Text>
           </Flexbox>
-          <Text md className=" text-text-secondary">
-            <Username user={post.owner} />
-            {' posted to '}
-            {post.cube === 'DEVBLOG' ? (
-              <Link href="/dev/blog">Developer Blog</Link>
-            ) : (
-              <Link href={`/cube/list/${post.cube}`}>{post.cubeName}</Link>
-            )}
-            {' - '}
-            <Datetime date={post.date} />
-          </Text>
         </Flexbox>
       </CardHeader>
       {hasChangelist && hasBody && (
