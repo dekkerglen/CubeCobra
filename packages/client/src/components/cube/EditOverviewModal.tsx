@@ -257,6 +257,9 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
             <Section title="Custom URL" isOpen={openSections.url} toggle={() => toggleSection('url')}>
               <Flexbox direction="col" gap="2">
                 <Text sm className="text-text-secondary">
+                  A short identifier used to link to this cube
+                </Text>
+                <Text sm className="text-text-secondary">
                   Linked as: /cube/list/{state.shortId || cube.id}
                 </Text>
                 <Input
