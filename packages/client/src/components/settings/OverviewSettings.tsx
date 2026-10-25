@@ -149,7 +149,7 @@ const OverviewSettings: React.FC = () => {
               onChange={(event) => setState({ ...state, name: event.target.value })}
             />
 
-            <div>
+            <div className="pt-4 border-t border-border">
               <Text semibold md className="mb-2">
                 Category: {getCubeDescription(state)}
               </Text>
@@ -188,7 +188,7 @@ const OverviewSettings: React.FC = () => {
               </Row>
             </div>
 
-            <div>
+            <div className="pt-4 border-t border-border">
               <Text semibold md className="mb-2">
                 Image
               </Text>
@@ -250,7 +250,7 @@ const OverviewSettings: React.FC = () => {
               )}
             </div>
 
-            <Flexbox direction="col" gap="2">
+            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
               <Text semibold md>
                 Hero Theme
               </Text>
@@ -260,7 +260,7 @@ const OverviewSettings: React.FC = () => {
               />
             </Flexbox>
 
-            <Flexbox direction="col" gap="2">
+            <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
               <Text semibold md>
                 Brief
               </Text>
@@ -275,7 +275,7 @@ const OverviewSettings: React.FC = () => {
               />
             </Flexbox>
 
-            <div>
+            <div className="pt-4 border-t border-border">
               <Input
                 label="Short ID"
                 id="shortId"
