@@ -1,5 +1,5 @@
 import type { Request as ExpressRequest } from 'express';
-import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator, type Options } from 'express-rate-limit';
 
 import type { Request, Response } from '../types/express';
 import { clientIp } from './clientIp';
@@ -31,15 +31,18 @@ export const jsonLimiter = (
 
 /**
  * Limiter for form posts and pages: flashes a message and redirects instead of returning a
- * bare 429. Keyed by IP unless a key generator is supplied.
+ * bare 429. Keyed by IP unless a key generator is supplied; `options` passes further
+ * express-rate-limit settings through.
  */
 export const formLimiter = (
   windowMs: number,
   limit: number,
   redirectTo: string | ((req: Request) => string),
   keyGenerator: (req: ExpressRequest) => string = ipKey,
+  options: Partial<Options> = {},
 ) =>
   rateLimit({
+    ...options,
     windowMs,
     limit,
     standardHeaders: 'draft-8',

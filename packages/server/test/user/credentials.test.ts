@@ -26,11 +26,14 @@ jest.mock('passport', () => ({
   default: { authenticate: jest.fn() },
 }));
 
+import express from 'express';
+import rateLimit from 'express-rate-limit';
 import passport from 'passport';
+import request from 'supertest';
 
 import { LOGIN_FAILED_MESSAGE } from '../../src/config/passport';
 import { passwordResetDao, userDao } from '../../src/dynamo/daos';
-import { loginAccountKey, postHandler as loginHandler } from '../../src/router/routes/user/login';
+import { loginAccountKey, loginLimiterOptions, postHandler as loginHandler } from '../../src/router/routes/user/login';
 import {
   emailRequestKey,
   LOST_PASSWORD_SENT,
@@ -418,9 +421,31 @@ describe('login', () => {
       login,
     };
 
-    await (loginHandler as any)(req, {}, jest.fn());
+    const res: any = { locals: {} };
+
+    await (loginHandler as any)(req, res, jest.fn());
 
     expect(login).toHaveBeenCalledWith(authenticated, expect.any(Function));
+    expect(res.locals.loginSucceeded).toBe(true);
     expect(redirectedTo()).toBe('/');
+  });
+
+  it('counts only failed attempts toward the login limits', async () => {
+    const app = express();
+    app.use(rateLimit({ windowMs: 60_000, limit: 2, ...loginLimiterOptions }));
+    app.post('/succeed', (_req, res) => {
+      res.locals.loginSucceeded = true;
+      res.sendStatus(204);
+    });
+    app.post('/fail', (_req, res) => {
+      res.sendStatus(204);
+    });
+
+    for (let i = 0; i < 5; i += 1) {
+      expect((await request(app).post('/succeed')).status).toBe(204);
+    }
+    expect((await request(app).post('/fail')).status).toBe(204);
+    expect((await request(app).post('/fail')).status).toBe(204);
+    expect((await request(app).post('/fail')).status).toBe(429);
   });
 });

@@ -1,4 +1,4 @@
-import type { Request as ExpressRequest } from 'express';
+import type { Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import passport from 'passport';
 import { formLimiter, ipKey } from 'serverutils/rateLimiters';
 import { redirect, render } from 'serverutils/render';
@@ -13,9 +13,17 @@ const LOGIN_WINDOW_MS = 15 * 60 * 1000;
 export const loginAccountKey = (req: ExpressRequest): string =>
   `${ipKey(req)}:${String(req.body?.username ?? '').toLowerCase()}`;
 
-const accountLimiter = formLimiter(LOGIN_WINDOW_MS, 10, '/user/login', loginAccountKey);
+// Only failed attempts count toward the limits: signing in successfully isn't guessing, and
+// counting it locked out anyone who signs in often. postHandler flags the success itself, so a
+// request from someone who is already signed in still counts when its guess fails.
+export const loginLimiterOptions = {
+  skipSuccessfulRequests: true,
+  requestWasSuccessful: (_req: ExpressRequest, res: ExpressResponse) => res.locals.loginSucceeded === true,
+};
+
+const accountLimiter = formLimiter(LOGIN_WINDOW_MS, 10, '/user/login', loginAccountKey, loginLimiterOptions);
 // A looser cap on one address spraying guesses across many accounts.
-const ipLimiter = formLimiter(LOGIN_WINDOW_MS, 50, '/user/login');
+const ipLimiter = formLimiter(LOGIN_WINDOW_MS, 50, '/user/login', ipKey, loginLimiterOptions);
 
 const getLoginRedirect = (req: Request) => {
   const redirectRoute = getSafeReferrer(req) || '/';
@@ -57,6 +65,7 @@ export const postHandler = (req: Request, res: Response, next: NextFunction) => 
       if (loginErr) {
         return next(loginErr);
       }
+      res.locals.loginSucceeded = true;
       return redirect(req, res, destination);
     });
   })(req, res, next);
