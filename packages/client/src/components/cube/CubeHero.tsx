@@ -907,7 +907,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                 onClick={() => setIsCollapsed(!isCollapsed)}
                 className="p-1 rounded-full bg-bg-secondary/80 hover:bg-bg-active transition-colors backdrop-blur-sm flex items-center justify-center cursor-pointer"
                 style={{ width: '32px', height: '32px' }}
-                aria-label="Expand cube hero"
+                aria-label="Expand cube banner"
               >
                 <ChevronDownIcon size={20} className="text-hero-text" />
               </button>
@@ -1322,7 +1322,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
             onClick={() => setIsCollapsed(!isCollapsed)}
             className="p-2 rounded-full bg-bg-secondary/80 hover:bg-bg-active transition-colors backdrop-blur-sm flex items-center justify-center cursor-pointer"
             style={{ width: '40px', height: '40px' }}
-            aria-label="Collapse cube hero"
+            aria-label="Collapse cube banner"
           >
             <ChevronUpIcon size={24} className="text-hero-text" />
           </button>

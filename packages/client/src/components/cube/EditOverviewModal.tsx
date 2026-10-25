@@ -175,7 +175,7 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
             <Section title="Brief Description" isOpen={openSections.brief} toggle={() => toggleSection('brief')}>
               <Flexbox direction="col" gap="2">
                 <Text sm className="text-text-secondary">
-                  A short description displayed in the cube hero (max 500 characters)
+                  A short description displayed in the cube banner (max 500 characters)
                 </Text>
                 <TextEntry
                   name="brief"
@@ -208,7 +208,7 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
               />
             </Section>
 
-            <Section title="Hero Theme" isOpen={openSections.heroTheme} toggle={() => toggleSection('heroTheme')}>
+            <Section title="Banner Color" isOpen={openSections.heroTheme} toggle={() => toggleSection('heroTheme')}>
               <HeroThemePicker
                 value={state.heroTheme}
                 setValue={(value) => setState((prev) => ({ ...prev, heroTheme: value || undefined }))}

@@ -20,9 +20,9 @@ const HeroThemePicker: React.FC<HeroThemePickerProps> = ({ value, setValue }) =>
   return (
     <Flexbox direction="col" gap="2">
       <Text sm className="text-text-secondary">
-        The color scheme for this cube&apos;s hero banner
+        The color scheme for this cube&apos;s banner
       </Text>
-      <div className="flex flex-row flex-wrap gap-2" role="radiogroup" aria-label="Hero theme">
+      <div className="flex flex-row flex-wrap gap-2" role="radiogroup" aria-label="Banner color">
         {HERO_THEMES.map(({ key, label }) => {
           const isSelected = key === selected;
           return (
