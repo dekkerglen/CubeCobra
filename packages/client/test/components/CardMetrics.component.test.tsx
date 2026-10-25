@@ -129,11 +129,41 @@ describe('CardMetrics', () => {
     expect(chip('Play Rate', '4w')).not.toHaveTextContent('+400.0%');
   });
 
-  it('calls a negligible move steady rather than reporting a percentage', () => {
+  it('keeps showing the number when a move is too small to matter', () => {
+    // play rate flat at 5.0%; elo drifts 1200 -> 1203.
     render(<CardMetrics card={cardWith()} history={buildHistory(50, 1203)} />);
 
-    expect(chip('Play Rate', '4w')).toHaveTextContent('Steady');
-    expect(chip('Elo', '4w')).toHaveTextContent('Steady');
+    expect(chip('Elo', '4w')).toHaveTextContent('+3');
+    expect(chip('Elo', '4w')).not.toHaveTextContent('Steady');
+    expect(chip('Play Rate', '4w')).not.toHaveTextContent('Steady');
+  });
+
+  it('colours a negligible move neither up nor down', () => {
+    render(<CardMetrics card={cardWith()} history={buildHistory(50, 1203)} />);
+
+    const value = chip('Elo', '4w').querySelector('span:last-child') as HTMLElement;
+
+    expect(value.className).not.toContain('text-green');
+    expect(value.className).not.toContain('text-red');
+  });
+
+  it('does not sign a change of exactly zero', () => {
+    render(<CardMetrics card={cardWith()} history={buildHistory(50, 1200)} />);
+
+    expect(chip('Play Rate', '4w')).toHaveTextContent('0.0%');
+    expect(chip('Play Rate', '4w')).not.toHaveTextContent('+0.0%');
+  });
+
+  it('calls a card that was in no cubes beforehand new, rather than quoting jargon at it', () => {
+    const history = [
+      ...span(4, 11).map((week) => weeklyEntry(week, 0, 1200)),
+      ...span(0, 3).map((week) => weeklyEntry(week, 30, 1200)),
+    ];
+
+    render(<CardMetrics card={cardWith()} history={history} />);
+
+    expect(chip('Play Rate', '4w')).toHaveTextContent('New');
+    expect(chip('Play Rate', '4w')).not.toHaveTextContent('pp');
   });
 
   it('marks a window it cannot compute as having no data, keeping the chip in place', () => {

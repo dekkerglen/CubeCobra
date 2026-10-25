@@ -26,7 +26,7 @@ const DIRECTION_COLOR: Record<Direction, string> = {
 
 const WINDOW_LABELS: Record<string, string> = { '4w': 'the last 4 weeks', '12w': 'the last 12 weeks' };
 
-const signed = (value: number, digits: number): string => `${value >= 0 ? '+' : ''}${value.toFixed(digits)}`;
+const signed = (value: number, digits: number): string => `${value > 0 ? '+' : ''}${value.toFixed(digits)}`;
 
 /** Drops the decimal past 100% so a runaway swing cannot widen the chip out of its column. */
 const signedPercent = (fraction: number): string => `${signed(fraction * 100, Math.abs(fraction) >= 1 ? 0 : 1)}%`;
@@ -79,28 +79,20 @@ const playRateChip = (window: string, momentum: Momentum | null) => {
   // "pp" is jargon, so the absolute move is spelled out here rather than shown in the chip.
   const title = `${signed(change, 2)} percentage points over ${WINDOW_LABELS[window] ?? window}`;
 
-  // Without a baseline there is no relative swing to lead with, so the raw move stands alone.
+  // A zero baseline means the card was in no cubes at all beforehand, so there is no
+  // relative swing to quote -- it simply arrived.
   if (relativeChange === null) {
-    const direction = directionOf(change, STEADY_PERCENTAGE_POINTS);
-
     return (
-      <TrendChip
-        window={window}
-        direction={direction}
-        title={title}
-        value={direction === 'steady' ? 'Steady' : `${signed(change, 2)}pp`}
-      />
+      <TrendChip window={window} direction={directionOf(change, STEADY_PERCENTAGE_POINTS)} title={title} value="New" />
     );
   }
-
-  const direction = directionOf(relativeChange, STEADY_RELATIVE_CHANGE);
 
   return (
     <TrendChip
       window={window}
-      direction={direction}
+      direction={directionOf(relativeChange, STEADY_RELATIVE_CHANGE)}
       title={title}
-      value={direction === 'steady' ? 'Steady' : signedPercent(relativeChange)}
+      value={signedPercent(relativeChange)}
     />
   );
 };
@@ -111,14 +103,12 @@ const eloChip = (window: string, momentum: Momentum | null) => {
     return <EmptyChip window={window} />;
   }
 
-  const direction = directionOf(momentum.change, STEADY_ELO_POINTS);
-
   return (
     <TrendChip
       window={window}
-      direction={direction}
+      direction={directionOf(momentum.change, STEADY_ELO_POINTS)}
       title={`${signed(momentum.change, 0)} elo points over ${WINDOW_LABELS[window] ?? window}`}
-      value={direction === 'steady' ? 'Steady' : signed(momentum.change, 0)}
+      value={signed(momentum.change, 0)}
     />
   );
 };
