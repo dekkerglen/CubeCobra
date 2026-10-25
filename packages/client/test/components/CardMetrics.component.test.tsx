@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -92,18 +92,35 @@ describe('CardMetrics', () => {
     expect(chip('Play Rate', '4w').querySelector('svg')).not.toBeInTheDocument();
   });
 
-  it('keeps the absolute move in the tooltip, spelled out rather than as "pp"', () => {
+  it('keeps the absolute move out of the chip but reachable on hover', () => {
     render(<CardMetrics card={cardWith()} history={buildHistory(60, 1200)} />);
 
-    expect(chip('Play Rate', '4w')).toHaveAttribute('title', '+1.00 percentage points over the last 4 weeks');
-    expect(chip('Play Rate', '12w')).toHaveAttribute('title', '+0.50 percentage points over the last 12 weeks');
+    fireEvent.mouseOver(chip('Play Rate', '4w').parentElement as HTMLElement);
+
+    expect(screen.getByText('+1.00 percentage points over the last 4 weeks', { selector: 'div' })).toBeInTheDocument();
     expect(chip('Play Rate', '4w')).not.toHaveTextContent('pp');
   });
 
-  it('explains the elo swing in points in its tooltip', () => {
+  it('describes each window distinctly so adjacent chips are not confused', () => {
+    render(<CardMetrics card={cardWith()} history={buildHistory(60, 1200)} />);
+
+    fireEvent.mouseOver(chip('Play Rate', '12w').parentElement as HTMLElement);
+
+    expect(screen.getByText('+0.50 percentage points over the last 12 weeks', { selector: 'div' })).toBeInTheDocument();
+  });
+
+  it('gives a screen reader the absolute move, which a visual tooltip cannot', () => {
+    render(<CardMetrics card={cardWith()} history={buildHistory(60, 1200)} />);
+
+    const description = chip('Play Rate', '4w').querySelector('.sr-only');
+
+    expect(description).toHaveTextContent('+1.00 percentage points over the last 4 weeks');
+  });
+
+  it('explains the elo swing in points for a screen reader', () => {
     render(<CardMetrics card={cardWith()} history={buildHistory(50, 1265)} />);
 
-    expect(chip('Elo', '4w')).toHaveAttribute('title', '+65 elo points over the last 4 weeks');
+    expect(chip('Elo', '4w').querySelector('.sr-only')).toHaveTextContent('+65 elo points over the last 4 weeks');
   });
 
   it('says why a window it cannot compute is blank', () => {
@@ -111,7 +128,9 @@ describe('CardMetrics', () => {
 
     render(<CardMetrics card={cardWith()} history={history} />);
 
-    expect(chip('Play Rate', '12w')).toHaveAttribute('title', 'Not enough history to compare the last 12 weeks');
+    expect(chip('Play Rate', '12w').querySelector('.sr-only')).toHaveTextContent(
+      'Not enough history to compare the last 12 weeks',
+    );
   });
 
   it('reports the elo trend in points rather than a percentage', () => {

@@ -7,6 +7,7 @@ import HistoryType from '@utils/datatypes/History';
 import { eloMomentum, eloSeries, Momentum, playRateMomentum, playRateSeries } from 'utils/cardMomentum';
 
 import Sparkline from '../base/Sparkline';
+import Tooltip from '../base/Tooltip';
 
 const SHORT_WINDOW_DAYS = 28;
 const LONG_WINDOW_DAYS = 84;
@@ -43,32 +44,40 @@ interface TrendChipProps {
   window: string;
   direction: Direction;
   value: string;
-  title: string;
+  description: string;
 }
 
 /**
  * Direction is carried by the sign and the colour. The sign is the one that survives
  * red-green colour blindness and a screen reader, so there is no separate arrow.
+ *
+ * The absolute move hangs off the chip twice over: the house Tooltip for sighted hover,
+ * which native `title` does unreliably between adjacent elements, and a visually hidden
+ * copy for screen readers, which the tooltip is invisible to.
  */
-const TrendChip: React.FC<TrendChipProps> = ({ window, direction, value, title }) => (
-  <span
-    title={title}
-    className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-border bg-bg px-1.5 py-0.5 text-xs"
-  >
-    <span className="text-text-secondary">{window}</span>
-    <span className={DIRECTION_COLOR[direction]}>{value}</span>
-  </span>
+const TrendChip: React.FC<TrendChipProps> = ({ window, direction, value, description }) => (
+  <Tooltip text={description} wrapperTag="span">
+    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-border bg-bg px-1.5 py-0.5 text-xs">
+      <span className="text-text-secondary">{window}</span>
+      <span className={DIRECTION_COLOR[direction]}>{value}</span>
+      <span className="sr-only">{description}</span>
+    </span>
+  </Tooltip>
 );
 
-const EmptyChip: React.FC<{ window: string }> = ({ window }) => (
-  <span
-    title={`Not enough history to compare ${WINDOW_LABELS[window] ?? window}`}
-    className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-border bg-bg px-1.5 py-0.5 text-xs text-text-secondary"
-  >
-    <span>{window}</span>
-    <span>No data</span>
-  </span>
-);
+const EmptyChip: React.FC<{ window: string }> = ({ window }) => {
+  const description = `Not enough history to compare ${WINDOW_LABELS[window] ?? window}`;
+
+  return (
+    <Tooltip text={description} wrapperTag="span">
+      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-border bg-bg px-1.5 py-0.5 text-xs text-text-secondary">
+        <span>{window}</span>
+        <span>No data</span>
+        <span className="sr-only">{description}</span>
+      </span>
+    </Tooltip>
+  );
+};
 
 const playRateChip = (window: string, momentum: Momentum | null) => {
   if (!momentum) {
@@ -77,13 +86,18 @@ const playRateChip = (window: string, momentum: Momentum | null) => {
 
   const { change, relativeChange } = momentum;
   // "pp" is jargon, so the absolute move is spelled out here rather than shown in the chip.
-  const title = `${signed(change, 2)} percentage points over ${WINDOW_LABELS[window] ?? window}`;
+  const description = `${signed(change, 2)} percentage points over ${WINDOW_LABELS[window] ?? window}`;
 
   // A zero baseline means the card was in no cubes at all beforehand, so there is no
   // relative swing to quote -- it simply arrived.
   if (relativeChange === null) {
     return (
-      <TrendChip window={window} direction={directionOf(change, STEADY_PERCENTAGE_POINTS)} title={title} value="New" />
+      <TrendChip
+        window={window}
+        direction={directionOf(change, STEADY_PERCENTAGE_POINTS)}
+        description={description}
+        value="New"
+      />
     );
   }
 
@@ -91,7 +105,7 @@ const playRateChip = (window: string, momentum: Momentum | null) => {
     <TrendChip
       window={window}
       direction={directionOf(relativeChange, STEADY_RELATIVE_CHANGE)}
-      title={title}
+      description={description}
       value={signedPercent(relativeChange)}
     />
   );
@@ -107,7 +121,7 @@ const eloChip = (window: string, momentum: Momentum | null) => {
     <TrendChip
       window={window}
       direction={directionOf(momentum.change, STEADY_ELO_POINTS)}
-      title={`${signed(momentum.change, 0)} elo points over ${WINDOW_LABELS[window] ?? window}`}
+      description={`${signed(momentum.change, 0)} elo points over ${WINDOW_LABELS[window] ?? window}`}
       value={signed(momentum.change, 0)}
     />
   );
