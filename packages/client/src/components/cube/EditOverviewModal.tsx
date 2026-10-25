@@ -159,12 +159,18 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
               </Alert>
             )}
 
-            <Input
-              label="Cube Name"
-              value={state.name}
-              required
-              onChange={(event) => setState({ ...state, name: event.target.value })}
-            />
+            <Flexbox direction="col" gap="2">
+              <Text semibold md>
+                Cube Name
+              </Text>
+              <Input
+                id="cubeName"
+                name="cubeName"
+                value={state.name}
+                required
+                onChange={(event) => setState({ ...state, name: event.target.value })}
+              />
+            </Flexbox>
 
             <Section title="Brief Description" isOpen={openSections.brief} toggle={() => toggleSection('brief')}>
               <Flexbox direction="col" gap="2">
