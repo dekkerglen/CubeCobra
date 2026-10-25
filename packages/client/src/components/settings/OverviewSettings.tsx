@@ -151,7 +151,7 @@ const OverviewSettings: React.FC = () => {
 
             <Flexbox direction="col" gap="2" className="pt-4 border-t border-border">
               <Text semibold md>
-                Brief
+                Brief Description
               </Text>
               <Text sm className="text-text-secondary">
                 A short description displayed in the cube hero (max 500 characters)

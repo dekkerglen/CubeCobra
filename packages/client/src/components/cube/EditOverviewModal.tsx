@@ -166,7 +166,7 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
               onChange={(event) => setState({ ...state, name: event.target.value })}
             />
 
-            <Section title="Brief" isOpen={openSections.brief} toggle={() => toggleSection('brief')}>
+            <Section title="Brief Description" isOpen={openSections.brief} toggle={() => toggleSection('brief')}>
               <Flexbox direction="col" gap="2">
                 <Text sm className="text-text-secondary">
                   A short description displayed in the cube hero (max 500 characters)
