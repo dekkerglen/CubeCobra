@@ -64,8 +64,6 @@ module.exports = {
         'hero-text-hover': 'rgb(var(--hero-text-hover) / <alpha-value>)',
         'hero-badge-bg': 'rgb(var(--hero-badge-bg) / <alpha-value>)',
         'hero-badge-text': 'rgb(var(--hero-badge-text) / <alpha-value>)',
-        'category-badge-bg': 'rgb(var(--category-badge-bg) / <alpha-value>)',
-        'category-badge-text': 'rgb(var(--category-badge-text) / <alpha-value>)',
         'tag-badge-bg': 'rgb(var(--tag-badge-bg) / <alpha-value>)',
         'tag-badge-text': 'rgb(var(--tag-badge-text) / <alpha-value>)',
       },

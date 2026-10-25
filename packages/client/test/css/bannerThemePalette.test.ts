@@ -134,6 +134,13 @@ describe('banner theme palette', () => {
       expect(block).not.toBeNull();
       expect(Object.keys(varsIn(block as string)).sort()).toEqual([...HERO_VARS].sort());
     });
+
+    // `system` is the default user theme, so this block ships to most dark-mode viewers, yet the
+    // contrast and deltaE assertions below only read the light and explicit-dark rules. Pinning it
+    // to the explicit-dark values inherits those guarantees instead of duplicating the maths.
+    it('uses the same values in system dark as in explicit dark', () => {
+      expect(varsIn(systemDarkBlock(key) as string)).toEqual(varsIn(ruleBlock(darkSelector(key)) as string));
+    });
   });
 
   describe.each(['light', 'dark'] as const)('%s mode', (mode) => {

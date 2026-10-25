@@ -100,8 +100,6 @@
     --hero-text-hover: 209 213 219;
     --hero-badge-bg: 34 139 34;
     --hero-badge-text: 255 255 255;
-    --category-badge-bg: 34 139 34;
-    --category-badge-text: 255 255 255;
     --tag-badge-bg: 108 117 125;
     --tag-badge-text: 255 255 255;
   }
@@ -148,8 +146,6 @@
     --hero-text-hover: 209 213 219;
     --hero-badge-bg: 34 139 34;
     --hero-badge-text: 255 255 255;
-    --category-badge-bg: 34 139 34;
-    --category-badge-text: 255 255 255;
     --tag-badge-bg: 108 117 125;
     --tag-badge-text: 255 255 255;
   }
@@ -195,8 +191,6 @@
     --hero-text-hover: 209 213 219;
     --hero-badge-bg: 76 175 80;
     --hero-badge-text: 33 37 41;
-    --category-badge-bg: 76 175 80;
-    --category-badge-text: 33 37 41;
     --tag-badge-bg: 149 165 166;
     --tag-badge-text: 33 37 41;
     color-scheme: dark;
@@ -244,8 +238,6 @@
       --hero-text-hover: 209 213 219;
       --hero-badge-bg: 76 175 80;
       --hero-badge-text: 33 37 41;
-      --category-badge-bg: 76 175 80;
-      --category-badge-text: 33 37 41;
       --tag-badge-bg: 149 165 166;
       --tag-badge-text: 33 37 41;
       --card-colorless: 60 58 64;
@@ -783,8 +775,8 @@ img.mana-symbol-sm {
  * nothing else. A test (packages/client/test/css/bannerThemePalette.test.ts) parses this file
  * and fails if a registered theme is missing a variable or falls below the contrast bars.
  *
- * Green's values are the pre-existing --hero-bg / --category-badge-bg, so a cube that has
- * never chosen a theme renders exactly as it always has. */
+ * Green's values are the ones :root has always carried, so a cube that has never chosen a
+ * theme renders exactly as it always has. */
 
 .banner-theme-white {
   --hero-bg: 107 84 16;

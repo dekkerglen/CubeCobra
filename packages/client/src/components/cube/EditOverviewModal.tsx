@@ -267,6 +267,7 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
                   onChange={(event) => setState({ ...state, shortId: event.target.value })}
                   required
                   placeholder="my-cube"
+                  otherInputProps={{ 'aria-label': 'Custom URL' }}
                 />
                 <Text semibold sm className="text-muted">
                   Changing the short ID may break existing links to your cube.
