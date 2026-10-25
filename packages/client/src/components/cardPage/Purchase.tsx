@@ -27,6 +27,8 @@ const Purchase: React.FC<PurchaseProps> = ({ card }) => {
       <CardBody>
         <Flexbox direction="col" gap="2">
           <TCGPlayerButton card={card} />
+          {!!card.prices.usd_foil && <TCGPlayerButton card={card} finish="foil" />}
+          {!!card.prices.usd_etched && <TCGPlayerButton card={card} finish="etched" />}
           <CardKingdomButton card={card} />
           <ManaPoolButton card={card} />
           <CardMarketButton card={card} />

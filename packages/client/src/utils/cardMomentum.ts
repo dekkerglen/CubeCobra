@@ -126,6 +126,22 @@ const cubeCountOf = (entry: HistoryType): number | null => {
 const eloOf = (entry: HistoryType): number | null => (Number.isFinite(entry.elo) ? (entry.elo as number) : null);
 
 /**
+ * Pulls a plottable series out of history, oldest point first. Snapshots the sample
+ * rejects are dropped, so a sparkline never dips to zero on a week that simply went
+ * unrecorded.
+ */
+const seriesOf = (history: HistoryType[], sample: Sample): number[] =>
+  history
+    .filter((entry) => Number.isFinite(entry?.date))
+    .sort((a, b) => a.date - b.date)
+    .map(sample)
+    .filter((value): value is number => value !== null);
+
+export const playRateSeries = (history: HistoryType[]): number[] => seriesOf(history, playRateOf);
+
+export const eloSeries = (history: HistoryType[]): number[] => seriesOf(history, eloOf);
+
+/**
  * Change in the card's share of cubes between two adjacent trailing windows.
  *
  * Share, not raw cube count: the total number of cubes on the site grows over time, so a

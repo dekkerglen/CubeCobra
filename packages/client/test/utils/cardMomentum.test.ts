@@ -1,6 +1,6 @@
 import HistoryType from '@utils/datatypes/History';
 
-import { eloMomentum, playRateMomentum } from 'utils/cardMomentum';
+import { eloMomentum, eloSeries, playRateMomentum, playRateSeries } from 'utils/cardMomentum';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ANCHOR = new Date('2026-10-25T00:00:00Z').valueOf();
@@ -199,5 +199,35 @@ describe('eloMomentum', () => {
     const history = [weeklyEntry(3), weeklyEntry(2), weeklyEntry(1), weeklyEntry(0)];
 
     expect(eloMomentum(history, 28)).toBeNull();
+  });
+});
+
+describe('playRateSeries', () => {
+  it('orders points oldest to newest regardless of how history arrives', () => {
+    const history = [weeklyEntry(0, { total: [60, 1000] }), weeklyEntry(2, { total: [40, 1000] })];
+
+    expect(playRateSeries(history)).toEqual([4, 6]);
+  });
+
+  it('drops snapshots with no recorded denominator rather than plotting them as zero', () => {
+    const history = [
+      weeklyEntry(2, { total: [40, 1000] }),
+      weeklyEntry(1, { total: [0, 0] }),
+      weeklyEntry(0, { total: [60, 1000] }),
+    ];
+
+    expect(playRateSeries(history)).toEqual([4, 6]);
+  });
+
+  it('is empty for a card with no recorded history', () => {
+    expect(playRateSeries([{} as HistoryType])).toEqual([]);
+  });
+});
+
+describe('eloSeries', () => {
+  it('orders points oldest to newest and drops snapshots with no elo', () => {
+    const history = [weeklyEntry(0, { elo: 1300 }), weeklyEntry(1, { elo: undefined }), weeklyEntry(2, { elo: 1200 })];
+
+    expect(eloSeries(history)).toEqual([1200, 1300]);
   });
 });
