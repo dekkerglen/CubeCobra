@@ -27,7 +27,7 @@ import { createCube, createUser } from '../test-utils/data';
 
 const owner = createUser();
 
-describe('CubeDynamoDao heroTheme', () => {
+describe('CubeDynamoDao bannerTheme', () => {
   let send: jest.Mock;
   let dao: CubeDynamoDao;
 
@@ -53,43 +53,43 @@ describe('CubeDynamoDao heroTheme', () => {
     jest.clearAllMocks();
   });
 
-  it('round-trips a stored heroTheme', async () => {
-    buildDao({ heroTheme: 'blue' });
+  it('round-trips a stored bannerTheme', async () => {
+    buildDao({ bannerTheme: 'blue' });
 
     const cube = await dao.getById('x');
 
-    expect(cube?.heroTheme).toBe('blue');
+    expect(cube?.bannerTheme).toBe('blue');
   });
 
-  it('persists heroTheme on update', async () => {
+  it('persists bannerTheme on update', async () => {
     buildDao();
 
-    await dao.update(createCube({ owner, heroTheme: 'blue' }));
+    await dao.update(createCube({ owner, bannerTheme: 'blue' }));
 
-    expect(storedCubeItem().heroTheme).toBe('blue');
+    expect(storedCubeItem().bannerTheme).toBe('blue');
   });
 
-  it('omits heroTheme when the cube has none', async () => {
+  it('omits bannerTheme when the cube has none', async () => {
     buildDao();
 
     await dao.update(createCube({ owner }));
 
-    expect(storedCubeItem()).not.toHaveProperty('heroTheme');
+    expect(storedCubeItem()).not.toHaveProperty('bannerTheme');
   });
 
-  it('omits heroTheme when it is the default', async () => {
+  it('omits bannerTheme when it is the default', async () => {
     buildDao();
 
-    await dao.update(createCube({ owner, heroTheme: 'green' }));
+    await dao.update(createCube({ owner, bannerTheme: 'green' }));
 
-    expect(storedCubeItem()).not.toHaveProperty('heroTheme');
+    expect(storedCubeItem()).not.toHaveProperty('bannerTheme');
   });
 
-  it('omits heroTheme when it is an empty string', async () => {
+  it('omits bannerTheme when it is an empty string', async () => {
     buildDao();
 
-    await dao.update(createCube({ owner, heroTheme: '' as any }));
+    await dao.update(createCube({ owner, bannerTheme: '' as any }));
 
-    expect(storedCubeItem()).not.toHaveProperty('heroTheme');
+    expect(storedCubeItem()).not.toHaveProperty('bannerTheme');
   });
 });

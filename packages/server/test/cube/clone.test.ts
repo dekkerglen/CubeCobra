@@ -69,12 +69,12 @@ describe('Clone Cube Handler', () => {
     }
   });
 
-  it('copies the hero theme from the source cube', async () => {
-    (cubeDao.getById as jest.Mock).mockResolvedValue({ ...source, heroTheme: 'blue' });
+  it('copies the banner theme from the source cube', async () => {
+    (cubeDao.getById as jest.Mock).mockResolvedValue({ ...source, bannerTheme: 'blue' });
 
     await call(cloneHandler).as(user).withFlash(flashMock).withParams({ id: source.id }).send();
 
     const [clone] = (cubeDao.putNewCube as jest.Mock).mock.calls[0];
-    expect(clone.heroTheme).toBe('blue');
+    expect(clone.bannerTheme).toBe('blue');
   });
 });

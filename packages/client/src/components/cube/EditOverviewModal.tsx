@@ -18,7 +18,7 @@ import Link from '../base/Link';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 import RadioButtonGroup from '../base/RadioButtonGroup';
 import Text from '../base/Text';
-import HeroThemePicker from './HeroThemePicker';
+import BannerThemePicker from './BannerThemePicker';
 import LoadingButton from '../LoadingButton';
 import MtgImage from '../MtgImage';
 import TextEntry from '../TextEntry';
@@ -67,7 +67,7 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
   const [openSections, setOpenSections] = useState({
     brief: false,
     image: false,
-    heroTheme: false,
+    bannerTheme: false,
     categories: false,
     url: false,
   });
@@ -79,7 +79,7 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
       setState(JSON.parse(JSON.stringify(cube)));
       setImagename(cube.imageName);
       setAlerts([]);
-      setOpenSections({ brief: false, image: false, heroTheme: false, categories: false, url: false });
+      setOpenSections({ brief: false, image: false, bannerTheme: false, categories: false, url: false });
     }
   }, [isOpen, cube]);
 
@@ -111,7 +111,7 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
             brief: state.brief,
             // Always sent, so choosing the default reaches the server as an explicit clear.
             // The endpoint preserves the stored theme when the field is absent.
-            heroTheme: state.heroTheme ?? '',
+            bannerTheme: state.bannerTheme ?? '',
             categoryOverride: state.categoryOverride,
             categoryPrefixes: state.categoryPrefixes,
           },
@@ -208,10 +208,10 @@ const EditOverviewModal: React.FC<EditOverviewModalProps> = ({ isOpen, setOpen }
               />
             </Section>
 
-            <Section title="Banner Color" isOpen={openSections.heroTheme} toggle={() => toggleSection('heroTheme')}>
-              <HeroThemePicker
-                value={state.heroTheme}
-                setValue={(value) => setState((prev) => ({ ...prev, heroTheme: value || undefined }))}
+            <Section title="Banner Color" isOpen={openSections.bannerTheme} toggle={() => toggleSection('bannerTheme')}>
+              <BannerThemePicker
+                value={state.bannerTheme}
+                setValue={(value) => setState((prev) => ({ ...prev, bannerTheme: value || undefined }))}
               />
             </Section>
 

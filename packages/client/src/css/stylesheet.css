@@ -775,18 +775,18 @@ img.mana-symbol-sm {
   }
 }
 
-/* Cube hero themes.
+/* Cube banner themes.
  *
  * Each theme is three rules: an unqualified one carrying the LIGHT values (matching :root,
  * which also holds light defaults), then two dark overrides that outrank it by specificity.
- * Adding a theme means one entry in packages/utils/src/heroTheme.ts and one group below --
- * nothing else. A test (packages/client/test/css/heroThemePalette.test.ts) parses this file
+ * Adding a theme means one entry in packages/utils/src/bannerTheme.ts and one group below --
+ * nothing else. A test (packages/client/test/css/bannerThemePalette.test.ts) parses this file
  * and fails if a registered theme is missing a variable or falls below the contrast bars.
  *
  * Green's values are the pre-existing --hero-bg / --category-badge-bg, so a cube that has
  * never chosen a theme renders exactly as it always has. */
 
-.hero-theme-white {
+.banner-theme-white {
   --hero-bg: 107 84 16;
   --hero-text: 255 255 255;
   --hero-text-hover: 209 213 219;
@@ -794,7 +794,7 @@ img.mana-symbol-sm {
   --hero-badge-text: 255 255 255;
 }
 
-:root[class~='dark'] .hero-theme-white {
+:root[class~='dark'] .banner-theme-white {
   --hero-bg: 95 95 75;
   --hero-text: 255 255 255;
   --hero-text-hover: 209 213 219;
@@ -803,7 +803,7 @@ img.mana-symbol-sm {
 }
 
 @media (prefers-color-scheme: dark) {
-  :root[class~='system'] .hero-theme-white {
+  :root[class~='system'] .banner-theme-white {
     --hero-bg: 95 95 75;
     --hero-text: 255 255 255;
     --hero-text-hover: 209 213 219;
@@ -812,7 +812,7 @@ img.mana-symbol-sm {
   }
 }
 
-.hero-theme-blue {
+.banner-theme-blue {
   --hero-bg: 14 77 139;
   --hero-text: 255 255 255;
   --hero-text-hover: 209 213 219;
@@ -820,7 +820,7 @@ img.mana-symbol-sm {
   --hero-badge-text: 255 255 255;
 }
 
-:root[class~='dark'] .hero-theme-blue {
+:root[class~='dark'] .banner-theme-blue {
   --hero-bg: 52 77 95;
   --hero-text: 255 255 255;
   --hero-text-hover: 209 213 219;
@@ -829,7 +829,7 @@ img.mana-symbol-sm {
 }
 
 @media (prefers-color-scheme: dark) {
-  :root[class~='system'] .hero-theme-blue {
+  :root[class~='system'] .banner-theme-blue {
     --hero-bg: 52 77 95;
     --hero-text: 255 255 255;
     --hero-text-hover: 209 213 219;
@@ -838,7 +838,7 @@ img.mana-symbol-sm {
   }
 }
 
-.hero-theme-black {
+.banner-theme-black {
   --hero-bg: 62 50 78;
   --hero-text: 255 255 255;
   --hero-text-hover: 209 213 219;
@@ -846,7 +846,7 @@ img.mana-symbol-sm {
   --hero-badge-text: 255 255 255;
 }
 
-:root[class~='dark'] .hero-theme-black {
+:root[class~='dark'] .banner-theme-black {
   --hero-bg: 62 50 78;
   --hero-text: 255 255 255;
   --hero-text-hover: 209 213 219;
@@ -855,7 +855,7 @@ img.mana-symbol-sm {
 }
 
 @media (prefers-color-scheme: dark) {
-  :root[class~='system'] .hero-theme-black {
+  :root[class~='system'] .banner-theme-black {
     --hero-bg: 62 50 78;
     --hero-text: 255 255 255;
     --hero-text-hover: 209 213 219;
@@ -864,7 +864,7 @@ img.mana-symbol-sm {
   }
 }
 
-.hero-theme-red {
+.banner-theme-red {
   --hero-bg: 142 22 0;
   --hero-text: 255 255 255;
   --hero-text-hover: 209 213 219;
@@ -872,7 +872,7 @@ img.mana-symbol-sm {
   --hero-badge-text: 255 255 255;
 }
 
-:root[class~='dark'] .hero-theme-red {
+:root[class~='dark'] .banner-theme-red {
   --hero-bg: 95 56 68;
   --hero-text: 255 255 255;
   --hero-text-hover: 209 213 219;
@@ -881,7 +881,7 @@ img.mana-symbol-sm {
 }
 
 @media (prefers-color-scheme: dark) {
-  :root[class~='system'] .hero-theme-red {
+  :root[class~='system'] .banner-theme-red {
     --hero-bg: 95 56 68;
     --hero-text: 255 255 255;
     --hero-text-hover: 209 213 219;
@@ -890,7 +890,7 @@ img.mana-symbol-sm {
   }
 }
 
-.hero-theme-green {
+.banner-theme-green {
   --hero-bg: 8 119 21;
   --hero-text: 255 255 255;
   --hero-text-hover: 209 213 219;
@@ -898,7 +898,7 @@ img.mana-symbol-sm {
   --hero-badge-text: 255 255 255;
 }
 
-:root[class~='dark'] .hero-theme-green {
+:root[class~='dark'] .banner-theme-green {
   --hero-bg: 73 95 52;
   --hero-text: 255 255 255;
   --hero-text-hover: 209 213 219;
@@ -907,7 +907,7 @@ img.mana-symbol-sm {
 }
 
 @media (prefers-color-scheme: dark) {
-  :root[class~='system'] .hero-theme-green {
+  :root[class~='system'] .banner-theme-green {
     --hero-bg: 73 95 52;
     --hero-text: 255 255 255;
     --hero-text-hover: 209 213 219;

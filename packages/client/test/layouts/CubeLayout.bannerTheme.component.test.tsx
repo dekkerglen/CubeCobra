@@ -15,22 +15,22 @@ jest.mock('components/cube/CubeSidebar', () => () => <div />);
 jest.mock('components/cube/MobileSubNav', () => () => <div data-testid="mobile-sub-nav" />);
 jest.mock('components/cube/CubeBottomNav', () => () => <div />);
 
-const buildCube = (heroTheme?: string) =>
+const buildCube = (bannerTheme?: string) =>
   ({
     id: 'c1',
     shortId: 'c1',
     name: 'Test Cube',
     views: [],
-    heroTheme,
+    bannerTheme,
   }) as unknown as Cube;
 
 // The theme class goes on the element containing both the hero and the mobile sub-nav, so
 // the strip under the banner inherits the custom properties through the cascade.
-const renderLayout = (heroTheme?: string) => {
+const renderLayout = (bannerTheme?: string) => {
   window.history.replaceState({}, '', '/cube/list/c1');
   render(
     <CSRFContext.Provider value={{ csrfFetch: jest.fn(), callApi: jest.fn() } as any}>
-      <CubeLayout cube={buildCube(heroTheme)} activeLink="list" />
+      <CubeLayout cube={buildCube(bannerTheme)} activeLink="list" />
     </CSRFContext.Provider>,
   );
 
@@ -39,21 +39,21 @@ const renderLayout = (heroTheme?: string) => {
   return wrapper;
 };
 
-describe('CubeLayout hero theme', () => {
+describe('CubeLayout banner theme', () => {
   it('adds no theme class when the cube has none', () => {
-    expect(renderLayout().className).not.toContain('hero-theme-');
+    expect(renderLayout().className).not.toContain('banner-theme-');
   });
 
   it('adds no theme class for the default green', () => {
-    expect(renderLayout('green').className).not.toContain('hero-theme-');
+    expect(renderLayout('green').className).not.toContain('banner-theme-');
   });
 
   it('adds the theme class for a non-default theme', () => {
-    expect(renderLayout('blue')).toHaveClass('hero-theme-blue');
+    expect(renderLayout('blue')).toHaveClass('banner-theme-blue');
   });
 
   it('ignores an unknown stored theme', () => {
-    expect(renderLayout('purple').className).not.toContain('hero-theme-');
+    expect(renderLayout('purple').className).not.toContain('banner-theme-');
   });
 
   it('keeps the hero and sub-nav under the themed wrapper', () => {

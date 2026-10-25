@@ -1,10 +1,10 @@
 import fs from 'fs';
 import path from 'path';
 
-import { HERO_THEMES } from '@utils/heroTheme';
+import { BANNER_THEMES } from '@utils/bannerTheme';
 
 /**
- * The hero theme colours live in CSS, not TypeScript, so that light/dark works through the
+ * The banner theme colours live in CSS, not TypeScript, so that light/dark works through the
  * existing mode blocks with no JavaScript and no flash. The cost of that choice is that a
  * registry key with no stylesheet block would silently fall back to the default green, and a
  * naive "adding a key needs no other edits" check would pass on a broken theme.
@@ -63,8 +63,8 @@ const blockAt = (from: number): string | null => {
 };
 
 /**
- * Finds a rule whose selector *begins a line*, so `.hero-theme-blue` cannot be satisfied by
- * the tail of `:root[class~='dark'] .hero-theme-blue`. A plain substring search silently
+ * Finds a rule whose selector *begins a line*, so `.banner-theme-blue` cannot be satisfied by
+ * the tail of `:root[class~='dark'] .banner-theme-blue`. A plain substring search silently
  * accepts a stylesheet whose light rule has been deleted, which is the one failure this
  * whole test exists to catch.
  */
@@ -97,9 +97,9 @@ const varsIn = (block: string): Partial<Record<HeroVar, Rgb>> => {
 };
 
 // The base rule carries the light values (matching :root); the two dark selectors outrank it.
-const lightSelector = (key: string) => `.hero-theme-${key}`;
-const darkSelector = (key: string) => `:root[class~='dark'] .hero-theme-${key}`;
-const systemSelector = (key: string) => `:root[class~='system'] .hero-theme-${key}`;
+const lightSelector = (key: string) => `.banner-theme-${key}`;
+const darkSelector = (key: string) => `:root[class~='dark'] .banner-theme-${key}`;
+const systemSelector = (key: string) => `:root[class~='system'] .banner-theme-${key}`;
 
 /**
  * The system-dark rule only applies inside a `prefers-color-scheme: dark` media query, so
@@ -118,13 +118,13 @@ const systemDarkBlock = (key: string): string | null => {
 };
 
 const paletteFor = (mode: 'light' | 'dark') =>
-  HERO_THEMES.map(({ key }) => {
+  BANNER_THEMES.map(({ key }) => {
     const block = ruleBlock(mode === 'light' ? lightSelector(key) : darkSelector(key));
     return { key, vars: block ? varsIn(block) : {} };
   });
 
-describe('hero theme palette', () => {
-  describe.each(HERO_THEMES.map((t) => t.key))('%s', (key) => {
+describe('banner theme palette', () => {
+  describe.each(BANNER_THEMES.map((t) => t.key))('%s', (key) => {
     it.each([
       ['light', () => ruleBlock(lightSelector(key))],
       ['explicit dark', () => ruleBlock(darkSelector(key))],

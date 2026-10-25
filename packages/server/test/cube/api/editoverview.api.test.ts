@@ -435,16 +435,16 @@ describe('Edit overview API', () => {
     expect(res.status).toEqual(200);
   });
 
-  describe('hero theme', () => {
+  describe('banner theme', () => {
     const owner = createUser({ id: '12345' });
 
-    const post = async (heroTheme: unknown, storedHeroTheme?: string) => {
-      const existingCube = createCube({ shortId: 'foo', owner, heroTheme: storedHeroTheme as any });
+    const post = async (bannerTheme: unknown, storedBannerTheme?: string) => {
+      const existingCube = createCube({ shortId: 'foo', owner, bannerTheme: storedBannerTheme as any });
       const updatedCube = { ...createCube({ ...existingCube, owner }) } as Record<string, unknown>;
-      if (typeof heroTheme === 'undefined') {
-        delete updatedCube.heroTheme;
+      if (typeof bannerTheme === 'undefined') {
+        delete updatedCube.bannerTheme;
       } else {
-        updatedCube.heroTheme = heroTheme;
+        updatedCube.bannerTheme = bannerTheme;
       }
 
       (cubeDao.getById as jest.Mock).mockResolvedValue(existingCube);
@@ -459,21 +459,21 @@ describe('Edit overview API', () => {
       const res = await post('blue');
 
       expect(res.status).toEqual(200);
-      expect(cubeDao.update).toHaveBeenCalledWith(expect.objectContaining({ heroTheme: 'blue' }));
+      expect(cubeDao.update).toHaveBeenCalledWith(expect.objectContaining({ bannerTheme: 'blue' }));
     });
 
     it('preserves the existing theme when the field is absent', async () => {
       const res = await post(undefined, 'blue');
 
       expect(res.status).toEqual(200);
-      expect(cubeDao.update).toHaveBeenCalledWith(expect.objectContaining({ heroTheme: 'blue' }));
+      expect(cubeDao.update).toHaveBeenCalledWith(expect.objectContaining({ bannerTheme: 'blue' }));
     });
 
     it('clears the theme on an explicit empty string', async () => {
       const res = await post('', 'blue');
 
       expect(res.status).toEqual(200);
-      expect((cubeDao.update as jest.Mock).mock.calls[0][0].heroTheme).toBeUndefined();
+      expect((cubeDao.update as jest.Mock).mock.calls[0][0].bannerTheme).toBeUndefined();
     });
 
     // The bundled UI sends '' for the default, but a direct API client can post 'green'.
@@ -483,14 +483,14 @@ describe('Edit overview API', () => {
       const res = await post('green', 'blue');
 
       expect(res.status).toEqual(200);
-      expect((cubeDao.update as jest.Mock).mock.calls[0][0].heroTheme).toBeUndefined();
+      expect((cubeDao.update as jest.Mock).mock.calls[0][0].bannerTheme).toBeUndefined();
     });
 
     it('rejects an unknown theme without updating', async () => {
       const res = await post('purple');
 
       expect(res.status).toEqual(400);
-      expect(res.body).toEqual({ error: 'Not a valid hero theme.' });
+      expect(res.body).toEqual({ error: 'Not a valid banner theme.' });
       expect(cubeDao.update).not.toHaveBeenCalled();
     });
 
@@ -498,7 +498,7 @@ describe('Edit overview API', () => {
       const res = await post(42);
 
       expect(res.status).toEqual(400);
-      expect(res.body).toEqual({ error: 'Not a valid hero theme.' });
+      expect(res.body).toEqual({ error: 'Not a valid banner theme.' });
       expect(cubeDao.update).not.toHaveBeenCalled();
     });
   });
