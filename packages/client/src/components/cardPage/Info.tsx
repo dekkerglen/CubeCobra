@@ -118,11 +118,13 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
         <hr className="mt-4" />
         {/* Two columns rather than one twelve-row list: a single table reads as a much
             taller block than the badge grid this replaced. */}
+        {/* Two columns only once they fit. Below sm the format name is clipped by the
+            column edge -- 42px of "Commander" goes missing at 320px. */}
         <Row gutters={2}>
-          <Col xs={6}>
+          <Col xs={12} sm={6}>
             <LegalityList card={card} from={0} to={6} />
           </Col>
-          <Col xs={6}>
+          <Col xs={12} sm={6}>
             <LegalityList card={card} from={6} to={12} />
           </Col>
         </Row>
