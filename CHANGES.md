@@ -26,7 +26,7 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Three new daily puzzle games under Games → Dailies: Mana Matrix, a 3×3 grid where you name a card matching each row and column; Synergy Connect, where you sort sixteen cards into four groups that each go with the same legendary creature; and a Magic crossword built fresh every day, which gets larger and harder from Monday through Sunday.
 - Your dashboard now shows one daily game you haven't played yet, rotating through them instead of always showing the same one.
 - Mana Matrix keeps your history and streaks, shows how unusual each of your answers was, and lets you see how everyone else answered once you've submitted.
-- Card art on the daily games now uses each card's first printing, so you see the version you recognise rather than an alternate-art reprint.
+- Card art on the daily games now uses each card's first printing, so you see the version you recognize rather than an alternate-art reprint.
 - The Print and Play export now uses the art you picked for each card, and can print straight from the browser instead of only downloading a PDF.
 - Cube lists can be filtered by how many copies of a card you have, including singleton-only.
 - Card searches support `words`, `wc`, or `wordcount` to find cards by roughly how much text they have.
@@ -50,3 +50,43 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Images in comments, blog posts and descriptions that point back at Cube Cobra pages are no longer shown; images hosted elsewhere display as before.
 - When adding a card or package to a cube, the Board menu now lists the boards that cube actually has, including any custom boards, instead of the same default list for every cube.
 - Cards on a card page — the Often Drafted With, Often Cubed With and Synergistic Cards lists, plus the other printings — can now be dragged onto the cube tray to add them to your cube boards.
+- Comparing a cube with an earlier version of itself now labels the two sides by date and "Present", and the date links to the cube list as it was then.
+- The public API can now fetch a cube's card list as of any past change and list a cube's change history; see the API docs page.
+- The Visual Spoiler now follows Collapse Duplicates, showing each card once with a count badge; cube owners can click a stack to edit every copy at once.
+- Cube primers can now be split into up to 10 tabs, each with its own title and its own link.
+- Default sorts saved on a view with more than one word in its name now stick, and links to views with characters like & or # in their name open the right view.
+- Saving tag colors no longer wipes the color of a tag that's only used on a custom board, and those tags now show up in the tag list.
+- Pack 1 Pick 1 polls made from a sample pack now show the right card, with its tags and custom art, when it comes from a custom board.
+- Custom images on your cube's Basics board now carry over to the basics added to new drafted, sealed and uploaded decks, and show in the Add Basics window.
+- Labeled text fields no longer spill over whatever sits below them, most noticeably the tab title field in the primer editor.
+- Clicking New Record on a records page you'd left open overnight now dates the record today, not the day you opened the page.
+- New card searches for checking how cards have been customized in your cube: `is:custom` finds custom cards, `is:override` (or `is:overridden`) finds cards whose colors, mana value, type, rarity or image you've changed, and `is:image`, `is:imageUrl` and `is:imageBackUrl` find cards with custom art.
+- Editing and deleting your comments works again — the changes had been failing to save.
+- Deleting your account no longer fails partway through when you've left comments.
+- Patrons whose membership lapsed can link their Patreon account again, instead of being told it belongs to another account.
+- Saving a default sort or answering the advertising email-consent prompt now tells you if the save failed, for example because you'd been logged out, instead of looking like it worked.
+- Card pages load faster: images on the other tabs only load once you open that tab.
+- Play rates on card pages now track Legacy and Modern cubes properly — they had been reading 0.00% — and empty cubes no longer count toward any play rate.
+- Card pages now show play rates in Pioneer cubes alongside Vintage, Legacy and Modern, and a format with no data says so instead of showing 0.00%.
+- Cube search now sorts in the direction you pick — searches run from the search page had been coming back in ascending order every time.
+- Card and cube search now keep their sort and display options in the page address, so reloading, sharing a link, or using Back and Forward shows the same search, and a search that fails says so instead of spinning forever.
+- The link from the Sets page to card search now shows the Printings option it's actually using, instead of saying Cards.
+- Messages after submitting a form show up again — a failed registration, for example, had been reloading the page without saying what was wrong.
+- Cube and package searches now work for cards with a colon in their name, like `card:"Summon: Esper Valigarmanda"`, and for tags that contain a colon.
+- Banned accounts are now signed out and told why, instead of running into error pages.
+- Sorting cube search results by followers, name, card count or date now reflects each cube's latest save, rather than the one before it.
+- The cube header now remembers whether you collapsed it on each About tab, even when you switch tabs without reloading.
+- When adding a package to a cube, you can now choose to use the cube's Default Printing for each card instead of the printing saved in the package.
+- Cards added from the Packages page now get the cube's default status instead of always being marked Owned.
+- Adding a package from the cube list sidebar can now tag the cards with the package name, just like the Packages page.
+- The note linking each added card back to its package can now be turned off, and turning off tagging no longer also drops that note and the package's blog post.
+- Cube owners can now save the cube list's display options — Show Unsorted Cards, Collapse Duplicates, inline emojis, tag colors, tag quick filters, Show All Boards and Use Base Card Data — as the defaults everyone sees. Anyone can still change them while browsing, but those changes now last only until you leave the page, and Reset Options puts them back.
+- Turning tag colors on or off now takes effect right away instead of after a reload; it's now one of the cube's display options rather than an account setting, and signed-out visitors see tag colors too.
+- The sort menu now tells you how many cards the current sorts are hiding, with a one-click way to show them.
+- The cube list's sort and display menu is split into sort, display and Rotisserie sections, and each sort level now says what it controls.
+- Rotisserie drafts can now be set up from the Playtest page too, and the button no longer appears on a cube's past-version list, where clicking it caused an error.
+- Cloning a cube now copies all of its display options.
+- The Asfans analysis now lists Standard Draft in its format menu — it was already showing Standard Draft numbers but couldn't show that choice.
+- Cube analytics now open on the cube's default draft format instead of always Standard Draft.
+- Cubes with Standard Draft turned off no longer offer it in the draft simulator or as the default format, and deleting the default custom format no longer switches the default back to Standard Draft.
+- Format menus no longer go blank when the cube's default format has been deleted.
