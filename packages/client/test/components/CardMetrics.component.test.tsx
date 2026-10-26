@@ -133,6 +133,15 @@ describe('CardMetrics', () => {
     );
   });
 
+  it('reports the elo trend over both windows, like the play rate', () => {
+    render(<CardMetrics card={cardWith()} history={buildHistory(50, 1265)} />);
+
+    // elo sits at 1265 for the last 4 weeks and 1200 before that.
+    expect(chip('Elo', '4w')).toHaveTextContent('+65');
+    // over 12 weeks that averages (1265*4 + 1200*8) / 12 = 1221.67 against 1200.
+    expect(chip('Elo', '12w')).toHaveTextContent('+22');
+  });
+
   it('reports the elo trend in points rather than a percentage', () => {
     render(<CardMetrics card={cardWith()} history={buildHistory(50, 1265)} />);
 
@@ -185,14 +194,24 @@ describe('CardMetrics', () => {
     expect(chip('Play Rate', '4w')).not.toHaveTextContent('pp');
   });
 
-  it('marks a window it cannot compute as having no data, keeping the chip in place', () => {
+  it('marks a window it cannot compute as N/A, keeping the chip in place', () => {
     // Only four weeks of history: nothing to compare either window against.
     const history = span(0, 3).map((week) => weeklyEntry(week, 50, 1200));
 
     render(<CardMetrics card={cardWith()} history={history} />);
 
-    expect(chip('Play Rate', '4w')).toHaveTextContent('No data');
-    expect(chip('Play Rate', '12w')).toHaveTextContent('No data');
+    expect(chip('Play Rate', '4w')).toHaveTextContent('N/A');
+    expect(chip('Play Rate', '12w')).toHaveTextContent('N/A');
+    expect(chip('Elo', '12w')).toHaveTextContent('N/A');
+  });
+
+  it('keeps both metrics on the same number of chips so their trend lines match', () => {
+    const { container } = render(<CardMetrics card={cardWith()} history={buildHistory(60, 1265)} />);
+
+    const columns = [...container.querySelectorAll('section[aria-label] > div:last-child')];
+
+    expect(columns).toHaveLength(2);
+    expect(columns[0].children).toHaveLength(columns[1].children.length);
   });
 
   it('keeps the trend line clear of the chips that would obscure it', () => {

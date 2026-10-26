@@ -27,6 +27,10 @@ const DIRECTION_COLOR: Record<Direction, string> = {
 
 const WINDOW_LABELS: Record<string, string> = { '4w': 'the last 4 weeks', '12w': 'the last 12 weeks' };
 
+// A fixed column so both metrics' trend lines end at the same point, and so the chips
+// line up with each other rather than sizing to whatever their value happens to be.
+const CHIP_COLUMN = 'w-24';
+
 const signed = (value: number, digits: number): string => `${value > 0 ? '+' : ''}${value.toFixed(digits)}`;
 
 /** Drops the decimal past 100% so a runaway swing cannot widen the chip out of its column. */
@@ -56,8 +60,8 @@ interface TrendChipProps {
  * copy for screen readers, which the tooltip is invisible to.
  */
 const TrendChip: React.FC<TrendChipProps> = ({ window, direction, value, description }) => (
-  <Tooltip text={description} wrapperTag="span">
-    <span className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-border bg-bg px-1.5 py-0.5 text-xs">
+  <Tooltip text={description} wrapperTag="span" className="w-full">
+    <span className="flex w-full items-center justify-between gap-1 whitespace-nowrap rounded border border-border bg-bg px-1.5 py-0.5 text-xs">
       <span className="text-text-secondary">{window}</span>
       <span className={DIRECTION_COLOR[direction]}>{value}</span>
       <span className="sr-only">{description}</span>
@@ -69,10 +73,10 @@ const EmptyChip: React.FC<{ window: string }> = ({ window }) => {
   const description = `Not enough history to compare ${WINDOW_LABELS[window] ?? window}`;
 
   return (
-    <Tooltip text={description} wrapperTag="span">
-      <span className="inline-flex items-center gap-1 whitespace-nowrap rounded border border-border bg-bg px-1.5 py-0.5 text-xs text-text-secondary">
+    <Tooltip text={description} wrapperTag="span" className="w-full">
+      <span className="flex w-full items-center justify-between gap-1 whitespace-nowrap rounded border border-border bg-bg px-1.5 py-0.5 text-xs text-text-secondary">
         <span>{window}</span>
-        <span>No data</span>
+        <span>N/A</span>
         <span className="sr-only">{description}</span>
       </span>
     </Tooltip>
@@ -157,7 +161,7 @@ const MetricSection: React.FC<MetricSectionProps> = ({ name, value, detail, seri
         {detail && <div className="text-xs text-text-secondary">{detail}</div>}
       </div>
     </div>
-    {series.length > 1 && <div className="flex shrink-0 flex-col items-end gap-1">{children}</div>}
+    {series.length > 1 && <div className={`flex shrink-0 flex-col items-end gap-1 ${CHIP_COLUMN}`}>{children}</div>}
   </section>
 );
 
@@ -177,6 +181,7 @@ const CardMetrics: React.FC<CardMetricsProps> = ({ card, history }) => {
   const shortPlayRate = useMemo(() => playRateMomentum(history, SHORT_WINDOW_DAYS), [history]);
   const longPlayRate = useMemo(() => playRateMomentum(history, LONG_WINDOW_DAYS), [history]);
   const shortElo = useMemo(() => eloMomentum(history, SHORT_WINDOW_DAYS), [history]);
+  const longElo = useMemo(() => eloMomentum(history, LONG_WINDOW_DAYS), [history]);
   const playRatePoints = useMemo(() => playRateSeries(history), [history]);
   const eloPoints = useMemo(() => eloSeries(history), [history]);
 
@@ -202,6 +207,7 @@ const CardMetrics: React.FC<CardMetricsProps> = ({ card, history }) => {
 
       <MetricSection name="Elo" value={cardElo(details).toFixed(0)} series={eloPoints} trendDirection={eloDirection}>
         {eloChip('4w', shortElo)}
+        {eloChip('12w', longElo)}
       </MetricSection>
     </div>
   );
