@@ -89,7 +89,7 @@ export const purchaseOptions = (card: CardDetails): PurchaseOption[] => {
     {
       id: 'cardmarket',
       vendor: 'cardmarket',
-      label: 'CardMarket',
+      label: 'Cardmarket',
       href: getCardMarketLink(asCard),
       price: card.prices.eur,
       format: euros,
@@ -97,7 +97,7 @@ export const purchaseOptions = (card: CardDetails): PurchaseOption[] => {
     {
       id: 'cardhoarder',
       vendor: 'cardhoarder',
-      label: 'CardHoarder',
+      label: 'Card Hoarder',
       href: getCardHoarderLink(asCard),
       price: card.prices.tix,
       format: tix,

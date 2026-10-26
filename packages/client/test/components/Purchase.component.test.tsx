@@ -43,14 +43,14 @@ describe('Purchase', () => {
   it('shows each vendor in its own currency', () => {
     render(<Purchase card={cardWith(allPrices)} />);
 
-    expect(within(rowFor('CardMarket')).getByText('€0.92')).toBeInTheDocument();
-    expect(within(rowFor('CardHoarder')).getByText('0.04 TIX')).toBeInTheDocument();
+    expect(within(rowFor('Cardmarket')).getByText('€0.92')).toBeInTheDocument();
+    expect(within(rowFor('Card Hoarder')).getByText('0.04 TIX')).toBeInTheDocument();
   });
 
   it('points each vendor at its own storefront', () => {
     render(<Purchase card={cardWith(allPrices)} />);
 
-    expect(screen.getByText('CardMarket')).toHaveAttribute('href', expect.stringContaining('cardmarket'));
+    expect(screen.getByText('Cardmarket')).toHaveAttribute('href', expect.stringContaining('cardmarket'));
     expect(screen.getByText('Mana Pool')).toHaveAttribute('href', expect.stringContaining('manapool'));
   });
 
