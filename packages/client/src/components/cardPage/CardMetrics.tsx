@@ -13,7 +13,7 @@ import {
   withCurrentSample,
 } from 'utils/cardMomentum';
 
-import Sparkline from '../base/Sparkline';
+import Sparkline, { SparkPoint } from '../base/Sparkline';
 import Tooltip from '../base/Tooltip';
 
 const SHORT_WINDOW_DAYS = 28;
@@ -142,7 +142,7 @@ interface MetricSectionProps {
   name: string;
   value: string;
   detail?: string;
-  series: number[];
+  points: SparkPoint[];
   children: React.ReactNode;
 }
 
@@ -162,12 +162,12 @@ const TREND_MASK = { maskImage: TREND_FADE, WebkitMaskImage: TREND_FADE };
  * all year but ticked up last month would draw a falling green line. The chips state
  * direction per window instead.
  */
-const MetricSection: React.FC<MetricSectionProps> = ({ name, value, detail, series, children }) => (
+const MetricSection: React.FC<MetricSectionProps> = ({ name, value, detail, points, children }) => (
   <section aria-label={name} className="flex items-end justify-between gap-2">
     <div className="relative min-w-0 flex-1">
-      {series.length > 1 && (
+      {points.length > 1 && (
         <Sparkline
-          values={series}
+          points={points}
           title={`${name} over time`}
           className="absolute inset-0 h-full w-full text-text/60 opacity-80"
           style={TREND_MASK}
@@ -185,7 +185,7 @@ const MetricSection: React.FC<MetricSectionProps> = ({ name, value, detail, seri
         </div>
       </div>
     </div>
-    {series.length > 1 && <div className={`flex shrink-0 flex-col items-end gap-1 ${CHIP_COLUMN}`}>{children}</div>}
+    {points.length > 1 && <div className={`flex shrink-0 flex-col items-end gap-1 ${CHIP_COLUMN}`}>{children}</div>}
   </section>
 );
 
@@ -229,7 +229,7 @@ const CardMetrics: React.FC<CardMetricsProps> = ({ card, history }) => {
         name="Play Rate"
         value={`${cardPopularity(details).toFixed(2)}%`}
         detail={`${cardCubeCount(details).toLocaleString()} cubes`}
-        series={playRatePoints}
+        points={playRatePoints}
       >
         {playRateChip('4w', shortPlayRate)}
         {playRateChip('12w', longPlayRate)}
@@ -237,7 +237,7 @@ const CardMetrics: React.FC<CardMetricsProps> = ({ card, history }) => {
 
       <hr className="border-border" />
 
-      <MetricSection name="Elo" value={cardElo(details).toFixed(0)} series={eloPoints}>
+      <MetricSection name="Elo" value={cardElo(details).toFixed(0)} points={eloPoints}>
         {eloChip('4w', shortElo)}
         {eloChip('12w', longElo)}
       </MetricSection>

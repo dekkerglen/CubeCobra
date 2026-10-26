@@ -206,7 +206,7 @@ describe('playRateSeries', () => {
   it('orders points oldest to newest regardless of how history arrives', () => {
     const history = [weeklyEntry(0, { total: [60, 1000] }), weeklyEntry(2, { total: [40, 1000] })];
 
-    expect(playRateSeries(history)).toEqual([4, 6]);
+    expect(playRateSeries(history).map((p) => p.value)).toEqual([4, 6]);
   });
 
   it('drops snapshots with no recorded denominator rather than plotting them as zero', () => {
@@ -216,7 +216,7 @@ describe('playRateSeries', () => {
       weeklyEntry(0, { total: [60, 1000] }),
     ];
 
-    expect(playRateSeries(history)).toEqual([4, 6]);
+    expect(playRateSeries(history).map((p) => p.value)).toEqual([4, 6]);
   });
 
   it('is empty for a card with no recorded history', () => {
@@ -228,7 +228,7 @@ describe('eloSeries', () => {
   it('orders points oldest to newest and drops snapshots with no elo', () => {
     const history = [weeklyEntry(0, { elo: 1300 }), weeklyEntry(1, { elo: undefined }), weeklyEntry(2, { elo: 1200 })];
 
-    expect(eloSeries(history)).toEqual([1200, 1300]);
+    expect(eloSeries(history).map((p) => p.value)).toEqual([1200, 1300]);
   });
 });
 
@@ -243,8 +243,8 @@ describe('withCurrentSample', () => {
 
     const series = withCurrentSample(history, current);
 
-    expect(playRateSeries(series)).toEqual([6, 8, 12]);
-    expect(eloSeries(series)).toEqual([1300, 1310, 1400]);
+    expect(playRateSeries(series).map((p) => p.value)).toEqual([6, 8, 12]);
+    expect(eloSeries(series).map((p) => p.value)).toEqual([1300, 1310, 1400]);
   });
 
   it('dates the catalog sample after the newest row, so it sorts last', () => {
@@ -254,6 +254,28 @@ describe('withCurrentSample', () => {
     const appended = series[series.length - 1];
 
     expect(appended.date).toBeGreaterThan(Math.max(...history.map((h) => h.date)));
+  });
+
+  it('spaces the catalog sample by the cadence of the series, not a fixed day', () => {
+    const history = [weeklyEntry(2, { total: [40, 1000] }), weeklyEntry(1), weeklyEntry(0, { total: [80, 1000] })];
+
+    const series = withCurrentSample(history, current);
+    const appended = series[series.length - 1];
+
+    // The gap to the catalog is unrecorded, but it is strictly inside one step of the
+    // rhythm: the row is written when the job hits a Sunday, the catalog on a later run
+    // of the same pipeline. Half a step is the central estimate. A fixed day would draw
+    // most of a week of movement as a near-vertical spike; a full step would sit on the
+    // trailing-window boundary and push a real week out of the average.
+    expect(appended.date - Math.max(...history.map((h) => h.date))).toBe(3.5 * DAY_MS);
+  });
+
+  it('falls back to a day when a single row gives no cadence to copy', () => {
+    const history = [weeklyEntry(0, { total: [80, 1000] })];
+
+    const series = withCurrentSample(history, current);
+
+    expect(series[series.length - 1].date - history[0].date).toBe(DAY_MS);
   });
 
   it('leaves a card with no recorded history alone, having nothing to extend', () => {
@@ -273,8 +295,8 @@ describe('withCurrentSample', () => {
 
     const series = withCurrentSample(history, { ...current, elo: undefined });
 
-    expect(playRateSeries(series)).toEqual([8, 12]);
-    expect(eloSeries(series)).toEqual([1310]);
+    expect(playRateSeries(series).map((p) => p.value)).toEqual([8, 12]);
+    expect(eloSeries(series).map((p) => p.value)).toEqual([1310]);
   });
 
   it('counts the catalog sample toward the recent window', () => {

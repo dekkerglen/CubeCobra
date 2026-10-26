@@ -125,21 +125,26 @@ const cubeCountOf = (entry: HistoryType): number | null => {
 
 const eloOf = (entry: HistoryType): number | null => (Number.isFinite(entry.elo) ? (entry.elo as number) : null);
 
+export interface SeriesPoint {
+  value: number;
+  date: number;
+}
+
 /**
- * Pulls a plottable series out of history, oldest point first. Snapshots the sample
- * rejects are dropped, so a sparkline never dips to zero on a week that simply went
- * unrecorded.
+ * Pulls a plottable series out of history, oldest point first, each carrying the date
+ * it was recorded so a chart can space it honestly. Snapshots the sample rejects are
+ * dropped, so a line never dips to zero on a week that simply went unrecorded.
  */
-const seriesOf = (history: HistoryType[], sample: Sample): number[] =>
+const seriesOf = (history: HistoryType[], sample: Sample): SeriesPoint[] =>
   history
     .filter((entry) => Number.isFinite(entry?.date))
     .sort((a, b) => a.date - b.date)
-    .map(sample)
-    .filter((value): value is number => value !== null);
+    .map((entry) => ({ value: sample(entry), date: entry.date }))
+    .filter((point): point is SeriesPoint => point.value !== null);
 
-export const playRateSeries = (history: HistoryType[]): number[] => seriesOf(history, playRateOf);
+export const playRateSeries = (history: HistoryType[]): SeriesPoint[] => seriesOf(history, playRateOf);
 
-export const eloSeries = (history: HistoryType[]): number[] => seriesOf(history, eloOf);
+export const eloSeries = (history: HistoryType[]): SeriesPoint[] => seriesOf(history, eloOf);
 
 export interface CurrentSample {
   cubeCount: number;
@@ -168,13 +173,22 @@ export const withCurrentSample = (history: HistoryType[], current: CurrentSample
     return history;
   }
 
-  const newest = Math.max(...dated.map((entry) => entry.date));
+  const sorted = dated.map((entry) => entry.date).sort((a, b) => a - b);
+  const newest = sorted[sorted.length - 1];
+
+  // Half a step of the series' own cadence past the last row. The real gap is unrecorded
+  // -- the weekly row lands when the job hits a Sunday, the catalog on a later run of the
+  // same pipeline -- but it is strictly inside one step, so half is the central estimate.
+  // A fixed day would draw most of a week of movement as a near-vertical spike; a whole
+  // step would sit on the trailing-window boundary and push a real week out of the
+  // average. The clock cannot settle it either: it reports when the page rendered, not
+  // when the job ran.
+  const steps = sorted.slice(1).map((date, index) => date - sorted[index]);
+  const cadence = steps.length > 0 ? [...steps].sort((a, b) => a - b)[Math.floor(steps.length / 2)] : 0;
+  const offset = cadence > 0 ? cadence / 2 : DAY_MS;
 
   const sample = {
-    // A day after the last snapshot. That is enough to sort last and sit inside the
-    // recent window, and it avoids the clock: nothing here knows when the catalog was
-    // actually built, and reading the time during render is impure anyway.
-    date: newest + DAY_MS,
+    date: newest + offset,
     total: [current.cubeCount, current.totalCubes],
     // Undefined when the card has no rating, which the extractor skips. The caller must
     // pass the raw figure rather than cardElo(), which substitutes a default of 1200.
