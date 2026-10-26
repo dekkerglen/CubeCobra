@@ -6,9 +6,9 @@ import HistoryType from '@utils/datatypes/History';
 
 import { nameToDashedUrlComponent } from 'utils/Affiliate';
 
+import Button from '../base/Button';
 import { CardBody } from '../base/Card';
 import { Col, Flexbox, Row } from '../base/Layout';
-import Link from '../base/Link';
 import Table from '../base/Table';
 import Text from '../base/Text';
 import Markdown from '../Markdown';
@@ -98,38 +98,31 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
           </Text>
         </Flexbox>
 
-        {/* Set apart from the card's own text above, which is prose rather than data. */}
-        <Row className="pt-6" gutters={2}>
-          <Col xs={12} md={8}>
-            <Text semibold lg>
-              Legality
-            </Text>
-            {/* Two columns rather than one twelve-row list: a single table reads as a
-                much taller block than the badge grid this replaced. */}
-            <Row gutters={2}>
-              <Col xs={6}>
-                <Table rows={legalityRows(card, 0, 6)} />
-              </Col>
-              <Col xs={6}>
-                <Table rows={legalityRows(card, 6, 12)} />
-              </Col>
-            </Row>
+        <hr className="mt-4" />
+        <Text semibold lg>
+          Legality
+        </Text>
+        {/* Two columns rather than one twelve-row list: a single table reads as a much
+            taller block than the badge grid this replaced. */}
+        <Row gutters={2}>
+          <Col xs={6}>
+            <Table rows={legalityRows(card, 0, 6)} />
           </Col>
-          <Col xs={12} md={4}>
-            <Text semibold lg>
-              Links
-            </Text>
-            <Table
-              rows={externalLinks.map(({ label, href }) => ({
-                // The card's name is the heading above; the labels do not repeat it.
-                link: (
-                  <Link href={href} target="_blank" rel="noopener noreferrer">
-                    {label}
-                  </Link>
-                ),
-              }))}
-            />
+          <Col xs={6}>
+            <Table rows={legalityRows(card, 6, 12)} />
           </Col>
+        </Row>
+
+        {/* Three references share a row. As a table they read as a stub beside the
+            twelve-row legality list. */}
+        <Row className="pt-2" gutters={2}>
+          {externalLinks.map(({ label, href }) => (
+            <Col key={label} xs={12} md={4}>
+              <Button type="link" outline color="accent" block href={href} target="_blank">
+                {label}
+              </Button>
+            </Col>
+          ))}
         </Row>
       </Flexbox>
     </CardBody>

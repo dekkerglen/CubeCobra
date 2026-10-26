@@ -72,13 +72,29 @@ describe('card page info tab', () => {
     expect(within(rowFor('Modern')).getByText('Banned')).toBeInTheDocument();
   });
 
-  it('offers the external references as links, not buttons', () => {
+  it('offers the external references as buttons below the tables, not as a table of their own', () => {
     renderInfo();
 
     expect(screen.getByText('Scryfall')).toHaveAttribute('href', 'https://scryfall.com/card/tmp/42');
     expect(screen.getByText('EDHREC')).toHaveAttribute('href', expect.stringContaining('edhrec.com'));
     expect(screen.getByText('MTG Top 8')).toHaveAttribute('href', expect.stringContaining('mtgtop8.com'));
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+
+    // Three rows made a table that read as a stub next to the twelve-row legality list.
+    expect(screen.getByText('Scryfall').closest('table')).toBeNull();
+    expect(screen.queryByText('Links')).not.toBeInTheDocument();
+  });
+
+  it('separates the card text from the data below it with a divider', () => {
+    const { container } = renderInfo();
+
+    const divider = [...container.querySelectorAll('hr')].pop() as HTMLElement;
+    const illustrator = screen.getByText(/Illustrated by/);
+    const legality = screen.getByText('Legality');
+    const after = (a: Element, b: Element) => !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
+
+    // The rule has to fall between the card's own text and the tables, not above both.
+    expect(after(illustrator, divider)).toBe(true);
+    expect(after(divider, legality)).toBe(true);
   });
 
   it('drops the card name from the link labels, which the heading already gives', () => {
