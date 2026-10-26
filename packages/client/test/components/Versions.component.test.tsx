@@ -53,6 +53,37 @@ describe('Printings', () => {
     expect(within(next).getByText(/str Edition/)).toBeInTheDocument();
   });
 
+  it('marks the printing being viewed, so it is not mistaken for another', () => {
+    render(<CardVersions card={card} versions={[version('a', 'str')]} />);
+
+    const [, current, next] = screen.getAllByRole('row');
+
+    expect(within(current).getByText('Current')).toBeInTheDocument();
+    expect(within(next).queryByText('Current')).not.toBeInTheDocument();
+  });
+
+  it('pads prices to two decimals so the columns line up', () => {
+    const priced = { ...card, prices: { usd: 0.3, usd_foil: 1.5, eur: 2, tix: 0.1 } };
+
+    render(<CardVersions card={priced} versions={[]} />);
+    const [, current] = screen.getAllByRole('row');
+
+    expect(within(current).getByText('$0.30')).toBeInTheDocument();
+    expect(within(current).getByText('$1.50')).toBeInTheDocument();
+    expect(within(current).getByText('€2.00')).toBeInTheDocument();
+    expect(within(current).getByText('0.10')).toBeInTheDocument();
+  });
+
+  it('leaves a price it does not have blank rather than padding a zero', () => {
+    render(<CardVersions card={{ ...card, prices: { usd: 0.3 } }} versions={[]} />);
+
+    const [, current] = screen.getAllByRole('row');
+    const cells = [...current.querySelectorAll('td')].map((td) => td.textContent.trim());
+
+    expect(cells).not.toContain('0.00');
+    expect(cells).not.toContain('$0.00');
+  });
+
   it('prices the printing being viewed like any other', () => {
     render(<CardVersions card={card} versions={[]} />);
 

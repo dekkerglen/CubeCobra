@@ -28,6 +28,10 @@ const capStringLength = (str: string, maxLength: number) => {
   return str;
 };
 
+// Two decimals, matching the Purchase table. A missing price stays blank rather than
+// becoming a padded zero, which would read as "free" instead of "unknown".
+const money = (value: number | undefined, symbol = '') => (value ? `${symbol}${value.toFixed(2)}` : '');
+
 const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
   const drag = useCubeTrayDrag();
   const [page, setPage] = useState(0);
@@ -79,17 +83,29 @@ const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
       <Table
         borderless
         headers={['Version', 'USD', 'USD Foil', 'EUR', 'TIX']}
-        rows={visiblePrintings.map((version) => ({
-          Version: (
-            <AutocardA card={detailsToCard(version)} href={`/tool/card/${version.scryfall_id}`}>
-              {capStringLength(`${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`, 30)}
-            </AutocardA>
-          ),
-          USD: version.prices.usd ? `$${version.prices.usd}` : '',
-          'USD Foil': version.prices.usd_foil ? `$${version.prices.usd_foil}` : '',
-          EUR: version.prices.eur ? `€${version.prices.eur}` : '',
-          TIX: version.prices.tix ? `${version.prices.tix}` : '',
-        }))}
+        rows={visiblePrintings.map((version) => {
+          const isCurrent = version.scryfall_id === card.scryfall_id;
+
+          return {
+            Version: (
+              <Flexbox direction="row" alignItems="center" gap="1">
+                <AutocardA card={detailsToCard(version)} href={`/tool/card/${version.scryfall_id}`}>
+                  {capStringLength(
+                    `${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`,
+                    isCurrent ? 20 : 30,
+                  )}
+                </AutocardA>
+                {isCurrent && (
+                  <span className="shrink-0 rounded border border-border px-1 text-xs text-text/75">Current</span>
+                )}
+              </Flexbox>
+            ),
+            USD: money(version.prices.usd, '$'),
+            'USD Foil': money(version.prices.usd_foil, '$'),
+            EUR: money(version.prices.eur, '€'),
+            TIX: money(version.prices.tix),
+          };
+        })}
         getRowProps={getRowProps}
       />
       {/* The full search lives at the end of the list it extends, rather than as a
