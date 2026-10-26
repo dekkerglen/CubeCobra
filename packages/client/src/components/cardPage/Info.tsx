@@ -34,10 +34,10 @@ const FORMATS = [
 ];
 
 const LEGALITY: Record<Legality, { label: string; className: string }> = {
-  legal: { label: 'Legal', className: 'text-green-500' },
-  not_legal: { label: 'Not Legal', className: 'text-text-secondary' },
-  banned: { label: 'Banned', className: 'text-red-500' },
-  restricted: { label: 'Restricted', className: 'text-amber-500' },
+  legal: { label: 'Legal', className: 'bg-button-primary' },
+  not_legal: { label: 'Not Legal', className: 'bg-button-secondary' },
+  banned: { label: 'Banned', className: 'bg-button-danger' },
+  restricted: { label: 'Restricted', className: 'bg-button-accent' },
 };
 
 const legalityRows = (card: CardDetails, from: number, to: number) =>
@@ -46,7 +46,13 @@ const legalityRows = (card: CardDetails, from: number, to: number) =>
 
     return {
       format,
-      status: <span className={`font-semibold ${status.className}`}>{status.label}</span>,
+      status: (
+        <span
+          className={`block rounded px-2 py-0.5 text-center text-xs font-semibold text-button-text ${status.className}`}
+        >
+          {status.label}
+        </span>
+      ),
     };
   });
 

@@ -56,6 +56,15 @@ describe('card page info tab', () => {
     }
   });
 
+  it('shows the status as a filled chip rather than bare text', () => {
+    renderInfo();
+
+    const status = within(rowFor('Legacy')).getByText('Legal');
+
+    // Colour alone is not the signal here; the filled block is what the grid used.
+    expect(status.className).toMatch(/\bbg-/);
+  });
+
   it('distinguishes the statuses a format can be in', () => {
     renderInfo();
 
