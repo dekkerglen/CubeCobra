@@ -30,7 +30,7 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
   const [imageUsed, setImageUsed] = useState(card.image_normal);
 
   return (
-    <Flexbox direction="col" className="my-2 ml-2" gap="2">
+    <Flexbox direction="col" className="my-2 mx-2" gap="2">
       <ImageFallback
         className="w-full"
         src={imageUsed}
