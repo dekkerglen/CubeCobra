@@ -60,6 +60,18 @@ describe('card page stats column', () => {
     expect(screen.getByDisplayValue('scryfall-id')).toBeInTheDocument();
   });
 
+  it('puts the id field directly under the card image, ahead of the actions', () => {
+    const { container } = render(<CardBreakdownStats card={card} history={noHistory} />);
+
+    const order = [...container.querySelectorAll('img, input, button')];
+    const image = order.findIndex((el) => el.tagName === 'IMG');
+    const idField = order.findIndex((el) => (el as HTMLInputElement).value === 'scryfall-id');
+    const addToCube = order.findIndex((el) => el.textContent === 'Add to Cube');
+
+    expect(image).toBeLessThan(idField);
+    expect(idField).toBeLessThan(addToCube);
+  });
+
   it('offers the cube and package searches without repeating the card name', () => {
     render(<CardBreakdownStats card={card} history={noHistory} />);
 

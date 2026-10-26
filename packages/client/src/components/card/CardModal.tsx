@@ -31,7 +31,9 @@ import { getTagColorClass, getTagColorStyle } from '@utils/Util';
 
 import ImageFallback, { ImageFallbackProps } from 'components/ImageFallback';
 import AddToCubeModal from 'components/modals/AddToCubeModal';
-import VendorButton from 'components/purchase/VendorButton';
+import PurchaseTable from 'components/purchase/PurchaseTable';
+
+import CardIdBadge from './CardIdBadge';
 import withModal from 'components/WithModal';
 
 import { cardImageBackUrl, cardImageUrl } from '../../../../utils/src/cardutil';
@@ -272,6 +274,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     <ArrowSwitchIcon size={16} /> Transform {isFrontImage ? '(To back)' : '(To front)'}
                   </Button>
                 )}
+                <CardIdBadge id={card.cardID} />
                 <Flexbox direction="row" gap="2" wrap="wrap">
                   {card.details?.prices && Number.isFinite(cardPrice(card)) && (
                     <TextBadge name="Price" className="mt-2 me-2">
@@ -352,10 +355,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     <Text md semibold>
                       Purchase
                     </Text>
-                    <VendorButton card={card.details} optionId="tcgplayer" />
-                    <VendorButton card={card.details} optionId="cardkingdom" />
-                    <VendorButton card={card.details} optionId="manapool" />
-                    <VendorButton card={card.details} optionId="cardmarket" />
+                    <PurchaseTable card={card.details} />
                   </>
                 )}
               </Flexbox>
