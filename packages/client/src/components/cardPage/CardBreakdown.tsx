@@ -26,7 +26,9 @@ const CardBreakdown: React.FC<CardPageProps> = ({ card, history }) => {
   return (
     <Card>
       <div className="border-b border-border pt-2 px-4">
-        <Flexbox direction="row" justify="between" alignItems="end">
+        {/* Below sm the title and the tabs cannot share a line: the tabs wrap to two rows
+            and the set name wraps with them. Stacked, each gets the full width. */}
+        <div className="flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between sm:gap-2">
           <Flexbox direction="col">
             <Text xl semibold>
               {card.name}
@@ -52,7 +54,7 @@ const CardBreakdown: React.FC<CardPageProps> = ({ card, history }) => {
             ]}
             activeTab={parseInt(selectedTab || '0', 10)}
           />
-        </Flexbox>
+        </div>
       </div>
       <Row gutters={0}>
         <Col xs={12} md={5} xl={4} xxl={5}>
