@@ -214,6 +214,20 @@ describe('CardMetrics', () => {
     expect(stacks[0].children).toHaveLength(stacks[1].children.length);
   });
 
+  it('does not colour the trend line by direction, which the chips already state', () => {
+    const rising = render(<CardMetrics card={cardWith()} history={buildHistory(60, 1200)} />);
+    const risingLine = rising.container.querySelector('svg')?.getAttribute('class');
+    rising.unmount();
+
+    const falling = render(<CardMetrics card={cardWith()} history={buildHistory(40, 1200)} />);
+    const fallingLine = falling.container.querySelector('svg')?.getAttribute('class');
+
+    // A line drawn over a year cannot honestly take its colour from the last four weeks.
+    expect(risingLine).toBe(fallingLine);
+    expect(risingLine).not.toContain('green');
+    expect(risingLine).not.toContain('red');
+  });
+
   it('keeps both metrics on the same number of chips so their trend lines match', () => {
     const { container } = render(<CardMetrics card={cardWith()} history={buildHistory(60, 1265)} />);
 

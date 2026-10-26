@@ -136,7 +136,6 @@ interface MetricSectionProps {
   value: string;
   detail?: string;
   series: number[];
-  trendDirection: Direction;
   children: React.ReactNode;
 }
 
@@ -150,15 +149,20 @@ const TREND_MASK = { maskImage: TREND_FADE, WebkitMaskImage: TREND_FADE };
  * One metric as a single band: its name, value and detail stacked at the left with the
  * trend line running behind them, and the trend chips held off to the right. The line
  * stops short of the chips rather than running under shapes that would hide it.
+ *
+ * The line is deliberately uncoloured. It spans the whole recorded history, so taking a
+ * colour from any one window would have it contradict its own shape -- a card that slid
+ * all year but ticked up last month would draw a falling green line. The chips state
+ * direction per window instead.
  */
-const MetricSection: React.FC<MetricSectionProps> = ({ name, value, detail, series, trendDirection, children }) => (
+const MetricSection: React.FC<MetricSectionProps> = ({ name, value, detail, series, children }) => (
   <section aria-label={name} className="flex items-end justify-between gap-2">
     <div className="relative min-w-0 flex-1">
       {series.length > 1 && (
         <Sparkline
           values={series}
           title={`${name} over time`}
-          className={`absolute inset-0 h-full w-full opacity-80 ${DIRECTION_COLOR[trendDirection]}`}
+          className="absolute inset-0 h-full w-full text-text/60 opacity-80"
           style={TREND_MASK}
         />
       )}
@@ -198,11 +202,6 @@ const CardMetrics: React.FC<CardMetricsProps> = ({ card, history }) => {
   const playRatePoints = useMemo(() => playRateSeries(history), [history]);
   const eloPoints = useMemo(() => eloSeries(history), [history]);
 
-  const playRateDirection = shortPlayRate
-    ? directionOf(shortPlayRate.relativeChange ?? shortPlayRate.change, STEADY_RELATIVE_CHANGE)
-    : 'steady';
-  const eloDirection = shortElo ? directionOf(shortElo.change, STEADY_ELO_POINTS) : 'steady';
-
   return (
     <div className="flex flex-col gap-3 rounded-md border border-border bg-bg-active p-3">
       <MetricSection
@@ -210,7 +209,6 @@ const CardMetrics: React.FC<CardMetricsProps> = ({ card, history }) => {
         value={`${cardPopularity(details).toFixed(2)}%`}
         detail={`${cardCubeCount(details).toLocaleString()} cubes`}
         series={playRatePoints}
-        trendDirection={playRateDirection}
       >
         {playRateChip('4w', shortPlayRate)}
         {playRateChip('12w', longPlayRate)}
@@ -218,7 +216,7 @@ const CardMetrics: React.FC<CardMetricsProps> = ({ card, history }) => {
 
       <hr className="border-border" />
 
-      <MetricSection name="Elo" value={cardElo(details).toFixed(0)} series={eloPoints} trendDirection={eloDirection}>
+      <MetricSection name="Elo" value={cardElo(details).toFixed(0)} series={eloPoints}>
         {eloChip('4w', shortElo)}
         {eloChip('12w', longElo)}
       </MetricSection>
