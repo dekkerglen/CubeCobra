@@ -136,26 +136,28 @@ interface MetricSectionProps {
   children: React.ReactNode;
 }
 
+/**
+ * One metric as a single band: its name, value and detail stacked at the left with the
+ * trend line running behind them, and the trend chips held off to the right. The line
+ * stops short of the chips rather than running under shapes that would hide it.
+ */
 const MetricSection: React.FC<MetricSectionProps> = ({ name, value, detail, series, trendDirection, children }) => (
-  <section aria-label={name}>
-    <div className="flex items-baseline justify-between gap-2">
-      <span className="text-xs uppercase tracking-wide text-text-secondary">{name}</span>
-      {/* Stacked and right-aligned so every metric's headline number shares a right edge,
-          whether or not it carries a secondary detail. */}
-      <span className="flex flex-col items-end leading-tight">
-        <span className="text-lg font-bold text-text">{value}</span>
-        {detail && <span className="text-xs text-text-secondary">{detail}</span>}
-      </span>
+  <section aria-label={name} className="flex items-end justify-between gap-2">
+    <div className="relative min-w-0 flex-1">
+      {series.length > 1 && (
+        <Sparkline
+          values={series}
+          title={`${name} over time`}
+          className={`absolute inset-0 h-full w-full opacity-70 ${DIRECTION_COLOR[trendDirection]}`}
+        />
+      )}
+      <div className="relative leading-tight">
+        <div className="text-xs uppercase tracking-wide text-text-secondary">{name}</div>
+        <div className="text-lg font-bold text-text">{value}</div>
+        {detail && <div className="text-xs text-text-secondary">{detail}</div>}
+      </div>
     </div>
-    {series.length > 1 && (
-      <Sparkline
-        values={series}
-        title={`${name} over time`}
-        className={`mt-1.5 h-7 w-full ${DIRECTION_COLOR[trendDirection]}`}
-      />
-    )}
-    {/* Wraps rather than truncates: the xxl breakpoint gives this column barely 244px. */}
-    {series.length > 1 && <div className="mt-1.5 flex flex-wrap gap-1.5">{children}</div>}
+    {series.length > 1 && <div className="flex shrink-0 flex-col items-end gap-1">{children}</div>}
   </section>
 );
 

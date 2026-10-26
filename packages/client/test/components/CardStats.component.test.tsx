@@ -43,7 +43,8 @@ describe('card page stats column', () => {
     render(<CardBreakdownStats card={card} history={noHistory} />);
 
     expect(screen.getByRole('region', { name: 'Elo' })).toBeInTheDocument();
-    expect(screen.queryByText('Elo', { selector: 'div' })).not.toBeInTheDocument();
+    // One "Elo" on the page: the panel's own label. The separate badge is gone.
+    expect(screen.getAllByText('Elo')).toHaveLength(1);
   });
 
   it('replaces the popularity sentence with the metrics panel', () => {

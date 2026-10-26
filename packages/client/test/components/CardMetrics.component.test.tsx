@@ -195,6 +195,17 @@ describe('CardMetrics', () => {
     expect(chip('Play Rate', '12w')).toHaveTextContent('No data');
   });
 
+  it('keeps the trend line clear of the chips that would obscure it', () => {
+    const { container } = render(<CardMetrics card={cardWith()} history={buildHistory(60, 1200)} />);
+
+    const sparkline = container.querySelector('svg') as SVGElement;
+    const chipRow = chip('Play Rate', '4w').closest('div') as HTMLElement;
+    const sparklineArea = sparkline.parentElement as HTMLElement;
+
+    // The line fills its own box; the chips sit outside it rather than on top.
+    expect(sparklineArea.contains(chipRow)).toBe(false);
+  });
+
   it('still draws the trend line for a card whose windows cannot be computed', () => {
     const history = span(0, 3).map((week) => weeklyEntry(week, 50, 1200));
 
