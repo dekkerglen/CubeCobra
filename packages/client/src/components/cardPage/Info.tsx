@@ -1,16 +1,16 @@
 import React from 'react';
 
 import { cdnUrl } from '@utils/cdnUrl';
-import { CardDetails } from '@utils/datatypes/Card';
+import { CardDetails, Legality } from '@utils/datatypes/Card';
 import HistoryType from '@utils/datatypes/History';
 
 import { nameToDashedUrlComponent } from 'utils/Affiliate';
 
-import Button from '../base/Button';
 import { CardBody } from '../base/Card';
 import { Col, Flexbox, Row } from '../base/Layout';
+import Link from '../base/Link';
+import Table from '../base/Table';
 import Text from '../base/Text';
-import LegalityBadge from '../card/CardLegalityBadge';
 import Markdown from '../Markdown';
 
 interface CardPageProps {
@@ -18,7 +18,45 @@ interface CardPageProps {
   history: HistoryType[];
 }
 
+const FORMATS = [
+  'Standard',
+  'Pioneer',
+  'Modern',
+  'Legacy',
+  'Vintage',
+  'Premodern',
+  'Brawl',
+  'Historic',
+  'Timeless',
+  'Pauper',
+  'Penny',
+  'Commander',
+];
+
+const LEGALITY: Record<Legality, { label: string; className: string }> = {
+  legal: { label: 'Legal', className: 'text-green-500' },
+  not_legal: { label: 'Not Legal', className: 'text-text-secondary' },
+  banned: { label: 'Banned', className: 'text-red-500' },
+  restricted: { label: 'Restricted', className: 'text-amber-500' },
+};
+
+const legalityRows = (card: CardDetails, from: number, to: number) =>
+  FORMATS.slice(from, to).map((format) => {
+    const status = LEGALITY[card.legalities[format]] ?? LEGALITY.not_legal;
+
+    return {
+      format,
+      status: <span className={`font-semibold ${status.className}`}>{status.label}</span>,
+    };
+  });
+
 const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
+  const externalLinks = [
+    { label: 'Scryfall', href: card.scryfall_uri },
+    { label: 'EDHREC', href: `https://edhrec.com/cards/${nameToDashedUrlComponent(card.name)}` },
+    { label: 'MTG Top 8', href: `http://mtgtop8.com/search?MD_check=1&SB_check=1&cards=${card.name}` },
+  ];
+
   return (
     <CardBody>
       <Flexbox direction="col" gap="2">
@@ -53,49 +91,38 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
             {card.power && `${card.power} / ${card.toughness}`}
           </Text>
         </Flexbox>
-        <hr />
-        <Row>
-          <Col xs={6}>
-            {['Standard', 'Pioneer', 'Modern', 'Legacy', 'Vintage', 'Premodern'].map((key) => (
-              <LegalityBadge key={key} legality={key} status={card.legalities[key]} />
-            ))}
+
+        {/* Set apart from the card's own text above, which is prose rather than data. */}
+        <Row className="pt-6" gutters={2}>
+          <Col xs={12} md={8}>
+            <Text semibold lg>
+              Legality
+            </Text>
+            {/* Two columns rather than one twelve-row list: a single table reads as a
+                much taller block than the badge grid this replaced. */}
+            <Row gutters={2}>
+              <Col xs={6}>
+                <Table rows={legalityRows(card, 0, 6)} />
+              </Col>
+              <Col xs={6}>
+                <Table rows={legalityRows(card, 6, 12)} />
+              </Col>
+            </Row>
           </Col>
-          <Col xs={6}>
-            {['Brawl', 'Historic', 'Timeless', 'Pauper', 'Penny', 'Commander'].map((key) => (
-              <LegalityBadge key={key} legality={key} status={card.legalities[key]} />
-            ))}
-          </Col>
-        </Row>
-        <hr />
-        <Row>
-          <Col xs={12} md={6}>
-            <Button type="link" outline color="accent" block href={card.scryfall_uri} target="_blank">
-              View on Scryfall
-            </Button>
-          </Col>
-          <Col xs={12} md={6}>
-            <Button
-              type="link"
-              outline
-              color="accent"
-              block
-              href={`https://edhrec.com/cards/${nameToDashedUrlComponent(card.name)}`}
-              target="_blank"
-            >
-              View on EDHRec
-            </Button>
-          </Col>
-          <Col xs={12} md={6}>
-            <Button
-              type="link"
-              outline
-              color="accent"
-              block
-              href={`http://mtgtop8.com/search?MD_check=1&SB_check=1&cards=${card.name}`}
-              target="_blank"
-            >
-              {`MTG Top 8 Decks with ${card.name}`}
-            </Button>
+          <Col xs={12} md={4}>
+            <Text semibold lg>
+              Links
+            </Text>
+            <Table
+              rows={externalLinks.map(({ label, href }) => ({
+                // The card's name is the heading above; the labels do not repeat it.
+                link: (
+                  <Link href={href} target="_blank" rel="noopener noreferrer">
+                    {label}
+                  </Link>
+                ),
+              }))}
+            />
           </Col>
         </Row>
       </Flexbox>
