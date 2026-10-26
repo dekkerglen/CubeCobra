@@ -44,7 +44,7 @@ describe('Purchase', () => {
     render(<Purchase card={cardWith(allPrices)} />);
 
     expect(within(rowFor('Cardmarket')).getByText('€0.92')).toBeInTheDocument();
-    expect(within(rowFor('Card Hoarder')).getByText('0.04 TIX')).toBeInTheDocument();
+    expect(within(rowFor('Cardhoarder')).getByText('0.04 TIX')).toBeInTheDocument();
   });
 
   it('points each vendor at its own storefront', () => {
