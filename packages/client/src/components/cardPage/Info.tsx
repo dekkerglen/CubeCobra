@@ -134,7 +134,7 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
         <Row className="pt-2" gutters={2}>
           {externalLinks.map(({ label, href }) => (
             <Col key={label} xs={12} md={4}>
-              <Button type="link" outline color="secondary" block href={href} target="_blank">
+              <Button type="link" color="secondary" block href={href} target="_blank">
                 {label}
               </Button>
             </Col>
