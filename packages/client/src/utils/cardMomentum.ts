@@ -141,6 +141,49 @@ export const playRateSeries = (history: HistoryType[]): number[] => seriesOf(his
 
 export const eloSeries = (history: HistoryType[]): number[] => seriesOf(history, eloOf);
 
+export interface CurrentSample {
+  cubeCount: number;
+  /** Total cubes the rate is out of. Derivable from the catalog's popularity. */
+  totalCubes: number;
+  elo?: number;
+}
+
+/**
+ * Appends the catalog's figures as one more point in the series.
+ *
+ * They are the same measurement the weekly rows carry, taken more recently:
+ * update_metadata_dict reads the newest cubes_history and global_draft_history files,
+ * while update_cube_history reads the file for each date it processes. update-all runs
+ * the history job first, so the catalog is never the older of the two.
+ *
+ * Appending it rather than letting the headline diverge means the trend line ends on
+ * the number printed above it, and the windows see the freshest figures there are.
+ */
+export const withCurrentSample = (history: HistoryType[], current: CurrentSample): HistoryType[] => {
+  const dated = history.filter((entry) => Number.isFinite(entry?.date));
+
+  // With no dated rows there is nothing to extend, and a lone sample draws no line and
+  // computes no window. A rate also needs something to divide by.
+  if (dated.length === 0 || !(current.totalCubes > 0)) {
+    return history;
+  }
+
+  const newest = Math.max(...dated.map((entry) => entry.date));
+
+  const sample = {
+    // A day after the last snapshot. That is enough to sort last and sit inside the
+    // recent window, and it avoids the clock: nothing here knows when the catalog was
+    // actually built, and reading the time during render is impure anyway.
+    date: newest + DAY_MS,
+    total: [current.cubeCount, current.totalCubes],
+    // Undefined when the card has no rating, which the extractor skips. The caller must
+    // pass the raw figure rather than cardElo(), which substitutes a default of 1200.
+    elo: current.elo,
+  } as HistoryType;
+
+  return [...history, sample];
+};
+
 /**
  * Change in the card's share of cubes between two adjacent trailing windows.
  *

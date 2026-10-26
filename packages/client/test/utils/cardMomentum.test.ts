@@ -1,6 +1,6 @@
 import HistoryType from '@utils/datatypes/History';
 
-import { eloMomentum, eloSeries, playRateMomentum, playRateSeries } from 'utils/cardMomentum';
+import { eloMomentum, eloSeries, playRateMomentum, playRateSeries, withCurrentSample } from 'utils/cardMomentum';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 const ANCHOR = new Date('2026-10-25T00:00:00Z').valueOf();
@@ -229,5 +229,61 @@ describe('eloSeries', () => {
     const history = [weeklyEntry(0, { elo: 1300 }), weeklyEntry(1, { elo: undefined }), weeklyEntry(2, { elo: 1200 })];
 
     expect(eloSeries(history)).toEqual([1200, 1300]);
+  });
+});
+
+describe('withCurrentSample', () => {
+  const current = { cubeCount: 120, totalCubes: 1000, elo: 1400 };
+
+  it('adds the catalog figures as the newest point in the series', () => {
+    const history = [
+      weeklyEntry(1, { total: [60, 1000], elo: 1300 }),
+      weeklyEntry(0, { total: [80, 1000], elo: 1310 }),
+    ];
+
+    const series = withCurrentSample(history, current);
+
+    expect(playRateSeries(series)).toEqual([6, 8, 12]);
+    expect(eloSeries(series)).toEqual([1300, 1310, 1400]);
+  });
+
+  it('dates the catalog sample after the newest row, so it sorts last', () => {
+    const history = [weeklyEntry(1, { total: [60, 1000] }), weeklyEntry(0, { total: [80, 1000] })];
+
+    const series = withCurrentSample(history, current);
+    const appended = series[series.length - 1];
+
+    expect(appended.date).toBeGreaterThan(Math.max(...history.map((h) => h.date)));
+  });
+
+  it('leaves a card with no recorded history alone, having nothing to extend', () => {
+    const empty = [{} as HistoryType];
+
+    expect(withCurrentSample(empty, current)).toBe(empty);
+  });
+
+  it('declines to invent a rate when the catalog cannot supply one', () => {
+    const history = [weeklyEntry(0, { total: [80, 1000] })];
+
+    expect(withCurrentSample(history, { ...current, totalCubes: 0 })).toBe(history);
+  });
+
+  it('leaves the elo out when the card has none, rather than inventing a default', () => {
+    const history = [weeklyEntry(0, { total: [80, 1000], elo: 1310 })];
+
+    const series = withCurrentSample(history, { ...current, elo: undefined });
+
+    expect(playRateSeries(series)).toEqual([8, 12]);
+    expect(eloSeries(series)).toEqual([1310]);
+  });
+
+  it('counts the catalog sample toward the recent window', () => {
+    const flat = [7, 6, 5, 4, 3, 2, 1, 0].map((w) => weeklyEntry(w, { total: [50, 1000] }));
+
+    const withJump = withCurrentSample(flat, { ...current, cubeCount: 100, totalCubes: 1000 });
+
+    // Prior window averages 5%; the recent four weeks plus a 10% sample average 6%.
+    expect(playRateMomentum(withJump, 28)?.current).toBeCloseTo(6, 6);
+    expect(playRateMomentum(flat, 28)?.current).toBeCloseTo(5, 6);
   });
 });

@@ -4,7 +4,14 @@ import { cardCubeCount, cardElo, cardPopularity, detailsToCard } from '@utils/ca
 import { CardDetails } from '@utils/datatypes/Card';
 import HistoryType from '@utils/datatypes/History';
 
-import { eloMomentum, eloSeries, Momentum, playRateMomentum, playRateSeries } from 'utils/cardMomentum';
+import {
+  eloMomentum,
+  eloSeries,
+  Momentum,
+  playRateMomentum,
+  playRateSeries,
+  withCurrentSample,
+} from 'utils/cardMomentum';
 
 import Sparkline from '../base/Sparkline';
 import Tooltip from '../base/Tooltip';
@@ -188,19 +195,33 @@ interface CardMetricsProps {
 }
 
 /**
- * The analytics summary under the card image. Headline numbers come from the card's own
- * details so they survive a card with no recorded history; the trend line and chips are
- * derived from the weekly snapshots and simply drop out when there are none.
+ * The analytics summary under the card image. The catalog's current figures are
+ * appended to the weekly history as one more sample, so the trend lines end on the
+ * numbers printed beside them and the windows run up to now rather than to the last
+ * snapshot. Headline numbers still come from the card's details, which is what lets a
+ * card with no recorded history show anything at all.
  */
 const CardMetrics: React.FC<CardMetricsProps> = ({ card, history }) => {
   const details = detailsToCard(card);
 
-  const shortPlayRate = useMemo(() => playRateMomentum(history, SHORT_WINDOW_DAYS), [history]);
-  const longPlayRate = useMemo(() => playRateMomentum(history, LONG_WINDOW_DAYS), [history]);
-  const shortElo = useMemo(() => eloMomentum(history, SHORT_WINDOW_DAYS), [history]);
-  const longElo = useMemo(() => eloMomentum(history, LONG_WINDOW_DAYS), [history]);
-  const playRatePoints = useMemo(() => playRateSeries(history), [history]);
-  const eloPoints = useMemo(() => eloSeries(history), [history]);
+  const series = useMemo(() => {
+    const cubeCount = cardCubeCount(details);
+    const popularity = cardPopularity(details);
+
+    return withCurrentSample(history, {
+      cubeCount,
+      // The catalog stores the rate, not the denominator the weekly rows carry.
+      totalCubes: popularity > 0 ? Math.round((100 * cubeCount) / popularity) : 0,
+      elo: Number.isFinite(card.elo) ? card.elo : undefined,
+    });
+  }, [history, details, card.elo]);
+
+  const shortPlayRate = useMemo(() => playRateMomentum(series, SHORT_WINDOW_DAYS), [series]);
+  const longPlayRate = useMemo(() => playRateMomentum(series, LONG_WINDOW_DAYS), [series]);
+  const shortElo = useMemo(() => eloMomentum(series, SHORT_WINDOW_DAYS), [series]);
+  const longElo = useMemo(() => eloMomentum(series, LONG_WINDOW_DAYS), [series]);
+  const playRatePoints = useMemo(() => playRateSeries(series), [series]);
+  const eloPoints = useMemo(() => eloSeries(series), [series]);
 
   return (
     <div className="flex flex-col gap-3 rounded-md border border-border bg-bg-active p-3">
