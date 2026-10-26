@@ -83,6 +83,7 @@ const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
       </CardHeader>
       {filteredVersions.length > 0 ? (
         <Table
+          borderless
           headers={['Version', 'USD', 'USD Foil', 'EUR', 'TIX']}
           rows={visibleVersions.map((version) => ({
             Version: (

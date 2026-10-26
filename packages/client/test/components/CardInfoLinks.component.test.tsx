@@ -34,15 +34,35 @@ const card: CardDetails = {
 };
 
 const renderInfo = () => render(<CardBreakdownInfo card={card} history={[] as HistoryType[]} />);
-const rowFor = (label: string) => screen.getByText(label).closest('tr') as HTMLElement;
+const rowFor = (label: string) => screen.getByText(label).parentElement as HTMLElement;
 
 describe('card page info tab', () => {
-  it('lists format legality as table rows rather than a grid of badges', () => {
-    const { container } = renderInfo();
+  it('pairs every format with its status', () => {
+    renderInfo();
 
-    expect(container.querySelectorAll('table').length).toBeGreaterThanOrEqual(2);
     expect(within(rowFor('Standard')).getByText('Not Legal')).toBeInTheDocument();
     expect(within(rowFor('Legacy')).getByText('Legal')).toBeInTheDocument();
+  });
+
+  it('stripes the legality rows without drawing them as a table', () => {
+    const { container } = renderInfo();
+
+    // Purchase and Other Printings are tables; legality is a plain striped list.
+    expect(screen.getByText('Standard').closest('table')).toBeNull();
+
+    const rows = [...container.querySelectorAll('[data-legality-row]')];
+    expect(rows).toHaveLength(12);
+    expect(rows[0].className).not.toBe(rows[1].className);
+  });
+
+  it('puts the status chip before the format it describes, so the two sit together', () => {
+    renderInfo();
+
+    const row = rowFor('Standard');
+    const chip = within(row).getByText('Not Legal');
+    const format = within(row).getByText('Standard');
+
+    expect(chip.compareDocumentPosition(format) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('lists every tracked format, split across two columns to stay compact', () => {
@@ -89,12 +109,19 @@ describe('card page info tab', () => {
 
     const divider = [...container.querySelectorAll('hr')].pop() as HTMLElement;
     const illustrator = screen.getByText(/Illustrated by/);
-    const legality = screen.getByText('Legality');
+    const firstFormat = screen.getByText('Standard');
     const after = (a: Element, b: Element) => !!(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING);
 
     // The rule has to fall between the card's own text and the tables, not above both.
     expect(after(illustrator, divider)).toBe(true);
-    expect(after(divider, legality)).toBe(true);
+    expect(after(divider, firstFormat)).toBe(true);
+  });
+
+  it('drops the Legality heading, which the status chips make obvious', () => {
+    renderInfo();
+
+    expect(screen.queryByText('Legality')).not.toBeInTheDocument();
+    expect(screen.getByText('Standard')).toBeInTheDocument();
   });
 
   it('drops the card name from the link labels, which the heading already gives', () => {

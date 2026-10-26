@@ -20,18 +20,31 @@ export interface TableProps {
   // container, so the table never introduces horizontal scroll. Off by default to keep
   // the single-line layout every existing table relies on.
   wrapCells?: boolean;
+  // When true, the table drops every rule and leans on the row striping to separate rows,
+  // with roomier cells in place of the borders that were doing the spacing.
+  borderless?: boolean;
 }
 
-const Table: React.FC<TableProps> = ({ headers, rows, hideOnMobile, headerTooltips, getRowProps, wrapCells }) => {
+const Table: React.FC<TableProps> = ({
+  headers,
+  rows,
+  hideOnMobile,
+  headerTooltips,
+  getRowProps,
+  wrapCells,
+  borderless,
+}) => {
   const hiddenSet = new Set(hideOnMobile ?? []);
   const cellHiddenClass = (header: string) => (hiddenSet.has(header) ? 'hidden md:table-cell' : '');
   const wrapClass = wrapCells ? 'whitespace-normal break-words' : 'whitespace-nowrap';
   const wrapperClass = classNames('max-w-full', { 'overflow-x-auto': !wrapCells });
+  const tableClass = classNames('w-full', { 'border border-border': !borderless });
+  const bodyCellClass = borderless ? 'p-2' : 'p-1';
 
   if (headers) {
     return (
       <div className={wrapperClass}>
-        <table className="border border-border w-full">
+        <table className={tableClass}>
           <thead className="bg-bg-active/80">
             <tr>
               {headers.map((header) => {
@@ -88,19 +101,19 @@ const Table: React.FC<TableProps> = ({ headers, rows, hideOnMobile, headerToolti
 
   return (
     <div className="overflow-x-auto max-w-full">
-      <table className="border border-border w-full">
+      <table className={tableClass}>
         <tbody>
           {rows.map((row, rowIndex) => (
             <tr
               className={classNames({
                 'bg-bg-accent/80': rowIndex % 2 === 0,
                 'bg-bg-active/80': rowIndex % 2 === 1,
-                'border-t border-border': rowIndex > 0,
+                'border-t border-border': rowIndex > 0 && !borderless,
               })}
               key={rowIndex}
             >
               {Object.values(row).map((value, index) => (
-                <td className="whitespace-nowrap p-1" key={index}>
+                <td className={classNames(wrapClass, bodyCellClass)} key={index}>
                   <Text sm>{value}</Text>
                 </td>
               ))}

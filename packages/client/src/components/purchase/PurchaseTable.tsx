@@ -18,6 +18,7 @@ interface PurchaseTableProps {
  */
 const PurchaseTable: React.FC<PurchaseTableProps> = ({ card }) => (
   <Table
+    borderless
     headers={['Vendor', 'Price']}
     rows={purchaseOptions(card).map((option) => ({
       Vendor: (

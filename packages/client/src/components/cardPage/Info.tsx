@@ -9,7 +9,6 @@ import { nameToDashedUrlComponent } from 'utils/Affiliate';
 import Button from '../base/Button';
 import { CardBody } from '../base/Card';
 import { Col, Flexbox, Row } from '../base/Layout';
-import Table from '../base/Table';
 import Text from '../base/Text';
 import Markdown from '../Markdown';
 
@@ -40,21 +39,39 @@ const LEGALITY: Record<Legality, { label: string; className: string }> = {
   restricted: { label: 'Restricted', className: 'bg-button-accent' },
 };
 
-const legalityRows = (card: CardDetails, from: number, to: number) =>
-  FORMATS.slice(from, to).map((format) => {
-    const status = LEGALITY[card.legalities[format]] ?? LEGALITY.not_legal;
+interface LegalityListProps {
+  card: CardDetails;
+  from: number;
+  to: number;
+}
 
-    return {
-      format,
-      status: (
-        <span
-          className={`block rounded px-2 py-0.5 text-center text-xs font-semibold text-button-text ${status.className}`}
+/**
+ * Striped by hand rather than through Table. The rows carry a chip and a label, not
+ * tabular data, and the chip has to lead so it sits beside the format it describes
+ * rather than at the far end of a column.
+ */
+const LegalityList: React.FC<LegalityListProps> = ({ card, from, to }) => (
+  <Flexbox direction="col">
+    {FORMATS.slice(from, to).map((format, index) => {
+      const status = LEGALITY[card.legalities[format]] ?? LEGALITY.not_legal;
+
+      return (
+        <div
+          key={format}
+          data-legality-row
+          className={`flex items-center gap-2 px-2 py-1 ${index % 2 === 0 ? 'bg-bg-accent/80' : 'bg-bg-active/80'}`}
         >
-          {status.label}
-        </span>
-      ),
-    };
-  });
+          <span
+            className={`w-20 shrink-0 rounded px-2 py-0.5 text-center text-xs font-semibold text-button-text ${status.className}`}
+          >
+            {status.label}
+          </span>
+          <Text sm>{format}</Text>
+        </div>
+      );
+    })}
+  </Flexbox>
+);
 
 const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
   const externalLinks = [
@@ -99,17 +116,14 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
         </Flexbox>
 
         <hr className="mt-4" />
-        <Text semibold lg>
-          Legality
-        </Text>
         {/* Two columns rather than one twelve-row list: a single table reads as a much
             taller block than the badge grid this replaced. */}
         <Row gutters={2}>
           <Col xs={6}>
-            <Table rows={legalityRows(card, 0, 6)} />
+            <LegalityList card={card} from={0} to={6} />
           </Col>
           <Col xs={6}>
-            <Table rows={legalityRows(card, 6, 12)} />
+            <LegalityList card={card} from={6} to={12} />
           </Col>
         </Row>
 
@@ -118,7 +132,7 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
         <Row className="pt-2" gutters={2}>
           {externalLinks.map(({ label, href }) => (
             <Col key={label} xs={12} md={4}>
-              <Button type="link" outline color="accent" block href={href} target="_blank">
+              <Button type="link" outline color="secondary" block href={href} target="_blank">
                 {label}
               </Button>
             </Col>
