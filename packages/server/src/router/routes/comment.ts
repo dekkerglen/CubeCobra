@@ -116,13 +116,8 @@ export const getHandler = async (req: Request, res: Response) => {
       'CommentPage',
       { comment },
       {
-        title: 'Comment',
-        metadata: generateMeta(
-          `Comment by ${ownerName}`,
-          description,
-          comment.image?.uri || '',
-          `${getBaseUrl()}/comment/${req.params.id}`,
-        ),
+        title: `Comment by ${ownerName}`,
+        metadata: generateMeta(description, comment.image?.uri || '', `${getBaseUrl()}/comment/${req.params.id}`),
       },
     );
   } catch (err) {

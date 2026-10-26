@@ -31,13 +31,20 @@ const renderPuzzlePage = async (req: Request, res: Response, puzzle: ManaMatrixP
     }
   }
 
-  return render(req, res, 'ManaMatrixPage', {
-    puzzle,
-    submission,
-    userStats,
-    popularity,
-    isArchive,
-  });
+  return render(
+    req,
+    res,
+    'ManaMatrixPage',
+    {
+      puzzle,
+      submission,
+      userStats,
+      popularity,
+      isArchive,
+    },
+    // Archived puzzles are dated so several open tabs stay tellable apart.
+    { title: isArchive && puzzle ? `Mana Matrix - ${puzzle.date}` : 'Mana Matrix' },
+  );
 };
 
 export const manaMatrixPageHandler = async (req: Request, res: Response) => {

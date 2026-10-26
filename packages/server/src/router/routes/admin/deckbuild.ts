@@ -65,10 +65,16 @@ const meanNonZero = (values: number[]): number => {
 };
 
 export const deckbuildHandler = async (req: Request, res: Response) => {
-  return render(req, res, 'AdminDeckbuildPage', {
-    defaultWindow: DEFAULT_WINDOW,
-    configured: !!(queueName() && dlqName() && functionName()),
-  });
+  return render(
+    req,
+    res,
+    'AdminDeckbuildPage',
+    {
+      defaultWindow: DEFAULT_WINDOW,
+      configured: !!(queueName() && dlqName() && functionName()),
+    },
+    { title: 'Bot Deckbuild - Admin' },
+  );
 };
 
 export const deckbuildMetricsHandler = async (req: Request, res: Response) => {

@@ -49,8 +49,10 @@ export const summarizeChangelist = (changelog: Partial<Changes> | undefined): st
   return parts.join(', ');
 };
 
+// og:title / twitter:title are deliberately absent: serverutils/render fills them from
+// the page title so the tab and the link preview can never disagree. A caller that needs
+// a bespoke social title can still append its own tag to the returned array.
 const generateMeta = (
-  title: string,
   description: string | undefined,
   image: string,
   url: string,
@@ -62,10 +64,6 @@ const generateMeta = (
   // callers that already ran truncateForMeta pass plain text and this is a no-op.
   const plainDescription = description ? stripMarkdown(description) : '';
   return [
-    {
-      property: 'og:title',
-      content: title,
-    },
     {
       property: 'og:description',
       content: plainDescription,
@@ -89,10 +87,6 @@ const generateMeta = (
     {
       property: 'twitter:card',
       content: 'summary_large_image',
-    },
-    {
-      property: 'twitter:title',
-      content: title,
     },
     {
       property: 'twitter:description',

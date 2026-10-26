@@ -98,7 +98,7 @@ const Feed: React.FC = () => {
       <Flexbox direction="col" gap="2">
         {feedItems.map((item, index) => (
           <React.Fragment key={item.id}>
-            <BlogPost post={item} />
+            <BlogPost post={item} showCubeImage />
             {showAds && (index + 1) % AD_INTERVAL === 0 && index < feedItems.length - 1 && (
               <Advertisment
                 placementId={`feed-banner-${Math.floor(index / AD_INTERVAL)}`}

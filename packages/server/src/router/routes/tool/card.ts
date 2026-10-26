@@ -120,7 +120,6 @@ export const getCardHandler = async (req: Request, res: Response) => {
       {
         title: `${card.name}`,
         metadata: generateMeta(
-          `${card.name} - Cube Cobra`,
           `Analytics for ${card.name} on CubeCobra`,
           card.image_normal || '',
           `${baseUrl}/tool/card/${req.params.id}`,

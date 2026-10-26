@@ -35,7 +35,6 @@ export const importFilePageHandler = async (req: Request, res: Response) => {
       {
         title: `${abbreviate(cube.name)} - Import Records`,
         metadata: generateMeta(
-          `Cube Cobra Import Records: ${cube.name}`,
           cube.brief,
           cube.image.uri,
           `${req.protocol}://${req.get('host')}/cube/records/importfile/${cube.id}`,

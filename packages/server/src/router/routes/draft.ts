@@ -38,12 +38,7 @@ const handler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - Draft`,
-        metadata: generateMeta(
-          `Cube Cobra Draft: ${cube.name}`,
-          cube.brief,
-          cube.image.uri,
-          `${baseUrl}/draft/${encodeURIComponent(req.params.id!)}`,
-        ),
+        metadata: generateMeta(cube.brief, cube.image.uri, `${baseUrl}/draft/${encodeURIComponent(req.params.id!)}`),
       },
     );
   } catch (err) {

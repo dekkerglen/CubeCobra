@@ -38,10 +38,16 @@ export const patronsHandler = async (req: Request, res: Response) => {
     const { items, lastKey } = await patronDao.getAllPatrons(undefined, PAGE_SIZE);
     const patrons = await toRows(items);
 
-    return render(req, res, 'AdminPatronsPage', {
-      patrons,
-      lastKey: lastKey ?? null,
-    });
+    return render(
+      req,
+      res,
+      'AdminPatronsPage',
+      {
+        patrons,
+        lastKey: lastKey ?? null,
+      },
+      { title: 'Patrons - Admin' },
+    );
   } catch (err) {
     return handleRouteError(req, res, err as Error, '/404');
   }

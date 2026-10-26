@@ -82,7 +82,7 @@ describe('Get Comment', () => {
       expect.anything(),
       'CommentPage',
       { comment: mockComment },
-      expect.objectContaining({ title: 'Comment' }),
+      expect.objectContaining({ title: 'Comment by Anonymous' }),
     );
 
     expect(flashMock).not.toHaveBeenCalled();

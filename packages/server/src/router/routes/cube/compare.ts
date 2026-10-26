@@ -48,7 +48,6 @@ export const compareHandler = async (req: Request, res: Response) => {
       {
         title: `Comparing ${cubeA.name} to ${cubeB.name}`,
         metadata: generateMeta(
-          'Cube Cobra Compare cubes',
           `Comparing "${cubeA.name}" To "${cubeB.name}"`,
           cubeA.image.uri,
           `${baseUrl}/cube/compare/${idA}/to/${idB}`,

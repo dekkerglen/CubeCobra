@@ -1,5 +1,5 @@
 import { cubeDao, userDao } from 'dynamo/daos';
-import { isCubeViewable } from 'serverutils/cubefn';
+import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
@@ -35,7 +35,7 @@ export const getFollowersPageHandler = async (req: Request, res: Response) => {
         followers,
         lastKey: page.lastKey,
       },
-      { title: `${cube.name} - Followers` },
+      { title: `${abbreviate(cube.name)} - Followers` },
     );
   } catch (err) {
     return handleRouteError(req, res, err as Error, `/cube/list/${req.params.id}`);

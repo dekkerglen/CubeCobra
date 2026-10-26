@@ -19,10 +19,16 @@ const stripBlogsDetails = (blogs: any[]): any[] => {
 export const blogHandler = async (req: Request, res: Response) => {
   const blogs = await blogDao.getByCube('DEVBLOG', 10);
 
-  return render(req, res, 'DevBlog', {
-    blogs: stripBlogsDetails(blogs.items),
-    lastKey: blogs.lastKey,
-  });
+  return render(
+    req,
+    res,
+    'DevBlog',
+    {
+      blogs: stripBlogsDetails(blogs.items),
+      lastKey: blogs.lastKey,
+    },
+    { title: 'Developer Blog' },
+  );
 };
 
 export const getMoreBlogsHandler = async (req: Request, res: Response) => {

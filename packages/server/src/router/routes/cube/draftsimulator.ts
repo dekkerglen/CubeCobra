@@ -29,7 +29,6 @@ const draftsimulatorHandler = async (req: Request, res: Response) => {
       {
         title: `${abbreviate(cube.name)} - Draft Simulator`,
         metadata: generateMeta(
-          `Cube Cobra Draft Simulator: ${cube.name}`,
           `Bot draft simulation and analysis for ${cube.name}`,
           cube.image.uri,
           `${baseUrl}/cube/draftsimulator/${req.params.id}`,

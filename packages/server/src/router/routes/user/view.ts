@@ -40,17 +40,23 @@ export const handler = async (req: Request, res: Response) => {
     const likedCubesCount = user.likedCubesCount ?? 0;
     const likedPackagesCount = await packageDao.countByVoter(user.id);
 
-    return render(req, res, 'UserCubePage', {
-      owner: user,
-      cubes,
-      lastKey: result.lastKey,
-      followersCount: user.followerCount ?? 0,
-      followingCount: user.followingCount ?? 0,
-      following,
-      patronLevel,
-      likedCubesCount,
-      likedPackagesCount,
-    });
+    return render(
+      req,
+      res,
+      'UserCubePage',
+      {
+        owner: user,
+        cubes,
+        lastKey: result.lastKey,
+        followersCount: user.followerCount ?? 0,
+        followingCount: user.followingCount ?? 0,
+        following,
+        patronLevel,
+        likedCubesCount,
+        likedPackagesCount,
+      },
+      { title: `${user.username}'s Cubes` },
+    );
   } catch (err) {
     return handleRouteError(req, res, err, '/404');
   }

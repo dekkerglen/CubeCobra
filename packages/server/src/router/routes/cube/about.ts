@@ -110,12 +110,7 @@ export const aboutHandler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - About`,
-        metadata: generateMeta(
-          `Cube Cobra: ${cube.name}`,
-          cube.brief,
-          cube.image.uri,
-          `${baseUrl}/cube/about/${req.params.id}`,
-        ),
+        metadata: generateMeta(cube.brief, cube.image.uri, `${baseUrl}/cube/about/${req.params.id}`),
         noindex:
           cube.visibility === CUBE_VISIBILITY.PRIVATE ||
           cube.visibility === CUBE_VISIBILITY.UNLISTED ||

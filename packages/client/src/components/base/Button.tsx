@@ -37,14 +37,17 @@ const ButtonLink: React.FC<ButtonLinkProps> = ({
     return () => window.removeEventListener('pageshow', handlePageShow);
   }, []);
 
+  // Targets other than the current browsing context leave this page mounted, so a spinner would never clear
+  const opensInCurrentTab = ['_self', '_parent', '_top'].includes(target);
+
   const handleClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     if (loading) {
       e.preventDefault(); // Prevent navigation if already loading
       return;
     }
 
-    // Don't show spinner when opening in a new tab (modifier keys)
-    if (e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) {
+    // Don't show spinner when opening in a new tab (modifier keys or an explicit target)
+    if (!opensInCurrentTab || e.metaKey || e.ctrlKey || e.shiftKey || e.button !== 0) {
       onClick?.(e);
       return;
     }

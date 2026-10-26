@@ -852,13 +852,8 @@ export const getDeckHandler = async (req: Request, res: Response) => {
         draft: stripped,
       },
       {
-        title: `Draft deck of ${abbreviate(cube.name)}`,
-        metadata: generateMeta(
-          `Cube Cobra Deck: ${cube.name}`,
-          cube.brief,
-          cube.image.uri,
-          `${baseUrl}/cube/deck/${req.params.id}`,
-        ),
+        title: `${abbreviate(cube.name)} - Draft Deck`,
+        metadata: generateMeta(cube.brief, cube.image.uri, `${baseUrl}/cube/deck/${req.params.id}`),
       },
     );
   } catch (err) {

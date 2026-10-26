@@ -103,6 +103,7 @@ describe('getHandler', () => {
       expect.anything(),
       'SearchPage',
       expect.objectContaining({ query: 'demo' }),
+      expect.objectContaining({ title: 'Search Cubes: demo' }),
     );
   });
 });

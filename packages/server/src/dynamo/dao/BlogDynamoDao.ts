@@ -1,7 +1,7 @@
 import { DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import BlogPost, { UnhydratedBlogPost } from '@utils/datatypes/BlogPost';
 import { Changes } from '@utils/datatypes/Card';
-import CubeType from '@utils/datatypes/Cube';
+import CubeType, { CubeImage } from '@utils/datatypes/Cube';
 import UserType from '@utils/datatypes/User';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -89,6 +89,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
   protected async hydrateItem(item: UnhydratedBlogPost): Promise<BlogPost> {
     let cubeName = 'Unknown';
     let cubeVisibility: string | undefined;
+    let cubeImage: CubeImage | undefined;
 
     const owner = await this.userDao.getById(item.owner);
 
@@ -97,16 +98,17 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
       if (cube) {
         cubeName = cube.name;
         cubeVisibility = cube.visibility;
+        cubeImage = cube.image;
       }
     }
 
     if (!item.changelist) {
-      return this.createHydratedBlog(item, owner!, cubeName, cubeVisibility);
+      return this.createHydratedBlog(item, owner!, cubeName, cubeVisibility, undefined, cubeImage);
     }
 
     const changelog = await this.changelogDao.getChangelog(item.cube, item.changelist);
 
-    return this.createHydratedBlog(item, owner!, cubeName, cubeVisibility, changelog);
+    return this.createHydratedBlog(item, owner!, cubeName, cubeVisibility, changelog, cubeImage);
   }
 
   /**
@@ -144,12 +146,14 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
       const owner = owners.find((o: UserType) => o.id === item.owner);
       let cubeName = 'Unknown';
       let cubeVisibility: string | undefined;
+      let cubeImage: CubeImage | undefined;
 
       if (item.cube && item.cube !== 'DEVBLOG') {
         const cube = cubes.find((c: CubeType) => c.id === item.cube);
         if (cube) {
           cubeName = cube.name;
           cubeVisibility = cube.visibility;
+          cubeImage = cube.image;
         }
       }
 
@@ -158,7 +162,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
         changelog = changelogMap.get(item.changelist);
       }
 
-      return this.createHydratedBlog(item, owner!, cubeName, cubeVisibility, changelog);
+      return this.createHydratedBlog(item, owner!, cubeName, cubeVisibility, changelog, cubeImage);
     });
   }
 
@@ -171,6 +175,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
     cubeName: string,
     cubeVisibility?: string,
     changelog?: Partial<Changes>,
+    cubeImage?: CubeImage,
   ): BlogPost {
     return {
       id: document.id!,
@@ -182,6 +187,7 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
       title: document.title,
       owner: owner,
       cubeName: cubeName,
+      cubeImage: cubeImage,
       cubeVisibility: cubeVisibility,
       changelist: document.changelist, // Preserve the changelog ID
       Changelog: changelog,

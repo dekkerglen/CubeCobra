@@ -59,9 +59,8 @@ export const contributePageHandler = async (req: Request, res: Response) => {
         suggestedName: user?.username ? `@${user.username}` : '',
       },
       {
-        title: `${abbreviate(cube.name)} - Add your deck`,
+        title: `${abbreviate(cube.name)} - Add Your Deck`,
         metadata: generateMeta(
-          `Cube Cobra: Add your deck to ${record.name}`,
           cube.brief,
           cube.image.uri,
           `${req.protocol}://${req.get('host')}/cube/records/contribute/${record.id}`,

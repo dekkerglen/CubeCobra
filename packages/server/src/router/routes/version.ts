@@ -4,11 +4,17 @@ import { render } from 'serverutils/render';
 import { Request, Response } from '../../types/express';
 
 const versionHandler = async (req: Request, res: Response) => {
-  return render(req, res, 'VersionPage', {
-    version: process.env.CUBECOBRA_VERSION,
-    host: process.env.DOMAIN,
-    gitCommit: GIT_COMMIT,
-  });
+  return render(
+    req,
+    res,
+    'VersionPage',
+    {
+      version: process.env.CUBECOBRA_VERSION,
+      host: process.env.DOMAIN,
+      gitCommit: GIT_COMMIT,
+    },
+    { title: 'Version' },
+  );
 };
 
 export const routes = [

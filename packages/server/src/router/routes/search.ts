@@ -531,12 +531,19 @@ export const getHandler = async (req: Request, res: Response) => {
     req.flash('danger', result.error);
   }
 
-  return render(req, res, 'SearchPage', {
-    cubes: result.cubes,
-    lastKey: result.lastKey,
-    parsedQuery: result.parsedQuery,
-    query: query,
-  });
+  return render(
+    req,
+    res,
+    'SearchPage',
+    {
+      cubes: result.cubes,
+      lastKey: result.lastKey,
+      parsedQuery: result.parsedQuery,
+      query: query,
+    },
+    // The query is part of the title so several open searches stay tellable apart.
+    { title: query ? `Search Cubes: ${query}` : 'Search Cubes' },
+  );
 };
 
 export const getmoresearchitemsHandler = async (req: Request, res: Response) => {

@@ -338,11 +338,17 @@ export const getIndexHandler = async (req: Request, res: Response) => {
       }
     }
 
-    return render(req, res, 'PackagesPage', {
-      items: result.packages,
-      lastKey: result.lastKey,
-      parsedQuery,
-    });
+    return render(
+      req,
+      res,
+      'PackagesPage',
+      {
+        items: result.packages,
+        lastKey: result.lastKey,
+        parsedQuery,
+      },
+      { title: 'Card Packages' },
+    );
   } catch (err) {
     return handleRouteError(req, res, err, '/404');
   }
@@ -667,9 +673,7 @@ export const getPackageHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/packages');
     }
 
-    return render(req, res, 'PackagePage', {
-      pack,
-    });
+    return render(req, res, 'PackagePage', { pack }, { title: pack.title || 'Card Package' });
   } catch (err) {
     return handleRouteError(req, res, err, '/404');
   }

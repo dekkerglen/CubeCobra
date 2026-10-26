@@ -104,12 +104,7 @@ export const settingsHandler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - Settings`,
-        metadata: generateMeta(
-          `Cube Cobra: ${cube.name}`,
-          cube.brief,
-          cube.image.uri,
-          `${baseUrl}/cube/settings/${req.params.id}`,
-        ),
+        metadata: generateMeta(cube.brief, cube.image.uri, `${baseUrl}/cube/settings/${req.params.id}`),
       },
     );
   } catch (err) {

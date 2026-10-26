@@ -17,9 +17,15 @@ const queueHandler = async (req: Request, res: Response) => {
   const cubes = await cubeDao.batchGet(featured.map((f: any) => f.cube));
   const sortedCubes = featured.map((f: any) => cubes.find((c: any) => c.id === f.cube)).filter((c: any) => c);
 
-  return render(req, res, 'FeaturedQueuePage', {
-    cubes: sortedCubes,
-  });
+  return render(
+    req,
+    res,
+    'FeaturedQueuePage',
+    {
+      cubes: sortedCubes,
+    },
+    { title: 'Featured Queue' },
+  );
 };
 
 export const routes = [

@@ -62,7 +62,7 @@ export const handler = async (req: Request, res: Response) => {
         likedPackagesCount,
       },
       {
-        title: user.username,
+        title: `${user.username}'s Blog Posts`,
       },
     );
   } catch (err) {

@@ -4,6 +4,15 @@ const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
 
 const relativeFormatter = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
 const absoluteFormatter = new Intl.DateTimeFormat('en', { year: 'numeric', month: 'short', day: 'numeric' });
+const fullFormatter = new Intl.DateTimeFormat('en', {
+  weekday: 'long',
+  year: 'numeric',
+  month: 'long',
+  day: 'numeric',
+  hour: 'numeric',
+  minute: '2-digit',
+  timeZoneName: 'short',
+});
 
 function formatRelative(diffMs: number): string {
   const diffDays = Math.round(diffMs / (24 * 60 * 60 * 1000));
@@ -36,7 +45,11 @@ const Datetime: React.FC<DatetimeProps> = ({ date }) => {
   const display = isRecent ? formatRelative(diffMs) : absoluteFormatter.format(d);
   const isoString = d.toISOString();
 
-  return <time dateTime={isoString}>{display}</time>;
+  return (
+    <time dateTime={isoString} title={fullFormatter.format(d)}>
+      {display}
+    </time>
+  );
 };
 
 export default Datetime;
