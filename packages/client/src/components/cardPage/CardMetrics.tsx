@@ -140,6 +140,12 @@ interface MetricSectionProps {
   children: React.ReactNode;
 }
 
+// The line fades in from the left so it never competes with the figures stacked over it.
+// The oldest history goes, which is the part the text covered anyway; the full chart is a
+// tab away. Repeated for -webkit- so Safari honours it.
+const TREND_FADE = 'linear-gradient(to right, transparent 10%, black 55%)';
+const TREND_MASK = { maskImage: TREND_FADE, WebkitMaskImage: TREND_FADE };
+
 /**
  * One metric as a single band: its name, value and detail stacked at the left with the
  * trend line running behind them, and the trend chips held off to the right. The line
@@ -152,13 +158,20 @@ const MetricSection: React.FC<MetricSectionProps> = ({ name, value, detail, seri
         <Sparkline
           values={series}
           title={`${name} over time`}
-          className={`absolute inset-0 h-full w-full opacity-70 ${DIRECTION_COLOR[trendDirection]}`}
+          className={`absolute inset-0 h-full w-full opacity-80 ${DIRECTION_COLOR[trendDirection]}`}
+          style={TREND_MASK}
         />
       )}
       <div className="relative leading-tight">
         <div className="text-xs uppercase tracking-wide text-text-secondary">{name}</div>
         <div className="text-lg font-bold text-text">{value}</div>
-        {detail && <div className="text-xs text-text-secondary">{detail}</div>}
+        {/* Always rendered, so a metric without a detail still occupies the same height as
+            one that has it. Hidden rather than empty, so it is skipped when read.
+            text-text/75 rather than text-text-secondary, which is 128/128/128 in every
+            theme and only reaches 2.06:1 on this panel. */}
+        <div className={`text-xs text-text/75 ${detail ? '' : 'invisible'}`} aria-hidden={!detail}>
+          {detail ?? '\u00a0'}
+        </div>
       </div>
     </div>
     {series.length > 1 && <div className={`flex shrink-0 flex-col items-end gap-1 ${CHIP_COLUMN}`}>{children}</div>}

@@ -9,13 +9,14 @@ interface SparklineProps {
   values: number[];
   className?: string;
   title?: string;
+  style?: React.CSSProperties;
 }
 
 /**
  * A bare trend line, normalised to its own range so the shape is readable whatever the
  * units. Stroked in currentColor, so callers set the direction colour with a text class.
  */
-const Sparkline: React.FC<SparklineProps> = ({ values, className, title }) => {
+const Sparkline: React.FC<SparklineProps> = ({ values, className, title, style }) => {
   if (values.length < 2) {
     return null;
   }
@@ -38,6 +39,7 @@ const Sparkline: React.FC<SparklineProps> = ({ values, className, title }) => {
   return (
     <svg
       className={className}
+      style={style}
       viewBox={`0 0 ${WIDTH} ${HEIGHT}`}
       preserveAspectRatio="none"
       role="img"

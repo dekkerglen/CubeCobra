@@ -205,6 +205,15 @@ describe('CardMetrics', () => {
     expect(chip('Elo', '12w')).toHaveTextContent('N/A');
   });
 
+  it('reserves the detail line on every metric so the sections match in height', () => {
+    const { container } = render(<CardMetrics card={cardWith()} history={buildHistory(60, 1265)} />);
+
+    const stacks = [...container.querySelectorAll('section[aria-label] > div:first-child > div')];
+
+    expect(stacks).toHaveLength(2);
+    expect(stacks[0].children).toHaveLength(stacks[1].children.length);
+  });
+
   it('keeps both metrics on the same number of chips so their trend lines match', () => {
     const { container } = render(<CardMetrics card={cardWith()} history={buildHistory(60, 1265)} />);
 
