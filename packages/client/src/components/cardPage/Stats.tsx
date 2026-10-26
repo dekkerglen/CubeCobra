@@ -62,6 +62,30 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
       >
         Add to Cube
       </AddModal>
+      {/* Where this card already appears. The name is the page heading, so the buttons
+          do not repeat it. */}
+      <Flexbox direction="row" gap="2">
+        <Button
+          type="link"
+          outline
+          color="accent"
+          block
+          href={`/search/?q=${encodeURIComponent(`card:"${card.name}"`)}`}
+          target="_blank"
+        >
+          Cubes
+        </Button>
+        <Button
+          type="link"
+          outline
+          color="accent"
+          block
+          href={`/packages?q=${encodeURIComponent(`card:"${card.name}"`)}`}
+          target="_blank"
+        >
+          Packages
+        </Button>
+      </Flexbox>
       <CardMetrics card={card} history={history} />
       <CardIdBadge id={card.scryfall_id} />
     </Flexbox>

@@ -3,9 +3,10 @@ import React from 'react';
 import { detailsToCard } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
 
-import { Card, CardBody } from '../base/Card';
+import { Card, CardBody, CardFooter, CardHeader } from '../base/Card';
 import Link from '../base/Link';
 import PagedTable from '../base/PagedTable';
+import Text from '../base/Text';
 import useCubeTrayDrag from '../cubetray/useCubeTrayDrag';
 import withAutocard from '../WithAutocard';
 
@@ -61,6 +62,11 @@ const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
 
   return (
     <Card>
+      <CardHeader>
+        <Text semibold lg>
+          Other Printings
+        </Text>
+      </CardHeader>
       {filteredVersions.length > 0 ? (
         <PagedTable
           headers={['Version', 'USD', 'USD Foil', 'EUR', 'TIX']}
@@ -80,9 +86,16 @@ const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
         />
       ) : (
         <CardBody>
-          <p>No other versions</p>
+          <p>No other printings</p>
         </CardBody>
       )}
+      {/* The full search lives at the end of the list it extends, rather than as a
+          button competing with the card's other links. */}
+      <CardFooter>
+        <Link href={`/tool/searchcards?f=name%3A"${card.name}"&p=0&di=printings`} target="_blank">
+          View all printings
+        </Link>
+      </CardFooter>
     </Card>
   );
 };

@@ -31,10 +31,7 @@ import { getTagColorClass, getTagColorStyle } from '@utils/Util';
 
 import ImageFallback, { ImageFallbackProps } from 'components/ImageFallback';
 import AddToCubeModal from 'components/modals/AddToCubeModal';
-import CardKingdomButton from 'components/purchase/CardKingdomButton';
-import CardMarketButton from 'components/purchase/CardMarketButton';
-import ManaPoolButton from 'components/purchase/ManaPoolButton';
-import TCGPlayerButton from 'components/purchase/TCGPlayerButton';
+import VendorButton from 'components/purchase/VendorButton';
 import withModal from 'components/WithModal';
 
 import { cardImageBackUrl, cardImageUrl } from '../../../../utils/src/cardutil';
@@ -355,10 +352,10 @@ const CardModal: React.FC<CardModalProps> = ({
                     <Text md semibold>
                       Purchase
                     </Text>
-                    <TCGPlayerButton card={card.details} />
-                    <CardKingdomButton card={card.details} />
-                    <ManaPoolButton card={card.details} />
-                    <CardMarketButton card={card.details} />
+                    <VendorButton card={card.details} optionId="tcgplayer" />
+                    <VendorButton card={card.details} optionId="cardkingdom" />
+                    <VendorButton card={card.details} optionId="manapool" />
+                    <VendorButton card={card.details} optionId="cardmarket" />
                   </>
                 )}
               </Flexbox>

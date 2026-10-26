@@ -24,18 +24,21 @@ const card: CardDetails = {
 };
 
 describe('card page info tab links', () => {
-  it.each([['View on TCGPlayer'], ['View on Card Kingdom']])('leaves %s to the Purchase section', (label) => {
+  it.each([
+    ['View on TCGPlayer'],
+    ['View on Card Kingdom'],
+    ['View all Printings'],
+    ['Cubes with Soltari Foot Soldier'],
+    ['Packages with Soltari Foot Soldier'],
+  ])('no longer carries %s, which now lives nearer what it refers to', (label) => {
     render(<CardBreakdownInfo card={card} history={[] as HistoryType[]} />);
 
     expect(screen.queryByText(label)).not.toBeInTheDocument();
   });
 
-  it.each([['View on Scryfall'], ['View on EDHRec'], ['View all Printings']])(
-    'keeps %s, which nothing else duplicates',
-    (label) => {
-      render(<CardBreakdownInfo card={card} history={[] as HistoryType[]} />);
+  it.each([['View on Scryfall'], ['View on EDHRec']])('keeps %s, which nothing else duplicates', (label) => {
+    render(<CardBreakdownInfo card={card} history={[] as HistoryType[]} />);
 
-      expect(screen.getByText(label)).toBeInTheDocument();
-    },
-  );
+    expect(screen.getByText(label)).toBeInTheDocument();
+  });
 });

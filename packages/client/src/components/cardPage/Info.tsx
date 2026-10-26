@@ -69,42 +69,6 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
         <hr />
         <Row>
           <Col xs={12} md={6}>
-            <Button
-              type="link"
-              outline
-              color="accent"
-              block
-              href={`/search/?q=${encodeURIComponent(`card:"${card.name}"`)}`}
-              target="_blank"
-            >
-              {`Cubes with ${card.name}`}
-            </Button>
-          </Col>
-          <Col xs={12} md={6}>
-            <Button
-              type="link"
-              outline
-              color="accent"
-              block
-              href={`/packages?q=${encodeURIComponent(`card:"${card.name}"`)}`}
-              target="_blank"
-            >
-              {`Packages with ${card.name}`}
-            </Button>
-          </Col>
-          <Col xs={12} md={6}>
-            <Button
-              type="link"
-              outline
-              color="accent"
-              block
-              href={`/tool/searchcards?f=name%3A"${card.name}"&p=0&di=printings`}
-              target="_blank"
-            >
-              View all Printings
-            </Button>
-          </Col>
-          <Col xs={12} md={6}>
             <Button type="link" outline color="accent" block href={card.scryfall_uri} target="_blank">
               View on Scryfall
             </Button>
