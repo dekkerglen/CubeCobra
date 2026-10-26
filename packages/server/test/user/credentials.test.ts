@@ -305,7 +305,13 @@ describe('password reset link', () => {
 
     await call(resetPageHandler).withFlash(jest.fn()).withParams({ id: 'reset-1' }).send();
 
-    expect(render).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'PasswordResetPage', { code: 'reset-1' });
+    expect(render).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      'PasswordResetPage',
+      { code: 'reset-1' },
+      { title: 'Reset Password' },
+    );
   });
 
   it('applies the shared password policy', async () => {

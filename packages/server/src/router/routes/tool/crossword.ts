@@ -31,15 +31,22 @@ const renderPuzzlePage = async (req: Request, res: Response, puzzle: CrosswordPu
     }
   }
 
-  return render(req, res, 'CrosswordPage', {
-    // toBoard is the answer boundary: shape, numbering and clues, no letters.
-    board: puzzle ? toBoard(puzzle) : null,
-    submission,
-    userStats,
-    elapsedMs,
-    answers,
-    isArchive,
-  });
+  return render(
+    req,
+    res,
+    'CrosswordPage',
+    {
+      // toBoard is the answer boundary: shape, numbering and clues, no letters.
+      board: puzzle ? toBoard(puzzle) : null,
+      submission,
+      userStats,
+      elapsedMs,
+      answers,
+      isArchive,
+    },
+    // Archived puzzles are dated so several open tabs stay tellable apart.
+    { title: isArchive && puzzle ? `Crossword - ${puzzle.date}` : 'Crossword' },
+  );
 };
 
 export const crosswordPageHandler = async (req: Request, res: Response) => {

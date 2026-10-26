@@ -47,9 +47,15 @@ const sourceLocation = (e: Record<string, string>): string | undefined => {
 };
 
 export const clientErrorsHandler = async (req: Request, res: Response) => {
-  return render(req, res, 'AdminClientErrorsPage', {
-    defaultWindow: DEFAULT_WINDOW,
-  });
+  return render(
+    req,
+    res,
+    'AdminClientErrorsPage',
+    {
+      defaultWindow: DEFAULT_WINDOW,
+    },
+    { title: 'Client Errors - Admin' },
+  );
 };
 
 export const clientErrorsQueryHandler = async (req: Request, res: Response) => {

@@ -145,11 +145,17 @@ const runDistribution = async (field: string, startTimeMs: number, endTimeMs: nu
 };
 
 export const performanceHandler = async (req: Request, res: Response) => {
-  return render(req, res, 'AdminPerformancePage', {
-    defaultWindow: DEFAULT_WINDOW,
-    defaultMetric: 'hits',
-    metrics: Object.entries(METRICS).map(([key, def]) => ({ key, label: def.label, unit: def.unit })),
-  });
+  return render(
+    req,
+    res,
+    'AdminPerformancePage',
+    {
+      defaultWindow: DEFAULT_WINDOW,
+      defaultMetric: 'hits',
+      metrics: Object.entries(METRICS).map(([key, def]) => ({ key, label: def.label, unit: def.unit })),
+    },
+    { title: 'Performance - Admin' },
+  );
 };
 
 export const performanceQueryHandler = async (req: Request, res: Response) => {

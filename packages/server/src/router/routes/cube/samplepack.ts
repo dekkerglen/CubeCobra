@@ -74,7 +74,6 @@ export const samplePackHandler = async (req: Request, res: Response) => {
       {
         title: `${abbreviate(cube.name)} - ${isBalanced ? 'Balanced ' : ''}Sample Pack`,
         metadata: generateMeta(
-          `Cube Cobra ${isBalanced ? 'Balanced ' : ''}Sample Pack`,
           `A ${isBalanced ? 'balanced ' : ''}sample pack from ${cube.name}`,
           `${baseUrl}/cube/samplepackimage/${req.params.id}/${pack.seed}.png${queryString}`,
           `${baseUrl}/cube/samplepack/${req.params.id}/${pack.seed}${queryString}`,

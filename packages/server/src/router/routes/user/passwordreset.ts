@@ -48,13 +48,13 @@ export const getHandler = async (req: Request, res: Response) => {
     req.flash('danger', 'Password recovery link expired');
     return redirect(req, res, '/');
   }
-  return render(req, res, 'PasswordResetPage', { code: req.params.id });
+  return render(req, res, 'PasswordResetPage', { code: req.params.id }, { title: 'Reset Password' });
 };
 
 export const postHandler = async (req: Request, res: Response) => {
   try {
     if (!req.validated) {
-      return render(req, res, 'PasswordResetPage', { code: req.body.code });
+      return render(req, res, 'PasswordResetPage', { code: req.body.code }, { title: 'Reset Password' });
     }
 
     const passwordreset = typeof req.body.code === 'string' ? await passwordResetDao.getById(req.body.code) : undefined;
@@ -71,7 +71,7 @@ export const postHandler = async (req: Request, res: Response) => {
 
     if (!user) {
       req.flash('danger', 'User not found');
-      return render(req, res, 'PasswordResetPage', { code: req.body.code });
+      return render(req, res, 'PasswordResetPage', { code: req.body.code }, { title: 'Reset Password' });
     }
 
     if (isSuperseded(passwordreset, user.sessionVersion)) {

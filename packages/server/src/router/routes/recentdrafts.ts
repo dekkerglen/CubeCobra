@@ -46,10 +46,16 @@ const getRecentDraftedCubes = async (lastKey?: string) => {
 const recentdraftsHandler = async (req: Request, res: Response) => {
   const result = await getRecentDraftedCubes();
 
-  return render(req, res, 'RecentDraftsPage', {
-    cubes: result.cubes,
-    lastKey: result.lastKey,
-  });
+  return render(
+    req,
+    res,
+    'RecentDraftsPage',
+    {
+      cubes: result.cubes,
+      lastKey: result.lastKey,
+    },
+    { title: 'Recent Drafts' },
+  );
 };
 
 const getmoreHandler = async (req: Request, res: Response) => {

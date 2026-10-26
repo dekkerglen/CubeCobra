@@ -22,13 +22,13 @@ const addressLimiter = formLimiter(HOUR_MS, 3, '/user/lostpassword', emailReques
 const ipLimiter = formLimiter(HOUR_MS, 10, '/user/lostpassword');
 
 export const getHandler = (req: Request, res: Response) => {
-  return render(req, res, 'LostPasswordPage');
+  return render(req, res, 'LostPasswordPage', {}, { title: 'Lost Password' });
 };
 
 export const postHandler = async (req: Request, res: Response) => {
   try {
     if (!req.validated) {
-      return render(req, res, 'LostPasswordPage');
+      return render(req, res, 'LostPasswordPage', {}, { title: 'Lost Password' });
     }
     const recoveryEmail = req.body.email.toLowerCase();
 

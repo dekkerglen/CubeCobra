@@ -41,9 +41,9 @@ const readPodcastFeed = async (req: Request, rss: unknown) => {
 export const applicationHandler = async (req: Request, res: Response) => {
   if (!req.user) {
     req.flash('danger', 'Please log in to apply to be a content creator partner.');
-    return render(req, res, 'ContactPage');
+    return render(req, res, 'ContactPage', {}, { title: 'Contact' });
   }
-  return render(req, res, 'ApplicationPage');
+  return render(req, res, 'ApplicationPage', {}, { title: 'Content Creator Application' });
 };
 
 // POST /content/submitapplication
@@ -51,7 +51,7 @@ export const submitApplicationHandler = async (req: Request, res: Response) => {
   try {
     if (!req.user) {
       req.flash('danger', 'Please log in to apply to be a content creator partner.');
-      return render(req, res, 'ContactPage');
+      return render(req, res, 'ContactPage', {}, { title: 'Contact' });
     }
 
     // Prevent duplicate active applications by this user
@@ -61,7 +61,7 @@ export const submitApplicationHandler = async (req: Request, res: Response) => {
     );
     if (alreadyReported) {
       req.flash('success', 'Your application has been submitted. We will reach out via email when a decision is made.');
-      return render(req, res, 'ApplicationPage');
+      return render(req, res, 'ApplicationPage', {}, { title: 'Content Creator Application' });
     }
 
     const application = {
@@ -73,10 +73,10 @@ export const submitApplicationHandler = async (req: Request, res: Response) => {
     await noticeDao.put(application);
 
     req.flash('success', 'Your application has been submitted. We will reach out via email when a decision is made.');
-    return render(req, res, 'ApplicationPage');
+    return render(req, res, 'ApplicationPage', {}, { title: 'Content Creator Application' });
   } catch {
     req.flash('danger', 'Please log in to apply to be a content creator partner.');
-    return render(req, res, 'ApplicationPage');
+    return render(req, res, 'ApplicationPage', {}, { title: 'Content Creator Application' });
   }
 };
 
@@ -89,7 +89,7 @@ export const creatorsHandler = async (req: Request, res: Response) => {
   const articles = await articleDao.queryByOwner(req.user.id);
   const videos = await videoDao.queryByOwner(req.user.id);
   const podcasts = await podcastDao.queryByOwner(req.user.id);
-  return render(req, res, 'CreatorsPage', { articles, videos, podcasts });
+  return render(req, res, 'CreatorsPage', { articles, videos, podcasts }, { title: 'Content Creator Dashboard' });
 };
 
 // GET /content/browse
@@ -115,10 +115,16 @@ export const browseHandler = async (req: Request, res: Response) => {
     episode: episodesResult.lastKey,
   };
 
-  return render(req, res, 'BrowseContentPage', {
-    content: allContent,
-    lastKey,
-  });
+  return render(
+    req,
+    res,
+    'BrowseContentPage',
+    {
+      content: allContent,
+      lastKey,
+    },
+    { title: 'Browse Content' },
+  );
 };
 
 // POST /content/getmore
@@ -162,7 +168,7 @@ export const getMoreHandler = async (req: Request, res: Response) => {
 export const articlesHandler = async (req: Request, res: Response) => {
   const content = await articleDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 24);
 
-  return render(req, res, 'ArticlesPage', { articles: content.items, lastKey: content.lastKey });
+  return render(req, res, 'ArticlesPage', { articles: content.items, lastKey: content.lastKey }, { title: 'Articles' });
 };
 
 // POST /content/getmorearticles
@@ -181,7 +187,7 @@ export const getMoreArticlesHandler = async (req: Request, res: Response) => {
 export const videosHandler = async (req: Request, res: Response) => {
   const content = await videoDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 24);
 
-  return render(req, res, 'VideosPage', { videos: content.items, lastKey: content.lastKey });
+  return render(req, res, 'VideosPage', { videos: content.items, lastKey: content.lastKey }, { title: 'Videos' });
 };
 
 // POST /content/getmorevideos
@@ -202,11 +208,17 @@ export const podcastsHandler = async (req: Request, res: Response) => {
   const content = await episodeDao.queryByStatus(ContentStatus.PUBLISHED, undefined, 24);
   const podcasts = await podcastDao.queryByStatus(ContentStatus.PUBLISHED);
 
-  return render(req, res, 'PodcastsPage', {
-    episodes: content.items,
-    podcasts: podcasts.items,
-    lastKey: content.lastKey,
-  });
+  return render(
+    req,
+    res,
+    'PodcastsPage',
+    {
+      episodes: content.items,
+      podcasts: podcasts.items,
+      lastKey: content.lastKey,
+    },
+    { title: 'Podcasts' },
+  );
 };
 
 // POST /content/getmorepodcasts
@@ -271,7 +283,6 @@ export const articleHandler = async (req: Request, res: Response) => {
     {
       title: article.title || 'Article',
       metadata: generateMeta(
-        article.title || 'Article',
         article.short || 'An article posted to Cube Cobra',
         article.imageName || '',
         `${baseUrl}/content/article/${req.params.id}`,
@@ -307,7 +318,6 @@ export const podcastHandler = async (req: Request, res: Response) => {
     {
       title: podcast.title || 'Podcast',
       metadata: generateMeta(
-        podcast.title || 'Podcast',
         `Listen to ${podcast.title || 'this podcast'} on Cube Cobra!`,
         podcast.imageName || '',
         `${baseUrl}/content/podcast/${req.params.id}`,
@@ -339,7 +349,6 @@ export const episodeHandler = async (req: Request, res: Response) => {
     {
       title: episode.title || 'Episode',
       metadata: generateMeta(
-        episode.title || 'Episode',
         `Listen to ${episode.title || 'this episode'} on Cube Cobra!`,
         episode.imageName || '',
         `${baseUrl}/content/episode/${req.params.id}`,
@@ -371,7 +380,6 @@ export const videoHandler = async (req: Request, res: Response) => {
     {
       title: video.title || 'Video',
       metadata: generateMeta(
-        video.title || 'Video',
         video.short || 'A video posted to Cube Cobra',
         video.imageName || '',
         `${baseUrl}/content/video/${req.params.id}`,
@@ -409,7 +417,7 @@ export const articleEditHandler = async (req: Request, res: Response) => {
     return redirect(req, res, `/content/article/${article.id}`);
   }
 
-  return render(req, res, 'EditArticlePage', { article });
+  return render(req, res, 'EditArticlePage', { article }, { title: 'Edit Article' });
 };
 
 // GET /content/podcast/edit/:id
@@ -441,7 +449,7 @@ export const podcastEditHandler = async (req: Request, res: Response) => {
     return redirect(req, res, `/content/podcast/${podcast.id}`);
   }
 
-  return render(req, res, 'EditPodcastPage', { podcast });
+  return render(req, res, 'EditPodcastPage', { podcast }, { title: 'Edit Podcast' });
 };
 
 // POST /content/podcast/update/:id
@@ -516,7 +524,7 @@ export const videoEditHandler = async (req: Request, res: Response) => {
     return redirect(req, res, `/content/video/${video.id}`);
   }
 
-  return render(req, res, 'EditVideoPage', { video });
+  return render(req, res, 'EditVideoPage', { video }, { title: 'Edit Video' });
 };
 
 // POST /content/editarticle

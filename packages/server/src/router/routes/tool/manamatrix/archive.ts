@@ -8,11 +8,17 @@ export const getArchiveHandler = async (req: Request, res: Response) => {
     const limit = 30;
     const result = await manaMatrixPuzzleDao.getHistory(undefined, limit);
 
-    return render(req, res, 'ManaMatrixArchivePage', {
-      history: result.items,
-      hasMore: !!result.lastKey,
-      lastKey: result.lastKey ? JSON.stringify(result.lastKey) : null,
-    });
+    return render(
+      req,
+      res,
+      'ManaMatrixArchivePage',
+      {
+        history: result.items,
+        hasMore: !!result.lastKey,
+        lastKey: result.lastKey ? JSON.stringify(result.lastKey) : null,
+      },
+      { title: 'Mana Matrix Archive' },
+    );
   } catch (err) {
     const error = err as Error;
     req.logger.error('Error loading ManaMatrix archive page:', error);

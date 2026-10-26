@@ -17,7 +17,7 @@ export const getSearchCardsHandler = async (req: Request, res: Response) =>
     'CardSearchPage',
     {},
     {
-      title: 'Search cards',
+      title: 'Search Cards',
     },
   );
 

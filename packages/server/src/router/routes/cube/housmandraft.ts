@@ -39,12 +39,7 @@ export const housmanDraftHandler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - Housman Draft`,
-        metadata: generateMeta(
-          `Cube Cobra Housman Draft: ${cube.name}`,
-          cube.brief,
-          cube.image.uri,
-          `${baseUrl}/cube/housmandraft/${req.params.id}`,
-        ),
+        metadata: generateMeta(cube.brief, cube.image.uri, `${baseUrl}/cube/housmandraft/${req.params.id}`),
       },
     );
   } catch (err) {

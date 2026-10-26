@@ -66,12 +66,18 @@ const dashboardHandler = async (req: Request, res: Response) => {
     const collaboratingCubes = collaboratingCubeIds.length > 0 ? await cubeDao.batchGet(collaboratingCubeIds) : [];
     const cubes = [...pinnedCubes, ...userCubes.items.filter((cube) => !pinnedIds.has(cube.id))];
 
-    return render(req, res, 'DashboardPage', {
-      featured,
-      dailyGame,
-      collaboratingCubes,
-      cubes,
-    });
+    return render(
+      req,
+      res,
+      'DashboardPage',
+      {
+        featured,
+        dailyGame,
+        collaboratingCubes,
+        cubes,
+      },
+      { title: 'Dashboard' },
+    );
   } catch (err) {
     return handleRouteError(req, res, err, '/landing');
   }

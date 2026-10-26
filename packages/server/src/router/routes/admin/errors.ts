@@ -12,9 +12,15 @@ const DEFAULT_WINDOW = 1440;
 const MAX_ROWS = 200;
 
 export const errorsHandler = async (req: Request, res: Response) => {
-  return render(req, res, 'AdminErrorsPage', {
-    defaultWindow: DEFAULT_WINDOW,
-  });
+  return render(
+    req,
+    res,
+    'AdminErrorsPage',
+    {
+      defaultWindow: DEFAULT_WINDOW,
+    },
+    { title: 'Errors - Admin' },
+  );
 };
 
 export const errorsQueryHandler = async (req: Request, res: Response) => {

@@ -43,17 +43,23 @@ export const handler = async (req: Request, res: Response) => {
     const likedCubesCount = user.likedCubesCount ?? 0;
     const likedPackagesCount = await packageDao.countByVoter(user.id);
 
-    return render(req, res, 'UserDecksPage', {
-      owner: user,
-      followersCount: user.followerCount ?? 0,
-      followingCount: user.followingCount ?? 0,
-      following: !!req.user && (await userDao.getFollow(req.user.id, user.id)),
-      decks: await filterViewableDrafts(decks.items, req.user),
-      lastKey: decks.lastKey,
-      patronLevel,
-      likedCubesCount,
-      likedPackagesCount,
-    });
+    return render(
+      req,
+      res,
+      'UserDecksPage',
+      {
+        owner: user,
+        followersCount: user.followerCount ?? 0,
+        followingCount: user.followingCount ?? 0,
+        following: !!req.user && (await userDao.getFollow(req.user.id, user.id)),
+        decks: await filterViewableDrafts(decks.items, req.user),
+        lastKey: decks.lastKey,
+        patronLevel,
+        likedCubesCount,
+        likedPackagesCount,
+      },
+      { title: `${user.username}'s Drafts` },
+    );
   } catch (err) {
     return handleRouteError(req, res, err as Error, '/404');
   }

@@ -17,9 +17,15 @@ describe('Leave warning page', () => {
       .withQuery({ url: 'https://example.com/a b' })
       .send();
 
-    expect(render.render).toHaveBeenCalledWith(expect.anything(), expect.anything(), 'LeaveWarningPage', {
-      url: 'https://example.com/a%20b',
-    });
+    expect(render.render).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      'LeaveWarningPage',
+      {
+        url: 'https://example.com/a%20b',
+      },
+      { title: 'External Link' },
+    );
   });
 
   it.each([
@@ -42,6 +48,7 @@ describe('Leave warning page', () => {
       expect.anything(),
       'ErrorPage',
       expect.objectContaining({ title: 'Invalid link' }),
+      expect.objectContaining({ title: 'Invalid Link' }),
     );
   });
 });

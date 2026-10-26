@@ -26,10 +26,16 @@ export const dashboardHandler = async (req: Request, res: Response) => {
     ...(episodesResult.items || []),
   ];
 
-  return render(req, res, 'AdminDashboardPage', {
-    noticeCount: noticeCount.items?.length || 0,
-    contentInReview: contentInReview.length,
-  });
+  return render(
+    req,
+    res,
+    'AdminDashboardPage',
+    {
+      noticeCount: noticeCount.items?.length || 0,
+      contentInReview: contentInReview.length,
+    },
+    { title: 'Dashboard - Admin' },
+  );
 };
 
 export const routes = [

@@ -67,7 +67,7 @@ const vocabularyStats = () => {
 export const crosswordLabPageHandler = async (req: Request, res: Response) => {
   try {
     await whenCardDbReady();
-    return render(req, res, 'CrosswordLabPage', { stats: vocabularyStats() });
+    return render(req, res, 'CrosswordLabPage', { stats: vocabularyStats() }, { title: 'Crossword Lab - Admin' });
   } catch (err) {
     return handleRouteError(req, res, err, '/');
   }

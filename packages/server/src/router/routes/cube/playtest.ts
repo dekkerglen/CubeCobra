@@ -47,12 +47,7 @@ export const playtestHandler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - Playtest`,
-        metadata: generateMeta(
-          `Cube Cobra Playtest: ${cube.name}`,
-          cube.brief,
-          cube.image.uri,
-          `${baseUrl}/cube/playtest/${req.params.id}`,
-        ),
+        metadata: generateMeta(cube.brief, cube.image.uri, `${baseUrl}/cube/playtest/${req.params.id}`),
       },
     );
   } catch (err) {

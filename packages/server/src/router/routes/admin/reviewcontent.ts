@@ -22,7 +22,7 @@ export const reviewcontentHandler = async (req: Request, res: Response) => {
     ...(episodesResult.items || []),
   ].sort((a, b) => b.date - a.date);
 
-  return render(req, res, 'ReviewContentPage', { content });
+  return render(req, res, 'ReviewContentPage', { content }, { title: 'Review Content - Admin' });
 };
 
 export const routes = [
