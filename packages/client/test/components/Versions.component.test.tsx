@@ -17,6 +17,11 @@ jest.mock('components/WithAutocard', () => ({
 const card: CardDetails = {
   ...getPlaceholderCardDetails('this-printing'),
   name: 'Soltari Foot Soldier',
+  set: 'tmp',
+  set_name: 'Tempest',
+  collector_number: '42',
+  released_at: '1997-10-14',
+  prices: { usd: 0.29 },
 };
 
 const version = (id: string, set: string): CardDetails => ({
@@ -31,17 +36,42 @@ const version = (id: string, set: string): CardDetails => ({
 const manyVersions = (count: number): CardDetails[] =>
   Array.from({ length: count }, (_, i) => version(`v${i}`, `s${i}`));
 
-describe('Other Printings', () => {
-  it('names the section', () => {
-    render(<CardVersions card={card} versions={[version('a', 'tmp')]} />);
+describe('Printings', () => {
+  it('names the section for every printing it lists, not just the other ones', () => {
+    render(<CardVersions card={card} versions={[version('a', 'str')]} />);
 
-    expect(screen.getByText('Other Printings')).toBeInTheDocument();
+    expect(screen.getByText('Printings')).toBeInTheDocument();
+    expect(screen.queryByText('Other Printings')).not.toBeInTheDocument();
+  });
+
+  it('leads with the printing being viewed', () => {
+    render(<CardVersions card={card} versions={[version('a', 'str')]} />);
+
+    const [, current, next] = screen.getAllByRole('row');
+
+    expect(within(current).getByText('Tempest [TMP-42]')).toBeInTheDocument();
+    expect(within(next).getByText(/str Edition/)).toBeInTheDocument();
+  });
+
+  it('prices the printing being viewed like any other', () => {
+    render(<CardVersions card={card} versions={[]} />);
+
+    const [, current] = screen.getAllByRole('row');
+
+    expect(within(current).getByText('$0.29')).toBeInTheDocument();
+  });
+
+  it('lists the printing being viewed once, even if it also arrives among the versions', () => {
+    // The server filters it out today; a duplicate row is the failure if that changes.
+    render(<CardVersions card={card} versions={[card, version('a', 'str')]} />);
+
+    expect(screen.getAllByText('Tempest [TMP-42]')).toHaveLength(1);
   });
 
   it('puts the pager in the header rather than giving it a row of its own', () => {
     render(<CardVersions card={card} versions={manyVersions(25)} />);
 
-    const header = screen.getByText('Other Printings').closest('.border-b') as HTMLElement;
+    const header = screen.getByText('Printings').closest('.border-b') as HTMLElement;
 
     expect(within(header).getByText('Page 1 of 3')).toBeInTheDocument();
   });
@@ -49,7 +79,7 @@ describe('Other Printings', () => {
   it('pages through the printings from the header', () => {
     render(<CardVersions card={card} versions={manyVersions(25)} />);
 
-    const header = screen.getByText('Other Printings').closest('.border-b') as HTMLElement;
+    const header = screen.getByText('Printings').closest('.border-b') as HTMLElement;
     // The pager is first/prev/next/last; the icons carry no accessible name.
     fireEvent.click(within(header).getAllByRole('button')[2]);
 
@@ -74,11 +104,11 @@ describe('Other Printings', () => {
     expect(link).toHaveAttribute('href', expect.stringContaining('Soltari Foot Soldier'));
   });
 
-  it('keeps the header and the search link even when there is nothing else to list', () => {
+  it('still has a row to show when this is the only printing', () => {
     render(<CardVersions card={card} versions={[]} />);
 
-    expect(screen.getByText('Other Printings')).toBeInTheDocument();
-    expect(screen.getByText('No other printings')).toBeInTheDocument();
+    expect(screen.getByText('Printings')).toBeInTheDocument();
+    expect(screen.getByText('Tempest [TMP-42]')).toBeInTheDocument();
     expect(screen.getByText('View all printings')).toBeInTheDocument();
   });
 });
