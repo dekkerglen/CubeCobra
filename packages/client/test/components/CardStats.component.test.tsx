@@ -61,16 +61,17 @@ describe('card page stats column', () => {
     expect(screen.getByDisplayValue('scryfall-id')).toBeInTheDocument();
   });
 
-  it('puts the id field directly under the card image, ahead of the actions', () => {
+  it('puts the id field below the metrics and above the cube and package searches', () => {
     const { container } = render(<CardBreakdownStats card={card} history={noHistory} />);
 
-    const order = [...container.querySelectorAll('img, input, button')];
-    const image = order.findIndex((el) => el.tagName === 'IMG');
-    const idField = order.findIndex((el) => (el as HTMLInputElement).value === 'scryfall-id');
-    const addToCube = order.findIndex((el) => el.textContent === 'Add to Cube');
+    const nodes = [...container.querySelectorAll('section[aria-label], input, a')];
+    const elo = nodes.findIndex((el) => el.getAttribute('aria-label') === 'Elo');
+    const idField = nodes.findIndex((el) => (el as HTMLInputElement).value === 'scryfall-id');
+    const cubes = nodes.findIndex((el) => el.textContent === 'Cubes');
 
-    expect(image).toBeLessThan(idField);
-    expect(idField).toBeLessThan(addToCube);
+    expect(elo).toBeGreaterThan(-1);
+    expect(idField).toBeGreaterThan(elo);
+    expect(cubes).toBeGreaterThan(idField);
   });
 
   it('offers the cube and package searches without repeating the card name', () => {

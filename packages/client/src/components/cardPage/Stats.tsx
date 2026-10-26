@@ -54,9 +54,6 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
           <ArrowSwitchIcon size={16} /> Transform
         </Button>
       )}
-      {/* The identifier belongs with the thing it identifies, so it sits directly under
-          the art rather than at the bottom of the column. */}
-      <CardIdBadge id={card.scryfall_id} />
       <AddModal
         color="primary"
         block
@@ -66,6 +63,7 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
         Add to Cube
       </AddModal>
       <CardMetrics card={card} history={history} />
+      <CardIdBadge id={card.scryfall_id} />
       {/* Where this card already appears. Secondary to the metrics above, and the page
           heading already names the card, so the buttons do not repeat it. */}
       <Flexbox direction="row" gap="2">
