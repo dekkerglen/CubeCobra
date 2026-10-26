@@ -65,13 +65,13 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
       >
         Add to Cube
       </AddModal>
-      {/* Where this card already appears. The name is the page heading, so the buttons
-          do not repeat it. */}
+      <CardMetrics card={card} history={history} />
+      {/* Where this card already appears. Secondary to the metrics above, and the page
+          heading already names the card, so the buttons do not repeat it. */}
       <Flexbox direction="row" gap="2">
         <Button
           type="link"
-          outline
-          color="accent"
+          color="secondary"
           block
           href={`/search/?q=${encodeURIComponent(`card:"${card.name}"`)}`}
           target="_blank"
@@ -80,8 +80,7 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
         </Button>
         <Button
           type="link"
-          outline
-          color="accent"
+          color="secondary"
           block
           href={`/packages?q=${encodeURIComponent(`card:"${card.name}"`)}`}
           target="_blank"
@@ -89,7 +88,6 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
           Packages
         </Button>
       </Flexbox>
-      <CardMetrics card={card} history={history} />
     </Flexbox>
   );
 };
