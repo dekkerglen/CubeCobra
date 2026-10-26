@@ -58,7 +58,16 @@ describe('Printings', () => {
 
     const [, current, next] = screen.getAllByRole('row');
 
-    expect(within(current).getByText('Current')).toBeInTheDocument();
+    expect(within(current).getByText('Tempest [TMP-42]').className).toContain('font-bold');
+    expect(within(next).getByText(/str Edition/).className).not.toContain('font-bold');
+  });
+
+  it('names the current printing for a screen reader, which cannot see the weight', () => {
+    render(<CardVersions card={card} versions={[version('a', 'str')]} />);
+
+    const [, current, next] = screen.getAllByRole('row');
+
+    expect(within(current).getByText('Current')).toHaveClass('sr-only');
     expect(within(next).queryByText('Current')).not.toBeInTheDocument();
   });
 

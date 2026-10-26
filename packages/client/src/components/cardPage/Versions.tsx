@@ -88,17 +88,20 @@ const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
 
           return {
             Version: (
-              <Flexbox direction="row" alignItems="center" gap="1">
+              <>
                 <AutocardA card={detailsToCard(version)} href={`/tool/card/${version.scryfall_id}`}>
-                  {capStringLength(
-                    `${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`,
-                    isCurrent ? 20 : 30,
-                  )}
+                  {/* Weight on an inner span rather than the link, whose own font-medium
+                      would otherwise race it for precedence. */}
+                  <span className={isCurrent ? 'font-bold' : undefined}>
+                    {capStringLength(
+                      `${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`,
+                      30,
+                    )}
+                  </span>
                 </AutocardA>
-                {isCurrent && (
-                  <span className="shrink-0 rounded border border-border px-1 text-xs text-text/75">Current</span>
-                )}
-              </Flexbox>
+                {/* Weight is invisible to a screen reader, so say it instead. */}
+                {isCurrent && <span className="sr-only">Current</span>}
+              </>
             ),
             USD: money(version.prices.usd, '$'),
             'USD Foil': money(version.prices.usd_foil, '$'),
