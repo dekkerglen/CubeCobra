@@ -188,7 +188,7 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
               <div className="w-full border-b-2 border-border opacity-50 my-1"></div>
 
               {/* Mana Production Bar */}
-              <div className="w-full h-4 bg-bg-secondary rounded-full overflow-hidden relative">
+              <div className="w-full h-4 bg-bg-active rounded-full overflow-hidden relative">
                 <div
                   className={`h-full ${colorStyles[color]} flex items-center justify-center text-xs font-bold`}
                   style={{ width: `${displayPercentage(landProduction, sourcesInDeck.total)}` }}
