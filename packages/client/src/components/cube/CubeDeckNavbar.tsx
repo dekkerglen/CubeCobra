@@ -30,7 +30,8 @@ interface CubeDeckNavbarProps {
 }
 
 const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex, setSeatIndex, view, setView }) => {
-  const { showCustomImages, toggleShowCustomImages } = React.useContext(DisplayContext);
+  const { showCustomImages, toggleShowCustomImages, showDeckBuilderStatsPanel, toggleShowDeckBuilderStatsPanel } =
+    React.useContext(DisplayContext);
   const { alerts, addAlert, dismissAlerts } = useAlerts();
 
   const isOwner = user && draft.owner && user.id === (draft.owner as User).id;
@@ -220,6 +221,13 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
               >
                 {showCustomImages ? 'Hide' : 'Show'} Custom Images
               </Link>
+              <Link
+                href="#"
+                onClick={toggleShowDeckBuilderStatsPanel}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+              >
+                {showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats
+              </Link>
               <DeleteDeckModalLink
                 modalprops={{ deck: draft, cubeID: draft.cube }}
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
@@ -364,6 +372,13 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
                 >
                   {showCustomImages ? 'Hide' : 'Show'} Custom Images
+                </Link>
+                <Link
+                  href="#"
+                  onClick={toggleShowDeckBuilderStatsPanel}
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                >
+                  {showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats
                 </Link>
                 <DeleteDeckModalLink
                   modalprops={{ deck: draft, cubeID: draft.cube }}
