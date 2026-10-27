@@ -237,6 +237,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
         href="#"
         modalprops={{
           basics: basics,
+          basicsBoard: draft.basicsBoard,
           addBasics,
           deck: mainboard.flat(2),
           cards: cards,

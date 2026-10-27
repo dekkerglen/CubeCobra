@@ -6,6 +6,7 @@ import '@testing-library/jest-dom';
 
 import BasicsModal from 'components/modals/BasicsModal';
 import { CSRFContext } from 'contexts/CSRFContext';
+import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 
 import { defaultDisplayContext } from '../../../server/test/test-utils/context';
@@ -42,6 +43,12 @@ describe('BasicsModal', () => {
     renderModal();
 
     expect(screen.getByAltText('Forest')).toHaveAttribute('src', 'forest-custom.png');
+  });
+
+  it('shows no empty-basics message when there are basics', () => {
+    renderModal();
+
+    expect(screen.queryByText(/basic lands/)).not.toBeInTheDocument();
   });
 
   it('shows the default image when custom images are hidden', () => {
@@ -85,5 +92,43 @@ describe('BasicsModal', () => {
       mainboard: [spell.details],
       basics: [plains.details, forest.details],
     });
+  });
+});
+
+describe('BasicsModal with no basics', () => {
+  const renderEmpty = (canEdit: boolean) =>
+    render(
+      <CSRFContext.Provider value={{ csrfToken: 'token', csrfFetch: jest.fn(), callApi: jest.fn() } as any}>
+        <CubeContext.Provider value={{ canEdit, cube: { id: 'c1' } } as any}>
+          <DisplayContext.Provider value={defaultDisplayContext}>
+            <BasicsModal
+              isOpen
+              setOpen={jest.fn()}
+              addBasics={jest.fn()}
+              deck={[0]}
+              basics={[]}
+              basicsBoard="None"
+              cards={cards}
+            />
+          </DisplayContext.Provider>
+        </CubeContext.Provider>
+      </CSRFContext.Provider>,
+    );
+
+  it('tells a player why there are no basics, without a settings link', () => {
+    renderEmpty(false);
+
+    expect(screen.getByText("This cube doesn't provide basic lands for this draft.")).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Draft Formats settings' })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add' })).toBeDisabled();
+  });
+
+  it('links an editor to Draft Formats settings', () => {
+    renderEmpty(true);
+
+    expect(screen.getByRole('link', { name: 'Draft Formats settings' })).toHaveAttribute(
+      'href',
+      '/cube/settings/c1?view=draft-formats',
+    );
   });
 });
