@@ -481,10 +481,10 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
             </div>
           </div>
 
-          {/* Second Row: Specify Versions, Create Blog Post, Import */}
+          {/* Second Row: Specify Versions, Show Extras, Create Blog Post, Import */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
-            {/* Specify Versions */}
-            <div className="flex items-center gap-4">
+            {/* Checkboxes - share a single wrapping row so spacing stays even and they never overlap */}
+            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 lg:col-span-2">
               <div className="flex items-center gap-2">
                 <Checkbox
                   label="Specify Versions"
@@ -501,14 +501,12 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
                   <QuestionIcon size={16} />
                 </Tooltip>
               </div>
-            </div>
-
-            {/* Create Blog Post */}
-            <div className="flex items-center gap-2">
-              <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
-              <Tooltip text={TOOLTIP_CREATE_BLOG_POST}>
-                <QuestionIcon size={16} />
-              </Tooltip>
+              <div className="flex items-center gap-2">
+                <Checkbox label="Create Blog Post" checked={useBlog} setChecked={(value) => setUseBlog(value)} />
+                <Tooltip text={TOOLTIP_CREATE_BLOG_POST}>
+                  <QuestionIcon size={16} />
+                </Tooltip>
+              </div>
             </div>
 
             {/* Import */}
