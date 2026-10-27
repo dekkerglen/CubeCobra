@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -15,6 +15,15 @@ jest.mock('components/modals/AddToCubeModal', () => ({
   default: () => <div />,
 }));
 
+// jsdom loads no images, so the real component always swaps in its placeholder on error
+// and hides which URL the face toggle picked. The fallback is tested on its own.
+jest.mock('components/ImageFallback', () => ({
+  __esModule: true,
+  default: ({ src, alt, className }: { src: string; alt: string; className?: string }) => (
+    <img src={src} alt={alt} className={className} />
+  ),
+}));
+
 const card: CardDetails = {
   ...getPlaceholderCardDetails('scryfall-id'),
   name: 'Soltari Foot Soldier',
@@ -25,6 +34,60 @@ const card: CardDetails = {
 };
 
 const noHistory = [{} as HistoryType];
+
+// Four layouts carry a back face, but only one of them actually transforms.
+const twoFaced = (layout: string): CardDetails => ({
+  ...card,
+  layout,
+  image_flip: 'https://cards.scryfall.io/normal/back/1/1/back.jpg',
+});
+
+describe('two-faced cards', () => {
+  it('offers no face toggle for a card with only one face', () => {
+    render(<CardBreakdownStats card={card} history={noHistory} />);
+
+    expect(screen.queryByRole('button', { name: /transform|flip/i })).not.toBeInTheDocument();
+  });
+
+  it('calls it a transform only when the card actually transforms', () => {
+    render(<CardBreakdownStats card={twoFaced('transform')} history={noHistory} />);
+
+    expect(screen.getByRole('button', { name: 'Transform' })).toBeInTheDocument();
+  });
+
+  it.each([['modal_dfc'], ['double_faced_token'], ['reversible_card']])(
+    'calls it a flip for %s, which has two faces but never transforms',
+    (layout) => {
+      render(<CardBreakdownStats card={twoFaced(layout)} history={noHistory} />);
+
+      expect(screen.getByRole('button', { name: 'Flip' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Transform' })).not.toBeInTheDocument();
+    },
+  );
+
+  it('falls back to the neutral word when the layout is unknown', () => {
+    render(
+      <CardBreakdownStats
+        card={{ ...twoFaced('transform'), layout: undefined as unknown as string }}
+        history={noHistory}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Flip' })).toBeInTheDocument();
+  });
+
+  it('shows the back face once the toggle is used, and returns on a second press', () => {
+    render(<CardBreakdownStats card={twoFaced('transform')} history={noHistory} />);
+    const toggle = screen.getByRole('button', { name: 'Transform' });
+    const image = screen.getByAltText('Soltari Foot Soldier');
+
+    fireEvent.click(toggle);
+    expect(image).toHaveAttribute('src', twoFaced('transform').image_flip);
+
+    fireEvent.click(toggle);
+    expect(image).toHaveAttribute('src', card.image_normal);
+  });
+});
 
 describe('card page stats column', () => {
   it.each([

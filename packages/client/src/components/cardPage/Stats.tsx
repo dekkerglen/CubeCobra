@@ -16,6 +16,14 @@ import CardMetrics from './CardMetrics';
 
 const AddModal = withModal(Button, AddToCubeModal);
 
+/**
+ * Four layouts carry a back face, but only one of them turns into its other side during
+ * play. Calling a modal DFC, a double-faced token or a reversible card a "transform"
+ * describes something the card cannot do, so they get the neutral word -- which is also
+ * the safe default for a layout this does not recognise.
+ */
+const faceToggleLabel = (layout: string): string => (layout === 'transform' ? 'Transform' : 'Flip');
+
 interface CardPageProps {
   card: CardDetails;
   history: HistoryType[];
@@ -39,9 +47,7 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
       />
       {card.image_flip && (
         <Button
-          className="mt-1"
           color="accent"
-          outline
           block
           onClick={() => {
             if (imageUsed === card.image_normal) {
@@ -51,15 +57,10 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
             }
           }}
         >
-          <ArrowSwitchIcon size={16} /> Transform
+          <ArrowSwitchIcon size={16} /> {faceToggleLabel(card.layout)}
         </Button>
       )}
-      <AddModal
-        color="primary"
-        block
-        className="mb-1 me-2"
-        modalprops={{ card: detailsToCard(card), hideAnalytics: true }}
-      >
+      <AddModal color="primary" block modalprops={{ card: detailsToCard(card), hideAnalytics: true }}>
         Add to Cube
       </AddModal>
       <CardMetrics card={card} history={history} />
