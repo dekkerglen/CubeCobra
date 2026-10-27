@@ -124,47 +124,23 @@ describe('card page stats column', () => {
     expect(screen.getByDisplayValue('scryfall-id')).toBeInTheDocument();
   });
 
-  it('puts the id field below the metrics and above the cube and package searches', () => {
+  it('ends with the id field, the metrics above it being the point of the column', () => {
     const { container } = render(<CardBreakdownStats card={card} history={noHistory} />);
 
-    const nodes = [...container.querySelectorAll('section[aria-label], input, a')];
+    const nodes = [...container.querySelectorAll('section[aria-label], input')];
     const elo = nodes.findIndex((el) => el.getAttribute('aria-label') === 'Elo');
     const idField = nodes.findIndex((el) => (el as HTMLInputElement).value === 'scryfall-id');
-    const cubes = nodes.findIndex((el) => el.textContent === 'Cubes');
 
     expect(elo).toBeGreaterThan(-1);
     expect(idField).toBeGreaterThan(elo);
-    expect(cubes).toBeGreaterThan(idField);
   });
 
-  it('offers the cube and package searches without repeating the card name', () => {
+  it('leaves the cube and package searches to the info panel, where the other links live', () => {
     render(<CardBreakdownStats card={card} history={noHistory} />);
 
-    // The card's name is the page heading; echoing it in every button was noise.
-    expect(screen.getByText('Cubes')).toBeInTheDocument();
-    expect(screen.getByText('Packages')).toBeInTheDocument();
-    expect(screen.queryByText(/with Soltari Foot Soldier/)).not.toBeInTheDocument();
-  });
-
-  it('puts the cube and package searches below the metrics they are secondary to', () => {
-    const { container } = render(<CardBreakdownStats card={card} history={noHistory} />);
-
-    const nodes = [...container.querySelectorAll('section[aria-label], a')];
-    const elo = nodes.findIndex((el) => el.getAttribute('aria-label') === 'Elo');
-    const cubes = nodes.findIndex((el) => el.textContent === 'Cubes');
-
-    expect(elo).toBeGreaterThan(-1);
-    expect(cubes).toBeGreaterThan(elo);
-  });
-
-  it('points the cube and package searches at this card', () => {
-    render(<CardBreakdownStats card={card} history={noHistory} />);
-
-    expect(screen.getByText('Cubes').closest('a')).toHaveAttribute('href', expect.stringContaining('/search/'));
-    expect(screen.getByText('Packages').closest('a')).toHaveAttribute('href', expect.stringContaining('/packages'));
-    expect(screen.getByText('Cubes').closest('a')).toHaveAttribute(
-      'href',
-      expect.stringContaining(encodeURIComponent('card:"Soltari Foot Soldier"')),
-    );
+    expect(screen.queryByText(/Cubes with this Card/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Packages with this Card/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Cubes' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Packages' })).not.toBeInTheDocument();
   });
 });

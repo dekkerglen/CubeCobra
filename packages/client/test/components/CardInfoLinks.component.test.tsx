@@ -92,6 +92,45 @@ describe('card page info tab', () => {
     expect(within(rowFor('Modern')).getByText('Banned')).toBeInTheDocument();
   });
 
+  it('offers the cube and package searches, naming what they search without the card name', () => {
+    renderInfo();
+
+    // The card's name is the page heading, so the labels point at "this Card" instead.
+    expect(screen.getByText('Cubes with this Card')).toBeInTheDocument();
+    expect(screen.getByText('Packages with this Card')).toBeInTheDocument();
+  });
+
+  it('points the cube and package searches at this card', () => {
+    renderInfo();
+
+    const cubes = screen.getByText('Cubes with this Card');
+    const packages = screen.getByText('Packages with this Card');
+    const query = encodeURIComponent('card:"Soltari Foot Soldier"');
+
+    expect(cubes).toHaveAttribute('href', `/search/?q=${query}`);
+    expect(packages).toHaveAttribute('href', `/packages?q=${query}`);
+  });
+
+  it('puts the cube and package searches above the external references they outrank', () => {
+    renderInfo();
+
+    const cubes = screen.getByText('Cubes with this Card');
+    const scryfall = screen.getByText('Scryfall');
+
+    expect(cubes.compareDocumentPosition(scryfall) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('pairs the two searches across a row rather than stacking them full width', () => {
+    renderInfo();
+
+    const column = screen.getByText('Cubes with this Card').closest('[class*="col-span"]') as HTMLElement;
+
+    // Half the twelve-column row from sm up, against the thirds the three external
+    // references take, and full width below that so the label is not clipped.
+    expect(column.className).toContain('sm:col-span-6');
+    expect(column.className).toContain('col-span-12');
+  });
+
   it('offers the external references as buttons below the tables, not as a table of their own', () => {
     renderInfo();
 

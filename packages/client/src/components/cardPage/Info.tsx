@@ -74,6 +74,15 @@ const LegalityList: React.FC<LegalityListProps> = ({ card, from, to }) => (
 );
 
 const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
+  const cardQuery = encodeURIComponent(`card:"${card.name}"`);
+
+  // Where this card already appears on the site. Two of them, so they take half the row
+  // each rather than the thirds the external references share.
+  const siteSearches = [
+    { label: 'Cubes with this Card', href: `/search/?q=${cardQuery}` },
+    { label: 'Packages with this Card', href: `/packages?q=${cardQuery}` },
+  ];
+
   const externalLinks = [
     { label: 'Scryfall', href: card.scryfall_uri },
     { label: 'EDHREC', href: `https://edhrec.com/cards/${nameToDashedUrlComponent(card.name)}` },
@@ -127,6 +136,17 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
           <Col xs={12} sm={6}>
             <LegalityList card={card} from={6} to={12} />
           </Col>
+        </Row>
+
+        {/* This card's place on the site comes before links that leave it. */}
+        <Row className="pt-2" gutters={2}>
+          {siteSearches.map(({ label, href }) => (
+            <Col key={label} xs={12} sm={6}>
+              <Button type="link" color="secondary" block href={href} target="_blank">
+                {label}
+              </Button>
+            </Col>
+          ))}
         </Row>
 
         {/* Three references share a row. As a table they read as a stub beside the

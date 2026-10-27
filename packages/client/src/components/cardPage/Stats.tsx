@@ -57,28 +57,6 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
       </AddModal>
       <CardMetrics card={card} history={history} />
       <CardIdBadge id={card.scryfall_id} />
-      {/* Where this card already appears. Secondary to the metrics above, and the page
-          heading already names the card, so the buttons do not repeat it. */}
-      <Flexbox direction="row" gap="2">
-        <Button
-          type="link"
-          color="secondary"
-          block
-          href={`/search/?q=${encodeURIComponent(`card:"${card.name}"`)}`}
-          target="_blank"
-        >
-          Cubes
-        </Button>
-        <Button
-          type="link"
-          color="secondary"
-          block
-          href={`/packages?q=${encodeURIComponent(`card:"${card.name}"`)}`}
-          target="_blank"
-        >
-          Packages
-        </Button>
-      </Flexbox>
     </Flexbox>
   );
 };
