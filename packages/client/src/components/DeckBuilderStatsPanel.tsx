@@ -7,8 +7,8 @@ import { Bar } from 'react-chartjs-2';
 
 import { Card as CardComponent, CardBody, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
-import { useChartTextColor } from 'components/draftSimulator/SimulatorCharts';
 import DisplayContext from 'contexts/DisplayContext';
+import useChartTextColor from 'hooks/useChartTextColor';
 
 import { getCardCountByColor, getCurveByColors, getManaSymbolCount, getSourcesDistribution } from '../utils/deckutil';
 import Tooltip from './base/Tooltip';

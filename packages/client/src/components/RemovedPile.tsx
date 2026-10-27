@@ -4,7 +4,6 @@ import CardType from '@utils/datatypes/Card';
 
 import DraftLocation from '../drafting/DraftLocation';
 import { Flexbox } from './base/Layout';
-import Link from './base/Link';
 import DraggableCard from './DraggableCard';
 
 interface RemovedPileProps {
@@ -26,9 +25,14 @@ const RemovedPile: React.FC<RemovedPileProps> = ({ cards }) => {
 
   return (
     <div className="mx-2 mb-3">
-      <Link onClick={() => setOpen((prev) => !prev)} className="font-medium cursor-pointer">
+      <button
+        type="button"
+        aria-expanded={open}
+        onClick={() => setOpen((prev) => !prev)}
+        className="font-medium text-link hover:text-link-active"
+      >
         Removed ({cards.length})
-      </Link>
+      </button>
       {open && (
         <Flexbox direction="row" wrap="wrap" gap="2" className="mt-2 p-2 border border-border rounded-md">
           {cards.map((card, index) => (

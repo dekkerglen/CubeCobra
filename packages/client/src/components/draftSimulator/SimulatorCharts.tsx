@@ -6,6 +6,7 @@ import { ArcElement, BarElement, CategoryScale, Chart as ChartJS, Legend, Toolti
 import { Bar, Doughnut } from 'react-chartjs-2';
 
 import Text from '../base/Text';
+import useChartTextColor from '../../hooks/useChartTextColor';
 
 ChartJS.register(ArcElement, BarElement, CategoryScale, Tooltip, Legend);
 
@@ -100,22 +101,6 @@ export function computeColorProfileFromDecks(
   if (maxShare <= 0) return 'C';
   const significant = COLOR_KEYS.filter((k) => (shares[k] ?? 0) >= maxShare * relativeThreshold);
   return significant.length > 0 ? significant.join('') : 'C';
-}
-
-/** Reads the --text CSS variable as an rgb() string, reacting to theme changes. */
-export function useChartTextColor(): string {
-  const read = () => {
-    if (typeof document === 'undefined') return 'rgb(33,37,41)';
-    const v = getComputedStyle(document.documentElement).getPropertyValue('--text').trim();
-    return v ? `rgb(${v})` : 'rgb(33,37,41)';
-  };
-  const [color, setColor] = React.useState(read);
-  React.useEffect(() => {
-    const obs = new MutationObserver(() => setColor(read()));
-    obs.observe(document.documentElement, { attributes: true, attributeFilter: ['class', 'data-theme'] });
-    return () => obs.disconnect();
-  }, []);
-  return color;
 }
 
 export function makeDoughnutOptions(textColor: string) {

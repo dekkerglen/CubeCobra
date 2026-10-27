@@ -10,6 +10,9 @@ import DisplayContext from 'contexts/DisplayContext';
 import { defaultDisplayContext } from '../../../server/test/test-utils/context';
 
 jest.mock('react-chartjs-2', () => ({ Bar: () => <div data-testid="bar" /> }));
+jest.mock('components/draftSimulator/SimulatorCharts', () => {
+  throw new Error('the deck stats panel must not pull in the draft simulator module');
+});
 
 const renderPanel = () =>
   render(

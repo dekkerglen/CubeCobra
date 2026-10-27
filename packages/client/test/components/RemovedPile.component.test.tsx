@@ -41,6 +41,15 @@ describe('RemovedPile', () => {
     expect(screen.getByAltText('Llanowar Elves')).toBeInTheDocument();
   });
 
+  it('exposes the toggle as a keyboard-reachable button with its expanded state', () => {
+    renderPile();
+
+    const toggle = screen.getByRole('button', { name: 'Removed (2)' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'false');
+    fireEvent.click(toggle);
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+  });
+
   it('collapses again once emptied', () => {
     const { rerender } = renderPile();
     fireEvent.click(screen.getByText('Removed (2)'));
