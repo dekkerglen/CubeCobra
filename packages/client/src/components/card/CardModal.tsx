@@ -3,6 +3,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 import { ArrowSwitchIcon } from '@primer/octicons-react';
 import {
   cardColorCategory,
+  cardFaceToggleLabel,
   cardColorIdentity,
   cardElo,
   cardEtchedPrice,
@@ -271,7 +272,8 @@ const CardModal: React.FC<CardModalProps> = ({
                       }
                     }}
                   >
-                    <ArrowSwitchIcon size={16} /> Transform {isFrontImage ? '(To back)' : '(To front)'}
+                    <ArrowSwitchIcon size={16} /> {cardFaceToggleLabel(card.details?.layout)}{' '}
+                    {isFrontImage ? '(To back)' : '(To front)'}
                   </Button>
                 )}
                 <CardIdBadge id={card.cardID} />

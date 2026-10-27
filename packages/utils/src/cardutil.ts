@@ -648,6 +648,17 @@ export const cardEdhrecSalt = (card: Card): number => card.details?.edhrecSalt ?
 
 export const cardLayout = (card: Card): string => card.details?.layout ?? '';
 
+/**
+ * Wording for the control that swaps a card's displayed face. Four layouts carry a
+ * second image, but only `transform` turns into its other side during play, so the
+ * rest get neutral wording rather than a claim the card cannot support. "Flip" is
+ * deliberately avoided: it names a separate Kamigawa-era layout that rotates in place
+ * and has no second image, so it would describe a mechanic this control does not drive.
+ * Callers may also reach here for a card whose back is a user-supplied custom image,
+ * which likewise never transforms.
+ */
+export const cardFaceToggleLabel = (layout?: string): string => (layout === 'transform' ? 'Transform' : 'Turn Over');
+
 export const cardReleaseDate = (card: Card): string => card.details?.released_at ?? '';
 
 export const cardFirstPrintYear = (card: Card): number => card.details?.firstPrintYear ?? 0;

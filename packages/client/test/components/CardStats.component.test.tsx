@@ -46,7 +46,7 @@ describe('two-faced cards', () => {
   it('offers no face toggle for a card with only one face', () => {
     render(<CardBreakdownStats card={card} history={noHistory} />);
 
-    expect(screen.queryByRole('button', { name: /transform|flip/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /transform|turn over/i })).not.toBeInTheDocument();
   });
 
   it('calls it a transform only when the card actually transforms', () => {
@@ -56,11 +56,11 @@ describe('two-faced cards', () => {
   });
 
   it.each([['modal_dfc'], ['double_faced_token'], ['reversible_card']])(
-    'calls it a flip for %s, which has two faces but never transforms',
+    'calls it a turn over for %s, which has two faces but never transforms',
     (layout) => {
       render(<CardBreakdownStats card={twoFaced(layout)} history={noHistory} />);
 
-      expect(screen.getByRole('button', { name: 'Flip' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Turn Over' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Transform' })).not.toBeInTheDocument();
     },
   );
@@ -73,7 +73,7 @@ describe('two-faced cards', () => {
       />,
     );
 
-    expect(screen.getByRole('button', { name: 'Flip' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Turn Over' })).toBeInTheDocument();
   });
 
   it('shows the back face once the toggle is used, and returns on a second press', () => {

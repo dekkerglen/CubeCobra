@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { ArrowSwitchIcon } from '@primer/octicons-react';
-import { detailsToCard } from '@utils/cardutil';
+import { cardFaceToggleLabel, detailsToCard } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
 import { CardDetails } from '@utils/datatypes/Card';
 import HistoryType from '@utils/datatypes/History';
@@ -15,14 +15,6 @@ import withModal from '../WithModal';
 import CardMetrics from './CardMetrics';
 
 const AddModal = withModal(Button, AddToCubeModal);
-
-/**
- * Four layouts carry a back face, but only one of them turns into its other side during
- * play. Calling a modal DFC, a double-faced token or a reversible card a "transform"
- * describes something the card cannot do, so they get the neutral word -- which is also
- * the safe default for a layout this does not recognise.
- */
-const faceToggleLabel = (layout: string): string => (layout === 'transform' ? 'Transform' : 'Flip');
 
 interface CardPageProps {
   card: CardDetails;
@@ -57,7 +49,7 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
             }
           }}
         >
-          <ArrowSwitchIcon size={16} /> {faceToggleLabel(card.layout)}
+          <ArrowSwitchIcon size={16} /> {cardFaceToggleLabel(card.layout)}
         </Button>
       )}
       <AddModal color="primary" block modalprops={{ card: detailsToCard(card), hideAnalytics: true }}>
