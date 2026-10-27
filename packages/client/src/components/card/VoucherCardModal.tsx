@@ -4,6 +4,7 @@ import { ArrowSwitchIcon, PlusIcon, TrashIcon, XIcon } from '@primer/octicons-re
 import {
   cardColorCategory,
   cardColorIdentity,
+  cardFaceToggleLabel,
   cardFinish,
   cardImageBackUrl,
   cardImageUrl,
@@ -419,7 +420,7 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
                       }
                     }}
                   >
-                    <ArrowSwitchIcon size={16} /> Transform {isFrontImage ? '(To back)' : '(To front)'}
+                    <ArrowSwitchIcon size={16} /> {cardFaceToggleLabel(card.details?.layout)}
                   </Button>
                 )}
                 {canEdit && card.board && (

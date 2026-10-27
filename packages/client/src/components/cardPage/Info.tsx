@@ -1,17 +1,15 @@
 import React from 'react';
 
-import { detailsToCard } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
-import { CardDetails } from '@utils/datatypes/Card';
+import { CardDetails, Legality } from '@utils/datatypes/Card';
 import HistoryType from '@utils/datatypes/History';
 
-import { getCardKingdomLink, getTCGLink, nameToDashedUrlComponent } from 'utils/Affiliate';
+import { nameToDashedUrlComponent } from 'utils/Affiliate';
 
 import Button from '../base/Button';
 import { CardBody } from '../base/Card';
 import { Col, Flexbox, Row } from '../base/Layout';
 import Text from '../base/Text';
-import LegalityBadge from '../card/CardLegalityBadge';
 import Markdown from '../Markdown';
 
 interface CardPageProps {
@@ -19,7 +17,78 @@ interface CardPageProps {
   history: HistoryType[];
 }
 
+const FORMATS = [
+  'Standard',
+  'Pioneer',
+  'Modern',
+  'Legacy',
+  'Vintage',
+  'Premodern',
+  'Brawl',
+  'Historic',
+  'Timeless',
+  'Pauper',
+  'Penny',
+  'Commander',
+];
+
+const LEGALITY: Record<Legality, { label: string; className: string }> = {
+  legal: { label: 'Legal', className: 'bg-button-primary' },
+  not_legal: { label: 'Not Legal', className: 'bg-button-secondary' },
+  banned: { label: 'Banned', className: 'bg-button-danger' },
+  restricted: { label: 'Restricted', className: 'bg-button-accent' },
+};
+
+interface LegalityListProps {
+  card: CardDetails;
+  from: number;
+  to: number;
+}
+
+/**
+ * Striped by hand rather than through Table. The rows carry a chip and a label, not
+ * tabular data, and the chip has to lead so it sits beside the format it describes
+ * rather than at the far end of a column.
+ */
+const LegalityList: React.FC<LegalityListProps> = ({ card, from, to }) => (
+  <Flexbox direction="col">
+    {FORMATS.slice(from, to).map((format, index) => {
+      const status = LEGALITY[card.legalities[format]] ?? LEGALITY.not_legal;
+
+      return (
+        <div
+          key={format}
+          data-legality-row
+          className={`flex items-center gap-2 px-2 py-1 ${index % 2 === 0 ? 'bg-bg-accent/80' : 'bg-bg-active/80'}`}
+        >
+          <span
+            className={`w-20 shrink-0 rounded px-2 py-0.5 text-center text-xs font-semibold text-button-text ${status.className}`}
+          >
+            {status.label}
+          </span>
+          <Text sm>{format}</Text>
+        </div>
+      );
+    })}
+  </Flexbox>
+);
+
 const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
+  const cardQuery = encodeURIComponent(`card:"${card.name}"`);
+
+  // Where this card already appears on the site. Two of them, so they take half the row
+  // each rather than the thirds the external references share.
+  const siteSearches = [
+    { label: 'Cubes with this Card', href: `/search/?q=${cardQuery}` },
+    { label: 'Packages with this Card', href: `/packages?q=${cardQuery}` },
+  ];
+
+  const externalLinks = [
+    { label: 'Scryfall', href: card.scryfall_uri },
+    { label: 'EDHREC', href: `https://edhrec.com/cards/${nameToDashedUrlComponent(card.name)}` },
+    { label: 'MTG Top 8', href: `http://mtgtop8.com/search?MD_check=1&SB_check=1&cards=${card.name}` },
+  ];
+
   return (
     <CardBody>
       <Flexbox direction="col" gap="2">
@@ -54,103 +123,42 @@ const CardBreakdownInfo: React.FC<CardPageProps> = ({ card }) => {
             {card.power && `${card.power} / ${card.toughness}`}
           </Text>
         </Flexbox>
-        <hr />
-        <Row>
-          <Col xs={6}>
-            {['Standard', 'Pioneer', 'Modern', 'Legacy', 'Vintage', 'Premodern'].map((key) => (
-              <LegalityBadge key={key} legality={key} status={card.legalities[key]} />
-            ))}
+
+        <hr className="mt-4" />
+        {/* Two columns rather than one twelve-row list: a single table reads as a much
+            taller block than the badge grid this replaced. */}
+        {/* Two columns only once they fit. Below sm the format name is clipped by the
+            column edge -- 42px of "Commander" goes missing at 320px. */}
+        <Row gutters={2}>
+          <Col xs={12} sm={6}>
+            <LegalityList card={card} from={0} to={6} />
           </Col>
-          <Col xs={6}>
-            {['Brawl', 'Historic', 'Timeless', 'Pauper', 'Penny', 'Commander'].map((key) => (
-              <LegalityBadge key={key} legality={key} status={card.legalities[key]} />
-            ))}
+          <Col xs={12} sm={6}>
+            <LegalityList card={card} from={6} to={12} />
           </Col>
         </Row>
-        <hr />
-        <Row>
-          <Col xs={12} md={6}>
-            <Button
-              type="link"
-              outline
-              color="accent"
-              block
-              href={`/search/?q=${encodeURIComponent(`card:"${card.name}"`)}`}
-              target="_blank"
-            >
-              {`Cubes with ${card.name}`}
-            </Button>
-          </Col>
-          <Col xs={12} md={6}>
-            <Button
-              type="link"
-              outline
-              color="accent"
-              block
-              href={`/packages?q=${encodeURIComponent(`card:"${card.name}"`)}`}
-              target="_blank"
-            >
-              {`Packages with ${card.name}`}
-            </Button>
-          </Col>
-          <Col xs={12} md={6}>
-            <Button
-              type="link"
-              outline
-              color="accent"
-              block
-              href={`/tool/searchcards?f=name%3A"${card.name}"&p=0&di=printings`}
-              target="_blank"
-            >
-              View all Printings
-            </Button>
-          </Col>
-          <Col xs={12} md={6}>
-            <Button type="link" outline color="accent" block href={card.scryfall_uri} target="_blank">
-              View on Scryfall
-            </Button>
-          </Col>
-          <Col xs={12} md={6}>
-            <Button type="link" outline color="accent" block href={getTCGLink(detailsToCard(card))} target="_blank">
-              View on TCGPlayer
-            </Button>
-          </Col>
-          <Col xs={12} md={6}>
-            <Button
-              type="link"
-              outline
-              color="accent"
-              block
-              href={getCardKingdomLink(detailsToCard(card))}
-              target="_blank"
-            >
-              View on Card Kingdom
-            </Button>
-          </Col>
-          <Col xs={12} md={6}>
-            <Button
-              type="link"
-              outline
-              color="accent"
-              block
-              href={`https://edhrec.com/cards/${nameToDashedUrlComponent(card.name)}`}
-              target="_blank"
-            >
-              View on EDHRec
-            </Button>
-          </Col>
-          <Col xs={12} md={6}>
-            <Button
-              type="link"
-              outline
-              color="accent"
-              block
-              href={`http://mtgtop8.com/search?MD_check=1&SB_check=1&cards=${card.name}`}
-              target="_blank"
-            >
-              {`MTG Top 8 Decks with ${card.name}`}
-            </Button>
-          </Col>
+
+        {/* This card's place on the site comes before links that leave it. */}
+        <Row className="pt-2" gutters={2}>
+          {siteSearches.map(({ label, href }) => (
+            <Col key={label} xs={12} sm={6}>
+              <Button type="link" color="secondary" block href={href} target="_blank">
+                {label}
+              </Button>
+            </Col>
+          ))}
+        </Row>
+
+        {/* Three references share a row. As a table they read as a stub beside the
+            twelve-row legality list. */}
+        <Row className="pt-2" gutters={2}>
+          {externalLinks.map(({ label, href }) => (
+            <Col key={label} xs={12} md={4}>
+              <Button type="link" color="secondary" block href={href} target="_blank">
+                {label}
+              </Button>
+            </Col>
+          ))}
         </Row>
       </Flexbox>
     </CardBody>

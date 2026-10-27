@@ -3,6 +3,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 import { ArrowSwitchIcon } from '@primer/octicons-react';
 import {
   cardColorCategory,
+  cardFaceToggleLabel,
   cardColorIdentity,
   cardElo,
   cardEtchedPrice,
@@ -31,10 +32,9 @@ import { getTagColorClass, getTagColorStyle } from '@utils/Util';
 
 import ImageFallback, { ImageFallbackProps } from 'components/ImageFallback';
 import AddToCubeModal from 'components/modals/AddToCubeModal';
-import CardKingdomButton from 'components/purchase/CardKingdomButton';
-import CardMarketButton from 'components/purchase/CardMarketButton';
-import ManaPoolButton from 'components/purchase/ManaPoolButton';
-import TCGPlayerButton from 'components/purchase/TCGPlayerButton';
+import PurchaseTable from 'components/purchase/PurchaseTable';
+
+import CardIdBadge from './CardIdBadge';
 import withModal from 'components/WithModal';
 
 import { cardImageBackUrl, cardImageUrl } from '../../../../utils/src/cardutil';
@@ -259,7 +259,6 @@ const CardModal: React.FC<CardModalProps> = ({
                 />
                 {getCardBackImage(card) && (
                   <Button
-                    className="mt-1"
                     color="accent"
                     block
                     onClick={() => {
@@ -272,9 +271,10 @@ const CardModal: React.FC<CardModalProps> = ({
                       }
                     }}
                   >
-                    <ArrowSwitchIcon size={16} /> Transform {isFrontImage ? '(To back)' : '(To front)'}
+                    <ArrowSwitchIcon size={16} /> {cardFaceToggleLabel(card.details?.layout)}
                   </Button>
                 )}
+                <CardIdBadge id={card.cardID} />
                 <Flexbox direction="row" gap="2" wrap="wrap">
                   {card.details?.prices && Number.isFinite(cardPrice(card)) && (
                     <TextBadge name="Price" className="mt-2 me-2">
@@ -355,10 +355,7 @@ const CardModal: React.FC<CardModalProps> = ({
                     <Text md semibold>
                       Purchase
                     </Text>
-                    <TCGPlayerButton card={card.details} />
-                    <CardKingdomButton card={card.details} />
-                    <ManaPoolButton card={card.details} />
-                    <CardMarketButton card={card.details} />
+                    <PurchaseTable card={card.details} />
                   </>
                 )}
               </Flexbox>

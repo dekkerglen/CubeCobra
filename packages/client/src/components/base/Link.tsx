@@ -17,7 +17,7 @@ const Link: React.FC<LinkProps> = ({ href, children, target, rel, onClick, class
 
   if (href && href !== '#') {
     return (
-      <a href={href} className={classes} target={target} rel={rel} {...props}>
+      <a href={href} className={classes} target={target} rel={rel} onClick={onClick} {...props}>
         {children}
       </a>
     );

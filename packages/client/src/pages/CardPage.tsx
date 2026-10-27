@@ -104,10 +104,10 @@ const CardPage: React.FC<CardPageProps> = ({
           <Col xs={12} xxl={4}>
             <Row>
               <Col xs={12} md={6} xxl={12}>
-                <CardVersions card={card} versions={filteredVersions} />
+                <CardPurchase card={card} />
               </Col>
               <Col xs={12} md={6} xxl={12}>
-                <CardPurchase card={card} />
+                <CardVersions card={card} versions={filteredVersions} />
               </Col>
             </Row>
           </Col>

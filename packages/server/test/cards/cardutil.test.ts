@@ -1,4 +1,4 @@
-import { cardFullName, cardName, cardNameLower, isManaFixingLand } from '@utils/cardutil';
+import { cardFaceToggleLabel, cardFullName, cardName, cardNameLower, isManaFixingLand } from '@utils/cardutil';
 
 import { createCard, createCardDetails } from '../test-utils/data';
 
@@ -177,5 +177,28 @@ describe('isManaFixingLand', () => {
         }),
       ),
     ).toBe(false);
+  });
+});
+
+describe('cardFaceToggleLabel', () => {
+  it('names the transform layout, the only one that turns into its other side in play', () => {
+    expect(cardFaceToggleLabel('transform')).toBe('Transform');
+  });
+
+  it.each([['modal_dfc'], ['double_faced_token'], ['reversible_card']])(
+    'avoids claiming %s transforms, since it has two faces but never does',
+    (layout) => {
+      expect(cardFaceToggleLabel(layout)).toBe('Turn Over');
+    },
+  );
+
+  it('stays neutral for the flip layout, which is a different thing entirely', () => {
+    // Kamigawa-style flip cards rotate 180 degrees and carry no second image, so
+    // borrowing "Flip" for this button would name a mechanic the button does not drive.
+    expect(cardFaceToggleLabel('flip')).toBe('Turn Over');
+  });
+
+  it.each([[''], [undefined]])('falls back to the neutral label for %p', (layout) => {
+    expect(cardFaceToggleLabel(layout)).toBe('Turn Over');
   });
 });

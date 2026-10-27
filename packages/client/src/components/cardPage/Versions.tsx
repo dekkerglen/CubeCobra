@@ -1,15 +1,20 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 
 import { detailsToCard } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
 
-import { Card, CardBody } from '../base/Card';
+import { Card, CardFooter, CardHeader } from '../base/Card';
+import { Flexbox } from '../base/Layout';
 import Link from '../base/Link';
-import PagedTable from '../base/PagedTable';
+import Pagination from '../base/Pagination';
+import Table from '../base/Table';
+import Text from '../base/Text';
 import useCubeTrayDrag from '../cubetray/useCubeTrayDrag';
 import withAutocard from '../WithAutocard';
 
 const AutocardA = withAutocard(Link);
+
+const PAGE_SIZE = 10;
 
 interface CardPageProps {
   card: CardDetails;
@@ -23,31 +28,34 @@ const capStringLength = (str: string, maxLength: number) => {
   return str;
 };
 
+// Two decimals, matching the Purchase table. A missing price stays blank rather than
+// becoming a padded zero, which would read as "free" instead of "unknown".
+const money = (value: number | undefined, symbol = '') => (value ? `${symbol}${value.toFixed(2)}` : '');
+
 const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
   const drag = useCubeTrayDrag();
-  const sortedVersions = versions.sort((a, b) => {
-    const date1 = new Date(a.released_at);
-    const date2 = new Date(b.released_at);
+  const [page, setPage] = useState(0);
 
-    if (date1 > date2) {
-      return -1;
-    }
-    if (date2 > date1) {
-      return 1;
-    }
-    return 0;
-  });
+  // The printing being viewed leads the list rather than being left out of it, so the
+  // table covers every printing and prices this one alongside the rest. Sorting the
+  // filtered copy, since Array.sort mutates and `versions` is a prop.
+  const printings = useMemo(() => {
+    const others = versions
+      .filter((version) => version.scryfall_id !== card.scryfall_id)
+      .sort((a, b) => new Date(b.released_at).valueOf() - new Date(a.released_at).valueOf());
 
-  const filteredVersions = sortedVersions.filter((version) => {
-    return version.scryfall_id !== card.scryfall_id;
-  });
+    return [card, ...others];
+  }, [card, versions]);
+
+  const pageCount = Math.ceil(printings.length / PAGE_SIZE);
+  const visiblePrintings = printings.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
   // Make each row a cube-tray drag source (mirrors the card search table).
   const getRowProps = drag.active
     ? (rowIndex: number) => ({
         className: 'cursor-grab active:cursor-grabbing',
         onPointerDown: (e: React.PointerEvent<HTMLTableRowElement>) =>
-          drag.start(detailsToCard(filteredVersions[rowIndex]), e),
+          drag.start(detailsToCard(visiblePrintings[rowIndex]), e),
         onDragStart: (e: React.DragEvent<HTMLTableRowElement>) => e.preventDefault(),
         // Capture so a drag's trailing click doesn't follow the Version link.
         onClickCapture: (e: React.MouseEvent<HTMLTableRowElement>) => {
@@ -61,28 +69,55 @@ const CardVersions: React.FC<CardPageProps> = ({ card, versions }) => {
 
   return (
     <Card>
-      {filteredVersions.length > 0 ? (
-        <PagedTable
-          headers={['Version', 'USD', 'USD Foil', 'EUR', 'TIX']}
-          rows={filteredVersions.map((version) => ({
+      {/* The pager shares the header rather than taking a band of its own above the
+          table, which cost a row and read as a second heading. */}
+      <CardHeader>
+        <Flexbox direction="row" justify="between" alignItems="center" gap="2">
+          <Text semibold lg>
+            Printings
+          </Text>
+          {pageCount > 1 && <Pagination count={pageCount} active={page} onClick={(p) => setPage(p)} />}
+        </Flexbox>
+      </CardHeader>
+      {/* Always at least one row, since the printing being viewed is always in the list. */}
+      <Table
+        borderless
+        headers={['Version', 'USD', 'USD Foil', 'EUR', 'TIX']}
+        rows={visiblePrintings.map((version) => {
+          const isCurrent = version.scryfall_id === card.scryfall_id;
+
+          return {
             Version: (
-              <AutocardA card={detailsToCard(version)} href={`/tool/card/${version.scryfall_id}`}>
-                {capStringLength(`${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`, 30)}
-              </AutocardA>
+              <>
+                <AutocardA card={detailsToCard(version)} href={`/tool/card/${version.scryfall_id}`}>
+                  {/* Weight on an inner span rather than the link, whose own font-medium
+                      would otherwise race it for precedence. */}
+                  <span className={isCurrent ? 'font-bold' : undefined}>
+                    {capStringLength(
+                      `${version.set_name} [${version.set.toUpperCase()}-${version.collector_number}]`,
+                      30,
+                    )}
+                  </span>
+                </AutocardA>
+                {/* Weight is invisible to a screen reader, so say it instead. */}
+                {isCurrent && <span className="sr-only">Current</span>}
+              </>
             ),
-            USD: version.prices.usd ? `$${version.prices.usd}` : '',
-            'USD Foil': version.prices.usd_foil ? `$${version.prices.usd_foil}` : '',
-            EUR: version.prices.eur ? `€${version.prices.eur}` : '',
-            TIX: version.prices.tix ? `${version.prices.tix}` : '',
-          }))}
-          className="m-2 ml-4"
-          getRowProps={getRowProps}
-        />
-      ) : (
-        <CardBody>
-          <p>No other versions</p>
-        </CardBody>
-      )}
+            USD: money(version.prices.usd, '$'),
+            'USD Foil': money(version.prices.usd_foil, '$'),
+            EUR: money(version.prices.eur, '€'),
+            TIX: money(version.prices.tix),
+          };
+        })}
+        getRowProps={getRowProps}
+      />
+      {/* The full search lives at the end of the list it extends, rather than as a
+          button competing with the card's other links. */}
+      <CardFooter>
+        <Link href={`/tool/searchcards?f=name%3A"${card.name}"&p=0&di=printings`} target="_blank">
+          View all printings
+        </Link>
+      </CardFooter>
     </Card>
   );
 };
