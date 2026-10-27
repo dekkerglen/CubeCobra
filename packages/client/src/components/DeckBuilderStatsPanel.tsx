@@ -7,6 +7,7 @@ import { Bar } from 'react-chartjs-2';
 
 import { Card as CardComponent, CardBody, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
+import { useChartTextColor } from 'components/draftSimulator/SimulatorCharts';
 import DisplayContext from 'contexts/DisplayContext';
 
 import { getCardCountByColor, getCurveByColors, getManaSymbolCount, getSourcesDistribution } from '../utils/deckutil';
@@ -33,6 +34,7 @@ const displayPercentage = (nom: number, denom: number): string => {
 
 const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) => {
   const { showDeckBuilderStatsPanel } = useContext(DisplayContext);
+  const chartTextColor = useChartTextColor();
 
   if (!showDeckBuilderStatsPanel) {
     return null;
@@ -97,7 +99,7 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
   const colorStyles: Record<string, string> = {
     White: `bg-yellow-300 text-gray-800`,
     Blue: `bg-blue-500 text-white`,
-    Black: `bg-gray-800 text-white`,
+    Black: `bg-gray-500 text-white`,
     Red: `bg-red-500 text-white`,
     Green: `bg-green-500 text-white`,
     Colorless: `bg-purple-600 text-white`,
@@ -106,7 +108,7 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
   const colors: Record<string, string> = {
     White: 'rgb(253 224 71)',
     Blue: 'rgb(59 130 246)',
-    Black: 'rgb(31 41 55)',
+    Black: 'rgb(107 114 128)',
     Red: 'rgb(239 68 68)',
     Green: 'rgb(34 197 94)',
     Colorless: 'rgb(147 51 234)',
@@ -122,7 +124,10 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
       <CardBody>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
           {manaData.map(({ color, symbol, cardCount, symbolCount, curve, landProduction }) => (
-            <div key={color} className="bg-white rounded-lg p-4 shadow-sm flex flex-col items-center text-center">
+            <div
+              key={color}
+              className="bg-bg-accent border border-border rounded-lg p-4 flex flex-col items-center text-center"
+            >
               <img alt={symbol} className="w-16 h-16 mb-1" src={cdnUrl(`/content/symbols/${symbol}.png`)} />
 
               {/* Percentage with Tooltip */}
@@ -131,7 +136,7 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
               </Tooltip>
 
               <Tooltip text={`${symbolCount ?? 0} of ${manaSymbolCounts.total} symbols are ${color.toLowerCase()}`}>
-                <p className="text-xs text-gray-500 mt-1">
+                <p className="text-xs text-text-secondary mt-1">
                   {displayPercentage(symbolCount, manaSymbolCounts.total)} of all symbols
                 </p>
               </Tooltip>
@@ -146,7 +151,7 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
                         label: 'Cards',
                         data: curve,
                         backgroundColor: colors[color],
-                        borderColor: 'black',
+                        borderColor: chartTextColor,
                       },
                     ],
                   }}
@@ -158,6 +163,7 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
                         display: true,
                         title: { display: false },
                         ticks: {
+                          color: chartTextColor,
                           font: {
                             size: 10,
                             lineHeight: 0.5,
@@ -179,10 +185,10 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
                 />
               </div>
 
-              <div className="w-full border-b-2 border-gray-300 opacity-50 my-1"></div>
+              <div className="w-full border-b-2 border-border opacity-50 my-1"></div>
 
               {/* Mana Production Bar */}
-              <div className="w-full h-4 bg-gray-100 rounded-full overflow-hidden relative">
+              <div className="w-full h-4 bg-bg-secondary rounded-full overflow-hidden relative">
                 <div
                   className={`h-full ${colorStyles[color]} flex items-center justify-center text-xs font-bold`}
                   style={{ width: `${displayPercentage(landProduction, sourcesInDeck.total)}` }}
