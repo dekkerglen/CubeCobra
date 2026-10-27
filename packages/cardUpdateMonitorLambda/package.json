@@ -11,9 +11,9 @@
     "publish": "npm run build && node publish.js"
   },
   "dependencies": {
-    "@aws-sdk/client-ecs": "^3.525.0",
-    "@aws-sdk/client-s3": "^3.525.0",
-    "@aws-sdk/credential-providers": "^3.525.0",
+    "@aws-sdk/client-ecs": "^3.1154.0",
+    "@aws-sdk/client-s3": "^3.1154.0",
+    "@aws-sdk/credential-providers": "^3.1154.0",
     "archiver": "^6.0.1"
   },
   "devDependencies": {

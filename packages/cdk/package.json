@@ -21,13 +21,13 @@
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",
     "@types/node": "22.7.9",
-    "aws-cdk": "^2.1137.0",
+    "aws-cdk": "^2.1146.0",
     "jest": "^30.5.2",
     "tsx": "^4.19.0",
     "typescript": "^7.0.2"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.260.0",
+    "aws-cdk-lib": "2.274.0",
     "aws-cdk-local": "^3.0.1",
     "constructs": "^10.0.0",
     "dotenv": "^16.0.0",
