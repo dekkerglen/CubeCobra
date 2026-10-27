@@ -1,5 +1,5 @@
 import { CubeCards } from '@utils/datatypes/Cube';
-import { addBasics, getBasicCardsFromCube, getMissingDraftBasics } from 'serverutils/cube';
+import { addBasics, getBasicCardsFromCube } from 'serverutils/cube';
 
 jest.mock('serverutils/carddb', () => ({
   ...jest.requireActual('serverutils/carddb'),
@@ -34,42 +34,6 @@ describe('getBasicCardsFromCube', () => {
 
   it('returns nothing for the None opt-out', () => {
     expect(getBasicCardsFromCube(cubeCards, 'None', ['legacy-id'])).toEqual([]);
-  });
-});
-
-describe('getMissingDraftBasics', () => {
-  const lands = { mainboard: [], lands: [{ cardID: 'lands-forest' }] } as unknown as CubeCards;
-
-  it('uses the board the draft was created with', () => {
-    expect(getMissingDraftBasics(lands, { draftBasicsBoard: 'Lands' })).toEqual([{ cardID: 'lands-forest' }]);
-  });
-
-  it('honors a draft created with None', () => {
-    expect(getMissingDraftBasics(cubeCards, { draftBasicsBoard: 'None' })).toEqual([]);
-  });
-
-  it('falls back to the Basics board when the draft recorded no board', () => {
-    expect(getMissingDraftBasics(cubeCards, {})[0]!.cardID).toBe('forest-id');
-  });
-
-  it('prefers the cube basics board setting when the draft recorded no board', () => {
-    const both = { ...cubeCards, lands: [{ cardID: 'lands-forest' }] } as unknown as CubeCards;
-    expect(getMissingDraftBasics(both, { cubeBasicsBoard: 'Lands' })).toEqual([{ cardID: 'lands-forest' }]);
-  });
-
-  // A cube setting naming a board that no longer exists (e.g. "Basics-") must not hide the Basics board.
-  it('skips a cube setting that names a missing board', () => {
-    expect(getMissingDraftBasics(cubeCards, { cubeBasicsBoard: 'Basics-' })[0]!.cardID).toBe('forest-id');
-  });
-
-  it('honors a cube set to None when the draft recorded no board', () => {
-    expect(getMissingDraftBasics(cubeCards, { cubeBasicsBoard: 'None' })).toEqual([]);
-  });
-
-  it('falls back to legacy basics when no board matches', () => {
-    expect(getMissingDraftBasics({ mainboard: [] } as any, { legacyBasics: ['legacy-id'] })).toEqual([
-      { cardID: 'legacy-id' },
-    ]);
   });
 });
 

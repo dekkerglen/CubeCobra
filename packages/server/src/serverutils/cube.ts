@@ -380,27 +380,6 @@ const getBasicsFromCube = (
   legacyBasics?: string[],
 ): string[] => getBasicCardsFromCube(cubeCards, basicsBoard, legacyBasics).map((card) => card.cardID);
 
-/**
- * Basics for a finished draft that has none — e.g. a deck uploaded before the cube had a Basics
- * board, since basics are only snapshotted when a draft is created. Honors the board the draft
- * was created with; drafts that never recorded one (uploads, older drafts) use the cube's
- * setting if it names a real board, else the Basics board.
- */
-const getMissingDraftBasics = (
-  cubeCards: Record<string, any>,
-  options: { draftBasicsBoard?: string; cubeBasicsBoard?: string; legacyBasics?: string[] },
-): BasicCard[] => {
-  const { draftBasicsBoard, cubeBasicsBoard, legacyBasics } = options;
-  if (draftBasicsBoard) {
-    return getBasicCardsFromCube(cubeCards, draftBasicsBoard, legacyBasics);
-  }
-  if (cubeBasicsBoard === 'None') {
-    return [];
-  }
-  const board = [cubeBasicsBoard, 'Basics'].find((name) => name && Array.isArray(cubeCards[boardNameToKey(name)]));
-  return getBasicCardsFromCube(cubeCards, board, legacyBasics);
-};
-
 const addBasics = (document: DraftDocument, basics: BasicCard[]) => {
   if (!document.cards) {
     throw new Error('Document must contains cards to add basics');
@@ -465,7 +444,6 @@ export {
   exportToMtgo,
   getBasicCardsFromCube,
   getBasicsFromCube,
-  getMissingDraftBasics,
   reverseArray,
   rotateArrayLeft,
   rotateArrayRight,
