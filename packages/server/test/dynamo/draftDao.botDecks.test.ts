@@ -169,6 +169,36 @@ describe('DraftDynamoDao bot-deck writes', () => {
     });
   });
 
+  describe('backfillBasics', () => {
+    const forest = { cardID: 'forest', index: 3, isUnlimited: true, type_line: 'Basic Land' };
+
+    it('appends the basics to the pool and records their indices', async () => {
+      expect(await dao.backfillBasics(DRAFT_ID, 3, [forest])).toBe(true);
+
+      const [, key, written] = (putObject as jest.Mock).mock.calls[0];
+      expect(key).toBe(`cardlist/${DRAFT_ID}.json`);
+      expect(written).toHaveLength(4);
+      expect(written[3]).toMatchObject({ cardID: 'forest', index: 3 });
+      const [, seatsKey, seatsWritten, etag] = (putObjectIfMatch as jest.Mock).mock.calls[0];
+      expect(seatsKey).toBe(`seats/${DRAFT_ID}.json`);
+      expect(seatsWritten.basics).toEqual([3]);
+      expect(etag).toBe('"v1"');
+    });
+
+    it('does nothing when the draft already has basics', async () => {
+      (getObjectWithETag as jest.Mock).mockResolvedValue({ value: { ...naiveSeats(), basics: [0] }, etag: '"v1"' });
+
+      expect(await dao.backfillBasics(DRAFT_ID, 3, [forest])).toBe(false);
+      expect(putObject).not.toHaveBeenCalled();
+      expect(putObjectIfMatch).not.toHaveBeenCalled();
+    });
+
+    it('does nothing when the pool changed since the caller read it', async () => {
+      expect(await dao.backfillBasics(DRAFT_ID, 2, [forest])).toBe(false);
+      expect(putObject).not.toHaveBeenCalled();
+    });
+  });
+
   describe('update', () => {
     it('carries stored bot-deck state forward rather than the caller stale copy', async () => {
       const stale = {

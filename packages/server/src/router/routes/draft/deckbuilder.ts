@@ -1,5 +1,6 @@
 import { cubeDao, draftDao } from 'dynamo/daos';
 import { resolveBotDeckStatus } from 'serverutils/botDeckStatus';
+import { addBasics, getMissingDraftBasics } from 'serverutils/cube';
 import { abbreviate, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -14,7 +15,7 @@ const handler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const deck = await draftDao.getById(req.params.id);
+    let deck = await draftDao.getById(req.params.id);
     if (!deck) {
       req.flash('danger', 'Deck not found');
       return redirect(req, res, '/404');
@@ -33,6 +34,30 @@ const handler = async (req: Request, res: Response) => {
     if (!cube || !isCubeViewable(cube, req.user)) {
       req.flash('danger', 'Cube not found');
       return redirect(req, res, '/404');
+    }
+
+    // Basics are snapshotted when a draft is created, so a deck uploaded before the cube had a
+    // Basics board (or before it had cards) has none forever. Fill them in from the cube now.
+    if (deck.basics.length === 0 && deck.basicsBoard !== 'None') {
+      try {
+        const cubeCards = await cubeDao.getCards(cube.id);
+        const basicCards = getMissingDraftBasics(cubeCards, {
+          draftBasicsBoard: deck.basicsBoard,
+          cubeBasicsBoard: cube.basicsBoard,
+          legacyBasics: cube.basics,
+        });
+        if (basicCards.length > 0) {
+          const poolSize = deck.cards.length;
+          const doc = { cards: [...deck.cards], basics: [] as number[] };
+          addBasics(doc, basicCards);
+          if (await draftDao.backfillBasics(deck.id, poolSize, doc.cards.slice(poolSize))) {
+            deck = (await draftDao.getById(deck.id)) ?? deck;
+          }
+        }
+      } catch (err) {
+        // Missing basics shouldn't block the deckbuilder; the modal explains the empty state.
+        req.logger.error('Failed to backfill draft basics', err);
+      }
     }
 
     const baseUrl = getBaseUrl();

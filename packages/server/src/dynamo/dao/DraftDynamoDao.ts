@@ -953,6 +953,31 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   }
 
   /**
+   * Give a finished draft basics it was created without (see getMissingDraftBasics). Appends
+   * `basicCards` — already indexed from `poolSize` — to the pool and records them as the
+   * draft's basics. A no-op returning false if the draft already has basics or the pool no
+   * longer has `poolSize` cards, so a stale caller can't misplace indices.
+   */
+  public async backfillBasics(draftId: string, poolSize: number, basicCards: { index: number }[]): Promise<boolean> {
+    const bucket = process.env.DATA_BUCKET!;
+    const seatsKey = `seats/${draftId}.json`;
+
+    const [cards, { value: seatsData, etag }] = await Promise.all([
+      this.getCards(draftId),
+      getObjectWithETag(bucket, seatsKey),
+    ]);
+    if (!seatsData || (seatsData.basics?.length ?? 0) > 0 || cards.length !== poolSize) {
+      return false;
+    }
+
+    // Cards first: if the seats write then loses a race, the appended cards are merely unused,
+    // whereas basics written first would point past the end of the pool.
+    await putObject(bucket, `cardlist/${draftId}.json`, this.stripDetails([...cards, ...basicCards]));
+    seatsData.basics = basicCards.map((card) => card.index);
+    return putObjectIfMatch(bucket, seatsKey, seatsData, etag);
+  }
+
+  /**
    * Apply asynchronously-built bot decks to a draft, touching ONLY the given bot seats.
    *
    * Used by the bot-deckbuild lambda's write-back. It read-modify-writes the current seats
