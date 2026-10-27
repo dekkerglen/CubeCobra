@@ -51,7 +51,7 @@ describe('voucher card modal face toggle', () => {
   it('calls it a transform only when the card actually transforms', () => {
     render(<VoucherCardModal {...props} card={voucherWith({ layout: 'transform', image_flip: 'back.jpg' })} />);
 
-    expect(screen.getByRole('button', { name: /^Transform/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Transform' })).toBeInTheDocument();
   });
 
   it.each([['modal_dfc'], ['double_faced_token'], ['reversible_card']])(
@@ -59,16 +59,24 @@ describe('voucher card modal face toggle', () => {
     (layout) => {
       render(<VoucherCardModal {...props} card={voucherWith({ layout, image_flip: 'back.jpg' })} />);
 
-      expect(screen.getByRole('button', { name: /^Turn Over/ })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /^Transform/ })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Turn Over' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Transform' })).not.toBeInTheDocument();
     },
   );
+
+  it('carries no direction suffix, matching the card analytics page', () => {
+    render(<VoucherCardModal {...props} card={voucherWith({ layout: 'transform', image_flip: 'back.jpg' })} />);
+    const toggle = screen.getByRole('button', { name: 'Transform' });
+
+    expect(toggle).toHaveTextContent(/^Transform$/);
+    expect(toggle).not.toHaveTextContent(/To back|To front/);
+  });
 
   it('stays neutral for a custom back image, the common case for a voucher', () => {
     const card = { ...voucherWith({ layout: 'normal' }), imgBackUrl: 'https://example.test/custom-back.png' };
 
     render(<VoucherCardModal {...props} card={card} />);
 
-    expect(screen.getByRole('button', { name: /^Turn Over/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Turn Over' })).toBeInTheDocument();
   });
 });

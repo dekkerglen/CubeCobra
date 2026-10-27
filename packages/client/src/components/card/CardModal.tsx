@@ -259,7 +259,6 @@ const CardModal: React.FC<CardModalProps> = ({
                 />
                 {getCardBackImage(card) && (
                   <Button
-                    className="mt-1"
                     color="accent"
                     block
                     onClick={() => {
@@ -272,8 +271,7 @@ const CardModal: React.FC<CardModalProps> = ({
                       }
                     }}
                   >
-                    <ArrowSwitchIcon size={16} /> {cardFaceToggleLabel(card.details?.layout)}{' '}
-                    {isFrontImage ? '(To back)' : '(To front)'}
+                    <ArrowSwitchIcon size={16} /> {cardFaceToggleLabel(card.details?.layout)}
                   </Button>
                 )}
                 <CardIdBadge id={card.cardID} />

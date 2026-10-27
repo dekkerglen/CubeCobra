@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -48,7 +48,7 @@ describe('card modal face toggle', () => {
   it('calls it a transform only when the card actually transforms', () => {
     render(<CardModal {...props} card={cardWith({ layout: 'transform', image_flip: 'back.jpg' })} />);
 
-    expect(screen.getByRole('button', { name: /^Transform/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Transform' })).toBeInTheDocument();
   });
 
   it.each([['modal_dfc'], ['double_faced_token'], ['reversible_card']])(
@@ -56,8 +56,8 @@ describe('card modal face toggle', () => {
     (layout) => {
       render(<CardModal {...props} card={cardWith({ layout, image_flip: 'back.jpg' })} />);
 
-      expect(screen.getByRole('button', { name: /^Turn Over/ })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: /^Transform/ })).not.toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Turn Over' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Transform' })).not.toBeInTheDocument();
     },
   );
 
@@ -66,12 +66,23 @@ describe('card modal face toggle', () => {
 
     render(<CardModal {...props} card={card} />);
 
-    expect(screen.getByRole('button', { name: /^Turn Over/ })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Turn Over' })).toBeInTheDocument();
   });
 
-  it('keeps the direction hint that tells you which way the toggle goes', () => {
+  it('carries no direction suffix, matching the card analytics page', () => {
     render(<CardModal {...props} card={cardWith({ layout: 'transform', image_flip: 'back.jpg' })} />);
+    const toggle = screen.getByRole('button', { name: 'Transform' });
 
-    expect(screen.getByRole('button', { name: 'Transform (To back)' })).toBeInTheDocument();
+    expect(toggle).toHaveTextContent(/^Transform$/);
+    expect(toggle).not.toHaveTextContent(/To back|To front/);
+  });
+
+  it('keeps the label steady once the other face is showing', () => {
+    render(<CardModal {...props} card={cardWith({ layout: 'transform', image_flip: 'back.jpg' })} />);
+    const toggle = screen.getByRole('button', { name: 'Transform' });
+
+    fireEvent.click(toggle);
+
+    expect(screen.getByRole('button', { name: 'Transform' })).toHaveTextContent(/^Transform$/);
   });
 });

@@ -420,8 +420,7 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
                       }
                     }}
                   >
-                    <ArrowSwitchIcon size={16} /> {cardFaceToggleLabel(card.details?.layout)}{' '}
-                    {isFrontImage ? '(To back)' : '(To front)'}
+                    <ArrowSwitchIcon size={16} /> {cardFaceToggleLabel(card.details?.layout)}
                   </Button>
                 )}
                 {canEdit && card.board && (
