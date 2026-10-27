@@ -70,6 +70,14 @@ describe('sanitizeDraftFormat', () => {
     });
   });
 
+  it('keeps the None opt-out as a basics board', () => {
+    expect(sanitizeDraftFormat(validFormat({ basicsBoard: 'None' })).format?.basicsBoard).toBe('None');
+  });
+
+  it('leaves the basics board unset when none is given', () => {
+    expect(sanitizeDraftFormat(validFormat()).format?.basicsBoard).toBeUndefined();
+  });
+
   it('keeps a sanitized legacy html description only when there is no markdown', () => {
     const { format } = sanitizeDraftFormat(
       validFormat({

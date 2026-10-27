@@ -25,6 +25,7 @@ import LoadingButton from 'components/LoadingButton';
 import TextEntry from 'components/TextEntry';
 import CubeContext from 'contexts/CubeContext';
 import useCoercedSelection from 'hooks/useCoercedSelection';
+import { basicsBoardSelectOptions, basicsBoardToSelectValue, selectValueToBasicsBoard } from 'utils/basicsBoardSelect';
 import { getDraftFormatOptions } from 'utils/draftFormats';
 
 const DraftFormatsSettings: React.FC = () => {
@@ -550,16 +551,10 @@ const DraftFormatsSettings: React.FC = () => {
 
                               <Select
                                 label="Basics board"
-                                value={format.basicsBoard || 'none'}
-                                options={[
-                                  { value: 'none', label: 'None' },
-                                  ...availableBoards.map((b) => ({
-                                    value: b.name.toLowerCase(),
-                                    label: b.name,
-                                  })),
-                                ]}
+                                value={basicsBoardToSelectValue(format.basicsBoard)}
+                                options={basicsBoardSelectOptions(availableBoards)}
                                 setValue={(value) =>
-                                  updateFormat(index, { basicsBoard: value === 'none' ? undefined : value })
+                                  updateFormat(index, { basicsBoard: selectValueToBasicsBoard(value) })
                                 }
                               />
 
