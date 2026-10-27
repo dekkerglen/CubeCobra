@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 
-import { EyeIcon, FileMediaIcon, PencilIcon, PlusIcon, TagIcon, ZapIcon } from '@primer/octicons-react';
+import { EyeIcon, FileMediaIcon, GraphIcon, PencilIcon, PlusIcon, TagIcon, ZapIcon } from '@primer/octicons-react';
 import { cardOracleId } from '@utils/cardutil';
 import Card, { CardDetails } from '@utils/datatypes/Card';
 import Draft from '@utils/datatypes/Draft';
@@ -326,17 +326,15 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
           >
             {showCustomImages ? 'Hide' : 'Show'} Custom Images
           </Link>
-          <Link
-            onClick={() => {
-              toggleShowDeckBuilderStatsPanel();
-              setDisplayDropdownOpen(false);
-            }}
-            className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-          >
-            {showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats
-          </Link>
         </Flexbox>
       </Dropdown>
+      <Link
+        onClick={toggleShowDeckBuilderStatsPanel}
+        className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
+      >
+        <GraphIcon size={16} />
+        {showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats
+      </Link>
       <CSRFForm ref={formRef} method="POST" action={`/cube/deck/editdeck/${draft.id}`} formData={formData}>
         <Flexbox direction="row" gap="2" alignItems="center">
           <TagIcon size={16} className="text-text-secondary" />

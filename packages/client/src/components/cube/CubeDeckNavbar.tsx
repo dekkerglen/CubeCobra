@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 
-import { KebabHorizontalIcon, PencilIcon, UploadIcon } from '@primer/octicons-react';
+import { GraphIcon, KebabHorizontalIcon, PencilIcon, UploadIcon } from '@primer/octicons-react';
 import { cardName } from '@utils/cardutil';
 import Draft from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
@@ -57,6 +57,16 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
     addAlert('success', 'Copied.');
     setTimeout(dismissAlerts, 3000);
   }, [addAlert, dismissAlerts, draft, seatIndex]);
+
+  const deckStatsToggle = (
+    <Link
+      onClick={toggleShowDeckBuilderStatsPanel}
+      className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
+    >
+      <GraphIcon size={16} />
+      {showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats
+    </Link>
+  );
 
   return (
     <>
@@ -186,6 +196,7 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
               Edit
             </Link>
           )}
+          {deckStatsToggle}
           <Dropdown
             trigger={
               <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
@@ -220,13 +231,6 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
                 className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
               >
                 {showCustomImages ? 'Hide' : 'Show'} Custom Images
-              </Link>
-              <Link
-                href="#"
-                onClick={toggleShowDeckBuilderStatsPanel}
-                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-              >
-                {showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats
               </Link>
               <DeleteDeckModalLink
                 modalprops={{ deck: draft, cubeID: draft.cube }}
@@ -338,6 +342,7 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
                 <Alerts alerts={alerts} />
               </Flexbox>
             </Dropdown>
+            {deckStatsToggle}
             <Dropdown
               trigger={
                 <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
@@ -372,13 +377,6 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
                   className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
                 >
                   {showCustomImages ? 'Hide' : 'Show'} Custom Images
-                </Link>
-                <Link
-                  href="#"
-                  onClick={toggleShowDeckBuilderStatsPanel}
-                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                >
-                  {showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats
                 </Link>
                 <DeleteDeckModalLink
                   modalprops={{ deck: draft, cubeID: draft.cube }}
