@@ -124,15 +124,18 @@ describe('card page stats column', () => {
     expect(screen.getByDisplayValue('scryfall-id')).toBeInTheDocument();
   });
 
-  it('ends with the id field, the metrics above it being the point of the column', () => {
+  it('puts the id field directly below Add to Cube, above the metrics', () => {
     const { container } = render(<CardBreakdownStats card={card} history={noHistory} />);
 
-    const nodes = [...container.querySelectorAll('section[aria-label], input')];
-    const elo = nodes.findIndex((el) => el.getAttribute('aria-label') === 'Elo');
+    const nodes = [...container.querySelectorAll('button, input, section[aria-label]')];
+    const addToCube = nodes.findIndex((el) => el.textContent === 'Add to Cube');
     const idField = nodes.findIndex((el) => (el as HTMLInputElement).value === 'scryfall-id');
+    const playRate = nodes.findIndex((el) => el.getAttribute('aria-label') === 'Play Rate');
 
-    expect(elo).toBeGreaterThan(-1);
-    expect(idField).toBeGreaterThan(elo);
+    expect(addToCube).toBeGreaterThan(-1);
+    expect(playRate).toBeGreaterThan(-1);
+    expect(idField).toBeGreaterThan(addToCube);
+    expect(idField).toBeLessThan(playRate);
   });
 
   it('leaves the cube and package searches to the info panel, where the other links live', () => {

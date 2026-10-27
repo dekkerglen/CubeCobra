@@ -55,8 +55,8 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
       <AddModal color="primary" block modalprops={{ card: detailsToCard(card), hideAnalytics: true }}>
         Add to Cube
       </AddModal>
-      <CardMetrics card={card} history={history} />
       <CardIdBadge id={card.scryfall_id} />
+      <CardMetrics card={card} history={history} />
     </Flexbox>
   );
 };
