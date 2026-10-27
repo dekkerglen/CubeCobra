@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 
-import { EyeIcon, FileMediaIcon, GraphIcon, PencilIcon, PlusIcon, TagIcon, ZapIcon } from '@primer/octicons-react';
+import { EyeIcon, FileMediaIcon, GraphIcon, PlusIcon, ZapIcon } from '@primer/octicons-react';
 import { cardOracleId } from '@utils/cardutil';
 import Card, { CardDetails } from '@utils/datatypes/Card';
 import Draft from '@utils/datatypes/Draft';
@@ -39,6 +39,7 @@ interface DeckbuilderNavbarProps {
   setDeck: (deck: any) => void;
   setSideboard: (sideboard: any) => void;
   seat: number;
+  deckTitle: string;
   maxSpells?: number;
   maxLands?: number;
   // Adds an arbitrary card to the deck (resolved to a CardDetails). When set,
@@ -65,6 +66,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   setSideboard,
   setDeck,
   seat,
+  deckTitle,
   maxSpells = 23,
   maxLands = 17,
   onAddCard,
@@ -84,8 +86,6 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   const [autobuilding, setAutobuilding] = useState(false);
   const [autobuildProgress, setAutobuildProgress] = useState<{ step: number; totalSteps: number } | null>(null);
   const [autobuildError, setAutobuildError] = useState<string | null>(null);
-  const seatData = draft.seats[seat];
-  const [deckTitle, setDeckTitle] = useState(seatData?.title || '');
   const [addCardValue, setAddCardValue] = useState('');
   const addCardRef = useRef<HTMLInputElement>(null);
   const formData = useMemo<Record<string, string>>(
@@ -335,30 +335,20 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
         <GraphIcon size={16} />
         {showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats
       </Link>
-      <CSRFForm ref={formRef} method="POST" action={`/cube/deck/editdeck/${draft.id}`} formData={formData}>
-        <Flexbox direction="row" gap="2" alignItems="center">
-          <TagIcon size={16} className="text-text-secondary" />
-          <input
-            type="text"
-            value={deckTitle}
-            onChange={(e) => setDeckTitle(e.target.value)}
-            placeholder={seatData?.name || 'Deck name...'}
-            maxLength={100}
-            className="border border-border rounded px-2 py-1 text-sm w-48 bg-bg focus:outline-none focus:border-link"
-          />
-          <Link
-            href="#"
+      <div className="ml-auto px-2">
+        <CSRFForm ref={formRef} method="POST" action={`/cube/deck/editdeck/${draft.id}`} formData={formData}>
+          <Button
+            type="button"
+            color="primary"
             onClick={() => {
               trackEvent('deck_build', { method: autobuildUsedRef.current ? 'autobuild' : 'manual' });
               formRef.current?.submit();
             }}
-            className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
           >
-            <PencilIcon size={16} />
-            Save Deck
-          </Link>
-        </Flexbox>
-      </CSRFForm>
+            <span className="text-nowrap">Save Deck</span>
+          </Button>
+        </CSRFForm>
+      </div>
     </Flexbox>
   );
 };

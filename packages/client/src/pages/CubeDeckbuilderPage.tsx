@@ -60,6 +60,8 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
   const [dragStartTime, setDragStartTime] = useState<number | null>(null);
   // Session-only: removed cards are dropped on save, like before.
   const [removed, setRemoved] = useState<number[]>([]);
+  const seat = initialDeck.seats[seatIndex];
+  const [deckTitle, setDeckTitle] = useState(seat?.title || '');
 
   const { basics } = initialDeck;
 
@@ -222,6 +224,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
             setDeck={setMainboard}
             setSideboard={setSideboard}
             seat={seatIndex}
+            deckTitle={deckTitle}
             maxSpells={maxSpells}
             maxLands={maxLands}
             onAddCard={addCardToDeck}
@@ -248,6 +251,17 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
                 <DeckStacks
                   cards={mainboard.map((col) => col.map((row) => row.map((index) => cards[index])))}
                   title="Deck"
+                  titleAccessory={
+                    <input
+                      type="text"
+                      aria-label="Deck name"
+                      value={deckTitle}
+                      onChange={(e) => setDeckTitle(e.target.value)}
+                      placeholder={seat?.name || 'Deck name...'}
+                      maxLength={100}
+                      className="border border-border rounded px-2 py-1 text-sm w-64 bg-bg focus:outline-none focus:border-link"
+                    />
+                  }
                   subtitle={makeSubtitle(
                     mainboard
                       .flat()
