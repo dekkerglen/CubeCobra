@@ -11,8 +11,10 @@ import VisualSpoiler from 'components/cube/VisualSpoiler';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 
+let mockSections: ((cards: Card[]) => [string, Card[]][]) | null = null;
+
 jest.mock('@utils/sorting/Sort', () => ({
-  sortForDownload: (cards: Card[]) => cards,
+  sortDeep: (cards: Card[]) => (mockSections ? mockSections(cards) : [['All', cards]]),
 }));
 
 jest.mock('components/FoilCardImage', () => ({
@@ -64,6 +66,24 @@ const renderSpoiler = ({ collapse, canEdit = true }: { collapse: boolean; canEdi
 };
 
 describe('VisualSpoiler collapse duplicates', () => {
+  afterEach(() => {
+    mockSections = null;
+  });
+
+  it('keeps a card that the sort places in two sections in both sections', () => {
+    // Mirrors Table View, which only collapses copies within the same sort section.
+    mockSections = (all) => [
+      ['Artifact', [all[0]!, all[2]!]],
+      ['Creature', [all[0]!, all[1]!]],
+    ];
+    renderSpoiler({ collapse: true });
+
+    const islands = screen.getAllByAltText('Island');
+    expect(islands).toHaveLength(2);
+    expect(screen.getAllByText('×2')).toHaveLength(1);
+    expect(screen.getAllByText(/×/)).toHaveLength(1);
+  });
+
   it('shows every copy when collapsing is off', () => {
     renderSpoiler({ collapse: false });
 
