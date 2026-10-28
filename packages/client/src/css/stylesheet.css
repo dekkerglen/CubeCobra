@@ -405,7 +405,7 @@
 }
 
 #autocardPopup {
-  position: absolute;
+  position: fixed;
   pointer-events: none;
   user-select: none;
   -moz-user-select: none;
@@ -418,6 +418,13 @@
 
 #autocardPopup img {
   width: 15rem;
+}
+
+/* Reserve the card's height before the image loads, so the popup can be measured and
+   clamped to the viewport on the very first frame. */
+#autocardImageFront,
+#autocardImageBack {
+  aspect-ratio: 488 / 680;
 }
 
 #autocardPopup {

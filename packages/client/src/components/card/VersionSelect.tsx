@@ -1,9 +1,8 @@
-import React, { useContext, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 
 import { ChevronDownIcon } from '@primer/octicons-react';
 import classNames from 'classnames';
 
-import AutocardContext from '../../contexts/AutocardContext';
 import Dropdown from '../base/Dropdown';
 import Input from '../base/Input';
 import { ListGroupItem } from '../base/ListGroup';
@@ -37,7 +36,6 @@ const VersionSelect: React.FC<VersionSelectProps> = ({ label, value, setValue, v
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState('');
   const filterRef = useRef<HTMLInputElement>(null);
-  const { hideCard } = useContext(AutocardContext);
 
   const selected = useMemo(() => versions.find((v) => v.scryfall_id === value), [versions, value]);
 
@@ -55,8 +53,6 @@ const VersionSelect: React.FC<VersionSelectProps> = ({ label, value, setValue, v
     setValue(id);
     setIsOpen(false);
     setFilter('');
-    // The row unmounts before its onMouseLeave fires, so clear the preview here.
-    hideCard();
   };
 
   const triggerClasses = classNames(
@@ -90,10 +86,6 @@ const VersionSelect: React.FC<VersionSelectProps> = ({ label, value, setValue, v
               setFilter('');
               // Focus the filter box once the menu has mounted.
               setTimeout(() => filterRef.current?.focus(), 0);
-            } else {
-              // Rows unmount on close before their onMouseLeave fires, which would
-              // otherwise leave the hovered preview stuck on screen.
-              hideCard();
             }
           }}
           trigger={

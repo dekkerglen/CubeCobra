@@ -15,7 +15,6 @@ import { getBoardDefinitions, TagColor } from '@utils/datatypes/Cube';
 import TagData from '@utils/datatypes/TagData';
 import { getLabels } from '@utils/sorting/Sort';
 
-import AutocardContext from '../contexts/AutocardContext';
 import CubeContext from '../contexts/CubeContext';
 import DisplayContext from '../contexts/DisplayContext';
 import Button from './base/Button';
@@ -92,7 +91,6 @@ const GroupModal: React.FC<GroupModalProps> = ({
   const [addTags, setAddTags] = useState(true);
   const [tags, setTags] = useState<{ id: string; text: string }[]>([]);
   const [targetBoard, setTargetBoard] = useState<string>('');
-  const { hideCard } = useContext(AutocardContext);
   const { setRightSidebarMode } = useContext(DisplayContext);
   const { cube, unfilteredChangedCards } = useContext(CubeContext);
 
@@ -113,9 +111,8 @@ const GroupModal: React.FC<GroupModalProps> = ({
       setModalSelection(
         cardsWithBoardAndIndex(cards.filter((c) => !(c.index === card.index && c.board === card.board))),
       );
-      hideCard();
     },
-    [cards, hideCard, setModalSelection],
+    [cards, setModalSelection],
   );
 
   const removeAll = useCallback(() => {
