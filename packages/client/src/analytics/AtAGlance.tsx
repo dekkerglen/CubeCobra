@@ -27,6 +27,7 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 
+import { chartCardListHandlers, useCardListModal } from '../components/analytics/CardListModal';
 import { Card as CardUI, CardBody, CardHeader } from '../components/base/Card';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Text from '../components/base/Text';
@@ -34,6 +35,7 @@ import Tooltip from '../components/base/Tooltip';
 import CardKingdomBulkButton from '../components/purchase/CardKingdomBulkButton';
 import ManaPoolBulkButton from '../components/purchase/ManaPoolBulkButton';
 import TCGPlayerBulkButton from '../components/purchase/TCGPlayerBulkButton';
+import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, ChartTooltip, Legend);
@@ -139,6 +141,39 @@ const getMajorType = (card: Card): string => {
   return 'Other';
 };
 
+// A chart's data plus the cards behind each bar or slice ([datasetIndex][index]), so a click can list them.
+interface ChartWithCards {
+  data: { labels: string[]; datasets: { label?: string; data: number[] }[] };
+  cards: Card[][][];
+}
+
+const histogramChart = (buckets: { label: string; cards: Card[] }[], color: string) => ({
+  data: {
+    labels: buckets.map((b) => b.label),
+    datasets: [{ data: buckets.map((b) => b.cards.length), backgroundColor: color, borderRadius: 2 }],
+  },
+  cards: [buckets.map((b) => b.cards)],
+});
+
+// Empty groups are left out so they don't clutter the legend.
+const donutChart = (groups: { label: string; cards: Card[]; color: string }[]) => {
+  const nonEmpty = groups.filter((g) => g.cards.length > 0);
+  return {
+    data: {
+      labels: nonEmpty.map((g) => g.label),
+      datasets: [
+        {
+          data: nonEmpty.map((g) => g.cards.length),
+          backgroundColor: nonEmpty.map((g) => g.color),
+          borderWidth: 1,
+          borderColor: 'rgba(255,255,255,0.3)',
+        },
+      ],
+    },
+    cards: [nonEmpty.map((g) => g.cards)],
+  };
+};
+
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
 const StatRow: React.FC<{ label: string; value: string; tooltip?: string }> = ({ label, value, tooltip }) => (
@@ -231,8 +266,8 @@ interface AtAGlanceProps {
 }
 
 const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
-  const { cube, changedCards } = useContext(CubeContext);
-  const cards = useMemo(() => changedCards.mainboard || [], [changedCards.mainboard]);
+  const { cube } = useContext(CubeContext);
+  const cards = useAnalysisCards();
   const total = cards.length;
 
   // ── Computed Stats ────────────────────────────────────────────────────────
@@ -334,234 +369,188 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
     const nonLandCards = cards.filter((c) => !cardIsLand(c));
     const cmcLabels = ['0', '1', '2', '3', '4', '5', '6', '7+'];
 
-    const datasets = COLOR_CATEGORIES_ORDER.map((color) => ({
-      label: color,
-      data: cmcLabels.map(
-        (_, i) =>
-          nonLandCards.filter((c) => cardColorCategory(c) === color && Math.min(Math.floor(cardCmc(c)), 7) === i)
-            .length,
+    const series = COLOR_CATEGORIES_ORDER.map((color) => ({
+      color,
+      buckets: cmcLabels.map((_, i) =>
+        nonLandCards.filter((c) => cardColorCategory(c) === color && Math.min(Math.floor(cardCmc(c)), 7) === i),
       ),
-      backgroundColor: COLOR_MAP[color],
-    })).filter((d) => d.data.some((v) => v > 0));
+    })).filter((s) => s.buckets.some((b) => b.length > 0));
 
-    return { labels: cmcLabels, datasets };
+    return {
+      data: {
+        labels: cmcLabels,
+        datasets: series.map(({ color, buckets }) => ({
+          label: color,
+          data: buckets.map((b) => b.length),
+          backgroundColor: COLOR_MAP[color],
+        })),
+      },
+      cards: series.map((s) => s.buckets),
+    };
   }, [cards]);
 
   // Color Pie (donut)
-  const colorPieData = useMemo(() => {
-    const allCategories = [...COLOR_CATEGORIES_ORDER, 'Lands'];
-    const counts = allCategories.map((cat) => cards.filter((c) => cardColorCategory(c) === cat).length);
-    const nonZero = allCategories.filter((_, i) => counts[i] > 0);
-    const nonZeroCounts = counts.filter((c) => c > 0);
-
-    return {
-      labels: nonZero,
-      datasets: [
-        {
-          data: nonZeroCounts,
-          backgroundColor: nonZero.map((c) => COLOR_MAP[c] || '#555'),
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.3)',
-        },
-      ],
-    };
-  }, [cards]);
+  const colorPieData = useMemo(
+    () =>
+      donutChart(
+        [...COLOR_CATEGORIES_ORDER, 'Lands'].map((cat) => ({
+          label: cat,
+          cards: cards.filter((c) => cardColorCategory(c) === cat),
+          color: COLOR_MAP[cat] || '#555',
+        })),
+      ),
+    [cards],
+  );
 
   // ELO Distribution (histogram, 50-point buckets)
   const eloHistogramData = useMemo(() => {
+    if (cards.length === 0) return histogramChart([], '#67A6D3');
     const elos = cards.map((c) => cardElo(c));
-    if (elos.length === 0) return { labels: [] as string[], datasets: [] };
 
     const minElo = Math.floor(Math.min(...elos) / 50) * 50;
     const maxElo = Math.ceil(Math.max(...elos) / 50) * 50;
-    const labels: string[] = [];
-    const counts: number[] = [];
+    const buckets: { label: string; cards: Card[] }[] = [];
     for (let bucket = minElo; bucket < maxElo; bucket += 50) {
-      labels.push(String(bucket));
-      counts.push(elos.filter((e) => e >= bucket && e < bucket + 50).length);
+      buckets.push({
+        label: String(bucket),
+        cards: cards.filter((c) => cardElo(c) >= bucket && cardElo(c) < bucket + 50),
+      });
     }
 
-    return {
-      labels,
-      datasets: [
-        {
-          data: counts,
-          backgroundColor: '#67A6D3',
-          borderRadius: 2,
-        },
-      ],
-    };
+    return histogramChart(buckets, '#67A6D3');
   }, [cards]);
 
   // Rarity Breakdown (donut)
-  const rarityData = useMemo(() => {
-    const rarities = ['common', 'uncommon', 'rare', 'mythic', 'special'];
-    const counts = rarities.map((r) => cards.filter((c) => cardRarity(c)?.toLowerCase() === r).length);
-    const labels = ['Common', 'Uncommon', 'Rare', 'Mythic', 'Special'];
-    const nonZero = labels.filter((_, i) => counts[i] > 0);
-    const nonZeroCounts = counts.filter((c) => c > 0);
-    const nonZeroColors = rarities.filter((_, i) => counts[i] > 0).map((r) => RARITY_COLORS[r] || '#555');
-
-    return {
-      labels: nonZero,
-      datasets: [
-        {
-          data: nonZeroCounts,
-          backgroundColor: nonZeroColors,
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.3)',
-        },
-      ],
-    };
-  }, [cards]);
+  const rarityData = useMemo(
+    () =>
+      donutChart(
+        ['common', 'uncommon', 'rare', 'mythic', 'special'].map((r) => ({
+          label: r.charAt(0).toUpperCase() + r.slice(1),
+          cards: cards.filter((c) => cardRarity(c)?.toLowerCase() === r),
+          color: RARITY_COLORS[r] || '#555',
+        })),
+      ),
+    [cards],
+  );
 
   // Release Year (histogram)
   const releaseYearData = useMemo(() => {
-    const years = cards.map((c) => cardFirstPrintYear(c)).filter((y) => y > 0);
-    if (years.length === 0) return { labels: [] as string[], datasets: [] };
+    const dated = cards.filter((c) => cardFirstPrintYear(c) > 0);
+    if (dated.length === 0) return histogramChart([], '#6AB572');
 
+    const years = dated.map((c) => cardFirstPrintYear(c));
     const minYear = Math.min(...years);
     const maxYear = Math.max(...years);
-    const labels: string[] = [];
-    const counts: number[] = [];
+    const buckets: { label: string; cards: Card[] }[] = [];
     for (let y = minYear; y <= maxYear; y++) {
-      labels.push(String(y));
-      counts.push(years.filter((yr) => yr === y).length);
+      buckets.push({ label: String(y), cards: dated.filter((c) => cardFirstPrintYear(c) === y) });
     }
 
-    return {
-      labels,
-      datasets: [
-        {
-          data: counts,
-          backgroundColor: '#6AB572',
-          borderRadius: 2,
-        },
-      ],
-    };
+    return histogramChart(buckets, '#6AB572');
   }, [cards]);
 
   // Card Types (donut)
-  const cardTypeData = useMemo(() => {
-    const typeCounts = new Map<string, number>();
-    for (const card of cards) {
-      const t = getMajorType(card);
-      typeCounts.set(t, (typeCounts.get(t) || 0) + 1);
-    }
-    const allTypes = [...MAJOR_TYPES, 'Other'];
-    const labels = allTypes.filter((t) => (typeCounts.get(t) || 0) > 0);
-    const counts = labels.map((t) => typeCounts.get(t) || 0);
-
-    return {
-      labels,
-      datasets: [
-        {
-          data: counts,
-          backgroundColor: labels.map((t) => TYPE_COLORS[t] || '#555'),
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.3)',
-        },
-      ],
-    };
-  }, [cards]);
+  const cardTypeData = useMemo(
+    () =>
+      donutChart(
+        [...MAJOR_TYPES, 'Other'].map((t) => ({
+          label: t,
+          cards: cards.filter((c) => getMajorType(c) === t),
+          color: TYPE_COLORS[t] || '#555',
+        })),
+      ),
+    [cards],
+  );
 
   // Format Legality (donut)
-  const formatLegalityData = useMemo(() => {
-    const formatCounts = new Map<string, number>();
-    for (const card of cards) {
-      const f = getMinFormat(card);
-      formatCounts.set(f, (formatCounts.get(f) || 0) + 1);
-    }
-    const allFormats = [...FORMAT_HIERARCHY, 'Not Legal'];
-    const labels = allFormats.filter((f) => (formatCounts.get(f) || 0) > 0);
-    const counts = labels.map((f) => formatCounts.get(f) || 0);
-
-    return {
-      labels,
-      datasets: [
-        {
-          data: counts,
-          backgroundColor: labels.map((f) => FORMAT_COLORS[f] || '#555'),
-          borderWidth: 1,
-          borderColor: 'rgba(255,255,255,0.3)',
-        },
-      ],
-    };
-  }, [cards]);
+  const formatLegalityData = useMemo(
+    () =>
+      donutChart(
+        [...FORMAT_HIERARCHY, 'Not Legal'].map((f) => ({
+          label: f,
+          cards: cards.filter((c) => getMinFormat(c) === f),
+          color: FORMAT_COLORS[f] || '#555',
+        })),
+      ),
+    [cards],
+  );
 
   // Word Count Distribution (histogram)
   const wordCountHistogramData = useMemo(() => {
-    const wcs = cards.map((c) => cardWordCount(c));
-    if (wcs.length === 0) return { labels: [] as string[], datasets: [] };
+    if (cards.length === 0) return histogramChart([], '#DBC467');
 
-    const maxWc = Math.max(...wcs);
+    const maxWc = Math.max(...cards.map((c) => cardWordCount(c)));
     const bucketSize = Math.max(1, Math.ceil(maxWc / 15));
 
-    const labels: string[] = [];
-    const counts: number[] = [];
+    const buckets: { label: string; cards: Card[] }[] = [];
     for (let b = 0; b <= maxWc; b += bucketSize) {
-      labels.push(bucketSize === 1 ? String(b) : `${b}-${b + bucketSize - 1}`);
-      counts.push(wcs.filter((w) => w >= b && w < b + bucketSize).length);
+      buckets.push({
+        label: bucketSize === 1 ? String(b) : `${b}-${b + bucketSize - 1}`,
+        cards: cards.filter((c) => cardWordCount(c) >= b && cardWordCount(c) < b + bucketSize),
+      });
     }
 
-    return {
-      labels,
-      datasets: [{ data: counts, backgroundColor: '#DBC467', borderRadius: 2 }],
-    };
+    return histogramChart(buckets, '#DBC467');
   }, [cards]);
 
   // Popularity Distribution (histogram, dynamic buckets)
   const popularityHistogramData = useMemo(() => {
-    const pops = cards.map((c) => cardPopularity(c));
-    if (pops.length === 0) return { labels: [] as string[], datasets: [] };
+    if (cards.length === 0) return histogramChart([], '#B87BD6');
 
-    const maxPop = Math.max(...pops);
+    const maxPop = Math.max(...cards.map((c) => cardPopularity(c)));
     const bucketSize = Math.max(1, Math.ceil(maxPop / 15));
-    const labels: string[] = [];
-    const counts: number[] = [];
+    const buckets: { label: string; cards: Card[] }[] = [];
     for (let b = 0; b <= maxPop; b += bucketSize) {
-      labels.push(bucketSize === 1 ? `${b}%` : `${b}-${b + bucketSize - 1}%`);
-      counts.push(pops.filter((p) => p >= b && p < b + bucketSize).length);
+      buckets.push({
+        label: bucketSize === 1 ? `${b}%` : `${b}-${b + bucketSize - 1}%`,
+        cards: cards.filter((c) => cardPopularity(c) >= b && cardPopularity(c) < b + bucketSize),
+      });
     }
 
-    return {
-      labels,
-      datasets: [{ data: counts, backgroundColor: '#B87BD6', borderRadius: 2 }],
-    };
+    return histogramChart(buckets, '#B87BD6');
   }, [cards]);
 
   // Price Distribution (histogram, dynamic buckets)
   const priceHistogramData = useMemo(() => {
-    const prices = cards.map((c) => cardPrice(c)).filter((p): p is number => p !== undefined && p > 0);
-    if (prices.length === 0) return { labels: [] as string[], datasets: [] };
+    const priced = cards.filter((c) => (cardPrice(c) ?? 0) > 0);
+    if (priced.length === 0) return histogramChart([], '#5DAE68');
+    const priceOf = (c: Card) => cardPrice(c) ?? 0;
 
     const bucketEdges = [0, 0.25, 0.5, 1, 2, 5, 10, 25, 50, 100, 250, 500, 1000];
     // Find the last bucket that has cards
-    const maxPrice = Math.max(...prices);
+    const maxPrice = Math.max(...priced.map(priceOf));
     const lastIdx = bucketEdges.findIndex((e) => e > maxPrice);
     const edges = lastIdx === -1 ? bucketEdges : bucketEdges.slice(0, lastIdx + 1);
 
-    const labels: string[] = [];
-    const counts: number[] = [];
+    const buckets: { label: string; cards: Card[] }[] = [];
     for (let i = 0; i < edges.length - 1; i++) {
       const lo = edges[i];
       const hi = edges[i + 1];
-      labels.push(`$${lo}-${hi}`);
-      counts.push(prices.filter((p) => p >= lo && p < hi).length);
+      buckets.push({ label: `$${lo}-${hi}`, cards: priced.filter((c) => priceOf(c) >= lo && priceOf(c) < hi) });
     }
     // Last bucket: captures anything >= last edge
     const lastEdge = edges[edges.length - 1];
-    const lastCount = prices.filter((p) => p >= lastEdge).length;
-    if (lastCount > 0) {
-      labels.push(`$${lastEdge}+`);
-      counts.push(lastCount);
+    const lastBucket = priced.filter((c) => priceOf(c) >= lastEdge);
+    if (lastBucket.length > 0) {
+      buckets.push({ label: `$${lastEdge}+`, cards: lastBucket });
     }
 
-    return {
-      labels,
-      datasets: [{ data: counts, backgroundColor: '#5DAE68', borderRadius: 2 }],
-    };
+    return histogramChart(buckets, '#5DAE68');
   }, [cards]);
+
+  // ── Card List Modal ───────────────────────────────────────────────────────
+
+  const { openCardList, cardListModal } = useCardListModal();
+
+  // Clicking a bar or slice lists its cards, titled e.g. "Mana Value: 3 · Blue".
+  const listOnClick = (name: string, chart: ChartWithCards, formatLabel = (label: string) => label) =>
+    chartCardListHandlers((datasetIndex, index) => {
+      const series = chart.data.datasets[datasetIndex]?.label;
+      return {
+        title: `${name}: ${formatLabel(chart.data.labels[index])}${series ? ` · ${series}` : ''}`,
+        cards: chart.cards[datasetIndex]?.[index] ?? [],
+      };
+    }, openCardList);
 
   // ── Render ────────────────────────────────────────────────────────────────
 
@@ -663,12 +652,18 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
       <Row className="g-3">
         <Col xs={12} lg={6}>
           <ChartCard title="Mana Curve">
-            <Bar data={manaCurveData} options={stackedBarOptions} />
+            <Bar
+              data={manaCurveData.data}
+              options={{ ...stackedBarOptions, ...listOnClick('Mana Value', manaCurveData) }}
+            />
           </ChartCard>
         </Col>
         <Col xs={12} lg={6}>
           <ChartCard title="Original Release Year">
-            <Bar data={releaseYearData} options={histogramOptions} />
+            <Bar
+              data={releaseYearData.data}
+              options={{ ...histogramOptions, ...listOnClick('Original Release Year', releaseYearData) }}
+            />
           </ChartCard>
         </Col>
       </Row>
@@ -677,22 +672,31 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
       <Row className="g-3">
         <Col xs={12} sm={6} lg={3}>
           <ChartCard title="Color Distribution">
-            <Doughnut data={colorPieData} options={doughnutOptions} />
+            <Doughnut
+              data={colorPieData.data}
+              options={{ ...doughnutOptions, ...listOnClick('Color', colorPieData) }}
+            />
           </ChartCard>
         </Col>
         <Col xs={12} sm={6} lg={3}>
           <ChartCard title="Card Types">
-            <Doughnut data={cardTypeData} options={doughnutOptions} />
+            <Doughnut
+              data={cardTypeData.data}
+              options={{ ...doughnutOptions, ...listOnClick('Card Type', cardTypeData) }}
+            />
           </ChartCard>
         </Col>
         <Col xs={12} sm={6} lg={3}>
           <ChartCard title="Rarity Breakdown">
-            <Doughnut data={rarityData} options={doughnutOptions} />
+            <Doughnut data={rarityData.data} options={{ ...doughnutOptions, ...listOnClick('Rarity', rarityData) }} />
           </ChartCard>
         </Col>
         <Col xs={12} sm={6} lg={3}>
           <ChartCard title="Format Legality">
-            <Doughnut data={formatLegalityData} options={doughnutOptions} />
+            <Doughnut
+              data={formatLegalityData.data}
+              options={{ ...doughnutOptions, ...listOnClick('Format Legality', formatLegalityData) }}
+            />
           </ChartCard>
         </Col>
       </Row>
@@ -701,12 +705,21 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
       <Row className="g-3">
         <Col xs={12} lg={6}>
           <ChartCard title="Elo Distribution">
-            <Bar data={eloHistogramData} options={histogramOptions} />
+            <Bar
+              data={eloHistogramData.data}
+              options={{
+                ...histogramOptions,
+                ...listOnClick('Elo', eloHistogramData, (label) => `${label}–${Number(label) + 49}`),
+              }}
+            />
           </ChartCard>
         </Col>
         <Col xs={12} lg={6}>
           <ChartCard title="Word Count Distribution">
-            <Bar data={wordCountHistogramData} options={histogramOptions} />
+            <Bar
+              data={wordCountHistogramData.data}
+              options={{ ...histogramOptions, ...listOnClick('Word Count', wordCountHistogramData) }}
+            />
           </ChartCard>
         </Col>
       </Row>
@@ -718,15 +731,22 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
             title="Popularity Distribution"
             tooltip="Percentage of cubes on Cube Cobra that include each card — shows how niche or ubiquitous your card choices are"
           >
-            <Bar data={popularityHistogramData} options={histogramOptions} />
+            <Bar
+              data={popularityHistogramData.data}
+              options={{ ...histogramOptions, ...listOnClick('Popularity', popularityHistogramData) }}
+            />
           </ChartCard>
         </Col>
         <Col xs={12} lg={6}>
           <ChartCard title="Price Distribution">
-            <Bar data={priceHistogramData} options={histogramOptions} />
+            <Bar
+              data={priceHistogramData.data}
+              options={{ ...histogramOptions, ...listOnClick('Price', priceHistogramData) }}
+            />
           </ChartCard>
         </Col>
       </Row>
+      {cardListModal}
     </Flexbox>
   );
 };

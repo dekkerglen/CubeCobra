@@ -7,11 +7,13 @@ import { cardCanBeSorted, getAllSorts, sortGroupsOrdered } from '@utils/sorting/
 import { fromEntries } from '@utils/Util';
 
 import AsfanDropdown from '../components/analytics/AsfanDropdown';
+import { useCardListModal } from '../components/analytics/CardListModal';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { compareStrings, SortableTable, valueRenderer } from '../components/SortableTable';
+import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
 import useQueryParam from '../hooks/useQueryParam';
 import { getDefaultDraftFormatValue } from '../utils/draftFormats';
@@ -29,8 +31,8 @@ const sortWithTotal: (pool: Card[], sort: string, cubeObj?: Cube | null) => Sort
   ]);
 
 const AnalyticTable: React.FC = () => {
-  const { cube, changedCards } = useContext(CubeContext);
-  const cards = changedCards.mainboard;
+  const { cube } = useContext(CubeContext);
+  const cards = useAnalysisCards();
   const [column, setColumn] = useQueryParam('column', 'Color Identity');
   const [row, setRow] = useQueryParam('row', 'Type');
   const [percentOf, setPercentOf] = useQueryParam('percentOf', 'total');
@@ -67,25 +69,42 @@ const AnalyticTable: React.FC = () => {
     return [fromEntries(counts), counts.map(([label]) => label)];
   }, [cardsWithAsfan, column, cube]);
 
-  const rows = useMemo(
-    () =>
-      [...sortGroupsOrdered(cardsWithAsfan, row, true, cube), ['Total', cardsWithAsfan]]
-        .map(([label, groupCards]) => [label, fromEntries(sortWithTotal(groupCards as Card[], column, cube))])
-        .map(([rowLabel, columnValues]) => ({
-          rowLabel,
-          ...fromEntries(columnLabels.map((label) => [label, (columnValues as Record<string, number>)[label] ?? 0])),
-        })),
-    [cardsWithAsfan, column, row, columnLabels, cube],
-  );
+  // cellCards holds the cards behind each cell, by row label then column label, so a click can list them.
+  const [rows, cellCards] = useMemo(() => {
+    const cells = new Map<string, Map<string, Card[]>>();
+    const rowGroups: [string, Card[]][] = [
+      ...sortGroupsOrdered(cardsWithAsfan, row, true, cube),
+      ['Total', cardsWithAsfan],
+    ];
+    const tableRows = rowGroups.map(([rowLabel, rowCards]) => {
+      const columnGroups = new Map<string, Card[]>([
+        ...sortGroupsOrdered(rowCards, column, true, cube),
+        ['Total', rowCards],
+      ]);
+      cells.set(rowLabel, columnGroups);
+      return {
+        rowLabel,
+        ...fromEntries(
+          columnLabels.map((label) => [
+            label,
+            (columnGroups.get(label) ?? []).reduce((acc, card) => acc + card.asfan!, 0),
+          ]),
+        ),
+      };
+    });
+    return [tableRows, cells] as const;
+  }, [cardsWithAsfan, column, row, columnLabels, cube]);
+
+  const { openCardList, cardListModal } = useCardListModal();
 
   const entryRenderer = useCallback(
-    (value: number, { Total: rowTotal }: { Total: number }, columnLabel: string) => {
+    (value: number, { rowLabel, Total: rowTotal }: { rowLabel: string; Total: number }, columnLabel: string) => {
       value = Number.isFinite(value) ? value : 0;
       let scalingFactor: number | null = null;
       if (percentOf === 'total') scalingFactor = 100 / columnCounts.Total;
       else if (percentOf === 'row') scalingFactor = 100 / rowTotal;
       else if (percentOf === 'column') scalingFactor = 100 / columnCounts[columnLabel];
-      return (
+      const content = (
         <Text>
           {valueRenderer(value)}
           {scalingFactor && (
@@ -95,8 +114,27 @@ const AnalyticTable: React.FC = () => {
           )}
         </Text>
       );
+
+      const cardsInCell = cellCards.get(rowLabel)?.get(columnLabel) ?? [];
+      if (cardsInCell.length === 0) return content;
+
+      const titleParts = [
+        ...(rowLabel !== 'Total' ? [`${row}: ${rowLabel}`] : []),
+        ...(columnLabel !== 'Total' ? [`${column}: ${columnLabel}`] : []),
+      ];
+      return (
+        <button
+          type="button"
+          className="cursor-pointer hover:underline"
+          onClick={() =>
+            openCardList({ title: titleParts.length > 0 ? titleParts.join(' · ') : 'All Cards', cards: cardsInCell })
+          }
+        >
+          {content}
+        </button>
+      );
     },
-    [columnCounts, percentOf],
+    [cellCards, column, columnCounts, openCardList, percentOf, row],
   );
 
   const columnProps = useMemo(
@@ -146,6 +184,7 @@ const AnalyticTable: React.FC = () => {
       <ErrorBoundary>
         <SortableTable columnProps={columnProps} data={rows} sortFns={{ rowLabel: compareStrings }} />
       </ErrorBoundary>
+      {cardListModal}
     </Flexbox>
   );
 };

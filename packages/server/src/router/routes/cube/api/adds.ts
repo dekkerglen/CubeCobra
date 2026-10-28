@@ -1,5 +1,6 @@
 import { typeIsSpecialZoneType } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
+import { isReservedBoardKey, MAX_BOARDS } from '@utils/datatypes/Cube';
 import { makeFilter, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId, getAllMostReasonable } from 'serverutils/carddb';
@@ -31,6 +32,17 @@ export const addsHandler = async (req: Request, res: Response) => {
   try {
     let { skip, limit } = req.body;
     const { cubeID, filterText, printingPreference } = req.body;
+
+    // Which boards count as the cube for ranking and for leaving out cards it already has.
+    // Defaults to the mainboard; anything malformed falls back to it too.
+    const requestedBoards: unknown = req.body.boards;
+    const boards =
+      Array.isArray(requestedBoards) &&
+      requestedBoards.length > 0 &&
+      requestedBoards.length <= MAX_BOARDS &&
+      requestedBoards.every((board) => typeof board === 'string' && !isReservedBoardKey(board))
+        ? (requestedBoards as string[])
+        : ['mainboard'];
 
     if (!cubeID || typeof cubeID !== 'string') {
       return res.status(400).send({
@@ -101,7 +113,8 @@ export const addsHandler = async (req: Request, res: Response) => {
     }
 
     const cubeCards = await cubeCardsPromise;
-    const cubeOracles = cubeCards.mainboard
+    const cubeOracles = boards
+      .flatMap((board) => (Array.isArray(cubeCards[board]) ? cubeCards[board] : []))
       .map((card: any) => cardFromId(card.cardID)?.oracle_id)
       .filter((id: any): id is string => Boolean(id));
 

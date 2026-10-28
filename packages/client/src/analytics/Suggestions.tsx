@@ -10,9 +10,11 @@ import ResponsiveDiv from '../components/base/ResponsiveDiv';
 import Spinner from '../components/base/Spinner';
 import Text from '../components/base/Text';
 import CardGrid from '../components/card/CardGrid';
+import AnalysisBoardPicker from '../components/cube/AnalysisBoardPicker';
 import CubeTray from '../components/cubetray/CubeTray';
 import FilterCollapse from '../components/FilterCollapse';
 import AddToCubeModal from '../components/modals/AddToCubeModal';
+import AnalysisViewContext from '../contexts/AnalysisViewContext';
 import { CSRFContext } from '../contexts/CSRFContext';
 import CubeContext from '../contexts/CubeContext';
 import { CubeTrayProvider } from '../contexts/CubeTrayContext';
@@ -37,10 +39,14 @@ const Suggestions: React.FC = () => {
   const { filterInput } = useContext(FilterContext);
   const { cube } = useContext(CubeContext);
   const { cubeSidebarExpanded } = useContext(DisplayContext);
+  const analysisViewContext = useContext(AnalysisViewContext);
+  // The boards whose cards the recommender treats as the cube.
+  const boards = analysisViewContext?.boards ?? ['mainboard'];
+  const boardsKey = boards.join(',');
 
   // An empty cube has no signal for the recommender, so Smart Search degrades to
   // plain card search sorted by Elo (via /tool/api/searchcards) instead.
-  const isEmptyCube = (cube.cards?.mainboard?.length ?? 0) === 0;
+  const isEmptyCube = boards.every((board) => (cube.cards?.[board]?.length ?? 0) === 0);
   // Keep the floating tray clear of the cube sidebar (expanded w-52 / collapsed w-16).
   const trayLeftClassName = cubeSidebarExpanded ? 'left-4 sm:left-[14rem]' : 'left-4 sm:left-20';
 
@@ -73,6 +79,7 @@ const Suggestions: React.FC = () => {
     filterText: filterInput,
     printingPreference: cube.defaultPrinting,
     isEmpty: isEmptyCube,
+    boards,
   });
   // eslint-disable-next-line react/refs
   paramsRef.current = {
@@ -80,6 +87,7 @@ const Suggestions: React.FC = () => {
     filterText: filterInput,
     printingPreference: cube.defaultPrinting,
     isEmpty: isEmptyCube,
+    boards,
   };
 
   // Fetch successive server windows until `allCards` holds enough cards to fill
@@ -111,7 +119,7 @@ const Suggestions: React.FC = () => {
           batches < MAX_BATCHES_PER_FILL
         ) {
           batches += 1;
-          const { cubeId, filterText, printingPreference, isEmpty } = paramsRef.current;
+          const { cubeId, filterText, printingPreference, isEmpty, boards: boardKeys } = paramsRef.current;
 
           // Empty cube: fall back to plain card search sorted by Elo. The search
           // endpoint is page-based and returns full details, so no per-id lookup.
@@ -150,6 +158,7 @@ const Suggestions: React.FC = () => {
               limit: FETCH_LIMIT,
               filterText,
               printingPreference,
+              boards: boardKeys,
             }),
           });
           const json = await res.json().catch(() => ({}));
@@ -232,7 +241,7 @@ const Suggestions: React.FC = () => {
     if (filterInput && filterInput.trim().length > 0) {
       loadThroughPage(0);
     }
-  }, [filterInput, cube.id, cube.defaultPrinting, isEmptyCube, loadThroughPage]);
+  }, [filterInput, cube.id, cube.defaultPrinting, isEmptyCube, boardsKey, loadThroughPage]);
 
   const goToPage = useCallback(
     (newPage: number) => {
@@ -359,12 +368,15 @@ const Suggestions: React.FC = () => {
     <CubeTrayProvider>
       <div className="p-2">
         <Flexbox direction="col" gap="2">
-          <Text xl semibold>
-            Smart Search
-          </Text>
+          <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
+            <Text xl semibold>
+              Smart Search
+            </Text>
+            <AnalysisBoardPicker />
+          </Flexbox>
           <Text>
             {isEmptyCube
-              ? 'This cube has no cards yet, so there’s nothing to tailor recommendations to — Smart Search runs your filter against the full card pool sorted by Elo. Enter a search filter to begin.'
+              ? `${boardsKey === 'mainboard' ? 'This cube has' : 'The selected boards have'} no cards yet, so there’s nothing to tailor recommendations to — Smart Search runs your filter against the full card pool sorted by Elo. Enter a search filter to begin.`
               : 'Smart Search is card search with a context-aware sort. It runs your filter against the full card pool and then ranks the results by how well each card fits this specific cube — surfacing relevant additions that a plain alphabetical search would bury. Enter a search filter to begin.'}
           </Text>
           <FilterCollapse isOpen buttonLabel="Search" />

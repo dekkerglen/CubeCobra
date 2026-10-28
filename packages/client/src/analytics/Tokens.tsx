@@ -29,6 +29,7 @@ import Text from '../components/base/Text';
 import Markdown from '../components/Markdown';
 import ManaPoolBulkButton from '../components/purchase/ManaPoolBulkButton';
 import TCGPlayerBulkButton from '../components/purchase/TCGPlayerBulkButton';
+import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
 import useAlerts, { Alerts } from '../hooks/UseAlerts';
 
@@ -84,9 +85,9 @@ interface PositionedCard extends CardType {
 }
 
 const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
-  const { cube, changedCards } = useContext(CubeContext);
+  const { cube } = useContext(CubeContext);
   const { alerts, addAlert, dismissAlerts } = useAlerts();
-  const cards = changedCards.mainboard;
+  const cards = useAnalysisCards();
 
   const { data, exportTokens, exportCSVRows } = useMemo((): {
     data: {

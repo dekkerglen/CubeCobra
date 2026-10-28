@@ -16,7 +16,7 @@ const AutocardDiv = withAutocard('div');
 const MIN_QUERY_LENGTH = 3;
 const DEBOUNCE_MS = 150;
 
-const normalize = (raw: string): string =>
+export const normalize = (raw: string): string =>
   (raw || '')
     // Replace curly quotes with straight quotes. Needed for iOS.
     .replace(/[‘’“”]/g, (c: string) => '\'\'""'.substr('‘’“”'.indexOf(c), 1))
@@ -40,6 +40,9 @@ export interface AutocompleteInputProps extends InputProps {
   // Render the suggestion dropdown in a body portal (fixed-positioned under the
   // input) so it escapes any scroll/overflow container the input sits inside.
   portalDropdown?: boolean;
+  // Keep the dropdown open when the only suggestion is exactly what's typed, so
+  // the user sees their input confirmed as a real name.
+  showExactMatch?: boolean;
 }
 
 const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
@@ -51,6 +54,7 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   defaultPrinting = null,
   showImages = true,
   portalDropdown = false,
+  showExactMatch = false,
   ...props
 }) => {
   const [matches, setMatches] = useState<string[]>([]);
@@ -158,7 +162,10 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   );
 
   const showMatches =
-    visible && !!value && matches.length > 0 && !(matches.length === 1 && matches[0] === normalizedValue);
+    visible &&
+    !!value &&
+    matches.length > 0 &&
+    (showExactMatch || !(matches.length === 1 && matches[0] === normalizedValue));
   // While a lookup is in flight, keep the dropdown open with a single spinner row
   // (the user can keep typing). Resolves to the matches once they arrive.
   const hasQuery = visible && !!value && normalizedValue.length >= MIN_QUERY_LENGTH;

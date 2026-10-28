@@ -122,6 +122,10 @@ export default interface Draft {
   // failed once this is old enough, so a draft can't sit "building…" forever. Unrelated
   // writes (a deck save) must not refresh it, which is why it isn't `dateLastUpdated`.
   botDecksPendingSince?: number;
+  // Art crop shown as the deck's preview image in place of the cube's image. Defaults to the
+  // drafter's first pick (P1P1) when the draft is saved; the owner can swap it for another card
+  // from the deckbuilder. Unset for older decks and for sealed/uploaded decks, which have no picks.
+  previewImage?: string;
 }
 
 // Deck-building fields a client may submit for a seat when it finishes a draft in the browser

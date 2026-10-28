@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useMemo } from 'react';
 
 import {
   cardEtchedPrice,
@@ -26,7 +26,7 @@ import { Card as CardUI, CardBody, CardHeader } from '../components/base/Card';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Text from '../components/base/Text';
 import Tooltip from '../components/base/Tooltip';
-import CubeContext from '../contexts/CubeContext';
+import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, ChartTooltip, Legend);
 
@@ -195,8 +195,7 @@ const valueBarOptions = {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 const Prices: React.FC = () => {
-  const { changedCards } = useContext(CubeContext);
-  const cards = useMemo(() => changedCards.mainboard || [], [changedCards.mainboard]);
+  const cards = useAnalysisCards();
   const total = cards.length;
 
   const stats = useMemo(() => {

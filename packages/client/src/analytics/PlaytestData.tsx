@@ -31,6 +31,7 @@ import ErrorBoundary from '../components/ErrorBoundary';
 import { SortableTable } from '../components/SortableTable';
 import withAutocard from '../components/WithAutocard';
 import { CSRFContext } from '../contexts/CSRFContext';
+import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
 import useLocalPlaytestAnalysisHistory from '../hooks/useLocalPlaytestAnalysisHistory';
 import { computePlaytestCardStats, runPlaytestAnalysis } from '../utils/playtestAnalysisRun';
@@ -331,8 +332,8 @@ interface ClusterInfo {
 
 // ─── Main ────────────────────────────────────────────────────────────────────
 const PlaytestData: React.FC = () => {
-  const { cube, changedCards } = useContext(CubeContext);
-  const cards = useMemo(() => changedCards.mainboard || [], [changedCards]);
+  const { cube } = useContext(CubeContext);
+  const cards = useAnalysisCards();
   const { csrfFetch } = useContext(CSRFContext);
 
   const {

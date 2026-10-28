@@ -12,6 +12,7 @@ import Select from '../components/base/Select';
 import Text from '../components/base/Text';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { compareStrings, SortableTable } from '../components/SortableTable';
+import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
 import useQueryParam from '../hooks/useQueryParam';
 import { getDefaultDraftFormatValue } from '../utils/draftFormats';
@@ -31,8 +32,8 @@ const DEFAULT_CHARACTERISTIC = 'Mana Value';
 const DEFAULT_USE_ASFANS = 'false';
 
 const Averages: React.FC<AveragesProps> = ({ characteristics }) => {
-  const { cube, changedCards } = useContext(CubeContext);
-  const cards = changedCards.mainboard;
+  const { cube } = useContext(CubeContext);
+  const cards = useAnalysisCards();
 
   const defaultDraftFormat = getDefaultDraftFormatValue(cube);
 

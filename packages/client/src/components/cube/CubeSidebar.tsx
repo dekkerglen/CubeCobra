@@ -521,6 +521,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                                           'recommender',
                                           'playtest-data',
                                           'tokens',
+                                          'keywords',
                                           'combos',
                                           'prices',
                                         ].includes(activeLink))
@@ -749,6 +750,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                             analysisViewContext &&
                             (activeLink === 'analysis' ||
                               [
+                                'at-a-glance',
                                 'averages',
                                 'table',
                                 'asfans',
@@ -756,6 +758,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                                 'recommender',
                                 'playtest-data',
                                 'tokens',
+                                'keywords',
                                 'combos',
                                 'prices',
                               ].includes(activeLink))

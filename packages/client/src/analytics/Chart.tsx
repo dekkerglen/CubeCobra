@@ -17,9 +17,11 @@ import {
 import { Bar } from 'react-chartjs-2';
 
 import AsfanDropdown from '../components/analytics/AsfanDropdown';
+import { chartCardListHandlers, useCardListModal } from '../components/analytics/CardListModal';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
+import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
 import useQueryParam from '../hooks/useQueryParam';
 import { getDefaultDraftFormatValue } from '../utils/draftFormats';
@@ -59,8 +61,8 @@ const getColor = (label: string, index: number): string => {
 };
 
 const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
-  const { cube, changedCards } = useContext(CubeContext);
-  const cards = changedCards.mainboard;
+  const { cube } = useContext(CubeContext);
+  const cards = useAnalysisCards();
 
   const [sort, setSort] = useQueryParam('sort', 'Color Identity');
   const [characteristic, setCharacteristic] = useQueryParam('field', 'Mana Value');
@@ -68,8 +70,14 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
   const [draftFormat, setDraftFormat] = useQueryParam('format', getDefaultDraftFormatValue(cube));
 
   const allSorts = useMemo(() => getAllSorts(cube), [cube]);
+  const { openCardList, cardListModal } = useCardListModal();
 
   const groups = sortIntoGroups(cards, sort, false, cube);
+
+  const labels = useMemo(
+    () => characteristics[characteristic].labels(cards, characteristic),
+    [characteristic, characteristics, cards],
+  );
 
   const options = {
     responsive: true,
@@ -97,12 +105,15 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
         },
       },
     },
+    ...chartCardListHandlers((datasetIndex, index) => {
+      const groupKey = Object.keys(groups)[datasetIndex];
+      const label = labels[index];
+      return {
+        title: sort === 'Unsorted' ? `${characteristic}: ${label}` : `${characteristic}: ${label} · ${groupKey}`,
+        cards: groups[groupKey].filter((card) => characteristics[characteristic].cardIsLabel(card, label)),
+      };
+    }, openCardList),
   };
-
-  const labels = useMemo(
-    () => characteristics[characteristic].labels(cards, characteristic),
-    [characteristic, characteristics, cards],
-  );
 
   const asfans = useMemo(() => {
     if (useAsfans !== 'true') {
@@ -162,6 +173,7 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
         setUseAsfans={(val) => setUseAsfans(val.toString())}
       />
       <Bar options={options as any} data={data} />
+      {cardListModal}
     </Flexbox>
   );
 };

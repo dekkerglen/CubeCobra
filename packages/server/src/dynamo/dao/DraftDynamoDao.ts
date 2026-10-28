@@ -65,6 +65,7 @@ export interface UnhydratedDraft {
   botDecksPending?: boolean;
   botDecksFailed?: boolean;
   botDecksPendingSince?: number;
+  previewImage?: string;
 }
 
 interface QueryResult {
@@ -146,6 +147,9 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       botDecksPending: item.botDecksPending,
       botDecksFailed: item.botDecksFailed,
       botDecksPendingSince: item.botDecksPendingSince,
+      // Defaults to the drafter's P1P1 until one is set; after that only the deckbuilder
+      // changes it (see applySeatEdit), so a save never replaces an image the user chose.
+      previewImage: item.previewImage ?? this.getPreviewImage(item),
     };
   }
 
@@ -158,11 +162,15 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
    *
    * The pipeline sets them through {@link markBotDecksPending} / {@link applyBuiltBotDecks} /
    * {@link markBotDecksFailed}, and creation writes them directly — those are the only writers.
+   *
+   * The preview image follows the same rule: the user picks it in the deckbuilder, which writes
+   * it through {@link applySeatEdit}, so a stale copy can't put back the old one.
    */
   protected refreshFromStored(stored: UnhydratedDraft, item: Draft): void {
     item.botDecksPending = stored.botDecksPending;
     item.botDecksFailed = stored.botDecksFailed;
     item.botDecksPendingSince = stored.botDecksPendingSince;
+    item.previewImage = stored.previewImage;
   }
 
   /**
@@ -219,6 +227,8 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       botDecksPending: item.botDecksPending,
       botDecksFailed: item.botDecksFailed,
       botDecksPendingSince: item.botDecksPendingSince,
+      // Decks saved before preview images existed have none stored; show their P1P1 anyway.
+      previewImage: item.previewImage ?? this.getPreviewImage({ seats: seatsData.seats || [], cards }),
     };
   }
 
@@ -300,6 +310,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         botDecksPending: item.botDecksPending,
         botDecksFailed: item.botDecksFailed,
         botDecksPendingSince: item.botDecksPendingSince,
+        previewImage: item.previewImage ?? this.getPreviewImage(data),
       };
     });
   }
@@ -405,6 +416,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         basics: [],
         InitialState: [],
         DraftmancerLog: item.DraftmancerLog,
+        previewImage: item.previewImage,
       };
     });
 
@@ -513,6 +525,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         basics: [],
         InitialState: [],
         DraftmancerLog: item.DraftmancerLog,
+        previewImage: item.previewImage,
       };
     });
 
@@ -651,6 +664,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         basics: [],
         InitialState: [],
         DraftmancerLog: item.DraftmancerLog,
+        previewImage: item.previewImage,
       };
     });
 
@@ -1050,6 +1064,8 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       title: string;
       body: string;
       newCards?: { cardID: string; type_line?: string }[];
+      // A card whose art the user dropped onto the deck's preview thumbnail.
+      previewCardID?: string;
     },
   ): Promise<void> {
     const bucket = process.env.DATA_BUCKET!;
@@ -1085,6 +1101,13 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       grid.map((row) => row.map((col) => col.filter((idx) => idx >= 0 && idx < cards.length)));
     const mainboard = sanitize(edit.mainboard);
     const sideboard = sanitize(edit.sideboard);
+
+    // Only a card from this deck's pool can become its preview, and the art is resolved here
+    // rather than taken from the client, so the stored image is always a real card's art.
+    const previewImage =
+      edit.previewCardID && cards.some((card) => card?.cardID === edit.previewCardID)
+        ? cardFromId(edit.previewCardID).art_crop
+        : undefined;
 
     // A user-supplied deck name lives on the seat as `title`; only fall back to the generated
     // archetype name when it's blank, so no save ever wipes a name the user typed. Only this
@@ -1127,10 +1150,14 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       }
     }
 
-    // 3. Patch the metadata item: the deck name, this seat's name, and nothing else.
+    // 3. Patch the metadata item: the deck name, this seat's name, the preview image if one was
+    //    chosen, and nothing else.
     await this.patchRaw(key, (item) => {
       item.complete = true;
       item.dateLastUpdated = Date.now();
+      if (previewImage) {
+        item.previewImage = previewImage;
+      }
 
       if (edit.title) {
         item.name = edit.title;
@@ -1352,6 +1379,18 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       }
     }
     return [...oracleIds];
+  }
+
+  /**
+   * Art crop of the drafter's first pick (their P1P1). Uses the first human seat with picks,
+   * since a Draftmancer upload can put a bot in seat 0. Undefined for sealed/upload decks and
+   * cards without art (custom cards), so callers fall back to the cube's image.
+   */
+  private getPreviewImage(draft: Pick<DraftType, 'seats' | 'cards'>): string | undefined {
+    const seat = draft.seats?.find((s) => !s.bot && s.pickorder && s.pickorder.length > 0);
+    const firstPick = seat?.pickorder?.[0];
+    const card = firstPick !== undefined ? draft.cards?.[firstPick] : undefined;
+    return card?.cardID ? cardFromId(card.cardID).art_crop : undefined;
   }
 
   private async getDeckColors(

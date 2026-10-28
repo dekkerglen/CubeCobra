@@ -10,13 +10,14 @@ import Select from '../components/base/Select';
 import Text from '../components/base/Text';
 import ErrorBoundary from '../components/ErrorBoundary';
 import { compareStrings, SortableTable } from '../components/SortableTable';
+import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
 import useQueryParam from '../hooks/useQueryParam';
 import { getDefaultDraftFormatValue } from '../utils/draftFormats';
 
 const Asfans: React.FC = () => {
-  const { cube, changedCards } = useContext(CubeContext);
-  const cards = changedCards.mainboard;
+  const { cube } = useContext(CubeContext);
+  const cards = useAnalysisCards();
   const [sort, setSort] = useQueryParam('sort', 'Color');
   const [draftFormat, setDraftFormat] = useQueryParam('format', getDefaultDraftFormatValue(cube));
 

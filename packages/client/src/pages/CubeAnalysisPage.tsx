@@ -50,7 +50,9 @@ interface CubeAnalysisPageProps {
 const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, tokenMap }) => {
   const analysisViewContext = React.useContext(AnalysisViewContext);
   const view = analysisViewContext?.view || 'averages';
-  const { cube, cardsLoading } = useContext(CubeContext);
+  const boards = analysisViewContext?.boards ?? ['mainboard'];
+  const { cardsLoading, unfilteredChangedCards } = useContext(CubeContext);
+  const selectedBoardsEmpty = boards.every((board) => (unfilteredChangedCards[board]?.length ?? 0) === 0);
 
   const convertToCharacteristic = (name: string, func: (card: any) => any) => ({
     get: func,
@@ -206,10 +208,14 @@ const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, toke
         <div className="flex justify-center py-12">
           <Spinner lg />
         </div>
-      ) : cube.cards.mainboard.length === 0 && view !== 'recommender' ? (
+      ) : selectedBoardsEmpty && view !== 'recommender' ? (
         // Smart Search still works on an empty cube — it just becomes plain card
         // search sorted by Elo — so let it render rather than blocking here.
-        <Text lg>This cube doesn't have any cards. Add cards to see analytics.</Text>
+        <Text lg>
+          {boards.length === 1 && boards[0] === 'mainboard'
+            ? "This cube doesn't have any cards. Add cards to see analytics."
+            : "The selected boards don't have any cards."}
+        </Text>
       ) : view === 'at-a-glance' ? (
         content
       ) : (

@@ -1,6 +1,13 @@
 import React, { useCallback, useState } from 'react';
 
-import { DndContext, DragEndEvent, useDroppable } from '@dnd-kit/core';
+import {
+  CollisionDetection,
+  DndContext,
+  DragEndEvent,
+  pointerWithin,
+  rectIntersection,
+  useDroppable,
+} from '@dnd-kit/core';
 import { cardType, cmcColumn, detailsToCard, makeSubtitle } from '@utils/cardutil';
 import CardType, { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
@@ -44,6 +51,32 @@ const RemoveZone: React.FC = () => {
   );
 };
 
+const PREVIEW_DROP_ID = 'deckbuilder-preview';
+
+// The dragged card is far bigger than the preview thumbnail, so judged by overlap it always loses
+// to the cards around it. When the pointer is over the thumbnail, the thumbnail wins.
+const collisionDetection: CollisionDetection = (args) => {
+  const preview = pointerWithin(args).find((collision) => collision.id === PREVIEW_DROP_ID);
+  return preview ? [preview] : rectIntersection(args);
+};
+
+// Thumbnail of the deck's preview image, beside the deck name. Dropping a card onto it uses that
+// card's art as the deck's image; the card itself stays where it was.
+const PreviewImageZone: React.FC<{ image: string }> = ({ image }) => {
+  const { setNodeRef, isOver } = useDroppable({ id: PREVIEW_DROP_ID, data: { type: 'preview' } });
+  return (
+    <div
+      ref={setNodeRef}
+      title="Drag a card here to use its art as the deck's image"
+      className={`shrink-0 h-10 aspect-video rounded overflow-hidden border-2 transition-colors ${
+        isOver ? 'border-link' : 'border-border'
+      }`}
+    >
+      <img src={image} alt="Deck image" className="w-full h-full object-cover" />
+    </div>
+  );
+};
+
 const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initialDeck }) => {
   const searchParams = new URLSearchParams(window.location.search);
   const seatIndex = parseInt(searchParams.get('seat') || '0', 10);
@@ -62,6 +95,11 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
   const [removed, setRemoved] = useState<number[]>([]);
   const seat = initialDeck.seats[seatIndex];
   const [deckTitle, setDeckTitle] = useState(seat?.title || '');
+  // The server fills in the drafter's first pick when none was chosen; decks without picks
+  // (sealed, uploads) fall back to the cube's image, as their preview does.
+  const [previewImage, setPreviewImage] = useState(initialDeck.previewImage || `/cubeimage/${cube.id}`);
+  // Only set once the user drops a card on the thumbnail; sent on save.
+  const [previewCardID, setPreviewCardID] = useState<string>();
 
   const { basics } = initialDeck;
 
@@ -76,6 +114,22 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
 
       const source = active.data.current as DraftLocation;
       const target = over.data.current as DraftLocation | { type: string };
+
+      // Dropped onto the preview thumbnail: use the card's art as the deck's image.
+      if ((target as { type: string })?.type === 'preview') {
+        let cardIndex: number | undefined;
+        if (source.type === 'removed') {
+          cardIndex = removed[source.index];
+        } else if (source.type === 'deck' || source.type === 'sideboard') {
+          cardIndex = (source.type === 'deck' ? mainboard : sideboard)[source.row]?.[source.col]?.[source.index];
+        }
+        const card = cardIndex !== undefined ? cards[cardIndex] : undefined;
+        if (card?.details?.art_crop) {
+          setPreviewImage(card.details.art_crop);
+          setPreviewCardID(card.cardID);
+        }
+        return;
+      }
 
       // Dropped onto the remove zone: move the card from its board into the removed pile.
       if ((target as { type: string })?.type === 'remove') {
@@ -225,6 +279,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
             setSideboard={setSideboard}
             seat={seatIndex}
             deckTitle={deckTitle}
+            previewCardID={previewCardID}
             maxSpells={maxSpells}
             maxLands={maxLands}
             onAddCard={addCardToDeck}
@@ -246,21 +301,28 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
           />
           <DynamicFlash />
           <Card className="my-3">
-            <DndContext onDragEnd={handleMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
+            <DndContext
+              collisionDetection={collisionDetection}
+              onDragEnd={handleMoveCard}
+              onDragStart={() => setDragStartTime(Date.now())}
+            >
               <ErrorBoundary>
                 <DeckStacks
                   cards={mainboard.map((col) => col.map((row) => row.map((index) => cards[index])))}
                   title="Deck"
                   titleAccessory={
-                    <input
-                      type="text"
-                      aria-label="Deck name"
-                      value={deckTitle}
-                      onChange={(e) => setDeckTitle(e.target.value)}
-                      placeholder={seat?.name || 'Deck name...'}
-                      maxLength={100}
-                      className="border border-border rounded px-2 py-1 text-sm w-64 bg-bg focus:outline-none focus:border-link"
-                    />
+                    <div className="flex items-center gap-2">
+                      <PreviewImageZone image={previewImage} />
+                      <input
+                        type="text"
+                        aria-label="Deck name"
+                        value={deckTitle}
+                        onChange={(e) => setDeckTitle(e.target.value)}
+                        placeholder={seat?.name || 'Deck name...'}
+                        maxLength={100}
+                        className="border border-border rounded px-2 py-1 text-sm w-64 bg-bg focus:outline-none focus:border-link"
+                      />
+                    </div>
                   }
                   subtitle={makeSubtitle(
                     mainboard

@@ -13,6 +13,7 @@ import { CSRFContext } from 'contexts/CSRFContext';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Link from '../components/base/Link';
 import Text from '../components/base/Text';
+import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
 
 interface ComboCardProps {
@@ -31,13 +32,13 @@ const zoneLocations: Record<string, string> = {
 };
 
 const ComboCard: React.FC<ComboCardProps> = ({ combo }) => {
-  const { cube } = useContext(CubeContext);
+  const analysisCards = useAnalysisCards();
 
   const cards = useMemo(() => {
     const oracles = (combo.uses ?? []).map((use: Combo['uses'][number]) => use?.card?.oracleId);
     //Match the first copy of the oracle id in the cube list
     const matchedOracles = new Set();
-    return cube.cards.mainboard.filter((card) => {
+    return analysisCards.filter((card) => {
       const oracleId = cardOracleId(card);
       if (matchedOracles.has(oracleId)) {
         return false;
@@ -48,7 +49,7 @@ const ComboCard: React.FC<ComboCardProps> = ({ combo }) => {
       }
       return matched;
     });
-  }, [combo, cube]);
+  }, [combo, analysisCards]);
 
   return (
     <Card className="mb-3">
@@ -141,8 +142,8 @@ const ComboCard: React.FC<ComboCardProps> = ({ combo }) => {
 
 const Combos: React.FC = () => {
   const [loading, setLoading] = useState(true);
-  const { cube, changedCards } = useContext(CubeContext);
-  const cards = changedCards.mainboard;
+  const { cube } = useContext(CubeContext);
+  const cards = useAnalysisCards();
   const [comboData, setComboData] = useState<Combo[]>([]);
   const { csrfFetch } = useContext(CSRFContext);
   const [resultFilter, setResultFilter] = useState<string>('');

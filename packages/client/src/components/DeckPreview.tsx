@@ -51,7 +51,7 @@ const DeckPreview: React.FC<DeckPreviewProps> = ({ deck }) => {
       >
         <AspectRatioBox ratio={16 / 9}>
           <img
-            src={`/cubeimage/${deck.cube}`}
+            src={deck.previewImage || `/cubeimage/${deck.cube}`}
             alt={deck.name}
             className="absolute inset-0 w-full h-full object-cover object-top transition-transform duration-300 group-hover:scale-105 saturate-75"
           />

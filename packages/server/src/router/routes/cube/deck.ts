@@ -617,7 +617,7 @@ export const editDeckHandler = async (req: Request, res: Response) => {
       });
     }
 
-    const { main, side, title, description, seat, newCards } = req.body;
+    const { main, side, title, description, seat, newCards, previewCard } = req.body;
 
     const seatIndex = parseInt(seat || '0', 10);
     if (!deck.seats[seatIndex]) {
@@ -636,6 +636,7 @@ export const editDeckHandler = async (req: Request, res: Response) => {
       title: (title || '').trim().substring(0, 100),
       body: (description || '').substring(0, 1000),
       newCards: newCards ? JSON.parse(newCards) : [],
+      previewCardID: typeof previewCard === 'string' && previewCard ? previewCard : undefined,
     });
 
     req.flash('success', 'Deck saved successfully');
@@ -853,7 +854,11 @@ export const getDeckHandler = async (req: Request, res: Response) => {
       },
       {
         title: `${abbreviate(cube.name)} - Draft Deck`,
-        metadata: generateMeta(cube.brief, cube.image.uri, `${baseUrl}/cube/deck/${req.params.id}`),
+        metadata: generateMeta(
+          cube.brief,
+          draft.previewImage || cube.image.uri,
+          `${baseUrl}/cube/deck/${req.params.id}`,
+        ),
       },
     );
   } catch (err) {

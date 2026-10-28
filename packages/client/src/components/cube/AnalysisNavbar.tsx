@@ -7,7 +7,9 @@ import { filterToReadableString } from '@utils/filtering/FilterCards';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
+import AnalysisBoardPicker from 'components/cube/AnalysisBoardPicker';
 import AdvancedFilterModal from 'components/modals/AdvancedFilterModal';
+import AnalysisViewContext from 'contexts/AnalysisViewContext';
 import CubeContext from 'contexts/CubeContext';
 import FilterContext from 'contexts/FilterContext';
 
@@ -18,6 +20,7 @@ const AnalysisNavbar: React.FC = () => {
 
   const { filterInput, setFilterInput, filterValid, cardFilter } = useContext(FilterContext);
   const { filterResult } = useContext(CubeContext);
+  const analysisViewContext = useContext(AnalysisViewContext);
 
   // Sync local filter with context filter
   useEffect(() => {
@@ -94,11 +97,13 @@ const AnalysisNavbar: React.FC = () => {
             />
           </div>
         </div>
+        <AnalysisBoardPicker />
       </Flexbox>
       {filterResult && Object.keys(filterResult).length > 0 && (
         <div className="text-center py-1">
           <Text italic sm>
             {Object.entries(filterResult)
+              .filter(([boardname]) => analysisViewContext?.boards.includes(boardname) ?? boardname === 'mainboard')
               .map(([boardname, counts]) => `Showing ${counts[0]} / ${counts[1]} cards in ${boardname}`)
               .join('. ')}
           </Text>

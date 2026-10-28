@@ -40,6 +40,8 @@ interface DeckbuilderNavbarProps {
   setSideboard: (sideboard: any) => void;
   seat: number;
   deckTitle: string;
+  // Card whose art the user chose as the deck's preview image, if they changed it.
+  previewCardID?: string;
   maxSpells?: number;
   maxLands?: number;
   // Adds an arbitrary card to the deck (resolved to a CardDetails). When set,
@@ -67,6 +69,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   setDeck,
   seat,
   deckTitle,
+  previewCardID,
   maxSpells = 23,
   maxLands = 17,
   onAddCard,
@@ -97,8 +100,9 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
       // Cards added beyond the original pool are appended server-side so the
       // mainboard/sideboard indices that reference them resolve correctly.
       newCards: JSON.stringify(cards.slice(originalCardCount ?? cards.length).map((card) => ({ cardID: card.cardID }))),
+      previewCard: previewCardID ?? '',
     }),
-    [mainboard, sideboard, seat, deckTitle, cards, originalCardCount],
+    [mainboard, sideboard, seat, deckTitle, cards, originalCardCount, previewCardID],
   );
 
   const handleAddCard = useCallback(

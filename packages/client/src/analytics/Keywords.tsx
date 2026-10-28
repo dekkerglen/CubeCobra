@@ -21,6 +21,7 @@ import { Col, Flexbox, Row } from '../components/base/Layout';
 import Text from '../components/base/Text';
 import Tooltip from '../components/base/Tooltip';
 import Markdown from '../components/Markdown';
+import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
 import { getKeywordReminder } from '../utils/keywordReminderText';
 
@@ -321,8 +322,8 @@ const KeywordReferenceCard: React.FC<{ stat: KeywordStat; cube: any }> = ({ stat
 
 // ─── Main component ───────────────────────────────────────────────────────────────
 const Keywords: React.FC = () => {
-  const { cube, changedCards } = useContext(CubeContext);
-  const cards = useMemo(() => changedCards.mainboard || [], [changedCards.mainboard]);
+  const { cube } = useContext(CubeContext);
+  const cards = useAnalysisCards();
 
   const [densityMode, setDensityMode] = useState<'count' | 'density'>('count');
 

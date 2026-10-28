@@ -90,3 +90,36 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Cube analytics now open on the cube's default draft format instead of always Standard Draft.
 - Cubes with Standard Draft turned off no longer offer it in the draft simulator or as the default format, and deleting the default custom format no longer switches the default back to Standard Draft.
 - Format menus no longer go blank when the cube's default format has been deleted.
+- Cube owners can now pick a banner color for their cube — White, Blue, Black, Red or Green — from the cube's overview settings.
+- The cube overview editor uses the same sections in the same order in both the settings page and the edit window: Cube Name, Brief Description, Image, Banner Color, Categories and Custom URL.
+- The Report button in a cube's banner now looks like the buttons next to it, and the banner's buttons show a pointer cursor.
+- Blog posts in your dashboard feed now show the cube's image, so you can tell at a glance which cube they're from.
+- Hovering over a date like "3 days ago" now shows the full date and time.
+- Links that open in a new tab, like View Card Analytics or View on Scryfall in the card window, no longer get stuck on a loading spinner and stop working.
+- Every page now has its own browser tab title — pages like Search Cubes, Resources, Mana Matrix and Log In had just said "Cube Cobra" — and link previews use the same title.
+- Card pages now show play rate and Elo with a small chart of their history and how much each has moved over the last 4 and 12 weeks.
+- The Purchase section on card pages is now a single table of every store, including foil and etched prices, replacing the duplicate price badges under the card image.
+- The card window on the cube list now uses the same Purchase table, adding the foil and Cardhoarder prices it was missing, and shows the card's ID below its image.
+- The printings list on a card page now includes the printing you're viewing, in bold, and every price shows two decimal places.
+- Cubes with this Card and Packages with this Card now sit with the Scryfall, EDHREC and MTG Top 8 links on card pages.
+- The button that flips a card to its back face now says Transform only for transforming cards, and Turn Over for modal double-faced cards, double-faced tokens and other two-sided cards.
+- Format legality on card pages no longer cuts off format names like Commander and Premodern on phones.
+- The card page tabs fit on one row on phones instead of wrapping and pushing the set name onto a second line.
+- The card image on card pages no longer shrinks on very wide screens.
+- The checkboxes in the cube list's edit bar no longer overlap each other.
+- Cards you drag out of your deck in the deckbuilder now go to a Removed pile you can drag them back from until you save.
+- Choosing None for a draft format's Basics board now really leaves basic lands out; a new Default option uses the cube's Basics board as before.
+- When a draft has no basic lands to add, the Add Basics window now explains why, and tells cube owners how to fix it.
+- Deck stats can now be shown on a deck's page as well as in the deckbuilder, from a Show Deck Stats button in the menu bar.
+- The deck stats panel now follows the site's light or dark theme instead of showing white boxes in dark mode.
+- You can now name your deck right next to its title in the deckbuilder, and Save Deck stands out as the main button.
+- With Collapse Duplicates on, the Visual Spoiler now combines copies only within each sort section, the same way Table view does, instead of across the whole list.
+- Cube analytics pages have a new board picker next to the filter, so you can choose which boards (Mainboard, Maybeboard, Basics or any custom board) count toward the analytics.
+- The "Showing X / Y cards" line under the analytics filter now lists only the boards you've picked.
+- Switching away from the Keywords analytics page no longer reloads the page and clears your filter.
+- Clicking a bar or slice on the At a Glance and Chart analytics pages, or a cell in the Table analytics page, now opens a list of the cards it counts.
+- Smart Search now has the analytics board picker too: the boards you pick are what it treats as your cube when ranking suggestions, and cards already on those boards aren't suggested.
+- Finished drafts now show the art of your first pick (P1P1) on their deck tile and in shared links, instead of the cube's image.
+- You can change a deck's image in the deckbuilder: drag any card onto the thumbnail next to the deck name to use its art.
+- In Mana Matrix, typing a card's full name now still shows it in the suggestions, confirming it's a real card.
+- Mana Matrix no longer lets you save a cell with a name that isn't a real card; it asks you to pick one from the suggestions instead.
