@@ -25,7 +25,7 @@ describe('Pack bot ratings toggle', () => {
   it('labels the button Hide and renders percentages when ratings are shown', () => {
     renderPack({ ratings: [0.75, 0.25], showRatings: true });
 
-    expect(screen.getByRole('button', { name: 'Hide CubeCobra Bot Ratings' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Hide CubeCobra Bot Ratings' })).not.toHaveClass('invisible');
     expect(screen.getByText('75%')).toBeInTheDocument();
     expect(screen.getByText('25%')).toBeInTheDocument();
   });
