@@ -1,11 +1,12 @@
 import { arraysEqual } from '@utils/Util';
 
-export type location = 'pack' | 'picks' | 'deck' | 'sideboard';
+export type location = 'pack' | 'picks' | 'deck' | 'sideboard' | 'removed';
 
 export const locations: { [key: string]: location } = {
   pack: 'pack',
   deck: 'deck',
   sideboard: 'sideboard',
+  removed: 'removed',
 };
 
 class DraftLocation {
@@ -35,6 +36,10 @@ class DraftLocation {
 
   static sideboard(row: number, col: number, index: number) {
     return new DraftLocation('sideboard', row, col, index);
+  }
+
+  static removed(index: number) {
+    return new DraftLocation('removed', 0, 0, index);
   }
 
   equals(other: DraftLocation) {

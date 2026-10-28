@@ -61,6 +61,7 @@ export interface UnhydratedDraft {
   name: string;
   seatNames?: string[];
   DraftmancerLog?: DraftmancerLog;
+  basicsBoard?: string;
   botDecksPending?: boolean;
   botDecksFailed?: boolean;
   botDecksPendingSince?: number;
@@ -141,6 +142,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       name: item.name,
       seatNames: item.seatNames,
       DraftmancerLog: item.DraftmancerLog,
+      basicsBoard: item.basicsBoard,
       botDecksPending: item.botDecksPending,
       botDecksFailed: item.botDecksFailed,
       botDecksPendingSince: item.botDecksPendingSince,
@@ -213,6 +215,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       InitialState: seatsData.InitialState || [],
       DraftmancerLog: item.DraftmancerLog,
       HousmanLog: seatsData.HousmanLog,
+      basicsBoard: item.basicsBoard,
       botDecksPending: item.botDecksPending,
       botDecksFailed: item.botDecksFailed,
       botDecksPendingSince: item.botDecksPendingSince,
@@ -293,6 +296,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         InitialState: data.InitialState,
         DraftmancerLog: item.DraftmancerLog,
         HousmanLog: data.HousmanLog,
+        basicsBoard: item.basicsBoard,
         botDecksPending: item.botDecksPending,
         botDecksFailed: item.botDecksFailed,
         botDecksPendingSince: item.botDecksPendingSince,
@@ -807,6 +811,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     date?: number | Date;
     name?: string;
     basics?: number[];
+    basicsBoard?: string;
     InitialState?: any;
     DraftmancerLog?: DraftmancerLog;
     seed?: string;
@@ -866,6 +871,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       cards: draftData.cards,
       seats: draftData.seats,
       basics: draftData.basics || [],
+      basicsBoard: draftData.basicsBoard,
       InitialState: draftData.InitialState,
       DraftmancerLog: draftData.DraftmancerLog,
       seed: draftData.seed,

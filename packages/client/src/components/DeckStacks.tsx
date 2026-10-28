@@ -13,6 +13,8 @@ import DraggableCard from './DraggableCard';
 interface DeckStacksProps {
   cards: Card[][][];
   title: string;
+  // Rendered beside the title, e.g. an editable deck name.
+  titleAccessory?: React.ReactNode;
   subtitle?: React.ReactNode;
   locationType: location;
   onClickCard?: (card: Card) => void;
@@ -27,7 +29,16 @@ interface DragOverState {
   index: number;
 }
 
-const DeckStacks: React.FC<DeckStacksProps> = ({ cards, title, subtitle, locationType, xs, md, lg }) => {
+const DeckStacks: React.FC<DeckStacksProps> = ({
+  cards,
+  title,
+  titleAccessory,
+  subtitle,
+  locationType,
+  xs,
+  md,
+  lg,
+}) => {
   const [dragOverPosition, setDragOverPosition] = useState<DragOverState | null>(null);
   const [draggedFrom, setDraggedFrom] = useState<DragOverState | null>(null);
 
@@ -111,9 +122,12 @@ const DeckStacks: React.FC<DeckStacksProps> = ({ cards, title, subtitle, locatio
     <>
       <CardHeader>
         <Flexbox direction="row" alignItems="end" justify="between" wrap="wrap">
-          <Text semibold lg>
-            {title}
-          </Text>
+          <Flexbox direction="row" alignItems="center" gap="2">
+            <Text semibold lg>
+              {title}
+            </Text>
+            {titleAccessory}
+          </Flexbox>
           <Text semibold md>
             {subtitle}
           </Text>

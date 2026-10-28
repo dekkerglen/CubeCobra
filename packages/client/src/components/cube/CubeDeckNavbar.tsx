@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 
-import { KebabHorizontalIcon, PencilIcon, UploadIcon } from '@primer/octicons-react';
+import { GraphIcon, KebabHorizontalIcon, PencilIcon, UploadIcon } from '@primer/octicons-react';
 import { cardName } from '@utils/cardutil';
 import Draft from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
@@ -30,7 +30,8 @@ interface CubeDeckNavbarProps {
 }
 
 const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex, setSeatIndex, view, setView }) => {
-  const { showCustomImages, toggleShowCustomImages } = React.useContext(DisplayContext);
+  const { showCustomImages, toggleShowCustomImages, showDeckBuilderStatsPanel, toggleShowDeckBuilderStatsPanel } =
+    React.useContext(DisplayContext);
   const { alerts, addAlert, dismissAlerts } = useAlerts();
 
   const isOwner = user && draft.owner && user.id === (draft.owner as User).id;
@@ -56,6 +57,16 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
     addAlert('success', 'Copied.');
     setTimeout(dismissAlerts, 3000);
   }, [addAlert, dismissAlerts, draft, seatIndex]);
+
+  const deckStatsToggle = (
+    <Link
+      onClick={toggleShowDeckBuilderStatsPanel}
+      className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
+    >
+      <GraphIcon size={16} />
+      {showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats
+    </Link>
+  );
 
   return (
     <>
@@ -185,6 +196,7 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
               Edit
             </Link>
           )}
+          {deckStatsToggle}
           <Dropdown
             trigger={
               <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
@@ -330,6 +342,7 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
                 <Alerts alerts={alerts} />
               </Flexbox>
             </Dropdown>
+            {deckStatsToggle}
             <Dropdown
               trigger={
                 <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">

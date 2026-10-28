@@ -9,6 +9,7 @@ import { DeckSortKey, getCardDefaultRowColumn, sortDeckIntoColumns, splitDeckByC
 
 import BotDeckStatusBanner from 'components/BotDeckStatusBanner';
 import DeckBuilderStatsPanel from 'components/DeckBuilderStatsPanel';
+import RemovedPile from 'components/RemovedPile';
 
 import { Card } from '../components/base/Card';
 import Container from '../components/base/Container';
@@ -19,6 +20,7 @@ import DynamicFlash from '../components/DynamicFlash';
 import ErrorBoundary from '../components/ErrorBoundary';
 import RenderToRoot from '../components/RenderToRoot';
 import DraftLocation, { addCard, locations, moveCard, removeCard } from '../drafting/DraftLocation';
+import { discardToPile, restoreFromPile } from '../drafting/removedPile';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
 
@@ -27,7 +29,7 @@ interface CubeDeckbuilderPageProps {
   initialDeck: Draft;
 }
 
-// Drop target for discarding a card out of the deck entirely.
+// Drop target that moves a card out of the deck into the recoverable removed pile.
 const RemoveZone: React.FC = () => {
   const { setNodeRef, isOver } = useDroppable({ id: 'deckbuilder-remove', data: { type: 'remove' } });
   return (
@@ -56,6 +58,10 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
     initialDeck.seats[seatIndex]?.sideboard || initialDeck.seats[0].sideboard,
   );
   const [dragStartTime, setDragStartTime] = useState<number | null>(null);
+  // Session-only: removed cards are dropped on save, like before.
+  const [removed, setRemoved] = useState<number[]>([]);
+  const seat = initialDeck.seats[seatIndex];
+  const [deckTitle, setDeckTitle] = useState(seat?.title || '');
 
   const { basics } = initialDeck;
 
@@ -71,19 +77,32 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
       const source = active.data.current as DraftLocation;
       const target = over.data.current as DraftLocation | { type: string };
 
-      // Dropped onto the remove zone: pull the card out of its board and discard.
+      // Dropped onto the remove zone: move the card from its board into the removed pile.
       if ((target as { type: string })?.type === 'remove') {
         if (source.type !== 'deck' && source.type !== 'sideboard') {
           return;
         }
         const sourceLocation = source.type === 'deck' ? mainboard : sideboard;
         const setSource = source.type === 'deck' ? setMainboard : setSideboard;
-        const [, newSourceLocation] = removeCard(sourceLocation, source);
-        setSource(newSourceLocation);
+        const result = discardToPile(sourceLocation, source, removed);
+        setSource(result.board);
+        setRemoved(result.pile);
         return;
       }
 
       const targetLoc = target as DraftLocation;
+
+      if (source.type === 'removed') {
+        if (targetLoc.type !== 'deck' && targetLoc.type !== 'sideboard') {
+          return;
+        }
+        const targetLocation = targetLoc.type === 'deck' ? mainboard : sideboard;
+        const setTarget = targetLoc.type === 'deck' ? setMainboard : setSideboard;
+        const result = restoreFromPile(removed, source.index, targetLocation, targetLoc);
+        setTarget(result.board);
+        setRemoved(result.pile);
+        return;
+      }
 
       if (source.equals(targetLoc)) {
         // player dropped card back in the same location
@@ -118,8 +137,8 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
         return;
       }
 
-      if (source.type === 'pack' || targetLoc.type === 'pack') {
-        // there are no packs in the deckbuilder
+      if (source.type === 'pack' || targetLoc.type === 'pack' || targetLoc.type === 'removed') {
+        // there are no packs in the deckbuilder, and the removed pile is only filled via the remove zone
         return;
       }
 
@@ -143,7 +162,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
         setTarget(addCard(targetLocation, targetLoc, card));
       }
     },
-    [mainboard, sideboard, setMainboard, setSideboard, cards, dragStartTime],
+    [mainboard, sideboard, setMainboard, setSideboard, cards, dragStartTime, removed],
   );
 
   const addBasics = useCallback(
@@ -205,6 +224,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
             setDeck={setMainboard}
             setSideboard={setSideboard}
             seat={seatIndex}
+            deckTitle={deckTitle}
             maxSpells={maxSpells}
             maxLands={maxLands}
             onAddCard={addCardToDeck}
@@ -231,6 +251,17 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
                 <DeckStacks
                   cards={mainboard.map((col) => col.map((row) => row.map((index) => cards[index])))}
                   title="Deck"
+                  titleAccessory={
+                    <input
+                      type="text"
+                      aria-label="Deck name"
+                      value={deckTitle}
+                      onChange={(e) => setDeckTitle(e.target.value)}
+                      placeholder={seat?.name || 'Deck name...'}
+                      maxLength={100}
+                      className="border border-border rounded px-2 py-1 text-sm w-64 bg-bg focus:outline-none focus:border-link"
+                    />
+                  }
                   subtitle={makeSubtitle(
                     mainboard
                       .flat()
@@ -255,6 +286,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
                   lg={8}
                 />
                 <RemoveZone />
+                <RemovedPile cards={removed.map((index) => cards[index])} />
               </ErrorBoundary>
             </DndContext>
           </Card>

@@ -8,6 +8,7 @@ import { Col, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import BotDeckStatusBanner from 'components/BotDeckStatusBanner';
 import CubeDeckNavbar from 'components/cube/CubeDeckNavbar';
+import DeckBuilderStatsPanel from 'components/DeckBuilderStatsPanel';
 import DeckCard from 'components/DeckCard';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
@@ -69,6 +70,11 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft }) => {
               setView={setView}
             />
             <UpgradePrompt className="mt-3" storageKey="deckPage" message="Hope you enjoyed your draft!" />
+            <DeckBuilderStatsPanel
+              cards={(hydratedDraft.seats[parseInt(seatIndex)]?.mainboard ?? [])
+                .flat(2)
+                .map((index) => hydratedDraft.cards[index])}
+            />
             <Row className="mt-3 mb-3">
               <Col>
                 <DeckCard
