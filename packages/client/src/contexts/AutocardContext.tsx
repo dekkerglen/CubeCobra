@@ -31,13 +31,16 @@ interface CardDivProps {
 // the preview keeps from the edge of the viewport.
 const GAP = 5;
 const EDGE_MARGIN = 5;
-// Width budget for the tag rail that sits alongside the preview.
-const TAG_WIDTH = 128;
+// Fixed width for the tag rail beside the preview. Tag values are free text and can be
+// arbitrarily long, so the rail is given a width to wrap within rather than being sized
+// by its content.
+const TAG_WIDTH = 160;
 
 interface Layout {
   left: number;
   top: number;
   tagsLeft: number;
+  tagsTop: number;
 }
 
 /**
@@ -61,6 +64,7 @@ const placeAlong = (start: number, end: number, size: number, extent: number): n
 const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, foilOverlay, blackBorder, anchor }) => {
   const [layout, setLayout] = useState<Layout | null>(null);
   const autocardPopup = useRef<HTMLDivElement>(null);
+  const autocardTags = useRef<HTMLDivElement>(null);
   const cursor = useRef<{ x: number; y: number } | null>(null);
 
   const visible = !hidden && (front !== null || back !== null);
@@ -98,9 +102,17 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
 
     const left = placeAlong(startX, endX, width, viewportWidth);
     const top = placeAlong(startY, endY, height, viewportHeight);
-    const tagsFitRight = left + width + TAG_WIDTH <= viewportWidth - EDGE_MARGIN;
 
-    setLayout({ left, top, tagsLeft: tagsFitRight ? left + width : Math.max(EDGE_MARGIN, left - TAG_WIDTH) });
+    // The rail is measured rather than assumed: its height depends on how many tags
+    // there are and how many lines each one wraps to.
+    const tagsHeight = autocardTags.current?.getBoundingClientRect().height ?? 0;
+    const tagsFitRight = left + width + GAP + TAG_WIDTH <= viewportWidth - EDGE_MARGIN;
+    const tagsLeft = tagsFitRight
+      ? left + width + GAP
+      : Math.max(EDGE_MARGIN, Math.min(left - TAG_WIDTH - GAP, viewportWidth - EDGE_MARGIN - TAG_WIDTH));
+    const tagsTop = Math.max(EDGE_MARGIN, Math.min(top, viewportHeight - EDGE_MARGIN - tagsHeight));
+
+    setLayout({ left, top, tagsLeft, tagsTop });
   }, [anchor]);
 
   // Tracked unconditionally. A preview can be triggered with no mouse movement at all —
@@ -167,8 +179,8 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
     pointerEvents: 'none',
     zIndex,
     left: layout?.tagsLeft ?? 0,
-    top: layout?.top ?? 0,
-    maxWidth: `${TAG_WIDTH}px`,
+    top: layout?.tagsTop ?? 0,
+    width: `${TAG_WIDTH}px`,
     visibility: ready ? 'visible' : 'hidden',
   };
 
@@ -199,11 +211,10 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
         </div>
       </div>
       {tags.length > 0 && (
-        <div id="autocardTags" style={tagPosition}>
-          <div
-            className="mx-2 autocard-tags-container bg-bg-accent"
-            style={{ padding: '0.5rem', whiteSpace: 'nowrap', overflow: 'hidden', borderRadius: '0.5rem' }}
-          >
+        <div id="autocardTags" style={tagPosition} ref={autocardTags}>
+          {/* Tag values are free text. They wrap inside the rail's fixed width — the rail
+              used to be nowrap and unbounded, so a long tag ran off the side of the page. */}
+          <div className="bg-bg-accent rounded-lg p-2 break-words">
             <Flexbox direction="col" gap="1">
               {tags.map((tag) => (
                 <Tag key={tag.value} text={tag.value} colorClass={tag.colorClass} colorStyle={tag.colorStyle} />

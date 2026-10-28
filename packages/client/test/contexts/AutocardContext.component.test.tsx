@@ -234,6 +234,48 @@ describe('autocard previews', () => {
     expect(onClick).toHaveBeenCalled();
   });
 
+  it('renders a long tag value in full inside a bounded rail', () => {
+    // Regression: the rail was white-space: nowrap with no width bound, so a long tag
+    // value stretched it off the side of the page.
+    const longTag = 'Supercalifragilistic Reanimator Combo Enabler Package';
+    const tagged = { ...card, tags: [longTag] } as unknown as Card;
+    render(
+      <AutocardContextProvider>
+        <AutocardDiv card={tagged}>Lightning Bolt</AutocardDiv>
+      </AutocardContextProvider>,
+    );
+
+    moveCursorTo(100, 100);
+    fireEvent.mouseEnter(screen.getByText('Lightning Bolt'));
+
+    const rail = document.getElementById('autocardTags') as HTMLDivElement;
+    expect(rail).toBeInTheDocument();
+    // The value is rendered in full rather than being clipped to the rail.
+    expect(rail).toHaveTextContent(longTag);
+    // The rail is width-bounded so the value has something to wrap within, and nothing
+    // in it forces a single line.
+    expect(rail.style.width).toBe('160px');
+    expect(rail.firstElementChild).toHaveClass('break-words');
+    expect((rail.firstElementChild as HTMLElement).style.whiteSpace).not.toBe('nowrap');
+  });
+
+  it('keeps the tag rail inside the viewport when the preview is near the right edge', () => {
+    const tagged = { ...card, tags: ['Reanimator'] } as unknown as Card;
+    render(
+      <AutocardContextProvider>
+        <AutocardDiv card={tagged}>Lightning Bolt</AutocardDiv>
+      </AutocardContextProvider>,
+    );
+
+    moveCursorTo(VIEWPORT.width - 20, 100);
+    fireEvent.mouseEnter(screen.getByText('Lightning Bolt'));
+
+    const rail = document.getElementById('autocardTags') as HTMLDivElement;
+    const railLeft = parseFloat(rail.style.left);
+    expect(railLeft).toBeGreaterThanOrEqual(0);
+    expect(railLeft + 160).toBeLessThanOrEqual(VIEWPORT.width);
+  });
+
   it('does not show a preview when given neither a card nor an image', () => {
     render(
       <AutocardContextProvider>
