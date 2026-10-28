@@ -29,6 +29,9 @@ interface PackProps {
   // Extra controls rendered in the pack header toolbar (e.g. the "Share as P1P1"
   // button shown at pack 1 pick 1). Kept generic so Pack has no draft-specific deps.
   headerActions?: React.ReactNode;
+  // The ratings toggle is owned by the caller so it can outlive a single pack.
+  showRatings?: boolean;
+  onToggleRatings?: () => void;
 }
 
 // 'auto' keeps the responsive breakpoint behavior below; a number forces that
@@ -90,18 +93,15 @@ const Pack: React.FC<PackProps> = ({
   retryInProgress = false,
   packSize,
   headerActions,
+  showRatings = false,
+  onToggleRatings = () => {},
 }) => {
-  const [showRatings, setShowRatings] = useState(false);
   const [cardsPerRow, setCardsPerRow] = useLocalStorage<CardsPerRowSetting>('draftPackCardsPerRow', 'auto');
   const [minHeight, setMinHeight] = useState(() => {
     const width = typeof window !== 'undefined' ? window.innerWidth : 768;
     return getPackMinHeight(Math.max(pack.length, packSize ?? pack.length), getPackColumns(cardsPerRow, width), width);
   });
   const maxRating = ratings ? Math.max(...ratings) : 0;
-
-  useEffect(() => {
-    setShowRatings(false);
-  }, [pack]);
 
   useEffect(() => {
     // The placeholder needs to follow the same breakpoint behavior as the grid itself,
@@ -144,11 +144,11 @@ const Pack: React.FC<PackProps> = ({
             </Button>
           ) : (
             <Button
-              className={ratings && ratings.length > 0 && !showRatings ? '' : 'invisible'}
-              onClick={() => setShowRatings(true)}
+              className={ratings && ratings.length > 0 ? '' : 'invisible'}
+              onClick={onToggleRatings}
               color="primary"
             >
-              Show CubeCobra Bot Ratings
+              {showRatings ? 'Hide' : 'Show'} CubeCobra Bot Ratings
             </Button>
           )}
         </div>

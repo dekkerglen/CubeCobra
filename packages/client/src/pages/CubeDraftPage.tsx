@@ -116,6 +116,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
   const [sideboard, setSideboard] = useLocalStorage(`sideboard-${draft.id}`, setupPicks(1, 8));
   const [trashboard, setTrashboard] = useLocalStorage<number[]>(`trashboard-${draft.id}`, []);
   const [ratings, setRatings] = useState<number[]>([]);
+  const [showRatings, setShowRatings] = useState(false);
   const [currentPredictions, setCurrentPredictions] = useState<PredictResponse | null>(null);
   const [userPicksInOrder, setUserPicksInOrder] = useLocalStorage<number[]>(`picks-${draft.id}`, []); // Tracks the pick sequencing, managed separately from the mainboard/sideboard state
   const [pendingPick, setPendingPick] = useState<number | null>(null); // Add state to track the pending pick made during predictionsLoading
@@ -874,6 +875,9 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
   // can turn it into a shareable/votable P1P1 instead of screenshotting it.
   const isFirstPick = state.pack === 1 && state.pick === 1 && !draftStatus.loading;
 
+  // Owned here rather than in Pack so the choice survives every pick and pack of this draft.
+  const toggleRatings = useCallback(() => setShowRatings((prev) => !prev), []);
+
   return (
     <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="playtest">
@@ -905,6 +909,8 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
                     title={packTitle}
                     disabled={packDisabled || draftStatus.retryInProgress}
                     ratings={ratings}
+                    showRatings={showRatings}
+                    onToggleRatings={toggleRatings}
                     error={draftStatus.predictError}
                     onRetry={handleRetryPredict}
                     retryInProgress={draftStatus.retryInProgress}
