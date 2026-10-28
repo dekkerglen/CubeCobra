@@ -4,7 +4,6 @@ import { isVoucher } from '@utils/cardutil';
 import Deck from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
 
-import useLocalStorage from '../hooks/useLocalStorage';
 import useQueryParam from '../hooks/useQueryParam';
 import { normalizeProbabilities } from '../utils/botRatings';
 import Text from './base/Text';
@@ -26,7 +25,7 @@ interface BreakdownProps {
 
 const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber, setPickNumber }) => {
   const [ratings, setRatings] = useState<number[]>([]);
-  const [showRatings, setShowRatings] = useLocalStorage(`showDraftRatings-${draft.id}`, true);
+  const [showRatings, setShowRatings] = useState(true);
 
   // Handle both CubeCobra and Draftmancer drafts
   const {
