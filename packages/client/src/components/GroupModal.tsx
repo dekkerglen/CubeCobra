@@ -280,7 +280,6 @@ const GroupModal: React.FC<GroupModalProps> = ({
                       key={card.index}
                       card={card}
                       noCardModal
-                      inModal
                       last={index === cards.length - 1}
                       first={index === 0}
                     >

@@ -255,7 +255,6 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
         matches.map((match, index) => {
           return showImages ? (
             <AutocardDiv
-              inModal
               image={
                 cubeId
                   ? `/tool/cardimageforcube/${encodeURIComponent(match)}/${cubeId}`

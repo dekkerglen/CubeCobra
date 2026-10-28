@@ -21,7 +21,6 @@ interface CardDivProps {
   front: string | null;
   back: string | null;
   tags: Tag[];
-  zIndex: number;
   foilOverlay: boolean;
   blackBorder: boolean;
   anchor: HTMLElement | null;
@@ -31,10 +30,12 @@ interface CardDivProps {
 // the preview keeps from the edge of the viewport.
 const GAP = 5;
 const EDGE_MARGIN = 5;
-// Fixed width for the tag rail beside the preview. Tag values are free text and can be
-// arbitrarily long, so the rail is given a width to wrap within rather than being sized
-// by its content.
-const TAG_WIDTH = 160;
+// Tag values are free text and can be arbitrarily long. The rail is sized by its content
+// up to this width, past which values wrap instead of stretching it off the page.
+const TAG_MAX_WIDTH = 160;
+// Above every overlay the app puts up (dropdowns at 1050, the draft table at 1300). The
+// preview is transient and pointer-events: none, so nothing should ever cover it.
+const POPUP_Z_INDEX = 2000;
 
 interface Layout {
   left: number;
@@ -61,7 +62,7 @@ const placeAlong = (start: number, end: number, size: number, extent: number): n
   return Math.max(EDGE_MARGIN, extent - EDGE_MARGIN - size);
 };
 
-const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, foilOverlay, blackBorder, anchor }) => {
+const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, foilOverlay, blackBorder, anchor }) => {
   const [layout, setLayout] = useState<Layout | null>(null);
   const autocardPopup = useRef<HTMLDivElement>(null);
   const autocardTags = useRef<HTMLDivElement>(null);
@@ -103,13 +104,12 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
     const left = placeAlong(startX, endX, width, viewportWidth);
     const top = placeAlong(startY, endY, height, viewportHeight);
 
-    // The rail is measured rather than assumed: its height depends on how many tags
-    // there are and how many lines each one wraps to.
-    const tagsHeight = autocardTags.current?.getBoundingClientRect().height ?? 0;
-    const tagsFitRight = left + width + GAP + TAG_WIDTH <= viewportWidth - EDGE_MARGIN;
-    const tagsLeft = tagsFitRight
-      ? left + width + GAP
-      : Math.max(EDGE_MARGIN, Math.min(left - TAG_WIDTH - GAP, viewportWidth - EDGE_MARGIN - TAG_WIDTH));
+    // The rail is measured rather than assumed: it is sized by its tags, up to
+    // TAG_MAX_WIDTH, and its height depends on how many lines those tags wrap to.
+    const tagsRect = autocardTags.current?.getBoundingClientRect();
+    const tagsWidth = tagsRect?.width ?? 0;
+    const tagsHeight = tagsRect?.height ?? 0;
+    const tagsLeft = placeAlong(left, left + width, tagsWidth, viewportWidth);
     const tagsTop = Math.max(EDGE_MARGIN, Math.min(top, viewportHeight - EDGE_MARGIN - tagsHeight));
 
     setLayout({ left, top, tagsLeft, tagsTop });
@@ -168,7 +168,7 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
   const ready = visible && layout !== null;
 
   const popupStyle: React.CSSProperties = {
-    zIndex,
+    zIndex: POPUP_Z_INDEX,
     left: layout?.left ?? 0,
     top: layout?.top ?? 0,
     visibility: ready ? 'visible' : 'hidden',
@@ -177,10 +177,10 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, zIndex, fo
   const tagPosition: React.CSSProperties = {
     position: 'fixed',
     pointerEvents: 'none',
-    zIndex,
+    zIndex: POPUP_Z_INDEX,
     left: layout?.tagsLeft ?? 0,
     top: layout?.tagsTop ?? 0,
-    width: `${TAG_WIDTH}px`,
+    maxWidth: `${TAG_MAX_WIDTH}px`,
     visibility: ready ? 'visible' : 'hidden',
   };
 
@@ -232,13 +232,7 @@ export interface AutocardContextValue {
    * Shows a preview and returns a token identifying it, or null if nothing was shown.
    * Pass the token back to hideCard so a stale trigger can't dismiss a newer preview.
    */
-  showCard: (
-    card: any,
-    inModal: boolean,
-    showCustomImages: boolean,
-    tagColors: TagColor[],
-    anchor?: HTMLElement | null,
-  ) => number | null;
+  showCard: (card: any, showCustomImages: boolean, tagColors: TagColor[], anchor?: HTMLElement | null) => number | null;
   hideCard: (token?: number | null) => void;
   stopAutocard: boolean;
   setStopAutocard: React.Dispatch<React.SetStateAction<boolean>>;
@@ -259,18 +253,11 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
   const [back, setBack] = useState<string | null>(null);
   const [stopAutocard, setStopAutocard] = useState(false);
   const [tags, setTags] = useState<Tag[]>([]);
-  const [zIndex, setZIndex] = useState(500);
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const token = useRef(0);
 
   const showCard = useCallback(
-    (
-      card: Card,
-      inModal: boolean,
-      showCustomImages: boolean,
-      tagColors: TagColor[],
-      anchorElement?: HTMLElement | null,
-    ) => {
+    (card: Card, showCustomImages: boolean, tagColors: TagColor[], anchorElement?: HTMLElement | null) => {
       if (stopAutocard || !card) {
         return null;
       }
@@ -287,7 +274,6 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
           colorStyle: getTagColorStyle(tagColors, tag),
         })),
       );
-      setZIndex(inModal ? 1500 : 500);
       setAnchor(anchorElement ?? null);
 
       token.current += 1;
@@ -364,7 +350,6 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
         front={front}
         back={back}
         tags={tags}
-        zIndex={zIndex}
         foilOverlay={foilOverlay}
         blackBorder={blackBorder}
         anchor={anchor}

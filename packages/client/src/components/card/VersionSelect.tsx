@@ -8,8 +8,8 @@ import Input from '../base/Input';
 import { ListGroupItem } from '../base/ListGroup';
 import withAutocard from '../WithAutocard';
 
-// Rows are real DOM elements (unlike native <option>s), so autocard can attach
-// and preview each printing's image on hover.
+// Rows are real DOM elements rather than native <option>s, so each printing can carry a
+// hover preview.
 const AutocardItem = withAutocard(ListGroupItem);
 
 // Above this many versions we show a filter box to tame very long printing lists.
@@ -27,7 +27,7 @@ export interface VersionSelectProps {
   label?: string;
   value: string; // current scryfall_id (card.cardID)
   setValue: (value: string) => void;
-  versions: VersionOption[]; // each includes image_normal for the hover preview
+  versions: VersionOption[]; // rows without an image_normal get no hover preview
   disabled?: boolean;
   loading?: boolean;
 }
@@ -121,10 +121,8 @@ const VersionSelect: React.FC<VersionSelectProps> = ({ label, value, setValue, v
                     first: index === 0 && !showFilter,
                     last: index === filtered.length - 1,
                   };
-                  // Only wrap with autocard when we have an image to preview;
-                  // withAutocard would otherwise dereference an undefined card.
                   return version.image_normal ? (
-                    <AutocardItem key={version.scryfall_id} image={version.image_normal} inModal {...rowProps}>
+                    <AutocardItem key={version.scryfall_id} image={version.image_normal} {...rowProps}>
                       {version.version}
                     </AutocardItem>
                   ) : (

@@ -46,7 +46,6 @@ const CardListModal: React.FC<CardListModalProps> = ({ isOpen, setOpen, title, c
             <AutocardListItem
               key={name}
               card={card}
-              inModal
               onClick={() => window.open(`/tool/card/${card.cardID}`)}
               first={index === 0}
               last={index === entries.length - 1}

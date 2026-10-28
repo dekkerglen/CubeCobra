@@ -23,6 +23,8 @@ const otherCard = {
 
 const VIEWPORT = { width: 1200, height: 800 };
 const POPUP = { width: 240, height: 334 };
+// Every non-popup element, including the tag rail, measures this in the stub below.
+const ELEMENT = { width: 100, height: 20 };
 // Mutable so a test can model a double-faced preview, which is twice as wide.
 let popupSize = { ...POPUP };
 
@@ -35,7 +37,7 @@ beforeAll(() => {
   // jsdom reports every element as 0x0, so the popup needs a size for the clamping
   // logic to have anything to work with.
   jest.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
-    const size = this.id === 'autocardPopup' ? popupSize : { width: 100, height: 20 };
+    const size = this.id === 'autocardPopup' ? popupSize : ELEMENT;
     return { ...size, top: 0, left: 0, right: size.width, bottom: size.height, x: 0, y: 0, toJSON: () => ({}) };
   });
 });
@@ -252,9 +254,10 @@ describe('autocard previews', () => {
     expect(rail).toBeInTheDocument();
     // The value is rendered in full rather than being clipped to the rail.
     expect(rail).toHaveTextContent(longTag);
-    // The rail is width-bounded so the value has something to wrap within, and nothing
-    // in it forces a single line.
-    expect(rail.style.width).toBe('160px');
+    // The rail is bounded rather than fixed-width, so short tags keep a narrow rail and
+    // long ones have something to wrap within.
+    expect(rail.style.maxWidth).toBe('160px');
+    expect(rail.style.width).toBe('');
     expect(rail.firstElementChild).toHaveClass('break-words');
     expect((rail.firstElementChild as HTMLElement).style.whiteSpace).not.toBe('nowrap');
   });
@@ -273,7 +276,7 @@ describe('autocard previews', () => {
     const rail = document.getElementById('autocardTags') as HTMLDivElement;
     const railLeft = parseFloat(rail.style.left);
     expect(railLeft).toBeGreaterThanOrEqual(0);
-    expect(railLeft + 160).toBeLessThanOrEqual(VIEWPORT.width);
+    expect(railLeft + ELEMENT.width).toBeLessThanOrEqual(VIEWPORT.width);
   });
 
   it('does not show a preview when given neither a card nor an image', () => {
