@@ -2,7 +2,7 @@ import React, { useContext, useMemo } from 'react';
 
 import { cardIndex, cardName } from '@utils/cardutil';
 import { BoardType, default as CardType } from '@utils/datatypes/Card';
-import { sortForDownload } from '@utils/sorting/Sort';
+import { sortDeep } from '@utils/sorting/Sort';
 
 import { NumCols } from 'components/base/Layout';
 import CardGrid from 'components/card/CardGrid';
@@ -22,36 +22,45 @@ const VisualSpoiler: React.FC<VisualSpoilerProps> = ({ cards }) => {
     displayOptions: { showUnsorted, collapseDuplicateCards: collapseDuplicates },
   } = useContext(DisplayContext);
 
-  const sorted = useMemo(
-    () =>
-      sortForDownload(
-        cards,
-        sortPrimary || 'Color Category',
-        sortSecondary || 'Types-Multicolor',
-        sortTertiary || 'CMC',
-        sortQuaternary || 'Alphabetical',
-        showUnsorted,
-        cube,
-      ),
-    [cards, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, showUnsorted, cube],
-  );
+  const sections = useMemo(() => {
+    const deep = sortDeep(
+      cards,
+      showUnsorted,
+      sortQuaternary || 'Alphabetical',
+      [sortPrimary || 'Color Category', sortSecondary || 'Types-Multicolor', sortTertiary || 'CMC'],
+      cube,
+    );
+    const leaves: CardType[][] = [];
+    const walk = (node: typeof deep) => {
+      if (node.length > 0 && Array.isArray(node[0])) {
+        for (const [, child] of node as [string, typeof deep][]) walk(child);
+      } else {
+        leaves.push(node as CardType[]);
+      }
+    };
+    walk(deep);
+    return leaves;
+  }, [cards, sortPrimary, sortSecondary, sortTertiary, sortQuaternary, showUnsorted, cube]);
 
   // Each entry is every copy shown under one image; the first copy is the one displayed.
+  // Copies only collapse within a sort section, matching Table View.
   const groups = useMemo(() => {
-    if (!collapseDuplicates) return sorted.map((card) => [card]);
+    if (!collapseDuplicates) return sections.flat().map((card) => [card]);
 
-    const byKey = new Map<string, CardType[]>();
-    for (const card of sorted) {
-      const key = `${card.board}|${cardName(card)}`;
-      const group = byKey.get(key);
-      if (group) {
-        group.push(card);
-      } else {
-        byKey.set(key, [card]);
+    return sections.flatMap((section) => {
+      const byKey = new Map<string, CardType[]>();
+      for (const card of section) {
+        const key = `${card.board}|${cardName(card)}`;
+        const group = byKey.get(key);
+        if (group) {
+          group.push(card);
+        } else {
+          byKey.set(key, [card]);
+        }
       }
-    }
-    return Array.from(byKey.values());
-  }, [sorted, collapseDuplicates]);
+      return Array.from(byKey.values());
+    });
+  }, [sections, collapseDuplicates]);
 
   return (
     <div className="my-2">
