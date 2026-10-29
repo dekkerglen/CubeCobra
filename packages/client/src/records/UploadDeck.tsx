@@ -16,7 +16,6 @@ import Text from 'components/base/Text';
 import TextArea from 'components/base/TextArea';
 import CardGrid from 'components/card/CardGrid';
 import BasicsModal from 'components/modals/BasicsModal';
-import AutocardContext from 'contexts/AutocardContext';
 import { CSRFContext } from 'contexts/CSRFContext';
 import { cardNameMatches, cubeCardNameMatches } from 'utils/cardAutocomplete';
 import { getCard } from 'utils/cards/getCard';
@@ -62,7 +61,6 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
   const [addToSideboard, setAddToSideboard] = useState<boolean>(false);
   const { csrfFetch } = useContext(CSRFContext);
   const removeRef = useRef<HTMLInputElement>(null);
-  const { hideCard } = useContext(AutocardContext);
   const [cardNameValue, setCardNameValue] = useState<string>('');
   const [decklistText, setDecklistText] = useState<string>('');
   const [parseErrors, setParseErrors] = useState<string[]>([]);
@@ -354,7 +352,6 @@ Counterspell`}
             xl={10}
             onClick={(_, index) => {
               setMainboardCards((prevCards) => prevCards.filter((_, i) => i !== index));
-              hideCard();
             }}
           />
         </>
@@ -372,7 +369,6 @@ Counterspell`}
             xl={10}
             onClick={(_, index) => {
               setSideboardCards((prevCards) => prevCards.filter((_, i) => i !== index));
-              hideCard();
             }}
           />
         </>

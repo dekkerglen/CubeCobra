@@ -1,9 +1,8 @@
-import React, { useCallback, useContext, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 import classNames from 'classnames';
 import { createPortal } from 'react-dom';
 
-import AutocardContext from '../../contexts/AutocardContext';
 import { MatchFetcher } from '../../utils/cardAutocomplete';
 import withAutocard from '../WithAutocard';
 import Input, { InputProps } from './Input';
@@ -61,7 +60,6 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   const [position, setPosition] = useState(-1);
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const { hideCard } = useContext(AutocardContext);
   // For the portal dropdown: the input's on-screen box, so the portalled list
   // can be fixed-positioned directly under it (kept fresh on scroll/resize).
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -138,19 +136,17 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
     (event: React.ChangeEvent<HTMLInputElement>) => {
       setValue(event.target.value);
       setVisible(true);
-      hideCard();
     },
-    [hideCard, setValue],
+    [setValue],
   );
 
   const acceptSuggestion = useCallback(
     (newValue: string) => {
       setValue(newValue);
       setVisible(false);
-      hideCard();
       setPosition(-1);
     },
-    [hideCard, setValue],
+    [setValue],
   );
 
   const handleClickSuggestion = useCallback(
@@ -259,7 +255,6 @@ const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
         matches.map((match, index) => {
           return showImages ? (
             <AutocardDiv
-              inModal
               image={
                 cubeId
                   ? `/tool/cardimageforcube/${encodeURIComponent(match)}/${cubeId}`

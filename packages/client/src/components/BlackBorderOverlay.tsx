@@ -6,10 +6,12 @@ import React from 'react';
  * cards render correctly.
  *
  * The geometry was measured from Scryfall's card images (viewBox is the card in mm): the outer
- * corner radius matches the `card-border` CSS rounding, and the frame is slightly thicker top and
- * bottom than on the sides, matching the real border. `preserveAspectRatio="none"` stretches the
- * frame to fill whatever box the card image occupies. Positioning mirrors `.foilOverlay` so it lines
- * up with the card in every context the foil overlay already works in.
+ * corner radius approximates the `card-border` CSS rounding to within a fraction of a pixel, and
+ * the frame is slightly thicker top and bottom than on the sides, matching the real border.
+ * `preserveAspectRatio="none"` stretches the frame to fill whatever box the card image occupies.
+ * Positioning mirrors `.foilOverlay` so it lines up with the card in every context the foil overlay
+ * already works in. Alpha's rounder corner is not handled here: Alpha is black-bordered and was
+ * never printed in foil, so this overlay never applies to it.
  */
 const BlackBorderOverlay: React.FC = () => (
   <svg

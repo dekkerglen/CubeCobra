@@ -1,6 +1,7 @@
 import React, { useContext, useMemo } from 'react';
 
-import { cardImageUrl, cardName } from '@utils/cardutil';
+import { cardImageUrl, cardName, isAlphaPrinting } from '@utils/cardutil';
+import classNames from 'classnames';
 import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
@@ -48,6 +49,10 @@ const CardImage: React.FC<CardImageProps> = ({
 
   const { showCustomImages } = useContext(DisplayContext);
   const imageSrc = (showCustomImages && cardImageUrl(current)) || current.details?.image_normal;
+  // ImageFallback derives the corner radius from the card it is given, but withAutocard
+  // consumes the card prop for the hover preview and does not forward it, so that path
+  // has to carry the Alpha override as a class instead.
+  const autocardBorderClass = classNames(className, { 'card-border-alpha': isAlphaPrinting(current) });
 
   if (autocard) {
     return (
@@ -58,7 +63,7 @@ const CardImage: React.FC<CardImageProps> = ({
         alt={cardName(current)}
         width={width ?? '100%'}
         height={height ?? 'auto'}
-        className={className}
+        className={autocardBorderClass}
         onClick={onClick}
       />
     );
@@ -66,6 +71,7 @@ const CardImage: React.FC<CardImageProps> = ({
 
   return (
     <ImageFallback
+      card={current}
       src={imageSrc}
       fallbackSrc={cdnUrl('/content/loadingcard.png')}
       alt={cardName(current)}

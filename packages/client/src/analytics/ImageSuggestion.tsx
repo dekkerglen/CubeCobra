@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { cardImageUrl, encodeName } from '@utils/cardutil';
+import { cardImageUrl, encodeName, isAlphaPrinting } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 
@@ -24,7 +24,10 @@ const ImageSuggestion: React.FC<ImageSuggestionProps> = ({ card, cube }) => {
       href={`/tool/card/${encodeName(card.cardID)}`}
       modalprops={{ card, hideAnalytics: false, cubeContext: cube.id }}
     >
-      <img className="card-border pr-1 w-full" src={cardImageUrl(card)} />
+      <img
+        className={`card-border pr-1 w-full${isAlphaPrinting(card) ? ' card-border-alpha' : ''}`}
+        src={cardImageUrl(card)}
+      />
     </AddModal>
   );
 };

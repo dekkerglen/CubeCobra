@@ -86,3 +86,27 @@ describe('card modal face toggle', () => {
     expect(screen.getByRole('button', { name: 'Transform' })).toHaveTextContent(/^Transform$/);
   });
 });
+
+describe('card modal corner radius', () => {
+  // Regression: the modal composes FoilOverlay(ImageFallback) directly rather than going
+  // through CardImage, so an Alpha printing kept the default radius and showed the white
+  // corner baked into Scryfall's image.
+  const imageOf = (card: Card) => {
+    render(<CardModal {...props} card={card} />);
+    return screen.getByAltText('Delver of Secrets');
+  };
+
+  it('gives an Alpha printing its rounder corner radius', () => {
+    expect(imageOf(cardWith({ set: 'lea' }))).toHaveClass('card-border-alpha');
+  });
+
+  it('leaves a non-Alpha printing on the default corner radius', () => {
+    expect(imageOf(cardWith({ set: 'leb' }))).not.toHaveClass('card-border-alpha');
+  });
+
+  it('does not leak the card object onto the rendered img', () => {
+    // ImageFallback spreads its remaining props onto the <img>, so `card` has to be
+    // destructured out or React warns about an unknown DOM attribute.
+    expect(imageOf(cardWith({ set: 'lea' })).hasAttribute('card')).toBe(false);
+  });
+});

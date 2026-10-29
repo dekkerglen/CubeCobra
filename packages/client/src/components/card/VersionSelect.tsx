@@ -1,16 +1,15 @@
-import React, { useContext, useMemo, useRef, useState } from 'react';
+import React, { useMemo, useRef, useState } from 'react';
 
 import { ChevronDownIcon } from '@primer/octicons-react';
 import classNames from 'classnames';
 
-import AutocardContext from '../../contexts/AutocardContext';
 import Dropdown from '../base/Dropdown';
 import Input from '../base/Input';
 import { ListGroupItem } from '../base/ListGroup';
 import withAutocard from '../WithAutocard';
 
-// Rows are real DOM elements (unlike native <option>s), so autocard can attach
-// and preview each printing's image on hover.
+// Rows are real DOM elements rather than native <option>s, so each printing can carry a
+// hover preview.
 const AutocardItem = withAutocard(ListGroupItem);
 
 // Above this many versions we show a filter box to tame very long printing lists.
@@ -28,7 +27,7 @@ export interface VersionSelectProps {
   label?: string;
   value: string; // current scryfall_id (card.cardID)
   setValue: (value: string) => void;
-  versions: VersionOption[]; // each includes image_normal for the hover preview
+  versions: VersionOption[]; // rows without an image_normal get no hover preview
   disabled?: boolean;
   loading?: boolean;
 }
@@ -37,7 +36,6 @@ const VersionSelect: React.FC<VersionSelectProps> = ({ label, value, setValue, v
   const [isOpen, setIsOpen] = useState(false);
   const [filter, setFilter] = useState('');
   const filterRef = useRef<HTMLInputElement>(null);
-  const { hideCard } = useContext(AutocardContext);
 
   const selected = useMemo(() => versions.find((v) => v.scryfall_id === value), [versions, value]);
 
@@ -55,8 +53,6 @@ const VersionSelect: React.FC<VersionSelectProps> = ({ label, value, setValue, v
     setValue(id);
     setIsOpen(false);
     setFilter('');
-    // The row unmounts before its onMouseLeave fires, so clear the preview here.
-    hideCard();
   };
 
   const triggerClasses = classNames(
@@ -90,10 +86,6 @@ const VersionSelect: React.FC<VersionSelectProps> = ({ label, value, setValue, v
               setFilter('');
               // Focus the filter box once the menu has mounted.
               setTimeout(() => filterRef.current?.focus(), 0);
-            } else {
-              // Rows unmount on close before their onMouseLeave fires, which would
-              // otherwise leave the hovered preview stuck on screen.
-              hideCard();
             }
           }}
           trigger={
@@ -129,10 +121,8 @@ const VersionSelect: React.FC<VersionSelectProps> = ({ label, value, setValue, v
                     first: index === 0 && !showFilter,
                     last: index === filtered.length - 1,
                   };
-                  // Only wrap with autocard when we have an image to preview;
-                  // withAutocard would otherwise dereference an undefined card.
                   return version.image_normal ? (
-                    <AutocardItem key={version.scryfall_id} image={version.image_normal} inModal {...rowProps}>
+                    <AutocardItem key={version.scryfall_id} image={version.image_normal} {...rowProps}>
                       {version.version}
                     </AutocardItem>
                   ) : (

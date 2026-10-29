@@ -14,6 +14,7 @@ import { createCard, createCardDetails } from '../../../server/test/test-utils/d
 jest.mock('@utils/cardutil', () => ({
   cardImageUrl: jest.fn(),
   cardName: jest.fn((card) => card.details?.name ?? ''),
+  isAlphaPrinting: jest.fn((card) => card?.details?.set === 'lea'),
 }));
 
 // ImageFallback preloads the real src via `new Image()` and swaps once onload
@@ -131,5 +132,42 @@ describe('CardImage Component', () => {
 
     const image = screen.getByAltText('Override Name');
     await waitFor(() => expect(image).toHaveAttribute('src', 'override.png'));
+  });
+
+  it('gives Alpha printings their rounder corner radius', async () => {
+    // Alpha was cut with rounder corners than later sets; the default radius would clip
+    // inside the corner baked into Scryfall's image and leave a white arc showing.
+    const card = createCard({
+      details: createCardDetails({ name: 'Black Lotus', image_normal: 'lotus.png', set: 'lea' }),
+    });
+
+    render(
+      <DisplayContext.Provider value={{ ...defaultDisplayContext, showCustomImages: false }}>
+        <CardImage card={card} />
+      </DisplayContext.Provider>,
+    );
+
+    const image = screen.getByAltText('Black Lotus');
+    // Settle the preload swap so the assertion runs inside an act() boundary.
+    await waitFor(() => expect(image).toHaveAttribute('src', 'lotus.png'));
+    expect(image).toHaveClass('card-border');
+    expect(image).toHaveClass('card-border-alpha');
+  });
+
+  it('leaves non-Alpha printings on the default corner radius', async () => {
+    const card = createCard({
+      details: createCardDetails({ name: 'Lightning Bolt', image_normal: 'bolt.png', set: 'leb' }),
+    });
+
+    render(
+      <DisplayContext.Provider value={{ ...defaultDisplayContext, showCustomImages: false }}>
+        <CardImage card={card} />
+      </DisplayContext.Provider>,
+    );
+
+    const image = screen.getByAltText('Lightning Bolt');
+    await waitFor(() => expect(image).toHaveAttribute('src', 'bolt.png'));
+    expect(image).toHaveClass('card-border');
+    expect(image).not.toHaveClass('card-border-alpha');
   });
 });

@@ -16,7 +16,6 @@ import withAutocard from '../WithAutocard';
 export interface AutocardListItemProps {
   card: Card;
   noCardModal?: boolean;
-  inModal?: boolean;
   children?: React.ReactNode;
   onClick?: (event: React.MouseEvent) => void;
   last?: boolean;
@@ -38,7 +37,6 @@ const noOp = () => undefined;
 const AutocardListItem: React.FC<AutocardListItemProps> = ({
   card,
   noCardModal = false,
-  inModal = false,
   children,
   onClick,
   last,
@@ -110,7 +108,6 @@ const AutocardListItem: React.FC<AutocardListItemProps> = ({
       style={tagColorStyle}
       card={card}
       onAuxClick={noCardModal ? noOp : handleAuxClick}
-      inModal={inModal}
       onClick={
         onClick
           ? (e: React.MouseEvent) => {

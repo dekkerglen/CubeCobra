@@ -405,7 +405,7 @@
 }
 
 #autocardPopup {
-  position: absolute;
+  position: fixed;
   pointer-events: none;
   user-select: none;
   -moz-user-select: none;
@@ -418,6 +418,13 @@
 
 #autocardPopup img {
   width: 15rem;
+}
+
+/* Reserve the card's height before the image loads, so the popup can be measured and
+   clamped to the viewport on the very first frame. */
+#autocardImageFront,
+#autocardImageBack {
+  aspect-ratio: 488 / 680;
 }
 
 #autocardPopup {
@@ -456,7 +463,13 @@
 }
 
 .card-border {
-  border-radius: 4.72% / 3.37%;
+  border-radius: 4.75% / 3.5%;
+}
+
+/* Alpha's corners are cut noticeably rounder than later sets. Scoped to .card-border so
+   it outranks the base rule on specificity rather than relying on source order. */
+.card-border.card-border-alpha {
+  border-radius: 7% / 5.5%;
 }
 
 .profile-thumbnail {

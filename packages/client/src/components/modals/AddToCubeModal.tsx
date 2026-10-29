@@ -185,6 +185,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
         <ModalBody className="centered" scrollable>
           <Flexbox direction="col" alignItems="center" gap="2">
             <ImageFallback
+              card={card}
               className="w-full mb-3"
               src={cardImageUrl(card)}
               fallbackSrc={cdnUrl('/content/loadingcard.png')}
@@ -217,6 +218,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
             </Alert>
           ))}
           <ImageFallback
+            card={card}
             className="w-full"
             src={cardImageUrl(card)}
             fallbackSrc={cdnUrl('/content/loadingcard.png')}

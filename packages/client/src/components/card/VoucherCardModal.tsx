@@ -360,7 +360,6 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
                           key={`${vc.cardID}-${i}`}
                           card={pseudoCard}
                           onClick={() => setSelection(i)}
-                          inModal
                           noCardModal
                           last={isLast}
                           isSelected={isSelected}
@@ -382,6 +381,7 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
               {/* Selected card preview */}
               <div className="mt-2">
                 <ImageFallback
+                  card={selection === 'voucher' ? card : selectedSubCard?.details}
                   src={getSelectedImage()}
                   fallbackSrc="/content/vouchercard.png"
                   alt={selection === 'voucher' ? cardName(card) : selectedSubCard?.details?.name || 'Card'}
