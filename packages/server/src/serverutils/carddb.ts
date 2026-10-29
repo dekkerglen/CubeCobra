@@ -1,7 +1,7 @@
 import { detailsToCard, reasonableCard } from '@utils/cardutil';
 import { CardDetails, DefaultPrintingPreference, PrintingPreference, SUPPORTED_FORMATS } from '@utils/datatypes/Card';
 import { filterCardsDetails, FilterFunction } from '@utils/filtering/FilterCards';
-import { SortFunctions } from '@utils/sorting/Sort';
+import { RawSortFunctions } from '@utils/sorting/Sort';
 import catalog from 'serverutils/cardCatalog';
 
 // eslint-disable-next-line camelcase
@@ -172,8 +172,12 @@ export function getMostReasonableByPrintingPreference(
     details: cardFromId(id),
   }));
   cards.sort((a, b) => {
-    const releaseDateSort = SortFunctions['Release date'];
-    const collectorNumberSort = SortFunctions['Collector number'];
+    /* Deliberately the raw comparators: a name tiebreak on `Release date` would make the
+     * collector-number fallback below unreachable for same-day printings whose names differ, which is
+     * every reskin. See RawSortFunctions in Sort.ts.
+     */
+    const releaseDateSort = RawSortFunctions['Release date'];
+    const collectorNumberSort = RawSortFunctions['Collector number'];
 
     if (!releaseDateSort || !collectorNumberSort) {
       return 0;

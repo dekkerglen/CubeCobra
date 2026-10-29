@@ -1,8 +1,22 @@
 import { cardName } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
-import { CARD_TYPES, cardGetLabels, getLabelsRaw, sortForDownload, sortGroupsOrdered } from '@utils/sorting/Sort';
+import {
+  CARD_TYPES,
+  cardGetLabels,
+  getLabelsRaw,
+  sortDeep,
+  sortForDownload,
+  SortFunctionsOnDetails,
+  sortGroupsOrdered,
+} from '@utils/sorting/Sort';
 
-import { createCard, createCardDetails, createCardFromDetails, createCustomCard } from '../test-utils/data';
+import {
+  createCard,
+  createCardDetails,
+  createCardFromDetails,
+  createCustomCard,
+  createCustomCardDetails,
+} from '../test-utils/data';
 
 const mapToCardNames = (sorted: Card[]) => {
   return sorted.map((c) => c.details?.name);
@@ -1217,5 +1231,112 @@ describe('Grouping by Types', () => {
     const groups = sortGroupsOrdered(cards, SORT, false);
     assertGroupOrdering(groups, ['Creature', 'Instant', 'Familiar', 'Hieress']);
     assertCardOrdering(groups, ['Card 3', 'Card 1', 'Card 2', 'Card 4']);
+  });
+});
+
+describe('Alphabetical tiebreak for ordered sorts', () => {
+  it('Breaks ties on mana value by name', async () => {
+    const cards = [
+      createCardFromDetails({ name: 'Zealous Conscripts', cmc: 5 }),
+      createCardFromDetails({ name: 'Ancient Tomb', cmc: 2 }),
+      createCardFromDetails({ name: 'Birds of Paradise', cmc: 5 }),
+      createCardFromDetails({ name: 'Arbor Elf', cmc: 5 }),
+    ];
+
+    expect(mapToCardNames(sortWithoutGrouping(cards, 'Mana Value'))).toEqual([
+      'Ancient Tomb',
+      'Arbor Elf',
+      'Birds of Paradise',
+      'Zealous Conscripts',
+    ]);
+  });
+
+  it('Produces the same order regardless of input order', async () => {
+    const names = ['Opt', 'Ponder', 'Preordain', 'Brainstorm'];
+    const build = (order: string[]) => order.map((name) => createCardFromDetails({ name, cmc: 1 }));
+
+    const forwards = mapToCardNames(sortWithoutGrouping(build(names), 'Mana Value'));
+    const backwards = mapToCardNames(sortWithoutGrouping(build([...names].reverse()), 'Mana Value'));
+
+    expect(forwards).toEqual(['Brainstorm', 'Opt', 'Ponder', 'Preordain']);
+    expect(backwards).toEqual(forwards);
+  });
+
+  it('Breaks ties on elo by name', async () => {
+    const cards = [
+      createCardFromDetails({ name: 'Zurgo Bellstriker', elo: 1500 }),
+      createCardFromDetails({ name: 'Thalia, Guardian of Thraben', elo: 1500 }),
+      createCardFromDetails({ name: 'Llanowar Elves', elo: 1700 }),
+    ];
+
+    expect(mapToCardNames(sortWithoutGrouping(cards, 'Elo'))).toEqual([
+      'Thalia, Guardian of Thraben',
+      'Zurgo Bellstriker',
+      'Llanowar Elves',
+    ]);
+  });
+
+  it('Leaves the Alphabetical sort unchanged', async () => {
+    const cards = [
+      createCardFromDetails({ name: 'Zealous Conscripts', cmc: 5 }),
+      createCardFromDetails({ name: 'Ancient Tomb', cmc: 2 }),
+      createCardFromDetails({ name: 'Birds of Paradise', cmc: 5 }),
+    ];
+
+    expect(mapToCardNames(sortWithoutGrouping(cards, 'Alphabetical'))).toEqual([
+      'Ancient Tomb',
+      'Birds of Paradise',
+      'Zealous Conscripts',
+    ]);
+  });
+
+  it('Keeps cards that share a name', async () => {
+    const cards = [
+      createCardFromDetails({ name: 'Lightning Bolt', cmc: 1 }),
+      createCardFromDetails({ name: 'Ancestral Recall', cmc: 1 }),
+      createCardFromDetails({ name: 'Lightning Bolt', cmc: 1 }),
+    ];
+
+    expect(mapToCardNames(sortWithoutGrouping(cards, 'Mana Value'))).toEqual([
+      'Ancestral Recall',
+      'Lightning Bolt',
+      'Lightning Bolt',
+    ]);
+  });
+
+  it('Breaks ties on the custom name for custom cards', async () => {
+    const cards = [createCustomCard('Zeta Proxy', { cmc: 3 }), createCustomCard('Alpha Proxy', { cmc: 3 })];
+
+    expect(sortWithoutGrouping(cards, 'Mana Value').map((c) => cardName(c))).toEqual(['Alpha Proxy', 'Zeta Proxy']);
+  });
+
+  it('Breaks ties by name when comparing bare card details', async () => {
+    const comparator = SortFunctionsOnDetails('Mana Value');
+    const zeta = createCardDetails({ name: 'Zeta', cmc: 2 });
+    const alpha = createCardDetails({ name: 'Alpha', cmc: 2 });
+
+    expect(comparator(zeta, alpha)).toBeGreaterThan(0);
+    expect(comparator(alpha, zeta)).toBeLessThan(0);
+  });
+
+  it('Leaves order alone for a leaf sort with no comparator', async () => {
+    const cards = [createCardFromDetails({ name: 'Zeta' }), createCardFromDetails({ name: 'Alpha' })];
+
+    const sorted = sortDeep(cards, false, 'Unsorted', []) as Card[];
+
+    expect(mapToCardNames(sorted)).toEqual(['Zeta', 'Alpha']);
+  });
+
+  it('Breaks ties on the base name when using base attributes', async () => {
+    const cards = [
+      createCustomCard('Zeta Proxy', { cmc: 3, details: createCustomCardDetails({ name: 'Alpha Base' }) }),
+      createCustomCard('Alpha Proxy', { cmc: 3, details: createCustomCardDetails({ name: 'Zeta Base' }) }),
+    ];
+
+    const withOverrides = sortDeep(cards, false, 'Mana Value', [], null, false) as Card[];
+    const withBase = sortDeep(cards, false, 'Mana Value', [], null, true) as Card[];
+
+    expect(withOverrides.map((c) => cardName(c))).toEqual(['Alpha Proxy', 'Zeta Proxy']);
+    expect(withBase.map((c) => c.details?.name)).toEqual(['Alpha Base', 'Zeta Base']);
   });
 });

@@ -32,7 +32,12 @@ jest.mock('serverutils/cardCatalog', () => ({
 
 import Card, { CardDetails, PrintingPreference } from '@utils/datatypes/Card';
 import { FilterFunction } from '@utils/filtering/FilterCards';
-import { getAllMostReasonable, getIdsFromName, getMostReasonable } from 'serverutils/carddb';
+import {
+  getAllMostReasonable,
+  getIdsFromName,
+  getMostReasonable,
+  getMostReasonableByPrintingPreference,
+} from 'serverutils/carddb';
 import cardCatalog from 'serverutils/cardCatalog';
 
 // Same object as the mocked module's default, so mutating it in tests is what the code reads.
@@ -253,6 +258,41 @@ describe('getMostReasonable', () => {
     fillCatalogWithCards([cardOne, cardTwo, cardThree]);
     expect(getMostReasonable('Giant Spider', PrintingPreference.RECENT)).toEqual(cardThree.details);
     expect(getMostReasonable('Giant Spider', PrintingPreference.FIRST)).toEqual(cardTwo.details);
+  });
+
+  /* Printings of one card do not necessarily share a name. The catalog holds every printing under every
+   * name it was ever printed with, so a reskin ("Party Tree" for The Great Henge) sits alongside the
+   * original under the same oracle id with a different `name`. getMostReasonableByPrintingPreference
+   * composes SortFunctions['Release date'] with SortFunctions['Collector number'] by hand, reaching the
+   * second only when the first ties — so neither comparator may carry a name tiebreak of its own, or the
+   * collector-number fallback becomes unreachable for exactly these cards and the chosen printing changes.
+   */
+  it('Picks the lower collector number when same-day printings have different names', async () => {
+    const cardOne = createCard({
+      details: createCardDetails({
+        ...overridesForNormalDetails,
+        name: 'Party Tree',
+        name_lower: 'party tree',
+        oracle_id: 'shared-oracle',
+        collector_number: '350',
+        released_at: '2019/10/04',
+      }),
+    });
+    const cardTwo = createCard({
+      details: createCardDetails({
+        ...overridesForNormalDetails,
+        name: 'The Great Henge',
+        name_lower: 'the great henge',
+        oracle_id: 'shared-oracle',
+        collector_number: '12',
+        released_at: '2019/10/04',
+      }),
+    });
+
+    fillCatalogWithCards([cardOne, cardTwo]);
+
+    const ids = [cardOne.details?.scryfall_id ?? '', cardTwo.details?.scryfall_id ?? ''];
+    expect(getMostReasonableByPrintingPreference(ids, PrintingPreference.FIRST)).toEqual(cardTwo.details);
   });
 
   it('Matches found by name, filters to none', async () => {
