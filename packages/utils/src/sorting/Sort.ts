@@ -283,7 +283,15 @@ const normalizeCollectorNumberForSorting = (card: Card): string => {
   return collectorNumber + lastCharacter;
 };
 
-export const SortFunctions: Record<string, (a: any, b: any) => number> = {
+/**
+ * The ordered-sort comparators as written, with no tiebreak of their own.
+ *
+ * `SortFunctions` below wraps these so ties fall through to the card name. Callers that compose two of
+ * these by hand — notably printing selection in `carddb.ts`, which falls back from `Release date` to
+ * `Collector number` — must use this table, not `SortFunctions`: a name tiebreak on the first comparator
+ * would make their own fallback unreachable. Printings of one card do not always share a name.
+ */
+export const RawSortFunctions: Record<string, (a: any, b: any) => number> = {
   Alphabetical: (a: Card, b: Card): number => {
     const textA = cardName(a).toUpperCase();
     const textB = cardName(b).toUpperCase();
@@ -320,6 +328,8 @@ export const SortFunctions: Record<string, (a: any, b: any) => number> = {
   },
   'Approximate Word Count': (a, b) => cardWordCount(a) - cardWordCount(b),
 };
+
+export const SortFunctions: Record<string, (a: any, b: any) => number> = RawSortFunctions;
 
 export const SortFunctionsOnDetails = (sort: string) => (a: any, b: any) => {
   const sortFunction = SortFunctions[sort];
