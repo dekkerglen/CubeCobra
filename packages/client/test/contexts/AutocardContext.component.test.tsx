@@ -279,6 +279,39 @@ describe('autocard previews', () => {
     expect(railLeft + ELEMENT.width).toBeLessThanOrEqual(VIEWPORT.width);
   });
 
+  it('rounds every corner of both faces of a double-faced preview', () => {
+    // Regression: the faces were rounded only along their bottom edge, and the card
+    // radius sat on a wrapper div that never clipped anything (no overflow: hidden).
+    // Only the popup's own overflow rounded the outer corners, so the two faces met in
+    // a square seam that exposed the white corner the Scryfall JPEG bakes in.
+    const dfc = {
+      ...card,
+      details: { ...card.details, image_flip: 'https://example.com/bolt-back.jpg' },
+    } as unknown as Card;
+    render(
+      <AutocardContextProvider>
+        <AutocardDiv card={dfc}>Lightning Bolt</AutocardDiv>
+      </AutocardContextProvider>,
+    );
+
+    moveCursorTo(100, 100);
+    fireEvent.mouseEnter(screen.getByText('Lightning Bolt'));
+
+    const popup = document.getElementById('autocardPopup') as HTMLDivElement;
+    expect(popup).toHaveClass('double-width');
+
+    const faces = [
+      document.getElementById('autocardImageFront'),
+      document.getElementById('autocardImageBack'),
+    ] as HTMLImageElement[];
+    for (const face of faces) {
+      // card-border carries the full card radius and, on an img, actually clips it.
+      expect(face).toHaveClass('card-border');
+      expect(face).not.toHaveClass('rounded-b-md');
+      expect(face.parentElement).not.toHaveClass('card-border');
+    }
+  });
+
   it('does not show a preview when given neither a card nor an image', () => {
     render(
       <AutocardContextProvider>

@@ -190,21 +190,29 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, foilOverla
         <div className="autocard-background bg-bg-accent">
           <Flexbox direction="row">
             {front && (
-              <div className="col position-relative card-border">
+              <div className="col position-relative">
                 {blackBorder && <BlackBorderOverlay />}
                 {foilOverlay && (
-                  <img className="foilOverlay" src={cdnUrl('/content/foilOverlay.png')} alt="foil overlay" />
+                  <img
+                    className="foilOverlay card-border"
+                    src={cdnUrl('/content/foilOverlay.png')}
+                    alt="foil overlay"
+                  />
                 )}
-                <img className="rounded-b-md" id="autocardImageFront" src={front} alt={front} key={front} />
+                <img className="card-border" id="autocardImageFront" src={front} alt={front} key={front} />
               </div>
             )}
             {back && (
-              <div className="col position-relative card-border">
+              <div className="col position-relative">
                 {blackBorder && <BlackBorderOverlay />}
                 {foilOverlay && (
-                  <img className="foilOverlay" src={cdnUrl('/content/foilOverlay.png')} alt="foil overlay" />
+                  <img
+                    className="foilOverlay card-border"
+                    src={cdnUrl('/content/foilOverlay.png')}
+                    alt="foil overlay"
+                  />
                 )}
-                <img className="rounded-b-md" id="autocardImageBack" src={back} alt={back} key={back} />
+                <img className="card-border" id="autocardImageBack" src={back} alt={back} key={back} />
               </div>
             )}
           </Flexbox>
