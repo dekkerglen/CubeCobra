@@ -228,7 +228,14 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       botDecksFailed: item.botDecksFailed,
       botDecksPendingSince: item.botDecksPendingSince,
       // Decks saved before preview images existed have none stored; show their P1P1 anyway.
-      previewImage: item.previewImage ?? this.getPreviewImage({ seats: seatsData.seats || [], cards }),
+      previewImage:
+        item.previewImage ??
+        this.getPreviewImage({
+          seats: seatsData.seats || [],
+          cards,
+          type: item.type as DraftType['type'],
+          DraftmancerLog: item.DraftmancerLog,
+        }),
     };
   }
 
@@ -310,7 +317,13 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         botDecksPending: item.botDecksPending,
         botDecksFailed: item.botDecksFailed,
         botDecksPendingSince: item.botDecksPendingSince,
-        previewImage: item.previewImage ?? this.getPreviewImage(data),
+        previewImage:
+          item.previewImage ??
+          this.getPreviewImage({
+            ...data,
+            type: item.type as DraftType['type'],
+            DraftmancerLog: item.DraftmancerLog,
+          }),
       };
     });
   }
@@ -1386,9 +1399,12 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
    * since a Draftmancer upload can put a bot in seat 0. Undefined for sealed/upload decks and
    * cards without art (custom cards), so callers fall back to the cube's image.
    */
-  private getPreviewImage(draft: Pick<DraftType, 'seats' | 'cards'>): string | undefined {
+  private getPreviewImage(draft: Pick<DraftType, 'seats' | 'cards' | 'type' | 'DraftmancerLog'>): string | undefined {
     const seat = draft.seats?.find((s) => !s.bot && s.pickorder && s.pickorder.length > 0);
-    const firstPick = seat?.pickorder?.[0];
+    // In-browser drafts store pickorder newest first (see getDrafterState); grid, Housman
+    // and Draftmancer drafts store it in pick order.
+    const newestFirst = draft.type === 'd' && !draft.DraftmancerLog;
+    const firstPick = newestFirst ? seat?.pickorder?.at(-1) : seat?.pickorder?.[0];
     const card = firstPick !== undefined ? draft.cards?.[firstPick] : undefined;
     return card?.cardID ? cardFromId(card.cardID).art_crop : undefined;
   }
