@@ -329,7 +329,24 @@ export const RawSortFunctions: Record<string, (a: any, b: any) => number> = {
   'Approximate Word Count': (a, b) => cardWordCount(a) - cardWordCount(b),
 };
 
-export const SortFunctions: Record<string, (a: any, b: any) => number> = RawSortFunctions;
+const alphabeticalComparator = RawSortFunctions['Alphabetical']!;
+
+/**
+ * The ordered-sort comparators, each falling back to the card name when the sorted values tie.
+ *
+ * Without the fallback, ties keep whatever order the input array had: the order cards were added to a
+ * cube on a cube list, and the order Scryfall emits rows in its bulk dump in card search. Neither is
+ * something a viewer can reason about, and the second reshuffles on any card update.
+ *
+ * `||` rather than an explicit `!== 0` check so that a comparator returning NaN for missing data — a
+ * comparison that is already meaningless — falls through to the name instead of leaving order undefined.
+ */
+export const SortFunctions: Record<string, (a: any, b: any) => number> = Object.fromEntries(
+  Object.entries(RawSortFunctions).map(([sort, comparator]) => [
+    sort,
+    sort === 'Alphabetical' ? comparator : (a: any, b: any) => comparator(a, b) || alphabeticalComparator(a, b),
+  ]),
+);
 
 export const SortFunctionsOnDetails = (sort: string) => (a: any, b: any) => {
   const sortFunction = SortFunctions[sort];
