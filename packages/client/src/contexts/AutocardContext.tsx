@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { cardTags, isCardFoil, showsBlackBorderForFoil } from '@utils/cardutil';
+import { cardTags, isAlphaPrinting, isCardFoil, showsBlackBorderForFoil } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 import { TagColor } from '@utils/datatypes/Cube';
@@ -23,6 +23,7 @@ interface CardDivProps {
   tags: Tag[];
   foilOverlay: boolean;
   blackBorder: boolean;
+  alphaBorder: boolean;
   anchor: HTMLElement | null;
 }
 
@@ -62,7 +63,16 @@ const placeAlong = (start: number, end: number, size: number, extent: number): n
   return Math.max(EDGE_MARGIN, extent - EDGE_MARGIN - size);
 };
 
-const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, foilOverlay, blackBorder, anchor }) => {
+const CardDiv: React.FC<CardDivProps> = ({
+  hidden,
+  front,
+  back,
+  tags,
+  foilOverlay,
+  blackBorder,
+  alphaBorder,
+  anchor,
+}) => {
   const [layout, setLayout] = useState<Layout | null>(null);
   const autocardPopup = useRef<HTMLDivElement>(null);
   const autocardTags = useRef<HTMLDivElement>(null);
@@ -167,6 +177,8 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, foilOverla
 
   const ready = visible && layout !== null;
 
+  const borderClass = alphaBorder ? 'card-border card-border-alpha' : 'card-border';
+
   const popupStyle: React.CSSProperties = {
     zIndex: POPUP_Z_INDEX,
     left: layout?.left ?? 0,
@@ -194,12 +206,12 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, foilOverla
                 {blackBorder && <BlackBorderOverlay />}
                 {foilOverlay && (
                   <img
-                    className="foilOverlay card-border"
+                    className={`foilOverlay ${borderClass}`}
                     src={cdnUrl('/content/foilOverlay.png')}
                     alt="foil overlay"
                   />
                 )}
-                <img className="card-border" id="autocardImageFront" src={front} alt={front} key={front} />
+                <img className={borderClass} id="autocardImageFront" src={front} alt={front} key={front} />
               </div>
             )}
             {back && (
@@ -207,12 +219,12 @@ const CardDiv: React.FC<CardDivProps> = ({ hidden, front, back, tags, foilOverla
                 {blackBorder && <BlackBorderOverlay />}
                 {foilOverlay && (
                   <img
-                    className="foilOverlay card-border"
+                    className={`foilOverlay ${borderClass}`}
                     src={cdnUrl('/content/foilOverlay.png')}
                     alt="foil overlay"
                   />
                 )}
-                <img className="card-border" id="autocardImageBack" src={back} alt={back} key={back} />
+                <img className={borderClass} id="autocardImageBack" src={back} alt={back} key={back} />
               </div>
             )}
           </Flexbox>
@@ -257,6 +269,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
   const [hidden, setHidden] = useState(true);
   const [foilOverlay, setFoilOverlay] = useState(false);
   const [blackBorder, setBlackBorder] = useState(false);
+  const [alphaBorder, setAlphaBorder] = useState(false);
   const [front, setFront] = useState<string | null>(null);
   const [back, setBack] = useState<string | null>(null);
   const [stopAutocard, setStopAutocard] = useState(false);
@@ -273,6 +286,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
       setHidden(false);
       setFoilOverlay(isCardFoil(card));
       setBlackBorder(showsBlackBorderForFoil(card, isCardFoil(card)));
+      setAlphaBorder(isAlphaPrinting(card));
       setFront(((showCustomImages && card.imgUrl) || card.details?.image_normal) ?? null);
       setBack(((showCustomImages && card.imgBackUrl) || card.details?.image_flip) ?? null);
       setTags(
@@ -301,6 +315,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
     setHidden(true);
     setFoilOverlay(false);
     setBlackBorder(false);
+    setAlphaBorder(false);
     setFront(null);
     setBack(null);
     setTags([]);
@@ -360,6 +375,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
         tags={tags}
         foilOverlay={foilOverlay}
         blackBorder={blackBorder}
+        alphaBorder={alphaBorder}
         anchor={anchor}
       />
     </AutocardContext.Provider>

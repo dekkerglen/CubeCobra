@@ -1,4 +1,11 @@
-import { cardFaceToggleLabel, cardFullName, cardName, cardNameLower, isManaFixingLand } from '@utils/cardutil';
+import {
+  cardFaceToggleLabel,
+  cardFullName,
+  cardName,
+  cardNameLower,
+  isAlphaPrinting,
+  isManaFixingLand,
+} from '@utils/cardutil';
 
 import { createCard, createCardDetails } from '../test-utils/data';
 
@@ -200,5 +207,25 @@ describe('cardFaceToggleLabel', () => {
 
   it.each([[''], [undefined]])('falls back to the neutral label for %p', (layout) => {
     expect(cardFaceToggleLabel(layout)).toBe('Turn Over');
+  });
+});
+
+describe('isAlphaPrinting', () => {
+  it('identifies Alpha printings, which are cut with rounder corners than later sets', () => {
+    expect(isAlphaPrinting(createCard({ details: createCardDetails({ set: 'lea' }) }))).toBe(true);
+  });
+
+  it('matches the set code regardless of case', () => {
+    expect(isAlphaPrinting(createCard({ details: createCardDetails({ set: 'LEA' }) }))).toBe(true);
+  });
+
+  it('does not match Beta, Unlimited, or the Alpha-styled 30th Anniversary reprints', () => {
+    for (const set of ['leb', '2ed', '30a']) {
+      expect(isAlphaPrinting(createCard({ details: createCardDetails({ set }) }))).toBe(false);
+    }
+  });
+
+  it('is false when the printing carries no set', () => {
+    expect(isAlphaPrinting({ cardID: 'x' } as any)).toBe(false);
   });
 });

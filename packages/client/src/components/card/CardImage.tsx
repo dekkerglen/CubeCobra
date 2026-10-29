@@ -1,6 +1,7 @@
 import React, { useContext, useMemo } from 'react';
 
-import { cardImageUrl, cardName } from '@utils/cardutil';
+import { cardImageUrl, cardName, isAlphaPrinting } from '@utils/cardutil';
+import classNames from 'classnames';
 import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 import { CardDetails } from '@utils/datatypes/Card';
@@ -48,6 +49,8 @@ const CardImage: React.FC<CardImageProps> = ({
 
   const { showCustomImages } = useContext(DisplayContext);
   const imageSrc = (showCustomImages && cardImageUrl(current)) || current.details?.image_normal;
+  // ImageFallback always applies card-border; this only adds the Alpha override on top.
+  const borderClass = classNames(className, { 'card-border-alpha': isAlphaPrinting(current) });
 
   if (autocard) {
     return (
@@ -58,7 +61,7 @@ const CardImage: React.FC<CardImageProps> = ({
         alt={cardName(current)}
         width={width ?? '100%'}
         height={height ?? 'auto'}
-        className={className}
+        className={borderClass}
         onClick={onClick}
       />
     );
@@ -71,7 +74,7 @@ const CardImage: React.FC<CardImageProps> = ({
       alt={cardName(current)}
       width={width ?? '100%'}
       height={height ?? 'auto'}
-      className={className}
+      className={borderClass}
       onClick={onClick}
     />
   );

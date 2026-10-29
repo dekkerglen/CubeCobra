@@ -312,6 +312,40 @@ describe('autocard previews', () => {
     }
   });
 
+  it('gives an Alpha printing its rounder corner radius', () => {
+    // Alpha was cut with rounder corners than later sets, and Scryfall's image preserves
+    // that; the default radius would clip inside the corner baked into the image.
+    const alpha = { ...card, details: { ...card.details, set: 'lea' } } as unknown as Card;
+    render(
+      <AutocardContextProvider>
+        <AutocardDiv card={alpha}>Lightning Bolt</AutocardDiv>
+      </AutocardContextProvider>,
+    );
+
+    moveCursorTo(100, 100);
+    fireEvent.mouseEnter(screen.getByText('Lightning Bolt'));
+
+    const face = document.getElementById('autocardImageFront') as HTMLImageElement;
+    expect(face).toHaveClass('card-border');
+    expect(face).toHaveClass('card-border-alpha');
+  });
+
+  it('leaves a non-Alpha printing on the default corner radius', () => {
+    const beta = { ...card, details: { ...card.details, set: 'leb' } } as unknown as Card;
+    render(
+      <AutocardContextProvider>
+        <AutocardDiv card={beta}>Lightning Bolt</AutocardDiv>
+      </AutocardContextProvider>,
+    );
+
+    moveCursorTo(100, 100);
+    fireEvent.mouseEnter(screen.getByText('Lightning Bolt'));
+
+    const face = document.getElementById('autocardImageFront') as HTMLImageElement;
+    expect(face).toHaveClass('card-border');
+    expect(face).not.toHaveClass('card-border-alpha');
+  });
+
   it('does not show a preview when given neither a card nor an image', () => {
     render(
       <AutocardContextProvider>

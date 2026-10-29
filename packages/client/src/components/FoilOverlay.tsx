@@ -3,7 +3,7 @@ import React, { ComponentProps, ElementType } from 'react';
 import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 
-import { isFoilFinish, showsBlackBorderForFoil } from '../../../utils/src/cardutil';
+import { isAlphaPrinting, isFoilFinish, showsBlackBorderForFoil } from '../../../utils/src/cardutil';
 import BlackBorderOverlay from './BlackBorderOverlay';
 
 export interface FoilOverlayProps {
@@ -36,7 +36,9 @@ const FoilOverlay = <T extends ElementType>(Tag: T) => {
         {showFoil && (
           <img
             src={cdnUrl('/content/foilOverlay.png')}
-            className="absolute inset-0 w-full h-full foilOverlay card-border"
+            className={`absolute inset-0 w-full h-full foilOverlay card-border${
+              props.card && isAlphaPrinting(props.card) ? ' card-border-alpha' : ''
+            }`}
             width="100%"
             alt="Foil overlay"
           />

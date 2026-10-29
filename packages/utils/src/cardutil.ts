@@ -417,6 +417,13 @@ export const cardBorderColor = (card: Card): string => card.details?.border_colo
 export const showsBlackBorderForFoil = (card: Card, isFoil: boolean): boolean =>
   isFoil && cardBorderColor(card) === 'white';
 
+// Alpha was cut with noticeably rounder corners than every set that followed, and
+// Scryfall's images preserve that. Callers pick the matching corner radius so the
+// rounding we apply lines up with the one baked into the image.
+export const ALPHA_SET_CODE = 'lea';
+
+export const isAlphaPrinting = (card: Card): boolean => cardSet(card).toLowerCase() === ALPHA_SET_CODE;
+
 export const cardName = (card: Card): string => {
   if (isCustomOrVoucher(card)) {
     return (card.custom_name || card.details?.name) ?? '';
@@ -1065,6 +1072,7 @@ export default {
   cardDigital,
   cardIsToken,
   cardBorderColor,
+  isAlphaPrinting,
   cardName,
   cardNameLower,
   cardFullName,
