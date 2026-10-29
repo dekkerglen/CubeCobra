@@ -422,7 +422,15 @@ export const showsBlackBorderForFoil = (card: Card, isFoil: boolean): boolean =>
 // rounding we apply lines up with the one baked into the image.
 export const ALPHA_SET_CODE = 'lea';
 
-export const isAlphaPrinting = (card: Card): boolean => cardSet(card).toLowerCase() === ALPHA_SET_CODE;
+// Accepts a Card or bare CardDetails: image components are handed one or the other
+// depending on whether the caller is working from a cube entry or the card catalog.
+export const isAlphaPrinting = (card?: Card | CardDetailsType | null): boolean => {
+  if (!card) {
+    return false;
+  }
+  const set = (card as Card).details?.set ?? (card as CardDetailsType).set;
+  return (set ?? '').toLowerCase() === ALPHA_SET_CODE;
+};
 
 export const cardName = (card: Card): string => {
   if (isCustomOrVoucher(card)) {

@@ -32,6 +32,7 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
   return (
     <Flexbox direction="col" className="my-2 mx-2" gap="2">
       <ImageFallback
+        card={card}
         className="w-full"
         src={imageUsed}
         fallbackSrc={cdnUrl('/content/loadingcard.png')}

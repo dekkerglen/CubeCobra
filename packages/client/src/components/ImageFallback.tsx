@@ -1,9 +1,18 @@
 import React, { RefObject, useEffect, useState } from 'react';
 
+import { isAlphaPrinting } from '@utils/cardutil';
+import Card, { CardDetails } from '@utils/datatypes/Card';
+import classNames from 'classnames';
+
 export interface ImageFallbackProps extends React.ImgHTMLAttributes<HTMLImageElement> {
   src?: string;
   fallbackSrc: string;
   innerRef?: RefObject<HTMLImageElement>;
+  // The printing being shown, when the caller has it. Used only to pick the corner
+  // radius, since Alpha was cut rounder than later sets. Accepts a Card or bare
+  // CardDetails because callers hold one or the other. Destructured out rather than
+  // spread, so it never reaches the DOM.
+  card?: Card | CardDetails;
   [key: string]: any;
   className?: string;
 }
@@ -13,7 +22,7 @@ export interface ImageFallbackProps extends React.ImgHTMLAttributes<HTMLImageEle
 // has actually fetched and decoded it, so card grids (search results, deck
 // piles, etc.) show the loading placeholder card up front instead of blank
 // slots that fill in one at a time.
-const ImageFallback: React.FC<ImageFallbackProps> = ({ src, fallbackSrc, innerRef, className, ...props }) => {
+const ImageFallback: React.FC<ImageFallbackProps> = ({ src, fallbackSrc, innerRef, className, card, ...props }) => {
   const [resolvedSrc, setResolvedSrc] = useState<string>(fallbackSrc);
 
   useEffect(() => {
@@ -33,7 +42,15 @@ const ImageFallback: React.FC<ImageFallbackProps> = ({ src, fallbackSrc, innerRe
     };
   }, [src, fallbackSrc]);
 
-  return <img className={`card-border ${className}`} src={resolvedSrc} ref={innerRef} {...props} />;
+  // This is the one place card-border is applied, so the radius is decided here too.
+  return (
+    <img
+      className={classNames('card-border', { 'card-border-alpha': isAlphaPrinting(card) }, className)}
+      src={resolvedSrc}
+      ref={innerRef}
+      {...props}
+    />
+  );
 };
 
 export default ImageFallback;
