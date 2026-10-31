@@ -69,23 +69,40 @@ const renderHero = () =>
     </CSRFContext.Provider>,
   );
 
-const showotherParams = (container: HTMLElement) =>
-  [...container.querySelectorAll<HTMLAnchorElement>('a[href*="/cube/download/"]')].map((link) =>
-    new URL(link.href, 'http://localhost').searchParams.get('showother'),
-  );
+const exportLinks = (container: HTMLElement) => [
+  ...container.querySelectorAll<HTMLAnchorElement>('a[href*="/cube/download/"]'),
+];
+
+const exportHrefs = (container: HTMLElement) => exportLinks(container).map((link) => link.href);
+
+const exportParams = (container: HTMLElement) =>
+  exportLinks(container).map((link) => new URL(link.href, 'http://localhost').searchParams);
 
 describe('CubeHero export links', () => {
-  it('tracks the live "show unsorted" display toggle rather than the cube\'s saved setting', () => {
+  it("are unaffected by the page's show unsorted toggle", () => {
     const { container } = renderHero();
 
-    const before = showotherParams(container);
+    const before = exportHrefs(container);
     expect(before.length).toBeGreaterThan(0);
-    expect(new Set(before)).toEqual(new Set(['false']));
 
-    // Toggling the page's display option must change the export links, because that toggle is what
-    // decides whether the cube page is showing the "Other" group.
     fireEvent.click(screen.getAllByText('Show Unsorted cards')[0]!);
 
-    expect(new Set(showotherParams(container))).toEqual(new Set(['true']));
+    expect(exportHrefs(container)).toEqual(before);
+  });
+
+  it('always ask for the fixed sort and for unsorted cards', () => {
+    const { container } = renderHero();
+    const params = exportParams(container);
+
+    expect(params.length).toBeGreaterThan(0);
+    expect(new Set(params.map((p) => p.get('primary')))).toEqual(new Set(['Color Category']));
+    expect(new Set(params.map((p) => p.get('showother')))).toEqual(new Set(['true']));
+  });
+
+  it('no longer offer a Use Sort checkbox', () => {
+    renderHero();
+
+    expect(screen.queryByText('Use Sort')).not.toBeInTheDocument();
+    expect(screen.getAllByText('Use Filter').length).toBeGreaterThan(0);
   });
 });
