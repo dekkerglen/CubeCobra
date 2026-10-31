@@ -1,6 +1,12 @@
-import type { LegendItem } from 'chart.js';
+import type { Chart, LegendItem } from 'chart.js';
 
-import { dimHiddenLegendItems, fadeColor } from '../../src/components/analytics/chartLegend';
+import {
+  barLegendLabels,
+  dimHiddenLegendItems,
+  dimmedLegendLabels,
+  doughnutLegendLabels,
+  fadeColor,
+} from '../../src/components/analytics/chartLegend';
 
 const item = (overrides: Partial<LegendItem> = {}) =>
   ({
@@ -61,5 +67,73 @@ describe('dimHiddenLegendItems', () => {
     expect(dimmed.text).toBe('Blue');
     expect(dimmed.datasetIndex).toBe(0);
     expect(dimmed.hidden).toBe(true);
+  });
+});
+
+describe('dimmedLegendLabels', () => {
+  it('omits generateLabels when the base generator is missing, so Chart.js keeps its own', () => {
+    expect(dimmedLegendLabels(undefined)).toEqual({});
+  });
+
+  it('pipes the base generator through the dimming when one is available', () => {
+    const labels = dimmedLegendLabels(() => [item({ hidden: true })]);
+
+    expect(labels.generateLabels!({} as Chart)[0].fillStyle).toBe('transparent');
+  });
+});
+
+// Minimal stand-ins shaped to what Chart.js's own label generators read, so the wrappers actually run
+// against the installed version rather than being asserted by identity alone.
+const barChart = (hiddenDataset: number) =>
+  ({
+    data: { datasets: [{ label: 'Blue' }, { label: 'Red' }] },
+    legend: { options: { labels: {} } },
+    _getSortedDatasetMetas: () =>
+      ['#67A6D3', '#D85F69'].map((backgroundColor, index) => ({
+        index,
+        visible: index !== hiddenDataset,
+        controller: { getStyle: () => ({ backgroundColor, borderColor: '#000000', borderWidth: 0 }) },
+      })),
+  }) as unknown as Chart;
+
+const doughnutChart = (hiddenSlice: number) =>
+  ({
+    data: { labels: ['White', 'Blue'], datasets: [{}] },
+    legend: { options: { labels: {} } },
+    getDatasetMeta: () => ({
+      controller: {
+        getStyle: (i: number) => ({
+          backgroundColor: ['#D8CEAB', '#67A6D3'][i],
+          borderColor: '#FFFFFF',
+          borderWidth: 1,
+        }),
+      },
+    }),
+    getDataVisibility: (i: number) => i !== hiddenSlice,
+  }) as unknown as Chart;
+
+describe('the generators wired into the At a Glance charts', () => {
+  it('dims a hidden dataset on a Chart.js bar legend', () => {
+    const items = barLegendLabels.generateLabels!(barChart(1));
+
+    expect(items.map((i) => i.text)).toEqual(['Blue', 'Red']);
+    expect(items[0].fillStyle).toBe('#67A6D3');
+    expect(items[1].fillStyle).toBe('transparent');
+    expect(items[1].strokeStyle).toBe('#D85F69');
+  });
+
+  // Production sets no legend label colour, so items arrive with fontColor undefined.
+  it('falls back to the Chart.js default colour when the legend sets none', () => {
+    const items = barLegendLabels.generateLabels!(barChart(1));
+
+    expect(items[1].fontColor).toBe('rgba(102, 102, 102, 0.45)');
+  });
+
+  it('labels each slice rather than each dataset on a Chart.js doughnut legend', () => {
+    const items = doughnutLegendLabels.generateLabels!(doughnutChart(1));
+
+    expect(items.map((i) => i.text)).toEqual(['White', 'Blue']);
+    expect(items[1].fillStyle).toBe('transparent');
+    expect(items[1].strokeStyle).toBe('#67A6D3');
   });
 });

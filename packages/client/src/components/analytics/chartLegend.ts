@@ -50,18 +50,25 @@ export const dimHiddenLegendItems = (items: LegendItem[]): LegendItem[] =>
       : item,
   );
 
-const barBase = (Legend.defaults as { labels: { generateLabels: LabelGenerator } }).labels.generateLabels;
+const barBase = (Legend.defaults as { labels?: { generateLabels?: LabelGenerator } } | undefined)?.labels
+  ?.generateLabels;
 
 // Doughnuts label each slice, not each dataset, via an override on the controller. Wrapping the
 // bar generator here would collapse the legend to a single entry.
 const doughnutBase = (
-  DoughnutController.overrides as { plugins: { legend: { labels: { generateLabels: LabelGenerator } } } }
-).plugins.legend.labels.generateLabels;
+  DoughnutController.overrides as
+    { plugins?: { legend?: { labels?: { generateLabels?: LabelGenerator } } } } | undefined
+)?.plugins?.legend?.labels?.generateLabels;
 
-export const barLegendLabels = {
-  generateLabels: (chart: Chart): LegendItem[] => dimHiddenLegendItems(barBase(chart)),
-};
+/**
+ * Both base generators are read out of Chart.js internals, which a future version may reshape. When
+ * one goes missing we omit `generateLabels` entirely rather than wrapping `undefined`: spreading an
+ * empty object leaves Chart.js to use its own default, so the chart loses the dimming but still
+ * renders a working legend instead of throwing.
+ */
+export const dimmedLegendLabels = (base: LabelGenerator | undefined): { generateLabels?: LabelGenerator } =>
+  typeof base === 'function' ? { generateLabels: (chart: Chart) => dimHiddenLegendItems(base(chart)) } : {};
 
-export const doughnutLegendLabels = {
-  generateLabels: (chart: Chart): LegendItem[] => dimHiddenLegendItems(doughnutBase(chart)),
-};
+export const barLegendLabels = dimmedLegendLabels(barBase);
+
+export const doughnutLegendLabels = dimmedLegendLabels(doughnutBase);
