@@ -8,6 +8,7 @@ import type { NextFunction, Request as ExpressRequest, Response as ExpressRespon
 import { cardFromId } from 'serverutils/carddb';
 import { CSV_HEADER, exportToMtgo, writeCard } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
+import { exportFileName, exportTextValue, forgeName } from 'serverutils/textExport';
 import { expensiveGetLimiter } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect } from 'serverutils/render';
 
@@ -119,11 +120,11 @@ export const cubecobraHandler = async (req: Request, res: Response) => {
 
     allCards = sortCardsByQuery(req, allCards, filter, cube);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(cube.name)}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     for (const card of allCards) {
-      res.write(`${cardName(card)}\r\n`);
+      res.write(`${exportTextValue(cardName(card))}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -163,7 +164,7 @@ export const csvHandler = async (req: Request, res: Response) => {
       }
     }
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(cube.name)}.csv`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write(`${CSV_HEADER}\r\n`);
@@ -215,14 +216,16 @@ export const forgeHandler = async (req: Request, res: Response) => {
 
     allCards = sortCardsByQuery(req, allCards, filter, cube);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(cube.name)}.dck`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write('[metadata]\r\n');
-    res.write(`name=${cube.name}\r\n`);
+    res.write(`name=${exportTextValue(cube.name)}\r\n`);
     res.write('[Main]\r\n');
     for (const card of allCards) {
-      res.write(`1 ${cardName(card)}|${cardSet(card).toUpperCase()}\r\n`);
+      // Forge reads the set from after the `|`, so an empty set has to drop the separator too.
+      const set = cardSet(card).toUpperCase();
+      res.write(`1 ${forgeName(cardName(card))}${set ? `|${set}` : ''}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -299,11 +302,16 @@ export const xmageHandler = async (req: Request, res: Response) => {
 
     allCards = sortCardsByQuery(req, allCards, filter, cube);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(cube.name)}.dck`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     for (const card of allCards) {
-      res.write(`1 [${cardSet(card).toUpperCase()}:${cardCollectorNumber(card)}] ${cardName(card)}\r\n`);
+      // XMage needs a real set and collector number inside the brackets; a custom card has neither,
+      // and `1 [:] Name` fails to import, so fall back to the bare name.
+      const set = cardSet(card).toUpperCase();
+      const collectorNumber = cardCollectorNumber(card);
+      const version = set && collectorNumber ? `[${set}:${collectorNumber}] ` : '';
+      res.write(`1 ${version}${exportTextValue(cardName(card))}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -331,7 +339,7 @@ export const versionedHandler = async (req: Request, res: Response) => {
 
     const boardsToExport = getBoardsToExport(req, cards);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(cube.name)}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
 
@@ -354,7 +362,7 @@ export const versionedHandler = async (req: Request, res: Response) => {
         const set = cardSet(card).toUpperCase();
         const collectorNumber = cardCollectorNumber(card);
 
-        let line = `1 ${cardName(card)}`;
+        let line = `1 ${exportTextValue(cardName(card))}`;
         if (set) {
           line += ` (${set})`;
           if (collectorNumber) {
@@ -395,7 +403,7 @@ export const plaintextHandler = async (req: Request, res: Response) => {
     // Determine which boards to export
     const boardsToExport = getBoardsToExport(req, cards);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(cube.name)}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
 
@@ -410,7 +418,7 @@ export const plaintextHandler = async (req: Request, res: Response) => {
 
       res.write(`# ${boardname}\r\n`);
       for (const card of sorted) {
-        res.write(`${cardName(card)}\r\n`);
+        res.write(`${exportTextValue(cardName(card))}\r\n`);
       }
       res.write(`\r\n`);
     }

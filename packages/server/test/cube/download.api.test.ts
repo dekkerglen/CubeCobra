@@ -1,3 +1,5 @@
+import { parse } from 'papaparse';
+
 import {
   csvHandler,
   cubecobraHandler,
@@ -30,8 +32,15 @@ import { cardFromId } from 'serverutils/carddb';
 
 const bearsDetails = createCardDetails({ name: 'Grizzly Bears', type: 'Creature — Bear', color_identity: ['G'] });
 const boltDetails = createCardDetails({ name: 'Lightning Bolt', type: 'Instant', color_identity: ['R'] });
-// Mirror production: unknown ids (custom cards, vouchers) resolve to the typeless placeholder.
-const placeholderDetails = createCardDetails({ name: 'Invalid Card', type: '', color_identity: [] });
+// Mirror production: unknown ids (custom cards, vouchers) resolve to the typeless placeholder,
+// which carries no set and no collector number.
+const placeholderDetails = createCardDetails({
+  name: 'Invalid Card',
+  type: '',
+  color_identity: [],
+  set: '',
+  collector_number: '',
+});
 const detailsById: Record<string, ReturnType<typeof createCardDetails>> = {
   'bears-id': bearsDetails,
   'bolt-id': boltDetails,
@@ -195,5 +204,95 @@ describe('GET /cube/download/csv/:id', () => {
   it('keeps stored order when nosort is set', async () => {
     const body = await download(csvHandler, cube, [bears(), bolt()], { nosort: 'true' });
     expect(rowNames(body)).toEqual(['Grizzly Bears', 'Lightning Bolt']);
+  });
+});
+
+describe('export formatting and escaping', () => {
+  // Custom cards and vouchers carry a free-text custom_name, and cube names are only
+  // profanity-checked, so both reach the writers as arbitrary user input.
+  const injected = () => createCustomCard('Bad\r\n1 Black Lotus', { details: undefined });
+  const piped = () => createCustomCard('Pipe|Name', { details: undefined });
+  const cube = createCube({ id: 'c1', showUnsorted: true, name: 'Nice Cube' });
+  const unsorted = { nosort: 'true' };
+
+  describe.each([
+    ['cubecobra', cubecobraHandler],
+    ['forge', forgeHandler],
+    ['xmage', xmageHandler],
+    ['versioned', versionedHandler],
+    ['plaintext', plaintextHandler],
+  ])('%s', (_name, handler) => {
+    it('never lets a card name introduce an extra line', async () => {
+      const body = await download(handler, cube, [bears(), injected()], unsorted);
+
+      expect(body).toContain('Bad 1 Black Lotus');
+      expect(body).not.toMatch(/\r\n1 Black Lotus/);
+    });
+  });
+
+  describe('forge', () => {
+    const forgeLines = async (cards: any[], forgeCube = cube) =>
+      lines(await download(forgeHandler, forgeCube, cards, unsorted));
+
+    it('drops the set separator for a card with no set', async () => {
+      // Forge reads everything after the `|` as a set code, so `1 My Custom|` is malformed.
+      await expect(forgeLines([custom()])).resolves.toContain('1 My Custom');
+    });
+
+    it('keeps the set separator for a real printing', async () => {
+      const body = await forgeLines([bears()]);
+      expect(body.some((line) => /^1 Grizzly Bears\|[A-Z0-9]+$/.test(line))).toBe(true);
+    });
+
+    it('folds a pipe in a card name so it cannot be read as a set code', async () => {
+      await expect(forgeLines([piped()])).resolves.toContain('1 Pipe/Name');
+    });
+
+    it('stops a cube name from forging a second deck section', async () => {
+      const evil = createCube({ id: 'c1', showUnsorted: true, name: 'Evil\r\n[Main]\r\n1 Black Lotus|LEA' });
+
+      const body = await forgeLines([bears()], evil);
+      expect(body.filter((line) => line === '[Main]')).toHaveLength(1);
+      expect(body).toContain('name=Evil [Main] 1 Black Lotus|LEA');
+    });
+  });
+
+  describe('xmage', () => {
+    it('omits the version block for a card with no set or collector number', async () => {
+      // `1 [:] My Custom` fails to import, so the bare name is the only usable fallback.
+      const body = lines(await download(xmageHandler, cube, [custom()], unsorted));
+      expect(body).toContain('1 My Custom');
+      expect(body.join('\n')).not.toContain('[:]');
+    });
+
+    it('keeps the version block for a real printing', async () => {
+      const body = lines(await download(xmageHandler, cube, [bears()], unsorted));
+      expect(body.some((line) => /^1 \[[A-Z0-9]+:123\] Grizzly Bears$/.test(line))).toBe(true);
+    });
+  });
+
+  describe('csv', () => {
+    it('quotes a newline inside a name instead of stripping it, so the row round-trips', async () => {
+      const body = await download(csvHandler, cube, [injected()], unsorted);
+
+      expect(body).toContain('"Bad\r\n1 Black Lotus"');
+      // Papa.parse reads the quoted break as part of the cell, so the row count is unchanged.
+      // Trimmed first, exactly as the CSV importer (CSVtoCards) does.
+      expect(parse(body.trim(), { header: true }).data).toHaveLength(1);
+    });
+  });
+
+  it('falls back to a usable download filename when the cube name has no ASCII word characters', async () => {
+    (cubeDao.getById as jest.Mock).mockResolvedValue(createCube({ id: 'c1', name: 'キューブ' }));
+    (cubeDao.getCards as jest.Mock).mockResolvedValue({ mainboard: [bears()] });
+
+    const res = await call(plaintextHandler)
+      .as(createUser())
+      .withParams({ id: 'c1' })
+      .withQuery({})
+      .withFlash(jest.fn())
+      .send();
+
+    expect(res.rawResponse.sentHeaders['Content-disposition']).toBe('attachment; filename=cube.txt');
   });
 });
