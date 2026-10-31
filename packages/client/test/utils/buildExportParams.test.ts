@@ -4,46 +4,32 @@ describe('buildExportParams', () => {
   const base: ExportParamsOptions = {
     isFilterUsed: false,
     filterInput: '',
-    isSortUsed: false,
-    sortPrimary: null,
-    sortSecondary: null,
-    sortTertiary: null,
-    sortQuaternary: null,
     exportAllBoards: false,
     currentViewBoards: ['mainboard'],
-    showUnsorted: false,
   };
 
   const paramsOf = (overrides: Partial<ExportParamsOptions> = {}) =>
     new URLSearchParams(buildExportParams({ ...base, ...overrides }));
 
-  it('asks for unsorted cards when sorting and the cube shows them', () => {
-    expect(paramsOf({ isSortUsed: true, showUnsorted: true }).get('showother')).toBe('true');
+  it('always sends the fixed export sort, whatever the cube or page is set to', () => {
+    const params = paramsOf();
+    expect(params.get('primary')).toBe('Color Category');
+    expect(params.get('secondary')).toBe('Types-Multicolor');
+    expect(params.get('tertiary')).toBe('Mana Value');
+    expect(params.get('quaternary')).toBe('Alphabetical');
   });
 
-  it('explicitly excludes unsorted cards when the cube hides them', () => {
-    expect(paramsOf({ isSortUsed: true, showUnsorted: false }).get('showother')).toBe('false');
+  it('always asks for unsorted cards, so nothing in scope is dropped', () => {
+    expect(paramsOf().get('showother')).toBe('true');
   });
 
-  it('asks for no sorting when the sort checkbox is off', () => {
-    const off = paramsOf({ isSortUsed: false, showUnsorted: true });
-    expect(off.get('nosort')).toBe('true');
-    expect(off.get('showother')).toBeNull();
-
-    expect(paramsOf({ isSortUsed: true }).get('nosort')).toBeNull();
+  it('never asks the endpoint to skip sorting', () => {
+    expect(paramsOf().get('nosort')).toBeNull();
   });
 
   it('includes the filter only when the filter checkbox is on', () => {
     expect(paramsOf({ isFilterUsed: true, filterInput: 'is:custom' }).get('filter')).toBe('is:custom');
     expect(paramsOf({ isFilterUsed: false, filterInput: 'is:custom' }).get('filter')).toBeNull();
-  });
-
-  it('includes the sorts only when the sort checkbox is on', () => {
-    const on = paramsOf({ isSortUsed: true, sortPrimary: 'Color Category', sortSecondary: 'Rarity' });
-    expect(on.get('primary')).toBe('Color Category');
-    expect(on.get('secondary')).toBe('Rarity');
-
-    expect(paramsOf({ isSortUsed: false, sortPrimary: 'Color Category' }).get('primary')).toBeNull();
   });
 
   it('exports every board or just the current view', () => {
