@@ -92,6 +92,10 @@ const COLOR_CATEGORIES_ORDER = ['White', 'Blue', 'Black', 'Red', 'Green', 'Multi
 
 const MAJOR_TYPES = ['Creature', 'Instant', 'Sorcery', 'Enchantment', 'Artifact', 'Planeswalker', 'Land', 'Battle'];
 
+// Read once at module load. Calling Date during render is impure, and the release-year axis ceiling
+// has no need to track wall-clock within a session.
+const CURRENT_YEAR = new Date().getFullYear();
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 const pct = (count: number, total: number): string =>
@@ -437,10 +441,7 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
   );
 
   // Release Year (histogram)
-  const releaseYearData = useMemo(
-    () => histogramChart(releaseYearBuckets(cards, new Date().getFullYear()), '#6AB572'),
-    [cards],
-  );
+  const releaseYearData = useMemo(() => histogramChart(releaseYearBuckets(cards, CURRENT_YEAR), '#6AB572'), [cards]);
 
   // Card Types (donut)
   const cardTypeData = useMemo(
