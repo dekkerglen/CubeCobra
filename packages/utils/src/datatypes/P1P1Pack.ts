@@ -14,6 +14,9 @@ export interface P1P1VoteSummary {
   botWeights?: number[]; // Array of bot rating weights for each card (0-1 range)
 }
 
+// How a pack was put together. Packs created before this field existed are random.
+export type P1P1PackSource = 'random' | 'custom';
+
 /**
  * P1P1 pack structure.
  * Data is split between DynamoDB (id, createdBy, cubeId, date, votesByUser)
@@ -33,6 +36,7 @@ export interface P1P1Pack {
   cards: Card[]; // Basic card data for each card in the pack
   createdByUsername: string;
   seed: string;
+  source?: P1P1PackSource; // 'custom' when a user hand-built the pack
 }
 
 /**
@@ -43,4 +47,7 @@ export type P1P1PackDynamoData = Pick<P1P1Pack, 'id' | 'createdBy' | 'cubeId' | 
 /**
  * S3 fields only (what gets stored in S3)
  */
-export type P1P1PackS3Data = Pick<P1P1Pack, 'botPick' | 'botWeights' | 'cards' | 'createdByUsername' | 'seed'>;
+export type P1P1PackS3Data = Pick<
+  P1P1Pack,
+  'botPick' | 'botWeights' | 'cards' | 'createdByUsername' | 'seed' | 'source'
+>;

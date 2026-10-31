@@ -5,6 +5,7 @@ import Button from '../base/Button';
 import { Card, CardBody, CardFooter, CardHeader } from '../base/Card';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
+import P1P1BuilderModal from './P1P1BuilderModal';
 
 interface CreateP1P1CardProps {
   cubeId: string;
@@ -14,6 +15,7 @@ const CreateP1P1Card: React.FC<CreateP1P1CardProps> = ({ cubeId }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [builderOpen, setBuilderOpen] = useState(false);
 
   const handleCreateP1P1 = async () => {
     setIsGenerating(true);
@@ -67,7 +69,8 @@ const CreateP1P1Card: React.FC<CreateP1P1CardProps> = ({ cubeId }) => {
       </CardHeader>
       <CardBody>
         <Text>
-          Generate a new Pack 1 Pick 1 poll from a random pack. Users can vote on which card they would pick first.
+          Generate a new Pack 1 Pick 1 poll from a random pack, or build your own. Users can vote on which card they
+          would pick first.
         </Text>
         {error && (
           <Text sm className="text-red-500 mt-2">
@@ -76,12 +79,16 @@ const CreateP1P1Card: React.FC<CreateP1P1CardProps> = ({ cubeId }) => {
         )}
       </CardBody>
       <CardFooter>
-        <Flexbox direction="row" justify="end">
+        <Flexbox direction="row" justify="end" gap="2">
           <Button color="primary" onClick={handleCreateP1P1} disabled={isGenerating} block>
             {isGenerating ? 'Generating...' : 'Generate P1P1'}
           </Button>
+          <Button color="secondary" onClick={() => setBuilderOpen(true)} disabled={isGenerating} block>
+            Build your own
+          </Button>
         </Flexbox>
       </CardFooter>
+      {builderOpen && <P1P1BuilderModal isOpen={builderOpen} setOpen={setBuilderOpen} cubeId={cubeId} />}
     </Card>
   );
 };

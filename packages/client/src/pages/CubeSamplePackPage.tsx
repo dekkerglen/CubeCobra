@@ -9,6 +9,7 @@ import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CardGrid from 'components/card/CardGrid';
 import DynamicFlash from 'components/DynamicFlash';
+import P1P1BuilderModal from 'components/p1p1/P1P1BuilderModal';
 import P1P1FromPackGenerator from 'components/p1p1/P1P1FromPackGenerator';
 import RenderToRoot from 'components/RenderToRoot';
 import CubeLayout from 'layouts/CubeLayout';
@@ -24,6 +25,7 @@ interface SamplePackPageProps {
 
 const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, isBalanced = false, maxBotWeight }) => {
   const [copied, setCopied] = React.useState(false);
+  const [builderOpen, setBuilderOpen] = React.useState(false);
 
   const randomPackUrl = `${window.location.origin}/cube/samplepack/${cube.id}/random${isBalanced ? '?balanced=true' : ''}`;
 
@@ -40,6 +42,9 @@ const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, isBal
   return (
     <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="playtest">
+        {builderOpen && (
+          <P1P1BuilderModal isOpen={builderOpen} setOpen={setBuilderOpen} cubeId={cube.id} initialPack={pack} />
+        )}
         <Flexbox direction="col" gap="2" className="my-2">
           <DynamicFlash />
           <Card>
@@ -60,6 +65,9 @@ const SamplePackPage: React.FC<SamplePackPageProps> = ({ seed, pack, cube, isBal
                 </Flexbox>
                 <Flexbox direction="row" wrap="wrap" gap="2">
                   <P1P1FromPackGenerator cubeId={cube.id} seed={seed} pack={pack} label="Create P1P1" />
+                  <Button color="primary" onClick={() => setBuilderOpen(true)}>
+                    Customize as P1P1
+                  </Button>
                   <Button type="link" color="primary" href={`/cube/samplepack/${cube.id}`}>
                     New
                   </Button>

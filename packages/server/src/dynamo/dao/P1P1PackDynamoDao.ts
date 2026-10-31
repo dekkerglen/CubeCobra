@@ -303,6 +303,7 @@ export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, Unhydrate
       cards: this.stripDetails(item.cards),
       createdByUsername: item.createdByUsername,
       seed: item.seed,
+      source: item.source,
     };
 
     // Store extended data in S3
@@ -325,6 +326,7 @@ export class P1P1PackDynamoDao extends BaseDynamoDao<P1P1PackExtended, Unhydrate
       cards: this.stripDetails(item.cards),
       createdByUsername: item.createdByUsername,
       seed: item.seed,
+      source: item.source,
     };
 
     // Store extended data in S3
