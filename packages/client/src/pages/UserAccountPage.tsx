@@ -1,7 +1,16 @@
 import React, { useContext } from 'react';
 
 import type { Icon as OcticonIcon } from '@primer/octicons-react';
-import { HeartIcon, ImageIcon, KeyIcon, MailIcon, PaintbrushIcon, PersonIcon, TrashIcon } from '@primer/octicons-react';
+import {
+  HeartIcon,
+  ImageIcon,
+  KeyIcon,
+  MailIcon,
+  PaintbrushIcon,
+  PersonIcon,
+  SignOutIcon,
+  TrashIcon,
+} from '@primer/octicons-react';
 import Cube from '@utils/datatypes/Cube';
 import Patron from '@utils/datatypes/Patron';
 import { canUseImageHosting } from '@utils/hostedImagesUtil';
@@ -12,6 +21,7 @@ import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
+import PostButton from 'components/base/PostButton';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
@@ -154,7 +164,18 @@ const SectionPill: React.FC<{ section: AccountSection; active: boolean; onClick:
   </a>
 );
 
-const UserAccountPage: React.FC<UserAccountPageProps> = (props) => {
+// Logout is an action rather than a settings section, so it lives outside SECTIONS -- it has no
+// route, no heading, and no panel of its own.
+const LogoutControl: React.FC = () => (
+  <PostButton action="/user/logout" color="danger" outline block>
+    <Flexbox direction="row" justify="center" alignItems="center" gap="2">
+      <SignOutIcon size={16} />
+      Logout
+    </Flexbox>
+  </PostButton>
+);
+
+export const UserAccountPage: React.FC<UserAccountPageProps> = (props) => {
   const { defaultNav, patron } = props;
   const user = useContext(UserContext);
   const [active, setActive] = useQueryParam('nav', defaultNav || '');
@@ -184,6 +205,9 @@ const UserAccountPage: React.FC<UserAccountPageProps> = (props) => {
                 <SectionTile key={section.key} section={section} onClick={() => setActive(section.key)} />
               ))}
             </div>
+            <div className="sm:max-w-xs sm:self-center w-full">
+              <LogoutControl />
+            </div>
           </Flexbox>
         </Container>
       ) : (
@@ -200,6 +224,7 @@ const UserAccountPage: React.FC<UserAccountPageProps> = (props) => {
                       onClick={() => setActive(section.key)}
                     />
                   ))}
+                  <LogoutControl />
                 </Flexbox>
               </div>
               <div className="min-w-0">
