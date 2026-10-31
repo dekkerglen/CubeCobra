@@ -355,7 +355,7 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
     const row: { [key: string]: React.ReactNode } = {
       Name: (
         <Flexbox direction="row" gap="2">
-          <Checkbox label="" checked={checked[cardIndex(card)]} setChecked={() => handleCheck(card)} />
+          <Checkbox label="" checked={!!checked[cardIndex(card)]} setChecked={() => handleCheck(card)} />
           <CardModalLink
             card={card}
             modalprops={{ card: { board: card.board || 'mainboard', index: cardIndex(card) } }}
