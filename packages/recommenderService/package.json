@@ -22,10 +22,10 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@aws-sdk/client-cloudwatch-logs": "^3.529.1",
-    "@aws-sdk/client-s3": "^3.927.0",
+    "@aws-sdk/client-cloudwatch-logs": "^3.1154.0",
+    "@aws-sdk/client-s3": "^3.1154.0",
     "@aws-sdk/client-ssm": "^3.1156.0",
-    "@aws-sdk/credential-providers": "^3.927.0",
+    "@aws-sdk/credential-providers": "^3.1154.0",
     "@tensorflow/tfjs-node": "^4.22.0",
     "@types/node": "^20.11.0",
     "compression": "^1.8.2",
@@ -37,7 +37,7 @@
     "tsx": "^4.19.0"
   },
   "devDependencies": {
-    "@aws-sdk/lib-storage": "^3.927.0",
+    "@aws-sdk/lib-storage": "^3.1154.0",
     "@types/archiver": "^6.0.2",
     "@types/compression": "^1.8.1",
     "@types/express": "^5.0.6",
