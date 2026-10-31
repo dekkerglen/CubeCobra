@@ -23,3 +23,7 @@ docs/superpowers/**/*
 # Wiki content uses CubeCobra's custom Markdown extensions (>>> <<< centering, << >> cardrows).
 # Prettier rewrites >>> into nested blockquotes (> > >), which breaks the rendered examples.
 packages/server/content/wiki/**/*
+# Git worktrees checked out inside the repo. Prettier reads .gitignore but not .git/info/exclude,
+# where these are listed, so without this `prettier --write .` walks in and reformats another
+# branch's files - including ones ignored above, whose patterns do not match one level down.
+.worktrees/**/*
