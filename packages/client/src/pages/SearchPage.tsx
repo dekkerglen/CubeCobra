@@ -296,6 +296,7 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
                       placeholder="Search cubes..."
                       value={queryText}
                       onChange={(event) => setQueryText(event.target.value)}
+                      onClear={() => setQueryText('')}
                       className="!bg-white !text-gray-800 !placeholder-gray-500 !border-gray-300"
                       otherInputProps={{ enterKeyHint: 'search', name: 'q' }}
                     />

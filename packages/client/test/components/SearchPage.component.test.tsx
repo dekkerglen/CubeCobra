@@ -249,3 +249,22 @@ describe('SearchPage submit paths', () => {
     expect(mockCsrfFetch).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('SearchPage clear button', () => {
+  beforeEach(() => {
+    mockCsrfFetch.mockReset();
+    mockCsrfFetch.mockResolvedValue(resolved([]));
+  });
+
+  it('clears the query text without re-running the search or rewriting the url', () => {
+    renderSearch('q=demo');
+
+    const urlBefore = window.location.search;
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+
+    expect(screen.getByPlaceholderText('Search cubes...')).toHaveValue('');
+    expect(mockCsrfFetch).not.toHaveBeenCalled();
+    expect(window.location.search).toEqual(urlBefore);
+  });
+});

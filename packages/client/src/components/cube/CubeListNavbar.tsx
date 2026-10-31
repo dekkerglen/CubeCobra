@@ -10,7 +10,6 @@ import {
   SortAscIcon,
   StackIcon,
   TableIcon,
-  XCircleIcon,
 } from '@primer/octicons-react';
 import { allFields, FilterValues, isColorField, isNumField } from '@utils/datatypes/Card';
 
@@ -92,6 +91,14 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
     setFilterInput(filterString);
     setAdvancedOpen(false);
   }, [filterValues, setFilterInput]);
+
+  // Both the local text and the applied filter have to go. Resetting only the context
+  // value would leave the stale text in `localFilterInput`, which the debounce effect
+  // below would then push straight back.
+  const clearFilter = useCallback(() => {
+    setLocalFilterInput('');
+    setFilterInput('');
+  }, [setFilterInput]);
 
   return (
     <>
@@ -238,14 +245,12 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               }}
               valid={(filterInput?.length ?? 0) > 0 ? filterValid : undefined}
               className="pr-3 bg-bg-active"
+              onClear={clearFilter}
               otherInputProps={{
                 style: { paddingLeft: '48px' },
                 onBlur: () => setFilterInput(localFilterInput),
               }}
             />
-            <span className="absolute" style={{ right: '16px', lineHeight: '0' }} onClick={() => setFilterInput('')}>
-              <XCircleIcon size={16} className="text-text-secondary cursor-pointer" />
-            </span>
           </div>
         </div>
         <div className="xl:px-2">
@@ -440,6 +445,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               }}
               valid={(filterInput?.length ?? 0) > 0 ? filterValid : undefined}
               className="pr-3 bg-bg-active w-full"
+              onClear={clearFilter}
               otherInputProps={{
                 style: { paddingLeft: '48px' },
                 onBlur: () => setFilterInput(localFilterInput),

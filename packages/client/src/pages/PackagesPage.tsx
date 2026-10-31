@@ -187,6 +187,7 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey, parsedQuery
                       value={queryText}
                       onChange={(event) => setQueryText(event.target.value)}
                       onEnter={() => getNewData(queryText, sortText, ascendingText)}
+                      onClear={() => setQueryText('')}
                       className="!bg-white !text-gray-800 !placeholder-gray-500 !border-gray-300"
                       otherInputProps={{ enterKeyHint: 'search', name: 'q' }}
                     />
