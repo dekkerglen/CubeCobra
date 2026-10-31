@@ -11,6 +11,7 @@ import {
   GraphIcon,
   HomeIcon,
   ListOrderedIcon,
+  PackageIcon,
   PersonIcon,
   QuestionIcon,
   SearchIcon,
@@ -23,10 +24,13 @@ import {
   VersionsIcon,
 } from '@primer/octicons-react';
 import { isAdFree } from '@utils/adsUtil';
+import type Cube from '@utils/datatypes/Cube';
 import { UserRoles } from '@utils/datatypes/User';
+import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
 import UserContext from '../../contexts/UserContext';
+import withQuickCreateCube from '../QuickCreateCubeButton';
 
 export interface MobileNavDrawerProps {
   isOpen: boolean;
@@ -106,6 +110,62 @@ const NavRow: React.FC<{ row: Row; pathname: string; badge?: string }> = ({ row,
 };
 
 const Divider: React.FC = () => <div className="my-3 border-t border-border" />;
+
+const SectionHeading: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <div className="px-3 pb-1 pt-2 text-xs font-bold uppercase tracking-wide text-text-secondary">{children}</div>
+);
+
+// `cubes` and `collaboratingCubes` arrive from render.ts as a trimmed cube that carries the image
+// uri alone, but the shared User type still declares them as full Cubes. The field is read through
+// a local cast rather than widening Cube, which would claim every cube everywhere carries it.
+const CubeRow: React.FC<{ cube: Cube }> = ({ cube }) => {
+  const { imageUri } = cube as Cube & { imageUri?: string };
+  return (
+    <a
+      href={`/cube/list/${encodeURIComponent(getCubeId(cube))}`}
+      // A name too long for a phone screen is clipped, so the full one rides along in the tooltip
+      // and in the link's accessible name.
+      title={cube.name}
+      className="flex items-center gap-3 rounded-md px-3 py-2 text-base text-text hover:bg-bg-active"
+    >
+      {imageUri ? (
+        <img
+          src={imageUri}
+          alt=""
+          loading="lazy"
+          className="h-8 w-8 shrink-0 rounded border border-border object-cover"
+        />
+      ) : (
+        // Defensive: every DAO-hydrated cube resolves an image, but a cube assembled elsewhere
+        // would render an <img> with no src, which paints a bordered broken-image box.
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded border border-border bg-bg-active text-text-secondary">
+          <PackageIcon size={16} />
+        </span>
+      )}
+      {/* `truncate` ellipses here only because its `overflow: hidden` forces this flex child's
+          automatic minimum size to zero; the computed `min-width` stays `auto`. */}
+      <span className="truncate">{cube.name}</span>
+    </a>
+  );
+};
+
+const actionClasses = 'block rounded-md px-3 py-2.5 text-left text-base text-text hover:bg-bg-active';
+
+const ActionLink: React.FC<{ href: string; children: React.ReactNode }> = ({ href, children }) => (
+  <a href={href} className={actionClasses}>
+    {children}
+  </a>
+);
+
+const ActionButton: React.FC<{ children?: React.ReactNode; onClick?: () => void }> = ({ children, onClick }) => (
+  <button type="button" onClick={onClick} className={classNames(actionClasses, 'w-full')}>
+    {children}
+  </button>
+);
+
+// There is no cube creation page to link to: a new cube is a CSRF POST to /cube/quickadd, which
+// creates it and redirects. Built once at module scope so the form is not remounted on each render.
+const CreateCubeAction = withQuickCreateCube(ActionButton);
 
 const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side }) => {
   const user = useContext(UserContext);
@@ -218,6 +278,43 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
     </div>
   );
 
+  // Nothing at all for a signed-out visitor: every destination here is personal, and user.id is
+  // never read without a user.
+  const rightContent = user ? (
+    <div className="flex h-full flex-col">
+      {/* min-h-0 is load-bearing: a flex item's automatic minimum size is its content, so without
+          it a full cube list refuses to shrink and pushes the action block off the panel. */}
+      <div className="flex-1 min-h-0 overflow-y-auto" data-testid="mobile-nav-cube-list">
+        <SectionHeading>Your Cubes</SectionHeading>
+        {(user.cubes || []).length > 0 ? (
+          (user.cubes || []).map((cube) => <CubeRow key={cube.id} cube={cube} />)
+        ) : (
+          <p className="px-3 py-2 text-sm text-text-secondary">You don&apos;t have any cubes yet.</p>
+        )}
+        {(user.collaboratingCubes || []).length > 0 && (
+          <>
+            <SectionHeading>Collaborating</SectionHeading>
+            {(user.collaboratingCubes || []).map((cube) => (
+              <CubeRow key={cube.id} cube={cube} />
+            ))}
+          </>
+        )}
+      </div>
+
+      <div className="shrink-0" data-testid="mobile-nav-cube-actions">
+        <Divider />
+        <CreateCubeAction>Create a New Cube</CreateCubeAction>
+        <ActionLink href={`/cube/liked/${user.id}`}>Liked Cubes</ActionLink>
+        <ActionLink href="/dashboard/drafts">Drafts of Your Cubes</ActionLink>
+        <ActionLink href={`/user/view/${user.id}`}>All Your Cubes</ActionLink>
+        <Divider />
+        <ActionLink href={`/user/packages/${user.id}`}>View All My Packages</ActionLink>
+        <ActionLink href={`/packages/liked/${user.id}`}>Liked Packages</ActionLink>
+        <ActionLink href="/packages/create">Create a New Package</ActionLink>
+      </div>
+    </div>
+  ) : null;
+
   return (
     <Transition show={isOpen}>
       {/* z-[60] clears CubeBottomNav's z-30 so the drawer covers the cube tab bar. */}
@@ -260,7 +357,7 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
               // does rather than trying to out-layer it.
               style={{ paddingBottom: shouldShowAds ? '50px' : undefined }}
             >
-              {side === 'left' && leftContent}
+              {side === 'left' ? leftContent : rightContent}
             </DialogPanel>
           </TransitionChild>
         </div>

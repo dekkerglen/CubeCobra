@@ -7,6 +7,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 
 import '@testing-library/jest-dom';
 
+import Cube from '@utils/datatypes/Cube';
 import Notification, { NotificationStatus } from '@utils/datatypes/Notification';
 import { UserRoles } from '@utils/datatypes/User';
 
@@ -35,6 +36,33 @@ const notification = (id: string): Notification => ({
   status: NotificationStatus.UNREAD,
   toStatusComp: `u1:${NotificationStatus.UNREAD}`,
 });
+
+// render.ts sends the nav a trimmed cube -- id, shortId, name and the image uri only -- but the
+// client's User type still declares `cubes: Cube[]`, so the fixture is cast to the shape the
+// component is actually handed rather than filling in forty fields it never reads.
+type NavCube = Cube & { imageUri?: string };
+const navCube = (fields: Pick<NavCube, 'id' | 'shortId' | 'name'> & { imageUri?: string }): NavCube =>
+  fields as NavCube;
+
+const cubeWithImage = navCube({
+  id: 'owned-1',
+  shortId: 'owned',
+  name: 'Owned Cube',
+  imageUri: 'https://cdn.example/owned.png',
+});
+const cubeWithoutImage = navCube({ id: 'owned-2', shortId: 'imageless', name: 'Imageless Cube' });
+const collaboratingCube = navCube({ id: 'collab-1', shortId: 'collab', name: 'Collaborating Cube' });
+
+const cubeRun = (prefix: string, count: number): NavCube[] =>
+  Array.from({ length: count }, (_unused, index) =>
+    navCube({ id: `${prefix}-${index}`, shortId: `${prefix}${index}`, name: `${prefix} cube ${index}` }),
+  );
+
+const cubesUser: UserContextValue = {
+  ...baseUser,
+  cubes: [cubeWithImage, cubeWithoutImage],
+  collaboratingCubes: [collaboratingCube],
+};
 
 interface RenderOptions {
   user?: UserContextValue | null;
@@ -268,5 +296,115 @@ describe('MobileNavDrawer', () => {
 
     renderDrawer({ user: { ...baseUser, roles: [UserRoles.PATRON] }, side: 'left' });
     expect(panel()).not.toHaveStyle({ paddingBottom: '50px' });
+  });
+
+  describe('the cubes side', () => {
+    it('renders a thumbnail per cube, falling back when none resolved', () => {
+      renderDrawer({ user: cubesUser, side: 'right' });
+
+      // A decorative `alt=""` image carries the implicit role `presentation` and is excluded from
+      // the accessibility tree, so the thumbnails are read off the DOM. The row's text already
+      // names the cube; alt text would make a screen reader announce it twice.
+      const images = panel().querySelectorAll('img');
+      expect(images).toHaveLength(1);
+      expect(images[0]).toHaveAttribute('src', 'https://cdn.example/owned.png');
+      expect(images[0]).toHaveAttribute('loading', 'lazy');
+
+      // The imageless row holds the same slot with an icon rather than an <img> React has to
+      // render without a src, which paints a broken-image box.
+      const fallbackRow = screen.getByRole('link', { name: 'Imageless Cube' });
+      expect(fallbackRow.querySelector('img')).toBeNull();
+      expect(fallbackRow.querySelector('svg')).not.toBeNull();
+    });
+
+    it('links each cube to its list page', () => {
+      renderDrawer({ user: cubesUser, side: 'right' });
+
+      expect(screen.getByRole('link', { name: 'Owned Cube' })).toHaveAttribute('href', '/cube/list/owned');
+    });
+
+    it('keeps the actions reachable with a full cube list', () => {
+      renderDrawer({
+        user: { ...baseUser, cubes: cubeRun('owned', 20), collaboratingCubes: cubeRun('collab', 12) },
+        side: 'right',
+      });
+
+      ['Create a New Cube', 'Liked Cubes', 'Drafts of Your Cubes', 'All Your Cubes'].forEach((label) =>
+        expect(screen.getByText(label)).toBeInTheDocument(),
+      );
+      // jsdom runs no layout, so the flex contract that keeps those actions on screen is asserted
+      // as the classes that encode it. `min-h-0` is the load-bearing one: without it the scroller
+      // keeps its automatic minimum size, refuses to shrink below 32 rows of content, and pushes
+      // the action block off the bottom of the panel.
+      expect(screen.getByTestId('mobile-nav-cube-list')).toHaveClass('flex-1', 'min-h-0', 'overflow-y-auto');
+      expect(screen.getByTestId('mobile-nav-cube-actions')).toHaveClass('shrink-0');
+    });
+
+    it('creates a cube by posting, not by navigating', () => {
+      renderDrawer({ user: cubesUser, side: 'right' });
+
+      expect(screen.getByRole('button', { name: /create a new cube/i }).closest('form')).toHaveAttribute(
+        'action',
+        '/cube/quickadd',
+      );
+      expect(screen.queryByRole('link', { name: /create a new cube/i })).not.toBeInTheDocument();
+    });
+
+    it('lists collaborating cubes in their own section', () => {
+      renderDrawer({ user: cubesUser, side: 'right' });
+
+      expect(screen.getByText('Collaborating')).toBeInTheDocument();
+      expect(screen.getByRole('link', { name: 'Collaborating Cube' })).toHaveAttribute('href', '/cube/list/collab');
+    });
+
+    it('omits the collaborating section entirely when there are none', () => {
+      renderDrawer({ user: { ...cubesUser, collaboratingCubes: [] }, side: 'right' });
+
+      expect(screen.queryByText(/collaborating/i)).not.toBeInTheDocument();
+    });
+
+    it('shows the empty state but keeps the actions when the user owns no cubes', () => {
+      renderDrawer({ user: { ...cubesUser, cubes: [] }, side: 'right' });
+
+      expect(screen.getByText("You don't have any cubes yet.")).toBeInTheDocument();
+      expect(screen.getByText('All Your Cubes')).toBeInTheDocument();
+    });
+
+    it('offers the viewer their own cube destinations', () => {
+      renderDrawer({ user: cubesUser, side: 'right' });
+
+      expect(screen.getByRole('link', { name: 'Liked Cubes' })).toHaveAttribute('href', '/cube/liked/u1');
+      expect(screen.getByRole('link', { name: 'Drafts of Your Cubes' })).toHaveAttribute('href', '/dashboard/drafts');
+      expect(screen.getByRole('link', { name: 'All Your Cubes' })).toHaveAttribute('href', '/user/view/u1');
+    });
+
+    it('offers the viewer their own package destinations', () => {
+      renderDrawer({ user: cubesUser, side: 'right' });
+
+      expect(screen.getByRole('link', { name: 'View All My Packages' })).toHaveAttribute('href', '/user/packages/u1');
+      expect(screen.getByRole('link', { name: 'Liked Packages' })).toHaveAttribute('href', '/packages/liked/u1');
+      expect(screen.getByRole('link', { name: 'Create a New Package' })).toHaveAttribute('href', '/packages/create');
+    });
+
+    it('carries the full name for a truncated cube', () => {
+      const longNamedCube = navCube({
+        id: 'long-1',
+        shortId: 'long',
+        name: 'An Extremely Long Cube Name That Will Not Fit Across A Phone Screen',
+      });
+      renderDrawer({ user: { ...cubesUser, cubes: [longNamedCube] }, side: 'right' });
+
+      const row = screen.getByRole('link', { name: new RegExp(longNamedCube.name) });
+      expect(row).toHaveAttribute('title', longNamedCube.name);
+      expect(row.querySelector('.truncate')).not.toBeNull();
+    });
+
+    it('renders nothing for a signed-out visitor', () => {
+      renderDrawer({ user: null, side: 'right' });
+
+      expect(screen.queryByText('Your Cubes')).not.toBeInTheDocument();
+      expect(screen.queryByText('All Your Cubes')).not.toBeInTheDocument();
+      expect(panel()).toBeEmptyDOMElement();
+    });
   });
 });
