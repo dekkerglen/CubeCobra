@@ -30,6 +30,7 @@ interface UserLayoutProps {
 
 const tabs = [
   { label: 'Cubes', href: '/user/view', key: 'view' },
+  { label: 'Collaborations', href: '/user/collaborations', key: 'collaborations' },
   { label: 'Packages', href: '/user/packages', key: 'packages' },
   { label: 'Drafts', href: '/user/decks', key: 'decks' },
   { label: 'Blog Posts', href: '/user/blog', key: 'blog' },
