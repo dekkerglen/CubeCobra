@@ -28,6 +28,7 @@ import {
 import { Bar, Doughnut } from 'react-chartjs-2';
 
 import { chartCardListHandlers, useCardListModal } from '../components/analytics/CardListModal';
+import { barLegendLabels, doughnutLegendLabels } from '../components/analytics/chartLegend';
 import { Card as CardUI, CardBody, CardHeader } from '../components/base/Card';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Text from '../components/base/Text';
@@ -37,6 +38,7 @@ import ManaPoolBulkButton from '../components/purchase/ManaPoolBulkButton';
 import TCGPlayerBulkButton from '../components/purchase/TCGPlayerBulkButton';
 import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
+import { releaseYearBuckets } from '../utils/releaseYearBuckets';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, ChartTooltip, Legend);
 
@@ -89,6 +91,10 @@ const FORMAT_HIERARCHY = ['Standard', 'Pioneer', 'Modern', 'Legacy', 'Vintage', 
 const COLOR_CATEGORIES_ORDER = ['White', 'Blue', 'Black', 'Red', 'Green', 'Multicolored', 'Hybrid', 'Colorless'];
 
 const MAJOR_TYPES = ['Creature', 'Instant', 'Sorcery', 'Enchantment', 'Artifact', 'Planeswalker', 'Land', 'Battle'];
+
+// Read once at module load. Calling Date during render is impure, and the release-year axis ceiling
+// has no need to track wall-clock within a session.
+const CURRENT_YEAR = new Date().getFullYear();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -225,6 +231,7 @@ const doughnutOptions = {
         usePointStyle: true,
         padding: 10,
         font: { size: 11 },
+        ...doughnutLegendLabels,
       },
     },
   },
@@ -241,7 +248,7 @@ const stackedBarOptions = {
   plugins: {
     legend: {
       position: 'top' as const,
-      labels: { usePointStyle: true, padding: 8, font: { size: 11 } },
+      labels: { usePointStyle: true, padding: 8, font: { size: 11 }, ...barLegendLabels },
     },
   },
 };
@@ -434,20 +441,7 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
   );
 
   // Release Year (histogram)
-  const releaseYearData = useMemo(() => {
-    const dated = cards.filter((c) => cardFirstPrintYear(c) > 0);
-    if (dated.length === 0) return histogramChart([], '#6AB572');
-
-    const years = dated.map((c) => cardFirstPrintYear(c));
-    const minYear = Math.min(...years);
-    const maxYear = Math.max(...years);
-    const buckets: { label: string; cards: Card[] }[] = [];
-    for (let y = minYear; y <= maxYear; y++) {
-      buckets.push({ label: String(y), cards: dated.filter((c) => cardFirstPrintYear(c) === y) });
-    }
-
-    return histogramChart(buckets, '#6AB572');
-  }, [cards]);
+  const releaseYearData = useMemo(() => histogramChart(releaseYearBuckets(cards, CURRENT_YEAR), '#6AB572'), [cards]);
 
   // Card Types (donut)
   const cardTypeData = useMemo(
@@ -687,7 +681,10 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
           </ChartCard>
         </Col>
         <Col xs={12} sm={6} lg={3}>
-          <ChartCard title="Rarity Breakdown">
+          <ChartCard
+            title="Rarity Breakdown"
+            tooltip="Uses each card's printing in this cube, so a card reprinted at a different rarity counts at the printing you chose. A per-card rarity override takes precedence."
+          >
             <Doughnut data={rarityData.data} options={{ ...doughnutOptions, ...listOnClick('Rarity', rarityData) }} />
           </ChartCard>
         </Col>
@@ -738,7 +735,10 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
           </ChartCard>
         </Col>
         <Col xs={12} lg={6}>
-          <ChartCard title="Price Distribution">
+          <ChartCard
+            title="Price Distribution"
+            tooltip="Uses each card's printing and finish in this cube — the same basis as Actual Price, not the cheapest printing. Cards with no price are omitted."
+          >
             <Bar
               data={priceHistogramData.data}
               options={{ ...histogramOptions, ...listOnClick('Price', priceHistogramData) }}

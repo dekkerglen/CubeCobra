@@ -18,6 +18,7 @@ import { Bar } from 'react-chartjs-2';
 
 import AsfanDropdown from '../components/analytics/AsfanDropdown';
 import { chartCardListHandlers, useCardListModal } from '../components/analytics/CardListModal';
+import { barLegendLabels } from '../components/analytics/chartLegend';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Select from '../components/base/Select';
 import Text from '../components/base/Text';
@@ -25,10 +26,6 @@ import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
 import useQueryParam from '../hooks/useQueryParam';
 import { getDefaultDraftFormatValue } from '../utils/draftFormats';
-
-console.log('ChartJS', ChartJS);
-
-console.log('BarElement', BarElement);
 
 // Register the necessary Chart.js components
 ChartJS.register(CategoryScale, TimeScale, LinearScale, PointElement, LineElement, Tooltip, Legend, BarElement);
@@ -81,6 +78,9 @@ const ChartComponent: React.FC<ChartComponentProps> = ({ characteristics }) => {
 
   const options = {
     responsive: true,
+    plugins: {
+      legend: { labels: { ...barLegendLabels } },
+    },
     tooltips: {
       mode: 'index',
       intersect: false,

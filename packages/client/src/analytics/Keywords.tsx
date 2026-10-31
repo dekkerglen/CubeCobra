@@ -15,6 +15,7 @@ import {
 import cloud from 'd3-cloud';
 import { Bar, Doughnut } from 'react-chartjs-2';
 
+import { barLegendLabels, doughnutLegendLabels } from '../components/analytics/chartLegend';
 import Button from '../components/base/Button';
 import { Card as CardUI, CardBody, CardHeader } from '../components/base/Card';
 import { Col, Flexbox, Row } from '../components/base/Layout';
@@ -123,7 +124,10 @@ const stackedHBarOptions = {
     y: { stacked: true, grid: { display: false } },
   },
   plugins: {
-    legend: { position: 'top' as const, labels: { usePointStyle: true, padding: 8, font: { size: 11 } } },
+    legend: {
+      position: 'top' as const,
+      labels: { usePointStyle: true, padding: 8, font: { size: 11 }, ...barLegendLabels },
+    },
   },
 };
 
@@ -131,7 +135,10 @@ const doughnutOptions = {
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
-    legend: { position: 'right' as const, labels: { usePointStyle: true, padding: 10, font: { size: 11 } } },
+    legend: {
+      position: 'right' as const,
+      labels: { usePointStyle: true, padding: 10, font: { size: 11 }, ...doughnutLegendLabels },
+    },
   },
   cutout: '55%',
 };

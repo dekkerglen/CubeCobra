@@ -2,9 +2,10 @@
 import React from 'react';
 
 import type { BuiltDeck, CardMeta } from '@utils/datatypes/SimulationReport';
-import { ArcElement, BarElement, CategoryScale, Chart as ChartJS, Legend, Tooltip } from 'chart.js';
+import { ArcElement, BarElement, CategoryScale, Chart as ChartJS, Legend, type LegendItem, Tooltip } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 
+import { dimHiddenLegendItems } from '../analytics/chartLegend';
 import Text from '../base/Text';
 import useChartTextColor from '../../hooks/useChartTextColor';
 
@@ -118,15 +119,20 @@ export function makeDoughnutOptions(textColor: string) {
           color: textColor,
           generateLabels: (chart: any) => {
             const data = chart.data;
-            return (data.labels as string[]).map((label: string, i: number) => ({
-              text: `${label}  ${(data.datasets[0].data[i] as number).toFixed(0)}%`,
-              fillStyle: data.datasets[0].backgroundColor[i],
-              strokeStyle: data.datasets[0].backgroundColor[i],
-              fontColor: textColor,
-              pointStyle: 'circle' as const,
-              hidden: false,
-              index: i,
-            }));
+            return dimHiddenLegendItems(
+              (data.labels as string[]).map(
+                (label: string, i: number) =>
+                  ({
+                    text: `${label}  ${(data.datasets[0].data[i] as number).toFixed(0)}%`,
+                    fillStyle: data.datasets[0].backgroundColor[i],
+                    strokeStyle: data.datasets[0].backgroundColor[i],
+                    fontColor: textColor,
+                    pointStyle: 'circle' as const,
+                    hidden: !chart.getDataVisibility(i),
+                    index: i,
+                  }) as LegendItem,
+              ),
+            );
           },
         },
       },
