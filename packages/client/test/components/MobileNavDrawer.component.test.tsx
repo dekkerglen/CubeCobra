@@ -338,6 +338,9 @@ describe('MobileNavDrawer', () => {
       // the action block off the bottom of the panel.
       expect(screen.getByTestId('mobile-nav-cube-list')).toHaveClass('flex-1', 'min-h-0', 'overflow-y-auto');
       expect(screen.getByTestId('mobile-nav-cube-actions')).toHaveClass('shrink-0');
+      // `h-full` is equally load-bearing on the column itself: `flex-1` divides a definite height,
+      // and without one the column grows to its content instead of to the panel.
+      expect(screen.getByTestId('mobile-nav-cube-list').parentElement).toHaveClass('flex', 'h-full', 'flex-col');
     });
 
     it('creates a cube by posting, not by navigating', () => {

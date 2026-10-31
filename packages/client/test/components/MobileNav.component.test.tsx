@@ -39,18 +39,24 @@ type MediaListener = (event: MediaQueryListEvent) => void;
 // 768px is the listener it registers here. The stub keeps real bookkeeping — the queries it was
 // asked for, and the listeners actually added and removed — so a missing, mis-keyed or un-cleaned
 // registration shows up as a failing assertion instead of passing against a no-op mock.
-const media: { queries: string[]; listeners: MediaListener[] } = { queries: [], listeners: [] };
+const media: { queries: string[]; types: string[]; listeners: MediaListener[] } = {
+  queries: [],
+  types: [],
+  listeners: [],
+};
 
 const installMatchMedia = () => {
   media.queries = [];
+  media.types = [];
   media.listeners = [];
   window.matchMedia = ((query: string) =>
     ({
       media: query,
       matches: false,
       onchange: null,
-      addEventListener: (_type: string, listener: MediaListener) => {
+      addEventListener: (type: string, listener: MediaListener) => {
         media.queries.push(query);
+        media.types.push(type);
         media.listeners.push(listener);
       },
       removeEventListener: (_type: string, listener: MediaListener) => {
@@ -78,7 +84,7 @@ describe('MobileNav', () => {
   });
 
   it('offers exactly a menu button, the logo, and a cubes button', () => {
-    renderNav(user);
+    const { container } = renderNav(user);
 
     expect(screen.getByRole('button', { name: /open menu/i })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /your cubes/i })).toBeInTheDocument();
@@ -86,6 +92,11 @@ describe('MobileNav', () => {
 
     const logo = screen.getByRole('link', { name: /cube cobra/i });
     expect(logo).toHaveAttribute('href', '/');
+
+    // jsdom runs no layout, so the bar's geometry is asserted as the classes that encode it. `h-10`
+    // is the load-bearing one: the logo is taken out of flow to stay centred against the bar rather
+    // than between its slots, so without a height on the bar itself the whole row collapses.
+    expect(container.firstChild).toHaveClass('relative', 'flex', 'h-10', 'items-center');
   });
 
   it('withholds the cubes button from a signed-out visitor', () => {
@@ -167,6 +178,9 @@ describe('MobileNav', () => {
     renderNav(user);
 
     expect(media.queries).toEqual(['(min-width: 768px)']);
+    // A MediaQueryList only reports breakpoint crossings as `change`; any other event name
+    // registers a listener that never fires.
+    expect(media.types).toEqual(['change']);
   });
 
   it('closes an open drawer when the viewport reaches the desktop breakpoint', async () => {
