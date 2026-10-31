@@ -63,7 +63,8 @@ export interface CardDragOptions<T> {
   target: (session: DragSession, left: number, top: number) => T | null;
   sameTarget: (a: T | null, b: T | null) => boolean;
   drop: (session: DragSession, target: T | null) => void;
-  click: (id: SpriteId) => void;
+  // A press without a drag; pointerType tells a tap ('touch') from a mouse click.
+  click: (id: SpriteId, pointerType: string) => void;
   dragStarted?: () => void;
   // Regions that scroll vertically: by swiping, and when a card is held near their top or bottom edge.
   scrollRegions?: () => ScrollRegion[];
@@ -400,7 +401,7 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
         return;
       }
       if (s.mode !== 'drag') {
-        if (s.id !== null) latest.current.click(s.id);
+        if (s.id !== null) latest.current.click(s.id, event.pointerType);
         return;
       }
       const handle = heldCard(s);

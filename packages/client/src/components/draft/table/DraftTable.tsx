@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { ChevronLeftIcon, ChevronRightIcon, CpuIcon } from '@primer/octicons-react';
+import { ChevronLeftIcon, CpuIcon } from '@primer/octicons-react';
 import { cardName, makeSubtitle } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
 import { getCardDefaultRowColumn } from '@utils/draftutil';
@@ -17,8 +17,8 @@ import Text from '../../base/Text';
 import BoosterPack from './BoosterPack';
 import CardSprite, { EnterFrom, ExitPlan, PASS_OUT_SECONDS, SpriteId } from './CardSprite';
 import { isCompactWidth } from './deckLayout';
-import DeckTable from './DeckTable';
 import { PhoneMenuButton, PhoneMenuPanel } from './PhoneMenu';
+import PoolTray, { PoolTab } from './PoolTray';
 import ScrollThumb from './ScrollThumb';
 import {
   COLUMN_LABELS,
@@ -164,10 +164,11 @@ const buildColumns = (mainboard: number[][][], sideboard: number[][][]): Segment
  * The draft table: a fixed-height table that fits the viewport. The pack is
  * fanned across the top and the pool is stacked in CMC columns below. Every card
  * is a sprite on one stage, so any card can be dragged anywhere and everything
- * else eases out of the way. Tap a pack card to raise it, tap again to draft it.
+ * else eases out of the way. Click a pack card to draft it; on touch, tap to
+ * raise it and tap again to draft it.
  *
  * On phones the table holds only the pack, laid out in rows; the pool is a
- * drawer that slides in from a tab on the right and works like the deckbuilder.
+ * tray that slides in from a tab on the right, listing the mainboard and sideboard.
  *
  * Draft rules stay in CubeDraftPage; the table only decides where cards are
  * drawn and translates drops into the page's existing pick/move handlers.
@@ -206,8 +207,11 @@ const DraftTable: React.FC<DraftTableProps> = ({
   const { showCustomImages } = useContext(DisplayContext);
   const tagColors = useContext(TagColorContext);
 
+  // The room the table has, before its own margins: what decides the phone layout.
+  const roomRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
+  const [roomWidth, setRoomWidth] = useState(0);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
 
   const [customOrder, setCustomOrder] = useState<number[]>([]);
@@ -215,6 +219,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
   const [hovered, setHovered] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [poolOpen, setPoolOpen] = useState(false);
+  const [poolTab, setPoolTab] = useState<PoolTab>('mainboard');
 
   // The handlers are defined further down; these wrappers only run on pointer events.
   const dragger = useCardDrag<DropTarget>({
@@ -223,7 +228,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
     target: (session, left, top) => computeTarget(session, left, top),
     sameTarget,
     drop: (session, target) => drop(session, target),
-    click: (id) => click(Number(id)),
+    click: (id, pointerType) => click(Number(id), pointerType),
     dragStarted: () => {
       hideCard();
       setHovered(null);
@@ -235,22 +240,29 @@ const DraftTable: React.FC<DraftTableProps> = ({
 
   useLayoutEffect(() => {
     const el = stageRef.current;
-    if (!el) return undefined;
-    const measure = () => setStageSize({ width: el.clientWidth, height: el.clientHeight });
+    const room = roomRef.current;
+    if (!el || !room) return undefined;
+    const measure = () => {
+      setStageSize({ width: el.clientWidth, height: el.clientHeight });
+      setRoomWidth(room.clientWidth);
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(el);
+    observer.observe(room);
     return () => observer.disconnect();
   }, []);
 
-  const compact = stageSize.width > 0 && isCompactWidth(stageSize.width);
+  // Decided by the room rather than the stage, since the phone layout drops the
+  // table's margins and so widens the stage: deciding by the stage could flip back and forth.
+  const compact = roomWidth > 0 && isCompactWidth(roomWidth);
   // Sized for the largest pack, so cards keep their size as the pack shrinks.
   const capacity = Math.max(packSize ?? 0, pack.length);
   const geometry: TableGeometry | null = useMemo(() => {
     if (stageSize.width <= 0 || stageSize.height <= 0) return null;
     return compact
-      ? computeRowsGeometry(stageSize.width, stageSize.height, capacity, TAB_WIDTH)
-      : computeGeometry(stageSize.width, stageSize.height);
+      ? computeRowsGeometry(stageSize.width, stageSize.height, capacity)
+      : computeGeometry(stageSize.width, stageSize.height, capacity);
   }, [stageSize.width, stageSize.height, compact, capacity]);
 
   // Phones: once, ease the page down so the table exactly fills the screen.
@@ -321,7 +333,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
     });
 
     // Phones keep the pool in a drawer, off the stage.
-    if (!geometry.rows) {
+    if (!compact) {
       columns.forEach((segments, column) => {
         const ids = segments.flatMap((segment) => segment.ids).filter((id) => id !== draggedId);
         const gap = target?.kind === 'pool' && target.column === column ? target.index : -1;
@@ -352,7 +364,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
       }
     }
     return result;
-  }, [geometry, packOrder, columns, drag, activeSelected, hovered]);
+  }, [geometry, compact, packOrder, columns, drag, activeSelected, hovered]);
 
   // ---- Pack turnover: where new cards come from, where leaving cards go ----
   // Pack 1 is passed left, so its packs arrive from the right and leftovers
@@ -470,10 +482,10 @@ const DraftTable: React.FC<DraftTableProps> = ({
         (drag?.target?.kind === 'pool' && drag.target.column === column ? 1 : 0),
     ),
   );
-  const maxScroll = geometry && !geometry.rows ? maxPoolScroll(geometry, tallestStack) : 0;
+  const maxScroll = geometry && !compact ? maxPoolScroll(geometry, tallestStack) : 0;
   useClampScroll(poolScroll, maxScroll);
   const scrollRegions: ScrollRegion[] =
-    geometry && !geometry.rows
+    geometry && !compact
       ? [
           {
             left: 0,
@@ -523,7 +535,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
     // Pack or pool by where the card is held, like the pool's edge scrolling.
     const pointerY = top + s.grabY;
 
-    if (geometry.rows) {
+    if (compact) {
       if (s.zone !== 'pack') return null;
       if (left + s.grabX >= geometry.width - TAB_DROP_ZONE) return canPlaceFromPack ? { kind: 'tab' } : null;
       return {
@@ -629,9 +641,11 @@ const DraftTable: React.FC<DraftTableProps> = ({
     if (!unchanged) onMovePoolCard(source, location);
   };
 
-  const click = (id: number) => {
+  // With a mouse, the hover preview already shows the card, so a click drafts it.
+  // A tap raises the card first so it can be read, and a second tap drafts it.
+  const click = (id: number, pointerType: string) => {
     if (!packIdSet.has(id)) return;
-    if (activeSelected !== id) {
+    if (pointerType === 'touch' && activeSelected !== id) {
       setSelected(id);
       return;
     }
@@ -645,15 +659,12 @@ const DraftTable: React.FC<DraftTableProps> = ({
       onTrash(packIndex);
     } else {
       revealId.current = id;
-      if (geometry?.rows) exitPlan.current.picked.add(id);
+      if (compact) exitPlan.current.picked.add(id);
       onPick(packIndex);
     }
   };
 
-  // ---- The pool drawer (phones) ----
-  const movePoolCard = (source: DraftLocation, target: DraftLocation) => {
-    if (!locked) onMovePoolCard(source, target);
-  };
+  // ---- The pool tray (phones) ----
   // A tap sends a card to the other board, in its natural spot.
   const togglePoolCard = (source: DraftLocation) => {
     if (locked) return;
@@ -733,8 +744,8 @@ const DraftTable: React.FC<DraftTableProps> = ({
             {Math.round(rating * 100)}%
           </div>
         )}
-        {isSelected && compact && (
-          // No room below a card in the rows, so the label sits on the card.
+        {isSelected && geometry!.rows && (
+          // No room below a card in rows, so the label sits on the card.
           <div className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap">
             <span
               className={`px-2 py-0.5 rounded-full text-xxs font-bold text-white shadow-lg ${
@@ -745,7 +756,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
             </span>
           </div>
         )}
-        {isSelected && !compact && (
+        {isSelected && !geometry!.rows && (
           <div className="pointer-events-none absolute top-full mt-1 left-1/2 -translate-x-1/2 whitespace-nowrap flex flex-col items-center gap-0.5">
             <span
               className={`px-3 py-0.5 rounded-full text-xxs font-bold text-white shadow-lg ${
@@ -784,18 +795,57 @@ const DraftTable: React.FC<DraftTableProps> = ({
   return (
     // Exactly one viewport tall (less the phone's bottom nav) regardless of the
     // header above it: scroll past the header and the table fills the screen.
-    // Edge to edge on phones.
-    <div
-      ref={tableRef}
-      className="relative mt-3 flex flex-col bg-bg-accent/80 shadow rounded-md border border-border overflow-hidden max-md:-mx-2 max-md:rounded-none max-md:border-x-0"
-      style={{ height: 'calc(100dvh - var(--bottom-nav-height, 0px))', minHeight: 480 }}
-    >
-      {compact ? (
-        // The menu drops over the table rather than pushing it down, so the cards keep their size.
-        <div className="relative z-10 border-b border-border">
-          <div className="flex items-center gap-2 py-1 px-2">
-            <div className="flex flex-col min-w-0">
-              <Text semibold className="truncate">
+    // In the phone layout it runs edge to edge, over the page's side padding.
+    <div ref={roomRef}>
+      <div
+        ref={tableRef}
+        className={`relative mt-3 flex flex-col bg-bg-accent/80 shadow overflow-hidden ${
+          compact ? '-mx-2 border-y border-border' : 'mx-2 rounded-md border border-border'
+        }`}
+        style={{ height: 'calc(100dvh - var(--bottom-nav-height, 0px))', minHeight: 480 }}
+      >
+        {compact ? (
+          // The menu drops over the table rather than pushing it down, so the cards keep their size.
+          <div className="relative z-10 border-b border-border">
+            {/* A fixed height, so the cards don't resize when the waiting line comes and goes. */}
+            <div className="flex items-center gap-2 h-11 px-2">
+              <div className="flex flex-col min-w-0">
+                <Text semibold className="truncate leading-5">
+                  {title}
+                </Text>
+                {pendingPick !== null && (
+                  <Text xs className="text-text-secondary">
+                    Waiting for Bot Picks...
+                  </Text>
+                )}
+              </div>
+              {hasMenu && (
+                <div className="ml-auto">
+                  <PhoneMenuButton
+                    open={menuOpen}
+                    onToggle={() => setMenuOpen((open) => !open)}
+                    label="Draft options"
+                  />
+                </div>
+              )}
+            </div>
+            {error && <div className="px-2 pb-2">{retryButton}</div>}
+            {hasMenu && (
+              <div className="absolute inset-x-0 top-full bg-bg-accent shadow-lg">
+                <PhoneMenuPanel open={menuOpen}>
+                  <div className="flex flex-col items-end gap-3 py-2 px-2 border-b border-border">
+                    {menuActions}
+                    {ratingsLink}
+                  </div>
+                </PhoneMenuPanel>
+              </div>
+            )}
+          </div>
+        ) : (
+          // A fixed height, so the cards don't resize as the buttons and the waiting line come and go.
+          <div className="flex items-center gap-4 h-12 px-4 border-b border-border">
+            <div className="flex flex-col shrink-0">
+              <Text semibold lg className="whitespace-nowrap leading-6">
                 {title}
               </Text>
               {pendingPick !== null && (
@@ -804,196 +854,150 @@ const DraftTable: React.FC<DraftTableProps> = ({
                 </Text>
               )}
             </div>
-            {hasMenu && (
-              <div className="ml-auto">
-                <PhoneMenuButton open={menuOpen} onToggle={() => setMenuOpen((open) => !open)} label="Draft options" />
-              </div>
-            )}
-          </div>
-          {error && <div className="px-2 pb-2">{retryButton}</div>}
-          {hasMenu && (
-            <div className="absolute inset-x-0 top-full bg-bg-accent shadow-lg">
-              <PhoneMenuPanel open={menuOpen}>
-                <div className="flex flex-col items-end gap-3 py-2 px-2 border-b border-border">
-                  {menuActions}
-                  {ratingsLink}
-                </div>
-              </PhoneMenuPanel>
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 py-2 px-4 border-b border-border">
-          <div className="flex flex-col min-w-0">
-            <Text semibold lg className="whitespace-nowrap">
-              {title}
-            </Text>
-            {pendingPick !== null && (
-              <Text xs className="text-text-secondary">
-                Waiting for Bot Picks...
-              </Text>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-2 items-center">
-            <Text xs className="text-text-secondary">
+            <Text xs className="flex-1 min-w-0 truncate text-right text-text-secondary">
               {makeSubtitle(mainboardCards.filter(Boolean))}
             </Text>
-            {headerActions}
-            {error
-              ? retryButton
-              : hasRatings && (
-                  <Button onClick={onToggleRatings} color="primary">
-                    {showRatings ? 'Hide Bot Ratings' : 'Show CubeCobra Bot Ratings'}
-                  </Button>
-                )}
+            <div className="flex shrink-0 gap-2 items-center">
+              {headerActions}
+              {error
+                ? retryButton
+                : hasRatings && (
+                    <Button onClick={onToggleRatings} color="primary">
+                      {showRatings ? 'Hide Bot Ratings' : 'Show CubeCobra Bot Ratings'}
+                    </Button>
+                  )}
+            </div>
           </div>
-        </div>
-      )}
-
-      {/* isolate: the cards' z-indexes stay inside the stage, under the menu and the pool drawer. */}
-      <div
-        ref={stageRef}
-        className="relative flex-1 overflow-hidden select-none isolate"
-        style={{ touchAction: 'none' }}
-        onPointerDown={(event) => {
-          setMenuOpen(false);
-          if (event.target === event.currentTarget) setSelected(null);
-          dragger.backgroundPointerDown(event);
-        }}
-      >
-        {geometry && !geometry.rows && (
-          <>
-            <div
-              className="absolute rounded-lg bg-bg/60 border border-border pointer-events-none"
-              style={{
-                left: geometry.columnX[0] - 8,
-                width: geometry.columnX[MAIN_COLUMNS - 1] + geometry.cardW - geometry.columnX[0] + 16,
-                top: geometry.poolTop - 4,
-                bottom: 4,
-              }}
-            />
-            <div
-              className="absolute rounded-lg bg-bg/60 border border-border pointer-events-none"
-              style={{
-                left: geometry.columnX[SIDEBOARD_COLUMN] - 8,
-                width: geometry.cardW + 16,
-                top: geometry.poolTop - 4,
-                bottom: 4,
-              }}
-            />
-            {geometry.columnX.map((x, column) => (
-              <div
-                key={COLUMN_LABELS[column]}
-                className={`absolute rounded-md pointer-events-none transition-colors duration-150 ${
-                  hoveredColumn === column ? 'bg-button-primary/15' : 'bg-transparent'
-                }`}
-                style={{ left: x - 4, width: geometry.cardW + 8, top: geometry.poolTop, bottom: 8 }}
-              >
-                <div className="text-center text-xs text-text-secondary leading-[22px]">
-                  {COLUMN_LABELS[column]}
-                  {columnCounts[column] > 0 && <span className="opacity-60"> · {columnCounts[column]}</span>}
-                </div>
-              </div>
-            ))}
-            <ScrollThumb
-              scroll={poolScroll}
-              max={maxScroll}
-              left={Math.min(geometry.width - 8, geometry.columnX[SIDEBOARD_COLUMN] + geometry.cardW + 12)}
-              top={geometry.stackTop}
-              height={geometry.poolBottom - geometry.stackTop}
-            />
-          </>
         )}
-        {geometry && (
-          <>
-            {packOrder.length === 0 && (
-              <div
-                className="absolute inset-x-0 top-0 flex items-center justify-center gap-2 text-text-secondary pointer-events-none"
-                style={{ height: geometry.rows ? geometry.height : geometry.packBottom }}
-              >
-                {(loading || locked) && <Spinner sm />}
-                <span>{locked ? 'Finishing draft...' : title || 'Waiting for the next pack...'}</span>
-              </div>
-            )}
-            <AnimatePresence>{sprites}</AnimatePresence>
-            {opening && (
-              <BoosterPack
-                key={opening.id}
-                x={geometry.packCenterX}
-                y={geometry.packCenterY}
-                width={geometry.cardW * 1.12}
-                height={geometry.cardH * 1.15}
-                art={packArt}
-                name={cubeName}
-                label={opening.label}
-                cardCount={opening.cardCount}
-                onBurst={burstOpening}
-                onDone={endOpening}
-              />
-            )}
-            {geometry.rows && (
-              // Phones: opens the pool drawer. Over every card, even one being dragged onto it.
-              <button
-                type="button"
-                aria-label="Open pool"
-                onClick={() => setPoolOpen(true)}
-                className={`absolute right-0 flex flex-col items-center gap-2 py-3 rounded-l-md border border-r-0 shadow-lg transition-colors ${
-                  tabTarget ? 'bg-button-primary/30 border-button-primary' : 'bg-bg-active border-border'
-                }`}
-                style={{ width: TAB_WIDTH, top: '50%', transform: 'translateY(-50%)', zIndex: 3100 }}
-              >
-                <ChevronLeftIcon size={16} />
-                {/* Pops each time a card lands in the pool. */}
-                <motion.span
-                  key={poolIds.size}
-                  initial={{ scale: 1.5 }}
-                  animate={{ scale: 1 }}
-                  transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                  className="text-xs font-semibold"
-                >
-                  {poolIds.size}
-                </motion.span>
-                <span
-                  className="text-xxs uppercase tracking-widest text-text-secondary"
-                  style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
-                >
-                  Pool
-                </span>
-              </button>
-            )}
-          </>
-        )}
-      </div>
 
-      {compact && (
-        // Phones: the pool, sliding in over the whole table. Stays mounted so it keeps its scroll.
-        <motion.div
-          className="absolute inset-0 z-20"
-          initial={false}
-          animate={{ x: poolOpen ? '0%' : '100%' }}
-          transition={{ type: 'tween', duration: 0.3, ease: 'easeOut' }}
-          inert={!poolOpen}
+        {/* isolate: the cards' z-indexes stay inside the stage, under the menu and the pool drawer. */}
+        <div
+          ref={stageRef}
+          className="relative flex-1 overflow-hidden select-none isolate"
+          style={{ touchAction: 'none' }}
+          onPointerDown={(event) => {
+            setMenuOpen(false);
+            if (event.target === event.currentTarget) setSelected(null);
+            dragger.backgroundPointerDown(event);
+          }}
         >
-          <DeckTable
+          {geometry && !compact && (
+            <>
+              <div
+                className="absolute rounded-lg bg-bg/60 border border-border pointer-events-none"
+                style={{
+                  left: geometry.columnX[0] - 8,
+                  width: geometry.columnX[MAIN_COLUMNS - 1] + geometry.cardW - geometry.columnX[0] + 16,
+                  top: geometry.poolTop - 4,
+                  bottom: 4,
+                }}
+              />
+              <div
+                className="absolute rounded-lg bg-bg/60 border border-border pointer-events-none"
+                style={{
+                  left: geometry.columnX[SIDEBOARD_COLUMN] - 8,
+                  width: geometry.cardW + 16,
+                  top: geometry.poolTop - 4,
+                  bottom: 4,
+                }}
+              />
+              {geometry.columnX.map((x, column) => (
+                <div
+                  key={COLUMN_LABELS[column]}
+                  className={`absolute rounded-md pointer-events-none transition-colors duration-150 ${
+                    hoveredColumn === column ? 'bg-button-primary/15' : 'bg-transparent'
+                  }`}
+                  style={{ left: x - 4, width: geometry.cardW + 8, top: geometry.poolTop, bottom: 8 }}
+                >
+                  <div className="text-center text-xs text-text-secondary leading-[22px]">
+                    {COLUMN_LABELS[column]}
+                    {columnCounts[column] > 0 && <span className="opacity-60"> · {columnCounts[column]}</span>}
+                  </div>
+                </div>
+              ))}
+              <ScrollThumb
+                scroll={poolScroll}
+                max={maxScroll}
+                left={Math.min(geometry.width - 8, geometry.columnX[SIDEBOARD_COLUMN] + geometry.cardW + 12)}
+                top={geometry.stackTop}
+                height={geometry.poolBottom - geometry.stackTop}
+              />
+            </>
+          )}
+          {geometry && (
+            <>
+              {packOrder.length === 0 && (
+                <div
+                  className="absolute inset-x-0 top-0 flex items-center justify-center gap-2 text-text-secondary pointer-events-none"
+                  style={{ height: compact ? geometry.height : geometry.packBottom }}
+                >
+                  {(loading || locked) && <Spinner sm />}
+                  <span>{locked ? 'Finishing draft...' : title || 'Waiting for the next pack...'}</span>
+                </div>
+              )}
+              <AnimatePresence>{sprites}</AnimatePresence>
+              {opening && (
+                <BoosterPack
+                  key={opening.id}
+                  x={geometry.packCenterX}
+                  y={geometry.packCenterY}
+                  width={geometry.cardW * 1.12}
+                  height={geometry.cardH * 1.15}
+                  art={packArt}
+                  name={cubeName}
+                  label={opening.label}
+                  cardCount={opening.cardCount}
+                  onBurst={burstOpening}
+                  onDone={endOpening}
+                />
+              )}
+              {compact && (
+                // Phones: opens the pool drawer. Over every card, even one being dragged onto it.
+                <button
+                  type="button"
+                  aria-label="Open pool"
+                  onClick={() => setPoolOpen(true)}
+                  className={`absolute right-0 flex flex-col items-center gap-2 py-3 rounded-l-md border border-r-0 shadow-lg transition-colors ${
+                    tabTarget ? 'bg-button-primary/30 border-button-primary' : 'bg-bg-active border-border'
+                  }`}
+                  style={{ width: TAB_WIDTH, top: '50%', transform: 'translateY(-50%)', zIndex: 3100 }}
+                >
+                  <ChevronLeftIcon size={16} />
+                  {/* Pops each time a card lands in the pool. */}
+                  <motion.span
+                    key={poolIds.size}
+                    initial={{ scale: 1.5 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                    className="text-xs font-semibold"
+                  >
+                    {poolIds.size}
+                  </motion.span>
+                  <span
+                    className="text-xxs uppercase tracking-widest text-text-secondary"
+                    style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+                  >
+                    Pool
+                  </span>
+                </button>
+              )}
+            </>
+          )}
+        </div>
+
+        {compact && (
+          <PoolTray
+            open={poolOpen}
+            onClose={() => setPoolOpen(false)}
+            tab={poolTab}
+            onTabChange={setPoolTab}
             cards={cards}
             mainboard={mainboard}
             sideboard={sideboard}
-            fill
-            headerStart={
-              <button
-                type="button"
-                aria-label="Close pool"
-                onClick={() => setPoolOpen(false)}
-                className="shrink-0 p-1 text-text-secondary hover:text-text"
-              >
-                <ChevronRightIcon size={20} />
-              </button>
-            }
-            onMove={movePoolCard}
-            onToggleBoard={togglePoolCard}
+            onToggle={togglePoolCard}
           />
-        </motion.div>
-      )}
+        )}
+      </div>
     </div>
   );
 };

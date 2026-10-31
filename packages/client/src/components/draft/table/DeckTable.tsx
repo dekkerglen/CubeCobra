@@ -46,30 +46,23 @@ interface DeckTableProps {
   cards: CardType[];
   mainboard: number[][][];
   sideboard: number[][][];
-  // The removed pile; leave out onRemove for a table without one.
-  removed?: number[];
-  // Renaming the deck and its art are desktop-only and optional.
-  deckTitle?: string;
-  onDeckTitleChange?: (title: string) => void;
-  deckNamePlaceholder?: string;
-  previewImage?: string;
+  removed: number[];
+  deckTitle: string;
+  onDeckTitleChange: (title: string) => void;
+  deckNamePlaceholder: string;
+  previewImage: string;
   // The deckbuilder's own toolbar, drawn inside the table so it counts toward the
   // window height: as a bar on desktop. On phones the Save button stays in the
   // header and everything else is a list behind a menu button.
   renderToolbar?: (layout: 'bar' | 'list' | 'save') => React.ReactNode;
-  // Fill the parent's height on phones too (e.g. the draft's pool drawer): the
-  // boards scroll inside instead of growing with their cards.
-  fill?: boolean;
-  // Leads the header row on phones when there's no toolbar menu, e.g. a close button.
-  headerStart?: React.ReactNode;
   // Move a card within or between the deck and sideboard. target.index assumes the
   // card has already been taken out of its pile.
   onMove: (source: DraftLocation, target: DraftLocation) => void;
-  onRemove?: (source: DraftLocation) => void;
-  onRestore?: (pileIndex: number, target: DraftLocation) => void;
+  onRemove: (source: DraftLocation) => void;
+  onRestore: (pileIndex: number, target: DraftLocation) => void;
   // A tap: send the card to the other board, in its natural spot.
   onToggleBoard: (source: DraftLocation) => void;
-  onSetArt?: (cardIndex: number) => void;
+  onSetArt: (cardIndex: number) => void;
 }
 
 // Where the card behind one sprite is stored.
@@ -94,7 +87,6 @@ interface Placement {
 }
 
 const BOARDS: BoardKey[] = ['deck', 'sideboard'];
-const NO_CARDS: number[] = [];
 // px of sideways scroll over which an edge fade comes in.
 const FADE_RAMP = 24;
 
@@ -126,14 +118,12 @@ const DeckTable: React.FC<DeckTableProps> = ({
   cards,
   mainboard,
   sideboard,
-  removed = NO_CARDS,
-  deckTitle = '',
+  removed,
+  deckTitle,
   onDeckTitleChange,
   deckNamePlaceholder,
   previewImage,
   renderToolbar,
-  fill = false,
-  headerStart,
   onMove,
   onRemove,
   onRestore,
@@ -145,11 +135,8 @@ const DeckTable: React.FC<DeckTableProps> = ({
   const tagColors = useContext(TagColorContext);
 
   const stageRef = useRef<HTMLDivElement>(null);
-  // Phones, in a drawer: the panel the stage scrolls in.
-  const scrollerRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
   const [menuOpen, setMenuOpen] = useState(false);
-  const hasRemovedPile = Boolean(onRemove);
   useLayoutEffect(() => {
     const el = stageRef.current;
     if (!el) return undefined;
@@ -171,7 +158,7 @@ const DeckTable: React.FC<DeckTableProps> = ({
     dragStarted: () => hideCard(),
     scrollRegions: () => scrollRegions,
     horizontal: () => horizontal,
-    verticalScroller: () => (geometry?.compact ? (fill ? scrollerRef.current : window) : null),
+    verticalScroller: () => (geometry?.compact ? window : null),
   });
   const { drag } = dragger;
 
@@ -234,18 +221,14 @@ const DeckTable: React.FC<DeckTableProps> = ({
   const geometry: DeckGeometry | null = useMemo(
     () =>
       stageSize.width > 0 && (compact || stageSize.height > 0)
-        ? computeDeckGeometry(
-            stageSize.width,
-            stageSize.height,
-            columnCount,
-            removedKeys.length,
-            { deck: deckRows, sideboard: sideboardRows },
-            { fill, removedPile: hasRemovedPile },
-          )
+        ? computeDeckGeometry(stageSize.width, stageSize.height, columnCount, removedKeys.length, {
+            deck: deckRows,
+            sideboard: sideboardRows,
+          })
         : null,
     // deckRows/sideboardRows are captured by rowsKey.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [stageSize.width, stageSize.height, compact, fill, hasRemovedPile, columnCount, removedKeys.length, rowsKey],
+    [stageSize.width, stageSize.height, compact, columnCount, removedKeys.length, rowsKey],
   );
 
   const deckScroll = useMotionValue(0);
@@ -414,9 +397,9 @@ const DeckTable: React.FC<DeckTableProps> = ({
     const pointerX = contentLeft + s.grabX;
     const pointerY = top + s.grabY;
 
-    if (geometry.compact ? hasRemovedPile && pointerY >= geometry.removed.top - 5 : pointerX >= railEdge) {
-      if (!geometry.compact && pointerY < geometry.removed.top) return onSetArt ? { kind: 'art' } : null;
-      return s.zone === 'removed' || !hasRemovedPile ? null : { kind: 'removed' };
+    if (geometry.compact ? pointerY >= geometry.removed.top - 5 : pointerX >= railEdge) {
+      if (!geometry.compact && pointerY < geometry.removed.top) return { kind: 'art' };
+      return s.zone === 'removed' ? null : { kind: 'removed' };
     }
 
     const board: BoardKey = pointerY < geometry.sideboard.top - 5 ? 'deck' : 'sideboard';
@@ -435,11 +418,11 @@ const DeckTable: React.FC<DeckTableProps> = ({
     if (!target || !slot) return;
 
     if (target.kind === 'art') {
-      onSetArt?.(slot.cardIndex);
+      onSetArt(slot.cardIndex);
       return;
     }
     if (target.kind === 'removed') {
-      if (slot.zone !== 'removed') onRemove?.(locationOf(slot));
+      if (slot.zone !== 'removed') onRemove(locationOf(slot));
       return;
     }
 
@@ -448,7 +431,7 @@ const DeckTable: React.FC<DeckTableProps> = ({
         ? DraftLocation.deck(target.row, target.col, target.index)
         : DraftLocation.sideboard(target.row, target.col, target.index);
     if (slot.zone === 'removed') {
-      onRestore?.(slot.index, to);
+      onRestore(slot.index, to);
       return;
     }
     const from = locationOf(slot);
@@ -559,29 +542,23 @@ const DeckTable: React.FC<DeckTableProps> = ({
   const phoneMenu = compact && renderToolbar;
 
   return (
-    // On desktop exactly one viewport tall, toolbar
+    // On desktop exactly one viewport tall (less the phone's bottom nav), toolbar
     // included, regardless of the header above it: scroll past the header and the
-    // table fills the screen. On phones as tall as its cards, or filling a drawer
-    // and scrolling inside it. Not clipped, so the toolbar's menus can drop over the stage.
+    // table fills the screen. On phones as tall as its cards. Not clipped, so the
+    // toolbar's menus can drop over the stage.
     <div
-      className={`flex flex-col ${
-        fill && compact
-          ? 'h-full bg-bg-accent'
-          : `bg-bg-accent/80 shadow border border-border ${compact ? 'mt-2 rounded-none border-x-0' : 'mt-3 rounded-md'}`
+      className={`flex flex-col bg-bg-accent/80 shadow border border-border ${
+        compact ? 'mt-2 rounded-none border-x-0' : 'mt-3 rounded-md'
       }`}
-      style={
-        compact ? undefined : { height: fill ? '100%' : 'calc(100dvh - var(--bottom-nav-height, 0px))', minHeight: 480 }
-      }
+      style={compact ? undefined : { height: 'calc(100dvh - var(--bottom-nav-height, 0px))', minHeight: 480 }}
     >
       {renderToolbar && !compact && <div className="pb-2 border-b border-border">{renderToolbar('bar')}</div>}
       <div className={`flex items-center gap-3 min-w-0 ${compact ? 'py-1 px-2' : 'py-2 px-4 border-b border-border'}`}>
-        {phoneMenu ? (
+        {phoneMenu && (
           <PhoneMenuButton open={menuOpen} onToggle={() => setMenuOpen((open) => !open)} label="Deck tools" />
-        ) : (
-          compact && headerStart
         )}
         {/* Renaming the deck and picking its art are desktop-only. */}
-        {!geometry?.compact && onDeckTitleChange && (
+        {!geometry?.compact && (
           <input
             type="text"
             aria-label="Deck name"
@@ -604,226 +581,214 @@ const DeckTable: React.FC<DeckTableProps> = ({
       {phoneMenu && <div className="px-2 pb-1">{subtitle}</div>}
       {compact && <div className="border-b border-border" />}
 
-      {/* On phones in a drawer, the stage scrolls up and down in here; otherwise this box doesn't affect layout. */}
+      {/* isolate: the cards' z-indexes stay inside the stage, under the toolbar's menus. */}
       <div
-        ref={scrollerRef}
-        className={compact && fill ? 'flex-1 min-h-0 overflow-y-auto overscroll-contain' : 'contents'}
+        ref={stageRef}
+        className={`relative overflow-hidden select-none isolate rounded-b-md ${compact ? '' : 'flex-1 min-h-0'}`}
+        style={compact ? { height: geometry?.contentHeight ?? 0, touchAction: 'pan-y' } : { touchAction: 'none' }}
+        onPointerDown={dragger.backgroundPointerDown}
       >
-        {/* isolate: the cards' z-indexes stay inside the stage, under the toolbar's menus. */}
-        <div
-          ref={stageRef}
-          className={`relative overflow-hidden select-none isolate rounded-b-md ${compact ? '' : 'flex-1 min-h-0'}`}
-          style={compact ? { height: geometry?.contentHeight ?? 0, touchAction: 'pan-y' } : { touchAction: 'none' }}
-          onPointerDown={dragger.backgroundPointerDown}
-        >
-          {geometry && (
-            <>
-              {/* Everything behind the cards, shifted with the sideways scroll. */}
-              <motion.div className="absolute inset-0 pointer-events-none" style={{ x: contentShift }}>
-                {BOARDS.map((board) => {
-                  const region = geometry[board];
+        {geometry && (
+          <>
+            {/* Everything behind the cards, shifted with the sideways scroll. */}
+            <motion.div className="absolute inset-0 pointer-events-none" style={{ x: contentShift }}>
+              {BOARDS.map((board) => {
+                const region = geometry[board];
+                return (
+                  <div
+                    key={board}
+                    className="absolute rounded-lg bg-bg/60 border border-border"
+                    style={{
+                      left: columnsLeft,
+                      width: columnsRight - columnsLeft,
+                      top: region.top - 4,
+                      height: region.bottom - region.top + 8,
+                    }}
+                  />
+                );
+              })}
+              {regionLabel('deck', `Deck · ${deckCards.length}`)}
+              {regionLabel('sideboard', `Sideboard · ${sideboardCards.length}`)}
+
+              {BOARDS.map((board) =>
+                geometry.columnX.map((x, col) => {
+                  const count = stacks[board].reduce((sum, row) => sum + (row[col]?.length ?? 0), 0);
                   return (
                     <div
-                      key={board}
-                      className="absolute rounded-lg bg-bg/60 border border-border"
+                      key={`${board}-${col}`}
+                      className="absolute text-center text-xs text-text-secondary"
                       style={{
-                        left: columnsLeft,
-                        width: columnsRight - columnsLeft,
-                        top: region.top - 4,
-                        height: region.bottom - region.top + 8,
-                      }}
-                    />
-                  );
-                })}
-                {regionLabel('deck', `Deck · ${deckCards.length}`)}
-                {regionLabel('sideboard', `Sideboard · ${sideboardCards.length}`)}
-
-                {BOARDS.map((board) =>
-                  geometry.columnX.map((x, col) => {
-                    const count = stacks[board].reduce((sum, row) => sum + (row[col]?.length ?? 0), 0);
-                    return (
-                      <div
-                        key={`${board}-${col}`}
-                        className="absolute text-center text-xs text-text-secondary"
-                        style={{
-                          left: x,
-                          width: geometry.cardW,
-                          top: geometry[board].top,
-                          lineHeight: `${LABEL_HEIGHT}px`,
-                        }}
-                      >
-                        {count > 0 ? count : ''}
-                      </div>
-                    );
-                  }),
-                )}
-
-                {/* Drop highlights: one per stack (row and column), scrolling and clipped with the board. */}
-                {BOARDS.map((board) => {
-                  const region = geometry[board];
-                  const clipTop = region.viewTop - 4;
-                  return (
-                    <div
-                      key={`${board}-drop`}
-                      className="absolute overflow-hidden"
-                      style={{
-                        left: 0,
-                        width: geometry.contentWidth,
-                        top: clipTop,
-                        height: region.bottom + 4 - clipTop,
-                      }}
-                    >
-                      <motion.div
-                        className="absolute inset-0"
-                        style={{ y: board === 'deck' ? deckShift : sideboardShift }}
-                      >
-                        {bandsOf(board).map((band, row) =>
-                          geometry.columnX.map((x, col) => {
-                            const hovered =
-                              target?.kind === 'board' &&
-                              target.board === board &&
-                              target.row === row &&
-                              target.col === col;
-                            return (
-                              <div
-                                key={`${row}-${col}`}
-                                className={`absolute rounded-md transition-colors duration-150 ${
-                                  hovered ? 'bg-button-primary/15' : 'bg-transparent'
-                                }`}
-                                style={{
-                                  left: x - 4,
-                                  width: geometry.cardW + 8,
-                                  top: band.top - 4 - clipTop,
-                                  height: band.height + 8,
-                                }}
-                              />
-                            );
-                          }),
-                        )}
-                      </motion.div>
-                    </div>
-                  );
-                })}
-
-                {geometry.compact ? (
-                  // Phones: the removed pile is a strip under the sideboard.
-                  hasRemovedPile && (
-                    <div
-                      className={`absolute rounded-lg border transition-colors ${
-                        target?.kind === 'removed'
-                          ? 'border-button-danger bg-button-danger/10'
-                          : 'border-border bg-bg/60'
-                      }`}
-                      style={{
-                        left: columnsLeft,
-                        width: Math.max(columnsRight, geometry.contentWidth - geometry.inset) - columnsLeft,
-                        top: geometry.removed.top - 4,
-                        height: geometry.removed.bottom - geometry.removed.top + 8,
-                      }}
-                    >
-                      <div className="px-2 text-xs text-text-secondary" style={{ lineHeight: `${LABEL_HEIGHT}px` }}>
-                        Removed{removedKeys.length > 0 ? ` · ${removedKeys.length}` : ''}
-                      </div>
-                    </div>
-                  )
-                ) : (
-                  <>
-                    {/* Deck art: drop a card here to use its art as the deck's image. */}
-                    <div
-                      className="absolute text-xs text-text-secondary"
-                      style={{
-                        left: geometry.railX,
-                        top: geometry.art.top - LABEL_HEIGHT,
+                        left: x,
+                        width: geometry.cardW,
+                        top: geometry[board].top,
                         lineHeight: `${LABEL_HEIGHT}px`,
                       }}
                     >
-                      Deck art
+                      {count > 0 ? count : ''}
                     </div>
-                    <div
-                      className={`absolute rounded-md overflow-hidden border-2 transition-colors ${
-                        target?.kind === 'art' ? 'border-link' : 'border-border'
-                      }`}
-                      style={{
-                        left: geometry.railX,
-                        top: geometry.art.top,
-                        width: geometry.cardW,
-                        height: geometry.art.bottom - geometry.art.top,
-                      }}
-                      title="Drag a card here to use its art as the deck's image"
-                    >
-                      <img src={previewImage} alt="Deck art" className="w-full h-full object-cover" />
-                    </div>
+                  );
+                }),
+              )}
 
-                    {/* Removed pile: drop a card here to take it out of the deck. */}
-                    <div
-                      className={`absolute rounded-lg border transition-colors ${
-                        target?.kind === 'removed'
-                          ? 'border-button-danger bg-button-danger/10'
-                          : 'border-border bg-bg/60'
-                      }`}
-                      style={{
-                        left: geometry.railX - 8,
-                        width: geometry.cardW + 16,
-                        top: geometry.removed.top - 4,
-                        height: geometry.removed.bottom - geometry.removed.top + 8,
-                      }}
+              {/* Drop highlights: one per stack (row and column), scrolling and clipped with the board. */}
+              {BOARDS.map((board) => {
+                const region = geometry[board];
+                const clipTop = region.viewTop - 4;
+                return (
+                  <div
+                    key={`${board}-drop`}
+                    className="absolute overflow-hidden"
+                    style={{
+                      left: 0,
+                      width: geometry.contentWidth,
+                      top: clipTop,
+                      height: region.bottom + 4 - clipTop,
+                    }}
+                  >
+                    <motion.div
+                      className="absolute inset-0"
+                      style={{ y: board === 'deck' ? deckShift : sideboardShift }}
                     >
-                      <div
-                        className="text-center text-xs text-text-secondary"
-                        style={{ lineHeight: `${LABEL_HEIGHT}px` }}
-                      >
-                        Removed{removedKeys.length > 0 ? ` · ${removedKeys.length}` : ''}
-                      </div>
-                      {removedKeys.length === 0 && (
-                        <div className="px-3 pt-6 text-center text-xs text-text-secondary">
-                          Drag a card here to remove it
-                        </div>
+                      {bandsOf(board).map((band, row) =>
+                        geometry.columnX.map((x, col) => {
+                          const hovered =
+                            target?.kind === 'board' &&
+                            target.board === board &&
+                            target.row === row &&
+                            target.col === col;
+                          return (
+                            <div
+                              key={`${row}-${col}`}
+                              className={`absolute rounded-md transition-colors duration-150 ${
+                                hovered ? 'bg-button-primary/15' : 'bg-transparent'
+                              }`}
+                              style={{
+                                left: x - 4,
+                                width: geometry.cardW + 8,
+                                top: band.top - 4 - clipTop,
+                                height: band.height + 8,
+                              }}
+                            />
+                          );
+                        }),
                       )}
-                    </div>
-                  </>
-                )}
-              </motion.div>
+                    </motion.div>
+                  </div>
+                );
+              })}
 
-              <ScrollThumb
-                scroll={deckScroll}
-                max={deckMax}
-                left={thumbLeft}
-                top={geometry.deck.viewTop}
-                height={geometry.deck.bottom - geometry.deck.viewTop}
-              />
-              <ScrollThumb
-                scroll={sideboardScroll}
-                max={sideboardMax}
-                left={thumbLeft}
-                top={geometry.sideboard.viewTop}
-                height={geometry.sideboard.bottom - geometry.sideboard.viewTop}
-              />
-              <ScrollThumb
-                scroll={removedScroll}
-                max={removedMax}
-                left={Math.min(geometry.width - 8, geometry.railX + geometry.cardW + 10)}
-                top={geometry.removed.viewTop}
-                height={geometry.removed.bottom - geometry.removed.viewTop}
-              />
-
-              <AnimatePresence>{sprites}</AnimatePresence>
-
-              {/* Over resting cards, under a card being dragged or flying across. */}
-              {maxScrollX > 0 && (
+              {geometry.compact ? (
+                // Phones: the removed pile is a strip under the sideboard.
+                <div
+                  className={`absolute rounded-lg border transition-colors ${
+                    target?.kind === 'removed' ? 'border-button-danger bg-button-danger/10' : 'border-border bg-bg/60'
+                  }`}
+                  style={{
+                    left: columnsLeft,
+                    width: Math.max(columnsRight, geometry.contentWidth - geometry.inset) - columnsLeft,
+                    top: geometry.removed.top - 4,
+                    height: geometry.removed.bottom - geometry.removed.top + 8,
+                  }}
+                >
+                  <div className="px-2 text-xs text-text-secondary" style={{ lineHeight: `${LABEL_HEIGHT}px` }}>
+                    Removed{removedKeys.length > 0 ? ` · ${removedKeys.length}` : ''}
+                  </div>
+                </div>
+              ) : (
                 <>
-                  <motion.div
-                    className="absolute inset-y-0 left-0 w-8 pointer-events-none bg-gradient-to-r from-bg-accent to-transparent"
-                    style={{ opacity: leftFade, zIndex: 2400 }}
-                  />
-                  <motion.div
-                    className="absolute inset-y-0 right-0 w-8 pointer-events-none bg-gradient-to-l from-bg-accent to-transparent"
-                    style={{ opacity: rightFade, zIndex: 2400 }}
-                  />
+                  {/* Deck art: drop a card here to use its art as the deck's image. */}
+                  <div
+                    className="absolute text-xs text-text-secondary"
+                    style={{
+                      left: geometry.railX,
+                      top: geometry.art.top - LABEL_HEIGHT,
+                      lineHeight: `${LABEL_HEIGHT}px`,
+                    }}
+                  >
+                    Deck art
+                  </div>
+                  <div
+                    className={`absolute rounded-md overflow-hidden border-2 transition-colors ${
+                      target?.kind === 'art' ? 'border-link' : 'border-border'
+                    }`}
+                    style={{
+                      left: geometry.railX,
+                      top: geometry.art.top,
+                      width: geometry.cardW,
+                      height: geometry.art.bottom - geometry.art.top,
+                    }}
+                    title="Drag a card here to use its art as the deck's image"
+                  >
+                    <img src={previewImage} alt="Deck art" className="w-full h-full object-cover" />
+                  </div>
+
+                  {/* Removed pile: drop a card here to take it out of the deck. */}
+                  <div
+                    className={`absolute rounded-lg border transition-colors ${
+                      target?.kind === 'removed' ? 'border-button-danger bg-button-danger/10' : 'border-border bg-bg/60'
+                    }`}
+                    style={{
+                      left: geometry.railX - 8,
+                      width: geometry.cardW + 16,
+                      top: geometry.removed.top - 4,
+                      height: geometry.removed.bottom - geometry.removed.top + 8,
+                    }}
+                  >
+                    <div
+                      className="text-center text-xs text-text-secondary"
+                      style={{ lineHeight: `${LABEL_HEIGHT}px` }}
+                    >
+                      Removed{removedKeys.length > 0 ? ` · ${removedKeys.length}` : ''}
+                    </div>
+                    {removedKeys.length === 0 && (
+                      <div className="px-3 pt-6 text-center text-xs text-text-secondary">
+                        Drag a card here to remove it
+                      </div>
+                    )}
+                  </div>
                 </>
               )}
-            </>
-          )}
-        </div>
+            </motion.div>
+
+            <ScrollThumb
+              scroll={deckScroll}
+              max={deckMax}
+              left={thumbLeft}
+              top={geometry.deck.viewTop}
+              height={geometry.deck.bottom - geometry.deck.viewTop}
+            />
+            <ScrollThumb
+              scroll={sideboardScroll}
+              max={sideboardMax}
+              left={thumbLeft}
+              top={geometry.sideboard.viewTop}
+              height={geometry.sideboard.bottom - geometry.sideboard.viewTop}
+            />
+            <ScrollThumb
+              scroll={removedScroll}
+              max={removedMax}
+              left={Math.min(geometry.width - 8, geometry.railX + geometry.cardW + 10)}
+              top={geometry.removed.viewTop}
+              height={geometry.removed.bottom - geometry.removed.viewTop}
+            />
+
+            <AnimatePresence>{sprites}</AnimatePresence>
+
+            {/* Over resting cards, under a card being dragged or flying across. */}
+            {maxScrollX > 0 && (
+              <>
+                <motion.div
+                  className="absolute inset-y-0 left-0 w-8 pointer-events-none bg-gradient-to-r from-bg-accent to-transparent"
+                  style={{ opacity: leftFade, zIndex: 2400 }}
+                />
+                <motion.div
+                  className="absolute inset-y-0 right-0 w-8 pointer-events-none bg-gradient-to-l from-bg-accent to-transparent"
+                  style={{ opacity: rightFade, zIndex: 2400 }}
+                />
+              </>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

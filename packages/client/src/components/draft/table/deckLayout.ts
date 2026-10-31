@@ -8,9 +8,8 @@
  *
  * On narrow (phone) stages there's no rail: the removed pile is a strip under
  * the sideboard, and the table scrolls sideways. Nothing scrolls inside the
- * table vertically: each board is as tall as its cards, and whatever holds the
- * table (the page, or the draft's pool drawer) scrolls instead. In the drawer,
- * rows without cards shrink and each board is just a card tall to start with.
+ * table vertically: each board is as tall as its cards and the page scrolls
+ * instead.
  */
 import { CARD_ASPECT, Pose } from './tableLayout';
 
@@ -59,8 +58,6 @@ export interface DeckGeometry {
   compact: boolean;
   // Desktop: each board scrolls inside its region instead of growing.
   scrollsInside: boolean;
-  // Height of a row with no cards (there's still somewhere to drop into).
-  emptyRow: number;
   // Size of everything on the table: wider than the stage when it scrolls
   // sideways, and on phones the height the stage should be.
   contentWidth: number;
@@ -84,57 +81,43 @@ export interface DeckGeometry {
   art: { top: number; bottom: number };
 }
 
-// Height of one row's band, given its tallest stack.
-const bandHeight = (cardH: number, bar: number, emptyRow: number, tallest: number) =>
-  tallest > 0 ? cardH + (tallest - 1) * bar : emptyRow;
+// Height of one row's band, given its tallest stack. Empty rows still get a
+// card's height so there's somewhere to drop into.
+const bandHeight = (cardH: number, bar: number, tallest: number) => cardH + (Math.max(1, tallest) - 1) * bar;
 
 /** Height of a row's band, given its tallest stack (see bandTops). */
-export const rowHeight = (g: DeckGeometry, tallest: number) => bandHeight(g.cardH, g.bar, g.emptyRow, tallest);
+export const rowHeight = (g: DeckGeometry, tallest: number) => bandHeight(g.cardH, g.bar, tallest);
 
 // Height of a board's bands, given the tallest stack in each row (see bandTops).
-const bandsHeight = (cardH: number, bar: number, emptyRow: number, bandGap: number, tallestPerRow: number[]) =>
-  tallestPerRow.reduce((sum, tallest) => sum + bandHeight(cardH, bar, emptyRow, tallest), 0) +
+const bandsHeight = (cardH: number, bar: number, bandGap: number, tallestPerRow: number[]) =>
+  tallestPerRow.reduce((sum, tallest) => sum + bandHeight(cardH, bar, tallest), 0) +
   Math.max(0, tallestPerRow.length - 1) * bandGap;
-
-export interface DeckLayoutOptions {
-  // Phones: inside a scrolling panel (the draft's pool drawer), where empty
-  // rows shrink to a sliver and each board is at least a card tall.
-  fill: boolean;
-  // Whether the table has a removed pile at all.
-  removedPile: boolean;
-}
 
 const computeCompactGeometry = (
   width: number,
   columns: number,
   removedCount: number,
   tallest: Record<BoardKey, number[]>,
-  { fill, removedPile }: DeckLayoutOptions,
 ): DeckGeometry => {
   const cardW = Math.round(
     Math.max(COMPACT_MIN_CARD_WIDTH, Math.min(COMPACT_MAX_CARD_WIDTH, width * COMPACT_CARD_SHARE)),
   );
   const cardH = Math.round(cardW * CARD_ASPECT);
   const bar = cardH * BAR;
-  const removedHeight = removedPile ? COMPACT_DIVIDER + LABEL_HEIGHT + cardH * COMPACT_REMOVED_PEEK + 4 : 0;
 
-  const emptyRow = fill ? Math.round(bar * 2) : cardH;
-  const boardHeight = (rows: number[]) => Math.max(cardH, bandsHeight(cardH, bar, emptyRow, COMPACT_BAND_GAP, rows));
-  const deckBottom = COMPACT_PAD + LABEL_HEIGHT + boardHeight(tallest.deck) + 4;
-  const sideboardBottom = deckBottom + COMPACT_DIVIDER + LABEL_HEIGHT + boardHeight(tallest.sideboard) + 4;
+  const deckBottom = COMPACT_PAD + LABEL_HEIGHT + bandsHeight(cardH, bar, COMPACT_BAND_GAP, tallest.deck) + 4;
   const sideboardTop = deckBottom + COMPACT_DIVIDER;
-  // Without a removed pile its region is empty, just under the sideboard.
-  const removedTop = removedPile ? sideboardBottom + COMPACT_DIVIDER : sideboardBottom;
-  const removedBottom = sideboardBottom + removedHeight;
+  const sideboardBottom =
+    sideboardTop + LABEL_HEIGHT + bandsHeight(cardH, bar, COMPACT_BAND_GAP, tallest.sideboard) + 4;
+  const removedTop = sideboardBottom + COMPACT_DIVIDER;
+  const removedBottom = removedTop + LABEL_HEIGHT + cardH * COMPACT_REMOVED_PEEK + 4;
 
   const columnX = Array.from(
     { length: columns },
     (_, c) => COMPACT_PAD + COMPACT_GUTTER + c * (cardW + COMPACT_COLUMN_GAP),
   );
   const columnsEnd = columnX[columns - 1] + cardW;
-  const removedEnd = removedPile
-    ? columnX[0] + removedCount * (cardW + COMPACT_COLUMN_GAP) - COMPACT_COLUMN_GAP
-    : columnsEnd;
+  const removedEnd = columnX[0] + removedCount * (cardW + COMPACT_COLUMN_GAP) - COMPACT_COLUMN_GAP;
   const contentWidth = Math.max(columnsEnd, removedEnd) + COMPACT_PAD;
   const contentHeight = removedBottom + COMPACT_PAD;
 
@@ -143,7 +126,6 @@ const computeCompactGeometry = (
     height: contentHeight,
     compact: true,
     scrollsInside: false,
-    emptyRow,
     contentWidth,
     contentHeight,
     cardW,
@@ -159,7 +141,7 @@ const computeCompactGeometry = (
     railX: contentWidth,
     deck: { top: COMPACT_PAD, viewTop: COMPACT_PAD + LABEL_HEIGHT, bottom: deckBottom },
     sideboard: { top: sideboardTop, viewTop: sideboardTop + LABEL_HEIGHT, bottom: sideboardBottom },
-    removed: { top: removedTop, viewTop: removedPile ? removedTop + LABEL_HEIGHT : removedTop, bottom: removedBottom },
+    removed: { top: removedTop, viewTop: removedTop + LABEL_HEIGHT, bottom: removedBottom },
     art: { top: 0, bottom: 0 },
   };
 };
@@ -174,9 +156,8 @@ export const computeDeckGeometry = (
   columns: number,
   removedCount: number,
   tallest: Record<BoardKey, number[]>,
-  options: DeckLayoutOptions,
 ): DeckGeometry => {
-  if (isCompactWidth(width)) return computeCompactGeometry(width, columns, removedCount, tallest, options);
+  if (isCompactWidth(width)) return computeCompactGeometry(width, columns, removedCount, tallest);
 
   const fromWidth = (width - 2 * PAD - GUTTER - (columns - 1) * COLUMN_GAP - RAIL_GAP) / (columns + 1);
   // The sideboard region should show at least a whole card and a couple of name bars.
@@ -205,7 +186,6 @@ export const computeDeckGeometry = (
     height,
     compact: false,
     scrollsInside: true,
-    emptyRow: cardH,
     contentWidth: width,
     contentHeight: height,
     cardW,
@@ -228,7 +208,7 @@ export const computeDeckGeometry = (
 
 /**
  * Where each row's band starts, given the tallest stack in each row. Empty rows
- * still get a band (see emptyRow) so there's somewhere to drop into.
+ * still get a card's height so there's somewhere to drop into.
  */
 export const bandTops = (g: DeckGeometry, region: Region, tallestPerRow: number[]): number[] => {
   const tops: number[] = [];

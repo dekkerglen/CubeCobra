@@ -806,11 +806,12 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
     totalPacks > 0 ? `Pack ${ownPackIndex >= 0 ? ownPackIndex + 1 : state.pack} of ${totalPacks}` : undefined;
   const largestPack = Math.max(0, ...(draft.InitialState?.[0] ?? []).map((initialPack) => initialPack.cards.length));
 
-  // The table sizes itself to the viewport, so it gets the full content width.
+  // The table sizes itself to the viewport and sets its own side margins, so it
+  // gets the full content width.
   return (
     <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="playtest" fullScreen>
-        <div className="px-2">
+        <div>
           <Alerts alerts={alerts} />
           <DraftTable
             cards={draft.cards}
