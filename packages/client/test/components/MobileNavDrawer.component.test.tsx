@@ -369,10 +369,22 @@ describe('MobileNavDrawer', () => {
       expect(screen.queryByRole('link', { name: 'collab cube 14' })).not.toBeInTheDocument();
     });
 
+    it('offers a way out of the capped list when there are collaborations', () => {
+      // The cap above is silent, so this is the only route to the ones it cut.
+      renderDrawer({ user: { ...cubesUser, collaboratingCubes: cubeRun('collab', 15) }, side: 'right' });
+
+      expect(screen.getByRole('link', { name: 'All Your Collaborations' })).toHaveAttribute(
+        'href',
+        '/user/collaborations/u1',
+      );
+    });
+
     it('omits the collaborating section entirely when there are none', () => {
       renderDrawer({ user: { ...cubesUser, collaboratingCubes: [] }, side: 'right' });
 
       expect(screen.queryByText(/collaborating/i)).not.toBeInTheDocument();
+      // No section means nothing to escape, and the drawer has no room to spare.
+      expect(screen.queryByRole('link', { name: 'All Your Collaborations' })).not.toBeInTheDocument();
     });
 
     it('shows the empty state but keeps the actions when the user owns no cubes', () => {

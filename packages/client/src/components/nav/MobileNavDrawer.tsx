@@ -311,6 +311,12 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
         <ActionLink href={`/cube/liked/${user.id}`}>Liked Cubes</ActionLink>
         <ActionLink href="/dashboard/drafts">Drafts of Your Cubes</ActionLink>
         <ActionLink href={`/user/view/${user.id}`}>All Your Cubes</ActionLink>
+        {/* The Collaborating section above stops at COLLABORATING_LIMIT with nothing on screen to
+            say so, and the drawer is too tight to spend a row on an escape hatch nobody needs, so
+            this is offered on the same condition as the section itself. */}
+        {(user.collaboratingCubes || []).length > 0 && (
+          <ActionLink href={`/user/collaborations/${user.id}`}>All Your Collaborations</ActionLink>
+        )}
         <Divider />
         <ActionLink href={`/user/packages/${user.id}`}>View All My Packages</ActionLink>
         <ActionLink href={`/packages/liked/${user.id}`}>Liked Packages</ActionLink>
