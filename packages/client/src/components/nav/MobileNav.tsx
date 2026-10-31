@@ -20,11 +20,16 @@ const MobileNav: React.FC = () => {
   const [cubesOpen, setCubesOpen] = useState(false);
 
   useEffect(() => {
-    // Safari before 14 has no matchMedia; the bar still paints, it simply keeps no breakpoint watch.
+    // A non-browser consumer has no matchMedia at all, and Safari before 14 returns a
+    // MediaQueryList with only the deprecated addListener pair — no MediaQueryList.addEventListener.
+    // Either way the bar still paints, it simply keeps no breakpoint watch.
     if (typeof window.matchMedia !== 'function') {
       return undefined;
     }
     const query = window.matchMedia(DESKTOP_QUERY);
+    if (typeof query.addEventListener !== 'function') {
+      return undefined;
+    }
     const closeOnDesktop = (event: MediaQueryListEvent) => {
       if (event.matches) {
         setMenuOpen(false);

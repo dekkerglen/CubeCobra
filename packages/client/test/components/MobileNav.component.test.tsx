@@ -201,8 +201,25 @@ describe('MobileNav', () => {
   });
 
   it('renders without a matchMedia implementation', () => {
-    // Safari before 14 and any non-browser consumer; the bar must still paint.
+    // Any non-browser consumer; the bar must still paint.
     (window as Partial<Window>).matchMedia = undefined;
+
+    expect(() => renderNav(user)).not.toThrow();
+    expect(screen.getByRole('button', { name: /open menu/i })).toBeInTheDocument();
+  });
+
+  it('renders when the media query list cannot be subscribed to', () => {
+    // Safari before 14 returns a MediaQueryList with only the deprecated addListener pair. The bar
+    // sits inside the layout every page renders, so throwing here would blank the whole site.
+    window.matchMedia = ((query: string) =>
+      ({
+        media: query,
+        matches: false,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        dispatchEvent: () => false,
+      }) as unknown as MediaQueryList) as typeof window.matchMedia;
 
     expect(() => renderNav(user)).not.toThrow();
     expect(screen.getByRole('button', { name: /open menu/i })).toBeInTheDocument();
