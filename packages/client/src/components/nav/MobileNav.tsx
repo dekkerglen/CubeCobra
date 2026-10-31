@@ -41,7 +41,7 @@ const MobileNav: React.FC = () => {
     <div className="relative flex h-10 flex-row items-center justify-between">
       <button
         type="button"
-        aria-label="Open menu"
+        aria-label={hasUnread ? 'Open menu, you have unread notifications' : 'Open menu'}
         onClick={() => setMenuOpen(true)}
         className={`${buttonClasses} relative -ml-2`}
       >

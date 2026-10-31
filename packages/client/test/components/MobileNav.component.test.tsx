@@ -102,6 +102,19 @@ describe('MobileNav', () => {
     expect(screen.getByTestId('mobile-nav-unread-dot')).toBeInTheDocument();
   });
 
+  it('names the menu button for unread notifications, since the dot is invisible to a screen reader', () => {
+    renderNav({ ...user, notifications: [notification('n1')] });
+
+    expect(screen.getByRole('button', { name: /unread notifications/i })).toBeInTheDocument();
+  });
+
+  it('does not claim unread notifications when there are none', () => {
+    renderNav(user);
+
+    expect(screen.queryByRole('button', { name: /unread/i })).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Open menu' })).toBeInTheDocument();
+  });
+
   it('shows no unread marker when there is nothing unread', () => {
     renderNav(user);
 
