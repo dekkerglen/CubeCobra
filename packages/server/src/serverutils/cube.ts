@@ -12,6 +12,7 @@ import { csvRow } from './csv';
 import { CSVtoCards } from './cubefn';
 import { IMPORT_TOO_LARGE_MESSAGE, MAX_IMPORT_CARDS, parseNonCSVLine } from './importParsing';
 import { handleRouteError, redirect, render } from './render';
+import { exportFileName } from './textExport';
 
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
@@ -291,7 +292,7 @@ const exportToMtgo = (
   sideCards: Card[] | any[][],
   cards?: Card[],
 ) => {
-  res.setHeader('Content-disposition', `attachment; filename=${fileName.replace(/\W/g, '')}.txt`);
+  res.setHeader('Content-disposition', `attachment; filename=${exportFileName(fileName)}.txt`);
   res.setHeader('Content-type', 'text/plain');
   res.charset = 'UTF-8';
 
