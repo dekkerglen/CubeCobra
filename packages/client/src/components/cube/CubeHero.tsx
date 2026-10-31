@@ -70,13 +70,10 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const { addAlert } = useAlerts();
   const isCubeOwner = !!user && cube.owner.id === user.id;
 
-  // Get current filter and sort values from contexts
-  const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
   const { filterInput } = useContext(FilterContext);
 
   // State for collapsed hero, stored per page
   const [isCollapsed, setIsCollapsed] = useLocalStorage<boolean>(`cube-hero-collapsed-${activeLink}`, false);
-  const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
   const [exportAllBoards, setExportAllBoards] = useState(false);
   const [followedState, setFollowedState] = useState(!!user && !!cube.likedByCurrentUser);
@@ -146,9 +143,6 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
     showCustomImages: _showCustomImages,
     toggleShowCustomImages: _toggleShowCustomImages,
     activeView,
-    // "Show Unsorted cards" is a live display toggle, not the cube's saved setting. Every view and
-    // the Arena/Print-and-Play exports read it from here, so the download links must too.
-    displayOptions: { showUnsorted },
   } = useContext(DisplayContext);
 
   const { hasCustomImages: _hasCustomImages, unfilteredChangedCards } = useContext(CubeContext);
@@ -265,33 +259,11 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
     return view?.boards.map((b) => b.toLowerCase()) || ['mainboard'];
   }, [cube, activeView]);
 
-  // Build URL segment for export links with filter, sort, board and unsorted-visibility parameters
+  // Build URL segment for export links. Ordering is fixed by buildExportParams, so only the
+  // filter and the board selection vary.
   const urlSegment = useMemo(
-    () =>
-      buildExportParams({
-        isFilterUsed,
-        filterInput,
-        isSortUsed,
-        sortPrimary,
-        sortSecondary,
-        sortTertiary,
-        sortQuaternary,
-        exportAllBoards,
-        currentViewBoards,
-        showUnsorted,
-      }),
-    [
-      isFilterUsed,
-      filterInput,
-      isSortUsed,
-      sortPrimary,
-      sortSecondary,
-      sortTertiary,
-      sortQuaternary,
-      exportAllBoards,
-      currentViewBoards,
-      showUnsorted,
-    ],
+    () => buildExportParams({ isFilterUsed, filterInput, exportAllBoards, currentViewBoards }),
+    [isFilterUsed, filterInput, exportAllBoards, currentViewBoards],
   );
 
   const exportMenuItems = (
@@ -342,13 +314,13 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
         XMage (.dck)
       </a>
       <ArenaExportModalItem
-        modalprops={{ isFilterUsed: isFilterUsed, isSortUsed: isSortUsed, exportAllBoards }}
+        modalprops={{ isFilterUsed: isFilterUsed, exportAllBoards }}
         className="!text-text hover:!text-link-active font-medium text-left bg-transparent border-0 p-0 cursor-pointer"
       >
         Arena (.txt)
       </ArenaExportModalItem>
       <PrintAndPlayExportModalItem
-        modalprops={{ isFilterUsed: isFilterUsed, isSortUsed: isSortUsed, exportAllBoards }}
+        modalprops={{ isFilterUsed: isFilterUsed, exportAllBoards }}
         className="!text-text hover:!text-link-active font-medium text-left bg-transparent border-0 p-0 cursor-pointer"
       >
         Print and Play (.pdf)
@@ -357,18 +329,6 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
         <Checkbox label="Export ALL boards" checked={exportAllBoards} setChecked={setExportAllBoards} />
         <Tooltip
           text="If enabled, exports all cards from all boards. If disabled, only exports cards in boards visible in the current view."
-          wrapperTag="span"
-          className="ms-auto me-0"
-        >
-          <QuestionIcon size={16} className="hidden md:inline" />
-        </Tooltip>
-      </Flexbox>
-      <Flexbox direction="row" justify="between" onClick={() => setIsSortUsed((is) => !is)} className="cursor-pointer">
-        <div onClick={(e) => e.stopPropagation()}>
-          <Checkbox label="Use Sort" checked={isSortUsed} setChecked={setIsSortUsed} />
-        </div>
-        <Tooltip
-          text="Order the export using the page's current sort. Cards no sort group claims are included only while 'Show Unsorted cards' is on. Turn this off to export every card in the cube's stored order."
           wrapperTag="span"
           className="ms-auto me-0"
         >
