@@ -108,14 +108,9 @@ const UserPackagesPage: React.FC<UserPackagesPageProps> = ({
             </Text>
             <Flexbox direction="row" gap="2" wrap="wrap" alignItems="center">
               {isOwner && (
-                <>
-                  <Button type="link" color="primary" href="/packages/create">
-                    Create New
-                  </Button>
-                  <Button type="link" color="secondary" href={`/packages/liked/${user.id}`}>
-                    Liked Packages
-                  </Button>
-                </>
+                <Button type="link" color="primary" href="/packages/create">
+                  Create New
+                </Button>
               )}
               {items.length > 0 && pager}
             </Flexbox>
