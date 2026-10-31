@@ -90,4 +90,15 @@ describe('Input clear button', () => {
 
     expect(screen.getByRole('textbox')).toHaveStyle({ paddingLeft: '48px', paddingRight: '2.25rem' });
   });
+
+  // The three search pages force the input background white in every theme
+  // (`!bg-white` on SearchPage, CardSearch, PackagesPage), while `text-text` is
+  // rgb(240,240,240) in dark theme. A hover that resolves to it put the icon at
+  // ~1.08:1 against its own background, so the control vanished when pointed at.
+  it('does not use a hover colour that can vanish against a forced-white input', () => {
+    render(<Input value="abc" onChange={jest.fn()} onClear={jest.fn()} />);
+
+    expect(clearButton()).not.toHaveClass('hover:text-text');
+    expect(clearButton()).toHaveClass('text-text-secondary');
+  });
 });

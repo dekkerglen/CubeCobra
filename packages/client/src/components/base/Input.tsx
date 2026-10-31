@@ -143,7 +143,11 @@ const Input: React.FC<InputProps> = ({
           <button
             type="button"
             aria-label="Clear"
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:text-text transition-colors"
+            // Hover is signalled by opacity, not colour. Three call sites force the input
+            // background white in every theme, so a themed foreground like `text-text`
+            // (near-white in dark) would make the icon disappear against its own input.
+            // Mid-grey holds up on both that white and the navbars' `bg-bg-active`.
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary hover:opacity-80 transition-opacity"
             // Keep the press from blurring the input: callers that commit their
             // value on blur would otherwise re-apply the text being cleared.
             onMouseDown={(event) => event.preventDefault()}
