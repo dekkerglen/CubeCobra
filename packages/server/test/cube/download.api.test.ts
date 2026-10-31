@@ -148,8 +148,7 @@ describe.each([
   ['xmage', xmageHandler, 'My Custom'],
   ['versioned', versionedHandler, 'My Custom'],
   ['plaintext', plaintextHandler, 'My Custom'],
-  // MTGO lists cards by their catalog name, so a custom card appears as the placeholder.
-  ['mtgo', mtgoHandler, 'Invalid Card'],
+  ['mtgo', mtgoHandler, 'My Custom'],
 ])('GET /cube/download/%s/:id', (_name, handler, customName) => {
   const cube = createCube({ id: 'c1', showUnsorted: false });
 
@@ -268,6 +267,27 @@ describe('export formatting and escaping', () => {
     it('keeps the version block for a real printing', async () => {
       const body = lines(await download(xmageHandler, cube, [bears()], unsorted));
       expect(body.some((line) => /^1 \[[A-Z0-9]+:123\] Grizzly Bears$/.test(line))).toBe(true);
+    });
+  });
+
+  describe('mtgo', () => {
+    it('keeps distinct custom cards apart instead of merging them into the placeholder', async () => {
+      const body = lines(
+        await download(
+          mtgoHandler,
+          cube,
+          [createCustomCard('Alpha', { details: undefined }), createCustomCard('Beta', { details: undefined })],
+          unsorted,
+        ),
+      );
+
+      expect(body).toEqual(expect.arrayContaining(['1 Alpha', '1 Beta']));
+      expect(body).not.toContain('2 Invalid Card');
+    });
+
+    it('still groups identical cards behind a quantity', async () => {
+      const body = lines(await download(mtgoHandler, cube, [bears(), bears()], unsorted));
+      expect(body).toContain('2 Grizzly Bears');
     });
   });
 

@@ -1,4 +1,3 @@
-import { cardCollectorNumber, cardName, cardSet } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import Cube, { CubeCards } from '@utils/datatypes/Cube';
 import filterutil, { FilterFunction, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
@@ -8,7 +7,14 @@ import type { NextFunction, Request as ExpressRequest, Response as ExpressRespon
 import { cardFromId } from 'serverutils/carddb';
 import { CSV_HEADER, exportToMtgo, writeCard } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
-import { exportFileName, exportTextValue, forgeName } from 'serverutils/textExport';
+import {
+  exportCardName,
+  exportFileName,
+  exportTextValue,
+  forgeLine,
+  setAndNumberLine,
+  xmageLine,
+} from 'serverutils/textExport';
 import { expensiveGetLimiter } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect } from 'serverutils/render';
 
@@ -124,7 +130,7 @@ export const cubecobraHandler = async (req: Request, res: Response) => {
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     for (const card of allCards) {
-      res.write(`${exportTextValue(cardName(card))}\r\n`);
+      res.write(`${exportCardName(card)}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -223,9 +229,7 @@ export const forgeHandler = async (req: Request, res: Response) => {
     res.write(`name=${exportTextValue(cube.name)}\r\n`);
     res.write('[Main]\r\n');
     for (const card of allCards) {
-      // Forge reads the set from after the `|`, so an empty set has to drop the separator too.
-      const set = cardSet(card).toUpperCase();
-      res.write(`1 ${forgeName(cardName(card))}${set ? `|${set}` : ''}\r\n`);
+      res.write(`1 ${forgeLine(card)}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -306,12 +310,7 @@ export const xmageHandler = async (req: Request, res: Response) => {
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     for (const card of allCards) {
-      // XMage needs a real set and collector number inside the brackets; a custom card has neither,
-      // and `1 [:] Name` fails to import, so fall back to the bare name.
-      const set = cardSet(card).toUpperCase();
-      const collectorNumber = cardCollectorNumber(card);
-      const version = set && collectorNumber ? `[${set}:${collectorNumber}] ` : '';
-      res.write(`1 ${version}${exportTextValue(cardName(card))}\r\n`);
+      res.write(`1 ${xmageLine(card)}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -359,18 +358,7 @@ export const versionedHandler = async (req: Request, res: Response) => {
         // 1 Cardname
         // 1 Cardname (SET)
         // 1 Cardname (SET) 123
-        const set = cardSet(card).toUpperCase();
-        const collectorNumber = cardCollectorNumber(card);
-
-        let line = `1 ${exportTextValue(cardName(card))}`;
-        if (set) {
-          line += ` (${set})`;
-          if (collectorNumber) {
-            line += ` ${collectorNumber}`;
-          }
-        }
-
-        res.write(`${line}\r\n`);
+        res.write(`1 ${setAndNumberLine(card)}\r\n`);
       }
 
       res.write(`\r\n`);
@@ -418,7 +406,7 @@ export const plaintextHandler = async (req: Request, res: Response) => {
 
       res.write(`# ${boardname}\r\n`);
       for (const card of sorted) {
-        res.write(`${exportTextValue(cardName(card))}\r\n`);
+        res.write(`${exportCardName(card)}\r\n`);
       }
       res.write(`\r\n`);
     }

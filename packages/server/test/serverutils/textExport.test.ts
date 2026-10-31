@@ -1,4 +1,27 @@
-import { exportFileName, exportTextValue, forgeName } from '../../src/serverutils/textExport';
+import {
+  exportCardName,
+  exportFileName,
+  exportTextValue,
+  forgeLine,
+  forgeName,
+  mtgoName,
+  setAndNumberLine,
+  xmageLine,
+} from '../../src/serverutils/textExport';
+import { createCard, createCardDetails, createCustomCard } from '../test-utils/data';
+
+const printed = (overrides = {}) =>
+  createCard({
+    cardID: 'bears-id',
+    details: createCardDetails({ name: 'Grizzly Bears', set: 'lea', collector_number: '123' }),
+    ...overrides,
+  });
+
+// Custom cards and vouchers resolve to a placeholder that carries no printing information.
+const unprinted = (name: string) =>
+  createCustomCard(name, {
+    details: createCardDetails({ name: 'Invalid Card', set: '', collector_number: '' }),
+  });
 
 describe('exportTextValue', () => {
   it.each([
@@ -53,5 +76,65 @@ describe('exportFileName', () => {
 
   it.each([null, undefined])('falls back for %p', (value) => {
     expect(exportFileName(value)).toBe('cube');
+  });
+});
+
+describe('exportCardName', () => {
+  it('uses the catalog name for a real printing', () => {
+    expect(exportCardName(printed())).toBe('Grizzly Bears');
+  });
+
+  it("uses a custom card's own name rather than the placeholder", () => {
+    expect(exportCardName(unprinted('My Custom'))).toBe('My Custom');
+  });
+
+  it('flattens a line break in a custom name', () => {
+    expect(exportCardName(unprinted('Bad\r\n1 Black Lotus'))).toBe('Bad 1 Black Lotus');
+  });
+});
+
+describe('setAndNumberLine', () => {
+  it('appends the set and collector number of a real printing', () => {
+    expect(setAndNumberLine(printed())).toBe('Grizzly Bears (LEA) 123');
+  });
+
+  it('emits a bare name when there is no printing, rather than empty brackets', () => {
+    expect(setAndNumberLine(unprinted('My Custom'))).toBe('My Custom');
+  });
+});
+
+describe('xmageLine', () => {
+  it('prefixes the version block for a real printing', () => {
+    expect(xmageLine(printed())).toBe('[LEA:123] Grizzly Bears');
+  });
+
+  it('drops the version block when there is no printing, since `[:]` fails to import', () => {
+    expect(xmageLine(unprinted('My Custom'))).toBe('My Custom');
+  });
+});
+
+describe('forgeLine', () => {
+  it('appends the set after the separator for a real printing', () => {
+    expect(forgeLine(printed())).toBe('Grizzly Bears|LEA');
+  });
+
+  it('drops the separator when there is no set, so nothing reads as an empty set code', () => {
+    expect(forgeLine(unprinted('My Custom'))).toBe('My Custom');
+  });
+
+  it('folds a pipe in a custom name', () => {
+    expect(forgeLine(unprinted('Pipe|Name'))).toBe('Pipe/Name');
+  });
+});
+
+describe('mtgoName', () => {
+  it('writes a split card with a single slash', () => {
+    const card = createCard({ details: createCardDetails({ name: 'Fire // Ice' }) });
+    expect(mtgoName(card)).toBe('Fire/Ice');
+  });
+
+  it('keeps distinct custom cards distinguishable', () => {
+    expect(mtgoName(unprinted('Alpha'))).toBe('Alpha');
+    expect(mtgoName(unprinted('Beta'))).toBe('Beta');
   });
 });
