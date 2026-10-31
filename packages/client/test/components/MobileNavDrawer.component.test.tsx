@@ -357,6 +357,15 @@ describe('MobileNavDrawer', () => {
       expect(screen.getByRole('link', { name: 'Collaborating Cube' })).toHaveAttribute('href', '/cube/list/collab');
     });
 
+    it('caps the collaborating list the way the desktop panel does', () => {
+      // The server sends every cube the user collaborates on, so the cap lives here.
+      renderDrawer({ user: { ...cubesUser, collaboratingCubes: cubeRun('collab', 15) }, side: 'right' });
+
+      expect(screen.getByRole('link', { name: 'collab cube 11' })).toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'collab cube 12' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'collab cube 14' })).not.toBeInTheDocument();
+    });
+
     it('omits the collaborating section entirely when there are none', () => {
       renderDrawer({ user: { ...cubesUser, collaboratingCubes: [] }, side: 'right' });
 

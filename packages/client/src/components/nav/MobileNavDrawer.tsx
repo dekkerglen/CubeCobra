@@ -73,6 +73,10 @@ const roleRows: { role: UserRoles; row: Row }[] = [
 
 const HOME_PATHS = ['/', '/landing', '/dashboard'];
 
+// Owned cubes arrive from the server already capped at 20; collaborating cubes do not, so the
+// drawer applies the same dozen the desktop cubes panel shows.
+const COLLABORATING_LIMIT = 12;
+
 // Section matching, so Packages stays marked on /packages/liked/:id. The segment boundary keeps a
 // row from claiming an unrelated path that merely starts with the same characters.
 const isRowActive = (href: string, pathname: string): boolean => {
@@ -294,7 +298,7 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
         {(user.collaboratingCubes || []).length > 0 && (
           <>
             <SectionHeading>Collaborating</SectionHeading>
-            {(user.collaboratingCubes || []).map((cube) => (
+            {(user.collaboratingCubes || []).slice(0, COLLABORATING_LIMIT).map((cube) => (
               <CubeRow key={cube.id} cube={cube} />
             ))}
           </>
