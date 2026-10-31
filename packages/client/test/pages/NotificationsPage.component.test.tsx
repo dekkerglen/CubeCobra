@@ -4,7 +4,10 @@ import { act, fireEvent, render, screen } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
-import NotificationType, { NotificationStatus } from '@utils/datatypes/Notification';
+import NotificationType, {
+  NotificationStatus,
+  NotificationType as NotificationKind,
+} from '@utils/datatypes/Notification';
 
 import { CSRFContext } from 'contexts/CSRFContext';
 
@@ -30,12 +33,28 @@ const n = (overrides: Partial<NotificationType> = {}): NotificationType => ({
   ...overrides,
 });
 
-const renderPage = (notifications: NotificationType[], csrfFetch: jest.Mock = jest.fn()) =>
+// Follow notifications are keyed on the recipient, so every follow a user receives collapses into
+// one group row — two followers is enough to make grouping the common case rather than the edge.
+const follow = (id: string, status: NotificationStatus = NotificationStatus.UNREAD): NotificationType =>
+  n({ id, status, type: NotificationKind.FOLLOW, subject: 'u1', toStatusComp: `u1:${status}` });
+
+const renderPage = (notifications: NotificationType[], csrfFetch: jest.Mock = jest.fn(), lastKey?: string) =>
   render(
     <CSRFContext.Provider value={{ csrfToken: 'token', csrfFetch, callApi: jest.fn() }}>
-      <NotificationsPage notifications={notifications} />
+      <NotificationsPage notifications={notifications} lastKey={lastKey} />
     </CSRFContext.Provider>,
   );
+
+// The pager's controls are icon-only, so the forward control is found by the octicon it renders.
+const nextPageButton = (): HTMLButtonElement => {
+  const found = Array.from(document.querySelectorAll('button')).find(
+    (button) => button.querySelector('.octicon-arrow-right') && !button.disabled,
+  );
+  if (!found) {
+    throw new Error('no enabled next-page control found');
+  }
+  return found;
+};
 
 const clickClearAll = async () => {
   await act(async () => {
@@ -102,5 +121,64 @@ describe('NotificationsPage clear all', () => {
     renderPage([n({ id: 'n1', body: 'old news', status: NotificationStatus.READ })]);
 
     expect(screen.getByText('old news')).toBeInTheDocument();
+  });
+
+  it('settles a collapsed run of unread notifications into the read state', async () => {
+    const csrfFetch = jest.fn().mockResolvedValue({ ok: true });
+    renderPage([follow('n1'), follow('n2')], csrfFetch);
+
+    // The run renders as a single group row, so the unread treatment has to reach that row or
+    // clearing produces no visible change at all for the most common notification kind.
+    expect(screen.getByText(/2 people followed you/)).toBeInTheDocument();
+    expect(screen.getByText('Unread')).toBeInTheDocument();
+
+    await clickClearAll();
+
+    expect(screen.getByText(/2 people followed you/)).toBeInTheDocument();
+    expect(screen.queryByText('Unread')).not.toBeInTheDocument();
+  });
+
+  it('leaves a collapsed run that has already been read alone', () => {
+    renderPage([follow('n1', NotificationStatus.READ), follow('n2', NotificationStatus.READ)]);
+
+    expect(screen.getByText(/2 people followed you/)).toBeInTheDocument();
+    expect(screen.queryByText('Unread')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /clear all/i })).not.toBeInTheDocument();
+  });
+
+  it('keeps rows read when a clear lands while more notifications are loading', async () => {
+    let landMore: (value: unknown) => void = () => {};
+    const morePending = new Promise((resolve) => {
+      landMore = resolve;
+    });
+    const csrfFetch = jest.fn((url: string) =>
+      url === '/user/clearnotifications' ? Promise.resolve({ ok: true }) : morePending,
+    );
+
+    renderPage([n({ id: 'n1', body: 'first body' })], csrfFetch, 'key-1');
+
+    await act(async () => {
+      fireEvent.click(nextPageButton());
+    });
+
+    await clickClearAll();
+    expect(screen.queryByText('Unread')).not.toBeInTheDocument();
+
+    await act(async () => {
+      landMore({
+        ok: true,
+        json: async () => ({
+          success: 'true',
+          notifications: [n({ id: 'n2', body: 'second body', status: NotificationStatus.READ })],
+          lastKey: undefined,
+        }),
+      });
+      await morePending;
+    });
+
+    // The in-flight page merges into the live list, not the snapshot it was issued against, so the
+    // statuses the clear just wrote survive.
+    expect(screen.getByText('second body')).toBeInTheDocument();
+    expect(screen.queryByText('Unread')).not.toBeInTheDocument();
   });
 });

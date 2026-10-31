@@ -1,4 +1,4 @@
-import Notification, { NotificationType } from './datatypes/Notification';
+import Notification, { NotificationStatus, NotificationType } from './datatypes/Notification';
 
 // A run of same-type/same-subject notifications collapsed into one display row.
 export interface NotificationGroup {
@@ -13,6 +13,9 @@ export interface NotificationGroup {
   count: number;
   // The ids of every notification in the group, so a click can mark them all read.
   ids: string[];
+  // How many members are still unread, so the row can carry the same unread treatment a single
+  // notification does.
+  unreadCount: number;
   // Sort position: the newest member's date.
   date: number;
 }
@@ -95,6 +98,7 @@ export const groupNotifications = (notifications: Notification[]): NotificationD
       url: n.url,
       count: bucket.length,
       ids: bucket.map((item) => item.id),
+      unreadCount: bucket.filter((item) => item.status === NotificationStatus.UNREAD).length,
       date: n.date,
     });
   }
