@@ -71,8 +71,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const isCubeOwner = !!user && cube.owner.id === user.id;
 
   // Get current filter and sort values from contexts
-  // The cube prop is the initial page data; the context copy reflects toggles made on the page.
-  const { cube: liveCube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
+  const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
   const { filterInput } = useContext(FilterContext);
 
   // State for collapsed hero, stored per page
@@ -147,6 +146,9 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
     showCustomImages: _showCustomImages,
     toggleShowCustomImages: _toggleShowCustomImages,
     activeView,
+    // "Show Unsorted cards" is a live display toggle, not the cube's saved setting. Every view and
+    // the Arena/Print-and-Play exports read it from here, so the download links must too.
+    displayOptions: { showUnsorted },
   } = useContext(DisplayContext);
 
   const { hasCustomImages: _hasCustomImages, unfilteredChangedCards } = useContext(CubeContext);
@@ -276,7 +278,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
         sortQuaternary,
         exportAllBoards,
         currentViewBoards,
-        showUnsorted: liveCube.showUnsorted || false,
+        showUnsorted,
       }),
     [
       isFilterUsed,
@@ -288,7 +290,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
       sortQuaternary,
       exportAllBoards,
       currentViewBoards,
-      liveCube.showUnsorted,
+      showUnsorted,
     ],
   );
 
@@ -365,7 +367,11 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
         <div onClick={(e) => e.stopPropagation()}>
           <Checkbox label="Use Sort" checked={isSortUsed} setChecked={setIsSortUsed} />
         </div>
-        <Tooltip text="Order export using current sort options." wrapperTag="span" className="ms-auto me-0">
+        <Tooltip
+          text="Order the export using the page's current sort. Cards no sort group claims are included only while 'Show Unsorted cards' is on. Turn this off to export every card in the cube's stored order."
+          wrapperTag="span"
+          className="ms-auto me-0"
+        >
           <QuestionIcon size={16} className="hidden md:inline" />
         </Tooltip>
       </Flexbox>
