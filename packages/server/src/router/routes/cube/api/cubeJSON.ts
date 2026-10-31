@@ -50,12 +50,17 @@ export const cubeJSONHandler = async (req: Request, res: Response) => {
     }
     const { cards: cubeCards, changelog: changelogMeta } = resolved;
 
-    // Sort every board using the cube's configured default sorts (falling back to the canonical defaults).
+    // Sorting repeats multi-group cards and drops ungrouped ones, so use it for order only.
     const [primary, secondary, tertiary, quaternary] = getCubeSorts(cube);
     for (const boardName of Object.keys(cubeCards)) {
       const board = cubeCards[boardName];
       if (Array.isArray(board)) {
-        cubeCards[boardName] = sortForDownload(board as Card[], primary, secondary, tertiary, quaternary, false, cube);
+        const sorted = sortForDownload(board as Card[], primary, secondary, tertiary, quaternary, false, cube);
+        const ordered = new Set<Card>(sorted);
+        for (const card of board as Card[]) {
+          ordered.add(card);
+        }
+        cubeCards[boardName] = [...ordered];
       }
     }
 

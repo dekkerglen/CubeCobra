@@ -3,7 +3,7 @@ import React, { useContext, useMemo, useState } from 'react';
 import { cardImageUrl } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import { findViewBySlug } from '@utils/datatypes/Cube';
-import { sortForDownload } from '@utils/sorting/Sort';
+import { EXPORT_SORTS, sortForDownload } from '@utils/sorting/Sort';
 import { jsPDF } from 'jspdf';
 
 import CubeContext from '../../contexts/CubeContext';
@@ -19,7 +19,6 @@ import Text from '../base/Text';
 interface PrintAndPlayExportModalProps {
   isOpen: boolean;
   setOpen: (open: boolean) => void;
-  isSortUsed: boolean;
   isFilterUsed: boolean;
   exportAllBoards?: boolean;
 }
@@ -27,18 +26,14 @@ interface PrintAndPlayExportModalProps {
 const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
   isOpen,
   setOpen,
-  isSortUsed,
   isFilterUsed,
   exportAllBoards = false,
 }) => {
   const { addAlert } = useAlerts();
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState({ current: 0, total: 0 });
-  const { cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
-  const {
-    activeView,
-    displayOptions: { showUnsorted },
-  } = useContext(DisplayContext);
+  const { cube } = useContext(CubeContext);
+  const { activeView } = useContext(DisplayContext);
   const { cardFilter } = useContext(FilterContext)!;
 
   // Derive boards to export
@@ -108,18 +103,10 @@ const PrintAndPlayExportModal: React.FC<PrintAndPlayExportModalProps> = ({
       cards = cards.filter(cardFilter.filter);
     }
 
-    let sortedCards = cards;
-    if (isSortUsed) {
-      sortedCards = sortForDownload(
-        cards,
-        sortPrimary ?? undefined,
-        sortSecondary ?? undefined,
-        sortTertiary ?? undefined,
-        sortQuaternary ?? undefined,
-        showUnsorted,
-        cube,
-      );
-    }
+    // Fixed ordering, and showOther so nothing in scope is dropped - same contract as the
+    // download links.
+    const [primary, secondary, tertiary, quaternary] = EXPORT_SORTS;
+    const sortedCards = sortForDownload(cards, primary, secondary, tertiary, quaternary, true, cube);
 
     return sortedCards.filter((card) => {
       const imageUrl = cardImageUrl(card);
