@@ -317,10 +317,6 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
         {(user.collaboratingCubes || []).length > 0 && (
           <ActionLink href={`/user/collaborations/${user.id}`}>All Your Collaborations</ActionLink>
         )}
-        <Divider />
-        <ActionLink href={`/user/packages/${user.id}`}>View All My Packages</ActionLink>
-        <ActionLink href={`/packages/liked/${user.id}`}>Liked Packages</ActionLink>
-        <ActionLink href="/packages/create">Create a New Package</ActionLink>
       </div>
     </div>
   ) : null;

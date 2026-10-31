@@ -402,12 +402,14 @@ describe('MobileNavDrawer', () => {
       expect(screen.getByRole('link', { name: 'All Your Cubes' })).toHaveAttribute('href', '/user/view/u1');
     });
 
-    it('offers the viewer their own package destinations', () => {
+    it('keeps the cubes drawer to cubes', () => {
+      // The panel is labelled "Your cubes"; package destinations live on the profile's Packages
+      // tab, which "All Your Cubes" reaches, and on the profile card UserLayout renders there.
       renderDrawer({ user: cubesUser, side: 'right' });
 
-      expect(screen.getByRole('link', { name: 'View All My Packages' })).toHaveAttribute('href', '/user/packages/u1');
-      expect(screen.getByRole('link', { name: 'Liked Packages' })).toHaveAttribute('href', '/packages/liked/u1');
-      expect(screen.getByRole('link', { name: 'Create a New Package' })).toHaveAttribute('href', '/packages/create');
+      expect(screen.queryByRole('link', { name: 'View All My Packages' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Liked Packages' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('link', { name: 'Create a New Package' })).not.toBeInTheDocument();
     });
 
     it('carries the full name for a truncated cube', () => {
