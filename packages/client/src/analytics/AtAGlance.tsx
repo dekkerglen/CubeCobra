@@ -37,6 +37,7 @@ import ManaPoolBulkButton from '../components/purchase/ManaPoolBulkButton';
 import TCGPlayerBulkButton from '../components/purchase/TCGPlayerBulkButton';
 import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
+import { releaseYearBuckets } from '../utils/releaseYearBuckets';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, ChartTooltip, Legend);
 
@@ -434,20 +435,10 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
   );
 
   // Release Year (histogram)
-  const releaseYearData = useMemo(() => {
-    const dated = cards.filter((c) => cardFirstPrintYear(c) > 0);
-    if (dated.length === 0) return histogramChart([], '#6AB572');
-
-    const years = dated.map((c) => cardFirstPrintYear(c));
-    const minYear = Math.min(...years);
-    const maxYear = Math.max(...years);
-    const buckets: { label: string; cards: Card[] }[] = [];
-    for (let y = minYear; y <= maxYear; y++) {
-      buckets.push({ label: String(y), cards: dated.filter((c) => cardFirstPrintYear(c) === y) });
-    }
-
-    return histogramChart(buckets, '#6AB572');
-  }, [cards]);
+  const releaseYearData = useMemo(
+    () => histogramChart(releaseYearBuckets(cards, new Date().getFullYear()), '#6AB572'),
+    [cards],
+  );
 
   // Card Types (donut)
   const cardTypeData = useMemo(
