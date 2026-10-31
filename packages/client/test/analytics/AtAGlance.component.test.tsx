@@ -122,3 +122,26 @@ describe('At a Glance legend hidden state', () => {
     }
   });
 });
+
+describe('At a Glance release year axis with upcoming sets', () => {
+  // The card catalog carries spoiled sets, so firstPrintYear can be later than today's year.
+  const futureYear = new Date().getFullYear() + 2;
+
+  it('extends past the current year rather than clipping a future-dated card', () => {
+    renderGlance([card('a', { firstPrintYear: futureYear })]);
+
+    const labels: string[] = mockBarProps[RELEASE_YEAR_BAR].data.labels;
+
+    expect(labels[labels.length - 1]).toBe(String(futureYear));
+  });
+
+  it('keeps the future-dated card in its own year bucket', () => {
+    renderGlance([card('a', { firstPrintYear: futureYear })]);
+
+    const { labels, datasets } = mockBarProps[RELEASE_YEAR_BAR].data;
+    const counts: number[] = datasets[0].data;
+
+    expect(counts[labels.indexOf(String(futureYear))]).toBe(1);
+    expect(counts.reduce((a, b) => a + b, 0)).toBe(1);
+  });
+});
