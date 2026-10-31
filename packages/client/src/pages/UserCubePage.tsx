@@ -3,13 +3,16 @@ import React, { useCallback, useContext, useState } from 'react';
 import Cube from '@utils/datatypes/Cube';
 import User from '@utils/datatypes/User';
 
+import Button from 'components/base/Button';
 import { Flexbox } from 'components/base/Layout';
 import Pagination from 'components/base/Pagination';
 import Text from 'components/base/Text';
 import CubePreview from 'components/cube/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
+import withQuickCreateCube from 'components/QuickCreateCubeButton';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
+import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
 
@@ -27,7 +30,9 @@ interface UserCubePageProps {
 
 const PAGE_SIZE = 36;
 
-const UserCubePage: React.FC<UserCubePageProps> = ({
+const CreateCubeButton = withQuickCreateCube(Button);
+
+export const UserCubePage: React.FC<UserCubePageProps> = ({
   owner,
   followersCount,
   followingCount,
@@ -38,6 +43,7 @@ const UserCubePage: React.FC<UserCubePageProps> = ({
   likedCubesCount,
   likedPackagesCount,
 }) => {
+  const user = useContext(UserContext);
   const { csrfFetch } = useContext(CSRFContext);
   const [items, setItems] = useState<Cube[]>(initialCubes);
   const [currentLastKey, setLastKey] = useState(initialLastKey);
@@ -73,6 +79,24 @@ const UserCubePage: React.FC<UserCubePageProps> = ({
     }
   }, [csrfFetch, owner.id, currentLastKey, items, page]);
 
+  const pager = (
+    <Pagination
+      count={pageCount}
+      active={page}
+      hasMore={hasMore}
+      onClick={async (newPage) => {
+        if (newPage >= pageCount) {
+          await fetchMoreData();
+        } else {
+          setPage(newPage);
+        }
+      }}
+      loading={loading}
+    />
+  );
+
+  const isOwner = !!user && user.id === owner.id;
+
   return (
     <MainLayout>
       <UserLayout
@@ -87,27 +111,16 @@ const UserCubePage: React.FC<UserCubePageProps> = ({
       >
         <DynamicFlash />
         <Flexbox direction="col" className="mt-3" gap="2">
-          {items.length > 0 && (
-            <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
-              <Text lg semibold>
-                Cubes ({items.length}
-                {hasMore ? '+' : ''})
-              </Text>
-              <Pagination
-                count={pageCount}
-                active={page}
-                hasMore={hasMore}
-                onClick={async (newPage) => {
-                  if (newPage >= pageCount) {
-                    await fetchMoreData();
-                  } else {
-                    setPage(newPage);
-                  }
-                }}
-                loading={loading}
-              />
+          <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap" className="w-full">
+            <Text lg semibold>
+              Cubes ({items.length}
+              {hasMore ? '+' : ''})
+            </Text>
+            <Flexbox direction="row" gap="2" wrap="wrap" alignItems="center">
+              {isOwner && <CreateCubeButton color="primary">Create New</CreateCubeButton>}
+              {items.length > 0 && pager}
             </Flexbox>
-          )}
+          </Flexbox>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5 5xl:grid-cols-6">
             {items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((cube) => (
               <CubePreview key={cube.id} cube={cube} />
@@ -115,19 +128,7 @@ const UserCubePage: React.FC<UserCubePageProps> = ({
           </div>
           {items.length > 0 && (
             <Flexbox direction="row" justify="end" alignItems="center" className="w-full mt-3">
-              <Pagination
-                count={pageCount}
-                active={page}
-                hasMore={hasMore}
-                onClick={async (newPage) => {
-                  if (newPage >= pageCount) {
-                    await fetchMoreData();
-                  } else {
-                    setPage(newPage);
-                  }
-                }}
-                loading={loading}
-              />
+              {pager}
             </Flexbox>
           )}
           {items.length === 0 && <Text className="text-text-secondary">This user has not created any cubes yet.</Text>}
