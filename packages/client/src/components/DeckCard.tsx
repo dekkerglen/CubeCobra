@@ -5,6 +5,7 @@ import Deck from '@utils/datatypes/Draft';
 import DeckSeat from '@utils/datatypes/DraftSeat';
 import { sortDeep } from '@utils/sorting/Sort';
 
+import useMediaQuery from '../hooks/useMediaQuery';
 import { Card, CardBody, CardHeader } from './base/Card';
 import { Col, Flexbox, Row } from './base/Layout';
 import Text from './base/Text';
@@ -12,6 +13,7 @@ import CardGrid from './card/CardGrid';
 import CommentsSection from './comments/CommentsSection';
 import DecksPickBreakdown from './DecksPickBreakdown';
 import FoilCardImage from './FoilCardImage';
+import HorizontalScrollFade from './HorizontalScrollFade';
 import HousmanPickBreakdown from './HousmanPickBreakdown';
 import Markdown from './Markdown';
 import Username from './Username';
@@ -23,42 +25,77 @@ interface DeckStacksStaticProps {
   className?: string;
 }
 
-export const DeckStacksStatic: React.FC<DeckStacksStaticProps> = ({ piles, cards, className }) => (
-  <CardBody className={className ?? 'pt-0 border-bottom'}>
-    {/* Guard against malformed/legacy deck data (e.g. old Mongo-ID decks) whose
-        mainboard/sideboard aren't the expected number[][][] — a mis-shaped row or
-        column would otherwise throw `.map is not a function` and blank the page. */}
-    {(Array.isArray(piles) ? piles : []).map((row, index) => (
-      <Row key={index} xs={2} md={4} lg={8}>
-        {(Array.isArray(row) ? row : []).map((column, index2) => {
-          const col = Array.isArray(column) ? column : [];
-          return (
-            <Col key={index2} xs={1}>
-              <div className="w-full text-center mb-1">
-                <b>{col.length > 0 ? col.length : ''}</b>
-              </div>
-              <div className="stack">
-                {col.map((cardIndex, index3) => {
-                  const card = cards[cardIndex];
-                  if (!card) return null;
-                  return (
-                    <div className="stacked" key={index3}>
-                      <a href={card.cardID ? `/tool/card/${card.cardID}` : undefined}>
-                        <FoilCardImage card={card} autocard />
-                      </a>
-                    </div>
-                  );
-                })}
-              </div>
-            </Col>
-          );
-        })}
-      </Row>
-    ))}
-  </CardBody>
+// One mana-value column: its count, then its cards stacked so each name shows.
+const StackColumn: React.FC<{ column: number[]; cards: any[] }> = ({ column, cards }) => (
+  <>
+    <div className="w-full text-center mb-1">
+      <b>{column.length > 0 ? column.length : ''}</b>
+    </div>
+    <div className="stack">
+      {column.map((cardIndex, index) => {
+        const card = cards[cardIndex];
+        if (!card) return null;
+        return (
+          <div className="stacked" key={index}>
+            <a href={card.cardID ? `/tool/card/${card.cardID}` : undefined}>
+              <FoilCardImage card={card} autocard />
+            </a>
+          </div>
+        );
+      })}
+    </div>
+  </>
 );
 
-// Mainboard cards in display order: color category, then mana value.
+// Guard against malformed/legacy deck data (e.g. old Mongo-ID decks) whose
+// mainboard/sideboard aren't the expected number[][][] — a mis-shaped row or
+// column would otherwise throw `.map is not a function` and blank the page.
+const safeRows = (piles: number[][][]) =>
+  (Array.isArray(piles) ? piles : []).map((row) =>
+    (Array.isArray(row) ? row : []).map((column) => (Array.isArray(column) ? column : [])),
+  );
+
+export const DeckStacksStatic: React.FC<DeckStacksStaticProps> = ({ piles, cards, className }) => {
+  const isPhone = useMediaQuery('(max-width: 767px)');
+  const rows = safeRows(piles);
+
+  if (isPhone) {
+    // Phones: every column at a readable width in one strip that scrolls sideways,
+    // with the rows stacked so their columns line up.
+    return (
+      <CardBody className={className ?? 'pt-0 px-0 pb-2 border-bottom'}>
+        <HorizontalScrollFade>
+          <div className="flex flex-col gap-2 w-max px-1.5">
+            {rows.map((row, index) => (
+              <div key={index} className="flex gap-1.5">
+                {row.map((column, index2) => (
+                  <div key={index2} className="w-[clamp(96px,32vw,170px)] shrink-0">
+                    <StackColumn column={column} cards={cards} />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </HorizontalScrollFade>
+      </CardBody>
+    );
+  }
+
+  return (
+    <CardBody className={className ?? 'pt-0 border-bottom'}>
+      {rows.map((row, index) => (
+        <Row key={index} xs={2} md={4} lg={8}>
+          {row.map((column, index2) => (
+            <Col key={index2} xs={1}>
+              <StackColumn column={column} cards={cards} />
+            </Col>
+          ))}
+        </Row>
+      ))}
+    </CardBody>
+  );
+};
+
 const sortedDeckCards = (cards: CardType[]): CardType[] => {
   const deep = sortDeep(cards, true, 'Unsorted', 'Color Category', 'Mana Value Full', 'Unsorted') as [
     string,
@@ -141,7 +178,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
   }
 
   return (
-    <Card>
+    <Card className="max-md:rounded-none max-md:border-x-0">
       <CardHeader>
         <Flexbox direction="col" alignItems="start" gap="1">
           <Text semibold lg>
@@ -181,7 +218,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
           <DeckStacksStatic piles={stackedDeck} cards={draft.cards} />
           {stackedSideboard && stackedSideboard.length > 0 && (
             <>
-              <CardBody className="border-bottom">
+              <CardBody className="border-bottom max-md:py-2">
                 <Text semibold lg>
                   Sideboard ({sbCount})
                 </Text>
