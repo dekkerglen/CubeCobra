@@ -22,6 +22,7 @@ import {
 } from 'chart.js';
 import { Bar, Doughnut } from 'react-chartjs-2';
 
+import { doughnutLegendLabels } from '../components/analytics/chartLegend';
 import { Card as CardUI, CardBody, CardHeader } from '../components/base/Card';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Text from '../components/base/Text';
@@ -161,7 +162,7 @@ const doughnutCountOptions = {
   plugins: {
     legend: {
       position: 'right' as const,
-      labels: { usePointStyle: true, padding: 10, font: { size: 11 } },
+      labels: { usePointStyle: true, padding: 10, font: { size: 11 }, ...doughnutLegendLabels },
     },
   },
   cutout: '55%',
