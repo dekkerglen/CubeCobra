@@ -8,7 +8,7 @@ export interface ExportParamsOptions {
   sortQuaternary: string | null;
   exportAllBoards: boolean;
   currentViewBoards: string[];
-  /** The cube's "show unsorted" setting, i.e. whether the page displays the "Other" group. */
+  /** The live "show unsorted" display option, i.e. whether the page is showing the "Other" group. */
   showUnsorted: boolean;
 }
 
