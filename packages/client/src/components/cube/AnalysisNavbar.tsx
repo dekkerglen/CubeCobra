@@ -63,10 +63,18 @@ const AnalysisNavbar: React.FC = () => {
     setAdvancedOpen(false);
   }, [filterValues, setFilterInput]);
 
+  // Both the local text and the applied filter have to go. Resetting only the context
+  // value would leave the stale text in `localFilterInput`, which the debounce effect
+  // above would then push straight back.
+  const clearFilter = useCallback(() => {
+    setLocalFilterInput('');
+    setFilterInput('');
+  }, [setFilterInput]);
+
   return (
     <>
       <Flexbox direction="row" gap="2" alignItems="center" justify="center" className="mt-2" wrap="wrap">
-        <div className="flex items-center gap-2 px-2">
+        <div className="flex items-center gap-2 px-2 flex-grow">
           <button
             onClick={() => setAdvancedOpen(true)}
             className="text-text hover:text-text-secondary transition-colors"
@@ -74,7 +82,11 @@ const AnalysisNavbar: React.FC = () => {
           >
             <QuestionIcon size={20} className="hidden md:inline" />
           </button>
-          <div className="relative flex items-center" style={{ minWidth: '250px', maxWidth: '400px' }}>
+          <div
+            className="relative flex items-center flex-grow"
+            data-testid="analysis-filter"
+            style={{ minWidth: '150px' }}
+          >
             <span className="absolute" style={{ left: '12px', lineHeight: '0' }}>
               <SearchIcon size={16} className="text-text-secondary" />
             </span>
@@ -90,6 +102,7 @@ const AnalysisNavbar: React.FC = () => {
               }}
               valid={(filterInput?.length ?? 0) > 0 ? filterValid : undefined}
               className="pr-3 bg-bg-active"
+              onClear={clearFilter}
               otherInputProps={{
                 style: { paddingLeft: '48px' },
                 onBlur: () => setFilterInput(localFilterInput),
