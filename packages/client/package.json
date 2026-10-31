@@ -82,7 +82,7 @@
     "@types/react-google-recaptcha": "^2.1.9",
     "@types/react-syntax-highlighter": "^15.5.13",
     "@types/seedrandom": "^3.0.8",
-    "@vitejs/plugin-react": "^6.0.3",
+    "@vitejs/plugin-react": "^6.1.2",
     "baseline-browser-mapping": "^2.9.14",
     "core-js": "^3.46.0",
     "cross-env": "^7.0.3",
