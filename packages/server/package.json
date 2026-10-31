@@ -94,7 +94,7 @@
     "@types/express": "^5.0.6",
     "@types/express-fileupload": "^1.5.1",
     "@types/express-flash": "^0.0.5",
-    "@types/express-rate-limit": "^5.1.3",
+    "@types/express-rate-limit": "^6.0.2",
     "@types/express-session": "^1.18.2",
     "@types/jest": "^30.0.0",
     "@types/lodash": "^4.14.202",
