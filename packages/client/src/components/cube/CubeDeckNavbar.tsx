@@ -58,14 +58,54 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
     setTimeout(dismissAlerts, 3000);
   }, [addAlert, dismissAlerts, draft, seatIndex]);
 
-  const deckStatsToggle = (
+  // Phones just say "Stats", to leave room for the rest of the row.
+  const deckStatsToggle = (label: string) => (
     <Link
       onClick={toggleShowDeckBuilderStatsPanel}
       className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
     >
       <GraphIcon size={16} />
-      {showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats
+      {label}
     </Link>
+  );
+
+  // Owners can rebuild their decks: one link, or a menu of seats when there are several.
+  const editControl = (
+    <>
+      {isOwner && hasMultipleSeats && (
+        <Dropdown
+          trigger={
+            <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
+              <PencilIcon size={16} />
+              Edit
+            </Link>
+          }
+          align="left"
+          minWidth="16rem"
+        >
+          <Flexbox direction="col" gap="2" className="p-3">
+            {draft.seats.map((seat, index) => (
+              <Link
+                key={index}
+                href={`/draft/deckbuilder/${draft.id}?seat=${index}`}
+                className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+              >
+                Seat {index + 1}: {seat.name}
+              </Link>
+            ))}
+          </Flexbox>
+        </Dropdown>
+      )}
+      {isOwner && !hasMultipleSeats && (
+        <Link
+          href={`/draft/deckbuilder/${draft.id}?seat=0`}
+          className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
+        >
+          <PencilIcon size={16} />
+          Edit
+        </Link>
+      )}
+    </>
   );
 
   return (
@@ -163,40 +203,8 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
               <Alerts alerts={alerts} />
             </Flexbox>
           </Dropdown>
-          {isOwner && hasMultipleSeats && (
-            <Dropdown
-              trigger={
-                <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
-                  <PencilIcon size={16} />
-                  Edit
-                </Link>
-              }
-              align="left"
-              minWidth="16rem"
-            >
-              <Flexbox direction="col" gap="2" className="p-3">
-                {draft.seats.map((seat, index) => (
-                  <Link
-                    key={index}
-                    href={`/draft/deckbuilder/${draft.id}?seat=${index}`}
-                    className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
-                  >
-                    Seat {index + 1}: {seat.name}
-                  </Link>
-                ))}
-              </Flexbox>
-            </Dropdown>
-          )}
-          {isOwner && !hasMultipleSeats && (
-            <Link
-              href={`/draft/deckbuilder/${draft.id}?seat=0`}
-              className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2"
-            >
-              <PencilIcon size={16} />
-              Edit
-            </Link>
-          )}
-          {deckStatsToggle}
+          {editControl}
+          {deckStatsToggle(`${showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats`)}
           <Dropdown
             trigger={
               <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
@@ -271,7 +279,7 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
             </div>
           </Flexbox>
 
-          {/* Second row: Export and More controls */}
+          {/* Second row: Export, Edit, Stats and More */}
           <Flexbox direction="row" gap="2" alignItems="center" justify="between" className="w-full">
             <Dropdown
               trigger={
@@ -342,7 +350,8 @@ const CubeDeckNavbar: React.FC<CubeDeckNavbarProps> = ({ draft, user, seatIndex,
                 <Alerts alerts={alerts} />
               </Flexbox>
             </Dropdown>
-            {deckStatsToggle}
+            {editControl}
+            {deckStatsToggle('Stats')}
             <Dropdown
               trigger={
                 <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">

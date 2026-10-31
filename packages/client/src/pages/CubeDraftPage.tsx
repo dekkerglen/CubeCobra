@@ -1,18 +1,12 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { DndContext } from '@dnd-kit/core';
-import { isVoucher, makeSubtitle } from '@utils/cardutil';
+import { isVoucher } from '@utils/cardutil';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
 import { getCardDefaultRowColumn, getInitialState, setupPicks } from '@utils/draftutil';
 
-import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Container from 'components/base/Container';
-import Spinner from 'components/base/Spinner';
-import Text from 'components/base/Text';
-import DeckStacks from 'components/DeckStacks';
+import DraftTable from 'components/draft/table/DraftTable';
 import P1P1FromPackGenerator from 'components/p1p1/P1P1FromPackGenerator';
-import Pack from 'components/Pack';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import DraftLocation, { addCard, location, removeCard } from 'drafting/DraftLocation';
@@ -133,7 +127,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
     draftCompleted: false, // We've made the final pick and are ready to endDraft
   });
 
-  const [dragStartTime, setDragStartTime] = useState<number | null>(null);
   const { csrfFetch } = useContext(CSRFContext);
 
   const getLocationReferences = useCallback(
@@ -473,20 +466,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
     ],
   );
 
-  // Filter out any indices that don't resolve to a card so downstream renderers never
-  // read `.cardID` off undefined. Filtering within each pile preserves row/col positions.
-  const mainboardCards = mainboard.map((row) =>
-    row.map((col) =>
-      col.map((index) => draft.cards[index]).filter((c): c is NonNullable<typeof c> => c !== null && c !== undefined),
-    ),
-  );
-  const sideboardCards = sideboard.map((row) =>
-    row.map((col) =>
-      col.map((index) => draft.cards[index]).filter((c): c is NonNullable<typeof c> => c !== null && c !== undefined),
-    ),
-  );
-
-  // Function to handle initial drag, sets in the right place and sets it as pending if necessary
+  // Drafts a pack card into an exact spot in a pool pile, and sets it as pending if necessary.
   const dragPickCard = useCallback(
     (source: DraftLocation, target: DraftLocation) => {
       if (pendingPick !== null) return;
@@ -507,9 +487,9 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
         setter((prev) => {
           const newBoard = prev.map((r) => r.map((c) => [...c]));
           for (const entry of boardEntries) {
-            // Use drag target's row/col for the first card, default placement for the rest
+            // Use drag target's spot for the first card, default placement for the rest
             if (entry === boardEntries[0]) {
-              newBoard[target.row][target.col].push(entry.cardIndex);
+              newBoard[target.row][target.col].splice(target.index, 0, entry.cardIndex);
             } else {
               newBoard[entry.row][entry.col].push(entry.cardIndex);
             }
@@ -523,7 +503,7 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
           const newBoard = prev.map((r) => r.map((c) => [...c]));
           for (const entry of boardEntries) {
             if (entry === boardEntries[0]) {
-              newBoard[target.row][target.col].push(entry.cardIndex);
+              newBoard[target.row][target.col].splice(target.index, 0, entry.cardIndex);
             } else {
               newBoard[entry.row][entry.col].push(entry.cardIndex);
             }
@@ -547,6 +527,11 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
       expandPickForBoard,
       setUserPicksInOrder,
     ],
+  );
+
+  const pickCardTo = useCallback(
+    (packIndex: number, target: DraftLocation) => dragPickCard(DraftLocation.pack(packIndex), target),
+    [dragPickCard],
   );
 
   const dragCardBetweenDeckStacks = useCallback(
@@ -622,32 +607,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
     ],
   );
 
-  /*
-   * Clicking on a card within either deck stack moves it to the other. Unlike a drag where we have different source and targets,
-   * on a click we only have the source. We determine the target location based on the source card's cmc/type (getCardDefaultRowColumn)
-   * though if moving to the sideboard only the CMC matters to determine the column.
-   */
-  const clickDeckStack = useCallback(
-    (source: DraftLocation) => {
-      //Determine the card which was clicked in the board, so we can calculate its standard row/col destination
-      const { board: sourceBoard } = getLocationReferences(source.type);
-      const cardIndex = sourceBoard[source.row][source.col][source.index];
-      const card = draft.cards[cardIndex];
-      const { row, col } = getCardDefaultRowColumn(card);
-
-      const targetLocation = source.type === locations.deck ? locations.sideboard : locations.deck;
-      //The sideboard only has one row, unlike the deck with has 1 row for creatures and 1 for non-creatures
-      const targetRow = targetLocation === locations.sideboard ? 0 : row;
-      const { board: targetBoard } = getLocationReferences(targetLocation);
-
-      //The card should be added to the end of the stack of cards at the grid position (row/col). Be extra careful
-      //with the boards (using .? operator) even though they are pre-populated via setupPicks() at the top
-      const targetIndex = targetBoard?.[targetRow]?.[col]?.[source.index] || 0;
-      dragCardBetweenDeckStacks(source, new DraftLocation(targetLocation, targetRow, col, targetIndex));
-    },
-    [draft.cards, getLocationReferences, dragCardBetweenDeckStacks],
-  );
-
   const clickTrashPick = useCallback(
     (packIndex: number) => {
       const cardIndex = state.seats[0].pack[packIndex];
@@ -662,64 +621,6 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
       }
     },
     [state.seats, draft.cards, draftStatus.predictionsLoading, setTrashboard, makePick],
-  );
-
-  const onMoveCard = useCallback(
-    async (event: any) => {
-      const { active, over } = event;
-      //If drag and drop ends without a collision, eg outside the drag/drop area, do nothing
-      if (!over) return;
-      // Can't make changes while drafting is over until deckbuilding to avoid weird timing issues
-      if (draftStatus.draftCompleted) return;
-
-      const source = active.data.current as DraftLocation;
-      const target = over.data.current as DraftLocation;
-
-      // Trash picks just don't go to the mainboard or sideboard
-      if (state.stepQueue[0]?.action === 'trash' && source.type === locations.pack) {
-        clickTrashPick(source.index);
-        return;
-      }
-
-      if (source.equals(target) && source.type === locations.pack) {
-        // player dropped card back in the same location
-        const dragTime = Date.now() - (dragStartTime ?? 0);
-        if (dragTime < 200) {
-          // If the drag was quick, treat it as a click
-          return clickPickCard(source.index);
-        }
-        return;
-      } else if (source.equals(target) && (source.type === locations.deck || source.type === locations.sideboard)) {
-        //Clicking a card within the deck or sideboard should move it from one to the other
-        clickDeckStack(source);
-        return;
-      } else if (source.equals(target)) {
-        return;
-      }
-
-      if (target.type === locations.pack) {
-        return;
-      }
-      //Dragged a card from the pack to the deck or sideboard
-      if (source.type === locations.pack) {
-        if (target.type === locations.deck || target.type === locations.sideboard) {
-          dragPickCard(source, target);
-          return;
-        }
-      }
-      //Otherwise the drag had nothing to do with the pack
-      dragCardBetweenDeckStacks(source, target);
-    },
-    [
-      clickDeckStack,
-      dragStartTime,
-      dragCardBetweenDeckStacks,
-      clickPickCard,
-      dragPickCard,
-      draftStatus.draftCompleted,
-      state.stepQueue,
-      clickTrashPick,
-    ],
   );
 
   // Converts pendingPicks into real picks when we're ready
@@ -875,88 +776,73 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
   // can turn it into a shareable/votable P1P1 instead of screenshotting it.
   const isFirstPick = state.pack === 1 && state.pick === 1 && !draftStatus.loading;
 
-  // Owned here rather than in Pack so the choice survives every pick and pack of this draft.
+  // Owned here rather than in the table so the choice survives every pick and pack of this draft.
   const toggleRatings = useCallback(() => setShowRatings((prev) => !prev), []);
 
+  const packCards = (state?.seats?.[0]?.pack ?? []).map((index) => draft.cards[index]);
+  const packHeaderActions = isFirstPick ? (
+    <P1P1FromPackGenerator cubeId={cube.id} seed={draft.id} pack={packCards} label="Share as P1P1" openInNewTab />
+  ) : undefined;
+  const packMenuActions = isFirstPick ? (
+    <P1P1FromPackGenerator
+      cubeId={cube.id}
+      seed={draft.id}
+      pack={packCards}
+      label="Share as P1P1"
+      openInNewTab
+      variant="link"
+    />
+  ) : undefined;
+
+  // state.pack lags a render behind when a new pack opens, so name the pack by finding it in
+  // the initial state instead (a freshly opened pack is always this seat's own).
+  const totalPacks = draft.InitialState?.[0]?.length ?? 0;
+  const firstPackCard = state?.seats?.[0]?.pack?.[0];
+  const ownPackIndex =
+    firstPackCard === undefined
+      ? -1
+      : (draft.InitialState?.[0]?.findIndex((initialPack) => initialPack.cards.includes(firstPackCard)) ?? -1);
+  const packLabel =
+    totalPacks > 0 ? `Pack ${ownPackIndex >= 0 ? ownPackIndex + 1 : state.pack} of ${totalPacks}` : undefined;
+  const largestPack = Math.max(0, ...(draft.InitialState?.[0] ?? []).map((initialPack) => initialPack.cards.length));
+
+  // The table sizes itself to the viewport, so it gets the full content width.
   return (
     <MainLayout useContainer={false}>
-      <CubeLayout cube={cube} activeLink="playtest">
-        <Container xl disableCenter>
+      <CubeLayout cube={cube} activeLink="playtest" fullScreen>
+        <div className="px-2">
           <Alerts alerts={alerts} />
-          <DndContext onDragEnd={onMoveCard} onDragStart={() => setDragStartTime(Date.now())}>
-            <div className="relative">
-              {/* Only show the pack if there are actually cards to show */}
-              {state?.seats?.[0]?.pack?.length > 0 ? (
-                draftStatus.predictionsLoading && pendingPick !== null ? (
-                  <Card className="mt-3">
-                    <CardHeader className="flex justify-between items-center">
-                      <Text semibold lg>
-                        Waiting for Bot Picks...
-                      </Text>
-                    </CardHeader>
-                    <CardBody>
-                      <div className="centered py-3">
-                        <div className="spinner" />
-                      </div>
-                    </CardBody>
-                  </Card>
-                ) : (
-                  <Pack
-                    // Just use state.seats[0].pack directly
-                    pack={state.seats[0].pack.map((index) => draft.cards[index])}
-                    packSize={state.seats[0].pack.length}
-                    loading={draftStatus.loading}
-                    title={packTitle}
-                    disabled={packDisabled || draftStatus.retryInProgress}
-                    ratings={ratings}
-                    showRatings={showRatings}
-                    onToggleRatings={toggleRatings}
-                    error={draftStatus.predictError}
-                    onRetry={handleRetryPredict}
-                    retryInProgress={draftStatus.retryInProgress}
-                    headerActions={
-                      isFirstPick ? (
-                        <P1P1FromPackGenerator
-                          cubeId={cube.id}
-                          seed={draft.id}
-                          pack={state.seats[0].pack.map((index) => draft.cards[index])}
-                          label="Share as P1P1"
-                          openInNewTab
-                        />
-                      ) : undefined
-                    }
-                  />
-                )
-              ) : draftStatus.loading || draftStatus.draftCompleted ? (
-                <Card className="mt-3">
-                  <CardHeader>
-                    <Text semibold lg>
-                      Finishing draft...
-                    </Text>
-                  </CardHeader>
-                  <CardBody>
-                    <div className="flex justify-center py-3">
-                      <Spinner md />
-                    </div>
-                  </CardBody>
-                </Card>
-              ) : (
-                <></>
-              )}
-              <Card className="my-3">
-                <DeckStacks
-                  cards={mainboardCards}
-                  title="Mainboard"
-                  subtitle={makeSubtitle(mainboard.flat(3).map((index) => draft.cards[index]))}
-                  locationType={locations.deck}
-                  xs={4}
-                  lg={8}
-                />
-                <DeckStacks cards={sideboardCards} title="Sideboard" locationType={locations.sideboard} xs={4} lg={8} />
-              </Card>
-            </div>
-          </DndContext>
-        </Container>
+          <DraftTable
+            cards={draft.cards}
+            pack={state?.seats?.[0]?.pack ?? []}
+            packNumber={state.pack}
+            pickNumber={state.pick}
+            cubeName={cube.name}
+            packArt={cube.image?.uri}
+            packLabel={packLabel}
+            packSize={largestPack}
+            mainboard={mainboard}
+            sideboard={sideboard}
+            title={packTitle}
+            ratings={ratings}
+            showRatings={showRatings}
+            onToggleRatings={toggleRatings}
+            loading={draftStatus.loading}
+            disabled={packDisabled || draftStatus.retryInProgress}
+            locked={draftStatus.draftCompleted}
+            pendingPick={pendingPick}
+            isTrashStep={state.stepQueue[0]?.action === 'trash'}
+            error={draftStatus.predictError}
+            onRetry={handleRetryPredict}
+            retryInProgress={draftStatus.retryInProgress}
+            headerActions={packHeaderActions}
+            menuActions={packMenuActions}
+            onPick={clickPickCard}
+            onTrash={clickTrashPick}
+            onPickTo={pickCardTo}
+            onMovePoolCard={dragCardBetweenDeckStacks}
+          />
+        </div>
       </CubeLayout>
     </MainLayout>
   );

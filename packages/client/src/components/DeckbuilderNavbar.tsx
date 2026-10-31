@@ -55,6 +55,13 @@ interface DeckbuilderNavbarProps {
   onSort?: (key: DeckSortKey) => void;
   // Splits the deck/sideboard into creature and non-creature rows.
   onSplitCreatures?: () => void;
+  // Whether autobuild ran since the page loaded, so the deck_build event can
+  // attribute the save to 'autobuild' vs 'manual'.
+  autobuilt?: boolean;
+  onAutobuilt?: () => void;
+  // 'bar' is every control in a row. Phones show 'save' (just the Save button)
+  // at all times and 'list' (everything else, one per row) behind a menu.
+  layout?: 'bar' | 'list' | 'save';
 }
 
 const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
@@ -77,14 +84,15 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
   originalCardCount,
   onSort,
   onSplitCreatures,
+  autobuilt = false,
+  onAutobuilt,
+  layout = 'bar',
 }) => {
+  const list = layout === 'list';
   const { csrfFetch } = useContext(CSRFContext);
   const { showCustomImages, toggleShowCustomImages, showDeckBuilderStatsPanel, toggleShowDeckBuilderStatsPanel } =
     useContext(DisplayContext);
   const formRef = useRef<HTMLFormElement>(null);
-  // Tracks whether the user ran autobuild before saving, so the deck_build
-  // event can attribute the save to 'autobuild' vs 'manual'.
-  const autobuildUsedRef = useRef(false);
   const [displayDropdownOpen, setDisplayDropdownOpen] = React.useState(false);
   const [autobuilding, setAutobuilding] = useState(false);
   const [autobuildProgress, setAutobuildProgress] = useState<{ step: number; totalSteps: number } | null>(null);
@@ -220,7 +228,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
 
       setDeck(formattedMainboard);
       setSideboard(formattedSideboard);
-      autobuildUsedRef.current = true;
+      onAutobuilt?.();
     } catch (err) {
       console.error('Autobuild failed:', err);
       setAutobuildError(err instanceof Error ? err.message : 'Autobuild failed');
@@ -228,15 +236,39 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
       setAutobuilding(false);
       setAutobuildProgress(null);
     }
-  }, [csrfFetch, mainboard, sideboard, basics, cards, setDeck, setSideboard, maxLands, maxSpells]);
+  }, [csrfFetch, mainboard, sideboard, basics, cards, setDeck, setSideboard, maxLands, maxSpells, onAutobuilt]);
 
   const autobuildPercent =
     autobuildProgress && autobuildProgress.totalSteps > 0
       ? Math.min(100, Math.round((autobuildProgress.step / autobuildProgress.totalSteps) * 100))
       : 0;
 
+  const saveButton = (
+    <CSRFForm ref={formRef} method="POST" action={`/cube/deck/editdeck/${draft.id}`} formData={formData}>
+      <Button
+        type="button"
+        color="primary"
+        onClick={() => {
+          trackEvent('deck_build', { method: autobuilt ? 'autobuild' : 'manual' });
+          formRef.current?.submit();
+        }}
+      >
+        <span className="text-nowrap">Save Deck</span>
+      </Button>
+    </CSRFForm>
+  );
+
+  if (layout === 'save') return saveButton;
+
   return (
-    <Flexbox direction="row" gap="2" justify="start" alignItems="center" className="w-full mt-2 px-2" wrap="wrap">
+    <Flexbox
+      direction={list ? 'col' : 'row'}
+      gap={list ? '3' : '2'}
+      justify="start"
+      alignItems={list ? 'start' : 'center'}
+      className={list ? 'w-full py-2 px-2' : 'w-full mt-2 px-2'}
+      wrap={list ? 'nowrap' : 'wrap'}
+    >
       <BasicsModalLink
         href="#"
         modalprops={{
@@ -252,7 +284,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
         Add Basics
       </BasicsModalLink>
       {onAddCard && (
-        <Flexbox direction="row" gap="1" alignItems="center" className="px-2">
+        <Flexbox direction="row" gap="1" alignItems="center" className={list ? 'px-2 w-full' : 'px-2'}>
           <PlusIcon size={16} className="text-text-secondary" />
           <AutocompleteInput
             cubeId={cubeID}
@@ -269,7 +301,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
             placeholder="Add card (e.g. Mox Ruby, or Mox Ruby [vma-263])"
             autoComplete="off"
             data-lpignore
-            className="w-56"
+            className={list ? 'w-full' : 'w-56'}
           />
           <Button color="primary" disabled={addCardValue.length === 0} onClick={() => handleAddCard(addCardValue)}>
             <span className="text-nowrap">Add</span>
@@ -339,20 +371,7 @@ const DeckbuilderNavbar: React.FC<DeckbuilderNavbarProps> = ({
         <GraphIcon size={16} />
         {showDeckBuilderStatsPanel ? 'Hide' : 'Show'} Deck Stats
       </Link>
-      <div className="ml-auto px-2">
-        <CSRFForm ref={formRef} method="POST" action={`/cube/deck/editdeck/${draft.id}`} formData={formData}>
-          <Button
-            type="button"
-            color="primary"
-            onClick={() => {
-              trackEvent('deck_build', { method: autobuildUsedRef.current ? 'autobuild' : 'manual' });
-              formRef.current?.submit();
-            }}
-          >
-            <span className="text-nowrap">Save Deck</span>
-          </Button>
-        </CSRFForm>
-      </div>
+      {!list && <div className="ml-auto px-2">{saveButton}</div>}
     </Flexbox>
   );
 };

@@ -1,14 +1,6 @@
 import React, { useCallback, useState } from 'react';
 
-import {
-  CollisionDetection,
-  DndContext,
-  DragEndEvent,
-  pointerWithin,
-  rectIntersection,
-  useDroppable,
-} from '@dnd-kit/core';
-import { cardType, cmcColumn, detailsToCard, makeSubtitle } from '@utils/cardutil';
+import { cardType, cmcColumn, detailsToCard } from '@utils/cardutil';
 import CardType, { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
@@ -16,17 +8,14 @@ import { DeckSortKey, getCardDefaultRowColumn, sortDeckIntoColumns, splitDeckByC
 
 import BotDeckStatusBanner from 'components/BotDeckStatusBanner';
 import DeckBuilderStatsPanel from 'components/DeckBuilderStatsPanel';
-import RemovedPile from 'components/RemovedPile';
 
-import { Card } from '../components/base/Card';
 import Container from '../components/base/Container';
-import Text from '../components/base/Text';
 import DeckbuilderNavbar from '../components/DeckbuilderNavbar';
-import DeckStacks from '../components/DeckStacks';
+import DeckTable from '../components/draft/table/DeckTable';
 import DynamicFlash from '../components/DynamicFlash';
 import ErrorBoundary from '../components/ErrorBoundary';
 import RenderToRoot from '../components/RenderToRoot';
-import DraftLocation, { addCard, locations, moveCard, removeCard } from '../drafting/DraftLocation';
+import DraftLocation, { addCard, removeCard } from '../drafting/DraftLocation';
 import { discardToPile, restoreFromPile } from '../drafting/removedPile';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
@@ -36,46 +25,9 @@ interface CubeDeckbuilderPageProps {
   initialDeck: Draft;
 }
 
-// Drop target that moves a card out of the deck into the recoverable removed pile.
-const RemoveZone: React.FC = () => {
-  const { setNodeRef, isOver } = useDroppable({ id: 'deckbuilder-remove', data: { type: 'remove' } });
-  return (
-    <div
-      ref={setNodeRef}
-      className={`flex items-center justify-center border-2 border-dashed rounded-md py-4 mx-2 mb-3 transition-colors ${
-        isOver ? 'border-danger bg-danger/10' : 'border-border text-text-secondary'
-      }`}
-    >
-      <Text semibold>{isOver ? 'Release to remove card' : 'Drag a card here to remove it from the deck'}</Text>
-    </div>
-  );
-};
-
-const PREVIEW_DROP_ID = 'deckbuilder-preview';
-
-// The dragged card is far bigger than the preview thumbnail, so judged by overlap it always loses
-// to the cards around it. When the pointer is over the thumbnail, the thumbnail wins.
-const collisionDetection: CollisionDetection = (args) => {
-  const preview = pointerWithin(args).find((collision) => collision.id === PREVIEW_DROP_ID);
-  return preview ? [preview] : rectIntersection(args);
-};
-
-// Thumbnail of the deck's preview image, beside the deck name. Dropping a card onto it uses that
-// card's art as the deck's image; the card itself stays where it was.
-const PreviewImageZone: React.FC<{ image: string }> = ({ image }) => {
-  const { setNodeRef, isOver } = useDroppable({ id: PREVIEW_DROP_ID, data: { type: 'preview' } });
-  return (
-    <div
-      ref={setNodeRef}
-      title="Drag a card here to use its art as the deck's image"
-      className={`shrink-0 h-10 aspect-video rounded overflow-hidden border-2 transition-colors ${
-        isOver ? 'border-link' : 'border-border'
-      }`}
-    >
-      <img src={image} alt="Deck image" className="w-full h-full object-cover" />
-    </div>
-  );
-};
+// The table addresses rows a board may not have yet (e.g. an empty sideboard).
+const withRow = (board: number[][][], row: number): number[][][] =>
+  board.length > row ? board : [...board, ...Array.from({ length: row + 1 - board.length }, () => [])];
 
 const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initialDeck }) => {
   const searchParams = new URLSearchParams(window.location.search);
@@ -90,7 +42,6 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
   const [sideboard, setSideboard] = useState<number[][][]>(
     initialDeck.seats[seatIndex]?.sideboard || initialDeck.seats[0].sideboard,
   );
-  const [dragStartTime, setDragStartTime] = useState<number | null>(null);
   // Session-only: removed cards are dropped on save, like before.
   const [removed, setRemoved] = useState<number[]>([]);
   const seat = initialDeck.seats[seatIndex];
@@ -103,120 +54,76 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
 
   const { basics } = initialDeck;
 
-  const handleMoveCard = useCallback(
-    (event: DragEndEvent) => {
-      const { active, over } = event;
-
-      //If drag and drop ends without a collision, eg outside the drag/drop area, do nothing
-      if (!over) {
-        return;
-      }
-
-      const source = active.data.current as DraftLocation;
-      const target = over.data.current as DraftLocation | { type: string };
-
-      // Dropped onto the preview thumbnail: use the card's art as the deck's image.
-      if ((target as { type: string })?.type === 'preview') {
-        let cardIndex: number | undefined;
-        if (source.type === 'removed') {
-          cardIndex = removed[source.index];
-        } else if (source.type === 'deck' || source.type === 'sideboard') {
-          cardIndex = (source.type === 'deck' ? mainboard : sideboard)[source.row]?.[source.col]?.[source.index];
-        }
-        const card = cardIndex !== undefined ? cards[cardIndex] : undefined;
-        if (card?.details?.art_crop) {
-          setPreviewImage(card.details.art_crop);
-          setPreviewCardID(card.cardID);
-        }
-        return;
-      }
-
-      // Dropped onto the remove zone: move the card from its board into the removed pile.
-      if ((target as { type: string })?.type === 'remove') {
-        if (source.type !== 'deck' && source.type !== 'sideboard') {
-          return;
-        }
-        const sourceLocation = source.type === 'deck' ? mainboard : sideboard;
-        const setSource = source.type === 'deck' ? setMainboard : setSideboard;
-        const result = discardToPile(sourceLocation, source, removed);
-        setSource(result.board);
-        setRemoved(result.pile);
-        return;
-      }
-
-      const targetLoc = target as DraftLocation;
-
-      if (source.type === 'removed') {
-        if (targetLoc.type !== 'deck' && targetLoc.type !== 'sideboard') {
-          return;
-        }
-        const targetLocation = targetLoc.type === 'deck' ? mainboard : sideboard;
-        const setTarget = targetLoc.type === 'deck' ? setMainboard : setSideboard;
-        const result = restoreFromPile(removed, source.index, targetLocation, targetLoc);
-        setTarget(result.board);
-        setRemoved(result.pile);
-        return;
-      }
-
-      if (source.equals(targetLoc)) {
-        // player dropped card back in the same location
-        const dragTime = Date.now() - (dragStartTime ?? 0);
-
-        if (dragTime < 200) {
-          // if the drag was too quick, it was a click so we move the card to the other location
-          const sourceBoard = source.type === 'deck' ? mainboard : sideboard;
-          const cardIndex = sourceBoard[source.row][source.col][source.index];
-          const card = cards[cardIndex];
-          const isCreature = cardType(card).toLowerCase().includes('creature');
-          const cmc = cmcColumn(card);
-
-          const newTarget =
-            source.type === 'deck'
-              ? DraftLocation.sideboard(0, cmc, sideboard[0][cmc]?.length || 0)
-              : DraftLocation.deck(isCreature ? 0 : 1, cmc, mainboard[isCreature ? 0 : 1][cmc]?.length || 0);
-
-          // moving cards between mainboard and sideboard
-          const sourceLocation = source.type === 'deck' ? mainboard : sideboard;
-          const setSource = source.type === 'deck' ? setMainboard : setSideboard;
-
-          const targetLocation = newTarget.type === 'deck' ? mainboard : sideboard;
-          const setTarget = newTarget.type === 'deck' ? setMainboard : setSideboard;
-
-          const [removedCard, newSourceLocation] = removeCard(sourceLocation, source);
-          setSource(newSourceLocation);
-
-          setTarget(addCard(targetLocation, newTarget, removedCard));
-        }
-
-        return;
-      }
-
-      if (source.type === 'pack' || targetLoc.type === 'pack' || targetLoc.type === 'removed') {
-        // there are no packs in the deckbuilder, and the removed pile is only filled via the remove zone
-        return;
-      }
-
-      if (source.type === targetLoc.type) {
-        // moving cards within the same location
-        const location = source.type === 'deck' ? mainboard : sideboard;
-        const updateLocation = source.type === 'deck' ? setMainboard : setSideboard;
-
-        updateLocation(moveCard(location, source, targetLoc));
-      } else {
-        // moving cards between mainboard and sideboard
-        const sourceLocation = source.type === 'deck' ? mainboard : sideboard;
-        const setSource = source.type === 'deck' ? setMainboard : setSideboard;
-
-        const targetLocation = targetLoc.type === 'deck' ? mainboard : sideboard;
-        const setTarget = targetLoc.type === 'deck' ? setMainboard : setSideboard;
-
-        const [card, newSourceLocation] = removeCard(sourceLocation, source);
-        setSource(newSourceLocation);
-
-        setTarget(addCard(targetLocation, targetLoc, card));
+  // Use a card's art as the deck's image.
+  const applyCardArt = useCallback(
+    (cardIndex: number | undefined) => {
+      const card = cardIndex !== undefined ? cards[cardIndex] : undefined;
+      if (card?.details?.art_crop) {
+        setPreviewImage(card.details.art_crop);
+        setPreviewCardID(card.cardID);
       }
     },
-    [mainboard, sideboard, setMainboard, setSideboard, cards, dragStartTime, removed],
+    [cards],
+  );
+
+  // A tap on a card sends it to the other board, at the end of its natural pile.
+  const toggleBoard = useCallback(
+    (source: DraftLocation) => {
+      const sourceBoard = source.type === 'deck' ? mainboard : sideboard;
+      const cardIndex = sourceBoard[source.row][source.col][source.index];
+      const card = cards[cardIndex];
+      const isCreature = cardType(card).toLowerCase().includes('creature');
+      const cmc = cmcColumn(card);
+
+      const newTarget =
+        source.type === 'deck'
+          ? DraftLocation.sideboard(0, cmc, sideboard[0]?.[cmc]?.length || 0)
+          : DraftLocation.deck(isCreature ? 0 : 1, cmc, mainboard[isCreature ? 0 : 1]?.[cmc]?.length || 0);
+
+      const setSource = source.type === 'deck' ? setMainboard : setSideboard;
+      const targetLocation = newTarget.type === 'deck' ? mainboard : sideboard;
+      const setTarget = newTarget.type === 'deck' ? setMainboard : setSideboard;
+
+      const [removedCard, newSourceLocation] = removeCard(sourceBoard, source);
+      setSource(newSourceLocation);
+      setTarget(addCard(withRow(targetLocation, newTarget.row), newTarget, removedCard));
+    },
+    [mainboard, sideboard, cards],
+  );
+
+  // Table moves: target.index already assumes the card is out of its pile.
+  const moveOnTable = useCallback(
+    (source: DraftLocation, target: DraftLocation) => {
+      const boardFor = (type: string) => (type === 'deck' ? mainboard : sideboard);
+      const setterFor = (type: string) => (type === 'deck' ? setMainboard : setSideboard);
+      const [card, rest] = removeCard(boardFor(source.type), source);
+      if (source.type === target.type) {
+        setterFor(source.type)(addCard(withRow(rest, target.row), target, card));
+      } else {
+        setterFor(source.type)(rest);
+        setterFor(target.type)(addCard(withRow(boardFor(target.type), target.row), target, card));
+      }
+    },
+    [mainboard, sideboard],
+  );
+
+  const removeOnTable = useCallback(
+    (source: DraftLocation) => {
+      const result = discardToPile(source.type === 'deck' ? mainboard : sideboard, source, removed);
+      (source.type === 'deck' ? setMainboard : setSideboard)(result.board);
+      setRemoved(result.pile);
+    },
+    [mainboard, sideboard, removed],
+  );
+
+  const restoreOnTable = useCallback(
+    (pileIndex: number, target: DraftLocation) => {
+      const board = withRow(target.type === 'deck' ? mainboard : sideboard, target.row);
+      const result = restoreFromPile(removed, pileIndex, board, target);
+      (target.type === 'deck' ? setMainboard : setSideboard)(result.board);
+      setRemoved(result.pile);
+    },
+    [mainboard, sideboard, removed],
   );
 
   const addBasics = useCallback(
@@ -262,32 +169,41 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
   const maxSpells = cube.deckbuildSpells ?? 23;
   const maxLands = cube.deckbuildLands ?? 17;
 
+  // Whether autobuild ran before saving, so the deck_build event can attribute the save.
+  const [autobuilt, setAutobuilt] = useState(false);
+  const markAutobuilt = useCallback(() => setAutobuilt(true), []);
+
+  const renderNavbar = (layout: 'bar' | 'list' | 'save') => (
+    <DeckbuilderNavbar
+      cards={cards}
+      basics={basics}
+      mainboard={mainboard}
+      sideboard={sideboard}
+      cubeID={cube.id}
+      draft={initialDeck}
+      addBasics={addBasics}
+      setDeck={setMainboard}
+      setSideboard={setSideboard}
+      seat={seatIndex}
+      deckTitle={deckTitle}
+      previewCardID={previewCardID}
+      maxSpells={maxSpells}
+      maxLands={maxLands}
+      onAddCard={addCardToDeck}
+      defaultPrinting={cube.defaultPrinting}
+      originalCardCount={originalCardCount}
+      onSort={sortDeck}
+      onSplitCreatures={splitCreatures}
+      autobuilt={autobuilt}
+      onAutobuilt={markAutobuilt}
+      layout={layout}
+    />
+  );
+
   return (
     <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="playtest">
         <Container xl disableCenter>
-          <DeckbuilderNavbar
-            cards={cards}
-            basics={basics}
-            mainboard={mainboard}
-            sideboard={sideboard}
-            cubeID={cube.id}
-            draft={initialDeck}
-            addBasics={addBasics}
-            className="mb-3"
-            setDeck={setMainboard}
-            setSideboard={setSideboard}
-            seat={seatIndex}
-            deckTitle={deckTitle}
-            previewCardID={previewCardID}
-            maxSpells={maxSpells}
-            maxLands={maxLands}
-            onAddCard={addCardToDeck}
-            defaultPrinting={cube.defaultPrinting}
-            originalCardCount={originalCardCount}
-            onSort={sortDeck}
-            onSplitCreatures={splitCreatures}
-          />
           <BotDeckStatusBanner
             draftId={initialDeck.id}
             initiallyPending={initialDeck.botDecksPending}
@@ -300,59 +216,28 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
               .map((index) => cards[index])}
           />
           <DynamicFlash />
-          <Card className="my-3">
-            <DndContext
-              collisionDetection={collisionDetection}
-              onDragEnd={handleMoveCard}
-              onDragStart={() => setDragStartTime(Date.now())}
-            >
-              <ErrorBoundary>
-                <DeckStacks
-                  cards={mainboard.map((col) => col.map((row) => row.map((index) => cards[index])))}
-                  title="Deck"
-                  titleAccessory={
-                    <div className="flex items-center gap-2">
-                      <PreviewImageZone image={previewImage} />
-                      <input
-                        type="text"
-                        aria-label="Deck name"
-                        value={deckTitle}
-                        onChange={(e) => setDeckTitle(e.target.value)}
-                        placeholder={seat?.name || 'Deck name...'}
-                        maxLength={100}
-                        className="border border-border rounded px-2 py-1 text-sm w-64 bg-bg focus:outline-none focus:border-link"
-                      />
-                    </div>
-                  }
-                  subtitle={makeSubtitle(
-                    mainboard
-                      .flat()
-                      .flat()
-                      .map((index) => cards[index]),
-                  )}
-                  locationType={locations.deck}
-                  xs={4}
-                  lg={8}
-                />
-                <DeckStacks
-                  cards={sideboard.map((col) => col.map((row) => row.map((index) => cards[index])))}
-                  title="Sideboard"
-                  locationType={locations.sideboard}
-                  subtitle={makeSubtitle(
-                    sideboard
-                      .flat()
-                      .flat()
-                      .map((index) => cards[index]),
-                  )}
-                  xs={4}
-                  lg={8}
-                />
-                <RemoveZone />
-                <RemovedPile cards={removed.map((index) => cards[index])} />
-              </ErrorBoundary>
-            </DndContext>
-          </Card>
         </Container>
+        {/* Edge to edge on phones, where room is tight. */}
+        <div className="-mx-2 md:mx-0 md:px-2">
+          <ErrorBoundary>
+            <DeckTable
+              cards={cards}
+              mainboard={mainboard}
+              sideboard={sideboard}
+              removed={removed}
+              deckTitle={deckTitle}
+              onDeckTitleChange={setDeckTitle}
+              deckNamePlaceholder={seat?.name || 'Deck name...'}
+              previewImage={previewImage}
+              renderToolbar={renderNavbar}
+              onMove={moveOnTable}
+              onRemove={removeOnTable}
+              onRestore={restoreOnTable}
+              onToggleBoard={toggleBoard}
+              onSetArt={applyCardArt}
+            />
+          </ErrorBoundary>
+        </div>
       </CubeLayout>
     </MainLayout>
   );

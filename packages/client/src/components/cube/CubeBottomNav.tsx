@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useLayoutEffect, useRef } from 'react';
 
 import { BookIcon, GearIcon, GraphIcon, ListUnorderedIcon, PlayIcon, TrophyIcon } from '@primer/octicons-react';
 import { isAdFree } from '@utils/adsUtil';
@@ -24,6 +24,23 @@ interface CubeBottomNavProps {
 const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
   const user = useContext(UserContext);
   const { canEdit } = useContext(CubeContext);
+  const navRef = useRef<HTMLElement>(null);
+
+  // Publish the bar's height (zero where it's hidden) so views that fill the
+  // screen, like the draft table, can stop above it.
+  useLayoutEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return undefined;
+    const root = document.documentElement;
+    const publish = () => root.style.setProperty('--bottom-nav-height', `${nav.offsetHeight}px`);
+    publish();
+    const observer = new ResizeObserver(publish);
+    observer.observe(nav);
+    return () => {
+      observer.disconnect();
+      root.style.removeProperty('--bottom-nav-height');
+    };
+  }, []);
 
   const navItems: NavItem[] = [
     {
@@ -117,6 +134,7 @@ const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
     <>
       {/* Bottom Navigation Bar */}
       <nav
+        ref={navRef}
         className={classNames(
           'sm:hidden',
           'fixed bottom-0 left-0 right-0 z-30',
