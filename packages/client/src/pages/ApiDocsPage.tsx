@@ -537,7 +537,10 @@ Mox Sapphire
             <Param name="primary" type="query">
               Primary sort column (e.g. <InlineCode>Color Category</InlineCode>). Each sort column defaults to the
               cube's own default sort, except for CSV, which keeps the cube's stored order unless{' '}
-              <InlineCode>primary</InlineCode> is given.
+              <InlineCode>primary</InlineCode> is given. Note that a sort which places a card in more than one group,
+              such as <InlineCode>Tags</InlineCode> or <InlineCode>Type</InlineCode>, writes that card out once per
+              group. Cube Cobra's own export menu always sends a fixed, single-group sort with{' '}
+              <InlineCode>showother=true</InlineCode> for that reason.
             </Param>
             <Param name="secondary" type="query">
               Secondary sort column
@@ -549,8 +552,9 @@ Mox Sapphire
               Quaternary sort column
             </Param>
             <Param name="showother" type="query">
-              Set to <InlineCode>true</InlineCode> to include the "other" category in the export. Defaults to the cube's
-              "show unsorted" setting, so by default the export matches what the cube page displays.
+              Set to <InlineCode>true</InlineCode> to include the "other" category in the export, which is every card
+              the requested sort does not place in a group. Defaults to the cube's "show unsorted" setting. Without it
+              those cards are left out of the response entirely.
             </Param>
             <Param name="nosort" type="query">
               Set to <InlineCode>true</InlineCode> to skip sorting and export every matching card once, in the cube's
