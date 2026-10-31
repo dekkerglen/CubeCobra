@@ -28,6 +28,7 @@ import {
 import { Bar, Doughnut } from 'react-chartjs-2';
 
 import { chartCardListHandlers, useCardListModal } from '../components/analytics/CardListModal';
+import { barLegendLabels, doughnutLegendLabels } from '../components/analytics/chartLegend';
 import { Card as CardUI, CardBody, CardHeader } from '../components/base/Card';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Text from '../components/base/Text';
@@ -226,6 +227,7 @@ const doughnutOptions = {
         usePointStyle: true,
         padding: 10,
         font: { size: 11 },
+        ...doughnutLegendLabels,
       },
     },
   },
@@ -242,7 +244,7 @@ const stackedBarOptions = {
   plugins: {
     legend: {
       position: 'top' as const,
-      labels: { usePointStyle: true, padding: 8, font: { size: 11 } },
+      labels: { usePointStyle: true, padding: 8, font: { size: 11 }, ...barLegendLabels },
     },
   },
 };

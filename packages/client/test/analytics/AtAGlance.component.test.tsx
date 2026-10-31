@@ -7,16 +7,21 @@ import '@testing-library/jest-dom';
 import CubeContext from 'contexts/CubeContext';
 
 import AtAGlance from '../../src/analytics/AtAGlance';
+import { barLegendLabels, doughnutLegendLabels } from '../../src/components/analytics/chartLegend';
 
 // Charts are canvas-rendered, so the mock stands in for them and records what they were handed.
 const mockBarProps: any[] = [];
+const mockDoughnutProps: any[] = [];
 
 jest.mock('react-chartjs-2', () => ({
   Bar: (props: any) => {
     mockBarProps.push(props);
     return <div data-testid="bar" />;
   },
-  Doughnut: () => <div data-testid="doughnut" />,
+  Doughnut: (props: any) => {
+    mockDoughnutProps.push(props);
+    return <div data-testid="doughnut" />;
+  },
 }));
 
 const card = (id: string, overrides = {}) => ({
@@ -56,6 +61,7 @@ const RELEASE_YEAR_BAR = 1;
 
 beforeEach(() => {
   mockBarProps.length = 0;
+  mockDoughnutProps.length = 0;
 });
 
 describe('At a Glance printing-basis tooltips', () => {
@@ -93,5 +99,26 @@ describe('At a Glance release year axis', () => {
 
     expect(labels.every((label) => /^\d{4}$/.test(label))).toBe(true);
     expect(labels).toHaveLength(new Date().getFullYear() - 1993 + 1);
+  });
+});
+
+describe('At a Glance legend hidden state', () => {
+  const MANA_CURVE_BAR = 0;
+
+  it('gives the Mana Curve legend the dimming label generator', () => {
+    renderGlance();
+
+    expect(mockBarProps[MANA_CURVE_BAR].options.plugins.legend.labels.generateLabels).toBe(
+      barLegendLabels.generateLabels,
+    );
+  });
+
+  it('gives every donut the per-slice dimming label generator', () => {
+    renderGlance();
+
+    expect(mockDoughnutProps).not.toHaveLength(0);
+    for (const props of mockDoughnutProps) {
+      expect(props.options.plugins.legend.labels.generateLabels).toBe(doughnutLegendLabels.generateLabels);
+    }
   });
 });
