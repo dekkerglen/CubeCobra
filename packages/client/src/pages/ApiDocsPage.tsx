@@ -629,6 +629,12 @@ Time Walk`}
                 </Param>
               </>
             }
+            notes={
+              <Text sm className="text-text-secondary">
+                Identical cards are grouped behind a quantity. Custom cards and vouchers are listed under the name they
+                were given in the cube, since they have no catalog printing.
+              </Text>
+            }
           />
 
           <Endpoint
@@ -644,6 +650,13 @@ Time Walk`}
                 </Param>
               </>
             }
+            notes={
+              <Text sm className="text-text-secondary">
+                Lines are <InlineCode>1 Name|SET</InlineCode>. A card with no printing - a custom card or voucher -
+                omits the separator, and a <InlineCode>|</InlineCode> inside a custom name becomes{' '}
+                <InlineCode>/</InlineCode> so it is not read as a set code.
+              </Text>
+            }
           />
 
           <Endpoint
@@ -658,6 +671,12 @@ Time Walk`}
                   Cube UUID or short ID
                 </Param>
               </>
+            }
+            notes={
+              <Text sm className="text-text-secondary">
+                Lines are <InlineCode>1 [SET:NUMBER] Name</InlineCode>. A card with no printing is written as just the
+                name, since an empty version block fails to import.
+              </Text>
             }
           />
         </Flexbox>
