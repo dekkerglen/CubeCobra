@@ -687,7 +687,10 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
           </ChartCard>
         </Col>
         <Col xs={12} sm={6} lg={3}>
-          <ChartCard title="Rarity Breakdown">
+          <ChartCard
+            title="Rarity Breakdown"
+            tooltip="Uses each card's printing in this cube, so a card reprinted at a different rarity counts at the printing you chose. A per-card rarity override takes precedence."
+          >
             <Doughnut data={rarityData.data} options={{ ...doughnutOptions, ...listOnClick('Rarity', rarityData) }} />
           </ChartCard>
         </Col>
@@ -738,7 +741,10 @@ const AtAGlance: React.FC<AtAGlanceProps> = ({ tokenMap }) => {
           </ChartCard>
         </Col>
         <Col xs={12} lg={6}>
-          <ChartCard title="Price Distribution">
+          <ChartCard
+            title="Price Distribution"
+            tooltip="Uses each card's printing and finish in this cube — the same basis as Actual Price, not the cheapest printing. Cards with no price are omitted."
+          >
             <Bar
               data={priceHistogramData.data}
               options={{ ...histogramOptions, ...listOnClick('Price', priceHistogramData) }}
