@@ -54,7 +54,7 @@
     "forever-monitor": "^3.0.3",
     "helmet": "^8.3.0",
     "html-to-text": "^9.0.0",
-    "joi": "^18.3.0",
+    "joi": "^18.3.1",
     "lodash": "^4.17.21",
     "module-alias": "^2.2.3",
     "nearley": "^2.20.1",
