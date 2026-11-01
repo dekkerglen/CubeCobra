@@ -25,7 +25,6 @@ interface IndefinitePaginatedTableProps<T> {
   itemsKey?: string;
   header: string;
   headers: string[];
-  countRows?: (items: T[]) => number;
   inCard?: boolean;
 }
 
@@ -41,7 +40,6 @@ const IndefinitePaginatedTable = <T,>({
   noneMessage = 'No items found.',
   itemsKey = 'items',
   headers,
-  countRows,
   inCard = false,
 }: IndefinitePaginatedTableProps<T>) => {
   const { callApi } = useContext(CSRFContext);
@@ -66,10 +64,9 @@ const IndefinitePaginatedTable = <T,>({
         itemsKey,
         setLoading,
         targetPage,
-        countRows,
       });
     },
-    [callApi, fetchMoreRoute, safeItems, setItems, lastKey, setLastKey, setPage, pageSize, itemsKey, countRows],
+    [callApi, fetchMoreRoute, safeItems, setItems, lastKey, setLastKey, setPage, pageSize, itemsKey],
   );
 
   const pager = (

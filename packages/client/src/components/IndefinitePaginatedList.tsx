@@ -23,7 +23,6 @@ interface IndefinitePaginatedListProps<T> {
   noneMessage?: string;
   itemsKey?: string;
   header: string;
-  countRows?: (items: T[]) => number;
   xs?: number;
   sm?: number;
   md?: number;
@@ -44,7 +43,6 @@ const IndefinitePaginatedList = <T,>({
   pageSize,
   noneMessage = 'No items found.',
   itemsKey = 'items',
-  countRows,
   xs,
   sm,
   md,
@@ -75,10 +73,9 @@ const IndefinitePaginatedList = <T,>({
         itemsKey,
         setLoading,
         targetPage,
-        countRows,
       });
     },
-    [callApi, fetchMoreRoute, lastKey, safeItems, setItems, pageSize, setLastKey, setLoading, itemsKey, countRows],
+    [callApi, fetchMoreRoute, lastKey, safeItems, setItems, pageSize, setLastKey, setLoading, itemsKey],
   );
 
   const pager = (

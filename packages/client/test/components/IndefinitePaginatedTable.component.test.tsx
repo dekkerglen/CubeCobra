@@ -22,7 +22,6 @@ interface HarnessOptions {
   callApi?: jest.Mock;
   pageSize?: number;
   inCard?: boolean;
-  countRows?: (items: Item[]) => number;
 }
 
 const renderTable = ({
@@ -31,7 +30,6 @@ const renderTable = ({
   callApi = jest.fn(),
   pageSize = 5,
   inCard = false,
-  countRows,
 }: HarnessOptions = {}) => {
   const Harness: React.FC = () => {
     const [items, setItems] = useState<Item[]>(initialItems);
@@ -50,7 +48,6 @@ const renderTable = ({
           pageSize={pageSize}
           header="Decks"
           inCard={inCard}
-          countRows={countRows}
         />
       </CSRFContext.Provider>
     );
@@ -110,22 +107,5 @@ describe('IndefinitePaginatedTable', () => {
     await waitFor(() => expect(screen.getAllByText('Page 2').length).toBeGreaterThan(0));
     expect(callApi).toHaveBeenCalledWith('/more', { lastKey: { id: 'cursor' } });
     expect(screen.getByText('Item 10')).toBeInTheDocument();
-  });
-
-  it('fills the requested page by display rows when countRows is supplied', async () => {
-    const callApi = jest.fn().mockResolvedValue(jsonResponse({ items: makeItems(5, 5), lastKey: { id: 'next' } }));
-    // Every pair of items collapses into one displayed row, so filling page two (ten rows)
-    // takes twenty items — three more fetches — where raw item counting would stop after one.
-    renderTable({
-      initialItems: makeItems(5),
-      initialLastKey: { id: 'cursor' },
-      callApi,
-      countRows: (items) => Math.ceil(items.length / 2),
-    });
-
-    fireEvent.click(screen.getAllByLabelText('Next page')[0]);
-
-    await waitFor(() => expect(screen.getAllByText('Page 2').length).toBeGreaterThan(0));
-    expect(callApi).toHaveBeenCalledTimes(3);
   });
 });
