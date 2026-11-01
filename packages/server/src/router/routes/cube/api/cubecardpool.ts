@@ -1,7 +1,7 @@
 import { boardNameToKey } from '@utils/datatypes/Cube';
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId } from 'serverutils/carddb';
-import { getBasicsFromCube } from 'serverutils/cube';
+import { basicsBoardFor, getBasicsFromCube } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
@@ -55,11 +55,7 @@ export const cubeCardPoolHandler = async (req: Request, res: Response) => {
     // basic that also sits on the requested board is still offered once here.
     const basicsSeen = new Set<string>();
     const basics: { cardID: string; name: string }[] = [];
-    // `|| 'Basics'` matches every other basics reader (simulatesetup, draftmancer
-    // publish, the draft simulator): a cube that never set basicsBoard explicitly still
-    // keeps its basics on the conventional "Basics" board. Passing the raw field instead
-    // falls through to the legacy cube.basics array, which modern cubes leave empty.
-    for (const cardID of getBasicsFromCube(cubeCards, cube.basicsBoard || 'Basics', cube.basics)) {
+    for (const cardID of getBasicsFromCube(cubeCards, basicsBoardFor(cube), cube.basics)) {
       const name = addName(cardID);
       if (name && !basicsSeen.has(name)) {
         basicsSeen.add(name);

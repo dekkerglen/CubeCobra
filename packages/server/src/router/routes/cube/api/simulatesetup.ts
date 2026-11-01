@@ -11,7 +11,7 @@ import { cubeDao } from 'dynamo/daos';
 import rateLimit from 'express-rate-limit';
 import Joi from 'joi';
 import { cardFromId, getOracleForMl } from 'serverutils/carddb';
-import { getBasicsFromCube } from 'serverutils/cube';
+import { basicsBoardFor, getBasicsFromCube } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { userOrIpKey } from 'serverutils/rateLimitKeys';
 import { MAX_SEATS } from 'serverutils/simulatorConstants';
@@ -143,7 +143,7 @@ export const simulatesetupHandler = async (req: Request, res: Response) => {
     }
 
     // Build basics list for client-side deckbuilding
-    const basicsBoard = cube.basicsBoard || 'Basics';
+    const basicsBoard = basicsBoardFor(cube);
     const basicCardIds = getBasicsFromCube(cubeCards, basicsBoard, cube.basics);
     const basics: BasicLandInfo[] = [];
     for (const id of basicCardIds) {

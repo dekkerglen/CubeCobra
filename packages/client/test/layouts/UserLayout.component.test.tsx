@@ -123,6 +123,16 @@ describe('UserLayout narrow column', () => {
     expect(row).toHaveClass('sm:grid-rows-[auto_1fr]');
   });
 
+  it('keeps the artist credit to a single line on the small tile', () => {
+    renderLayout();
+    expect(screen.getByText(/Janet Aulisio/)).toHaveClass('truncate');
+  });
+
+  it('describes the image by username when there is no artist to credit', () => {
+    renderLayout({ image: { uri: 'http://img/a.jpg', artist: '' } as User['image'] });
+    expect(screen.getByRole('img')).toHaveAttribute('alt', 'demo');
+  });
+
   it('wraps the badge row', () => {
     renderLayout({ roles: [UserRoles.ADMIN] });
     expect(screen.getByText('Admin').closest('div.flex')).toHaveClass('flex-wrap');

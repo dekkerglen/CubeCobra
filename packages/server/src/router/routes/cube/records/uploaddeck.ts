@@ -10,7 +10,7 @@ import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from 'serverutils/carddb';
-import { addBasics, createPool, getBasicCardsFromCube } from 'serverutils/cube';
+import { addBasics, basicsBoardFor, createPool, getBasicCardsFromCube } from 'serverutils/cube';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
@@ -61,6 +61,39 @@ export const uploadDeckPageHandler = async (req: Request, res: Response) => {
 const mainboardSchema = Joi.array().items(Joi.string()).min(1).max(200).required();
 const sideboardSchema = Joi.array().items(Joi.string()).max(200).default([]);
 
+// Record decks arrive as oracle ids, so each printing has to be recovered from the cube.
+// Basics live on their own board, so matching the mainboard alone sends every basic land
+// to the catalog's default printing instead of the one the cube picked. Fold them in, the
+// way the photo scanner's card pool already does.
+//
+// Mainboard first: a cube that also keeps basics in its mainboard should resolve them to
+// the drafted copy. Legacy `cube.basics` entries are bare ids, so hydrate details — the
+// oracle match reads `card.details.oracle_id`.
+const buildCubeCardPool = (cube: CubeType, cubeCards: CubeCards): CardType[] => {
+  const basics = getBasicCardsFromCube(cubeCards, basicsBoardFor(cube), cube.basics).map((basic) =>
+    basic.details ? basic : { ...basic, details: cardFromId(basic.cardID) },
+  );
+  return [...cubeCards.mainboard, ...basics] as CardType[];
+};
+
+const resolveCardByOracle = (oracle: string, cubePool: CardType[]) => {
+  const inCube = cubePool.find((c: CardType) => cardOracleId(c) === oracle);
+  if (inCube) {
+    return {
+      finish: inCube.finish,
+      imgBackUrl: inCube.imgBackUrl,
+      imgUrl: inCube.imgUrl,
+      cardID: inCube.cardID,
+      details: cardFromId(inCube.cardID),
+    };
+  }
+
+  const reasonableCard = getReasonableCardByOracle(oracle);
+  const reasonableId = reasonableCard ? reasonableCard.scryfall_id : null;
+  const selectedId = reasonableId || getVersionsByOracleId(oracle)[0];
+  return selectedId ? { cardID: selectedId, details: cardFromId(selectedId) } : null;
+};
+
 export const associateNewDraft = async (
   cube: CubeType,
   record: RecordEntity,
@@ -69,35 +102,14 @@ export const associateNewDraft = async (
   sideboardOracles: string[] = [],
 ) => {
   const cubeCards = await cubeDao.getCards(cube.id);
-  const { mainboard } = cubeCards;
+  const cubePool = buildCubeCardPool(cube, cubeCards);
 
   const deck: number[][][] = createPool();
   const sideboard: number[][][] = setupPicks(1, 8);
   const cards: CardType[] = [];
 
   const processCard = (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
-    let selected = null;
-    const potentialIds = getVersionsByOracleId(oracle);
-    const inCube = mainboard.find((c: CardType) => cardOracleId(c) === oracle);
-    if (inCube) {
-      selected = {
-        finish: inCube.finish,
-        imgBackUrl: inCube.imgBackUrl,
-        imgUrl: inCube.imgUrl,
-        cardID: inCube.cardID,
-        details: cardFromId(inCube.cardID),
-      };
-    } else {
-      const reasonableCard = getReasonableCardByOracle(oracle);
-      const reasonableId = reasonableCard ? reasonableCard.scryfall_id : null;
-      const selectedId = reasonableId || potentialIds[0];
-      if (selectedId) {
-        selected = {
-          cardID: selectedId,
-          details: cardFromId(selectedId),
-        };
-      }
-    }
+    const selected = resolveCardByOracle(oracle, cubePool);
 
     if (selected) {
       const isCreature = selected.details.type.toLowerCase().includes('creature');
@@ -151,8 +163,8 @@ export const associateNewDraft = async (
     targetSeat.sideboard = sideboard;
   }
 
-  // Get basics from the "Basics" board or fall back to legacy cube.basics
-  const basicsToAdd = getBasicCardsFromCube(cubeCards, 'Basics', cube.basics);
+  // Get basics from the cube's basics board or fall back to legacy cube.basics
+  const basicsToAdd = getBasicCardsFromCube(cubeCards, basicsBoardFor(cube), cube.basics);
 
   // addBasics modifies the draft object in place, adding basic cards to cards array
   // and setting basics to be an array of card indices
@@ -177,35 +189,14 @@ export const associateWithExistingDraft = async (
   sideboardOracles: string[] = [],
 ) => {
   const cubeCards = await cubeDao.getCards(cube.id);
-  const { mainboard } = cubeCards;
+  const cubePool = buildCubeCardPool(cube, cubeCards);
 
   const deck: number[][][] = createPool();
   const sideboard: number[][][] = setupPicks(1, 8);
   const cards: CardType[] = draft.cards;
 
   const processCard = (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
-    let selected = null;
-    const potentialIds = getVersionsByOracleId(oracle);
-    const inCube = mainboard.find((c: CardType) => cardOracleId(c) === oracle);
-    if (inCube) {
-      selected = {
-        finish: inCube.finish,
-        imgBackUrl: inCube.imgBackUrl,
-        imgUrl: inCube.imgUrl,
-        cardID: inCube.cardID,
-        details: cardFromId(inCube.cardID),
-      };
-    } else {
-      const reasonableCard = getReasonableCardByOracle(oracle);
-      const reasonableId = reasonableCard ? reasonableCard.scryfall_id : null;
-      const selectedId = reasonableId || potentialIds[0];
-      if (selectedId) {
-        selected = {
-          cardID: selectedId,
-          details: cardFromId(selectedId),
-        };
-      }
-    }
+    const selected = resolveCardByOracle(oracle, cubePool);
 
     if (selected) {
       const isCreature = selected.details.type.toLowerCase().includes('creature');
@@ -251,29 +242,11 @@ export const associateDecksWithNewDraft = async (
   preloadedCubeCards?: CubeCards,
 ) => {
   const cubeCards = preloadedCubeCards ?? (await cubeDao.getCards(cube.id));
-  const { mainboard: cubeMainboard } = cubeCards;
+  const cubePool = buildCubeCardPool(cube, cubeCards);
   const cards: CardType[] = [];
 
   const processCard = (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
-    let selected = null;
-    const potentialIds = getVersionsByOracleId(oracle);
-    const inCube = cubeMainboard.find((c: CardType) => cardOracleId(c) === oracle);
-    if (inCube) {
-      selected = {
-        finish: inCube.finish,
-        imgBackUrl: inCube.imgBackUrl,
-        imgUrl: inCube.imgUrl,
-        cardID: inCube.cardID,
-        details: cardFromId(inCube.cardID),
-      };
-    } else {
-      const reasonableCard = getReasonableCardByOracle(oracle);
-      const reasonableId = reasonableCard ? reasonableCard.scryfall_id : null;
-      const selectedId = reasonableId || potentialIds[0];
-      if (selectedId) {
-        selected = { cardID: selectedId, details: cardFromId(selectedId) };
-      }
-    }
+    const selected = resolveCardByOracle(oracle, cubePool);
 
     if (selected) {
       const isCreature = selected.details.type.toLowerCase().includes('creature');
@@ -327,7 +300,7 @@ export const associateDecksWithNewDraft = async (
     basics: [] as number[], // populated by addBasics
   };
 
-  const basicsToAdd = getBasicCardsFromCube(cubeCards, 'Basics', cube.basics);
+  const basicsToAdd = getBasicCardsFromCube(cubeCards, basicsBoardFor(cube), cube.basics);
   addBasics(newDraft, basicsToAdd);
 
   const id = await draftDao.createDraft(newDraft);
