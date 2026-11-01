@@ -6,6 +6,7 @@ import {
   BellFillIcon,
   BookIcon,
   BroadcastIcon,
+  ChevronLeftIcon,
   ChevronRightIcon,
   GearIcon,
   GraphIcon,
@@ -285,7 +286,7 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
   // Nothing at all for a signed-out visitor: every destination here is personal, and user.id is
   // never read without a user.
   const rightContent = user ? (
-    <div className="flex h-full flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       {/* min-h-0 is load-bearing: a flex item's automatic minimum size is its content, so without
           it a full cube list refuses to shrink and pushes the action block off the panel. */}
       <div className="flex-1 min-h-0 overflow-y-auto" data-testid="mobile-nav-cube-list">
@@ -321,6 +322,8 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
     </div>
   ) : null;
 
+  const panelContent = side === 'left' ? leftContent : rightContent;
+
   return (
     <Transition show={isOpen}>
       {/* z-[60] clears CubeBottomNav's z-30 so the drawer covers the cube tab bar. */}
@@ -355,7 +358,7 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
             <DialogPanel
               as="nav"
               className={classNames(
-                'fixed inset-y-0 flex w-[82%] max-w-xs flex-col overflow-y-auto border-border bg-bg-accent p-2',
+                'fixed inset-y-0 flex w-[82%] max-w-xs flex-col overflow-hidden border-border bg-bg-accent p-2',
                 side === 'left' ? 'left-0 border-r' : 'right-0 border-l',
               )}
               // The NitroPay anchor is a fixed-bottom 320x50 third-party iframe that paints above
@@ -363,7 +366,35 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
               // does rather than trying to out-layer it.
               style={{ paddingBottom: shouldShowAds ? '50px' : undefined }}
             >
-              {side === 'left' ? leftContent : rightContent}
+              {/* A side with no content renders nothing at all, close control included: an empty
+                  panel is a louder bug than one carrying a working dismiss button, and the cubes
+                  side is empty exactly when MobileNav withholds the button that opens it. */}
+              {panelContent && (
+                <>
+                  {/* Dismissal affordance matching the cube list's Edit sidebar: the chevron sits
+                      on the panel's inner edge and points the way the panel leaves. */}
+                  <div
+                    className={classNames(
+                      'flex shrink-0 items-center',
+                      side === 'left' ? 'justify-end' : 'justify-start',
+                    )}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setOpen(false)}
+                      aria-label={side === 'left' ? 'Close menu' : 'Close cubes'}
+                      className="cursor-pointer rounded-md p-2 text-text-secondary transition-colors hover:bg-bg-active hover:text-text"
+                    >
+                      {side === 'left' ? <ChevronLeftIcon size={20} /> : <ChevronRightIcon size={20} />}
+                    </button>
+                  </div>
+                  {side === 'left' ? (
+                    <div className="min-h-0 flex-1 overflow-y-auto">{panelContent}</div>
+                  ) : (
+                    panelContent
+                  )}
+                </>
+              )}
             </DialogPanel>
           </TransitionChild>
         </div>

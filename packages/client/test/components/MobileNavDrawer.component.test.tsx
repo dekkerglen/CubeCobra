@@ -123,6 +123,30 @@ describe('MobileNavDrawer', () => {
     await waitFor(() => expect(setOpen).toHaveBeenCalledWith(false));
   });
 
+  it('dismisses from the close chevron on either side', async () => {
+    const leftSetOpen = jest.fn();
+    const { unmount } = renderDrawer({ side: 'left', setOpen: leftSetOpen });
+    fireEvent.click(screen.getByRole('button', { name: 'Close menu' }));
+    await waitFor(() => expect(leftSetOpen).toHaveBeenCalledWith(false));
+    unmount();
+
+    const rightSetOpen = jest.fn();
+    renderDrawer({ side: 'right', setOpen: rightSetOpen });
+    fireEvent.click(screen.getByRole('button', { name: 'Close cubes' }));
+    await waitFor(() => expect(rightSetOpen).toHaveBeenCalledWith(false));
+  });
+
+  // The chevron points the way the panel leaves, matching the cube list's Edit sidebar. Pointing it
+  // the wrong way reads as "expand", which is the opposite of what the control does.
+  it('points the close chevron toward the edge the panel exits by', () => {
+    const { unmount } = renderDrawer({ side: 'left' });
+    expect(screen.getByRole('button', { name: 'Close menu' }).querySelector('.octicon-chevron-left')).toBeTruthy();
+    unmount();
+
+    renderDrawer({ side: 'right' });
+    expect(screen.getByRole('button', { name: 'Close cubes' }).querySelector('.octicon-chevron-right')).toBeTruthy();
+  });
+
   // The same contract with focus parked on a row, which is where it sits once a visitor has tabbed
   // into the panel. Dismissal must not depend on where inside the drawer the keystroke came from.
   it('dismisses on Escape pressed from inside the panel', async () => {
@@ -338,9 +362,15 @@ describe('MobileNavDrawer', () => {
       // the action block off the bottom of the panel.
       expect(screen.getByTestId('mobile-nav-cube-list')).toHaveClass('flex-1', 'min-h-0', 'overflow-y-auto');
       expect(screen.getByTestId('mobile-nav-cube-actions')).toHaveClass('shrink-0');
-      // `h-full` is equally load-bearing on the column itself: `flex-1` divides a definite height,
-      // and without one the column grows to its content instead of to the panel.
-      expect(screen.getByTestId('mobile-nav-cube-list').parentElement).toHaveClass('flex', 'h-full', 'flex-col');
+      // The column itself must also be a flex item that fills the panel beside the close header:
+      // `flex-1` gives it the remaining height and `min-h-0` lets it shrink below its content, so
+      // the inner list scrolls instead of pushing the actions off the bottom.
+      expect(screen.getByTestId('mobile-nav-cube-list').parentElement).toHaveClass(
+        'flex',
+        'min-h-0',
+        'flex-1',
+        'flex-col',
+      );
     });
 
     it('creates a cube by posting, not by navigating', () => {
