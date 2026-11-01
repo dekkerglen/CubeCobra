@@ -120,7 +120,7 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Clicking a bar or slice on the At a Glance and Chart analytics pages, or a cell in the Table analytics page, now opens a list of the cards it counts.
 - Smart Search now has the analytics board picker too: the boards you pick are what it treats as your cube when ranking suggestions, and cards already on those boards aren't suggested.
 - Finished drafts now show the art of your first pick (P1P1) on their deck tile and in shared links, instead of the cube's image.
-- You can change a deck's image in the deckbuilder: drag any card onto the thumbnail next to the deck name to use its art.
+- You can change a deck's image in the deckbuilder: drag any card onto the Deck art spot to use its art.
 - In Mana Matrix, typing a card's full name now still shows it in the suggestions, confirming it's a real card.
 - Mana Matrix no longer lets you save a cell with a name that isn't a real card; it asks you to pick one from the suggestions instead.
 - Conspiracy's draft-matters cards now work when you draft against bots: Cogwork Librarian, Leovold's Operative, Agent of Acquisitions, Lore Seeker, Canal Dredger, Archdemon of Paliano and the rest do what they say, and the bots use them too.
@@ -128,3 +128,28 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - What draft-matters cards note during the draft, like Garbage Fire's pick number or the colors chosen for Paliano, the High City, shows on the card while drafting, in the deckbuilder and on the deck page, along with any cards you removed from the draft.
 - The pick-by-pick breakdown now shows extra picks, whole packs taken, random picks, cards received from a Canal Dredger, Lore Seeker packs and removed cards.
 - Cube owners can set the booster pack a Lore Seeker adds to the draft from the card's window on the cube list, and it can include cards from other boards.
+- Drafting and deckbuilding now happen on a table: cards can be dragged anywhere and ease into place, and packs open and pass with animation.
+- On phones, the draft shows just your pack, fanned out in rows, with your pool in a drawer that opens from a tab on the right.
+- On phones, the deckbuilder and deck page scroll sideways, the deckbuilder's tools are in a menu, and Save Deck stays on screen.
+- Signing in successfully no longer counts toward the login limit, so people who sign in often don't get locked out; only failed attempts count.
+- Once you show CubeCobra Bot Ratings in a draft, they stay on for every pick until you hide them again, instead of switching off after each pick.
+- Cards that tie on a sort, like two cards with the same mana value, are now listed alphabetically in cube lists, exports, card search and Top Cards, instead of in the order they were added or an order that could change from day to day.
+- Finished drafts against bots now show your actual first pick on their deck tile and in shared links — they had been showing your last pick.
+- The card preview that pops up when you hover over a card no longer appears in the wrong spot after you scroll, or gets stuck on screen following your cursor after it leaves the window, and Escape now closes it.
+- Hover previews of double-faced cards no longer run off the right edge on mid-sized screens, and long tags beside a preview wrap instead of stretching off the page.
+- Card previews now show on touchscreen laptops with a mouse, and when you tab to a card with the keyboard.
+- Alpha printings now show with their rounder corners instead of white corner specks, and both faces of a double-faced card preview have properly rounded corners.
+- User profiles have a new Collaborations tab listing the cubes that person collaborates on; on your own profile it includes your unlisted and private ones too.
+- Your own profile now has a Create New button for starting a cube, even before you've made one.
+- The cube list filter now has its clear button at every screen size, and the analytics filter and the cube, card and package search boxes have one too.
+- The analytics filter now stretches to use the space beside it.
+- The Rarity Breakdown and Price Distribution charts in analytics now explain that they're based on the printing of each card in your cube.
+- The release year chart in analytics now always runs from 1993 to this year, so it's easy to compare between cubes.
+- Clicking a chart legend to hide a series in analytics now visibly dims that entry, and the draft simulator's donut charts now mark hidden slices in their legend instead of still showing them as active.
+- Checking cards in the cube list's List View no longer makes cards on other pages look checked.
+- The navigation bar on phones is now a slim bar: the menu opens a drawer with every page and your account, and a Your Cubes button opens a drawer with the cubes you own and collaborate on.
+- Unread notifications now stand out from ones you've read, and the Notifications page has a Clear All button that marks them all read.
+- Your account page now has a Logout button.
+- You can now build your own Pack 1 Pick 1 poll from the Playtest page or a sample pack: pick each card by name, or fill empty slots at random or with a balanced pick, and the bot ratings update as you go.
+- Hand-built Pack 1 Pick 1 polls credit the person who built them.
+- Cube collaborators can now delete Pack 1 Pick 1 polls on their cube.
