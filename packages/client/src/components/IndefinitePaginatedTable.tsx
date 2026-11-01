@@ -8,8 +8,8 @@ import {
   hasIndefiniteMore,
 } from '../utils/indefinitePagination';
 import { Card, CardBody, CardHeader } from './base/Card';
+import CursorPagination from './base/CursorPagination';
 import { Flexbox } from './base/Layout';
-import Pagination from './base/Pagination';
 import Table from './base/Table';
 import Text from './base/Text';
 
@@ -25,6 +25,7 @@ interface IndefinitePaginatedTableProps<T> {
   itemsKey?: string;
   header: string;
   headers: string[];
+  countRows?: (items: T[]) => number;
   inCard?: boolean;
 }
 
@@ -40,6 +41,7 @@ const IndefinitePaginatedTable = <T,>({
   noneMessage = 'No items found.',
   itemsKey = 'items',
   headers,
+  countRows,
   inCard = false,
 }: IndefinitePaginatedTableProps<T>) => {
   const { callApi } = useContext(CSRFContext);
@@ -50,28 +52,32 @@ const IndefinitePaginatedTable = <T,>({
   const pageCount = getIndefinitePageCount(safeItems, pageSize);
   const hasMore = hasIndefiniteMore(lastKey);
 
-  const fetchMoreData = useCallback(async () => {
-    await fetchIndefiniteMoreData<T>({
-      callApi,
-      fetchMoreRoute,
-      items: safeItems,
-      setItems,
-      lastKey,
-      setLastKey,
-      page,
-      setPage,
-      pageSize,
-      itemsKey,
-      setLoading,
-    });
-  }, [callApi, fetchMoreRoute, safeItems, setItems, lastKey, setLastKey, page, setPage, pageSize, itemsKey]);
+  const fetchMoreData = useCallback(
+    async (targetPage: number) => {
+      await fetchIndefiniteMoreData<T>({
+        callApi,
+        fetchMoreRoute,
+        items: safeItems,
+        setItems,
+        lastKey,
+        setLastKey,
+        setPage,
+        pageSize,
+        itemsKey,
+        setLoading,
+        targetPage,
+        countRows,
+      });
+    },
+    [callApi, fetchMoreRoute, safeItems, setItems, lastKey, setLastKey, setPage, pageSize, itemsKey, countRows],
+  );
 
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
+      onPageChange={async (newPage) => {
         await handleIndefinitePageSelection({
           newPage,
           pageCount,
@@ -102,10 +108,9 @@ const IndefinitePaginatedTable = <T,>({
       <Flexbox direction="col" gap="2">
         <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
           <Text lg semibold>
-            {header} ({safeItems.length}
-            {hasMore ? '+' : ''})
+            {header}
           </Text>
-          {safeItems.length > 0 && pager}
+          {pager}
         </Flexbox>
         {body}
       </Flexbox>
@@ -117,10 +122,9 @@ const IndefinitePaginatedTable = <T,>({
       <CardHeader>
         <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
           <Text lg semibold>
-            {header} ({safeItems.length}
-            {hasMore ? '+' : ''})
+            {header}
           </Text>
-          {safeItems.length > 0 && pager}
+          {pager}
         </Flexbox>
       </CardHeader>
       <CardBody>{body}</CardBody>
