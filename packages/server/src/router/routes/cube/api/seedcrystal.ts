@@ -6,11 +6,13 @@ import { ensureAuthJson } from 'router/middleware';
 import carddb, {
   cardFromId,
   getMostReasonable,
+  getNonUniversesBeyondPrinting,
   getReasonableCardByOracleWithPrintingPreference,
   getRelatedCards,
 } from 'serverutils/carddb';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { recommend } from 'serverutils/ml';
+import { hidesUniversesBeyond } from 'serverutils/universesBeyond';
 import { newCard } from 'serverutils/util';
 
 import { Request, Response } from '../../../../types/express';
@@ -200,8 +202,12 @@ export const seedCrystalHandler = async (req: Request, res: Response) => {
       });
     }
 
+    // The seed is the user's explicit pick, so it's kept even when they hide Universes Beyond;
+    // everything suggested around it follows the setting.
+    const hideUniversesBeyond = hidesUniversesBeyond(req.user);
+
     // Pull synergistic neighbours from the metadata dictionary
-    const related = getRelatedCards(seedCard.oracle_id, printing);
+    const related = getRelatedCards(seedCard.oracle_id, printing, hideUniversesBeyond);
     const synergistic = related.synergistic ?? {};
     const synergisticOracles: string[] = [];
     const synergisticSeen = new Set<string>([seedCard.oracle_id]);
@@ -278,8 +284,11 @@ export const seedCrystalHandler = async (req: Request, res: Response) => {
       const ids = carddb.oracleToId[oracleId];
       if (!ids || ids.length === 0) continue;
       if (!hasModernPrinting(oracleId)) continue;
-      const details = getReasonableCardByOracleWithPrintingPreference(oracleId, printing);
-      if (!isUsableCard(details)) continue;
+      const details =
+        hideUniversesBeyond && oracleId !== seedCard.oracle_id
+          ? getNonUniversesBeyondPrinting(oracleId, printing)
+          : getReasonableCardByOracleWithPrintingPreference(oracleId, printing);
+      if (!details || !isUsableCard(details)) continue;
       // Don't try to inspect the underlying scryfall card again — the
       // catalog already gives us a CardDetails with isToken/layout.
       // For lands we filter by color_identity (so a Watery Grave is excluded

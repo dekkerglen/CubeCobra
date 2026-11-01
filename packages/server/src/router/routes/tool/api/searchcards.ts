@@ -4,6 +4,7 @@ import { OrderedSortsType } from '@utils/sorting/Sort';
 import { SortDirectionsType } from '@utils/sorting/sortContext';
 import { expensiveGetLimiter } from 'serverutils/rateLimiters';
 import { searchCards } from 'serverutils/tools';
+import { applyUniversesBeyondSetting } from 'serverutils/universesBeyond';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -32,7 +33,7 @@ export const searchCardsHandler = async (req: Request, res: Response) => {
     const page = typeof req.query.p === 'string' ? parseInt(req.query.p, 10) : 0;
     const includeExtras = req.query.ie === '1' || req.query.ie === 'true';
     const { data, numResults } = searchCards(
-      filter!,
+      applyUniversesBeyondSetting(filter, req.user, filterText)!,
       req.query.s as OrderedSortsType,
       page,
       req.query.d as SortDirectionsType,

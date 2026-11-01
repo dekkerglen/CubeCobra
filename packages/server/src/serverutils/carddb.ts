@@ -3,6 +3,7 @@ import { CardDetails, DefaultPrintingPreference, PrintingPreference, SUPPORTED_F
 import { filterCardsDetails, FilterFunction } from '@utils/filtering/FilterCards';
 import { RawSortFunctions } from '@utils/sorting/Sort';
 import catalog from 'serverutils/cardCatalog';
+import { NOT_UNIVERSES_BEYOND } from 'serverutils/universesBeyond';
 
 // eslint-disable-next-line camelcase
 export function getPlaceholderCard(scryfall_id: string): CardDetails {
@@ -252,6 +253,18 @@ export function getReasonableCardByOracleWithPrintingPreference(
   return getMostReasonableByPrintingPreference(ids, printingPreference)!;
 }
 
+/** The card's best non-Universes Beyond printing, or null if it only exists as Universes Beyond. */
+export function getNonUniversesBeyondPrinting(
+  oracleId: string,
+  printingPreference: PrintingPreference,
+): CardDetails | null {
+  const ids = catalog.oracleToId[oracleId];
+  if (!ids || ids.length === 0) {
+    return null;
+  }
+  return getMostReasonableByPrintingPreference(ids, printingPreference, NOT_UNIVERSES_BEYOND);
+}
+
 export function isOracleBasic(oracleId: string): boolean {
   const ids = catalog.oracleToId[oracleId];
   if (!ids || ids.length === 0) {
@@ -292,6 +305,8 @@ const indexToReasonableWithPrintingPreference = (
 export function getRelatedCards(
   oracleId: string,
   printingPreference: PrintingPreference,
+  // Drop related cards that only exist as Universes Beyond printings, and show the rest in a regular printing.
+  hideUniversesBeyond = false,
 ): Record<string, Record<string, CardDetails[]>> {
   const related = catalog.metadatadict[oracleId];
 
@@ -318,28 +333,33 @@ export function getRelatedCards(
     };
   }
 
-  const mapper = (oracleIndex: number) => {
-    return indexToReasonableWithPrintingPreference(oracleIndex, printingPreference);
+  const map = (indices: number[]): CardDetails[] => {
+    if (!hideUniversesBeyond) {
+      return indices.map((index) => indexToReasonableWithPrintingPreference(index, printingPreference));
+    }
+    return indices
+      .map((index) => getNonUniversesBeyondPrinting(catalog.indexToOracle[index] ?? '', printingPreference))
+      .filter((card): card is CardDetails => card !== null);
   };
 
   return {
     cubedWith: {
-      top: related.cubedWith.top.map(mapper),
-      creatures: related.cubedWith.creatures.map(mapper),
-      spells: related.cubedWith.spells.map(mapper),
-      other: related.cubedWith.other.map(mapper),
+      top: map(related.cubedWith.top),
+      creatures: map(related.cubedWith.creatures),
+      spells: map(related.cubedWith.spells),
+      other: map(related.cubedWith.other),
     },
     draftedWith: {
-      top: related.draftedWith.top.map(mapper),
-      creatures: related.draftedWith.creatures.map(mapper),
-      spells: related.draftedWith.spells.map(mapper),
-      other: related.draftedWith.other.map(mapper),
+      top: map(related.draftedWith.top),
+      creatures: map(related.draftedWith.creatures),
+      spells: map(related.draftedWith.spells),
+      other: map(related.draftedWith.other),
     },
     synergistic: {
-      top: related.synergistic.top.map(mapper),
-      creatures: related.synergistic.creatures.map(mapper),
-      spells: related.synergistic.spells.map(mapper),
-      other: related.synergistic.other.map(mapper),
+      top: map(related.synergistic.top),
+      creatures: map(related.synergistic.creatures),
+      spells: map(related.synergistic.spells),
+      other: map(related.synergistic.other),
     },
   };
 }

@@ -74,6 +74,8 @@ export interface UnhydratedUser {
   disableFollowAlerts?: boolean;
   /** Hide the floating cube board tray. The tray is always hidden on mobile regardless of this setting. */
   disableCubeTray?: boolean;
+  // Leave cards that only exist as Universes Beyond printings out of card search and recommendations.
+  hideUniversesBeyond?: boolean;
 }
 
 export interface UserWithSensitiveInformation extends UnhydratedUser {

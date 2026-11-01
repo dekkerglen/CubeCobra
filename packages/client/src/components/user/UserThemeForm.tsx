@@ -29,6 +29,7 @@ const UserThemeForm: React.FC = () => {
   const [useTextOverIcons, setUseTextOverIcons] = useState(user?.useTextOverIcons || false);
   const [disableFollowAlerts, setDisableFollowAlerts] = useState(user?.disableFollowAlerts || false);
   const [disableCubeTray, setDisableCubeTray] = useState(user?.disableCubeTray || false);
+  const [hideUniversesBeyond, setHideUniversesBeyond] = useState(user?.hideUniversesBeyond || false);
   const formRef = React.useRef<HTMLFormElement>(null);
   const formData = useMemo(
     () => ({
@@ -42,6 +43,7 @@ const UserThemeForm: React.FC = () => {
       useTextOverIcons: `${useTextOverIcons}`,
       disableFollowAlerts: `${disableFollowAlerts}`,
       disableCubeTray: `${disableCubeTray}`,
+      hideUniversesBeyond: `${hideUniversesBeyond}`,
     }),
     [
       selectedTheme,
@@ -54,6 +56,7 @@ const UserThemeForm: React.FC = () => {
       useTextOverIcons,
       disableFollowAlerts,
       disableCubeTray,
+      hideUniversesBeyond,
     ],
   );
 
@@ -81,6 +84,11 @@ const UserThemeForm: React.FC = () => {
             { value: PrintingPreference.FIRST, label: 'First' },
             { value: PrintingPreference.CHEAPEST, label: 'Cheapest' },
           ]}
+        />
+        <Checkbox
+          label="Hide Universes Beyond cards in card search and recommendations"
+          checked={hideUniversesBeyond}
+          setChecked={setHideUniversesBeyond}
         />
         <Select
           label="Default grid tightness"

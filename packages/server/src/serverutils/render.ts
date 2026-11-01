@@ -226,6 +226,7 @@ interface ReactProps {
     disableAnimations?: boolean;
     useTextOverIcons?: boolean;
     disableCubeTray?: boolean;
+    hideUniversesBeyond?: boolean;
   };
   nitroPayEnabled?: boolean;
   baseUrl?: string;
@@ -287,6 +288,7 @@ const render = (
         disableAnimations: req.user.disableAnimations,
         useTextOverIcons: req.user.useTextOverIcons,
         disableCubeTray: req.user.disableCubeTray,
+        hideUniversesBeyond: req.user.hideUniversesBeyond,
       };
     }
 

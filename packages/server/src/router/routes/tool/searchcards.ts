@@ -7,6 +7,7 @@ import { SortDirectionsType } from '@utils/sorting/sortContext';
 import { expensiveGetLimiter } from 'serverutils/rateLimiters';
 import { render } from 'serverutils/render';
 import { searchAllCards } from 'serverutils/tools';
+import { applyUniversesBeyondSetting } from 'serverutils/universesBeyond';
 
 import { Request, Response } from '../../../types/express';
 
@@ -63,7 +64,7 @@ export const csvHandler = async (req: Request, res: Response) => {
 
     const includeExtras = req.query.ie === '1' || req.query.ie === 'true';
     const cards = searchAllCards(
-      filter,
+      applyUniversesBeyondSetting(filter, req.user, filterText)!,
       req.query.s as OrderedSortsType,
       req.query.d as SortDirectionsType,
       toDistinct(req.query.di as string | undefined),
