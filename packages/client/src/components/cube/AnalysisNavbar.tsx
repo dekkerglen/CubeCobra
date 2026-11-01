@@ -87,7 +87,7 @@ const AnalysisNavbar: React.FC = () => {
             data-testid="analysis-filter"
             style={{ minWidth: '150px' }}
           >
-            <span className="absolute" style={{ left: '12px', lineHeight: '0' }}>
+            <span className="absolute z-10 pointer-events-none" style={{ left: '12px', lineHeight: '0' }}>
               <SearchIcon size={16} className="text-text-secondary" />
             </span>
             <Input
@@ -104,7 +104,7 @@ const AnalysisNavbar: React.FC = () => {
               className="pr-3 bg-bg-active"
               onClear={clearFilter}
               otherInputProps={{
-                style: { paddingLeft: '48px' },
+                style: { paddingLeft: '40px' },
                 onBlur: () => setFilterInput(localFilterInput),
               }}
             />

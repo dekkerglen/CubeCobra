@@ -230,7 +230,14 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             </button>
           </Tooltip>
           <div className="relative flex items-center flex-grow" style={{ minWidth: '150px' }}>
-            <span className="absolute" style={{ left: '12px', lineHeight: '0' }}>
+            {/*
+              `Input` wraps its field in its own positioned div, which follows this span in the
+              DOM and so paints over it. Without an explicit z-index the opaque input background
+              hides the icon, leaving only the gap reserved by its padding-left. The 40px of
+              padding is the icon's 12px offset plus its 16px width plus a 12px gap, matching
+              the input's own `px-3`.
+            */}
+            <span className="absolute z-10 pointer-events-none" style={{ left: '12px', lineHeight: '0' }}>
               <SearchIcon size={16} className="text-text-secondary" />
             </span>
             <Input
@@ -247,7 +254,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               className="pr-3 bg-bg-active"
               onClear={clearFilter}
               otherInputProps={{
-                style: { paddingLeft: '48px' },
+                style: { paddingLeft: '40px' },
                 onBlur: () => setFilterInput(localFilterInput),
               }}
             />
@@ -430,7 +437,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
             <QuestionIcon size={20} className="hidden md:inline" />
           </button>
           <div className="relative flex items-center flex-grow">
-            <span className="absolute" style={{ left: '12px', lineHeight: '0' }}>
+            <span className="absolute z-10 pointer-events-none" style={{ left: '12px', lineHeight: '0' }}>
               <SearchIcon size={16} className="text-text-secondary" />
             </span>
             <Input
@@ -447,7 +454,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
               className="pr-3 bg-bg-active w-full"
               onClear={clearFilter}
               otherInputProps={{
-                style: { paddingLeft: '48px' },
+                style: { paddingLeft: '40px' },
                 onBlur: () => setFilterInput(localFilterInput),
               }}
             />
