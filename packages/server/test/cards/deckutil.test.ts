@@ -604,33 +604,31 @@ describe('getDeckColorStats', () => {
     expect(colorless.curve).toEqual([1, 0, 0, 0, 0, 0]);
   });
 
-  it('counts a modal double-faced card with a land back as both a spell and a mana source', () => {
+  // Modal double-faced cards are stored front-face-only: the card update job's `convertType` takes
+  // `card_faces[0].type_line`, so no card in the catalog has `//` in its type. Bala Ged Recovery is
+  // `type: 'Sorcery'`, `colorcategory: 'Green'` with `produced_mana: ['G']` — a spell by `cardIsLand`,
+  // and not a mana source either, despite the land back. This pins that real shape; a `'Sorcery // Land'`
+  // type line is only reachable through an owner's manual type override or a custom card.
+  it('counts a modal double-faced card with a land back as a spell, not a mana source', () => {
     const stats = getDeckColorStats([
-      createSpell({
-        type: 'Sorcery // Land',
-        colors: ['G'],
-        parsed_cost: ['1', 'g'],
-        cmc: 2,
-        produced_mana: ['G'],
-      }),
+      createSpell({ type: 'Sorcery', colors: ['G'], parsed_cost: ['1', 'g'], cmc: 2, produced_mana: ['G'] }),
     ]);
 
     expect(stats.spellCount).toEqual(1);
-    expect(stats.landCount).toEqual(1);
+    expect(stats.landCount).toEqual(0);
     expect(statFor(stats, 'Green').cardCount).toEqual(1);
     expect(statFor(stats, 'Green').curve).toEqual([0, 0, 1, 0, 0, 0]);
-    expect(statFor(stats, 'Green').sources).toEqual(1);
-    expect(statFor(stats, 'Green').sourceTotal).toEqual(1);
+    expect(statFor(stats, 'Green').sources).toEqual(0);
   });
 
-  it('still excludes a card whose front face is a land', () => {
+  it('treats an owner-overridden combined type line containing Land as a land', () => {
     const stats = getDeckColorStats([
-      createSpell({ type: 'Land // Land', colors: [], parsed_cost: [], cmc: 0, produced_mana: ['G'] }),
+      createSpell({ type: 'Sorcery // Land', colors: ['G'], parsed_cost: ['1', 'g'], cmc: 2 }),
     ]);
 
     expect(stats.spellCount).toEqual(0);
     expect(stats.landCount).toEqual(1);
-    expect(statFor(stats, 'Green').sources).toEqual(1);
+    expect(statFor(stats, 'Green').cardCount).toEqual(0);
   });
 
   it('reports every spell as colorless when none has a color', () => {

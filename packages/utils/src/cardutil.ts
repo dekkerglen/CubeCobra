@@ -764,15 +764,6 @@ export const cardIsLand = (card: Card): boolean => {
   return cardType(card).includes('Land') || card.colorCategory === 'Lands';
 };
 
-// A modal double-faced card such as Bala Ged Recovery // Bala Ged Sanctuary has a land back,
-// so `cardIsLand` is true for it — correct when asking "can this make mana", wrong when asking
-// "is this a spell". This looks only at the face you cast, so such a card is both a spell and a
-// mana source rather than disappearing from the spell side of a breakdown.
-export const cardFrontIsLand = (card: Card): boolean => {
-  const frontType = cardType(card).split('//')[0] ?? '';
-  return frontType.includes('Land') || card.colorCategory === 'Lands';
-};
-
 const BASIC_LAND_TYPE_NAMES = ['plains', 'island', 'swamp', 'mountain', 'forest'];
 
 export const isManaFixingLand = (details: CardDetailsType): boolean => {

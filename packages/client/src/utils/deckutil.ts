@@ -2,7 +2,6 @@ import {
   BASIC_LAND_MANA_MAPPING,
   cardCmc,
   cardColorsAsManaSymbols,
-  cardFrontIsLand,
   cardIsLand,
   cardManaProduced,
   cardManaSymbols,
@@ -269,14 +268,12 @@ const DECK_CURVE_BUCKETS = [0, 1, 2, 3, 4, 5];
 
 /**
  * Aggregates everything the deck stats panel needs, deciding here which cards each number describes:
- * cards you cast as a land are excluded from the card, symbol and curve counts, while the mana
- * sources are counted over the whole deck. A modal double-faced card with a land back is therefore
- * in both populations — it really is a spell you can also play as a land — so `spellCount` plus
- * `landCount` may exceed the size of the deck.
+ * lands are excluded from the card, symbol and curve counts, while the mana sources are counted over
+ * the whole deck.
  */
 export const getDeckColorStats = (deck: Deck): DeckColorStats => {
-  const spells = deck.filter((card: Card) => !cardFrontIsLand(card));
-  const landCount = deck.filter((card: Card) => cardIsLand(card)).length;
+  const spells = deck.filter((card: Card) => !cardIsLand(card));
+  const landCount = deck.length - spells.length;
 
   const cardCounts = getCardCountByColor(spells);
   const symbolCounts = getManaSymbolCount(spells);
