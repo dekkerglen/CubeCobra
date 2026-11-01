@@ -99,6 +99,21 @@ describe('MobileNav', () => {
     expect(container.firstChild).toHaveClass('relative', 'flex', 'h-10', 'items-center');
   });
 
+  it('carries the full wordmark, kept clear of both icon buttons', () => {
+    renderNav(user);
+
+    const logo = screen.getByRole('link', { name: /cube cobra/i });
+    // The extended lockup the desktop bar uses, not the bare icon.
+    expect(logo.querySelector('img')).toHaveAttribute('src', expect.stringContaining('banner.png'));
+    // At its natural height the wordmark is wide enough to reach the buttons on a narrow phone, so
+    // the box reserves room for both and the image scales down inside it instead of colliding.
+    expect(logo).toHaveClass('max-w-[calc(100%-7rem)]');
+    expect(logo.querySelector('img')).toHaveClass('max-w-full', 'object-contain');
+    // Centring that survives the cubes button being withheld from a signed-out visitor: auto
+    // margins against both insets, rather than a half-width offset that also caps the box at 50%.
+    expect(logo).toHaveClass('inset-x-0', 'mx-auto');
+  });
+
   it('withholds the cubes button from a signed-out visitor', () => {
     renderNav(null);
 

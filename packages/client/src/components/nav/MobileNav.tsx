@@ -61,11 +61,14 @@ const MobileNav: React.FC = () => {
       </button>
 
       {/* Centred against the bar rather than between its slots, so the logo does not shift when the
-          cubes button is absent. The bar carries the row height the logo used to give it in flow. */}
-      <a href="/" className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          cubes button is absent. The bar carries the row height the logo used to give it in flow.
+          Centring is inset-x-0 plus auto margins rather than left-1/2: a shrink-to-fit absolute box
+          offered only half the bar caps the wordmark at 50% of it. The max-width keeps it clear of
+          both icon buttons, which at h-10 it would collide with below ~390px. */}
+      <a href="/" className="absolute inset-x-0 top-1/2 mx-auto w-fit max-w-[calc(100%-7rem)] -translate-y-1/2">
         <img
-          className="h-10"
-          src={cdnUrl('/content/sticker.png')}
+          className="h-8 w-auto max-w-full object-contain"
+          src={cdnUrl('/content/banner.png')}
           alt="Cube Cobra: a site for Magic: the Gathering Cube"
         />
       </a>
