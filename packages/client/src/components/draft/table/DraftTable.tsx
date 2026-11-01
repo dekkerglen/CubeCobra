@@ -9,6 +9,7 @@ import { AnimatePresence, motion, MotionValue, useMotionValue } from 'framer-mot
 import AutocardContext from '../../../contexts/AutocardContext';
 import DisplayContext from '../../../contexts/DisplayContext';
 import TagColorContext from '../../../contexts/TagColorContext';
+import UserContext from '../../../contexts/UserContext';
 import DraftLocation from '../../../drafting/DraftLocation';
 import Button from '../../base/Button';
 import Link from '../../base/Link';
@@ -260,6 +261,8 @@ const DraftTable: React.FC<DraftTableProps> = ({
   const { showCard, hideCard } = useContext(AutocardContext);
   const { showCustomImages } = useContext(DisplayContext);
   const tagColors = useContext(TagColorContext);
+  // The player turned animations off: packs arrive and leave at once, with no opening or passing.
+  const animationsOff = useContext(UserContext)?.disableAnimations ?? false;
 
   // The room the table has, before its own margins: what decides the phone layout.
   const roomRef = useRef<HTMLDivElement>(null);
@@ -451,9 +454,11 @@ const DraftTable: React.FC<DraftTableProps> = ({
     picked: new Set(),
     pickedX: 0,
     pickedY: 0,
+    passInstantly: false,
   });
   useLayoutEffect(() => {
     // Leaving cards read this from their (passive) exit effects, which run after layout effects.
+    exitPlan.current.passInstantly = animationsOff;
     exitPlan.current.direction = passesLeft ? -1 : 1;
     exitPlan.current.stageWidth = stageSize.width;
     if (geometry) {
@@ -493,7 +498,8 @@ const DraftTable: React.FC<DraftTableProps> = ({
       if (!turnover.seen.has(id)) kinds.set(id, 'pool');
     });
     const openings = turnover.openings + (unwrapped ? 1 : 0);
-    if (unwrapped) setOpening({ id: openings, label: packLabel, cardCount: packIds.length, burst: false });
+    if (unwrapped && !animationsOff)
+      setOpening({ id: openings, label: packLabel, cardCount: packIds.length, burst: false });
     setTurnover({
       signature: drawnSignature,
       pack: packIds,
@@ -506,7 +512,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
 
   const enterFor = (id: number, placement: Placement): EnterFrom | null => {
     const kind = turnover.kinds.get(id);
-    if (!geometry || !kind) return null;
+    if (!geometry || !kind || animationsOff) return null;
     if (kind === 'pool') return { ...placement.pose, opacity: 0, delay: 0 };
     const slot = packOrder.indexOf(id);
     // A slight per-card tilt so a gathered pack reads as a pile.

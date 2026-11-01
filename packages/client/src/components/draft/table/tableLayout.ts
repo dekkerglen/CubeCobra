@@ -36,17 +36,17 @@ const BAR = 0.112; // visible slice of each card in a pool stack (the name bar)
 const MIN_VISIBLE_BARS = 7; // the card size leaves room for this many bars per stack before the pool scrolls
 const MIN_CARD_WIDTH = 56;
 // Phones: the pack in rows, each a small fan like the desktop one, running
-// edge to edge and spread out to fill the stage. Cards are small enough that a
-// row of four barely overlaps, so every card can be read; the room across is
-// the scarcer, so rows get fewer cards when the stage is tall enough.
+// edge to edge and spread from top to bottom of the stage. Cards are a set
+// fraction of the stage width, small enough that a row of four barely
+// overlaps, so every card can be read; the room across is the scarcer, so rows
+// get as few cards as fit the pack in ROW_MAX_ROWS rows, overlapping the row
+// above when the stage is short.
 const ROW_PAD = 3; // px above and below the rows
 const ROW_MAX = 5; // cards per row, at most...
 const ROW_MIN = 3; // ...and at least
 const ROW_MAX_ROWS = 5; // rows, at most, unless a full ROW_MAX a row still needs more
-const ROW_MIN_SIZE = 0.8; // fewer cards per row win unless they'd make cards smaller than this fraction of the biggest
-const ROW_CARD_WIDTH = 0.265; // fraction of the stage width, at most
+const ROW_CARD_WIDTH = 0.265; // fraction of the stage width
 const ROW_MAX_GAP = 0.5; // fraction of a card width between cards or rows, at most, so a small pack doesn't fly apart
-const ROW_GAP = 4; // px between rows, below the outer cards' dip, at least
 const ROW_ARC = 0.05;
 const ROW_TILT = 5;
 const ROW_SPLAY = 2.5;
@@ -195,8 +195,7 @@ const computeDeskRowsGeometry = (width: number, height: number, capacity: number
   // The overlapping rows, then the pool's label, a card and its name bars.
   const fixedHeight = PAD + 8 + 4 + LABEL_HEIGHT + PAD;
   const perCard =
-    CARD_ASPECT *
-      (DESK_ROW_RAISE + (rowCount - 1) * DESK_ROW_PITCH + 1 + DESK_ROW_ARC + 1 + DESK_POOL_MIN_BARS * BAR) +
+    CARD_ASPECT * (DESK_ROW_RAISE + (rowCount - 1) * DESK_ROW_PITCH + 1 + DESK_ROW_ARC + 1 + DESK_POOL_MIN_BARS * BAR) +
     DESK_TILT_REACH / 2;
   const fromHeight = (height - fixedHeight) / perCard;
 
@@ -263,38 +262,19 @@ const rowSag = (perRow: number) => {
   return { dip: tiltDip(tilt, ROW_TILT, ROW_ARC), hang: Math.sin((tilt * Math.PI) / 180) / 2 };
 };
 
-// The widest phone card that `rowCount` rows of `perRow` leave room for down, up to ROW_CARD_WIDTH of the stage across.
-const rowCardWidth = (width: number, height: number, rowCount: number, perRow: number) => {
-  const { dip, hang } = rowSag(perRow);
-  const availableH = height - 2 * ROW_PAD;
-  // Each row is a card plus the end cards' dip and lower corners; the top row also needs room to lift.
-  const perCardHeight = CARD_ASPECT * (rowCount * (1 + dip) + ROW_RAISE) + rowCount * hang;
-  const fromHeight = (availableH - (rowCount - 1) * ROW_GAP) / perCardHeight;
-  return Math.max(MIN_ROW_CARD_WIDTH, Math.floor(Math.min(width * ROW_CARD_WIDTH, fromHeight)));
-};
-
 /**
  * The phone layout: just the pack, in rows of ROW_MIN to ROW_MAX cards, each
- * row a small fan whose end cards reach the edges of the stage. Cards are as
- * big as the rows allow down, up to ROW_CARD_WIDTH of the stage across, and
- * rows take the fewest cards that doesn't make them much smaller or need more
- * than ROW_MAX_ROWS rows (15 cards are usually 5 rows of 3, 16 are 4 of 4).
- * Laid out for a pack of `count` cards, however big it started; the rows spread
- * across whatever room is left. The pool's tab sits over the right edge.
+ * row a small fan whose end cards reach the edges of the stage. Cards are
+ * ROW_CARD_WIDTH of the stage across, and rows take the fewest cards that fit
+ * the pack in ROW_MAX_ROWS rows. Laid out for a pack of `count` cards, however
+ * big it started; the rows spread from top to bottom, overlapping when there
+ * isn't room. The pool's tab sits over the right edge.
  */
 export const computeRowsGeometry = (width: number, height: number, count: number): TableGeometry => {
   const cards = Math.max(1, count);
-  const options: { rowCount: number; cardW: number }[] = [];
-  for (let perRow = Math.min(ROW_MAX, cards); perRow >= Math.min(ROW_MIN, cards); perRow -= 1) {
-    const rowCount = Math.ceil(cards / perRow);
-    if (options.length > 0 && rowCount > ROW_MAX_ROWS) break;
-    if (options.length === 0 || options[options.length - 1].rowCount !== rowCount) {
-      options.push({ rowCount, cardW: rowCardWidth(width, height, rowCount, Math.ceil(cards / rowCount)) });
-    }
-  }
-  const biggest = Math.max(...options.map((option) => option.cardW));
-  const { rowCount, cardW } = options.filter((option) => option.cardW >= biggest * ROW_MIN_SIZE).pop()!;
+  const rowCount = Math.ceil(cards / Math.max(ROW_MIN, Math.min(ROW_MAX, Math.ceil(cards / ROW_MAX_ROWS))));
   const perRow = Math.ceil(cards / rowCount);
+  const cardW = Math.max(MIN_ROW_CARD_WIDTH, Math.floor(width * ROW_CARD_WIDTH));
   const cardH = Math.round(cardW * CARD_ASPECT);
   const maxGap = cardW * ROW_MAX_GAP;
 

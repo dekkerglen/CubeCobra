@@ -157,3 +157,4 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - On phones, the cards in a draft pack now spread edge to edge across the screen instead of bunching up in the middle, sized so you can read every card in a row of four.
 - On desktop, a draft pack of more than 8 cards is now laid out in two overlapping rows at most, leaving more room for your picks below.
 - The scrollbars beside the columns in the deck editor and the draft pool can now be dragged, and clicking one jumps to that spot.
+- With Disable Animations turned on in your account settings, draft packs now appear and get passed instantly, without the pack opening and passing animations.
