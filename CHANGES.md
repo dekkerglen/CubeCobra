@@ -153,3 +153,12 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - You can now build your own Pack 1 Pick 1 poll from the Playtest page or a sample pack: pick each card by name, or fill empty slots at random or with a balanced pick, and the bot ratings update as you go.
 - Hand-built Pack 1 Pick 1 polls credit the person who built them.
 - Cube collaborators can now delete Pack 1 Pick 1 polls on their cube.
+- The daily crossword no longer uses Universes Beyond cards: no answers, clues or themes come from Final Fantasy, Marvel, The Lord of the Rings or the other crossover sets, and cards that also have a Magic version appear under their Magic name.
+- On phones, the cards in a draft pack now spread edge to edge across the screen instead of bunching up in the middle, sized so you can read every card in a row of four.
+- On desktop, a draft pack of more than 8 cards is now laid out in two overlapping rows at most, leaving more room for your picks below.
+- The scrollbars beside the columns in the deck editor and the draft pool can now be dragged, and clicking one jumps to that spot.
+- With Disable Animations turned on in your account settings, draft packs now appear and get passed instantly, without the pack opening and passing animations.
+- Cards whose hybrid mana only uses colors the card already requires, like Practiced Scrollsmith ({R}{R/W}{W}), are now counted as gold instead of hybrid in searches and the Manacost Type sort.
+- Cards added to a cube from Smart Search, card pages, or the cube tray now get the cube's Default Status instead of always being marked Owned.
+- On a cube's list page, each view in the sidebar now shows how many cards it holds across its boards.
+- Basic lands in draft record decks now use the printing from your cube's Basics board, custom art included, instead of switching to a default printing when the deck was uploaded.

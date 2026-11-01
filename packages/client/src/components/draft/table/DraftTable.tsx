@@ -9,6 +9,7 @@ import { AnimatePresence, motion, MotionValue, useMotionValue } from 'framer-mot
 import AutocardContext from '../../../contexts/AutocardContext';
 import DisplayContext from '../../../contexts/DisplayContext';
 import TagColorContext from '../../../contexts/TagColorContext';
+import UserContext from '../../../contexts/UserContext';
 import DraftLocation from '../../../drafting/DraftLocation';
 import Button from '../../base/Button';
 import Link from '../../base/Link';
@@ -52,7 +53,7 @@ interface DraftTableProps {
   // Whether the pack on the table is unopened (nobody has drafted from it yet), when the
   // page knows; otherwise the table guesses from cards leaving and arriving.
   freshPack?: boolean;
-  // The largest pack in the draft; phones size the pack's rows for it.
+  // The largest pack in the draft; the desktop table is sized for it.
   packSize?: number;
   mainboard: number[][][];
   sideboard: number[][][];
@@ -260,6 +261,8 @@ const DraftTable: React.FC<DraftTableProps> = ({
   const { showCard, hideCard } = useContext(AutocardContext);
   const { showCustomImages } = useContext(DisplayContext);
   const tagColors = useContext(TagColorContext);
+  // The player turned animations off: packs arrive and leave at once, with no opening or passing.
+  const animationsOff = useContext(UserContext)?.disableAnimations ?? false;
 
   // The room the table has, before its own margins: what decides the phone layout.
   const roomRef = useRef<HTMLDivElement>(null);
@@ -310,14 +313,18 @@ const DraftTable: React.FC<DraftTableProps> = ({
   // Decided by the room rather than the stage, since the phone layout drops the
   // table's margins and so widens the stage: deciding by the stage could flip back and forth.
   const compact = roomWidth > 0 && isCompactWidth(roomWidth);
-  // Sized for the largest pack, so cards keep their size as the pack shrinks.
-  const capacity = Math.max(packSize ?? 0, pack.length + inPack.length);
+  // Phones lay out the pack as it is, so a pack of 15 always looks the same. The
+  // count keeps a pick that's in flight, so what's left of the pack holds its
+  // layout until the next pack arrives. Desktop is sized for the largest pack,
+  // so the pool holds still as the pack shrinks.
+  const packCount = pack.length + inPack.length;
+  const capacity = Math.max(packSize ?? 0, packCount);
   const geometry: TableGeometry | null = useMemo(() => {
     if (stageSize.width <= 0 || stageSize.height <= 0) return null;
     return compact
-      ? computeRowsGeometry(stageSize.width, stageSize.height, capacity)
+      ? computeRowsGeometry(stageSize.width, stageSize.height, packCount)
       : computeGeometry(stageSize.width, stageSize.height, capacity);
-  }, [stageSize.width, stageSize.height, compact, capacity]);
+  }, [stageSize.width, stageSize.height, compact, packCount, capacity]);
 
   // Phones: once, ease the page down so the table exactly fills the screen.
   const broughtIntoView = useRef(false);
@@ -447,9 +454,11 @@ const DraftTable: React.FC<DraftTableProps> = ({
     picked: new Set(),
     pickedX: 0,
     pickedY: 0,
+    passInstantly: false,
   });
   useLayoutEffect(() => {
     // Leaving cards read this from their (passive) exit effects, which run after layout effects.
+    exitPlan.current.passInstantly = animationsOff;
     exitPlan.current.direction = passesLeft ? -1 : 1;
     exitPlan.current.stageWidth = stageSize.width;
     if (geometry) {
@@ -489,7 +498,8 @@ const DraftTable: React.FC<DraftTableProps> = ({
       if (!turnover.seen.has(id)) kinds.set(id, 'pool');
     });
     const openings = turnover.openings + (unwrapped ? 1 : 0);
-    if (unwrapped) setOpening({ id: openings, label: packLabel, cardCount: packIds.length, burst: false });
+    if (unwrapped && !animationsOff)
+      setOpening({ id: openings, label: packLabel, cardCount: packIds.length, burst: false });
     setTurnover({
       signature: drawnSignature,
       pack: packIds,
@@ -502,7 +512,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
 
   const enterFor = (id: number, placement: Placement): EnterFrom | null => {
     const kind = turnover.kinds.get(id);
-    if (!geometry || !kind) return null;
+    if (!geometry || !kind || animationsOff) return null;
     if (kind === 'pool') return { ...placement.pose, opacity: 0, delay: 0 };
     const slot = packOrder.indexOf(id);
     // A slight per-card tilt so a gathered pack reads as a pile.

@@ -1,6 +1,6 @@
 import React, { useContext, useMemo } from 'react';
 
-import Cube, { getViewDefinitions, viewNameToSlug } from '@utils/datatypes/Cube';
+import Cube, { getViewCardCount, getViewDefinitions, viewNameToSlug } from '@utils/datatypes/Cube';
 import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
@@ -25,7 +25,7 @@ interface SubNavItem {
 
 const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink }) => {
   // Use cube from context to pick up live updates (e.g., when views are modified)
-  const { cube } = useContext(CubeContext);
+  const { cube, unfilteredChangedCards } = useContext(CubeContext);
   const { activeView, setActiveView } = useContext(DisplayContext);
   const aboutViewContext = useContext(AboutViewContext);
   const analysisViewContext = useContext(AnalysisViewContext);
@@ -40,6 +40,17 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
     () => views.map((view) => ({ key: viewNameToSlug(view.name), label: view.name })),
     [views],
   );
+
+  // Only the list page is guaranteed to have the cube's cards loaded, so view
+  // counts are limited to it.
+  const viewCardCounts = useMemo(() => {
+    if (activeLink !== 'list') return null;
+    const counts: Record<string, number> = {};
+    for (const view of views) {
+      counts[viewNameToSlug(view.name)] = getViewCardCount(view, unfilteredChangedCards);
+    }
+    return counts;
+  }, [activeLink, views, unfilteredChangedCards]);
 
   // Determine which subitems to show based on the active link
   let subItems: SubNavItem[] = [];
@@ -270,6 +281,9 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
               })}
             >
               {subItem.label}
+              {viewCardCounts && (
+                <span className="ml-1 font-normal opacity-70 tabular-nums">{viewCardCounts[subItem.key]}</span>
+              )}
             </a>
           );
         })}

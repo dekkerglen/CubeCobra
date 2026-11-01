@@ -33,6 +33,7 @@ import {
   cardWordCount,
   COLOR_COMBINATIONS,
   convertFromLegacyCardColorCategory,
+  costWithoutRedundantHybrid,
 } from '../cardutil';
 import Card, { CARD_STATUSES, COLOR_CATEGORIES, FINISHES, SUPPORTED_FORMATS } from '../datatypes/Card';
 // Import filter utilities - we'll need this for custom sorts
@@ -1064,7 +1065,7 @@ export function cardGetLabels(
     }
   } else if (sort === 'Manacost Type') {
     const colors = cardColors(effectiveCard);
-    const parsedCost = effectiveCard.details?.parsed_cost ?? [];
+    const parsedCost = costWithoutRedundantHybrid(effectiveCard.details?.parsed_cost ?? []);
     if (colors.length > 1 && parsedCost.every((symbol: string) => !symbol.includes('-'))) {
       ret = ['Gold'];
     } else if (

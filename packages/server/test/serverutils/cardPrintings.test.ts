@@ -35,8 +35,10 @@ import {
   canonicalCardName,
   canonicalPrintingForName,
   clearPrintingIndexCache,
+  excludedSets,
   isEarlierPrinting,
   originalPrintings,
+  printingsInScope,
   setsWithFirstPrinting,
 } from 'serverutils/cardPrintings';
 import { eligiblePremiereSetCodes, eligibleSetCodes } from 'serverutils/setEligibility';
@@ -219,6 +221,75 @@ describe('setsWithFirstPrinting', () => {
     mockCardCatalog.printedCardList = reskinnedCard();
 
     expect([...setsWithFirstPrinting()]).toEqual(['eld']);
+  });
+});
+
+describe('the withoutUniversesBeyond scope', () => {
+  const ub: Partial<CardDetails> = { promo_types: ['universesbeyond'] };
+
+  /**
+   * Rick, Steadfast Leader premiered in a Walking Dead Secret Lair and came back
+   * as Greymond, Avacyn's Stalwart: one oracle id, and the name printed first is
+   * the Universes Beyond one.
+   */
+  const GREYMOND_ORACLE = 'greymond-oracle';
+  const universesBeyondFirst = (): CardDetails[] => [
+    printing('Rick, Steadfast Leader', {
+      ...ub,
+      oracle_id: GREYMOND_ORACLE,
+      set: 'sld',
+      setIndex: 5,
+      released_at: '2020-10-26',
+      reprint: false,
+    }),
+    printing("Greymond, Avacyn's Stalwart", {
+      oracle_id: GREYMOND_ORACLE,
+      set: 'slx',
+      setIndex: 6,
+      released_at: '2021-01-01',
+      reprint: true,
+    }),
+  ];
+
+  it('drops a card printed only in Universes Beyond and keeps one reprinted there', () => {
+    mockCardCatalog.printedCardList = [
+      printing("Frodo, Sauron's Bane", { ...ub, oracle_id: 'frodo', set: 'ltr', setIndex: 50, reprint: false }),
+      printing('Sol Ring', { oracle_id: 'sol-ring', set: 'lea', setIndex: 0, reprint: false }),
+      printing('Sol Ring', { ...ub, oracle_id: 'sol-ring', set: 'ltc', setIndex: 51, reprint: true }),
+    ];
+
+    expect([...originalPrintings().keys()]).toEqual(["frodo, sauron's bane", 'sol ring']);
+    expect([...originalPrintings('withoutUniversesBeyond').keys()]).toEqual(['sol ring']);
+    expect(printingsInScope('withoutUniversesBeyond').map((details) => details.set)).toEqual(['lea']);
+    expect([...setsWithFirstPrinting('withoutUniversesBeyond')]).toEqual(['lea']);
+  });
+
+  it('makes the Universes Within name the real one when the Universes Beyond name came first', () => {
+    mockCardCatalog.printedCardList = universesBeyondFirst();
+
+    expect([...originalPrintings().keys()]).toEqual(['rick, steadfast leader']);
+    expect([...originalPrintings('withoutUniversesBeyond').keys()]).toEqual(["greymond, avacyn's stalwart"]);
+  });
+
+  it('leaves canonicalPrintingForName looking at every printing', () => {
+    mockCardCatalog.printedCardList = universesBeyondFirst();
+    // Build the scoped index first, so a shared cache would be caught out.
+    originalPrintings('withoutUniversesBeyond');
+
+    expect(canonicalCardName("Greymond, Avacyn's Stalwart")).toBe('Rick, Steadfast Leader');
+  });
+
+  it('excludes a set only when every printing in it is Universes Beyond', () => {
+    mockCardCatalog.printedCardList = [
+      printing("Cloud, Planet's Champion", { ...ub, oracle_id: 'cloud', set: 'fin' }),
+      printing('Sephiroth, Fabled SOLDIER', { ...ub, oracle_id: 'sephiroth', set: 'fin' }),
+      printing('Birds of Paradise', { oracle_id: 'birds', set: 'sld' }),
+      printing('Rick, Steadfast Leader', { ...ub, oracle_id: 'rick', set: 'sld' }),
+      printing('Llanowar Elves', { oracle_id: 'elves', set: 'dom' }),
+    ];
+
+    expect([...excludedSets('withoutUniversesBeyond')]).toEqual(['fin']);
+    expect([...excludedSets('all')]).toEqual([]);
   });
 });
 

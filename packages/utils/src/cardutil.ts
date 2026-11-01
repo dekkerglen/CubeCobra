@@ -826,13 +826,46 @@ export function isExtraCard(card: CardDetailsType): boolean {
   );
 }
 
-const isUniversesBeyond = (details: CardDetailsType) => (details.promo_types || []).includes('universesbeyond');
+export const isUniversesBeyond = (details: CardDetailsType) => (details.promo_types || []).includes('universesbeyond');
+
+const COST_COLORS = ['w', 'u', 'b', 'r', 'g', 'c'];
+
+/**
+ * Drops hybrid pips that offer no color choice because every color in them is already required by a
+ * regular pip on the same face. {R}{R/W}{W} is gold, while {R}{U}{W/B} is still hybrid. Split, adventure
+ * and prepare costs join their faces with 'split', and each face is checked on its own.
+ */
+export const costWithoutRedundantHybrid = (parsedCost: string[]): string[] => {
+  let current: string[] = [];
+  const faces = [current];
+  for (const symbol of parsedCost) {
+    if (symbol === 'split') {
+      current = [];
+      faces.push(current);
+    }
+    current.push(symbol);
+  }
+
+  return faces.flatMap((face) => {
+    const required = face.filter((symbol) => COST_COLORS.includes(symbol));
+    return face.filter((symbol) => {
+      if (!symbol.includes('-') || symbol.includes('-p')) {
+        return true;
+      }
+      const colors = symbol.split('-').filter((part) => COST_COLORS.includes(part));
+      return colors.length === 0 || colors.some((color) => !required.includes(color));
+    });
+  });
+};
 
 const RAW_CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> = {
-  gold: (details) => details.colors.length > 1 && details.parsed_cost.every((symbol) => !symbol.includes('-')),
+  gold: (details) =>
+    details.colors.length > 1 &&
+    costWithoutRedundantHybrid(details.parsed_cost).every((symbol) => !symbol.includes('-')),
   twobrid: (details) => details.parsed_cost.some((symbol) => symbol.includes('-') && symbol.includes('2')),
   hybrid: (details) =>
-    details.colors.length > 1 && details.parsed_cost.some((symbol) => symbol.includes('-') && !symbol.includes('-p')),
+    details.colors.length > 1 &&
+    costWithoutRedundantHybrid(details.parsed_cost).some((symbol) => symbol.includes('-') && !symbol.includes('-p')),
   phyrexian: (details) => details.parsed_cost.some((symbol) => symbol.includes('-p')),
   promo: (details) => details.promo,
   reprint: (details) => details.reprint,

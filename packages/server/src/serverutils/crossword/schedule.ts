@@ -1,8 +1,9 @@
 import { makeFilter } from '@utils/filtering/FilterCards';
 import seedrandom from 'seedrandom';
+import { excludedSets } from 'serverutils/cardPrintings';
 import { eligibleSetCodes } from 'serverutils/setEligibility';
 
-import { getVocabulary, themedCardTexts } from './vocabulary';
+import { CROSSWORD_PRINTINGS, getVocabulary, themedCardTexts } from './vocabulary';
 
 /**
  * Which puzzle each weekday gets: how big, and what kind of restriction the
@@ -154,7 +155,10 @@ export interface ThemePools {
  * for the keywords) — so they are the same values the grid can be filled with.
  * Sets come from `eligibleSetCodes`, shared with ManaMatrix so "a real set"
  * means one thing across the games, and date-bounded so a puzzle never themes
- * itself to a set that hadn't been released yet.
+ * itself to a set that hadn't been released yet. The crossword's own scope then
+ * drops the Universes Beyond sets, which ManaMatrix keeps: a set the vocabulary
+ * has no cards from could never clear the depth check, and every draw spent on
+ * one is a draw the day doesn't get back.
  *
  * Both vocabulary pools carry junk — Alchemy and Un-set keywords, one-printing
  * creature types. None of it is filtered out here on purpose: `chooseTheme`
@@ -164,13 +168,14 @@ export interface ThemePools {
  */
 export const themePools = (date: string): ThemePools => {
   const vocab = getVocabulary();
+  const outOfScopeSets = excludedSets(CROSSWORD_PRINTINGS);
   const displaysOf = (entryClass: string): string[] =>
     [...new Set(vocab.entries.filter((entry) => entry.entryClass === entryClass).map((entry) => entry.display))].sort();
 
   return {
     creatureTypes: displaysOf('creatureType'),
     keywords: displaysOf('keyword'),
-    sets: eligibleSetCodes(date),
+    sets: eligibleSetCodes(date).filter((code) => !outOfScopeSets.has(code.toLowerCase())),
   };
 };
 

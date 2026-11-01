@@ -53,6 +53,8 @@ export interface ExitPlan {
   picked: Set<SpriteId>;
   pickedX: number;
   pickedY: number;
+  // A passed pack just goes, without gathering and sliding off (the player turned animations off).
+  passInstantly: boolean;
 }
 
 export interface EnterFrom extends Pose {
@@ -351,6 +353,11 @@ const CardSprite: React.FC<CardSpriteProps> = ({
         animate(rotate, rotate.get() + 16, { duration: 0.4, ease: 'easeIn' }),
         animate(opacity, 0, { duration: 0.4, ease: 'easeIn' }),
       ];
+    } else if (plan && passOnExit && plan.passInstantly) {
+      // Gone at once, though it stays mounted until every other leaving card (a
+      // pick shrinking into the pool's tab) has finished.
+      opacity.set(0);
+      controls = [];
     } else if (plan && passOnExit) {
       const offTable = plan.direction < 0 ? -width * 1.5 : plan.stageWidth + width * 0.5;
       const pile = (spriteSeed(id) % 9) - 4;

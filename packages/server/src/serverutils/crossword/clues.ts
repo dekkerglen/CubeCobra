@@ -19,6 +19,7 @@ import {
   spellsOutAnswer,
   splitNameParts,
 } from './text';
+import { CROSSWORD_PRINTINGS } from './vocabulary';
 
 /**
  * Clue text for crossword entries. Clues are built per puzzle and never stored,
@@ -278,9 +279,10 @@ const pushCapped = (map: Map<string, number[]>, key: string, index: number): voi
 let cachedContext: ClueContext | undefined;
 
 const buildClueContext = (): ClueContext => {
-  // The original printing of every distinct name, from the same helper the
-  // vocabulary pass uses, so the two agree on which card a word was counted on.
-  const bestByName = originalPrintings();
+  // The original printing of every distinct name, from the same helper and the
+  // same scope the vocabulary pass uses, so the two agree on which card a word
+  // was counted on.
+  const bestByName = originalPrintings(CROSSWORD_PRINTINGS);
 
   const cards: CardDetails[] = [];
   const byNameLower = new Map<string, number>();
