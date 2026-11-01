@@ -1,5 +1,5 @@
 import { CubeCards } from '@utils/datatypes/Cube';
-import { addBasics, getBasicCardsFromCube } from 'serverutils/cube';
+import { addBasics, basicsBoardFor, getBasicCardsFromCube } from 'serverutils/cube';
 
 jest.mock('serverutils/carddb', () => ({
   ...jest.requireActual('serverutils/carddb'),
@@ -34,6 +34,20 @@ describe('getBasicCardsFromCube', () => {
 
   it('returns nothing for the None opt-out', () => {
     expect(getBasicCardsFromCube(cubeCards, 'None', ['legacy-id'])).toEqual([]);
+  });
+});
+
+describe('basicsBoardFor', () => {
+  it('defaults to the conventional Basics board when the cube never set one', () => {
+    expect(basicsBoardFor({})).toBe('Basics');
+  });
+
+  it('uses a renamed board', () => {
+    expect(basicsBoardFor({ basicsBoard: 'My Lands' })).toBe('My Lands');
+  });
+
+  it('preserves the None opt-out', () => {
+    expect(basicsBoardFor({ basicsBoard: 'None' })).toBe('None');
   });
 });
 

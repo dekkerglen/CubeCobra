@@ -6,7 +6,15 @@ import { body } from 'express-validator';
 import { ensureAuth } from 'router/middleware';
 import { resolveBotDeckStatus } from 'serverutils/botDeckStatus';
 import { cardFromId, getIdsFromName, getMostReasonable } from 'serverutils/carddb';
-import { addBasics, createPool, CSV_HEADER, exportToMtgo, getBasicCardsFromCube, writeCard } from 'serverutils/cube';
+import {
+  addBasics,
+  basicsBoardFor,
+  createPool,
+  CSV_HEADER,
+  exportToMtgo,
+  getBasicCardsFromCube,
+  writeCard,
+} from 'serverutils/cube';
 import { csvRow } from 'serverutils/csv';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
@@ -793,7 +801,7 @@ export const uploadDecklistHandler = async (req: Request, res: Response) => {
     };
 
     // Upload doesn't use format definitions, so default to "Basics" board
-    const basicsToAdd = getBasicCardsFromCube(cubeCards, 'Basics', cube.basics);
+    const basicsToAdd = getBasicCardsFromCube(cubeCards, basicsBoardFor(cube), cube.basics);
     addBasics(deck, basicsToAdd);
 
     const id = await draftDao.createDraft(deck);

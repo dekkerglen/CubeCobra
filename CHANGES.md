@@ -161,3 +161,4 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Cards whose hybrid mana only uses colors the card already requires, like Practiced Scrollsmith ({R}{R/W}{W}), are now counted as gold instead of hybrid in searches and the Manacost Type sort.
 - Cards added to a cube from Smart Search, card pages, or the cube tray now get the cube's Default Status instead of always being marked Owned.
 - On a cube's list page, each view in the sidebar now shows how many cards it holds across its boards.
+- Basic lands in draft record decks now use the printing from your cube's Basics board, custom art included, instead of switching to a default printing when the deck was uploaded.
