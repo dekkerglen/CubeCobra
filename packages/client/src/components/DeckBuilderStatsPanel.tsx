@@ -77,7 +77,7 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
                 className="bg-bg-accent border border-border rounded-lg p-4 flex flex-col items-center text-center"
               >
                 <img
-                  alt={symbol.toLowerCase()}
+                  alt={color}
                   className="w-16 h-16 mb-1"
                   src={cdnUrl(`/content/symbols/${symbol.toLowerCase()}.png`)}
                 />
@@ -153,17 +153,21 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
 
                 {/* Mana Production Bar */}
                 <div className="w-full h-4 bg-bg-active rounded-full overflow-hidden relative">
-                  <div className={`h-full ${fillStyles[color]}`} style={{ width: `${sourcePercent}%` }} />
+                  <div
+                    className={`h-full ${fillStyles[color]}`}
+                    data-testid="source-fill"
+                    style={{ width: `${sourcePercent}%` }}
+                  />
                   <div
                     className="absolute inset-0 flex items-center justify-center text-xs font-bold text-text"
-                    data-testid="source-label"
+                    data-testid="source-label-track"
                     style={{ clipPath: `inset(0 0 0 ${sourcePercent}%)` }}
                   >
                     {sourcePercent}%
                   </div>
                   <div
                     className={`absolute inset-0 flex items-center justify-center text-xs font-bold ${onFillTextStyles[color]}`}
-                    data-testid="source-label"
+                    data-testid="source-label-fill"
                     aria-hidden="true"
                     style={{ clipPath: `inset(0 ${100 - sourcePercent}% 0 0)` }}
                   >

@@ -111,9 +111,11 @@ describe('DeckBuilderStatsPanel', () => {
       createBasicLand('Forest'),
     ]);
 
-    const quarter = Array.from(container.querySelectorAll('[data-testid="source-label"]')).filter(
-      (label) => label.textContent === '25%',
-    ) as HTMLElement[];
+    const quarter = (
+      Array.from(
+        container.querySelectorAll('[data-testid="source-label-track"], [data-testid="source-label-fill"]'),
+      ) as HTMLElement[]
+    ).filter((label) => label.textContent === '25%');
 
     expect(quarter).toHaveLength(2);
 
@@ -124,5 +126,9 @@ describe('DeckBuilderStatsPanel', () => {
     expect(offFill).toHaveLength(1);
     expect(onFill[0]).not.toBe(offFill[0]);
     expect(quarter.every((label) => label.style.width === '')).toBe(true);
+
+    const fill = quarter[0]!.parentElement!.querySelector('[data-testid="source-fill"]') as HTMLElement;
+
+    expect(fill.style.width).toBe('25%');
   });
 });
