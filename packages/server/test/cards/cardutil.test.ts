@@ -237,25 +237,25 @@ describe('gold and hybrid categories', () => {
 
   it('treats a hybrid pip whose colors are already required as gold, e.g. {R}{R/W}{W}', () => {
     const card = details(['R', 'W'], ['w', 'r-w', 'r']);
-    expect(CARD_CATEGORY_DETECTORS.hybrid(card)).toBe(false);
-    expect(CARD_CATEGORY_DETECTORS.gold(card)).toBe(true);
+    expect(CARD_CATEGORY_DETECTORS.hybrid!(card)).toBe(false);
+    expect(CARD_CATEGORY_DETECTORS.gold!(card)).toBe(true);
   });
 
   it('keeps a hybrid pip that adds a choice of color as hybrid, e.g. {R}{U}{W/B}', () => {
     const card = details(['W', 'U', 'B', 'R'], ['w-b', 'u', 'r']);
-    expect(CARD_CATEGORY_DETECTORS.hybrid(card)).toBe(true);
-    expect(CARD_CATEGORY_DETECTORS.gold(card)).toBe(false);
+    expect(CARD_CATEGORY_DETECTORS.hybrid!(card)).toBe(true);
+    expect(CARD_CATEGORY_DETECTORS.gold!(card)).toBe(false);
   });
 
   it('keeps a hybrid pip with only one of its colors required as hybrid, e.g. {R}{R/W}', () => {
     const card = details(['R', 'W'], ['r-w', 'r']);
-    expect(CARD_CATEGORY_DETECTORS.hybrid(card)).toBe(true);
-    expect(CARD_CATEGORY_DETECTORS.gold(card)).toBe(false);
+    expect(CARD_CATEGORY_DETECTORS.hybrid!(card)).toBe(true);
+    expect(CARD_CATEGORY_DETECTORS.gold!(card)).toBe(false);
   });
 
   it('checks each half of a split card on its own, e.g. {G/W}{G/W} // {4}{G}{W}', () => {
     const card = details(['G', 'W'], ['g-w', 'g-w', 'split', '4', 'g', 'w']);
-    expect(CARD_CATEGORY_DETECTORS.hybrid(card)).toBe(true);
-    expect(CARD_CATEGORY_DETECTORS.gold(card)).toBe(false);
+    expect(CARD_CATEGORY_DETECTORS.hybrid!(card)).toBe(true);
+    expect(CARD_CATEGORY_DETECTORS.gold!(card)).toBe(false);
   });
 });

@@ -836,12 +836,14 @@ const COST_COLORS = ['w', 'u', 'b', 'r', 'g', 'c'];
  * and prepare costs join their faces with 'split', and each face is checked on its own.
  */
 export const costWithoutRedundantHybrid = (parsedCost: string[]): string[] => {
-  const faces: string[][] = [[]];
+  let current: string[] = [];
+  const faces = [current];
   for (const symbol of parsedCost) {
     if (symbol === 'split') {
-      faces.push([]);
+      current = [];
+      faces.push(current);
     }
-    faces[faces.length - 1].push(symbol);
+    current.push(symbol);
   }
 
   return faces.flatMap((face) => {
