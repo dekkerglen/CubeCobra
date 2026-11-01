@@ -92,7 +92,11 @@ interface CardSpriteProps {
   held?: boolean;
   // 'pan-y' lets a vertical swipe on the card scroll the page natively (phone deckbuilder).
   touchAction?: 'none' | 'pan-y';
-  highlight: 'selected' | 'top' | null;
+  highlight: 'selected' | 'top' | 'armed' | null;
+  // An ability ready to use: the card rocks gently in place.
+  rocking?: boolean;
+  // Drawn as a card back (a pack drafted blind).
+  faceDown?: boolean;
   children?: React.ReactNode;
   exitPlan?: React.MutableRefObject<ExitPlan>;
   register: (id: SpriteId, handle: SpriteHandle | null) => void;
@@ -111,6 +115,18 @@ export const spriteSeed = (id: SpriteId): number => {
   for (let i = 0; i < id.length; i += 1) hash = (hash * 31 + id.charCodeAt(i)) % 9973;
   return hash;
 };
+
+// Not any game's real card back: a plain patterned face for cards drafted blind.
+export const CardBack: React.FC = () => (
+  <div
+    className="w-full h-full p-[6%] bg-[#1f2937]"
+    style={{
+      backgroundImage: 'repeating-linear-gradient(45deg, rgba(255,255,255,0.05) 0 6px, transparent 6px 12px)',
+    }}
+  >
+    <div className="w-full h-full rounded-md border-2 border-white/20" />
+  </div>
+);
 
 const insideBand = (center: number, band: Band) => center >= band.top && center <= band.bottom;
 
@@ -139,6 +155,8 @@ const CardSprite: React.FC<CardSpriteProps> = ({
   held = false,
   touchAction = 'none',
   highlight,
+  rocking = false,
+  faceDown = false,
   children,
   exitPlan,
   register,
@@ -375,7 +393,7 @@ const CardSprite: React.FC<CardSpriteProps> = ({
       onPointerEnter={() => onHoverChange(id, true)}
       onPointerLeave={() => onHoverChange(id, false)}
     >
-      <div
+      <motion.div
         className={classNames(
           'relative w-full h-full card-border overflow-hidden pointer-events-none transition-shadow',
           {
@@ -383,11 +401,19 @@ const CardSprite: React.FC<CardSpriteProps> = ({
             'shadow-[0_10px_22px_-10px_rgba(0,0,0,0.85)]': !dragged,
             'ring-2 ring-white': highlight === 'selected',
             'ring-[3px] ring-[#3b82f6]': highlight === 'top',
+            'ring-[3px] ring-[#f59e0b]': highlight === 'armed',
           },
         )}
+        style={{ transformOrigin: '50% 50%' }}
+        animate={rocking && !dragged ? { rotate: [0, 2.5, 0, -2.5, 0] } : { rotate: 0 }}
+        transition={
+          rocking && !dragged
+            ? { duration: 2.4, ease: 'easeInOut', repeat: Infinity, delay: (spriteSeed(id) % 7) * 0.17 }
+            : { duration: 0.2 }
+        }
       >
-        <FoilCardImage card={card} height="100%" />
-      </div>
+        {faceDown ? <CardBack /> : <FoilCardImage card={card} height="100%" />}
+      </motion.div>
       {/* Badges and labels belong to the card's spot; they don't leave with it. */}
       {isPresent && children}
     </motion.div>

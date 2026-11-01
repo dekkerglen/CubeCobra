@@ -63,6 +63,8 @@ interface DeckTableProps {
   // A tap: send the card to the other board, in its natural spot.
   onToggleBoard: (source: DraftLocation) => void;
   onSetArt: (cardIndex: number) => void;
+  // What draft-matters cards noted during the draft, by card index.
+  notes?: Record<number, string[]>;
 }
 
 // Where the card behind one sprite is stored.
@@ -129,6 +131,7 @@ const DeckTable: React.FC<DeckTableProps> = ({
   onRestore,
   onToggleBoard,
   onSetArt,
+  notes = {},
 }) => {
   const { showCard, hideCard } = useContext(AutocardContext);
   const { showCustomImages } = useContext(DisplayContext);
@@ -502,7 +505,17 @@ const DeckTable: React.FC<DeckTableProps> = ({
         register={dragger.register}
         onPointerDown={dragger.pointerDown}
         onHoverChange={onHoverChange}
-      />,
+      >
+        {notes[slot!.cardIndex] && (
+          // On the name bar, so it shows on a stacked card too.
+          <div
+            className="pointer-events-none absolute top-0.5 right-0.5 px-1.5 rounded-full bg-black/80 text-white text-xxs leading-4 truncate"
+            style={{ maxWidth: '50%' }}
+          >
+            {notes[slot!.cardIndex]!.join(' · ')}
+          </div>
+        )}
+      </CardSprite>,
     );
   });
 

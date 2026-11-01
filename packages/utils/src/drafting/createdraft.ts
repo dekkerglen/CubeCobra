@@ -2,10 +2,11 @@ import seedrandom from 'seedrandom';
 
 import Card from '../datatypes/Card';
 import Cube from '../datatypes/Cube';
-import Draft, { CardSlot, DraftFormat, DraftState } from '../datatypes/Draft';
+import Draft, { CardSlot, DraftFormat, DraftState, LoreSeekerPack, Pack } from '../datatypes/Draft';
 import User from '../datatypes/User';
 import { buildDefaultSteps, createDefaultDraftFormat } from '../draftutil';
 import { arraysEqual, fromEntries } from '../Util';
+import { isLoreSeeker } from './draftEffects';
 import { compileSlotFilter, Filter } from './draftFilter';
 
 type RNGFunction = () => number;
@@ -392,6 +393,66 @@ export const createPacks = (
   return result;
 };
 
+// Stops runaway chains of Lore Seekers inside Lore Seeker packs.
+export const MAX_LORE_SEEKER_PACKS = 24;
+
+/**
+ * Builds the pack each Lore Seeker in the draft can add (its own pack definition, or
+ * one like the pack it was in), then the packs for Lore Seekers inside those, until
+ * none are left or the cap is reached. Cards come from the same pool as the regular
+ * packs, after them, so nothing repeats unless the format allows multiples. A pack is
+ * as big as the pool allows. New cards are appended to `cards`.
+ */
+export const createLoreSeekerPacks = (
+  format: DraftFormat,
+  initialState: DraftState,
+  cards: Card[],
+  nextCardFn: NextCardFn,
+  rng: RNGFunction,
+): LoreSeekerPack[] => {
+  const packs: LoreSeekerPack[] = [];
+  const queue: { source: number; template: Pack }[] = [];
+  const templateFor = (cardIndex: number, fallback: Pack): Pack => cards[cardIndex]?.lore_seeker_pack ?? fallback;
+
+  for (const seat of initialState) {
+    seat.forEach((pack, packNum) => {
+      const formatPack = format.packs[packNum];
+      if (!formatPack) return;
+      for (const cardIndex of pack.cards) {
+        if (isLoreSeeker(cards[cardIndex]))
+          queue.push({ source: cardIndex, template: templateFor(cardIndex, formatPack) });
+      }
+    });
+  }
+
+  while (queue.length > 0 && packs.length < MAX_LORE_SEEKER_PACKS) {
+    const { source, template } = queue.shift()!;
+    const packCards: number[] = [];
+    for (const slot of template.slots) {
+      let drawn: DraftResult;
+      try {
+        drawn = nextCardFn((slot.filter || '').split(','), slot.board || 'mainboard');
+      } catch {
+        break; // the pool ran out: the pack is as big as it got
+      }
+      if (!drawn.card) break;
+      const index = cards.length;
+      cards.push(drawn.card);
+      packCards.push(index);
+      if (isLoreSeeker(drawn.card)) queue.push({ source: index, template: templateFor(index, template) });
+    }
+    if (packCards.length === 0) continue;
+    if (template.randomizeOrder) shuffleInPlace(packCards, rng);
+    const full = packCards.length === template.slots.length;
+    packs.push({
+      source,
+      cards: packCards,
+      steps: full && template.steps ? template.steps : buildDefaultSteps(packCards.length),
+    });
+  }
+  return packs;
+};
+
 export const createDraft = (
   cube: Cube,
   format: DraftFormat,
@@ -425,12 +486,15 @@ export const createDraft = (
     throw new Error(`Could not create draft:\n${result.messages.join('\n')}`);
   }
 
+  const loreSeekerPacks = createLoreSeekerPacks(format, result.initialState, result.cards, nextCardFn, rng);
+
   const draft: Draft = {
     seats: [],
     cards: result.cards,
     seed,
     cube: cube.id,
     InitialState: result.initialState,
+    ...(loreSeekerPacks.length > 0 ? { LoreSeekerPacks: loreSeekerPacks } : {}),
     basics: [], // Deprecated - for backwards compatibility
     // basicsBoard stores a display name (e.g. "Basics"); it is normalized
     // via boardNameToKey() at lookup time in getBasicsFromCube()

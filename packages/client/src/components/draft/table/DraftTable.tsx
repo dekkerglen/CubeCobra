@@ -1,10 +1,10 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { ChevronLeftIcon, CpuIcon } from '@primer/octicons-react';
+import { ChevronLeftIcon, CpuIcon, StackIcon, ZapIcon } from '@primer/octicons-react';
 import { cardName, makeSubtitle } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
 import { getCardDefaultRowColumn } from '@utils/draftutil';
-import { AnimatePresence, motion, useMotionValue } from 'framer-motion';
+import { AnimatePresence, motion, MotionValue, useMotionValue } from 'framer-motion';
 
 import AutocardContext from '../../../contexts/AutocardContext';
 import DisplayContext from '../../../contexts/DisplayContext';
@@ -14,6 +14,7 @@ import Button from '../../base/Button';
 import Link from '../../base/Link';
 import Spinner from '../../base/Spinner';
 import Text from '../../base/Text';
+import FoilCardImage from '../../FoilCardImage';
 import BoosterPack from './BoosterPack';
 import CardSprite, { EnterFrom, ExitPlan, PASS_OUT_SECONDS, SpriteId } from './CardSprite';
 import { isCompactWidth } from './deckLayout';
@@ -48,6 +49,9 @@ interface DraftTableProps {
   cubeName: string;
   packArt?: string;
   packLabel?: string;
+  // Whether the pack on the table is unopened (nobody has drafted from it yet), when the
+  // page knows; otherwise the table guesses from cards leaving and arriving.
+  freshPack?: boolean;
   // The largest pack in the draft; phones size the pack's rows for it.
   packSize?: number;
   mainboard: number[][][];
@@ -73,6 +77,34 @@ interface DraftTableProps {
   onTrash: (packIndex: number) => void;
   onPickTo: (packIndex: number, target: DraftLocation) => void;
   onMovePoolCard: (source: DraftLocation, target: DraftLocation) => void;
+  // A second header line, e.g. waiting on the bots.
+  subtitle?: string;
+  // The pack is face down (Archdemon of Paliano): any card drafts a random one.
+  blind?: boolean;
+  onPickBlind?: () => void;
+  // The player can only pass this pack.
+  passOnly?: boolean;
+  onPass?: () => void;
+  // Pool cards whose ability is ready (they rock), and abilities switched on for the next pick.
+  readyCards?: number[];
+  armedCards?: number[];
+  // What draft-matters cards noted, by card index.
+  notes?: Record<number, string[]>;
+  // Cards the player removed from the draft.
+  removed?: number[];
+  // Shown over the pack, e.g. where a Lore Seeker pack came from.
+  packTag?: string;
+  // Packs waiting for the player, the one on screen included.
+  queueCount?: number;
+  onPoolCardPress?: (card: number) => void;
+  // Pool cards that can be dropped onto the pack (Cogwork Librarian), and the drop.
+  poolToPack?: number[];
+  // Pool cards drawn in the pack until the pick goes through (an armed Cogwork Librarian).
+  // Clicking one, or dragging it back to the pool, is onPoolCardPress.
+  inPack?: number[];
+  onPoolCardToPack?: (card: number) => void;
+  // Prompts, toasts and the like, drawn over the table.
+  effects?: React.ReactNode;
 }
 
 // One stored pile that feeds a pool column. A CMC column shows the creature row
@@ -85,8 +117,13 @@ interface Segment {
 }
 
 // 'tab': the pool's tab on phones, which drafts the card into its natural spot.
+// 'packDrop': a pool card dropped onto the pack to use it (Cogwork Librarian).
 type DropTarget =
-  { kind: 'pack'; index: number } | { kind: 'pool'; column: number; index: number } | { kind: 'tab' } | null;
+  | { kind: 'pack'; index: number }
+  | { kind: 'pool'; column: number; index: number }
+  | { kind: 'tab' }
+  | { kind: 'packDrop' }
+  | null;
 
 type Zone = 'pack' | 'pool';
 
@@ -141,7 +178,7 @@ const sameTarget = (a: DropTarget, b: DropTarget): boolean => {
   if (a === null || b === null) return a === b;
   if (a.kind === 'pack' && b.kind === 'pack') return a.index === b.index;
   if (a.kind === 'pool' && b.kind === 'pool') return a.column === b.column && a.index === b.index;
-  return a.kind === 'tab' && b.kind === 'tab';
+  return a.kind === b.kind;
 };
 
 const buildColumns = (mainboard: number[][][], sideboard: number[][][]): Segment[][] => {
@@ -181,6 +218,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
   cubeName,
   packArt,
   packLabel,
+  freshPack,
   packSize,
   mainboard,
   sideboard,
@@ -202,6 +240,22 @@ const DraftTable: React.FC<DraftTableProps> = ({
   onTrash,
   onPickTo,
   onMovePoolCard,
+  subtitle,
+  blind = false,
+  onPickBlind,
+  passOnly = false,
+  onPass,
+  readyCards = [],
+  armedCards = [],
+  notes = {},
+  removed = [],
+  packTag,
+  queueCount = 0,
+  onPoolCardPress,
+  poolToPack = [],
+  inPack = [],
+  onPoolCardToPack,
+  effects,
 }) => {
   const { showCard, hideCard } = useContext(AutocardContext);
   const { showCustomImages } = useContext(DisplayContext);
@@ -257,7 +311,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
   // table's margins and so widens the stage: deciding by the stage could flip back and forth.
   const compact = roomWidth > 0 && isCompactWidth(roomWidth);
   // Sized for the largest pack, so cards keep their size as the pack shrinks.
-  const capacity = Math.max(packSize ?? 0, pack.length);
+  const capacity = Math.max(packSize ?? 0, pack.length + inPack.length);
   const geometry: TableGeometry | null = useMemo(() => {
     if (stageSize.width <= 0 || stageSize.height <= 0) return null;
     return compact
@@ -274,14 +328,26 @@ const DraftTable: React.FC<DraftTableProps> = ({
     if (table) window.scrollTo({ top: window.scrollY + table.getBoundingClientRect().top, behavior: 'smooth' });
   }, [compact]);
 
+  // The stored piles. Cards drawn in the pack (inPack) are still in them, but not drawn there.
   const columns = useMemo(() => buildColumns(mainboard, sideboard), [mainboard, sideboard]);
-  const poolIds = useMemo(() => new Set(columns.flat().flatMap((segment) => segment.ids)), [columns]);
+  const inPackSet = useMemo(() => new Set(inPack), [inPack]);
+  const shownInColumn = useCallback(
+    (segments: Segment[]) => segments.flatMap((segment) => segment.ids).filter((id) => !inPackSet.has(id)),
+    [inPackSet],
+  );
+  const poolIds = useMemo(
+    () => new Set(columns.flat().flatMap((segment) => segment.ids.filter((id) => !inPackSet.has(id)))),
+    [columns, inPackSet],
+  );
 
   // A pick made while bots are still thinking is already in the pool but still
   // in the pack; the pool copy wins.
   const packIds = useMemo(
-    () => pack.filter((id, index) => index !== pendingPick && !poolIds.has(id) && cards[id]),
-    [pack, pendingPick, poolIds, cards],
+    () => [
+      ...pack.filter((id, index) => index !== pendingPick && !poolIds.has(id) && cards[id]),
+      ...inPack.filter((id) => cards[id]),
+    ],
+    [pack, pendingPick, poolIds, cards, inPack],
   );
   const packIdSet = useMemo(() => new Set(packIds), [packIds]);
 
@@ -302,8 +368,10 @@ const DraftTable: React.FC<DraftTableProps> = ({
   const maxRating = ratingById.size > 0 ? Math.max(...ratingById.values()) : 0;
 
   const canCommit = !disabled && !loading && !locked;
-  // Drafting by dropping into the pool; trash steps are click-only.
-  const canPlaceFromPack = canCommit && !isTrashStep;
+  // Drafting by dropping into the pool; trash steps and blind picks are click-only.
+  const canPlaceFromPack = canCommit && !isTrashStep && !blind;
+  const readySet = useMemo(() => new Set(readyCards), [readyCards]);
+  const armedSet = useMemo(() => new Set(armedCards), [armedCards]);
 
   // ---- Where every card sits this render ----
   const placements = useMemo(() => {
@@ -335,7 +403,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
     // Phones keep the pool in a drawer, off the stage.
     if (!compact) {
       columns.forEach((segments, column) => {
-        const ids = segments.flatMap((segment) => segment.ids).filter((id) => id !== draggedId);
+        const ids = shownInColumn(segments).filter((id) => id !== draggedId);
         const gap = target?.kind === 'pool' && target.column === column ? target.index : -1;
         let index = 0;
         ids.forEach((id) => {
@@ -354,7 +422,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
         result.set(draggedId, { pose, z: 100 + homeSlot, zone: 'pack' });
       } else {
         columns.forEach((segments, column) => {
-          const ids = segments.flatMap((segment) => segment.ids);
+          const ids = shownInColumn(segments);
           const index = ids.indexOf(draggedId);
           if (index >= 0) {
             const pose = stackSlot(geometry, column, index);
@@ -364,7 +432,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
       }
     }
     return result;
-  }, [geometry, compact, packOrder, columns, drag, activeSelected, hovered]);
+  }, [geometry, compact, packOrder, columns, shownInColumn, drag, activeSelected, hovered]);
 
   // ---- Pack turnover: where new cards come from, where leaving cards go ----
   // Pack 1 is passed left, so its packs arrive from the right and leftovers
@@ -405,11 +473,14 @@ const DraftTable: React.FC<DraftTableProps> = ({
   const drawnSignature = geometry ? [...packIds, ...poolIds].join(',') : '';
   if (geometry && drawnSignature !== turnover.signature) {
     const packLeft = turnover.pack.some((id) => !packIdSet.has(id) && !poolIds.has(id));
-    const passed = packLeft || turnover.passPending;
+    const leftBefore = packLeft || turnover.passPending;
     const entered = packIds.some((id) => !turnover.seen.has(id));
+    const firstDraw = turnover.signature === '';
     // A pack opened mid-draft, or the first pick on load, gets the full opening.
     // Reloading partway through a pack just deals the cards back out.
-    const unwrapped = entered && !passed && (turnover.signature !== '' || pickNumber === 1);
+    const passed = freshPack === undefined ? leftBefore : entered && !freshPack && !firstDraw;
+    const unwrapped =
+      freshPack === undefined ? entered && !passed && (!firstDraw || pickNumber === 1) : entered && freshPack;
     const kinds = new Map<number, EnterKind>();
     packIds.forEach((id) => {
       if (!turnover.seen.has(id)) kinds.set(id, passed ? 'passed' : unwrapped ? 'burst' : 'opened');
@@ -423,7 +494,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
       signature: drawnSignature,
       pack: packIds,
       seen: new Set([...packIds, ...poolIds]),
-      passPending: passed && !entered,
+      passPending: leftBefore && !entered,
       kinds,
       openings,
     });
@@ -478,8 +549,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
     0,
     ...columns.map(
       (segments, column) =>
-        segments.reduce((sum, segment) => sum + segment.ids.length, 0) +
-        (drag?.target?.kind === 'pool' && drag.target.column === column ? 1 : 0),
+        shownInColumn(segments).length + (drag?.target?.kind === 'pool' && drag.target.column === column ? 1 : 0),
     ),
   );
   const maxScroll = geometry && !compact ? maxPoolScroll(geometry, tallestStack) : 0;
@@ -513,10 +583,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
     // Still in the pack until the page moves it.
     if (placement.zone !== 'pool') return;
     revealId.current = null;
-    const stack =
-      columns
-        .find((segments) => segments.some((segment) => segment.ids.includes(id)))
-        ?.flatMap((segment) => segment.ids) ?? [];
+    const stack = shownInColumn(columns.find((segments) => shownInColumn(segments).includes(id)) ?? []);
     // The last card in a stack shows its whole face, the others just their name bar.
     const top = placement.pose.y;
     const bottom = top + (stack[stack.length - 1] === id ? geometry.cardH : geometry.bar);
@@ -524,7 +591,8 @@ const DraftTable: React.FC<DraftTableProps> = ({
   });
 
   // ---- Drag and click ----
-  const locate = (id: number) =>
+  // Typed, since the drag hook that calls it is declared before the placements it reads.
+  const locate = (id: number): { zone: Zone; scroll: MotionValue<number> | null } | null =>
     placements.has(id)
       ? { zone: packIdSet.has(id) ? 'pack' : 'pool', scroll: packIdSet.has(id) ? null : poolScroll }
       : null;
@@ -535,9 +603,11 @@ const DraftTable: React.FC<DraftTableProps> = ({
     // Pack or pool by where the card is held, like the pool's edge scrolling.
     const pointerY = top + s.grabY;
 
+    const backToPool = inPackSet.has(Number(s.id)) && !locked;
     if (compact) {
       if (s.zone !== 'pack') return null;
-      if (left + s.grabX >= geometry.width - TAB_DROP_ZONE) return canPlaceFromPack ? { kind: 'tab' } : null;
+      if (left + s.grabX >= geometry.width - TAB_DROP_ZONE)
+        return canPlaceFromPack || backToPool ? { kind: 'tab' } : null;
       return {
         kind: 'pack',
         index: nearestPackSlot(geometry, packOrder.length, centerX, top + geometry.cardH / 2),
@@ -545,16 +615,16 @@ const DraftTable: React.FC<DraftTableProps> = ({
     }
 
     if (pointerY < geometry.packBottom) {
-      // Pool cards can't go back into the pack.
-      if (s.zone !== 'pack') return null;
+      // Pool cards can't go back into the pack, except to use one (Cogwork Librarian).
+      if (s.zone !== 'pack') return poolToPack.includes(Number(s.id)) && !locked ? { kind: 'packDrop' } : null;
       return { kind: 'pack', index: nearestPackSlot(geometry, packOrder.length, centerX, top + geometry.cardH / 2) };
     }
 
-    if (s.zone === 'pack' && !canPlaceFromPack) return null;
+    if (s.zone === 'pack' && !canPlaceFromPack && !backToPool) return null;
     if (locked) return null;
     const column = columnAt(geometry, centerX);
     if (column === null) return null;
-    const count = columns[column].flatMap((segment) => segment.ids).filter((id) => id !== s.id).length;
+    const count = shownInColumn(columns[column]).filter((id) => id !== s.id).length;
     return { kind: 'pool', column, index: stackInsertIndex(geometry, top + poolScroll.get(), count) };
   };
 
@@ -563,9 +633,11 @@ const DraftTable: React.FC<DraftTableProps> = ({
   // move handler applies them. At a boundary between piles (e.g. the last
   // creature / first non-creature) the card's natural pile wins.
   const resolveLocation = (id: number, column: number, index: number): DraftLocation => {
+    // As drawn: without the dragged card or cards drawn in the pack.
     const segments = columns[column].map((segment) => ({
       ...segment,
-      ids: segment.ids.filter((other) => other !== id),
+      stored: segment.ids.filter((other) => other !== id),
+      ids: segment.ids.filter((other) => other !== id && !inPackSet.has(other)),
     }));
     const card = cards[id];
     const natural = card ? getCardDefaultRowColumn(card) : { row: 1, col: 0 };
@@ -584,9 +656,11 @@ const DraftTable: React.FC<DraftTableProps> = ({
       }
       start += segments[i].ids.length;
     }
+    // Back to a position in the stored pile, which may hold cards that aren't drawn.
+    const stored = at < segment.ids.length ? segment.stored.indexOf(segment.ids[at]!) : segment.stored.length;
     return segment.board === 'deck'
-      ? DraftLocation.deck(segment.row, segment.col, at)
-      : DraftLocation.sideboard(segment.row, segment.col, at);
+      ? DraftLocation.deck(segment.row, segment.col, stored)
+      : DraftLocation.sideboard(segment.row, segment.col, stored);
   };
 
   const findPoolLocation = (id: number): DraftLocation | null => {
@@ -604,6 +678,17 @@ const DraftTable: React.FC<DraftTableProps> = ({
   const drop = (s: DragSession, target: DropTarget) => {
     if (target === null) return;
     const id = Number(s.id);
+
+    if (target.kind === 'packDrop') {
+      onPoolCardToPack?.(id);
+      return;
+    }
+
+    // A card drawn in the pack, put back in the pool.
+    if (inPackSet.has(id) && (target.kind === 'pool' || target.kind === 'tab')) {
+      onPoolCardPress?.(id);
+      return;
+    }
 
     if (target.kind === 'pack') {
       const order = packOrder.filter((other) => other !== id);
@@ -644,7 +729,26 @@ const DraftTable: React.FC<DraftTableProps> = ({
   // With a mouse, the hover preview already shows the card, so a click drafts it.
   // A tap raises the card first so it can be read, and a second tap drafts it.
   const click = (id: number, pointerType: string) => {
-    if (!packIdSet.has(id)) return;
+    if (locked) return;
+    if (inPackSet.has(id)) {
+      onPoolCardPress?.(id);
+      return;
+    }
+    if (!packIdSet.has(id)) {
+      if (!poolIds.has(id)) return;
+      // A card with an ability opens its prompt; any other goes to the other board.
+      if (readySet.has(id) || armedSet.has(id)) onPoolCardPress?.(id);
+      else {
+        const source = findPoolLocation(id);
+        if (source) togglePoolCard(source);
+      }
+      return;
+    }
+    // Face down there's nothing to read first: any card is a random pick.
+    if (blind) {
+      if (canCommit) onPickBlind?.();
+      return;
+    }
     if (pointerType === 'touch' && activeSelected !== id) {
       setSelected(id);
       return;
@@ -686,7 +790,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
     if (hovering) {
       setHovered(id);
       const card = cards[id];
-      if (card) showCard(card, showCustomImages, tagColors);
+      if (card && !(blind && packIdSet.has(id))) showCard(card, showCustomImages, tagColors);
     } else {
       setHovered((current) => (current === id ? null : current));
       hideCard();
@@ -701,7 +805,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
         .flatMap((segments) => segments.flatMap((segment) => segment.ids.map((id) => cards[id]))),
     [columns, cards],
   );
-  const columnCounts = columns.map((segments) => segments.reduce((sum, segment) => sum + segment.ids.length, 0));
+  const columnCounts = columns.map((segments) => shownInColumn(segments).length);
   const hoveredColumn = drag?.target?.kind === 'pool' ? drag.target.column : null;
   const hasRatings = ratingById.size > 0;
 
@@ -709,9 +813,12 @@ const DraftTable: React.FC<DraftTableProps> = ({
   placements.forEach((placement, id) => {
     const card = cards[id];
     if (!card) return;
-    const rating = ratingById.get(id);
+    const inPackZone = placement.zone === 'pack';
+    const rating = blind ? undefined : ratingById.get(id);
     const isSelected = id === activeSelected;
     const isTop = showRatings && rating !== undefined && rating === maxRating && maxRating > 0;
+    const isArmed = armedSet.has(id);
+    const cardNotes = inPackZone ? [] : (notes[id] ?? []);
     sprites.push(
       <CardSprite
         key={`card-${id}`}
@@ -729,7 +836,9 @@ const DraftTable: React.FC<DraftTableProps> = ({
         enterFrom={enterFor(id, placement)}
         dragged={drag?.id === id}
         held={opening !== null && !opening.burst && turnover.kinds.get(id) === 'burst'}
-        highlight={isSelected ? 'selected' : isTop ? 'top' : null}
+        highlight={isSelected ? 'selected' : isArmed ? 'armed' : isTop ? 'top' : null}
+        rocking={!inPackZone && readySet.has(id) && !isArmed && hovered !== id}
+        faceDown={inPackZone && blind && !inPackSet.has(id)}
         exitPlan={exitPlan}
         register={dragger.register}
         onPointerDown={dragger.pointerDown}
@@ -742,6 +851,15 @@ const DraftTable: React.FC<DraftTableProps> = ({
             }`}
           >
             {Math.round(rating * 100)}%
+          </div>
+        )}
+        {cardNotes.length > 0 && (
+          // On the name bar, so it shows on a stacked card too.
+          <div
+            className="pointer-events-none absolute top-0.5 right-0.5 px-1.5 rounded-full bg-black/80 text-white text-xxs leading-4 truncate"
+            style={{ maxWidth: '50%' }}
+          >
+            {cardNotes.join(' · ')}
           </div>
         )}
         {isSelected && geometry!.rows && (
@@ -791,6 +909,22 @@ const DraftTable: React.FC<DraftTableProps> = ({
   );
   const hasMenu = Boolean(menuActions) || Boolean(ratingsLink);
   const tabTarget = drag?.target?.kind === 'tab';
+  const packDropTarget = drag?.target?.kind === 'packDrop';
+  const passButton = passOnly && onPass && (
+    <Button color="primary" onClick={onPass} disabled={locked}>
+      Pass
+    </Button>
+  );
+  const queueBadge = queueCount > 1 && (
+    <span className="flex items-center gap-1 text-xs text-text-secondary" title={`${queueCount} packs`}>
+      <StackIcon size={14} />
+      {queueCount}
+    </span>
+  );
+  // Phones: ready and armed cards sit in the corner of the table, since the pool is in a tray.
+  const cornerCards = compact
+    ? [...armedCards, ...readyCards.filter((id) => !armedSet.has(id))].filter((id) => !inPackSet.has(id))
+    : [];
 
   return (
     // Exactly one viewport tall (less the phone's bottom nav) regardless of the
@@ -813,21 +947,23 @@ const DraftTable: React.FC<DraftTableProps> = ({
                 <Text semibold className="truncate leading-5">
                   {title}
                 </Text>
-                {pendingPick !== null && (
-                  <Text xs className="text-text-secondary">
-                    Waiting for Bot Picks...
+                {subtitle && (
+                  <Text xs className="text-text-secondary truncate">
+                    {subtitle}
                   </Text>
                 )}
               </div>
-              {hasMenu && (
-                <div className="ml-auto">
+              <div className="ml-auto flex items-center gap-2 shrink-0">
+                {queueBadge}
+                {passButton}
+                {hasMenu && (
                   <PhoneMenuButton
                     open={menuOpen}
                     onToggle={() => setMenuOpen((open) => !open)}
                     label="Draft options"
                   />
-                </div>
-              )}
+                )}
+              </div>
             </div>
             {error && <div className="px-2 pb-2">{retryButton}</div>}
             {hasMenu && (
@@ -848,16 +984,18 @@ const DraftTable: React.FC<DraftTableProps> = ({
               <Text semibold lg className="whitespace-nowrap leading-6">
                 {title}
               </Text>
-              {pendingPick !== null && (
+              {subtitle && (
                 <Text xs className="text-text-secondary">
-                  Waiting for Bot Picks...
+                  {subtitle}
                 </Text>
               )}
             </div>
+            {queueBadge}
             <Text xs className="flex-1 min-w-0 truncate text-right text-text-secondary">
               {makeSubtitle(mainboardCards.filter(Boolean))}
             </Text>
             <div className="flex shrink-0 gap-2 items-center">
+              {passButton}
               {headerActions}
               {error
                 ? retryButton
@@ -936,6 +1074,42 @@ const DraftTable: React.FC<DraftTableProps> = ({
                 </div>
               )}
               <AnimatePresence>{sprites}</AnimatePresence>
+              {packTag && (
+                <div
+                  className="absolute top-1 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full bg-black/75 text-white text-xxs font-semibold whitespace-nowrap pointer-events-none"
+                  style={{ zIndex: 700 }}
+                >
+                  {packTag}
+                </div>
+              )}
+              {packDropTarget && (
+                <div
+                  className="absolute inset-x-2 top-2 rounded-lg border-2 border-dashed border-[#f59e0b] bg-[#f59e0b]/10 pointer-events-none"
+                  style={{ height: geometry.packBottom - 8, zIndex: 50 }}
+                />
+              )}
+              {cornerCards.length > 0 && (
+                <div className="absolute left-2 bottom-2 flex gap-1.5" style={{ zIndex: 3050 }}>
+                  {cornerCards.map((id) => (
+                    <motion.button
+                      key={id}
+                      type="button"
+                      onClick={() => onPoolCardPress?.(id)}
+                      className={`block w-12 card-border overflow-hidden shadow-lg ${
+                        armedSet.has(id) ? 'ring-[3px] ring-[#f59e0b]' : ''
+                      }`}
+                      animate={armedSet.has(id) ? { rotate: 0 } : { rotate: [0, 4, 0, -4, 0] }}
+                      transition={
+                        armedSet.has(id)
+                          ? { duration: 0.2 }
+                          : { duration: 2.4, ease: 'easeInOut', repeat: Infinity, delay: (id % 7) * 0.17 }
+                      }
+                    >
+                      <FoilCardImage card={cards[id]} />
+                    </motion.button>
+                  ))}
+                </div>
+              )}
               {opening && (
                 <BoosterPack
                   key={opening.id}
@@ -953,16 +1127,24 @@ const DraftTable: React.FC<DraftTableProps> = ({
               )}
               {compact && (
                 // Phones: opens the pool drawer. Over every card, even one being dragged onto it.
-                <button
+                <motion.button
                   type="button"
                   aria-label="Open pool"
                   onClick={() => setPoolOpen(true)}
                   className={`absolute right-0 flex flex-col items-center gap-2 py-3 rounded-l-md border border-r-0 shadow-lg transition-colors ${
                     tabTarget ? 'bg-button-primary/30 border-button-primary' : 'bg-bg-active border-border'
                   }`}
-                  style={{ width: TAB_WIDTH, top: '50%', transform: 'translateY(-50%)', zIndex: 3100 }}
+                  style={{ width: TAB_WIDTH, top: '50%', y: '-50%', zIndex: 3100, transformOrigin: '100% 50%' }}
+                  animate={readyCards.length > 0 ? { rotate: [0, 3, 0, -3, 0] } : { rotate: 0 }}
+                  transition={
+                    readyCards.length > 0 ? { duration: 2.4, ease: 'easeInOut', repeat: Infinity } : { duration: 0.2 }
+                  }
                 >
-                  <ChevronLeftIcon size={16} />
+                  {readyCards.length > 0 ? (
+                    <ZapIcon size={14} className="text-[#f59e0b]" />
+                  ) : (
+                    <ChevronLeftIcon size={16} />
+                  )}
                   {/* Pops each time a card lands in the pool. */}
                   <motion.span
                     key={poolIds.size}
@@ -979,7 +1161,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
                   >
                     Pool
                   </span>
-                </button>
+                </motion.button>
               )}
             </>
           )}
@@ -995,8 +1177,14 @@ const DraftTable: React.FC<DraftTableProps> = ({
             mainboard={mainboard}
             sideboard={sideboard}
             onToggle={togglePoolCard}
+            readyCards={readyCards}
+            armedCards={armedCards}
+            onPress={onPoolCardPress}
+            notes={notes}
+            removed={removed}
           />
         )}
+        {effects}
       </div>
     </div>
   );

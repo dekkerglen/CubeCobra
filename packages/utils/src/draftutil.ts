@@ -2,6 +2,7 @@ import { cardCmc, cardColorCategory, cardRarity, cardType, cmcColumn } from './c
 import Card from './datatypes/Card';
 import Draft, { CardSlot, DraftAction, DraftFormat, DraftStep, Pack } from './datatypes/Draft';
 import type { State } from './datatypes/DraftState';
+import { hasDraftLog, ReplayCardAction, seatCardActions } from './drafting/draftEngine';
 
 interface Step {
   action: string;
@@ -248,9 +249,40 @@ const replayDraft = (draft: Draft, visit: (states: DrafterState[]) => boolean): 
   return states;
 };
 
+// Logged drafts replay through the draft engine. Callers ask for one pick at a time,
+// so each seat's replay is kept for as long as the draft object is.
+const loggedActions = new WeakMap<Draft, Map<number, ReplayCardAction[]>>();
+const loggedSeatActions = (draft: Draft, seatNumber: number): ReplayCardAction[] => {
+  let bySeat = loggedActions.get(draft);
+  if (!bySeat) {
+    bySeat = new Map();
+    loggedActions.set(draft, bySeat);
+  }
+  let actions = bySeat.get(seatNumber);
+  if (!actions) {
+    actions = seatCardActions(draft, seatNumber);
+    bySeat.set(seatNumber, actions);
+  }
+  return actions;
+};
+
 export const getDrafterState = (draft: Draft, seatNumber: number, pickNumber: number): DrafterState => {
   if (!draft.InitialState) {
     return emptyDrafterState();
+  }
+
+  if (hasDraftLog(draft)) {
+    const action = loggedSeatActions(draft, seatNumber)[pickNumber];
+    if (!action) return emptyDrafterState();
+    return {
+      ...emptyDrafterState(),
+      picked: action.picked,
+      cardsInPack: action.cardsInPack,
+      pick: action.pick,
+      pack: action.pack,
+      selection: action.selection,
+      step: { action: action.action },
+    };
   }
 
   const states = replayDraft(draft, (current) => {
@@ -278,6 +310,16 @@ export interface SeatActionState {
 export const getSeatActionStates = (draft: Draft, seatNumber: number): SeatActionState[] => {
   if (!draft.InitialState) {
     return [];
+  }
+
+  if (hasDraftLog(draft)) {
+    return loggedSeatActions(draft, seatNumber).map((action) => ({
+      action: action.action,
+      selection: action.selection,
+      cardsInPack: action.cardsInPack,
+      pack: action.pack,
+      pick: action.pick,
+    }));
   }
 
   const out: SeatActionState[] = [];

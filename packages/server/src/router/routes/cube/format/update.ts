@@ -56,6 +56,46 @@ const sanitizeStep = (raw: unknown): DraftStep | null => {
 };
 
 /**
+ * Rebuilds a single pack from untrusted input with the same limits as a format's packs (such as
+ * the pack a Lore Seeker card opens). Returns null when the pack can't be accepted.
+ */
+export const sanitizePack = (raw: unknown): Pack | null => {
+  if (!isPlainObject(raw) || !Array.isArray(raw.slots) || raw.slots.length > MAX_PACK_SLOTS) {
+    return null;
+  }
+
+  const slots: CardSlot[] = [];
+  for (const rawSlot of raw.slots) {
+    const slot = sanitizeSlot(rawSlot);
+    if (!slot) {
+      return null;
+    }
+    slots.push(slot);
+  }
+
+  let steps: DraftStep[] | null = null;
+  if (raw.steps !== null && raw.steps !== undefined) {
+    if (!Array.isArray(raw.steps) || raw.steps.length > MAX_PACK_STEPS) {
+      return null;
+    }
+    steps = [];
+    for (const rawStep of raw.steps) {
+      const step = sanitizeStep(rawStep);
+      if (!step) {
+        return null;
+      }
+      steps.push(step);
+    }
+  }
+
+  const pack: Pack = { slots, steps };
+  if (raw.randomizeOrder === true) {
+    pack.randomizeOrder = true;
+  }
+  return pack;
+};
+
+/**
  * Rebuilds a custom draft format from untrusted input, keeping only known fields with sane
  * types and sizes. Returns a user-facing error when the format can't be accepted.
  */

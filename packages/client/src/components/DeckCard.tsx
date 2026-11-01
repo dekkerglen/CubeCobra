@@ -1,8 +1,10 @@
 import React, { useMemo } from 'react';
 
+import { cardName } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
 import Deck from '@utils/datatypes/Draft';
 import DeckSeat from '@utils/datatypes/DraftSeat';
+import { noteText, seatLabel } from '@utils/drafting/draftEngine';
 import { sortDeep } from '@utils/sorting/Sort';
 
 import useMediaQuery from '../hooks/useMediaQuery';
@@ -17,6 +19,9 @@ import HorizontalScrollFade from './HorizontalScrollFade';
 import HousmanPickBreakdown from './HousmanPickBreakdown';
 import Markdown from './Markdown';
 import Username from './Username';
+import withAutocard from './WithAutocard';
+
+const TextAutocard = withAutocard('span');
 
 interface DeckStacksStaticProps {
   piles: number[][][];
@@ -167,6 +172,21 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
 
   const mbCount = sorted.length;
 
+  // What draft-matters cards noted during the draft, and the cards this seat removed from it.
+  const notes = useMemo(() => {
+    return Object.entries(seat?.draftNotes ?? {})
+      .map(([card, list]) => ({
+        card: draft.cards[Number(card)],
+        text: list.map((note) => noteText(note, seatLabel, draft.cards)).join(' · '),
+      }))
+      .filter((entry) => entry.card && entry.text);
+  }, [seat, draft.cards]);
+  const removed = (seat?.removedorder ?? [])
+    .slice()
+    .reverse()
+    .map((index) => draft.cards[index])
+    .filter(Boolean);
+
   if (!hasSeat) {
     return (
       <Card>
@@ -248,6 +268,42 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
                 xs={8}
               />
             </>
+          )}
+        </CardBody>
+      )}
+      {view !== 'picks' && (notes.length > 0 || removed.length > 0) && (
+        <CardBody className="border-top flex flex-col gap-3">
+          {notes.length > 0 && (
+            <div>
+              <Text semibold lg>
+                Draft notes
+              </Text>
+              <div className="flex flex-col gap-1 mt-1">
+                {notes.map(({ card, text }) => (
+                  <Text sm key={card!.cardID + text}>
+                    <TextAutocard card={card} className="font-semibold">
+                      {cardName(card!)}
+                    </TextAutocard>
+                    <span className="text-text-secondary">: {text}</span>
+                  </Text>
+                ))}
+              </div>
+            </div>
+          )}
+          {removed.length > 0 && (
+            <div>
+              <Text semibold lg>
+                Removed ({removed.length})
+              </Text>
+              <Text sm className="block mt-1">
+                {removed.map((card, index) => (
+                  <React.Fragment key={`${card.cardID}-${index}`}>
+                    {index > 0 && ', '}
+                    <TextAutocard card={card}>{cardName(card)}</TextAutocard>
+                  </React.Fragment>
+                ))}
+              </Text>
+            </div>
           )}
         </CardBody>
       )}

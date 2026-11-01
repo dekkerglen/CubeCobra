@@ -1,7 +1,7 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 
-import { ChevronRightIcon } from '@primer/octicons-react';
+import { ChevronRightIcon, ZapIcon } from '@primer/octicons-react';
 import { cardCmc, cardCost, cardName, cardType, getCardColorClass, makeSubtitle } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
 import CardType from '@utils/datatypes/Card';
@@ -13,7 +13,7 @@ import FoilCardImage from '../../FoilCardImage';
 import withAutocard from '../../WithAutocard';
 import { CARD_ASPECT } from './tableLayout';
 
-export type PoolTab = 'mainboard' | 'sideboard';
+export type PoolTab = 'mainboard' | 'sideboard' | 'removed';
 
 interface PoolTrayProps {
   open: boolean;
@@ -26,12 +26,22 @@ interface PoolTrayProps {
   sideboard: number[][][];
   // A tap on a row: send one copy to the other board.
   onToggle: (source: DraftLocation) => void;
+  // Cards with an ability ready to use, and abilities switched on for the next pick.
+  readyCards?: number[];
+  armedCards?: number[];
+  // A tap on a ready or armed card's row, instead of moving it.
+  onPress?: (card: number) => void;
+  // What draft-matters cards noted, by card index.
+  notes?: Record<number, string[]>;
+  // Cards the player removed from the draft.
+  removed?: number[];
 }
 
 // One row of the list: every copy of a card on the board, and where each one is.
 interface Entry {
   name: string;
   card: CardType;
+  ids: number[];
   locations: DraftLocation[];
 }
 
@@ -58,8 +68,10 @@ const entriesOf = (cards: CardType[], board: number[][][], type: 'deck' | 'sideb
         const name = cardName(card);
         const location = type === 'deck' ? DraftLocation.deck(r, c, i) : DraftLocation.sideboard(r, c, i);
         const entry = byName.get(name);
-        if (entry) entry.locations.push(location);
-        else byName.set(name, { name, card, locations: [location] });
+        if (entry) {
+          entry.ids.push(cardIndex);
+          entry.locations.push(location);
+        } else byName.set(name, { name, card, ids: [cardIndex], locations: [location] });
       }),
     ),
   );
@@ -73,6 +85,13 @@ const entriesOf = (cards: CardType[], board: number[][][], type: 'deck' | 'sideb
 };
 
 const count = (board: number[][][]) => board.flat(2).length;
+const NO_BOARD: number[][][] = [];
+
+const removedEntries = (cards: CardType[], removed: number[]): Entry[] =>
+  removed.flatMap((cardIndex) => {
+    const card = cards[cardIndex];
+    return card ? [{ name: cardName(card), card, ids: [cardIndex], locations: [] }] : [];
+  });
 
 // Above the row if it fits, otherwise below; centered on it, inside the screen.
 const previewPosition = (row: DOMRect) => {
@@ -102,19 +121,23 @@ const PoolTray: React.FC<PoolTrayProps> = ({
   mainboard,
   sideboard,
   onToggle,
+  readyCards = [],
+  armedCards = [],
+  onPress,
+  notes = {},
+  removed = [],
 }) => {
-  const board = tab === 'mainboard' ? mainboard : sideboard;
+  const board = tab === 'mainboard' ? mainboard : tab === 'sideboard' ? sideboard : NO_BOARD;
   const entries = useMemo(
-    () => entriesOf(cards, board, tab === 'mainboard' ? 'deck' : 'sideboard'),
-    [cards, board, tab],
+    () =>
+      tab === 'removed'
+        ? removedEntries(cards, removed)
+        : entriesOf(cards, board, tab === 'mainboard' ? 'deck' : 'sideboard'),
+    [cards, board, tab, removed],
   );
   const boardCards = useMemo(
-    () =>
-      board
-        .flat(2)
-        .map((index) => cards[index])
-        .filter(Boolean),
-    [board, cards],
+    () => (tab === 'removed' ? removed : board.flat(2)).map((index) => cards[index]).filter(Boolean),
+    [board, cards, tab, removed],
   );
 
   const [preview, setPreview] = useState<{ card: CardType; top: number; left: number } | null>(null);
@@ -153,10 +176,16 @@ const PoolTray: React.FC<PoolTrayProps> = ({
     setPreview(null);
   };
 
+  const special = (entry: Entry) =>
+    entry.ids.find((id) => armedCards.includes(id)) ?? entry.ids.find((id) => readyCards.includes(id));
+
   const tap = (entry: Entry) => {
     const held = press.current?.shown;
     press.current = null;
-    if (!held) onToggle(entry.locations[entry.locations.length - 1]);
+    if (held) return;
+    const card = special(entry);
+    if (card !== undefined && onPress) onPress(card);
+    else if (entry.locations.length > 0) onToggle(entry.locations[entry.locations.length - 1]);
   };
 
   const tabButton = (key: PoolTab, label: string, total: number) => (
@@ -214,6 +243,7 @@ const PoolTray: React.FC<PoolTrayProps> = ({
             <div role="tablist" className="flex">
               {tabButton('mainboard', 'Mainboard', count(mainboard))}
               {tabButton('sideboard', 'Sideboard', count(sideboard))}
+              {removed.length > 0 && tabButton('removed', 'Removed', removed.length)}
             </div>
             <Text xs className="block px-3 py-1 text-text-secondary">
               {makeSubtitle(boardCards)}
@@ -221,38 +251,59 @@ const PoolTray: React.FC<PoolTrayProps> = ({
           </div>
 
           <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain">
-            {entries.map((entry) => (
-              <AutocardButton
-                key={entry.name}
-                card={entry.card}
-                type="button"
-                onClick={() => tap(entry)}
-                onPointerDown={(event) => startPress(event, entry.card)}
-                onPointerMove={movePress}
-                onPointerUp={endPress}
-                onPointerCancel={endPress}
-                onPointerLeave={endPress}
-                onContextMenu={(event) => event.preventDefault()}
-                style={{ WebkitTouchCallout: 'none' }}
-                className={`flex items-center gap-2 w-full px-3 py-1.5 text-left select-none border-b border-border bg-card-${getCardColorClass(entry.card)}`}
-              >
-                <span className="w-6 shrink-0 text-xs font-semibold">{entry.locations.length}x</span>
-                <span className="flex-1 min-w-0 truncate text-sm font-medium">{entry.name}</span>
-                <span className="inline-flex shrink-0 items-center">
-                  {cardCost(entry.card)
-                    .slice(0)
-                    .reverse()
-                    .map((symbol, index) => (
-                      <img
-                        key={`${symbol}-${index}`}
-                        alt={symbol}
-                        className="mana-symbol-sm"
-                        src={cdnUrl(`/content/symbols/${symbol}.png`)}
-                      />
-                    ))}
-                </span>
-              </AutocardButton>
-            ))}
+            {entries.map((entry) => {
+              const card = special(entry);
+              const armed = card !== undefined && armedCards.includes(card);
+              const entryNotes = entry.ids.flatMap((id) => notes[id] ?? []);
+              return (
+                <AutocardButton
+                  key={entry.name}
+                  card={entry.card}
+                  type="button"
+                  onClick={() => tap(entry)}
+                  onPointerDown={(event) => startPress(event, entry.card)}
+                  onPointerMove={movePress}
+                  onPointerUp={endPress}
+                  onPointerCancel={endPress}
+                  onPointerLeave={endPress}
+                  onContextMenu={(event) => event.preventDefault()}
+                  style={{ WebkitTouchCallout: 'none' }}
+                  className={`flex items-center gap-2 w-full px-3 py-1.5 text-left select-none border-b border-border bg-card-${getCardColorClass(entry.card)} ${
+                    armed ? 'ring-2 ring-inset ring-[#f59e0b]' : ''
+                  }`}
+                >
+                  <span className="w-6 shrink-0 text-xs font-semibold">{entry.ids.length}x</span>
+                  <span className="flex flex-col flex-1 min-w-0">
+                    <span className="truncate text-sm font-medium">{entry.name}</span>
+                    {entryNotes.length > 0 && (
+                      <span className="truncate text-xs text-text-secondary">{entryNotes.join(' · ')}</span>
+                    )}
+                  </span>
+                  {card !== undefined && (
+                    <motion.span
+                      className="shrink-0 text-[#f59e0b]"
+                      animate={armed ? { rotate: 0 } : { rotate: [0, 12, 0, -12, 0] }}
+                      transition={armed ? { duration: 0.2 } : { duration: 1.6, ease: 'easeInOut', repeat: Infinity }}
+                    >
+                      <ZapIcon size={14} />
+                    </motion.span>
+                  )}
+                  <span className="inline-flex shrink-0 items-center">
+                    {cardCost(entry.card)
+                      .slice(0)
+                      .reverse()
+                      .map((symbol, index) => (
+                        <img
+                          key={`${symbol}-${index}`}
+                          alt={symbol}
+                          className="mana-symbol-sm"
+                          src={cdnUrl(`/content/symbols/${symbol}.png`)}
+                        />
+                      ))}
+                  </span>
+                </AutocardButton>
+              );
+            })}
           </div>
         </motion.div>
       )}

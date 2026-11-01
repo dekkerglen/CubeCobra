@@ -123,3 +123,8 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - You can change a deck's image in the deckbuilder: drag any card onto the thumbnail next to the deck name to use its art.
 - In Mana Matrix, typing a card's full name now still shows it in the suggestions, confirming it's a real card.
 - Mana Matrix no longer lets you save a cell with a name that isn't a real card; it asks you to pick one from the suggestions instead.
+- Conspiracy's draft-matters cards now work when you draft against bots: Cogwork Librarian, Leovold's Operative, Agent of Acquisitions, Lore Seeker, Canal Dredger, Archdemon of Paliano and the rest do what they say, and the bots use them too.
+- Cards in your pool with an ability you can use rock back and forth; tap one to use it. You're told when a bot drafts a face-up card or uses one, and a Table log lists everything that happened at the table.
+- What draft-matters cards note during the draft, like Garbage Fire's pick number or the colors chosen for Paliano, the High City, shows on the card while drafting, in the deckbuilder and on the deck page, along with any cards you removed from the draft.
+- The pick-by-pick breakdown now shows extra picks, whole packs taken, random picks, cards received from a Canal Dredger, Lore Seeker packs and removed cards.
+- Cube owners can set the booster pack a Lore Seeker adds to the draft from the card's window on the cube list, and it can include cards from other boards.

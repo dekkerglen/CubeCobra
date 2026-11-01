@@ -1,9 +1,10 @@
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 
 import { cardType, cmcColumn, detailsToCard } from '@utils/cardutil';
 import CardType, { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
+import { noteText, seatLabel } from '@utils/drafting/draftEngine';
 import { DeckSortKey, getCardDefaultRowColumn, sortDeckIntoColumns, splitDeckByCreature } from '@utils/draftutil';
 
 import BotDeckStatusBanner from 'components/BotDeckStatusBanner';
@@ -53,6 +54,15 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
   const [previewCardID, setPreviewCardID] = useState<string>();
 
   const { basics } = initialDeck;
+
+  // What draft-matters cards noted during the draft.
+  const notes = useMemo(() => {
+    const text: Record<number, string[]> = {};
+    for (const [card, list] of Object.entries(seat?.draftNotes ?? {})) {
+      text[Number(card)] = list.map((note) => noteText(note, seatLabel, initialDeck.cards));
+    }
+    return text;
+  }, [seat, initialDeck]);
 
   // Use a card's art as the deck's image.
   const applyCardArt = useCallback(
@@ -235,6 +245,7 @@ const CubeDeckbuilderPage: React.FC<CubeDeckbuilderPageProps> = ({ cube, initial
               onRestore={restoreOnTable}
               onToggleBoard={toggleBoard}
               onSetArt={applyCardArt}
+              notes={notes}
             />
           </ErrorBoundary>
         </div>

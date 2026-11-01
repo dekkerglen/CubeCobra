@@ -28,6 +28,8 @@ interface DraftBreakdownDisplayProps {
   userSelection?: string;
   hideRatingsToggle?: boolean;
   hideHelpText?: boolean;
+  // How this pick came about, when it wasn't a plain pick (draft-matters cards).
+  pickLabel?: string;
 }
 
 const DraftBreakdownDisplay: React.FC<DraftBreakdownDisplayProps> = ({
@@ -44,6 +46,7 @@ const DraftBreakdownDisplay: React.FC<DraftBreakdownDisplayProps> = ({
   cardUrlPrefix = '/tool/card',
   hideRatingsToggle = false,
   hideHelpText = false,
+  pickLabel,
 }) => {
   return (
     <div className="draft-breakdown-display" role="region" aria-label="Draft picks and recommendations">
@@ -100,7 +103,10 @@ const DraftBreakdownDisplay: React.FC<DraftBreakdownDisplayProps> = ({
             </Flexbox>
           </Col>
           <Col xs={6} sm={8} lg={9} xl={10}>
-            <Text semibold lg>{`Pack ${packNumber + 1}: Pick ${pickNumber}`}</Text> {/* Add 1 for display */}
+            <Text semibold lg>
+              {`Pack ${packNumber + 1}: Pick ${pickNumber}`} {/* Add 1 for display */}
+              {pickLabel && <span className="font-normal text-text-secondary"> · {pickLabel}</span>}
+            </Text>
             <CardGrid
               xs={2}
               sm={3}

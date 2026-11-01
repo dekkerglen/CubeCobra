@@ -1,3 +1,4 @@
+import type { DraftLogEntry } from '../drafting/draftEngine';
 import Card from './Card';
 import DraftSeat from './DraftSeat';
 import User from './User';
@@ -51,6 +52,14 @@ export type DraftState = {
   steps: DraftStep[];
 }[][];
 
+// The pack a Lore Seeker adds to the draft, built when the draft is created. `source`
+// is the Lore Seeker's index in the draft's cards.
+export interface LoreSeekerPack {
+  source: number;
+  cards: number[];
+  steps: DraftStep[];
+}
+
 // One completed Housman-draft exchange: a seat placed `given` into the shared pool and took
 // `taken` from it. Persisted (in draft order, grouped by round) so the completed draft can
 // render a pick-by-pick breakdown. Both cards are public, so nothing hidden is recorded here.
@@ -96,6 +105,11 @@ export default interface Draft {
   DraftmancerLog?: DraftmancerLog;
   // Ordered exchange history for Housman drafts, used to render the pick-by-pick breakdown.
   HousmanLog?: HousmanLogEntry[];
+  // Packs Lore Seekers can add, Lore Seekers inside those packs included.
+  LoreSeekerPacks?: LoreSeekerPack[];
+  // Every decision of an in-browser draft, in order (see drafting/draftEngine). Replaying it
+  // gives the exact draft, including draft-matters effects. Absent for older drafts.
+  DraftLog?: DraftLogEntry[];
   basics: number[]; // Deprecated - kept for backwards compatibility with old cubes
   basicsBoard?: string; // New: which board basics are pulled from
   id: string;
