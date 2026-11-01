@@ -2001,8 +2001,11 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       }
     }
 
+    // Return everything accumulated, even if that overshoots targetLimit. currentLastKey points past every
+    // row scanned, so trimming the page here would leave the trimmed matches in neither this page nor the
+    // next one. Callers window the results themselves, so an over-long page is harmless.
     return {
-      items: matchingCubes.slice(0, targetLimit),
+      items: matchingCubes,
       lastKey: currentLastKey,
     };
   }
