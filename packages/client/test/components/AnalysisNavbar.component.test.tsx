@@ -94,4 +94,20 @@ describe('AnalysisNavbar filter', () => {
     expect(wrapper).not.toHaveStyle({ maxWidth: '400px' });
     expect(wrapper).toHaveClass('flex-grow');
   });
+
+  // The input reserves padding-left for the search icon, but `Input` renders its field
+  // inside its own positioned wrapper that follows the icon in the DOM. Without an
+  // explicit stacking order the opaque input background paints over the icon and the
+  // reserved space just looks empty.
+  it('stacks the search icon above the input so it is not hidden by the input background', () => {
+    const { container } = renderNavbar({ filterInput: '' });
+
+    const icon = container.querySelector('[data-testid="analysis-filter"] > span.absolute');
+
+    expect(icon).toBeInTheDocument();
+    expect(icon).toHaveClass('z-10');
+    expect(icon!.querySelector('svg')).toBeInTheDocument();
+    // 12px icon offset + 16px icon + a 12px gap matching the input's own `px-3`.
+    expect(screen.getByRole('textbox')).toHaveStyle({ paddingLeft: '40px' });
+  });
 });
