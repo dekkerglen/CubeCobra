@@ -5,8 +5,8 @@ import Podcast from '@utils/datatypes/Podcast';
 
 import Banner from 'components/Banner';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
+import CursorPagination from 'components/base/CursorPagination';
 import { Col, Flexbox, Row } from 'components/base/Layout';
-import Pagination from 'components/base/Pagination';
 import Text from 'components/base/Text';
 import PodcastEpisodePreview from 'components/content/PodcastEpisodePreview';
 import PodcastPreview from 'components/content/PodcastPreview';
@@ -14,6 +14,12 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import MainLayout from 'layouts/MainLayout';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
 interface PodcastsPageProps {
   episodes: Episode[];
@@ -25,50 +31,45 @@ const PAGE_SIZE = 24;
 
 const PodcastsPage: React.FC<PodcastsPageProps> = ({ episodes, podcasts, lastKey }) => {
   const [items, setItems] = useState(episodes);
-  const { csrfFetch } = useContext(CSRFContext);
+  const { callApi } = useContext(CSRFContext);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!currentLastKey;
+  const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(currentLastKey);
 
-  const fetchMoreData = useCallback(async () => {
-    setLoading(true);
-
-    const response = await csrfFetch(`/content/getmorepodcasts`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+  const fetchMoreData = useCallback(
+    async (targetPage: number) => {
+      await fetchIndefiniteMoreData<Episode>({
+        callApi,
+        fetchMoreRoute: '/content/getmorepodcasts',
+        items,
+        setItems,
         lastKey: currentLastKey,
-      }),
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-      if (json.success === 'true') {
-        setItems([...items, ...json.episodes]);
-        setPage(page + 1);
-        setLastKey(json.lastKey);
-      }
-    }
-    setLoading(false);
-  }, [csrfFetch, currentLastKey, items, page]);
+        setLastKey,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'episodes',
+        setLoading,
+        targetPage,
+      });
+    },
+    [callApi, currentLastKey, items],
+  );
 
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        console.log(newPage, pageCount);
-        if (newPage >= pageCount) {
-          await fetchMoreData();
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData,
+        });
       }}
       loading={loading}
     />
@@ -98,8 +99,7 @@ const PodcastsPage: React.FC<PodcastsPageProps> = ({ episodes, podcasts, lastKey
         <CardHeader>
           <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
             <Text lg semibold>
-              Blog Posts ({items.length}
-              {hasMore ? '+' : ''})
+              Blog Posts
             </Text>
             {pager}
           </Flexbox>

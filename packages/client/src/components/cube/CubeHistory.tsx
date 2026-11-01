@@ -14,8 +14,14 @@ import BlogPostChangelog from 'components/blog/BlogPostChangelog';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
 import { formatDateTime } from 'utils/Date';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
-import Pagination from '../base/Pagination';
+import CursorPagination from '../base/CursorPagination';
 
 interface CubeHistoryProps {
   changes?: Record<string, any>[];
@@ -25,7 +31,7 @@ interface CubeHistoryProps {
 const PAGE_SIZE = 18;
 
 const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
-  const { csrfFetch } = useContext(CSRFContext);
+  const { csrfFetch, callApi } = useContext(CSRFContext);
   const { cube } = useContext(CubeContext);
   const [items, setItems] = useState(changes);
   const [currentLastKey, setLastKey] = useState(lastKey);
@@ -34,8 +40,12 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
   const [initialLoading, setInitialLoading] = useState(changes === undefined);
 
   const safeItems = useMemo(() => items ?? [], [items]);
-  const pageCount = Math.ceil(safeItems.length / PAGE_SIZE);
-  const hasMore = !!currentLastKey;
+  const pageCount = getIndefinitePageCount(safeItems, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(currentLastKey);
+
+  // `cubeId` is read outside the callbacks below so the compiler infers a dependency on that value
+  // rather than on `cube`, which would stop it preserving the memoization.
+  const cubeId = cube?.id;
 
   useEffect(() => {
     const fetchInitialData = async () => {
@@ -71,39 +81,31 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
     return safeItems.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).filter((_, index) => index % 2 !== 0);
   }, [safeItems, page]);
 
-  const fetchMoreData = useCallback(async () => {
-    setLoading(true);
-
-    const response = await csrfFetch(`/cube/getmorechangelogs`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        cubeId: safeItems[0]?.cubeId,
+  const fetchMoreData = useCallback(
+    async (targetPage: number) => {
+      await fetchIndefiniteMoreData<Record<string, any>>({
+        callApi,
+        fetchMoreRoute: '/cube/getmorechangelogs',
+        items: safeItems,
+        setItems,
         lastKey: currentLastKey,
-      }),
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-      if (json.success === 'true') {
-        setItems([...safeItems, ...json.posts]);
-        setPage(page + 1);
-        setLastKey(json.lastKey);
-      }
-    }
-    setLoading(false);
-  }, [currentLastKey, safeItems, page, csrfFetch]);
+        setLastKey,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'posts',
+        setLoading,
+        targetPage,
+        body: { cubeId },
+      });
+    },
+    [callApi, currentLastKey, safeItems, cubeId],
+  );
 
   const [dateValue, setDateValue] = useState(() => {
     const now = new Date();
     return now.toISOString().split('T')[0];
   });
 
-  // `cubeId` is read outside the callback so the compiler infers a dependency on that value
-  // rather than on `cube`, which would stop it preserving the memoization.
-  const cubeId = cube?.id;
   const handleDateJump = useCallback(() => {
     if (!dateValue || !cubeId) return;
     const dateMs = new Date(dateValue).getTime();
@@ -111,17 +113,17 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
   }, [dateValue, cubeId]);
 
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        console.log(newPage, pageCount);
-        if (newPage >= pageCount) {
-          await fetchMoreData();
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData,
+        });
       }}
       loading={loading}
     />
@@ -153,8 +155,7 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
       </Flexbox>
       <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
         <Text lg semibold>
-          Changes ({safeItems.length}
-          {hasMore ? '+' : ''})
+          Changes
         </Text>
         {pager}
       </Flexbox>
