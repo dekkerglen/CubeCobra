@@ -4,7 +4,7 @@ import { fireEvent, render, screen } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
-import CursorPagination from 'components/base/CursorPagination';
+import CursorPagination, { willRenderCursorPager } from 'components/base/CursorPagination';
 
 describe('CursorPagination', () => {
   it('renders no denominator', () => {
@@ -86,5 +86,30 @@ describe('CursorPagination', () => {
 
     fireEvent.click(screen.getByLabelText('Previous page'));
     expect(onPageChange).toHaveBeenCalledWith(0);
+  });
+});
+
+// Callers that wrap the pager in their own visible chrome - a bordered card footer, say - render
+// that chrome on this predicate. If it ever disagreed with the component, they would draw an empty
+// bordered strip, or hide a pager that was about to render.
+describe('willRenderCursorPager', () => {
+  const cases: { loadedPages: number; hasMore: boolean }[] = [];
+  for (const loadedPages of [0, 1, 2, 3]) {
+    for (const hasMore of [false, true]) {
+      cases.push({ loadedPages, hasMore });
+    }
+  }
+
+  it.each(cases)('agrees with what the component renders for %o', ({ loadedPages, hasMore }) => {
+    const { container } = render(
+      <CursorPagination active={0} loadedPages={loadedPages} hasMore={hasMore} onPageChange={jest.fn()} />,
+    );
+
+    expect(willRenderCursorPager(loadedPages, hasMore)).toBe(!(container as HTMLElement).matches(':empty'));
+  });
+
+  it('treats an omitted hasMore as false, like the component does', () => {
+    expect(willRenderCursorPager(1)).toBe(false);
+    expect(willRenderCursorPager(2)).toBe(true);
   });
 });

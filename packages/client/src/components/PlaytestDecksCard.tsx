@@ -13,7 +13,7 @@ import {
   hasIndefiniteMore,
 } from 'utils/indefinitePagination';
 
-import CursorPagination from './base/CursorPagination';
+import CursorPagination, { willRenderCursorPager } from './base/CursorPagination';
 import { Flexbox } from './base/Layout';
 
 interface PlaytestDecksCardProps {
@@ -71,6 +71,10 @@ const PlaytestDecksCard: React.FC<PlaytestDecksCardProps> = ({ decks, decksLastK
     />
   );
 
+  // The footer is a bordered strip of its own, so it has to appear on exactly the condition the
+  // pager does. Asking the component rather than re-deriving a rule from items.length is what
+  // keeps the two from drifting apart.
+  const showPager = willRenderCursorPager(pageCount, hasMore);
   const hasItems = items.length > 0;
 
   return (
@@ -90,11 +94,13 @@ const PlaytestDecksCard: React.FC<PlaytestDecksCardProps> = ({ decks, decksLastK
               <DeckPreview key={deck.id} deck={deck} />
             ))}
           </div>
-          <CardFooter>
-            <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
-              {pager}
-            </Flexbox>
-          </CardFooter>
+          {showPager && (
+            <CardFooter>
+              <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
+                {pager}
+              </Flexbox>
+            </CardFooter>
+          )}
         </>
       ) : (
         <CardBody>

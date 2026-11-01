@@ -65,6 +65,29 @@ describe('PreviousP1P1sCard', () => {
     expect(screen.queryByText(/Page/)).not.toBeInTheDocument();
   });
 
+  // The footer is a bordered strip; before it tracked the pager's own visibility rule it drew as an
+  // empty divider under every cube whose packs fit on one page, and under cubes with no packs at all.
+  it('draws no empty bordered footer when every pack fits on one page', () => {
+    const { container } = renderCard(makePacks(3));
+
+    expect(screen.queryByText(/Page/)).not.toBeInTheDocument();
+    expect(container.querySelector('.border-t')).toBeNull();
+    expect(screen.getByText('Pack 1')).toBeInTheDocument();
+  });
+
+  it('draws no empty bordered footer when there are no packs at all', () => {
+    const { container } = renderCard([]);
+
+    expect(container.querySelector('.border-t')).toBeNull();
+  });
+
+  it('draws the bordered footer once there is a pager to put in it', () => {
+    const { container } = renderCard(makePacks(3), { id: 'cursor' });
+
+    expect(screen.getAllByText('Page 1').length).toBeGreaterThan(0);
+    expect(container.querySelector('.border-t')).not.toBeNull();
+  });
+
   it('renders Page 1 with no denominator', () => {
     renderCard(makePacks(25), { id: 'cursor' });
 

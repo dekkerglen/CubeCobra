@@ -5,7 +5,7 @@ import Cube from '@utils/datatypes/Cube';
 import User from '@utils/datatypes/User';
 
 import { Card as BaseCard, CardBody, CardHeader } from 'components/base/Card';
-import CursorPagination from 'components/base/CursorPagination';
+import CursorPagination, { willRenderCursorPager } from 'components/base/CursorPagination';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
@@ -81,6 +81,10 @@ const CubeFollowersPage: React.FC<CubeFollowersPageProps> = ({
     />
   );
 
+  // The divider strip is visible chrome of its own, so it has to appear on exactly the condition
+  // the pager does. Asking the component rather than re-deriving a rule from items.length is what
+  // keeps the two from drifting apart.
+  const showPager = willRenderCursorPager(pageCount, hasMore);
   const totalShown = items.length;
   const headerCount = cube.likeCount ?? totalShown;
 
@@ -98,27 +102,25 @@ const CubeFollowersPage: React.FC<CubeFollowersPageProps> = ({
             </Flexbox>
           </CardHeader>
           {totalShown > 0 ? (
-            <>
-              <CardBody className="p-0">
-                <Row className="g-0">
-                  {items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((user) => (
-                    <Col key={user.id} xs={6} sm={4} md={3} lg={3} xl={2}>
-                      <UserPreview user={user} />
-                    </Col>
-                  ))}
-                </Row>
-              </CardBody>
-              {/* The divider belongs to the list, not the pager: an unguarded footer would draw an
-                  empty bordered strip under "No likes yet." */}
-              <CardBody className="border-t border-border">
-                <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
-                  {pager}
-                </Flexbox>
-              </CardBody>
-            </>
+            <CardBody className="p-0">
+              <Row className="g-0">
+                {items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((user) => (
+                  <Col key={user.id} xs={6} sm={4} md={3} lg={3} xl={2}>
+                    <UserPreview user={user} />
+                  </Col>
+                ))}
+              </Row>
+            </CardBody>
           ) : (
             <CardBody>
               <Text className="text-text-secondary">No likes yet.</Text>
+            </CardBody>
+          )}
+          {showPager && (
+            <CardBody className="border-t border-border">
+              <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
+                {pager}
+              </Flexbox>
             </CardBody>
           )}
         </BaseCard>

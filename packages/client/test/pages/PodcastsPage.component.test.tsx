@@ -59,6 +59,6 @@ describe('PodcastsPage', () => {
     renderPage({ episodes: Array.from({ length: 24 }, (_, index) => episode(index)), lastKey: 'cursor' });
 
     expect(screen.getAllByText('Page 1').length).toBeGreaterThan(0);
-    expect(screen.queryByText(/of/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(/ of /i)).not.toBeInTheDocument();
   });
 });

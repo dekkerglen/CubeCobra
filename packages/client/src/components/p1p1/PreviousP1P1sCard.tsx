@@ -11,7 +11,7 @@ import {
   hasIndefiniteMore,
 } from '../../utils/indefinitePagination';
 import { Card, CardFooter, CardHeader } from '../base/Card';
-import CursorPagination from '../base/CursorPagination';
+import CursorPagination, { willRenderCursorPager } from '../base/CursorPagination';
 import { Flexbox } from '../base/Layout';
 import Text from '../base/Text';
 import P1P1Preview from './P1P1Preview';
@@ -78,6 +78,11 @@ const PreviousP1P1sCard: React.FC<PreviousP1P1sCardProps> = ({ packs, packsLastK
     />
   );
 
+  // The footer is a bordered strip of its own, so it has to appear on exactly the condition the
+  // pager does. Asking the component rather than re-deriving a rule from allPacks.length is what
+  // keeps the two from drifting apart.
+  const showPager = willRenderCursorPager(pageCount, hasMore);
+
   const handlePackDeleted = useCallback((deletedPackId: string) => {
     setAllPacks((prevItems) => prevItems.filter((pack) => pack.id !== deletedPackId));
   }, []);
@@ -95,11 +100,13 @@ const PreviousP1P1sCard: React.FC<PreviousP1P1sCardProps> = ({ packs, packsLastK
       {allPacks.slice(activePage * PAGE_SIZE, (activePage + 1) * PAGE_SIZE).map((pack) => (
         <P1P1Preview key={pack.id} pack={pack} onDeleted={handlePackDeleted} cubeOwner={cubeOwner} />
       ))}
-      <CardFooter>
-        <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
-          {pager}
-        </Flexbox>
-      </CardFooter>
+      {showPager && (
+        <CardFooter>
+          <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
+            {pager}
+          </Flexbox>
+        </CardFooter>
+      )}
     </Card>
   );
 };
