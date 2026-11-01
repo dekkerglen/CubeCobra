@@ -38,36 +38,16 @@ export async function startDraft(
   return url.pathname;
 }
 
+/** Cards in the pack being drafted from (the draft table tags each card with its zone). */
+export const PACK_CARD = '[data-zone="pack"]';
+
 /**
- * Pick a single card from the draft pack using manual mouse events.
- *
- * The draft page uses @dnd-kit/core with PointerSensor. A fast `.click()` fires
- * pointerdown/pointerup before React renders and dnd-kit computes collision
- * detection, leaving `over` as null and causing the handler to silently return.
- *
- * To work around this, we manually sequence mouse events with a short delay
- * between down and up so dnd-kit has time to compute the `over` target.
- * A small mouse move triggers the collision detection update.
- * The drag completes in < 200ms so dnd-kit treats it as a "click" pick.
+ * Pick a single card from the draft pack. With a mouse, a press without a drag
+ * drafts the card. The click waits out the pack-opening overlay and cards of a
+ * passed pack still sliding off, which don't take pointer events.
  */
 async function clickPackCard(page: Page): Promise<void> {
-  const packCard = page.locator('.no-touch-action').first();
-  const box = await packCard.boundingBox();
-  if (!box) {
-    throw new Error('Pack card not visible — cannot get bounding box');
-  }
-
-  const x = box.x + box.width / 2;
-  const y = box.y + box.height / 2;
-
-  await page.mouse.move(x, y);
-  await page.mouse.down();
-  // Allow React to process drag start and dnd-kit to initialise
-  await page.waitForTimeout(50);
-  // Small move triggers pointermove → collision detection update
-  await page.mouse.move(x + 1, y + 1);
-  await page.waitForTimeout(50);
-  await page.mouse.up();
+  await page.locator(PACK_CARD).first().click({ timeout: 15000 });
 }
 
 /**
@@ -107,7 +87,7 @@ export async function pickAllCards(page: Page, maxPicks = 20, pickDelayMs = 3000
     }
 
     // Wait for a pickable card to appear
-    const packCard = page.locator('.no-touch-action').first();
+    const packCard = page.locator(PACK_CARD).first();
     try {
       await packCard.waitFor({ state: 'visible', timeout: 15000 });
     } catch {
@@ -116,7 +96,6 @@ export async function pickAllCards(page: Page, maxPicks = 20, pickDelayMs = 3000
       return;
     }
 
-    // Pick the card using manual mouse events for dnd-kit compatibility
     await clickPackCard(page);
 
     // Wait for the pick to process (predictions + bot picks + UI update)
