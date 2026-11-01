@@ -740,9 +740,11 @@ describe('crossword vocabulary: Universes Beyond', () => {
     ];
     clearVocabularyCache();
 
-    expect(texts()).toContain('GREYMONDAVACYNSSTALWART');
+    // The full name is too long for an entry, so its legend name and title stand in for it.
     expect(getVocabulary().entries.find((entry) => entry.text === 'GREYMOND')?.entryClass).toBe('legendName');
+    expect(texts()).toContain('AVACYNSSTALWART');
     expect(texts()).not.toContain('RICKSTEADFASTLEADER');
+    expect(texts()).not.toContain('STEADFASTLEADER');
     expect(texts()).not.toContain('RICK');
   });
 
