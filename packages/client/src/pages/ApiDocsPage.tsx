@@ -309,9 +309,10 @@ const ApiDocsPage: React.FC = () => (
 }`}
             notes={
               <Text sm className="text-text-secondary">
-                Cards are sorted by the default sort (Color Category → Types-Multicolor → Mana Value → Alphabetical).
-                All boards are always returned regardless of cube visibility settings. The{' '}
-                <InlineCode>changelog</InlineCode> field is only present when the <InlineCode>date</InlineCode> or{' '}
+                Cards are ordered by the cube's default sorts (Color Category → Types-Multicolor → Mana Value →
+                Alphabetical unless the cube sets its own). Every card is returned exactly once; cards no sort group
+                claims come last in their board. All boards are always returned regardless of cube visibility settings.
+                The <InlineCode>changelog</InlineCode> field is only present when the <InlineCode>date</InlineCode> or{' '}
                 <InlineCode>changelog</InlineCode> query parameter is used.
               </Text>
             }
@@ -534,7 +535,12 @@ Mox Sapphire
               A <Link href="/wiki/reference/filter-syntax">filter expression</Link> to include only matching cards
             </Param>
             <Param name="primary" type="query">
-              Primary sort column (e.g. <InlineCode>Color Category</InlineCode>)
+              Primary sort column (e.g. <InlineCode>Color Category</InlineCode>). Each sort column defaults to the
+              cube's own default sort, except for CSV, which keeps the cube's stored order unless{' '}
+              <InlineCode>primary</InlineCode> is given. Note that a sort which places a card in more than one group,
+              such as <InlineCode>Tags</InlineCode> or <InlineCode>Type</InlineCode>, writes that card out once per
+              group. Cube Cobra's own export menu always sends a fixed, single-group sort with{' '}
+              <InlineCode>showother=true</InlineCode> for that reason.
             </Param>
             <Param name="secondary" type="query">
               Secondary sort column
@@ -546,7 +552,13 @@ Mox Sapphire
               Quaternary sort column
             </Param>
             <Param name="showother" type="query">
-              Set to <InlineCode>true</InlineCode> to include the "other" category in the export
+              Set to <InlineCode>true</InlineCode> to include the "other" category in the export, which is every card
+              the requested sort does not place in a group. Defaults to the cube's "show unsorted" setting. Without it
+              those cards are left out of the response entirely.
+            </Param>
+            <Param name="nosort" type="query">
+              Set to <InlineCode>true</InlineCode> to skip sorting and export every matching card once, in the cube's
+              stored order. Sort parameters and <InlineCode>showother</InlineCode> are ignored.
             </Param>
           </ul>
 
@@ -621,6 +633,12 @@ Time Walk`}
                 </Param>
               </>
             }
+            notes={
+              <Text sm className="text-text-secondary">
+                Identical cards are grouped behind a quantity. Custom cards and vouchers are listed under the name they
+                were given in the cube, since they have no catalog printing.
+              </Text>
+            }
           />
 
           <Endpoint
@@ -636,6 +654,13 @@ Time Walk`}
                 </Param>
               </>
             }
+            notes={
+              <Text sm className="text-text-secondary">
+                Lines are <InlineCode>1 Name|SET</InlineCode>. A card with no printing - a custom card or voucher -
+                omits the separator, and a <InlineCode>|</InlineCode> inside a custom name becomes{' '}
+                <InlineCode>/</InlineCode> so it is not read as a set code.
+              </Text>
+            }
           />
 
           <Endpoint
@@ -650,6 +675,12 @@ Time Walk`}
                   Cube UUID or short ID
                 </Param>
               </>
+            }
+            notes={
+              <Text sm className="text-text-secondary">
+                Lines are <InlineCode>1 [SET:NUMBER] Name</InlineCode>. A card with no printing is written as just the
+                name, since an empty version block fails to import.
+              </Text>
             }
           />
         </Flexbox>

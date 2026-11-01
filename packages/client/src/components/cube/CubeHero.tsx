@@ -32,6 +32,7 @@ import UserContext from '../../contexts/UserContext';
 import useAlerts from '../../hooks/UseAlerts';
 import useLocalStorage from '../../hooks/useLocalStorage';
 import { cardKingdomBulkLink, getBulkManaPoolLink, tcgMassEntryUrl, tcgplayerAffiliate } from '../../utils/Affiliate';
+import { buildExportParams } from '../../utils/buildExportParams';
 import Checkbox from '../base/Checkbox';
 import Container from '../base/Container';
 import Dropdown from '../base/Dropdown';
@@ -69,13 +70,10 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const { addAlert } = useAlerts();
   const isCubeOwner = !!user && cube.owner.id === user.id;
 
-  // Get current filter and sort values from contexts
-  const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
   const { filterInput } = useContext(FilterContext);
 
   // State for collapsed hero, stored per page
   const [isCollapsed, setIsCollapsed] = useLocalStorage<boolean>(`cube-hero-collapsed-${activeLink}`, false);
-  const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
   const [exportAllBoards, setExportAllBoards] = useState(false);
   const [followedState, setFollowedState] = useState(!!user && !!cube.likedByCurrentUser);
@@ -261,39 +259,12 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
     return view?.boards.map((b) => b.toLowerCase()) || ['mainboard'];
   }, [cube, activeView]);
 
-  // Build URL segment for export links with filter, sort, and board parameters
-  const urlSegment = useMemo(() => {
-    const params = new URLSearchParams();
-
-    if (isFilterUsed && filterInput) {
-      params.set('filter', filterInput);
-    }
-
-    if (isSortUsed) {
-      if (sortPrimary) params.set('primary', sortPrimary);
-      if (sortSecondary) params.set('secondary', sortSecondary);
-      if (sortTertiary) params.set('tertiary', sortTertiary);
-      if (sortQuaternary) params.set('quaternary', sortQuaternary);
-    }
-
-    if (exportAllBoards) {
-      params.set('allBoards', '1');
-    } else {
-      params.set('boards', currentViewBoards.join(','));
-    }
-
-    return params.toString();
-  }, [
-    isFilterUsed,
-    filterInput,
-    isSortUsed,
-    sortPrimary,
-    sortSecondary,
-    sortTertiary,
-    sortQuaternary,
-    exportAllBoards,
-    currentViewBoards,
-  ]);
+  // Build URL segment for export links. Ordering is fixed by buildExportParams, so only the
+  // filter and the board selection vary.
+  const urlSegment = useMemo(
+    () => buildExportParams({ isFilterUsed, filterInput, exportAllBoards, currentViewBoards }),
+    [isFilterUsed, filterInput, exportAllBoards, currentViewBoards],
+  );
 
   const exportMenuItems = (
     <Flexbox direction="col" gap="2" className="p-3">
@@ -343,13 +314,13 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
         XMage (.dck)
       </a>
       <ArenaExportModalItem
-        modalprops={{ isFilterUsed: isFilterUsed, isSortUsed: isSortUsed, exportAllBoards }}
+        modalprops={{ isFilterUsed: isFilterUsed, exportAllBoards }}
         className="!text-text hover:!text-link-active font-medium text-left bg-transparent border-0 p-0 cursor-pointer"
       >
         Arena (.txt)
       </ArenaExportModalItem>
       <PrintAndPlayExportModalItem
-        modalprops={{ isFilterUsed: isFilterUsed, isSortUsed: isSortUsed, exportAllBoards }}
+        modalprops={{ isFilterUsed: isFilterUsed, exportAllBoards }}
         className="!text-text hover:!text-link-active font-medium text-left bg-transparent border-0 p-0 cursor-pointer"
       >
         Print and Play (.pdf)
@@ -361,14 +332,6 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
           wrapperTag="span"
           className="ms-auto me-0"
         >
-          <QuestionIcon size={16} className="hidden md:inline" />
-        </Tooltip>
-      </Flexbox>
-      <Flexbox direction="row" justify="between" onClick={() => setIsSortUsed((is) => !is)} className="cursor-pointer">
-        <div onClick={(e) => e.stopPropagation()}>
-          <Checkbox label="Use Sort" checked={isSortUsed} setChecked={setIsSortUsed} />
-        </div>
-        <Tooltip text="Order export using current sort options." wrapperTag="span" className="ms-auto me-0">
           <QuestionIcon size={16} className="hidden md:inline" />
         </Tooltip>
       </Flexbox>

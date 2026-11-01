@@ -43,6 +43,18 @@ import { arrayIsSubset, fromEntries } from '../Util';
 //"as const" so Typescript knows will always be these 4 values
 export const CUBE_DEFAULT_SORTS = ['Color Category', 'Types-Multicolor', 'Mana Value', 'Alphabetical'] as const;
 
+/**
+ * The ordering every export uses, independent of what the cube or the page is sorted by.
+ *
+ * Invariant: each sort named here must place a card in exactly one group. `sortGroupsOrdered` pushes
+ * a card into every group it matches, so a multi-label sort would write it to the file more than
+ * once. `Tags`, `Oracle Tags`, `Art Tags`, `Type`, `Supertype`, `Color`, `4+ Color`,
+ * `Color Combination Includes` and `Includes Color Combination` all fail that test and must never
+ * appear here. Pair it with `showOther` true, which is what keeps a card that matches no group at
+ * all from being dropped.
+ */
+export const EXPORT_SORTS = ['Color Category', 'Types-Multicolor', 'Mana Value', 'Alphabetical'] as const;
+
 const COLOR_MAP: Record<string, string> = {
   W: 'White',
   U: 'Blue',

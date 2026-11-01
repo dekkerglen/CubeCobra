@@ -8,6 +8,14 @@ import { resolveBotDeckStatus } from 'serverutils/botDeckStatus';
 import { cardFromId, getIdsFromName, getMostReasonable } from 'serverutils/carddb';
 import { addBasics, createPool, CSV_HEADER, exportToMtgo, getBasicCardsFromCube, writeCard } from 'serverutils/cube';
 import { csvRow } from 'serverutils/csv';
+import {
+  exportCardName,
+  exportFileName,
+  exportTextValue,
+  forgeLine,
+  setAndNumberLine,
+  xmageLine,
+} from 'serverutils/textExport';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
@@ -70,6 +78,32 @@ async function loadDownloadSeat(
   return { deck, seat, seatIndex };
 }
 
+/**
+ * Counts one of a seat's boards by the line each card renders to, keeping first-seen order. Every
+ * text deck export groups identical cards behind a quantity, so they all share this shape.
+ */
+const countBoardBy = (
+  board: number[][][],
+  cards: Card[],
+  toLine: (card: Card) => string,
+): [line: string, count: number][] => {
+  const counts = new Map<string, number>();
+  for (const row of board) {
+    for (const col of row) {
+      for (const cardIndex of col) {
+        const card = cards[cardIndex];
+        if (!card) continue;
+        if (!card.details) {
+          card.details = cardFromId(card.cardID);
+        }
+        const line = toLine(card);
+        counts.set(line, (counts.get(line) ?? 0) + 1);
+      }
+    }
+  }
+  return [...counts];
+};
+
 export const downloadXmageHandler = async (req: Request, res: Response) => {
   try {
     const loaded = await loadDownloadSeat(req, res, true);
@@ -78,48 +112,16 @@ export const downloadXmageHandler = async (req: Request, res: Response) => {
     }
     const { deck, seat } = loaded;
 
-    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(seat.name, 'deck')}.dck`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
-    res.write(`NAME:${seat.name}\r\n`);
-    const main: Record<string, number> = {};
-    for (const row of seat.mainboard) {
-      for (const col of row) {
-        for (const cardIndex of col) {
-          const card = deck.cards[cardIndex];
-          if (!card) continue;
-          const details = cardFromId(card.cardID);
-          const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
-          if (main[name]) {
-            main[name] += 1;
-          } else {
-            main[name] = 1;
-          }
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(main)) {
-      res.write(`${value} ${key}\r\n`);
+    res.write(`NAME:${exportTextValue(seat.name)}\r\n`);
+    for (const [line, count] of countBoardBy(seat.mainboard, deck.cards, xmageLine)) {
+      res.write(`${count} ${line}\r\n`);
     }
 
-    const side: Record<string, number> = {};
-    for (const row of seat.sideboard) {
-      for (const col of row) {
-        for (const cardIndex of col) {
-          const card = deck.cards[cardIndex];
-          if (!card) continue;
-          const details = cardFromId(card.cardID);
-          const name = `[${details.set.toUpperCase()}:${details.collector_number}] ${details.name}`;
-          if (side[name]) {
-            side[name] += 1;
-          } else {
-            side[name] = 1;
-          }
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(side)) {
-      res.write(`SB: ${value} ${key}\r\n`);
+    for (const [line, count] of countBoardBy(seat.sideboard, deck.cards, xmageLine)) {
+      res.write(`SB: ${count} ${line}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -135,51 +137,19 @@ export const downloadForgeHandler = async (req: Request, res: Response) => {
     }
     const { deck, seat } = loaded;
 
-    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.dck`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(seat.name, 'deck')}.dck`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write('[metadata]\r\n');
-    res.write(`name=${seat.name}\r\n`);
+    res.write(`name=${exportTextValue(seat.name)}\r\n`);
     res.write('[Main]\r\n');
-    const main: Record<string, number> = {};
-    for (const row of seat.mainboard) {
-      for (const col of row) {
-        for (const cardIndex of col) {
-          const card = deck.cards[cardIndex];
-          if (!card) continue;
-          const details = cardFromId(card.cardID);
-          const name = `${details.name}|${details.set.toUpperCase()}`;
-          if (main[name]) {
-            main[name] += 1;
-          } else {
-            main[name] = 1;
-          }
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(main)) {
-      res.write(`${value} ${key}\r\n`);
+    for (const [line, count] of countBoardBy(seat.mainboard, deck.cards, forgeLine)) {
+      res.write(`${count} ${line}\r\n`);
     }
 
     res.write('[Side]\r\n');
-    const side: Record<string, number> = {};
-    for (const row of seat.sideboard) {
-      for (const col of row) {
-        for (const cardIndex of col) {
-          const card = deck.cards[cardIndex];
-          if (!card) continue;
-          const details = cardFromId(card.cardID);
-          const name = `${details.name}|${details.set.toUpperCase()}`;
-          if (side[name]) {
-            side[name] += 1;
-          } else {
-            side[name] = 1;
-          }
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(side)) {
-      res.write(`${value} ${key}\r\n`);
+    for (const [line, count] of countBoardBy(seat.sideboard, deck.cards, forgeLine)) {
+      res.write(`${count} ${line}\r\n`);
     }
 
     return res.end();
@@ -196,7 +166,7 @@ export const downloadTxtHandler = async (req: Request, res: Response) => {
     }
     const { deck, seat } = loaded;
 
-    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(seat.name, 'deck')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     for (const row of seat.mainboard) {
@@ -204,8 +174,10 @@ export const downloadTxtHandler = async (req: Request, res: Response) => {
         for (const cardIndex of col) {
           const card = deck.cards[cardIndex];
           if (!card) continue;
-          const { name } = cardFromId(card.cardID);
-          res.write(`${name}\r\n`);
+          if (!card.details) {
+            card.details = cardFromId(card.cardID);
+          }
+          res.write(`${exportCardName(card)}\r\n`);
         }
       }
     }
@@ -236,49 +208,17 @@ export const downloadArenaHandler = async (req: Request, res: Response) => {
     }
     const { deck, seat } = loaded;
 
-    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(seat.name, 'deck')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write('Deck\r\n');
-    const main: Record<string, number> = {};
-    for (const row of seat.mainboard) {
-      for (const col of row) {
-        for (const cardIndex of col) {
-          const card = deck.cards[cardIndex];
-          if (!card) continue;
-          const details = cardFromId(card.cardID);
-          const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
-          if (main[name]) {
-            main[name] += 1;
-          } else {
-            main[name] = 1;
-          }
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(main)) {
-      res.write(`${value} ${key}\r\n`);
+    for (const [line, count] of countBoardBy(seat.mainboard, deck.cards, setAndNumberLine)) {
+      res.write(`${count} ${line}\r\n`);
     }
 
     res.write('\r\nSideboard\r\n');
-    const side: Record<string, number> = {};
-    for (const row of seat.sideboard) {
-      for (const col of row) {
-        for (const cardIndex of col) {
-          const card = deck.cards[cardIndex];
-          if (!card) continue;
-          const details = cardFromId(card.cardID);
-          const name = `${details.name} (${details.set.toUpperCase()}) ${details.collector_number}`;
-          if (side[name]) {
-            side[name] += 1;
-          } else {
-            side[name] = 1;
-          }
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(side)) {
-      res.write(`${value} ${key}\r\n`);
+    for (const [line, count] of countBoardBy(seat.sideboard, deck.cards, setAndNumberLine)) {
+      res.write(`${count} ${line}\r\n`);
     }
 
     return res.end();
@@ -295,48 +235,16 @@ export const downloadCockatriceHandler = async (req: Request, res: Response) => 
     }
     const { deck, seat } = loaded;
 
-    res.setHeader('Content-disposition', `attachment; filename=${seat.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(seat.name, 'deck')}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
-    const main: Record<string, number> = {};
-    for (const row of seat.mainboard) {
-      for (const col of row) {
-        for (const cardIndex of col) {
-          const card = deck.cards[cardIndex];
-          if (!card) continue;
-          const details = cardFromId(card.cardID);
-          const name = `${details.name}`;
-          if (main[name]) {
-            main[name] += 1;
-          } else {
-            main[name] = 1;
-          }
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(main)) {
-      res.write(`${value}x ${key}\r\n`);
+    for (const [line, count] of countBoardBy(seat.mainboard, deck.cards, exportCardName)) {
+      res.write(`${count}x ${line}\r\n`);
     }
 
     res.write('sideboard\r\n');
-    const side: Record<string, number> = {};
-    for (const row of seat.sideboard) {
-      for (const col of row) {
-        for (const cardIndex of col) {
-          const card = deck.cards[cardIndex];
-          if (!card) continue;
-          const details = cardFromId(card.cardID);
-          const name = `${details.name}`;
-          if (side[name]) {
-            side[name] += 1;
-          } else {
-            side[name] = 1;
-          }
-        }
-      }
-    }
-    for (const [key, value] of Object.entries(side)) {
-      res.write(`${value}x ${key}\r\n`);
+    for (const [line, count] of countBoardBy(seat.sideboard, deck.cards, exportCardName)) {
+      res.write(`${count}x ${line}\r\n`);
     }
 
     return res.end();
@@ -374,7 +282,7 @@ export const downloadTopdeckedHandler = async (req: Request, res: Response) => {
           } else {
             main[oracleId] = 1;
             mainCardID[oracleId] = `${card.cardID}`;
-            mainCardName[oracleId] = `${card.details.name}`;
+            mainCardName[oracleId] = exportCardName(card);
           }
         }
       }
@@ -397,7 +305,7 @@ export const downloadTopdeckedHandler = async (req: Request, res: Response) => {
           } else {
             side[oracleId] = 1;
             sideCardID[oracleId] = `${card.cardID}`;
-            sideCardName[oracleId] = `${card.details.name}`;
+            sideCardName[oracleId] = exportCardName(card);
           }
         }
       }
@@ -420,7 +328,7 @@ export const downloadCsvHandler = async (req: Request, res: Response) => {
     }
     const { deck, seat, seatIndex } = loaded;
 
-    const fileName = seat.name ? seat.name.replace(/\W/g, '') : `${deck.id}_${seatIndex}`;
+    const fileName = exportFileName(seat.name, `${deck.id}_${seatIndex}`);
     res.attachment(`${fileName}.csv`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
