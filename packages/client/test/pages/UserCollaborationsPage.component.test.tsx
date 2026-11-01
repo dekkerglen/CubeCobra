@@ -52,14 +52,18 @@ describe('UserCollaborationsPage', () => {
   it('lists the cubes the user collaborates on', () => {
     renderPage({ cubes: [shared], nextOffset: 36 });
 
-    expect(screen.getByText('Collaborations (1)')).toBeInTheDocument();
+    expect(screen.getByText('Collaborations')).toBeInTheDocument();
     expect(screen.getByText('Shared Cube')).toBeInTheDocument();
   });
 
-  it('marks the count as partial while more pages remain', () => {
+  it('claims no total for a list it has only partly loaded', () => {
     renderPage({ cubes: [shared], nextOffset: 36, hasMore: true });
 
-    expect(screen.getByText('Collaborations (1+)')).toBeInTheDocument();
+    // The server reports only whether another page exists, never how many cubes there are, so the
+    // page offers a way forward instead of a count or a denominator.
+    expect(screen.getAllByText('Page 1').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/ of /i)).not.toBeInTheDocument();
+    expect(screen.getAllByLabelText('Next page')[0]).toBeEnabled();
   });
 
   it('tells the owner they have no collaborations yet', () => {
@@ -74,12 +78,11 @@ describe('UserCollaborationsPage', () => {
     expect(screen.getByText('This user is not a collaborator on any cubes yet.')).toBeInTheDocument();
   });
 
-  // Pagination renders icon-only buttons whose octicons are aria-hidden, so there is no accessible
-  // name to query by; the arrow-right glyph is the only stable handle on the next-page control.
+  // Both the header and the footer render a pager, so every control has two matches.
   const clickNextPage = () => {
-    const next = document.querySelector('.octicon-arrow-right')?.closest('button');
+    const next = screen.getAllByLabelText('Next page')[0];
     expect(next).toBeEnabled();
-    fireEvent.click(next!);
+    fireEvent.click(next);
   };
 
   it('asks the server for the next page from the offset it was given', async () => {
@@ -115,8 +118,8 @@ describe('UserCollaborationsPage', () => {
 
     clickNextPage();
 
-    await waitFor(() => expect(screen.getByText('Collaborations (37)')).toBeInTheDocument());
-    expect(screen.getByText('Later Cube')).toBeInTheDocument();
+    await waitFor(() => expect(screen.getByText('Later Cube')).toBeInTheDocument());
+    expect(screen.getAllByText('Page 2').length).toBeGreaterThan(0);
     // The first page is retained in state, not discarded - it is simply on the previous page now.
     expect(screen.queryByText('Cube 0')).not.toBeInTheDocument();
   });

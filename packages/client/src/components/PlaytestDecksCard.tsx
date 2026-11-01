@@ -6,9 +6,15 @@ import { Card, CardBody, CardFooter, CardHeader } from 'components/base/Card';
 import Text from 'components/base/Text';
 import DeckPreview from 'components/DeckPreview';
 import { CSRFContext } from 'contexts/CSRFContext';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
+import CursorPagination from './base/CursorPagination';
 import { Flexbox } from './base/Layout';
-import Pagination from './base/Pagination';
 
 interface PlaytestDecksCardProps {
   decks: Draft[];
@@ -19,49 +25,47 @@ interface PlaytestDecksCardProps {
 const PAGE_SIZE = 25;
 
 const PlaytestDecksCard: React.FC<PlaytestDecksCardProps> = ({ decks, decksLastKey, cubeId }) => {
-  const { csrfFetch } = useContext(CSRFContext);
+  const { callApi } = useContext(CSRFContext);
   const [page, setPage] = React.useState(0);
   const [items, setItems] = React.useState<Draft[]>(decks);
   const [lastKey, setLastKey] = useState(decksLastKey);
   const [loading, setLoading] = useState(false);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!lastKey;
+  const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(lastKey);
 
-  const fetchMore = useCallback(async () => {
-    setLoading(true);
-    const response = await csrfFetch(`/cube/getmoredecks/${cubeId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        cubeId,
+  const fetchMore = useCallback(
+    async (targetPage: number) => {
+      await fetchIndefiniteMoreData<Draft>({
+        callApi,
+        fetchMoreRoute: `/cube/getmoredecks/${cubeId}`,
+        items,
+        setItems,
         lastKey,
-      }),
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-
-      setLastKey(json.lastKey);
-      setItems([...items, ...json.decks]);
-      setPage(page + 1);
-      setLoading(false);
-    }
-  }, [csrfFetch, cubeId, items, lastKey, page]);
+        setLastKey,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'decks',
+        setLoading,
+        targetPage,
+        body: { cubeId },
+      });
+    },
+    [callApi, cubeId, items, lastKey],
+  );
 
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMore();
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData: fetchMore,
+        });
       }}
       loading={loading}
     />
@@ -74,10 +78,9 @@ const PlaytestDecksCard: React.FC<PlaytestDecksCardProps> = ({ decks, decksLastK
       <CardHeader>
         <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
           <Text lg semibold>
-            Drafts ({items.length}
-            {hasMore ? '+' : ''})
+            Drafts
           </Text>
-          {hasItems && pager}
+          {pager}
         </Flexbox>
       </CardHeader>
       {hasItems ? (

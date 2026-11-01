@@ -5,8 +5,8 @@ import Cube from '@utils/datatypes/Cube';
 import User from '@utils/datatypes/User';
 
 import { Card as BaseCard, CardBody, CardHeader } from 'components/base/Card';
+import CursorPagination from 'components/base/CursorPagination';
 import { Col, Flexbox, Row } from 'components/base/Layout';
-import Pagination from 'components/base/Pagination';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
@@ -14,6 +14,12 @@ import UserPreview from 'components/UserPreview';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
 const PAGE_SIZE = 36;
 
@@ -30,51 +36,46 @@ const CubeFollowersPage: React.FC<CubeFollowersPageProps> = ({
   followers: initialFollowers,
   lastKey: initialLastKey,
 }) => {
-  const { csrfFetch } = useContext(CSRFContext);
+  const { callApi } = useContext(CSRFContext);
   const [items, setItems] = useState<User[]>(initialFollowers);
   const [currentLastKey, setLastKey] = useState<any>(initialLastKey);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!currentLastKey;
+  const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(currentLastKey);
 
   const fetchMore = useCallback(
     async (targetPage: number) => {
-      setLoading(true);
-      const response = await csrfFetch(`/cube/followers/getmore/${cube.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lastKey: currentLastKey }),
+      await fetchIndefiniteMoreData<User>({
+        callApi,
+        fetchMoreRoute: `/cube/followers/getmore/${cube.id}`,
+        items,
+        setItems,
+        lastKey: currentLastKey,
+        setLastKey,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'followers',
+        setLoading,
+        targetPage,
       });
-
-      if (response.ok) {
-        const json = await response.json();
-        if (json.success === 'true') {
-          const newItems = [...items, ...(json.followers || [])];
-          setItems(newItems);
-          setLastKey(json.lastKey);
-
-          const newPageCount = Math.max(1, Math.ceil(newItems.length / PAGE_SIZE));
-          setPage(Math.max(0, Math.min(targetPage, newPageCount - 1)));
-        }
-      }
-      setLoading(false);
     },
-    [csrfFetch, cube.id, currentLastKey, items],
+    [callApi, cube.id, currentLastKey, items],
   );
 
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMore(newPage);
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData: fetchMore,
+        });
       }}
       loading={loading}
     />
@@ -93,29 +94,31 @@ const CubeFollowersPage: React.FC<CubeFollowersPageProps> = ({
               <Text lg semibold>
                 Likes ({headerCount})
               </Text>
-              {totalShown > 0 && pager}
+              {pager}
             </Flexbox>
           </CardHeader>
           {totalShown > 0 ? (
-            <CardBody className="p-0">
-              <Row className="g-0">
-                {items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((user) => (
-                  <Col key={user.id} xs={6} sm={4} md={3} lg={3} xl={2}>
-                    <UserPreview user={user} />
-                  </Col>
-                ))}
-              </Row>
-            </CardBody>
+            <>
+              <CardBody className="p-0">
+                <Row className="g-0">
+                  {items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((user) => (
+                    <Col key={user.id} xs={6} sm={4} md={3} lg={3} xl={2}>
+                      <UserPreview user={user} />
+                    </Col>
+                  ))}
+                </Row>
+              </CardBody>
+              {/* The divider belongs to the list, not the pager: an unguarded footer would draw an
+                  empty bordered strip under "No likes yet." */}
+              <CardBody className="border-t border-border">
+                <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
+                  {pager}
+                </Flexbox>
+              </CardBody>
+            </>
           ) : (
             <CardBody>
               <Text className="text-text-secondary">No likes yet.</Text>
-            </CardBody>
-          )}
-          {totalShown > 0 && (
-            <CardBody className="border-t border-border">
-              <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
-                {pager}
-              </Flexbox>
             </CardBody>
           )}
         </BaseCard>

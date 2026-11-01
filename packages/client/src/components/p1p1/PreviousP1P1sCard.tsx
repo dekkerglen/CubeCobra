@@ -3,9 +3,16 @@ import React, { useCallback, useContext, useState } from 'react';
 import { P1P1Pack } from '@utils/datatypes/P1P1Pack';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
+import {
+  clampPage,
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from '../../utils/indefinitePagination';
 import { Card, CardFooter, CardHeader } from '../base/Card';
+import CursorPagination from '../base/CursorPagination';
 import { Flexbox } from '../base/Layout';
-import Pagination from '../base/Pagination';
 import Text from '../base/Text';
 import P1P1Preview from './P1P1Preview';
 
@@ -21,49 +28,51 @@ interface PreviousP1P1sCardProps {
 const PAGE_SIZE = 10;
 
 const PreviousP1P1sCard: React.FC<PreviousP1P1sCardProps> = ({ packs, packsLastKey, cubeId, cubeOwner }) => {
-  const { csrfFetch } = useContext(CSRFContext);
+  const { callApi } = useContext(CSRFContext);
   const [currentPage, setCurrentPage] = useState(0);
   const [allPacks, setAllPacks] = useState<P1P1Pack[]>(packs);
   const [paginationKey, setPaginationKey] = useState(packsLastKey);
   const [isLoading, setIsLoading] = useState(false);
 
-  const pageCount = Math.ceil(allPacks.length / PAGE_SIZE);
-  const hasMore = !!paginationKey;
+  const pageCount = getIndefinitePageCount(allPacks, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(paginationKey);
+  // Deleting a pack shortens the list under the viewer, so the page they are on can fall off the
+  // end. Clamping here keeps the rendered window and the pager's label on the same page, instead
+  // of slicing past the end and showing nothing.
+  const activePage = clampPage(currentPage, pageCount);
 
-  const fetchMore = useCallback(async () => {
-    setIsLoading(true);
-    const response = await csrfFetch(`/tool/api/getmorep1p1s/${cubeId}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        cubeId,
+  const fetchMore = useCallback(
+    async (targetPage: number) => {
+      await fetchIndefiniteMoreData<P1P1Pack>({
+        callApi,
+        fetchMoreRoute: `/tool/api/getmorep1p1s/${cubeId}`,
+        items: allPacks,
+        setItems: setAllPacks,
         lastKey: paginationKey,
-      }),
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-
-      setPaginationKey(json.lastKey);
-      setAllPacks([...allPacks, ...json.packs]);
-      setCurrentPage(currentPage + 1);
-      setIsLoading(false);
-    }
-  }, [csrfFetch, cubeId, allPacks, paginationKey, currentPage]);
+        setLastKey: setPaginationKey,
+        setPage: setCurrentPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'packs',
+        setLoading: setIsLoading,
+        targetPage,
+        body: { cubeId },
+      });
+    },
+    [callApi, cubeId, allPacks, paginationKey],
+  );
 
   const pager = (
-    <Pagination
-      count={pageCount}
-      active={currentPage}
+    <CursorPagination
+      active={activePage}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMore();
-        } else {
-          setCurrentPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage: setCurrentPage,
+          fetchMoreData: fetchMore,
+        });
       }}
       loading={isLoading}
     />
@@ -78,13 +87,12 @@ const PreviousP1P1sCard: React.FC<PreviousP1P1sCardProps> = ({ packs, packsLastK
       <CardHeader>
         <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
           <Text lg semibold>
-            P1P1s ({allPacks.length}
-            {hasMore ? '+' : ''})
+            P1P1s
           </Text>
           {pager}
         </Flexbox>
       </CardHeader>
-      {allPacks.slice(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE).map((pack) => (
+      {allPacks.slice(activePage * PAGE_SIZE, (activePage + 1) * PAGE_SIZE).map((pack) => (
         <P1P1Preview key={pack.id} pack={pack} onDeleted={handlePackDeleted} cubeOwner={cubeOwner} />
       ))}
       <CardFooter>

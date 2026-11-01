@@ -3,8 +3,8 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 import CardPackageData from '@utils/datatypes/CardPackage';
 import User from '@utils/datatypes/User';
 
+import CursorPagination from 'components/base/CursorPagination';
 import { Flexbox } from 'components/base/Layout';
-import Pagination from 'components/base/Pagination';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import CardPackage from 'components/card/CardPackage';
@@ -14,6 +14,12 @@ import { CSRFContext } from 'contexts/CSRFContext';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
 const PAGE_SIZE = 36;
 
@@ -49,7 +55,7 @@ const LikedPackagesPage: React.FC<LikedPackagesPageProps> = ({
   likedCubesCount,
   likedPackagesCount,
 }) => {
-  const { csrfFetch } = useContext(CSRFContext);
+  const { csrfFetch, callApi } = useContext(CSRFContext);
 
   const [sort, setSort] = useQueryParam('s', initialSort || 'date');
   const [ascending, setAscending] = useQueryParam('a', initialAscending ? 'true' : 'false');
@@ -59,8 +65,8 @@ const LikedPackagesPage: React.FC<LikedPackagesPageProps> = ({
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!currentLastKey;
+  const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(currentLastKey);
 
   const loadInitial = useCallback(
     async (s: string | null, a: string | null) => {
@@ -95,42 +101,38 @@ const LikedPackagesPage: React.FC<LikedPackagesPageProps> = ({
     loadInitial(sort, ascending);
   }, [sort, ascending, loadInitial]);
 
-  const fetchMoreData = useCallback(async () => {
-    setLoading(true);
-    const response = await csrfFetch('/packages/liked/getmore', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ owner: owner.id, sort, ascending, lastKey: currentLastKey }),
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-      if (json.success === 'true') {
-        const newItems = [...items, ...(json.packages || [])];
-        setItems(newItems);
-        setLastKey(json.lastKey);
-
-        const numItemsOnLastPage = items.length % PAGE_SIZE;
-        const newItemsOnLastPage = newItems.length % PAGE_SIZE;
-        if (numItemsOnLastPage === 0 && newItemsOnLastPage > 0) {
-          setPage(page + 1);
-        }
-      }
-    }
-    setLoading(false);
-  }, [csrfFetch, owner.id, sort, ascending, currentLastKey, items, page]);
+  const fetchMoreData = useCallback(
+    async (targetPage: number) => {
+      await fetchIndefiniteMoreData<CardPackageData>({
+        callApi,
+        fetchMoreRoute: '/packages/liked/getmore',
+        items,
+        setItems,
+        lastKey: currentLastKey,
+        setLastKey,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'packages',
+        setLoading,
+        targetPage,
+        body: { owner: owner.id, sort, ascending },
+      });
+    },
+    [callApi, owner.id, sort, ascending, currentLastKey, items],
+  );
 
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMoreData();
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData,
+        });
       }}
       loading={loading}
     />
@@ -152,8 +154,7 @@ const LikedPackagesPage: React.FC<LikedPackagesPageProps> = ({
         <Flexbox direction="col" className="mt-3" gap="2">
           <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap" className="w-full">
             <Text lg semibold>
-              Liked Packages ({items.length}
-              {hasMore ? '+' : ''})
+              Liked Packages
             </Text>
             <Flexbox direction="row" alignItems="center" gap="2">
               <div className="w-52">
@@ -173,11 +174,9 @@ const LikedPackagesPage: React.FC<LikedPackagesPageProps> = ({
             </Flexbox>
           </Flexbox>
 
-          {items.length > 0 && (
-            <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
-              {pager}
-            </Flexbox>
-          )}
+          <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
+            {pager}
+          </Flexbox>
 
           {items.length > 0 ? (
             <Flexbox direction="col" gap="2">
