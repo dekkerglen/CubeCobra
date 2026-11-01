@@ -67,7 +67,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({
             <img
               className="w-28 h-28 sm:w-52 sm:h-52 lg:w-full lg:h-auto lg:aspect-square object-cover rounded-md lg:rounded-none"
               alt={`Art by ${user.image.artist}`}
-              title={`Art by ${user.image.artist}`}
+              title={user.image.artist ? `Art by ${user.image.artist}` : undefined}
               src={user.image.uri}
             />
             {user.image.artist && (
@@ -78,7 +78,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({
           </div>
         )}
         <Flexbox direction="col" gap="3" className="min-w-0 lg:px-3 lg:pt-6">
-          <Text semibold lg className="break-words">
+          <Text semibold lg>
             {user.username}
           </Text>
           {(isAdmin || typeof patronLevel === 'number') && (
@@ -159,8 +159,10 @@ const UserLayout: React.FC<UserLayoutProps> = ({
         </div>
       </div>
 
-      <div className="border-t border-border px-3 pb-3 pt-3">
-        <SafeMarkdown markdown={user.about || '_This user has not yet filled out their about section._'} />
+      <div className="px-3 pb-3">
+        <div className="border-t border-border pt-3">
+          <SafeMarkdown markdown={user.about || '_This user has not yet filled out their about section._'} />
+        </div>
       </div>
     </div>
   );

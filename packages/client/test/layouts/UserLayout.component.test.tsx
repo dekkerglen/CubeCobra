@@ -9,7 +9,7 @@ import User, { UserRoles } from '@utils/datatypes/User';
 import UserContext from 'contexts/UserContext';
 import UserLayout from 'layouts/UserLayout';
 
-jest.mock('components/Markdown', () => ({ SafeMarkdown: () => <div /> }));
+jest.mock('components/Markdown', () => ({ SafeMarkdown: () => <div data-testid="user-about" /> }));
 jest.mock('components/modals/ConfirmActionModal', () => () => <div />);
 
 const renderLayout = (overrides: Partial<User> = {}) =>
@@ -95,10 +95,26 @@ describe('UserLayout narrow column', () => {
     expect(wrapper).toHaveClass('relative', 'self-start');
   });
 
-  it('wraps a long username instead of overflowing the column', () => {
-    const long = 'a'.repeat(60);
-    renderLayout({ username: long });
-    expect(screen.getByText(long)).toHaveClass('break-words');
+  // A long username overflows because the `1fr` track's automatic minimum is the
+  // word's min-content width; `overflow-wrap: break-word` (applied globally in
+  // stylesheet.css) does not reduce that. `min-w-0` on the identity column is what
+  // actually keeps the name inside the card.
+  it('lets the identity column shrink below its content width', () => {
+    renderLayout({ username: 'a'.repeat(60) });
+    const name = screen.getByText('a'.repeat(60));
+    expect(name.closest('div.min-w-0')).not.toBeNull();
+  });
+
+  it('keeps the about divider inset from the card edge, as it was before', () => {
+    renderLayout();
+    const divider = screen.getByTestId('user-about').closest('div.border-t')!;
+    expect(divider).not.toHaveClass('px-3');
+    expect(divider.parentElement).toHaveClass('px-3');
+  });
+
+  it('omits the tooltip when the image has no artist', () => {
+    renderLayout({ image: { uri: 'http://img/a.jpg' } as User['image'] });
+    expect(screen.getByRole('img')).not.toHaveAttribute('title');
   });
 
   it('wraps the badge row', () => {
