@@ -9,6 +9,14 @@ import { Request, Response } from '../../types/express';
 
 type SortOrder = 'pop' | 'alpha' | 'cards' | 'date';
 
+const PAGE_SIZE = 36;
+
+// Visibility is filtered per-viewer after the query returns, so hidden cubes eat page capacity.
+// Refilling is an optimisation, not a correctness mechanism: the client accumulates and windows
+// regardless, and the cap stays low because this composes with the DAO's own 10-page internal
+// loop on the busiest route in the app.
+const MAX_REFILL_PASSES = 3;
+
 // Arrives as a string from both the query and the JSON body, where "false" would otherwise be truthy.
 const toAscending = (value: unknown): boolean => value === true || value === 'true';
 
@@ -366,86 +374,87 @@ const performSearch = async (
   }
 
   try {
-    let cubes: any[];
-    let resultLastKey: any = null;
+    // The visibility predicate depends on the requesting user, so it cannot be pushed into the
+    // query; it stays here and the DAO stays user-agnostic.
+    const fetchPage = async (cursor: any): Promise<{ items: any[]; lastKey: any }> => {
+      if (hashes.length === 1) {
+        // Determine which query method to use based on hash prefix
+        const hash = hashes[0] || '';
+        let result;
 
-    if (hashes.length === 1) {
-      // Determine which query method to use based on hash prefix
-      const hash = hashes[0] || '';
-      let result;
+        if (hash.startsWith('oracle:')) {
+          const oracleId = hash.substring('oracle:'.length);
+          result = await cubeDao.queryByOracleId(
+            oracleId,
+            mapSortOrder(order),
+            ascending,
+            cursor,
+            PAGE_SIZE,
+            cardCountFilter,
+          );
+        } else if (hash.startsWith('tag:')) {
+          const tag = hash.substring('tag:'.length);
+          result = await cubeDao.queryByTag(tag, mapSortOrder(order), ascending, cursor, PAGE_SIZE, cardCountFilter);
+        } else if (hash.startsWith('keywords:')) {
+          const keywords = hash.substring('keywords:'.length);
+          result = await cubeDao.queryByKeyword(
+            keywords,
+            mapSortOrder(order),
+            ascending,
+            cursor,
+            PAGE_SIZE,
+            cardCountFilter,
+          );
+        } else if (hash.startsWith('category:')) {
+          const category = hash.substring('category:'.length);
+          result = await cubeDao.queryByCategory(
+            category,
+            mapSortOrder(order),
+            ascending,
+            cursor,
+            PAGE_SIZE,
+            cardCountFilter,
+          );
+        } else if (hash === 'featured:true') {
+          result = await cubeDao.queryByFeatured(mapSortOrder(order), ascending, cursor, PAGE_SIZE, cardCountFilter);
+        } else if (hash === 'cube:all') {
+          result = await cubeDao.queryAllCubes(mapSortOrder(order), ascending, cursor, PAGE_SIZE, cardCountFilter);
+        } else {
+          // Unknown hash type - return empty results
+          result = { items: [], lastKey: undefined };
+        }
 
-      if (hash.startsWith('oracle:')) {
-        const oracleId = hash.substring('oracle:'.length);
-        result = await cubeDao.queryByOracleId(
-          oracleId,
-          mapSortOrder(order),
-          ascending,
-          lastKey || undefined,
-          36,
-          cardCountFilter,
-        );
-      } else if (hash.startsWith('tag:')) {
-        const tag = hash.substring('tag:'.length);
-        result = await cubeDao.queryByTag(
-          tag,
-          mapSortOrder(order),
-          ascending,
-          lastKey || undefined,
-          36,
-          cardCountFilter,
-        );
-      } else if (hash.startsWith('keywords:')) {
-        const keywords = hash.substring('keywords:'.length);
-        result = await cubeDao.queryByKeyword(
-          keywords,
-          mapSortOrder(order),
-          ascending,
-          lastKey || undefined,
-          36,
-          cardCountFilter,
-        );
-      } else if (hash.startsWith('category:')) {
-        const category = hash.substring('category:'.length);
-        result = await cubeDao.queryByCategory(
-          category,
-          mapSortOrder(order),
-          ascending,
-          lastKey || undefined,
-          36,
-          cardCountFilter,
-        );
-      } else if (hash === 'featured:true') {
-        result = await cubeDao.queryByFeatured(
-          mapSortOrder(order),
-          ascending,
-          lastKey || undefined,
-          36,
-          cardCountFilter,
-        );
-      } else if (hash === 'cube:all') {
-        result = await cubeDao.queryAllCubes(mapSortOrder(order), ascending, lastKey || undefined, 36, cardCountFilter);
-      } else {
-        // Unknown hash type - return empty results
-        result = { items: [], lastKey: undefined };
+        return { items: result.items, lastKey: result.lastKey };
       }
 
-      cubes = result.items;
-      resultLastKey = result.lastKey;
-    } else {
       // Use queryByMultipleHashes from cubeDao (which efficiently handles cardCountFilter natively)
       const multiHashResult = await cubeDao.queryByMultipleHashes(
         hashes,
         mapSortOrder(order),
         ascending,
-        lastKey || undefined,
+        cursor,
         cardCountFilter,
       );
-      cubes = multiHashResult.items;
-      resultLastKey = multiHashResult.lastKey;
-    }
+      return { items: multiHashResult.items, lastKey: multiHashResult.lastKey };
+    };
 
-    // Filter by listing visibility
-    const visibleCubes = cubes.filter((cube: any) => isCubeListed(cube, user));
+    const visibleCubes: any[] = [];
+    let cursor: any = lastKey || undefined;
+    let resultLastKey: any = null;
+    let passes = 0;
+
+    do {
+      const page = await fetchPage(cursor);
+      passes += 1;
+
+      // Filter by listing visibility
+      visibleCubes.push(...page.items.filter((cube: any) => isCubeListed(cube, user)));
+
+      // Always the cursor from the most recent request, never an earlier one: the next page must
+      // resume past everything scanned, including when the pass cap stops the refill early.
+      cursor = page.lastKey ?? null;
+      resultLastKey = cursor;
+    } while (visibleCubes.length < PAGE_SIZE && cursor && passes < MAX_REFILL_PASSES);
 
     return {
       cubes: visibleCubes,

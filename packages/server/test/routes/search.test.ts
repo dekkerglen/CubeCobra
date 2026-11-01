@@ -31,9 +31,11 @@ import { DefaultPrintingPreference } from '@utils/datatypes/Card';
 import { cubeDao } from '../../src/dynamo/daos';
 import { routes } from '../../src/router/routes/search';
 import { getMostReasonable, getReasonableCardByOracle } from '../../src/serverutils/carddb';
+import { isCubeListed } from '../../src/serverutils/cubefn';
 import { render } from '../../src/serverutils/render';
 import { call } from '../test-utils/transport';
 const searchHandler = routes.find((route) => route.path === '')!.handler.at(-1)!;
+const moreSearchItemsHandler = routes.find((route) => route.path === '/getmoresearchitems')!.handler.at(-1)!;
 
 const renderedProps = () => (render as jest.Mock).mock.calls[0]![3];
 
@@ -158,5 +160,85 @@ describe('cube search query parsing', () => {
       value: 250,
     });
     expect(renderedProps().parsedQuery).toEqual(['Cube size > 250 cards']);
+  });
+});
+
+describe('cube search visibility refill', () => {
+  // Cubes carry the listedness the mocked predicate reads, standing in for the per-viewer
+  // visibility rules that cannot be expressed in the DynamoDB query.
+  const makeCubes = (prefix: string, count: number, listed: boolean) =>
+    Array.from({ length: count }, (_, index) => ({ id: `${prefix}-${index}`, listed }));
+
+  const searchMore = (lastKey: any = null) =>
+    call(moreSearchItemsHandler as any)
+      .withBody({ query: 'vintage', order: 'pop', ascending: 'false', lastKey })
+      .send();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    // A full reset, not just a clear: an unconsumed `mockResolvedValueOnce` queue would otherwise
+    // leak into the next test, since these cases deliberately leave pages unfetched.
+    (cubeDao.queryByKeyword as jest.Mock).mockReset();
+    (cubeDao.queryByKeyword as jest.Mock).mockResolvedValue({ items: [], lastKey: undefined });
+    (getMostReasonable as jest.Mock).mockReturnValue(null);
+    (isCubeListed as jest.Mock).mockImplementation((cube: any) => cube.listed !== false);
+  });
+
+  afterEach(() => {
+    (isCubeListed as jest.Mock).mockImplementation(() => true);
+  });
+
+  it('refills a page that visibility filtering left short', async () => {
+    (cubeDao.queryByKeyword as jest.Mock)
+      .mockResolvedValueOnce({
+        items: [...makeCubes('visible-1', 30, true), ...makeCubes('hidden-1', 6, false)],
+        lastKey: 'key-1',
+      })
+      .mockResolvedValueOnce({ items: makeCubes('visible-2', 36, true), lastKey: 'key-2' });
+
+    const response = await searchMore();
+
+    expect(cubeDao.queryByKeyword).toHaveBeenCalledTimes(2);
+    expect((cubeDao.queryByKeyword as jest.Mock).mock.calls[1]![3]).toBe('key-1');
+    expect(response.body.cubes).toHaveLength(66);
+    expect(response.body.lastKey).toBe('key-2');
+  });
+
+  it('stops at three refill iterations', async () => {
+    (cubeDao.queryByKeyword as jest.Mock).mockImplementation(async (_keyword, _order, _ascending, cursor) => ({
+      items: makeCubes(`hidden-${cursor ?? 'start'}`, 36, false),
+      lastKey: `key-after-${cursor ?? 'start'}`,
+    }));
+
+    const response = await searchMore();
+
+    expect(cubeDao.queryByKeyword).toHaveBeenCalledTimes(3);
+    expect(response.body.cubes).toHaveLength(0);
+  });
+
+  it('returns the cursor past everything scanned when the cap trips', async () => {
+    (cubeDao.queryByKeyword as jest.Mock)
+      .mockResolvedValueOnce({ items: makeCubes('hidden-1', 36, false), lastKey: 'key-1' })
+      .mockResolvedValueOnce({ items: makeCubes('hidden-2', 36, false), lastKey: 'key-2' })
+      .mockResolvedValueOnce({ items: makeCubes('hidden-3', 36, false), lastKey: 'key-3' });
+
+    const response = await searchMore();
+
+    // Anything less than the final cursor would silently skip every record the refill scanned.
+    expect(response.body.lastKey).toBe('key-3');
+    expect(response.body.lastKey).not.toBeNull();
+  });
+
+  it('stops early when the cursor is exhausted', async () => {
+    (cubeDao.queryByKeyword as jest.Mock).mockResolvedValueOnce({
+      items: makeCubes('visible-1', 10, true),
+      lastKey: undefined,
+    });
+
+    const response = await searchMore();
+
+    expect(cubeDao.queryByKeyword).toHaveBeenCalledTimes(1);
+    expect(response.body.cubes).toHaveLength(10);
+    expect(response.body.lastKey).toBeNull();
   });
 });
