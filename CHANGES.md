@@ -158,3 +158,6 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - On desktop, a draft pack of more than 8 cards is now laid out in two overlapping rows at most, leaving more room for your picks below.
 - The scrollbars beside the columns in the deck editor and the draft pool can now be dragged, and clicking one jumps to that spot.
 - With Disable Animations turned on in your account settings, draft packs now appear and get passed instantly, without the pack opening and passing animations.
+- Cards whose hybrid mana only uses colors the card already requires, like Practiced Scrollsmith ({R}{R/W}{W}), are now counted as gold instead of hybrid in searches and the Manacost Type sort.
+- Cards added to a cube from Smart Search, card pages, or the cube tray now get the cube's Default Status instead of always being marked Owned.
+- On a cube's list page, each view in the sidebar now shows how many cards it holds across its boards.
