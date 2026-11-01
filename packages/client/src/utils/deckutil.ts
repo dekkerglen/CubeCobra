@@ -16,6 +16,14 @@ type Deck = Card[];
 
 type ColorDistribution = Record<ManaSymbol, number> & { total: number };
 
+export const percentOf = (numerator: number, denominator: number): number => {
+  if (denominator === 0) {
+    return 0;
+  }
+
+  return Math.round((numerator / denominator) * 100);
+};
+
 export const getManaSymbolCount = (deck: Deck): ColorDistribution => {
   return deck
     .map((card: Card) => cardManaSymbols(card))
@@ -35,7 +43,16 @@ export const getManaSymbolCount = (deck: Deck): ColorDistribution => {
 
 export const getCardCountByColor = (deck: Deck) => {
   const colorsInDeck: ColorDistribution = deck
-    .map((card: Card) => cardColorsAsManaSymbols(card))
+    .map((card: Card) => {
+      const colors = cardColorsAsManaSymbols(card);
+
+      // If the card has no colors let's count it as colorless
+      if (colors.length === 0) {
+        colors.push('C');
+      }
+
+      return colors;
+    })
     .flat()
     .reduce(
       (acc, str: ManaSymbol) => {

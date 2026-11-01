@@ -4,11 +4,24 @@ import {
   getFetchableColors,
   getManaSymbolCount,
   getSourcesDistribution,
+  percentOf,
 } from '@client/utils/deckutil';
 import { cardGames, cardManaSymbols, reasonableCard } from '@utils/cardutil';
 import Card, { CardDetails } from '@utils/datatypes/Card';
 
 import { createBasicLand, createCard, createCardDetails, createCardFromDetails } from '../test-utils/data';
+
+describe('percentOf', () => {
+  it('returns a whole-number percentage', () => {
+    expect(percentOf(1, 4)).toEqual(25);
+    expect(percentOf(2, 3)).toEqual(67);
+  });
+
+  it('returns 0 when the denominator is 0', () => {
+    expect(percentOf(0, 0)).toEqual(0);
+    expect(percentOf(5, 0)).toEqual(0);
+  });
+});
 
 describe('getManaSymbolCount', () => {
   it('should return the count of each mana symbols found in the deck', () => {
@@ -53,6 +66,16 @@ describe('getCardColors', () => {
       C: 0,
       total: 4,
     });
+  });
+
+  it('counts a card with no colors as colorless', () => {
+    const result = getCardCountByColor([
+      createCard({ colors: ['W'] }),
+      createCard({ colors: [] }),
+      createCard({ colors: [] }),
+    ]);
+
+    expect(result).toEqual({ W: 1, U: 0, B: 0, R: 0, G: 0, C: 2, total: 3 });
   });
 });
 
