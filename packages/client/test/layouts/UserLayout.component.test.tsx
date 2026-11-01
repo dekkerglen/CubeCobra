@@ -117,6 +117,12 @@ describe('UserLayout narrow column', () => {
     expect(screen.getByRole('img')).not.toHaveAttribute('title');
   });
 
+  it('keeps the buttons directly under the stats when the tile forces a taller row', () => {
+    renderLayout();
+    const row = screen.getByAltText('Art by Janet Aulisio').closest('div.grid')!;
+    expect(row).toHaveClass('sm:grid-rows-[auto_1fr]');
+  });
+
   it('wraps the badge row', () => {
     renderLayout({ roles: [UserRoles.ADMIN] });
     expect(screen.getByText('Admin').closest('div.flex')).toHaveClass('flex-wrap');

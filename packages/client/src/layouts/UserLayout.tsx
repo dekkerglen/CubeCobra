@@ -58,7 +58,7 @@ const UserLayout: React.FC<UserLayoutProps> = ({
     <div className="bg-bg-accent border border-border rounded-md overflow-hidden">
       <div
         className={classNames('grid gap-3 p-3 lg:block lg:px-0 lg:pt-0 lg:pb-3', {
-          'grid-cols-[auto_1fr]': !!user.image,
+          'grid-cols-[auto_1fr] sm:grid-rows-[auto_1fr]': !!user.image,
           'grid-cols-1': !user.image,
         })}
       >
