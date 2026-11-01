@@ -371,6 +371,7 @@ const CardSprite: React.FC<CardSpriteProps> = ({
   return (
     <motion.div
       className="absolute left-0 top-0 select-none"
+      data-zone={zone}
       style={{
         x: drawnX,
         y: drawnY,

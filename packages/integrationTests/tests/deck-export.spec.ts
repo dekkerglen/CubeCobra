@@ -4,7 +4,7 @@ import { login } from '../helpers/authActions';
 import { addCardsByName, TEST_CARDS } from '../helpers/cardActions';
 import { createCube, deleteCube } from '../helpers/cubeActions';
 import { dumpDomOnFailure } from '../helpers/domDump';
-import { pickAllCards, startDraft } from '../helpers/draftActions';
+import { PACK_CARD, pickAllCards, startDraft } from '../helpers/draftActions';
 import { getTestUser } from '../helpers/testUser';
 
 test.describe('Deck Export', () => {
@@ -29,7 +29,7 @@ test.describe('Deck Export', () => {
     try {
       const draftPath = await startDraft(page, cubeId, { seats: 2, packs: 1, cards: 5 });
       await page.goto(draftPath, { waitUntil: 'domcontentloaded' });
-      await page.waitForSelector('.no-touch-action', { timeout: 30000 });
+      await page.waitForSelector(PACK_CARD, { timeout: 30000 });
       await pickAllCards(page);
 
       // Extract draft ID from URL

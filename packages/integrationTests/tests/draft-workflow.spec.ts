@@ -4,7 +4,7 @@ import { login } from '../helpers/authActions';
 import { addCardsByName, TEST_CARDS } from '../helpers/cardActions';
 import { createCube, deleteCube, navigateToCubePlaytest } from '../helpers/cubeActions';
 import { dumpDomOnFailure } from '../helpers/domDump';
-import { pickAllCards, startDraft } from '../helpers/draftActions';
+import { PACK_CARD, pickAllCards, startDraft } from '../helpers/draftActions';
 import { navigateToCubeFromNav } from '../helpers/navigationActions';
 import { getTestUser } from '../helpers/testUser';
 
@@ -64,8 +64,8 @@ test.describe('Draft Workflow', () => {
     await page.goto(draftPath, { waitUntil: 'domcontentloaded' });
 
     // Verify the draft page loaded with pack info
-    await page.waitForSelector('.no-touch-action', { timeout: 30000 });
-    const packCards = await page.locator('.no-touch-action').count();
+    await page.waitForSelector(PACK_CARD, { timeout: 30000 });
+    const packCards = await page.locator(PACK_CARD).count();
     expect(packCards).toBeGreaterThanOrEqual(1);
 
     // Pick all cards until draft completes
@@ -85,7 +85,7 @@ test.describe('Draft Workflow', () => {
     await page.goto(draftPath, { waitUntil: 'domcontentloaded' });
 
     // Wait for first card to appear
-    await page.waitForSelector('.no-touch-action', { timeout: 30000 });
+    await page.waitForSelector(PACK_CARD, { timeout: 30000 });
 
     // Pick all cards
     await pickAllCards(page);
