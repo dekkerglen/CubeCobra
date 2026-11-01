@@ -57,6 +57,7 @@
  */
 
 import {
+  BatchGetCommand,
   BatchWriteCommand,
   DeleteCommand,
   DynamoDBDocumentClient,
@@ -159,6 +160,11 @@ export interface UnhydratedCube {
 interface QueryResult {
   items: Cube[];
   lastKey?: Record<string, any>;
+  /**
+   * Set when a multi-hash scan stopped at its page cap without finding anything. The result is a
+   * genuine (empty) page, not a failure — the flag only lets callers explain why the list ended.
+   */
+  scanExhausted?: boolean;
 }
 
 /** Replaces a stored legacy `description` with `primerTabs`, so no hydrated cube carries `description`. */
@@ -1731,17 +1737,20 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
    * Queries cubes that match ALL provided hash criteria (intersection).
    * Uses a two-phase approach:
    * 1. Query the first hash to get a page of candidates (using GSI for sorting)
-   * 2. Load all hashes for those candidates and filter by remaining criteria
+   * 2. Point-look-up the remaining hashes on each candidate and keep the cubes that carry them all
    * 3. Apply card count filter in memory if provided
    * 4. Return results once we have hits, or continue up to 10 pages
+   *
+   * DynamoDB cannot intersect hash rows, so this emulates the join in the application. Scanning is
+   * capped at MAX_PAGES: a sparse query gives up and reports exhaustion rather than running until
+   * the request times out.
    *
    * @param hashes - Array of hash strings to query. First hash should be most restrictive.
    * @param sortBy - How to sort the results from the first hash query (uses appropriate GSI)
    * @param ascending - Sort direction
    * @param lastKey - Pagination key from previous query
    * @param cardCountFilter - Optional filter for card count { operator: 'eq' | 'gt' | 'lt', value: number }
-   * @returns Query result with cubes and pagination key
-   * @throws Error if dual write mode is enabled (old data model doesn't support this operation)
+   * @returns Query result with cubes and pagination key; `scanExhausted` when the page cap stopped the scan
    */
   public async queryByMultipleHashes(
     hashes: string[],
@@ -1783,8 +1792,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     // First hash is the primary query (should be most restrictive)
     const primaryHash = validHashStrings[0]!;
-    // Remaining hashes to filter by
-    const filterHashes = new Set(validHashStrings.slice(1));
+    // Remaining hashes every candidate must also carry
+    const requiredHashes = Array.from(new Set(validHashStrings.slice(1)));
 
     const MAX_PAGES = 10;
     const PAGE_SIZE = 100;
@@ -1793,11 +1802,10 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     const matchingCubes: Cube[] = [];
 
     // Keep querying pages until we find matches or hit the page limit
-    while (pagesChecked < MAX_PAGES && matchingCubes.length === 0) {
+    while (pagesChecked < MAX_PAGES) {
       pagesChecked += 1;
 
       // Query one page of candidates from the first hash using the appropriate GSI for sorting
-      // No limit specified - use DynamoDB's default max page size (1MB of data)
       const candidatesResult = await this.queryByHashForIdsOnly(
         primaryHash,
         sortBy,
@@ -1806,53 +1814,27 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
         PAGE_SIZE,
       );
 
-      if (candidatesResult.cubeIds.length === 0) {
-        // No more results
-        break;
-      }
-
-      // Load all hashes for each candidate cube
-      const candidateHashes = await Promise.all(
-        candidatesResult.cubeIds.map(async (cubeId) => {
-          const result = await this.getHashesForCube(cubeId);
-          return {
-            cubeId,
-            hashes: new Set(result.hashes.map((h) => h.hash)),
-          };
-        }),
-      );
-
-      // Filter candidates that have all required hashes
-      const matchingIds = candidateHashes
-        .filter((candidate) => {
-          // Check if this cube has all the filter hashes
-          for (const requiredHash of filterHashes) {
-            if (!candidate.hashes.has(requiredHash)) {
-              return false;
-            }
-          }
-          return true;
-        })
-        .map((candidate) => candidate.cubeId);
-
-      if (matchingIds.length > 0) {
-        // Found matches! Hydrate cubes
-        const cubes = await this.batchGet(matchingIds);
-
-        // Apply card count filter using shared helper
-        const filteredCubes = this.filterByCardCount(cubes, cardCountFilter);
-
-        matchingCubes.push(...filteredCubes);
-      }
-
+      // Always advance to the cursor past everything just scanned, including on an empty page:
+      // handing back the cursor we were given would make the caller re-read the same page forever.
       currentLastKey = candidatesResult.lastKey;
 
-      if (!currentLastKey) {
-        // No more pages to check
-        break;
+      if (candidatesResult.cubeIds.length > 0) {
+        const matchingIds = await this.cubeIdsHavingAllHashes(candidatesResult.cubeIds, requiredHashes);
+
+        if (matchingIds.length > 0) {
+          // Found matches! Hydrate cubes
+          const cubes = await this.batchGet(matchingIds);
+
+          // Apply card count filter using shared helper
+          matchingCubes.push(...this.filterByCardCount(cubes, cardCountFilter));
+        }
       }
 
-      // If we have results, return them
+      if (!currentLastKey) {
+        // DynamoDB has no more candidates for the primary hash: whatever we have is the whole tail.
+        return { items: matchingCubes };
+      }
+
       if (matchingCubes.length > 0) {
         return {
           items: matchingCubes,
@@ -1861,19 +1843,97 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       }
     }
 
-    // If we exhausted pages without finding anything, provide helpful error
-    if (pagesChecked >= MAX_PAGES && matchingCubes.length === 0) {
-      throw new Error(
-        `Search query too expensive: No matches found after checking ${MAX_PAGES} pages. ` +
-          `Tip: Move the most restrictive criteria to the front of the query to improve performance.`,
-      );
+    // The page cap stopped the scan with nothing to show. This is exhaustion, not an error: a Next
+    // click deep into a sparse search must end the list cleanly rather than surface a failure. The
+    // cursor is dropped with it, so the caller stops here instead of re-entering a scan that already
+    // burned MAX_PAGES without a hit; `scanExhausted` lets the route explain why the list ended.
+    return { items: [], scanExhausted: true };
+  }
+
+  /**
+   * Returns the subset of `cubeIds` whose hash partition carries every one of `requiredHashes`,
+   * preserving the order it was given.
+   *
+   * Membership is tested with point lookups on the exact rows in question rather than by reading
+   * each candidate's full hash set. A cube has one hash row per mainboard card, so a large cube's
+   * hash partition spans several DynamoDB pages; a single unpaginated read of it silently drops the
+   * tail, and the membership test then misses hashes the cube really has — the cube disappears from
+   * search results with no error anywhere. Fetching only the rows being tested is bounded by the
+   * number of filter hashes instead of the size of the cube, and cannot truncate.
+   */
+  private async cubeIdsHavingAllHashes(cubeIds: string[], requiredHashes: string[]): Promise<string[]> {
+    if (requiredHashes.length === 0 || cubeIds.length === 0) {
+      return cubeIds;
     }
 
-    // Return whatever we found (might be empty)
-    return {
-      items: matchingCubes,
-      lastKey: currentLastKey,
-    };
+    const rowKey = (cubeId: string, hash: string) => `HASH#${this.typedKey(cubeId)}|${hash}`;
+
+    // Deduplicated: BatchGetItem rejects a request that asks for the same key twice.
+    const keys = new Map<string, { PK: string; SK: string }>();
+    for (const cubeId of cubeIds) {
+      for (const hash of requiredHashes) {
+        keys.set(rowKey(cubeId, hash), { PK: `HASH#${this.typedKey(cubeId)}`, SK: hash });
+      }
+    }
+
+    const BATCH_SIZE = 100; // DynamoDB BatchGetItem limit
+    const MAX_ATTEMPTS = 5;
+    const allKeys = Array.from(keys.values());
+    const found = new Set<string>();
+
+    const chunks: { PK: string; SK: string }[][] = [];
+    for (let i = 0; i < allKeys.length; i += BATCH_SIZE) {
+      chunks.push(allKeys.slice(i, i + BATCH_SIZE));
+    }
+
+    // In parallel: this runs on the search path, where every extra round trip is latency the user
+    // waits through, and a candidate page of 100 cubes needs several batches.
+    await Promise.all(
+      chunks.map(async (chunk) => {
+        let pending = chunk;
+        let attempts = 0;
+
+        while (pending.length > 0) {
+          const response = await this.dynamoClient.send(
+            new BatchGetCommand({
+              RequestItems: {
+                [this.tableName]: {
+                  Keys: pending,
+                  // Only the keys matter; the row's sort attributes would be dead weight on the wire.
+                  ProjectionExpression: 'PK, SK',
+                },
+              },
+            }),
+          );
+
+          for (const item of response.Responses?.[this.tableName] ?? []) {
+            found.add(`${item.PK}|${item.SK}`);
+          }
+
+          pending = (response.UnprocessedKeys?.[this.tableName]?.Keys ?? []) as { PK: string; SK: string }[];
+          attempts += 1;
+
+          if (pending.length === 0) {
+            break;
+          }
+
+          // An unprocessed key is throttling, not absence. Treating it as a miss would hide cubes
+          // the same way the truncated read did, so retry and then give up loudly rather than
+          // quietly dropping results.
+          if (attempts >= MAX_ATTEMPTS) {
+            throw new Error(
+              `Hash membership lookup incomplete: ${pending.length} keys still unprocessed after ${MAX_ATTEMPTS} attempts`,
+            );
+          }
+
+          // Exponential backoff with jitter, matching the rest of the DAO's contention handling.
+          const backoffMs = Math.pow(2, attempts - 1) * 50 + Math.floor(Math.random() * 50);
+          await new Promise((resolve) => setTimeout(resolve, backoffMs));
+        }
+      }),
+    );
+
+    return cubeIds.filter((cubeId) => requiredHashes.every((hash) => found.has(rowKey(cubeId, hash))));
   }
 
   /**
@@ -2166,11 +2226,16 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   }
 
   /**
-   * Gets all hash rows for a specific cube.
+   * Gets hash rows for a specific cube.
    * This is useful for cleanup/sweeper operations to verify or remove stale hashes.
    *
+   * Returns a single DynamoDB page. A cube carries one hash row per mainboard card, so a large
+   * cube's rows do not all fit in one page: callers that need the complete set must follow the
+   * returned `lastKey`. Do not use this for membership tests — see `cubeIdsHavingAllHashes`, which
+   * reads only the rows it is testing and so cannot be truncated.
+   *
    * @param cubeId - The ID of the cube to get hashes for
-   * @returns Promise with array of hash strings and their metadata
+   * @returns Promise with array of hash strings and their metadata, plus a key for the next page
    */
   public async getHashesForCube(cubeId: string): Promise<{
     hashes: Array<{

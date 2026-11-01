@@ -379,7 +379,7 @@ const performSearch = async (
   try {
     // The visibility predicate depends on the requesting user, so it cannot be pushed into the
     // query; it stays here and the DAO stays user-agnostic.
-    const fetchPage = async (cursor: any): Promise<{ items: any[]; lastKey: any }> => {
+    const fetchPage = async (cursor: any): Promise<{ items: any[]; lastKey: any; scanExhausted?: boolean }> => {
       if (hashes.length === 1) {
         // Determine which query method to use based on hash prefix
         const hash = hashes[0] || '';
@@ -438,16 +438,21 @@ const performSearch = async (
         cursor,
         cardCountFilter,
       );
-      return { items: multiHashResult.items, lastKey: multiHashResult.lastKey };
+      return {
+        items: multiHashResult.items,
+        lastKey: multiHashResult.lastKey,
+        scanExhausted: multiHashResult.scanExhausted,
+      };
     };
 
     const visibleCubes: any[] = [];
     let cursor: any = lastKey || undefined;
     let resultLastKey: any = null;
     let passes = 0;
+    let scanExhausted = false;
 
     do {
-      let page: { items: any[]; lastKey: any };
+      let page: { items: any[]; lastKey: any; scanExhausted?: boolean };
       try {
         page = await fetchPage(cursor);
       } catch (error) {
@@ -462,6 +467,7 @@ const performSearch = async (
 
       // Filter by listing visibility
       visibleCubes.push(...page.items.filter((cube: any) => isCubeListed(cube, user)));
+      scanExhausted = page.scanExhausted === true;
 
       // Always the cursor from the most recent request, never an earlier one: the next page must
       // resume past everything scanned, including when the pass cap stops the refill early.
@@ -472,6 +478,16 @@ const performSearch = async (
     return {
       cubes: visibleCubes,
       lastKey: resultLastKey,
+      // The multi-hash scan gave up at its page cap. That is a bounded search, not a failure, so the
+      // empty list stands and the tip is advice rather than an error — only worth saying when the
+      // user has nothing to look at.
+      ...(scanExhausted && visibleCubes.length === 0
+        ? {
+            error:
+              'No matches found before the search hit its scan limit. ' +
+              'Tip: Move the most restrictive criteria to the front of the query.',
+          }
+        : {}),
     };
   } catch (error: any) {
     return {
