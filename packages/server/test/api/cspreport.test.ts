@@ -1,3 +1,6 @@
+import express, { RequestHandler } from 'express';
+import request from 'supertest';
+
 import { cspReportHandler } from '../../src/router/routes/api/cspreport';
 
 const makeRes = () => {
@@ -47,5 +50,34 @@ describe('cspReportHandler', () => {
     cspReportHandler(req, makeRes());
 
     expect(req.logger.info).not.toHaveBeenCalled();
+  });
+});
+
+describe('CSP report route', () => {
+  // Loads the route fresh, so the test starts with an empty rate-limit window.
+  const buildApp = () => {
+    let routes: any[] = [];
+    jest.isolateModules(() => {
+      routes = require('../../src/router/routes/api/cspreport').routes;
+    });
+    const app = express();
+    app.use((req: any, _res, next) => {
+      req.logger = { info: jest.fn() };
+      next();
+    });
+    app.post('/api/cspreport', ...(routes[0].handler as RequestHandler[]));
+    return app;
+  };
+
+  it('answers 204 past the rate limit instead of 429', async () => {
+    const app = buildApp();
+
+    for (let i = 0; i < 11; i += 1) {
+      const res = await request(app)
+        .post('/api/cspreport')
+        .set('Content-Type', 'application/csp-report')
+        .send(JSON.stringify(report));
+      expect(res.status).toBe(204);
+    }
   });
 });

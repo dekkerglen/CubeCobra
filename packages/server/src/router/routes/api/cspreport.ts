@@ -1,5 +1,6 @@
 import bodyParser from 'body-parser';
-import { ipKey, jsonLimiter } from 'serverutils/rateLimiters';
+import rateLimit from 'express-rate-limit';
+import { ipKey } from 'serverutils/rateLimiters';
 
 import { Request, Response } from '../../../types/express';
 
@@ -34,10 +35,24 @@ export const cspReportHandler = (req: Request, res: Response) => {
   return res.status(204).end();
 };
 
+// Past the limit a report is dropped with the same 204. A 429 counts against the instance in
+// Elastic Beanstalk's health checks (these reports are a third of all requests), and browsers
+// don't retry reports anyway.
+const reportLimiter = rateLimit({
+  windowMs: 60_000,
+  limit: 10,
+  standardHeaders: false,
+  legacyHeaders: false,
+  keyGenerator: ipKey,
+  handler: (_req, res) => {
+    res.status(204).end();
+  },
+});
+
 export const routes = [
   {
     path: '/',
     method: 'post',
-    handler: [jsonLimiter(60_000, 10, ipKey), reportParser, cspReportHandler],
+    handler: [reportLimiter, reportParser, cspReportHandler],
   },
 ];
