@@ -10,7 +10,7 @@ import Text from 'components/base/Text';
 import DisplayContext from 'contexts/DisplayContext';
 import useChartTextColor from 'hooks/useChartTextColor';
 
-import { getCardCountByColor, getCurveByColors, getManaSymbolCount, getSourcesDistribution } from '../utils/deckutil';
+import { getDeckColorStats, percentOf } from '../utils/deckutil';
 import Tooltip from './base/Tooltip';
 
 // Register Chart.js components
@@ -20,17 +20,7 @@ interface DeckBuilderStatsPanelProps {
   cards: Card[];
 }
 
-const displayPercentage = (nom: number, denom: number): string => {
-  if (nom === 0) {
-    return '0%';
-  }
-
-  if (denom === 0) {
-    return '100%';
-  }
-
-  return `${((nom / denom) * 100).toFixed(0)}%`;
-};
+const displayPercentage = (nom: number, denom: number): string => `${percentOf(nom, denom)}%`;
 
 const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) => {
   const { showDeckBuilderStatsPanel } = useContext(DisplayContext);
@@ -40,61 +30,7 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
     return null;
   }
 
-  const manaSymbolCounts = getManaSymbolCount(cards);
-  const cardColorCounts = getCardCountByColor(cards);
-  const sourcesInDeck = getSourcesDistribution(cards);
-  const curveByColors = getCurveByColors(cards, [0, 1, 2, 3, 4, 5]);
-
-  const manaData = [
-    {
-      color: 'White',
-      symbol: 'w',
-      cardCount: cardColorCounts.W,
-      symbolCount: manaSymbolCounts.W,
-      curve: curveByColors.W,
-      landProduction: sourcesInDeck.W,
-    },
-    {
-      color: 'Blue',
-      symbol: 'u',
-      cardCount: cardColorCounts.U,
-      symbolCount: manaSymbolCounts.U,
-      curve: curveByColors.U,
-      landProduction: sourcesInDeck.U,
-    },
-    {
-      color: 'Black',
-      symbol: 'b',
-      cardCount: cardColorCounts.B,
-      symbolCount: manaSymbolCounts.B,
-      curve: curveByColors.B,
-      landProduction: sourcesInDeck.B,
-    },
-    {
-      color: 'Red',
-      symbol: 'r',
-      cardCount: cardColorCounts.R,
-      symbolCount: manaSymbolCounts.R,
-      curve: curveByColors.R,
-      landProduction: sourcesInDeck.R,
-    },
-    {
-      color: 'Green',
-      symbol: 'g',
-      cardCount: cardColorCounts.G,
-      symbolCount: manaSymbolCounts.G,
-      curve: curveByColors.G,
-      landProduction: sourcesInDeck.G,
-    },
-    {
-      color: 'Colorless',
-      symbol: 'c',
-      cardCount: cardColorCounts.C,
-      symbolCount: manaSymbolCounts.C,
-      curve: curveByColors.C,
-      landProduction: sourcesInDeck.C,
-    },
-  ];
+  const stats = getDeckColorStats(cards);
 
   const colorStyles: Record<string, string> = {
     White: `bg-yellow-300 text-gray-800`,
@@ -123,21 +59,39 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
       </CardHeader>
       <CardBody>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {manaData.map(({ color, symbol, cardCount, symbolCount, curve, landProduction }) => (
+          {stats.colors.map(({ color, symbol, cardCount, symbolCount, symbolTotal, curve, sources, sourceTotal }) => (
             <div
               key={color}
               className="bg-bg-accent border border-border rounded-lg p-4 flex flex-col items-center text-center"
             >
-              <img alt={symbol} className="w-16 h-16 mb-1" src={cdnUrl(`/content/symbols/${symbol}.png`)} />
+              <img
+                alt={symbol.toLowerCase()}
+                className="w-16 h-16 mb-1"
+                src={cdnUrl(`/content/symbols/${symbol.toLowerCase()}.png`)}
+              />
 
               {/* Percentage with Tooltip */}
-              <Tooltip text={`${cardCount ?? 0} of ${cards.length} cards are ${color}`}>
-                <h3 className="text-lg font-bold cursor-pointer">{displayPercentage(cardCount, cards.length)}</h3>
+              <Tooltip
+                text={
+                  color === 'Colorless'
+                    ? `${cardCount} of ${stats.spellCount} spells are colorless`
+                    : `${cardCount} of ${stats.spellCount} spells include ${color.toLowerCase()}`
+                }
+              >
+                <h3 className="text-lg font-bold cursor-pointer" data-testid="color-percentage">
+                  {displayPercentage(cardCount, stats.spellCount)}
+                </h3>
               </Tooltip>
 
-              <Tooltip text={`${symbolCount ?? 0} of ${manaSymbolCounts.total} symbols are ${color.toLowerCase()}`}>
+              <Tooltip
+                text={
+                  color === 'Colorless'
+                    ? `${symbolCount} of ${symbolTotal} mana symbols are colorless`
+                    : `${symbolCount} of ${symbolTotal} mana symbols are ${color.toLowerCase()}`
+                }
+              >
                 <p className="text-xs text-text-secondary mt-1">
-                  {displayPercentage(symbolCount, manaSymbolCounts.total)} of all symbols
+                  {displayPercentage(symbolCount, symbolTotal)} of mana symbols
                 </p>
               </Tooltip>
 
@@ -178,7 +132,7 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
                           display: false,
                         },
                       },
-                      y: { display: false },
+                      y: { display: false, beginAtZero: true, max: stats.curveMax },
                     },
                     plugins: { legend: { display: false } },
                   }}
@@ -191,16 +145,16 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
               <div className="w-full h-4 bg-bg-active rounded-full overflow-hidden relative">
                 <div
                   className={`h-full ${colorStyles[color]} flex items-center justify-center text-xs font-bold`}
-                  style={{ width: `${displayPercentage(landProduction, sourcesInDeck.total)}` }}
+                  style={{ width: `${displayPercentage(sources, sourceTotal)}` }}
                 >
-                  {landProduction > 0 ? displayPercentage(landProduction, sourcesInDeck.total) : ''}
+                  {sources > 0 ? displayPercentage(sources, sourceTotal) : ''}
                 </div>
               </div>
               <p className="text-xs">
-                {landProduction > 0
-                  ? landProduction === sourcesInDeck.total
+                {sources > 0
+                  ? sources === sourceTotal
                     ? `All lands produce ${color.toLowerCase()}`
-                    : `${landProduction} out of ${sourcesInDeck.total} lands produce ${color.toLowerCase()}`
+                    : `${sources} out of ${sourceTotal} lands produce ${color.toLowerCase()}`
                   : `No land produces ${color.toLowerCase()}`}
               </p>
             </div>
