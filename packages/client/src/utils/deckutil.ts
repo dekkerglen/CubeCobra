@@ -233,3 +233,74 @@ export const getCurveByColors = (deck: Deck, buckets: number[]): Record<ManaSymb
 
   return histogram;
 };
+
+export const DECK_COLOR_NAMES = ['White', 'Blue', 'Black', 'Red', 'Green', 'Colorless'] as const;
+export type DeckColorName = (typeof DECK_COLOR_NAMES)[number];
+
+export interface DeckColorStat {
+  color: DeckColorName;
+  symbol: ManaSymbol;
+  cardCount: number;
+  symbolCount: number;
+  symbolTotal: number;
+  curve: number[];
+  sources: number;
+  sourceTotal: number;
+}
+
+export interface DeckColorStats {
+  spellCount: number;
+  landCount: number;
+  curveMax: number;
+  colors: DeckColorStat[];
+}
+
+const DECK_COLOR_SYMBOLS: Record<DeckColorName, ManaSymbol> = {
+  White: 'W',
+  Blue: 'U',
+  Black: 'B',
+  Red: 'R',
+  Green: 'G',
+  Colorless: 'C',
+};
+
+const DECK_CURVE_BUCKETS = [0, 1, 2, 3, 4, 5];
+
+/**
+ * Aggregates everything the deck stats panel needs, deciding here which cards each number describes:
+ * lands are excluded from the card, symbol and curve counts, while the mana sources are counted over
+ * the whole deck.
+ */
+export const getDeckColorStats = (deck: Deck): DeckColorStats => {
+  const spells = deck.filter((card: Card) => !cardIsLand(card));
+  const landCount = deck.length - spells.length;
+
+  const cardCounts = getCardCountByColor(spells);
+  const symbolCounts = getManaSymbolCount(spells);
+  const curves = getCurveByColors(spells, DECK_CURVE_BUCKETS);
+  const sources = getSourcesDistribution(deck);
+
+  const colors: DeckColorStat[] = DECK_COLOR_NAMES.map((color) => {
+    const symbol = DECK_COLOR_SYMBOLS[color];
+
+    return {
+      color,
+      symbol,
+      cardCount: cardCounts[symbol],
+      symbolCount: symbolCounts[symbol],
+      symbolTotal: symbolCounts.total,
+      curve: curves[symbol],
+      sources: sources[symbol],
+      sourceTotal: sources.total,
+    };
+  });
+
+  const curveMax = Math.max(1, ...colors.map((stat) => Math.max(...stat.curve)));
+
+  return {
+    spellCount: spells.length,
+    landCount,
+    curveMax,
+    colors,
+  };
+};
