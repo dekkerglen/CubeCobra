@@ -15,7 +15,10 @@ const PAGE_SIZE = 36;
 // Refilling is an optimisation, not a correctness mechanism: the client accumulates and windows
 // regardless, and the cap stays low because this composes with the DAO's own 10-page internal
 // loop on the busiest route in the app.
-const MAX_REFILL_PASSES = 3;
+//
+// This bounds *fetches*, not refills: the mandatory initial query counts as pass 1, so 3 permits
+// the first query plus two refills. Do not raise it to "fix" an apparent off-by-one.
+const MAX_FETCH_PASSES = 3;
 
 // Arrives as a string from both the query and the JSON body, where "false" would otherwise be truthy.
 const toAscending = (value: unknown): boolean => value === true || value === 'true';
@@ -444,7 +447,17 @@ const performSearch = async (
     let passes = 0;
 
     do {
-      const page = await fetchPage(cursor);
+      let page: { items: any[]; lastKey: any };
+      try {
+        page = await fetchPage(cursor);
+      } catch (error) {
+        // A refill is best-effort: a transient failure must not discard the page already in hand,
+        // which is valid and carries a usable cursor. Only the first fetch failing is a real error.
+        if (passes > 0) {
+          break;
+        }
+        throw error;
+      }
       passes += 1;
 
       // Filter by listing visibility
@@ -454,7 +467,7 @@ const performSearch = async (
       // resume past everything scanned, including when the pass cap stops the refill early.
       cursor = page.lastKey ?? null;
       resultLastKey = cursor;
-    } while (visibleCubes.length < PAGE_SIZE && cursor && passes < MAX_REFILL_PASSES);
+    } while (visibleCubes.length < PAGE_SIZE && cursor && passes < MAX_FETCH_PASSES);
 
     return {
       cubes: visibleCubes,

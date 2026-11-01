@@ -229,6 +229,33 @@ describe('cube search visibility refill', () => {
     expect(response.body.lastKey).not.toBeNull();
   });
 
+  it('keeps the first page when a refill pass throws', async () => {
+    (cubeDao.queryByKeyword as jest.Mock)
+      .mockResolvedValueOnce({
+        items: [...makeCubes('visible-1', 30, true), ...makeCubes('hidden-1', 6, false)],
+        lastKey: 'key-1',
+      })
+      .mockRejectedValueOnce(new Error('dynamo blew up'));
+
+    const response = await searchMore();
+
+    // The refill is best-effort: a page that was already good must not be thrown away by a
+    // failed attempt to make it better.
+    expect(response.body.error).toBeUndefined();
+    expect(response.body.cubes).toHaveLength(30);
+    expect(response.body.lastKey).toBe('key-1');
+  });
+
+  it('still reports a failure of the very first fetch', async () => {
+    (cubeDao.queryByKeyword as jest.Mock).mockRejectedValueOnce(new Error('dynamo blew up'));
+
+    const response = await searchMore();
+
+    expect(response.body.error).toBe('dynamo blew up');
+    expect(response.body.cubes).toHaveLength(0);
+    expect(response.body.lastKey).toBeNull();
+  });
+
   it('stops early when the cursor is exhausted', async () => {
     (cubeDao.queryByKeyword as jest.Mock).mockResolvedValueOnce({
       items: makeCubes('visible-1', 10, true),
