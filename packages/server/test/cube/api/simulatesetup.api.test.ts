@@ -25,6 +25,7 @@ jest.mock('serverutils/carddb', () => ({
   getOracleForMl: jest.fn((oracle: string) => oracle),
 }));
 jest.mock('serverutils/cube', () => ({
+  basicsBoardFor: jest.fn((cube: { basicsBoard?: string }) => cube.basicsBoard || 'Basics'),
   getBasicsFromCube: jest.fn(() => []),
 }));
 

@@ -248,6 +248,21 @@ export function getViewDefinitions(cube: Cube): ViewDefinition[] {
 }
 
 /**
+ * Counts the cards across every board a view shows. Board keys are matched
+ * case-insensitively, the same way the list page matches view boards to card boards.
+ */
+export function getViewCardCount(view: ViewDefinition, cards: Record<string, unknown[] | undefined>): number {
+  const boards = new Set(view.boards.map((board) => board.toLowerCase()));
+  let count = 0;
+  for (const [board, list] of Object.entries(cards)) {
+    if (boards.has(board.toLowerCase()) && Array.isArray(list)) {
+      count += list.length;
+    }
+  }
+  return count;
+}
+
+/**
  * Resolves a view from the value carried in the `view` query param.
  *
  * The param normally holds a slug (e.g. "base-packs"), but links predating slug

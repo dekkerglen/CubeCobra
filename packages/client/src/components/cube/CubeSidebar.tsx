@@ -10,7 +10,7 @@ import {
   PlayIcon,
   TrophyIcon,
 } from '@primer/octicons-react';
-import Cube, { getViewDefinitions, viewNameToSlug } from '@utils/datatypes/Cube';
+import Cube, { getViewCardCount, getViewDefinitions, viewNameToSlug } from '@utils/datatypes/Cube';
 import { UserRoles } from '@utils/datatypes/User';
 import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
@@ -143,7 +143,7 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean):
 
 const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, controls }) => {
   // Use cube from context to pick up live updates (e.g., when views are modified)
-  const { cube, canEdit } = React.useContext(CubeContext);
+  const { cube, canEdit, unfilteredChangedCards } = React.useContext(CubeContext);
   const user = React.useContext(UserContext);
   const isAdmin = !!user && Array.isArray(user.roles) && user.roles.includes(UserRoles.ADMIN);
   const isCubeOwner = (!!user && cube.owner?.id === user.id) || isAdmin;
@@ -167,6 +167,18 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
   };
 
   const { activeView, setActiveView } = React.useContext(DisplayContext);
+
+  // Only the list page is guaranteed to have the cube's cards loaded, so view
+  // counts are limited to it.
+  const viewCardCounts = React.useMemo(() => {
+    if (activeLink !== 'list') return null;
+    const counts: Record<string, number> = {};
+    for (const view of getViewDefinitions(cube)) {
+      counts[viewNameToSlug(view.name)] = getViewCardCount(view, unfilteredChangedCards);
+    }
+    return counts;
+  }, [activeLink, cube, unfilteredChangedCards]);
+
   const aboutViewContext = React.useContext(AboutViewContext);
   const analysisViewContext = React.useContext(AnalysisViewContext);
   const playtestViewContext = React.useContext(PlaytestViewContext);
@@ -386,14 +398,19 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                                       href={listHref}
                                       onClick={handleClick}
                                       className={classNames(
-                                        'flex items-center pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
+                                        'flex items-center justify-between gap-2 pl-8 pr-4 py-0.5 transition-colors text-sm cursor-pointer hover:bg-bg-active',
                                         {
                                           'bg-bg-active font-bold text-text': isActive,
                                           'font-normal text-text': !isActive,
                                         },
                                       )}
                                     >
-                                      {subItem.label}
+                                      <span className="min-w-0">{subItem.label}</span>
+                                      {viewCardCounts && (
+                                        <span className="shrink-0 text-xs font-normal text-text-secondary tabular-nums">
+                                          {viewCardCounts[viewKey]}
+                                        </span>
+                                      )}
                                     </a>
                                   );
                                 }
@@ -693,7 +710,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                             href={subHref}
                             onClick={handleClick}
                             className={classNames(
-                              'block px-4 py-1.5 text-sm cursor-pointer',
+                              'flex items-center justify-between gap-4 px-4 py-1.5 text-sm cursor-pointer',
                               'hover:bg-bg-active transition-colors',
                               {
                                 'bg-bg-active font-bold text-text': isViewActive,
@@ -701,7 +718,12 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                               },
                             )}
                           >
-                            {subItem.label}
+                            <span className="min-w-0">{subItem.label}</span>
+                            {viewCardCounts && (
+                              <span className="shrink-0 text-xs font-normal text-text-secondary tabular-nums">
+                                {viewCardCounts[subItem.key]}
+                              </span>
+                            )}
                           </a>
                         );
                       } else if (item.key === 'records') {
