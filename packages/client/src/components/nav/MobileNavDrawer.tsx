@@ -18,6 +18,7 @@ import {
   SearchIcon,
   ShareAndroidIcon,
   ShieldCheckIcon,
+  SignOutIcon,
   StackIcon,
   TableIcon,
   ToolsIcon,
@@ -31,6 +32,7 @@ import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
 import UserContext from '../../contexts/UserContext';
+import PostButton from '../base/PostButton';
 import withQuickCreateCube from '../QuickCreateCubeButton';
 
 export interface MobileNavDrawerProps {
@@ -118,6 +120,18 @@ const Divider: React.FC = () => <div className="my-3 border-t border-border" />;
 
 const SectionHeading: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="px-3 pb-1 pt-2 text-xs font-bold uppercase tracking-wide text-text-secondary">{children}</div>
+);
+
+// Logging out is a POST, so it is a form button dressed as the rows around it rather than a link.
+const LogoutRow: React.FC = () => (
+  <PostButton
+    action="/user/logout"
+    unstyled
+    className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-left text-base text-text hover:bg-bg-active"
+  >
+    <SignOutIcon size={20} />
+    <span>Logout</span>
+  </PostButton>
 );
 
 // `cubes` and `collaboratingCubes` arrive from render.ts as a trimmed cube that carries the image
@@ -269,6 +283,16 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
       {siteRows.map((row) => (
         <NavRow key={row.href} row={row} pathname={pathname} />
       ))}
+
+      {/* Signed-in only: a visitor is offered Sign in and Create account at the top instead. The
+          account page keeps its own logout, so this is a second route to it rather than the only
+          one. */}
+      {user && (
+        <>
+          <Divider />
+          <LogoutRow />
+        </>
+      )}
 
       <Divider />
 

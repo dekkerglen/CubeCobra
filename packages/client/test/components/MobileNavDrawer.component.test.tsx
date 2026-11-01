@@ -259,6 +259,22 @@ describe('MobileNavDrawer', () => {
     expect(screen.queryByRole('link', { name: 'Notifications' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Settings' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Profile' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /logout/i })).not.toBeInTheDocument();
+  });
+
+  it('offers logout as a post, below the site destinations', () => {
+    renderDrawer({ side: 'left' });
+
+    const logout = screen.getByRole('button', { name: /logout/i });
+    // Logging out changes state, so it must not be reachable by GET: an <img> in user Markdown
+    // pointing at the route would otherwise sign the reader out.
+    const form = logout.closest('form');
+    expect(form).toHaveAttribute('action', '/user/logout');
+    expect(form).toHaveAttribute('method', 'POST');
+
+    // It sits after the last site row, not among the personal rows higher up.
+    const rows = Array.from(panel().querySelectorAll('a[href], form button'));
+    expect(rows.indexOf(logout)).toBeGreaterThan(rows.indexOf(screen.getByRole('link', { name: 'Help' })));
   });
 
   it('still offers the public destinations to a signed-out visitor', () => {
