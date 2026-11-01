@@ -27,6 +27,11 @@ describe('CursorPagination', () => {
     expect(container).toBeEmptyDOMElement();
   });
 
+  it('renders nothing when no pages are loaded even if more exist', () => {
+    const { container } = render(<CursorPagination active={0} loadedPages={0} hasMore onPageChange={jest.fn()} />);
+    expect(container).toBeEmptyDOMElement();
+  });
+
   it('enables next when more pages are loaded even though hasMore is false', () => {
     render(<CursorPagination active={0} loadedPages={3} hasMore={false} onPageChange={jest.fn()} />);
     expect(screen.getByLabelText('Next page')).toBeEnabled();

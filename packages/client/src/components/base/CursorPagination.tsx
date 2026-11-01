@@ -37,7 +37,8 @@ const CursorPagination: React.FC<CursorPaginationProps> = ({
   // The list can shrink under the viewer, leaving active past the end of what is loaded
   const clampedActive = Math.max(0, Math.min(active, Math.max(0, loadedPages - 1)));
 
-  if (loadedPages <= 1 && !hasMore) {
+  // Nothing has been fetched yet, so there is no page to honestly label, even if a cursor remains
+  if (loadedPages < 1 || (loadedPages < 2 && !hasMore)) {
     return null;
   }
 
