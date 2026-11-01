@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -10,7 +10,7 @@ import DeckBuilderStatsPanel from 'components/DeckBuilderStatsPanel';
 import DisplayContext from 'contexts/DisplayContext';
 
 import { defaultDisplayContext } from '../../../server/test/test-utils/context';
-import { createBasicLand, createCard } from '../../../server/test/test-utils/data';
+import { createBasicLand, createCard, createCardDetails } from '../../../server/test/test-utils/data';
 
 jest.mock('react-chartjs-2', () => ({
   Bar: ({ options }: any) => <div data-testid="bar" data-max={String(options?.scales?.y?.max)} />,
@@ -66,5 +66,57 @@ describe('DeckBuilderStatsPanel', () => {
     );
 
     expect(headlines).toEqual(['0%', '0%', '0%', '100%', '0%', '0%']);
+  });
+
+  it('labels the headline percentage with the population it came from', () => {
+    const { container } = renderPanel([createCard({ colors: ['R'], cmc: 1 }), createBasicLand('Mountain')]);
+
+    const populations = Array.from(container.querySelectorAll('[data-testid="color-population"]')).map(
+      (tile) => tile.textContent,
+    );
+
+    expect(populations).toEqual([
+      '0 of 1 spells',
+      '0 of 1 spells',
+      '0 of 1 spells',
+      '1 of 1 spells',
+      '0 of 1 spells',
+      '0 of 1 spells',
+    ]);
+  });
+
+  it('describes a color as included in spells rather than as a share of the deck', () => {
+    const { container } = renderPanel([
+      createCard({ colors: ['R'], cmc: 1, details: createCardDetails({ parsed_cost: ['r'] }) }),
+    ]);
+
+    const headline = container.querySelectorAll('[data-testid="color-percentage"]')[3]!.parentElement!;
+    fireEvent.mouseEnter(headline);
+
+    expect(screen.getByText('1 of 1 spells include red')).toBeInTheDocument();
+
+    fireEvent.mouseLeave(headline);
+
+    const symbolLine = screen.getByText('100% of mana symbols').parentElement!;
+    fireEvent.mouseEnter(symbolLine);
+
+    expect(screen.getByText('1 of 1 mana symbols are red')).toBeInTheDocument();
+  });
+
+  it('centers the land percentage over the whole track rather than inside the fill', () => {
+    const { container } = renderPanel([
+      createBasicLand('Mountain'),
+      createBasicLand('Forest'),
+      createBasicLand('Forest'),
+      createBasicLand('Forest'),
+    ]);
+
+    const quarter = Array.from(container.querySelectorAll('[data-testid="source-label"]')).filter(
+      (label) => label.textContent === '25%',
+    ) as HTMLElement[];
+
+    expect(quarter).toHaveLength(2);
+    expect(quarter.some((label) => label.style.clipPath === 'inset(0 75% 0 0)')).toBe(true);
+    expect(quarter.every((label) => label.style.width === '')).toBe(true);
   });
 });
