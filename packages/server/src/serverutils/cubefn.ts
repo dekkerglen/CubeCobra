@@ -694,6 +694,35 @@ const samplePackFormat = (cube: any): DraftFormat => {
   };
 };
 
+export interface P1P1PackScore {
+  botPickIndex: number | null;
+  botWeights: number[];
+  maxBotWeight: number;
+}
+
+/**
+ * Rates each pack as a first pick (empty pool) in a single batched ML call. Weights line up with
+ * the given oracle ids; an id the model doesn't return a rating for scores 0.
+ */
+async function scoreP1P1Packs(packs: string[][]): Promise<P1P1PackScore[]> {
+  const batchResults = await batchDraft(packs.map((pack) => ({ pack, pool: [] as string[] })));
+
+  return packs.map((oracleIds, i) => {
+    const predictions = batchResults[i] || [];
+    const ratings = new Map(predictions.map((prediction) => [prediction.oracle, prediction.rating]));
+    const botWeights = oracleIds.map((oracleId) => ratings.get(oracleId) ?? 0);
+
+    const topPick = predictions[0];
+    const botPickIndex = topPick ? oracleIds.indexOf(topPick.oracle) : -1;
+
+    return {
+      botPickIndex: botPickIndex >= 0 ? botPickIndex : null,
+      botWeights,
+      maxBotWeight: Math.max(...(botWeights.length > 0 ? botWeights : [0])),
+    };
+  });
+}
+
 async function generateBalancedPack(
   cube: any,
   cards: any,
@@ -736,39 +765,15 @@ async function generateBalancedPack(
     candidates.push({ packResult, oracleIds });
   }
 
-  // Single batched ML call for all candidates (P1P1: pack=oracleIds, pool=[])
-  const batchInputs = candidates.map((c) => ({
-    pack: c.oracleIds,
-    pool: [] as string[],
-  }));
-  const batchResults = await batchDraft(batchInputs);
+  const scores = await scoreP1P1Packs(candidates.map((c) => c.oracleIds));
 
   for (let i = 0; i < candidates.length; i++) {
-    const { packResult, oracleIds } = candidates[i]!;
-    const predictions = batchResults[i] || [];
-
-    // Convert predictions to BotResult format
-    const botWeights = new Array(oracleIds.length).fill(0);
-    predictions.forEach((prediction: { oracle: string; rating: number }) => {
-      const cardIndex = oracleIds.findIndex((oracleId: string) => oracleId === prediction.oracle);
-      if (cardIndex >= 0) {
-        botWeights[cardIndex] = prediction.rating;
-      }
-    });
-
-    const topPick = predictions[0];
-    const botPickIndex = topPick ? oracleIds.findIndex((oracleId: string) => oracleId === topPick.oracle) : -1;
-
-    const botResult = {
-      botPickIndex: botPickIndex >= 0 ? botPickIndex : null,
-      botWeights,
-    };
-
-    const maxBotWeight = Math.max(...(botResult.botWeights.length > 0 ? botResult.botWeights : [0]));
+    const { packResult } = candidates[i]!;
+    const { botPickIndex, botWeights, maxBotWeight } = scores[i]!;
 
     packCandidates.push({
       packResult,
-      botResult,
+      botResult: { botPickIndex, botWeights },
       maxBotWeight,
       seed: seedPrefix,
     });
@@ -974,6 +979,7 @@ const methods = {
   sanitize,
   generatePack,
   generateBalancedPack,
+  scoreP1P1Packs,
   getCubeId,
   addCardHtml,
   removeCardHtml,
@@ -1002,6 +1008,7 @@ export {
   CSVtoCards,
   cubeCardTags,
   generateBalancedPack,
+  scoreP1P1Packs,
   generatePack,
   getCubeId,
   getCubeTypes,

@@ -11,7 +11,7 @@ import Link from '../base/Link';
 import Text from '../base/Text';
 
 interface P1P1HeaderProps {
-  pack: { cubeId: string; id: string };
+  pack: { cubeId: string; id: string; source?: string; createdByUsername?: string };
   votes: P1P1VoteSummary;
   showBotWeights: boolean;
   onToggleBotWeights: () => void;
@@ -45,6 +45,14 @@ const P1P1Header: React.FC<P1P1HeaderProps> = ({ pack, votes, showBotWeights, on
                 {cube.owner.username}
               </Link>
             </>
+          )}
+          {pack.source === 'custom' && pack.createdByUsername && (
+            <Text sm className="block text-text-secondary">
+              Hand-built pack, curated by{' '}
+              <Link href={`/user/view/${pack.createdByUsername}`} className="text-decoration-none">
+                {pack.createdByUsername}
+              </Link>
+            </Text>
           )}
         </Text>
 

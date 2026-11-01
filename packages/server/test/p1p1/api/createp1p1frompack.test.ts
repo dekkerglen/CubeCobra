@@ -25,7 +25,7 @@ const cubeCard = (cardID: string, board: string, index: number, tags: string[] =
 
 const CUBE = { id: 'cube-1', visibility: 'pu', owner: { id: 'owner-1' } };
 
-const run = async (cards: CubeCards, packCards: { cardID: string; index?: number }[]) => {
+const run = async (cards: CubeCards, packCards: { cardID: string; index?: number }[], source?: string) => {
   (cubeDao.getById as jest.Mock).mockResolvedValue(CUBE);
   (cubeDao.getCards as jest.Mock).mockResolvedValue(cards);
   (p1p1PackDao.createPack as jest.Mock).mockImplementation(async (_meta, s3Data) => ({ id: 'pack-1', ...s3Data }));
@@ -36,6 +36,7 @@ const run = async (cards: CubeCards, packCards: { cardID: string; index?: number
       cubeId: 'cube-1',
       seed: 'seed-1',
       cards: packCards,
+      ...(source ? { source } : {}),
     })
     .send();
 
@@ -85,5 +86,40 @@ describe('createP1P1FromPack board resolution', () => {
     const { cards: resolved } = await run(cards, [{ cardID: 'main-1' }]);
 
     expect(resolved![0]!.tags).toEqual(['from-mainboard']);
+  });
+});
+
+describe('createP1P1FromPack custom packs', () => {
+  beforeEach(() => jest.clearAllMocks());
+
+  const cards = {
+    mainboard: [cubeCard('main-1', 'mainboard', 0)],
+    maybeboard: [cubeCard('maybe-1', 'maybeboard', 0)],
+  } as unknown as CubeCards;
+
+  it('stores the custom source', async () => {
+    const { status } = await run(cards, [{ cardID: 'main-1', index: 0 }], 'custom');
+
+    expect(status).toBe(200);
+    expect((p1p1PackDao.createPack as jest.Mock).mock.calls[0][1].source).toBe('custom');
+  });
+
+  it('rejects a card that is not in the cube instead of falling back to the catalog', async () => {
+    const { status } = await run(cards, [{ cardID: 'not-in-cube', index: 5 }], 'custom');
+
+    expect(status).toBe(400);
+    expect(p1p1PackDao.createPack).not.toHaveBeenCalled();
+  });
+
+  it('rejects maybeboard cards', async () => {
+    const { status } = await run(cards, [{ cardID: 'maybe-1', index: 0 }], 'custom');
+
+    expect(status).toBe(400);
+  });
+
+  it('leaves random packs without a source', async () => {
+    await run(cards, [{ cardID: 'main-1', index: 0 }]);
+
+    expect((p1p1PackDao.createPack as jest.Mock).mock.calls[0][1].source).toBeUndefined();
   });
 });

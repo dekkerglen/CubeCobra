@@ -31,11 +31,14 @@ const CreateP1P1FromPackSchema = Joi.object({
       'array.max': 'Pack size too large (max 30 cards)',
       'any.required': 'Cards array is required',
     }),
+  // 'custom' packs are hand-built, so every card must come from the cube itself.
+  source: Joi.string().valid('random', 'custom').optional(),
 });
 
 export const createP1P1FromPackHandler = async (req: Request, res: Response) => {
   try {
-    const { cubeId, seed, cards: packCards } = req.body;
+    const { cubeId, seed, cards: packCards, source } = req.body;
+    const isCustom = source === 'custom';
     const { user } = req;
 
     // ensureAuth middleware guarantees user exists but we're doing this for typescript
@@ -61,7 +64,8 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
     // down the fallback path, which rebuilds them without their tags, status or finish.
     const allCubeCards: Card[] = [];
     for (const [board, list] of Object.entries(cubeCards)) {
-      if (board !== 'id' && Array.isArray(list)) {
+      // A hand-built pack can't reach into the maybeboard.
+      if (board !== 'id' && Array.isArray(list) && !(isCustom && board === 'maybeboard')) {
         allCubeCards.push(...list);
       }
     }
@@ -70,10 +74,13 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
       try {
         // `index` is per-board, so it isn't unique across a multi-board cube. Match on
         // cardID as well to pick the right card, and fall back to either key alone for
-        // packs generated before this pairing was required.
-        const cubeCard =
-          packCard.index !== undefined
-            ? (allCubeCards.find((card) => card.index === packCard.index && card.cardID === packCard.cardID) ??
+        // packs generated before this pairing was required. Custom packs come from the builder,
+        // which always sends both, so they get the exact match only.
+        const exact = allCubeCards.find((card) => card.index === packCard.index && card.cardID === packCard.cardID);
+        const cubeCard = isCustom
+          ? exact
+          : packCard.index !== undefined
+            ? (exact ??
               allCubeCards.find((card) => card.cardID === packCard.cardID) ??
               allCubeCards.find((card) => card.index === packCard.index))
             : allCubeCards.find((card) => card.cardID === packCard.cardID);
@@ -86,6 +93,8 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
           if (cubeCard.details?.oracle_id) {
             oracleIds.push(cubeCard.details.oracle_id);
           }
+        } else if (isCustom) {
+          return res.status(400).json({ error: `Card ${packCard.cardID} is not in this cube` });
         } else {
           req.logger.error(`Card not found in cube ${cubeId}: cardID=${packCard.cardID}, index=${packCard.index}`);
 
@@ -132,6 +141,7 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
       cards: cards, // Card details will be stripped automatically by putS3Data
       createdByUsername: user.username,
       seed,
+      source: isCustom ? ('custom' as const) : undefined,
     };
 
     // Create P1P1 pack
