@@ -6,7 +6,7 @@ import { groupNotifications, isNotificationGroup } from '@utils/notificationGrou
 import Banner from 'components/Banner';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import CursorPagination from 'components/base/CursorPagination';
+import CursorPagination, { willRenderCursorPager } from 'components/base/CursorPagination';
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
@@ -111,6 +111,11 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
       loading={loading}
     />
   );
+
+  // The footer's padded CardBody is visible chrome of its own, so it has to appear on exactly the
+  // condition the pager does — otherwise a one-page list ends in an empty padded band.
+  const showPager = willRenderCursorPager(pageCount, hasMore);
+
   return (
     <MainLayout>
       <Banner />
@@ -145,11 +150,13 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
             <a href="https://discord.gg/YYF9x65Ane">Cube Cobra Discord?</a>
           </p>
         )}
-        <CardBody>
-          <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
-            {pager}
-          </Flexbox>
-        </CardBody>
+        {showPager && (
+          <CardBody>
+            <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
+              {pager}
+            </Flexbox>
+          </CardBody>
+        )}
       </Card>
     </MainLayout>
   );

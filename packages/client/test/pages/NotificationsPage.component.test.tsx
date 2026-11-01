@@ -303,4 +303,24 @@ describe('NotificationsPage pagination', () => {
     expect(screen.getByText(/4 people followed you/)).toBeInTheDocument();
     expect(screen.queryByText(/Page/)).not.toBeInTheDocument();
   });
+
+  // The footer pager sits inside a padded CardBody. When the pager renders nothing, that CardBody
+  // is still visible chrome — a ~32px empty band hanging off the bottom of the card.
+  it('renders no empty padded band under a list that fits one page', () => {
+    const { container } = renderPage([ungrouped(1), ungrouped(2)]);
+
+    expect(screen.queryByText(/Page/)).not.toBeInTheDocument();
+    const emptyPadded = Array.from(container.querySelectorAll('div.p-4')).filter(
+      (element) => element.textContent === '',
+    );
+    expect(emptyPadded).toHaveLength(0);
+  });
+
+  it('still renders the footer pager when another page can be loaded', () => {
+    const { container } = renderPage([ungrouped(1)], jest.fn(), 'key-1');
+
+    const paddedFooters = Array.from(container.querySelectorAll('div.p-4'));
+    expect(paddedFooters.length).toBeGreaterThan(0);
+    expect(paddedFooters.every((element) => element.textContent !== '')).toBe(true);
+  });
 });
