@@ -62,8 +62,14 @@ const RenderToRoot = <P,>(Element: ComponentType<P>): ComponentType<P> => {
     // render so we capture failures during the initial mount too.
     initErrorReporting();
 
+    // Mount once per page. In dev, Fast Refresh appends a self-import stamped with the module's
+    // last hot-update time (`Page.tsx?t=...`), which the browser treats as a different module from
+    // the unstamped entry <script>, so the page module (and this call) can run twice. A second
+    // createRoot on the same container would remount the whole page; later hot updates are
+    // applied by Fast Refresh instead.
     const wrapper = document.getElementById('react-root');
-    if (wrapper) {
+    if (wrapper && !wrapper.dataset.reactMounted) {
+      wrapper.dataset.reactMounted = 'true';
       const root = createRoot(wrapper); // createRoot(wrapper!) if you use TypeScript
       root.render(element);
     }

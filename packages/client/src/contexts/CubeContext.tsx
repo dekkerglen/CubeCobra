@@ -1659,8 +1659,9 @@ export function CubeContextProvider({
     <CubeContext.Provider value={value}>
       <>
         {children}
-        {/* Voucher cards use a dedicated editor (VoucherCardModal); all other cards use CardModal.
-            Each modal case below is split into an isVoucher / !isVoucher pair. */}
+        {/* Voucher cards use a dedicated editor (VoucherCardModal); all other cards use CardModal,
+            which adds a pack editor for Lore Seekers. Each modal case below is split into an
+            isVoucher / !isVoucher pair. */}
         {modalSelection &&
           !Array.isArray(modalSelection) &&
           Object.prototype.hasOwnProperty.call(modalSelection, 'isNewlyAdded') &&

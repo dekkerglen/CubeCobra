@@ -27,6 +27,7 @@ import { cdnUrl } from '@utils/cdnUrl';
 import Card, { BoardType } from '@utils/datatypes/Card';
 import { getBoardDefinitions, TagColor } from '@utils/datatypes/Cube';
 import TagData from '@utils/datatypes/TagData';
+import { isLoreSeeker } from '@utils/drafting/draftEffects';
 import { getLabels } from '@utils/sorting/Sort';
 import { getTagColorClass, getTagColorStyle } from '@utils/Util';
 
@@ -59,6 +60,7 @@ import { ColorChecksAddon } from '../ColorCheck';
 import FoilOverlay, { FoilOverlayProps } from '../FoilOverlay';
 import TagInput from '../TagInput';
 import TextBadge from '../TextBadge';
+import LoreSeekerPackEditor from './LoreSeekerPackEditor';
 import VersionSelect from './VersionSelect';
 
 type FoilCardImageProps = FoilOverlayProps & ImageFallbackProps;
@@ -579,6 +581,13 @@ const CardModal: React.FC<CardModalProps> = ({
           </Row>
         ) : (
           <Spinner lg />
+        )}
+        {versions && isLoreSeeker(card) && (canEdit || card.lore_seeker_pack) && (
+          <LoreSeekerPackEditor
+            pack={card.lore_seeker_pack}
+            setPack={(pack) => updateField('lore_seeker_pack', pack)}
+            disabled={disabled}
+          />
         )}
       </ModalBody>
       {canEdit && (

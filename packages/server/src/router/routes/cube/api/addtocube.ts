@@ -17,6 +17,7 @@ import { newCard } from 'serverutils/util';
 import { AppError } from '../../../../../errors/AppError';
 import { ErrorCode } from '../../../../../errors/errorCodes';
 import { Request, Response } from '../../../../types/express';
+import { sanitizeLoreSeekerPack } from './commit';
 
 export const addtocubeHandler = async (req: Request, res: Response) => {
   try {
@@ -146,6 +147,12 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
         if (cardInput.voucher_cards && Array.isArray(cardInput.voucher_cards)) {
           customProperties.voucher_cards = cardInput.voucher_cards;
           sanitizeCardImageUrls(customProperties);
+        }
+        if (cardInput.lore_seeker_pack) {
+          const loreSeekerPack = sanitizeLoreSeekerPack(cardInput.lore_seeker_pack, baseCard.cardID);
+          if (loreSeekerPack) {
+            customProperties.lore_seeker_pack = loreSeekerPack;
+          }
         }
       }
 

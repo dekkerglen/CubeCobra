@@ -40,6 +40,9 @@ interface CubeLayoutProps {
   useChangedCards?: boolean;
   controls?: React.ReactNode;
   rightSidebar?: React.ReactNode;
+  // The page is a full-screen view that already stops above the phone's bottom
+  // nav (the draft table), so it skips the space otherwise kept clear for it.
+  fullScreen?: boolean;
   // Forwarded to the hoisted DisplayContextProvider. Pages that used to wrap
   // their own provider (e.g. CubeListPage) pass these through here instead.
   defaultEditSidebarOpen?: boolean;
@@ -54,6 +57,7 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
   useChangedCards = false,
   controls,
   rightSidebar,
+  fullScreen = false,
   defaultEditSidebarOpen,
 }) => {
   // Only show full hero on list, primer, blog, and changelog pages
@@ -96,7 +100,7 @@ const CubeLayout: React.FC<CubeLayoutProps> = ({
             loadVersionDict={loadVersionDict}
             useChangedCards={useChangedCards}
           >
-            <div className="flex flex-grow pb-20 sm:pb-0">
+            <div className={classNames('flex flex-grow', { 'pb-20 sm:pb-0': !fullScreen })}>
               <CubeSidebar cube={cube} activeLink={activeLink} controls={controls} />
               {/* The theme class sits here, on the common ancestor of the hero and the mobile
                   sub-nav, so both pick up the theme's custom properties through the cascade. */}

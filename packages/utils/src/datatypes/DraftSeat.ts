@@ -1,3 +1,4 @@
+import type { DraftNote } from '../drafting/draftEngine';
 import User from './User';
 
 export default interface DraftSeat {
@@ -16,4 +17,8 @@ export default interface DraftSeat {
   playerName?: string;
   // grid draft only
   pickedIndices?: number[];
+  // Information noted for drafted cards (draft-matters cards), by card index.
+  draftNotes?: Record<number, DraftNote[]>;
+  // Cards removed from the draft (Cogwork Grinder, Animus of Predation), newest first.
+  removedorder?: number[];
 }

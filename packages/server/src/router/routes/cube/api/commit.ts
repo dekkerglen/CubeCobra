@@ -1,4 +1,4 @@
-import { BoardChanges } from '@utils/datatypes/Card';
+import Card, { BoardChanges } from '@utils/datatypes/Card';
 import {
   boardNameToKey,
   CUBE_VISIBILITY,
@@ -6,16 +6,45 @@ import {
   isReservedBoardKey,
   sanitizeCardImageUrls,
 } from '@utils/datatypes/Cube';
+import { Pack } from '@utils/datatypes/Draft';
 import { FeedTypes } from '@utils/datatypes/Feed';
+import { LORE_SEEKER_ORACLE_ID } from '@utils/drafting/draftEffects';
 import { blogDao, cubeDao, feedDao, userDao } from 'dynamo/daos';
+import { cardFromId } from 'serverutils/carddb';
 import { isCubeEditable } from 'serverutils/cubefn';
 
 import { AppError } from '../../../../../errors/AppError';
 import { ErrorCode } from '../../../../../errors/errorCodes';
 import { Request, Response } from '../../../../types/express';
+import { sanitizePack } from '../format/update';
 
 const isPlainObject = (value: unknown): value is Record<string, any> =>
   typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const isLoreSeekerId = (cardID: unknown): boolean =>
+  typeof cardID === 'string' && cardFromId(cardID).oracle_id === LORE_SEEKER_ORACLE_ID;
+
+/**
+ * The pack a Lore Seeker card opens in a draft, rebuilt with the same limits as a draft format's
+ * packs. Returns undefined when the pack is invalid or the card isn't a Lore Seeker.
+ */
+export const sanitizeLoreSeekerPack = (raw: unknown, cardID: unknown): Pack | undefined =>
+  isLoreSeekerId(cardID) ? (sanitizePack(raw) ?? undefined) : undefined;
+
+/**
+ * Keeps a card's Lore Seeker pack only when it is a valid pack on a Lore Seeker, in place. An
+ * edit may send null to go back to the format's pack; that is dropped once the edit is applied.
+ */
+const sanitizeCardLoreSeekerPack = (card: Card, allowClear: boolean): void => {
+  const raw: unknown = card.lore_seeker_pack;
+  if (raw === undefined || (raw === null && allowClear)) return;
+  const pack = sanitizeLoreSeekerPack(raw, card.cardID);
+  if (pack) {
+    card.lore_seeker_pack = pack;
+  } else {
+    delete card.lore_seeker_pack;
+  }
+};
 
 const isValidIndex = (index: unknown, length: number): boolean =>
   typeof index === 'number' && Number.isInteger(index) && index >= 0 && index < length;
@@ -141,12 +170,13 @@ export const commitHandler = async (req: Request, res: Response) => {
       // Custom images are fetched server-side when pack images are rendered, so only plain
       // http(s) URLs may be stored.
       const boardChanges = changes[board] as BoardChanges;
-      for (const card of [
-        ...(boardChanges.adds ?? []),
-        ...(boardChanges.swaps ?? []).map((swap) => swap.card),
-        ...(boardChanges.edits ?? []).map((edit) => edit.newCard),
-      ]) {
+      for (const card of [...(boardChanges.adds ?? []), ...(boardChanges.swaps ?? []).map((swap) => swap.card)]) {
         sanitizeCardImageUrls(card);
+        sanitizeCardLoreSeekerPack(card, false);
+      }
+      for (const edit of boardChanges.edits ?? []) {
+        sanitizeCardImageUrls(edit.newCard);
+        sanitizeCardLoreSeekerPack(edit.newCard, true);
       }
     }
 
@@ -168,10 +198,15 @@ export const commitHandler = async (req: Request, res: Response) => {
       // edits
       if ((changes as any)[board].edits) {
         for (const edit of (changes as any)[board].edits) {
-          (cards as any)[board][edit.index] = {
+          const card = {
             ...(cards as any)[board][edit.index],
             ...edit.newCard,
           };
+          // null clears a Lore Seeker pack, and a card edited into another card keeps none.
+          if (card.lore_seeker_pack === null || (card.lore_seeker_pack && !isLoreSeekerId(card.cardID))) {
+            delete card.lore_seeker_pack;
+          }
+          (cards as any)[board][edit.index] = card;
         }
       }
       // removes

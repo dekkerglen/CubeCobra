@@ -1,3 +1,4 @@
+import type { Pack } from './Draft';
 import { ManaSymbol } from './Mana';
 
 export const COLOR_CATEGORIES = [
@@ -290,4 +291,7 @@ export default interface Card {
   custom_name?: string;
   voucher_cards?: VoucherCard[];
   voucher_card_indices?: number[];
+  // Lore Seeker only: the pack it opens when added to a draft. Unset means a pack like
+  // the one it was drafted from. Uses the draft format pack shape (slots and steps).
+  lore_seeker_pack?: Pack;
 }

@@ -1,11 +1,13 @@
 import React, { useContext, useState } from 'react';
 
+import { ShareIcon } from '@primer/octicons-react';
 import CardType from '@utils/datatypes/Card';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
 import UserContext from '../../contexts/UserContext';
 import Alert from '../base/Alert';
 import Button from '../base/Button';
+import Link from '../base/Link';
 import Spinner from '../base/Spinner';
 import Text from '../base/Text';
 
@@ -18,7 +20,12 @@ interface P1P1FromPackGeneratorProps {
   // When true (e.g. during a live draft), open the created P1P1 in a new tab and
   // surface a shareable link instead of navigating away from the current page.
   openInNewTab?: boolean;
+  // 'link' draws it as a text link, for menus.
+  variant?: 'button' | 'link';
 }
+
+const LINK_CLASS =
+  'flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2';
 
 const P1P1FromPackGenerator: React.FC<P1P1FromPackGeneratorProps> = ({
   cubeId,
@@ -26,6 +33,7 @@ const P1P1FromPackGenerator: React.FC<P1P1FromPackGeneratorProps> = ({
   pack,
   label = 'Create P1P1 from Pack',
   openInNewTab = false,
+  variant = 'button',
 }) => {
   const user = useContext(UserContext);
   const { csrfFetch } = useContext(CSRFContext);
@@ -79,8 +87,15 @@ const P1P1FromPackGenerator: React.FC<P1P1FromPackGeneratorProps> = ({
     }
   };
 
+  const disabled = generating || !cubeId || !seed || !pack || pack.length === 0;
+
   if (!user) {
-    return (
+    return variant === 'link' ? (
+      <span className="flex items-center gap-2 px-2 font-medium text-text-secondary">
+        <ShareIcon size={16} />
+        Login to create a P1P1
+      </span>
+    ) : (
       <Button color="primary" disabled>
         Login to create a P1P1
       </Button>
@@ -88,7 +103,12 @@ const P1P1FromPackGenerator: React.FC<P1P1FromPackGeneratorProps> = ({
   }
 
   if (createdUrl) {
-    return (
+    return variant === 'link' ? (
+      <Link href={createdUrl} target="_blank" rel="noopener noreferrer" className={LINK_CLASS}>
+        <ShareIcon size={16} />
+        View / Share P1P1
+      </Link>
+    ) : (
       <Button color="accent" href={createdUrl} target="_blank" rel="noopener noreferrer">
         View / Share P1P1
       </Button>
@@ -97,13 +117,16 @@ const P1P1FromPackGenerator: React.FC<P1P1FromPackGeneratorProps> = ({
 
   return (
     <>
-      <Button
-        color="primary"
-        onClick={handleGenerateP1P1}
-        disabled={generating || !cubeId || !seed || !pack || pack.length === 0}
-      >
-        {generating ? <Spinner sm /> : label}
-      </Button>
+      {variant === 'link' ? (
+        <Link onClick={disabled ? undefined : handleGenerateP1P1} className={LINK_CLASS}>
+          {generating ? <Spinner sm /> : <ShareIcon size={16} />}
+          {label}
+        </Link>
+      ) : (
+        <Button color="primary" onClick={handleGenerateP1P1} disabled={disabled}>
+          {generating ? <Spinner sm /> : label}
+        </Button>
+      )}
 
       {error && (
         <Alert color="danger" className="mt-2">
