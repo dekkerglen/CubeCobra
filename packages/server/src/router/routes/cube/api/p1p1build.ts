@@ -9,9 +9,9 @@ import { jsonLimiter } from 'serverutils/rateLimiters';
 
 import { Request, Response } from '../../../../types/express';
 
-// Tough fills try this many random fills and keep the one whose best card is rated lowest,
+// Balanced fills try this many random fills and keep the one whose best card is rated lowest,
 // the same trade-off generateBalancedPack makes for whole packs.
-const TOUGH_FILL_CANDIDATES = 10;
+const BALANCED_FILL_CANDIDATES = 10;
 
 const MAX_P1P1_PACK_SIZE = 30;
 
@@ -33,8 +33,19 @@ const P1P1BuildSchema = Joi.object({
     .max(MAX_P1P1_PACK_SIZE)
     .required(),
   // score: rate the filled slots and leave empty ones empty
-  // random / tough: fill every empty slot from the mainboard, then rate the whole pack
-  mode: Joi.string().valid('score', 'random', 'tough').required(),
+  // random / balanced: fill every empty slot from the mainboard, then rate the whole pack
+  mode: Joi.string().valid('score', 'random', 'balanced').required(),
+  // random / balanced: which slots to fill. Defaults to every empty slot. A listed slot that already
+  // holds a card is replaced with a different one.
+  fill: Joi.array()
+    .items(
+      Joi.number()
+        .integer()
+        .min(0)
+        .max(MAX_P1P1_PACK_SIZE - 1),
+    )
+    .unique()
+    .optional(),
 });
 
 type Slot = { cardID: string; index: number } | { name: string } | null;
@@ -65,7 +76,14 @@ const cubeBoards = (cubeCards: Record<string, unknown>): Record<string, Card[]> 
 
 export const p1p1BuildHandler = async (req: Request, res: Response) => {
   try {
-    const { slots, mode } = req.body as { slots: Slot[]; mode: 'score' | 'random' | 'tough' };
+    const { slots, mode, fill } = req.body as {
+      slots: Slot[];
+      mode: 'score' | 'random' | 'balanced';
+      fill?: number[];
+    };
+    if (fill?.some((i) => i >= slots.length)) {
+      return res.status(400).json({ error: 'Fill slot is outside the pack' });
+    }
 
     const cube = await cubeDao.getById(req.params.id!);
     if (!cube || !isCubeViewable(cube, req.user)) {
@@ -97,20 +115,21 @@ export const p1p1BuildHandler = async (req: Request, res: Response) => {
       placed[i] = card;
     }
 
-    const emptyCount = placed.filter((card) => card === null).length;
+    const toFill = new Set(fill ?? placed.flatMap((card, i) => (card ? [] : [i])));
     let candidates: (Card | null)[][] = [placed];
 
-    if (mode !== 'score' && emptyCount > 0) {
+    if (mode !== 'score' && toFill.size > 0) {
+      // Cards being replaced count as used too, so a replacement is always a different card.
       const used = new Set(placed.filter((card): card is Card => card !== null));
       const pool = (boards.mainboard || []).filter((card) => !used.has(card));
-      if (pool.length < emptyCount) {
+      if (pool.length < toFill.size) {
         return res.status(400).json({ error: 'Not enough cards in the mainboard to fill the pack' });
       }
 
-      const candidateCount = mode === 'tough' ? TOUGH_FILL_CANDIDATES : 1;
+      const candidateCount = mode === 'balanced' ? BALANCED_FILL_CANDIDATES : 1;
       candidates = _.times(candidateCount, () => {
-        const fill = _.sampleSize(pool, emptyCount);
-        return placed.map((card) => card ?? fill.pop()!);
+        const drawn = _.sampleSize(pool, toFill.size);
+        return placed.map((card, i) => (toFill.has(i) ? drawn.pop()! : card));
       });
     }
 
@@ -149,7 +168,7 @@ export const routes = [
   {
     method: 'post',
     path: '/:id',
-    // Every call runs the draft model, and tough fills run it on several candidates.
+    // Every call runs the draft model, and balanced fills run it on several candidates.
     handler: [ensureAuth, jsonLimiter(60_000, 30), csrfProtection, bodyValidation(P1P1BuildSchema), p1p1BuildHandler],
   },
 ];

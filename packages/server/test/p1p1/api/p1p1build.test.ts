@@ -25,13 +25,13 @@ const cubeCard = (name: string, rating: number, index: number, board = 'mainboar
 
 const CUBE = { id: 'cube-1', visibility: 'pu', owner: { id: 'owner-1' } };
 
-const run = async (cards: CubeCards, slots: unknown[], mode: string) => {
+const run = async (cards: CubeCards, slots: unknown[], mode: string, fill?: number[]) => {
   (cubeDao.getById as jest.Mock).mockResolvedValue(CUBE);
   (cubeDao.getCards as jest.Mock).mockResolvedValue(cards);
   return call(p1p1BuildHandler)
     .as({ id: 'user-1', username: 'tester' } as any)
     .withParams({ id: 'cube-1' })
-    .withBody({ slots, mode })
+    .withBody({ slots, mode, fill })
     .send();
 };
 
@@ -67,10 +67,28 @@ describe('p1p1Build', () => {
     expect(names).not.toContain('m');
   });
 
-  it('tough fill keeps the candidate whose best card is rated lowest', async () => {
+  it('fills only the listed slot when given one, leaving other empty slots empty', async () => {
+    const mainboard = [0, 1, 2, 3].map((i) => cubeCard(`c${i}`, 0.1 * (i + 1), i));
+    const res = await run({ mainboard } as any, [ref(mainboard[0]!), null, null], 'random', [1]);
+
+    expect(res.status).toBe(200);
+    expect(res.body.cards[0].details.name).toBe('c0');
+    expect(res.body.cards[1]).not.toBeNull();
+    expect(res.body.cards[2]).toBeNull();
+  });
+
+  it('replaces a listed slot that already has a card with a different card', async () => {
+    const mainboard = [cubeCard('keep', 0.1, 0), cubeCard('old', 0.2, 1), cubeCard('new', 0.3, 2)];
+    const res = await run({ mainboard } as any, [ref(mainboard[0]!), ref(mainboard[1]!)], 'random', [1]);
+
+    expect(res.status).toBe(200);
+    expect(res.body.cards.map((c: Card) => c.details!.name)).toEqual(['keep', 'new']);
+  });
+
+  it('balanced fill keeps the candidate whose best card is rated lowest', async () => {
     // Only one possible fill avoids the bomb, and ten candidates make missing it near-impossible.
     const mainboard = [cubeCard('low', 0.1, 0), cubeCard('low2', 0.15, 1), cubeCard('bomb', 0.99, 2)];
-    const res = await run({ mainboard } as any, [ref(mainboard[0]!), null], 'tough');
+    const res = await run({ mainboard } as any, [ref(mainboard[0]!), null], 'balanced');
 
     expect(res.status).toBe(200);
     expect(res.body.cards.map((c: Card) => c.details!.name)).toEqual(['low', 'low2']);

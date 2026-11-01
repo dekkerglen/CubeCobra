@@ -4,6 +4,7 @@ import { XIcon } from '@primer/octicons-react';
 
 import Datetime from 'components/base/Datetime';
 
+import CubeContext from '../../contexts/CubeContext';
 import UserContext from '../../contexts/UserContext';
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
@@ -27,6 +28,7 @@ interface P1P1PreviewProps {
 
 const P1P1Preview: React.FC<P1P1PreviewProps> = ({ pack, onDeleted, cubeOwner }) => {
   const user = useContext(UserContext);
+  const { canEdit: canEditCube } = useContext(CubeContext);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const canEdit = useMemo(() => {
@@ -34,9 +36,9 @@ const P1P1Preview: React.FC<P1P1PreviewProps> = ({ pack, onDeleted, cubeOwner })
       return false;
     }
 
-    // User can delete if they are the cube owner or the pack creator
-    return user.id === cubeOwner || user.id === pack.createdBy;
-  }, [user, pack, cubeOwner]);
+    // User can delete if they can edit the cube (owner or collaborator) or created the pack
+    return canEditCube || user.id === cubeOwner || user.id === pack.createdBy;
+  }, [user, pack, cubeOwner, canEditCube]);
 
   const handleDeleteStart = useCallback(() => {
     setIsDeleting(true);

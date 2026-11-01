@@ -21,7 +21,7 @@ const MAX_PACK_SIZE = 30;
 
 // A slot holds a card from the cube, or just a typed name until the server resolves it.
 type Slot = Card | { name: string } | null;
-type BuildMode = 'score' | 'random' | 'tough';
+type BuildMode = 'score' | 'random' | 'balanced';
 
 interface P1P1BuilderModalProps {
   isOpen: boolean;
@@ -56,7 +56,7 @@ const P1P1BuilderModal: React.FC<P1P1BuilderModalProps> = ({ isOpen, setOpen, cu
   // Runs the build endpoint on the given slots. Every edit goes through here so the bot
   // ratings stay in sync with what's on screen.
   const build = useCallback(
-    async (nextSlots: Slot[], mode: BuildMode) => {
+    async (nextSlots: Slot[], mode: BuildMode, fill?: number[]) => {
       setSlots(nextSlots);
       setWeights(null);
       setError(null);
@@ -67,7 +67,7 @@ const P1P1BuilderModal: React.FC<P1P1BuilderModalProps> = ({ isOpen, setOpen, cu
         const response = await csrfFetch(`/cube/api/p1p1build/${cubeId}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ slots: nextSlots.map(toSlotRef), mode }),
+          body: JSON.stringify({ slots: nextSlots.map(toSlotRef), mode, fill }),
         });
         const data = await response.json();
         if (!response.ok) {
@@ -90,22 +90,6 @@ const P1P1BuilderModal: React.FC<P1P1BuilderModalProps> = ({ isOpen, setOpen, cu
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const startFromRandomPack = async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const response = await fetch(`/cube/api/p1p1/${cubeId}`);
-      if (!response.ok) {
-        throw new Error('Failed to generate pack');
-      }
-      const data = await response.json();
-      await build(data.cards, 'score');
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unknown error occurred');
-      setLoading(false);
-    }
-  };
-
   const resize = (size: number) => {
     if (!Number.isInteger(size) || size < 1 || size > MAX_PACK_SIZE) return;
     const next = slots.slice(0, size);
@@ -120,11 +104,8 @@ const P1P1BuilderModal: React.FC<P1P1BuilderModalProps> = ({ isOpen, setOpen, cu
       'score',
     );
 
-  const reroll = (index: number) =>
-    build(
-      slots.map((slot, i) => (i === index ? null : slot)),
-      'random',
-    );
+  // Fills (or replaces) just this slot, leaving other empty slots alone.
+  const reroll = (index: number) => build(slots, 'random', [index]);
 
   const placeCard = (name?: string) => {
     const picked = (name ?? cardSearch).trim();
@@ -176,14 +157,11 @@ const P1P1BuilderModal: React.FC<P1P1BuilderModalProps> = ({ isOpen, setOpen, cu
       <ModalBody scrollable>
         <Flexbox direction="col" gap="3">
           <Text sm className="text-text-secondary">
-            Pick cards for each slot, or fill empty slots randomly. &quot;Tough pick&quot; fills them so no card stands
-            out to the bot. Bot ratings update as you build.
+            Pick cards for each slot, or fill empty slots randomly. Balanced pick attempts to create evenly weighted
+            picks.
           </Text>
 
           <Flexbox direction="row" gap="2" alignItems="end" wrap="wrap">
-            <Button color="secondary" onClick={startFromRandomPack} disabled={loading}>
-              Start from random pack
-            </Button>
             <Button
               color="secondary"
               onClick={() =>
@@ -208,8 +186,8 @@ const P1P1BuilderModal: React.FC<P1P1BuilderModalProps> = ({ isOpen, setOpen, cu
             <Button color="primary" onClick={() => build(slots, 'random')} disabled={loading || isFull}>
               Fill empty: Random
             </Button>
-            <Button color="primary" onClick={() => build(slots, 'tough')} disabled={loading || isFull}>
-              Fill empty: Tough pick
+            <Button color="primary" onClick={() => build(slots, 'balanced')} disabled={loading || isFull}>
+              Fill empty: Balanced pick
             </Button>
           </Flexbox>
 
@@ -281,8 +259,9 @@ const P1P1BuilderModal: React.FC<P1P1BuilderModalProps> = ({ isOpen, setOpen, cu
                         className="px-2 py-1 text-sm"
                         onClick={() => reroll(index)}
                         disabled={loading}
+                        title="Replace with a random card from the mainboard that isn't already in the pack"
                       >
-                        Reroll
+                        Random card
                       </Button>
                       {slot && (
                         <Button
