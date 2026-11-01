@@ -16,7 +16,8 @@ export interface IndefinitePaginationFetchArgs<T> {
   // item count (grouped tables, for example). Defaults to items.length.
   countRows?: (items: T[]) => number;
   maxFetches?: number;
-  // Extra fields merged into the POST body of every fetch.
+  // Extra fields merged into the POST body of every fetch. The cursor is applied last, so a body
+  // that happens to carry a lastKey cannot freeze pagination on a stale one.
   body?: Record<string, unknown>;
 }
 
@@ -54,7 +55,7 @@ export const fetchIndefiniteMoreData = async <T>({
 
   try {
     while (rows < (targetPage + 1) * pageSize && hasIndefiniteMore(cursor) && fetches < maxFetches) {
-      const response = await callApi(fetchMoreRoute, { lastKey: cursor, ...body });
+      const response = await callApi(fetchMoreRoute, { ...body, lastKey: cursor });
 
       if (!response.ok) {
         break;

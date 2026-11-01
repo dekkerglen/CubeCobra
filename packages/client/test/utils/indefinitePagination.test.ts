@@ -204,6 +204,21 @@ describe('fetchIndefiniteMoreData', () => {
     expect(callApi).toHaveBeenNthCalledWith(2, '/test/route', { lastKey: 'k1', query: 'abc', order: 'pop' });
   });
 
+  // A caller whose body happens to carry a lastKey would otherwise overwrite the cursor, freezing
+  // pagination on whatever stale key the caller handed in.
+  it('keeps its own cursor when the extra body carries a lastKey', async () => {
+    const { callApi } = await runFetch({
+      itemsPerResponse: 10,
+      lastKeys: ['k1', 'k2'],
+      pageSize: 20,
+      targetPage: 0,
+      body: { query: 'abc', lastKey: 'caller-key' },
+    });
+
+    expect(callApi).toHaveBeenNthCalledWith(1, '/test/route', { lastKey: 'start-key', query: 'abc' });
+    expect(callApi).toHaveBeenNthCalledWith(2, '/test/route', { lastKey: 'k1', query: 'abc' });
+  });
+
   it('preserves the lastKey from the final response', async () => {
     const { setLastKey } = await runFetch({
       itemsPerResponse: 10,
