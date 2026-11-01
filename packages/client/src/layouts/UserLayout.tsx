@@ -66,12 +66,12 @@ const UserLayout: React.FC<UserLayoutProps> = ({
           <div className="relative self-start sm:row-span-2">
             <img
               className="w-28 h-28 sm:w-52 sm:h-52 lg:w-full lg:h-auto lg:aspect-square object-cover rounded-md lg:rounded-none"
-              alt={`Art by ${user.image.artist}`}
+              alt={user.image.artist ? `Art by ${user.image.artist}` : user.username}
               title={user.image.artist ? `Art by ${user.image.artist}` : undefined}
               src={user.image.uri}
             />
             {user.image.artist && (
-              <em className="absolute bottom-1 right-2 text-[10px] text-white/90 text-shadow">
+              <em className="absolute bottom-1 left-2 right-2 truncate text-right text-[10px] text-white/90 text-shadow">
                 Art by {user.image.artist}
               </em>
             )}
