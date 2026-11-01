@@ -105,10 +105,15 @@ export const getCubesSortValues = (user: User): { sort: SortOrder; ascending: bo
   }
 };
 
-const trimCube = (cube: CubeType): Pick<CubeType, 'id' | 'shortId' | 'name'> => ({
+// Only the uri is sent: the artist and id on CubeImage exist for attribution on pages that show
+// the full art, which the cube listings in the nav never do.
+export type TrimmedCube = Pick<CubeType, 'id' | 'shortId' | 'name'> & { imageUri?: string };
+
+const trimCube = (cube: CubeType): TrimmedCube => ({
   id: cube.id,
   shortId: cube.shortId,
   name: cube.name,
+  imageUri: cube.image?.uri,
 });
 
 const DROPDOWN_CUBE_LIMIT = 20;
@@ -198,6 +203,8 @@ interface ReactProps {
     username: string;
     email?: string;
     about?: string;
+    followerCount?: number;
+    followingCount?: number;
     image?: Image;
     roles?: UserRoles[];
     // Patreon tier info, so the client can gate tier-locked features (e.g. image hosting).
@@ -207,8 +214,8 @@ interface ReactProps {
     profileImageUrl?: string;
     theme?: string;
     hideFeatured?: boolean;
-    cubes: Pick<CubeType, 'id' | 'shortId' | 'name'>[];
-    collaboratingCubes?: Pick<CubeType, 'id' | 'shortId' | 'name'>[];
+    cubes: TrimmedCube[];
+    collaboratingCubes?: TrimmedCube[];
     notifications?: any[];
     defaultPrinting?: string;
     gridTightness?: string;
@@ -257,6 +264,8 @@ const render = (
         username: req.user.username,
         email: req.user.email,
         about: req.user.about,
+        followerCount: req.user.followerCount,
+        followingCount: req.user.followingCount,
         image: req.user.image,
         roles: req.user.roles,
         patronLevel: patron?.level,

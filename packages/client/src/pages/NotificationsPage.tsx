@@ -1,9 +1,10 @@
-import React, { useCallback, useContext, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useRef, useState } from 'react';
 
-import NotificationType from '@utils/datatypes/Notification';
+import NotificationType, { NotificationStatus } from '@utils/datatypes/Notification';
 import { groupNotifications, isNotificationGroup } from '@utils/notificationGrouping';
 
 import Banner from 'components/Banner';
+import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Pagination from 'components/base/Pagination';
@@ -29,12 +30,32 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);
 
+  // Mirrors `items` so the async handlers below apply their change to the live list rather than to
+  // whichever snapshot they closed over: a clear-all and a page fetch can be in flight together,
+  // and whichever landed second would otherwise discard the other's work.
+  const itemsRef = useRef<NotificationType[]>(notifications);
+  const updateItems = useCallback((update: (current: NotificationType[]) => NotificationType[]) => {
+    itemsRef.current = update(itemsRef.current);
+    setItems(itemsRef.current);
+  }, []);
+
   // Collapse runs of same-type/same-subject notifications into single rows for display, then paginate
   // over the collapsed list so a group counts as one entry.
   const entries = useMemo(() => groupNotifications(items), [items]);
 
   const pageCount = Math.ceil(entries.length / PAGE_SIZE);
   const hasMore = !!currentLastKey;
+  const hasUnread = items.some((item) => item.status === NotificationStatus.UNREAD);
+
+  // The endpoint flips UNREAD to READ and deletes nothing, and this page lists notifications
+  // regardless of status — so the rows stay put and change appearance. Dropping them would claim a
+  // deletion that never happened, and the next page load would bring every one of them back.
+  const clearAll = useCallback(async () => {
+    const response = await csrfFetch('/user/clearnotifications', { method: 'POST' });
+    if (response.ok) {
+      updateItems((current) => current.map((item) => ({ ...item, status: NotificationStatus.READ })));
+    }
+  }, [csrfFetch, updateItems]);
 
   const fetchMoreData = useCallback(async () => {
     setLoading(true);
@@ -51,18 +72,17 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
     if (response.ok) {
       const json = await response.json();
       if (json.success === 'true') {
-        const newItems = [...items, ...json.notifications];
-        setItems(newItems);
+        updateItems((current) => [...current, ...json.notifications]);
         // Grouping collapses runs of same-type/same-subject notifications, so a fetch may add fewer
         // (or zero) new display entries than raw notifications. Clamp the advance to the last valid
         // page so we never scroll past the end and render a blank list.
-        const newPageCount = Math.ceil(groupNotifications(newItems).length / PAGE_SIZE);
+        const newPageCount = Math.ceil(groupNotifications(itemsRef.current).length / PAGE_SIZE);
         setPage(Math.min(page + 1, Math.max(0, newPageCount - 1)));
         setLastKey(json.lastKey);
       }
     }
     setLoading(false);
-  }, [csrfFetch, currentLastKey, items, page]);
+  }, [csrfFetch, currentLastKey, page, updateItems]);
 
   const pager = (
     <Pagination
@@ -85,11 +105,16 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
       <DynamicFlash />
       <Card className="my-3">
         <CardHeader>
-          <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
+          <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap" className="w-full">
             <Text lg semibold>
               Notifications ({items.length}
               {hasMore ? '+' : ''})
             </Text>
+            {hasUnread && (
+              <Button color="primary" onClick={clearAll}>
+                Clear All
+              </Button>
+            )}
             {items.length > 0 && pager}
           </Flexbox>
         </CardHeader>
