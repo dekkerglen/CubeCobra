@@ -1,4 +1,4 @@
-import { isExtraCard, normalizeName } from '@utils/cardutil';
+import { isExtraCard, isUniversesBeyond, normalizeName } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
 import catalog from 'serverutils/cardCatalog';
 
@@ -17,6 +17,26 @@ import catalog from 'serverutils/cardCatalog';
  * `tagEligibility` for Tagger slugs. This used to live in
  * `crossword/vocabulary.ts`, back when the crossword was the only consumer.
  */
+
+/**
+ * Which printings an index is built from.
+ *
+ * `all` is every printing that isn't an extra. `withoutUniversesBeyond` is the
+ * catalog as if the Universes Beyond printings had never been made, for puzzles
+ * that are about Magic alone: the crossword has no business asking for MOOGLE or
+ * DALEK. It is a scope rather than a filter on the answers because the printings
+ * decide more than which names exist — which printing is a card's original, and
+ * so which of its names is the real one, comes out of the same pass. A card first
+ * printed as Rick, Steadfast Leader is Rick under `all`, and only under this
+ * scope does its Universes Within name, Greymond, Avacyn's Stalwart, become the
+ * card's own.
+ */
+export type PrintingScope = 'all' | 'withoutUniversesBeyond';
+
+const IN_SCOPE: Record<PrintingScope, (details: CardDetails) => boolean> = {
+  all: () => true,
+  withoutUniversesBeyond: (details) => !isUniversesBeyond(details),
+};
 
 /**
  * Whether `candidate` is a better claim to being a name's original printing than
@@ -57,21 +77,41 @@ interface PrintingIndex {
   originals: Map<string, CardDetails>;
   /** Lowercase codes of sets where at least one card had its first printing. */
   premiereSets: Set<string>;
+  /** Every non-extra printing in scope, in catalog order. */
+  printings: CardDetails[];
+  /** Lowercase codes of sets with printings, none of them in scope. */
+  excludedSets: Set<string>;
 }
 
-let cached: PrintingIndex | undefined;
+const cached = new Map<PrintingScope, PrintingIndex>();
 
-const buildIndex = (): PrintingIndex => {
+const buildIndex = (scope: PrintingScope): PrintingIndex => {
+  const inScope = IN_SCOPE[scope];
   // Earliest printing under each exact name, and earliest printing per card
   // regardless of the name it wore. Insertion order follows printedCardList, so
   // everything derived from these stays deterministic.
   const earliestByName = new Map<string, CardDetails>();
   const earliestByOracleId = new Map<string, CardDetails>();
+  const printings: CardDetails[] = [];
+  const setsSeen = new Set<string>();
+  const setsInScope = new Set<string>();
 
   for (const details of catalog.printedCardList) {
     if (isExtraCard(details)) {
       continue;
     }
+    const set = details.set?.toLowerCase();
+    if (set) {
+      setsSeen.add(set);
+    }
+    if (!inScope(details)) {
+      continue;
+    }
+    if (set) {
+      setsInScope.add(set);
+    }
+    printings.push(details);
+
     const incumbent = earliestByName.get(details.name_lower);
     if (!incumbent || isEarlierPrinting(details, incumbent)) {
       earliestByName.set(details.name_lower, details);
@@ -115,19 +155,27 @@ const buildIndex = (): PrintingIndex => {
     }
   }
 
-  return { canonicalByName, originals, premiereSets };
+  // A set is excluded only when every printing in it is out of scope: Final
+  // Fantasy and Marvel's Spider-Man go under `withoutUniversesBeyond`, Secret
+  // Lair and Ravnica: Clue Edition, which carry some Universes Beyond cards
+  // among the rest, stay.
+  const excludedSets = new Set([...setsSeen].filter((set) => !setsInScope.has(set)));
+
+  return { canonicalByName, originals, premiereSets, printings, excludedSets };
 };
 
-const getPrintingIndex = (): PrintingIndex => {
-  if (!cached) {
+const getPrintingIndex = (scope: PrintingScope): PrintingIndex => {
+  let index = cached.get(scope);
+  if (!index) {
     const start = Date.now();
-    cached = buildIndex();
+    index = buildIndex(scope);
+    cached.set(scope, index);
     console.info(
-      `Card printing index built in ${Date.now() - start}ms: ${cached.originals.size} card names, ` +
-        `${cached.canonicalByName.size - cached.originals.size} reskins, ${cached.premiereSets.size} sets with a premiere`,
+      `Card printing index (${scope}) built in ${Date.now() - start}ms: ${index.originals.size} card names, ` +
+        `${index.canonicalByName.size - index.originals.size} reskins, ${index.premiereSets.size} sets with a premiere`,
     );
   }
-  return cached;
+  return index;
 };
 
 /**
@@ -140,9 +188,13 @@ const getPrintingIndex = (): PrintingIndex => {
  * one that makes "first printed in" and "premiered here" true. See
  * `isEarlierPrinting`: the catalog's order is not it.
  *
+ * Under `withoutUniversesBeyond` a card is only here if it has a printing
+ * outside Universes Beyond, and its original is the earliest of those.
+ *
  * The returned map is the cached one; treat it as read-only.
  */
-export const originalPrintings = (): Map<string, CardDetails> => getPrintingIndex().originals;
+export const originalPrintings = (scope: PrintingScope = 'all'): Map<string, CardDetails> =>
+  getPrintingIndex(scope).originals;
 
 /**
  * The printing that *is* the card behind a name — the earliest printing sharing
@@ -151,9 +203,12 @@ export const originalPrintings = (): Map<string, CardDetails> => getPrintingInde
  * Feeding it a reskin's name gets the original back ("party tree" -> The Great
  * Henge), which is what makes it the answer to both "what is this card really
  * called" and "which art should a card default to".
+ *
+ * Always over every printing: ManaMatrix accepts a Universes Beyond card as an
+ * answer, and card images default to whichever printing this picks.
  */
 export const canonicalPrintingForName = (name: string): CardDetails | undefined =>
-  getPrintingIndex().canonicalByName.get(normalizeName(name));
+  getPrintingIndex('all').canonicalByName.get(normalizeName(name));
 
 /**
  * A card's real printed name, given any name it has ever been printed under.
@@ -171,9 +226,27 @@ export const canonicalCardName = (name: string): string => canonicalPrintingForN
  *
  * The returned set is the cached one; treat it as read-only.
  */
-export const setsWithFirstPrinting = (): Set<string> => getPrintingIndex().premiereSets;
+export const setsWithFirstPrinting = (scope: PrintingScope = 'all'): Set<string> =>
+  getPrintingIndex(scope).premiereSets;
+
+/**
+ * Every printing in scope, extras already dropped, in catalog order — for a pass
+ * that has to see reprints too, like collecting every creature type a card was
+ * ever printed with.
+ *
+ * The returned array is the cached one; treat it as read-only.
+ */
+export const printingsInScope = (scope: PrintingScope): CardDetails[] => getPrintingIndex(scope).printings;
+
+/**
+ * Lowercase codes of the sets that are entirely out of scope, so a puzzle that
+ * names sets doesn't name one it has no cards from. Always empty under `all`.
+ *
+ * The returned set is the cached one; treat it as read-only.
+ */
+export const excludedSets = (scope: PrintingScope): Set<string> => getPrintingIndex(scope).excludedSets;
 
 /** Test seam: drop the cache so a rebuilt catalog is re-scanned. */
 export const clearPrintingIndexCache = (): void => {
-  cached = undefined;
+  cached.clear();
 };

@@ -1,9 +1,15 @@
-import { isExtraCard } from '@utils/cardutil';
 import Card, { CardDetails } from '@utils/datatypes/Card';
 import { CrosswordEntryClass, CrosswordVocabEntry } from '@utils/datatypes/Crossword';
 import { makeFilter } from '@utils/filtering/FilterCards';
 import catalog from 'serverutils/cardCatalog';
-import { clearPrintingIndexCache, originalPrintings, setsWithFirstPrinting } from 'serverutils/cardPrintings';
+import {
+  clearPrintingIndexCache,
+  excludedSets,
+  originalPrintings,
+  PrintingScope,
+  printingsInScope,
+  setsWithFirstPrinting,
+} from 'serverutils/cardPrintings';
 import { isRecognisableSet } from 'serverutils/setEligibility';
 
 import { CROSSWORD_SYNONYMS } from './synonyms.generated';
@@ -31,6 +37,15 @@ import {
  * clue writer: a word only belongs here if a clue can be written about it later,
  * and that is only true by construction if both sides read the same words.
  */
+
+/**
+ * The printings the crossword is built from: everything but Universes Beyond.
+ * Their names, creature types, mechanics and sets belong to other franchises —
+ * AANG, MOOGLE, DALEK, Web-slinging — and a Magic crossword shouldn't need them.
+ * The clue writer reads cards through the same scope, so a clue never cites a
+ * card the vocabulary left out.
+ */
+export const CROSSWORD_PRINTINGS: PrintingScope = 'withoutUniversesBeyond';
 
 // Anything outside this range is unusable in a crossword of sane dimensions.
 const MIN_LENGTH = 3;
@@ -299,7 +314,7 @@ const clueableRulesWords = (words: Iterable<string>): Set<string> => {
   // Membership of `unproven` is the length filter as well: every word in it came
   // from a count that already applied the window.
   const sources = new Map<string, CardDetails[]>();
-  for (const details of originalPrintings().values()) {
+  for (const details of originalPrintings(CROSSWORD_PRINTINGS).values()) {
     if (!details.oracle_text) {
       continue;
     }
@@ -337,14 +352,11 @@ const buildVocabulary = (): Vocabulary => {
   const nameWordCards = new Map<string, NameWordStats>();
   const nameBigramCards = new Map<string, NameWordStats>();
   // Sets that are somebody's first printing; everything else is reprint-only.
-  const premiereSets = setsWithFirstPrinting();
+  const premiereSets = setsWithFirstPrinting(CROSSWORD_PRINTINGS);
 
   // Types and keywords are read off every printing, because a reprint can carry a
   // type line or a keyword the original didn't.
-  for (const details of catalog.printedCardList) {
-    if (isExtraCard(details)) {
-      continue;
-    }
+  for (const details of printingsInScope(CROSSWORD_PRINTINGS)) {
     for (const subtype of creatureSubtypes(details.type)) {
       creatureTypes.add(subtype);
     }
@@ -353,7 +365,7 @@ const buildVocabulary = (): Vocabulary => {
     }
   }
 
-  for (const details of originalPrintings().values()) {
+  for (const details of originalPrintings(CROSSWORD_PRINTINGS).values()) {
     // Rules-text vocabulary, counted once per card.
     //
     // A card names itself in its own rules text ("Searing Blaze deals 1 damage
@@ -472,9 +484,12 @@ const buildVocabulary = (): Vocabulary => {
   // Set codes: short, which is exactly what the 3-4 letter slots were starving
   // for, but only for sets a player would recognise. Scryfall lists over a
   // thousand, and the long tail is Duel Decks, oversized reprints and promo
-  // drops — DDH, GVL, AYLI, OCMD fill a slot without being answerable.
+  // drops — DDH, GVL, AYLI, OCMD fill a slot without being answerable. A set
+  // whose cards are all out of scope goes too: there's no FIN without the Final
+  // Fantasy cards.
+  const outOfScopeSets = excludedSets(CROSSWORD_PRINTINGS);
   for (const set of Object.values(catalog.setdict)) {
-    if (!set.code || !isRecognisableSet(set)) {
+    if (!set.code || !isRecognisableSet(set) || outOfScopeSets.has(set.code.toLowerCase())) {
       continue;
     }
     addEntry(
@@ -679,10 +694,7 @@ export const themedCardTexts = (filterText: string): Set<string> | null => {
   }
 
   const texts = new Set<string>();
-  for (const details of catalog.printedCardList) {
-    if (isExtraCard(details)) {
-      continue;
-    }
+  for (const details of printingsInScope(CROSSWORD_PRINTINGS)) {
     if (filter({ details } as Card)) {
       const text = normalize(details.name);
       if (text.length >= MIN_LENGTH && text.length <= MAX_LENGTH) {

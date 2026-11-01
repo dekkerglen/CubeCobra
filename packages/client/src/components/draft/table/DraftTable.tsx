@@ -52,7 +52,7 @@ interface DraftTableProps {
   // Whether the pack on the table is unopened (nobody has drafted from it yet), when the
   // page knows; otherwise the table guesses from cards leaving and arriving.
   freshPack?: boolean;
-  // The largest pack in the draft; phones size the pack's rows for it.
+  // The largest pack in the draft; the desktop table is sized for it.
   packSize?: number;
   mainboard: number[][][];
   sideboard: number[][][];
@@ -310,14 +310,18 @@ const DraftTable: React.FC<DraftTableProps> = ({
   // Decided by the room rather than the stage, since the phone layout drops the
   // table's margins and so widens the stage: deciding by the stage could flip back and forth.
   const compact = roomWidth > 0 && isCompactWidth(roomWidth);
-  // Sized for the largest pack, so cards keep their size as the pack shrinks.
-  const capacity = Math.max(packSize ?? 0, pack.length + inPack.length);
+  // Phones lay out the pack as it is, so a pack of 15 always looks the same. The
+  // count keeps a pick that's in flight, so what's left of the pack holds its
+  // layout until the next pack arrives. Desktop is sized for the largest pack,
+  // so the pool holds still as the pack shrinks.
+  const packCount = pack.length + inPack.length;
+  const capacity = Math.max(packSize ?? 0, packCount);
   const geometry: TableGeometry | null = useMemo(() => {
     if (stageSize.width <= 0 || stageSize.height <= 0) return null;
     return compact
-      ? computeRowsGeometry(stageSize.width, stageSize.height, capacity)
+      ? computeRowsGeometry(stageSize.width, stageSize.height, packCount)
       : computeGeometry(stageSize.width, stageSize.height, capacity);
-  }, [stageSize.width, stageSize.height, compact, capacity]);
+  }, [stageSize.width, stageSize.height, compact, packCount, capacity]);
 
   // Phones: once, ease the page down so the table exactly fills the screen.
   const broughtIntoView = useRef(false);

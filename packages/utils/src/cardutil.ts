@@ -826,7 +826,7 @@ export function isExtraCard(card: CardDetailsType): boolean {
   );
 }
 
-const isUniversesBeyond = (details: CardDetailsType) => (details.promo_types || []).includes('universesbeyond');
+export const isUniversesBeyond = (details: CardDetailsType) => (details.promo_types || []).includes('universesbeyond');
 
 const RAW_CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> = {
   gold: (details) => details.colors.length > 1 && details.parsed_cost.every((symbol) => !symbol.includes('-')),

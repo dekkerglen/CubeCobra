@@ -39,6 +39,7 @@ import {
   getVocabulary,
   isCluableName,
   leavesCluableRemainder,
+  themedCardTexts,
 } from 'serverutils/crossword/vocabulary';
 
 import { createCardDetails } from '../test-utils/data';
@@ -664,5 +665,111 @@ describe('crossword vocabulary: setCode entries', () => {
     const byText = new Map(setCodes().map((entry) => [entry.text, entry]));
     expect(byText.get('LEA')?.reprintOnly).toBe(false);
     expect(byText.get('CHR')?.reprintOnly).toBe(true);
+  });
+});
+
+describe('crossword vocabulary: Universes Beyond', () => {
+  const ub: Partial<CardDetails> = { promo_types: ['universesbeyond'] };
+
+  const universesBeyondCards = (): CardDetails[] => [
+    card('Mog, Moogle Warrior', {
+      ...ub,
+      oracle_id: 'mog',
+      set: 'fin',
+      type: 'Legendary Creature — Moogle Warrior',
+      keywords: ['Job select'],
+    }),
+    card('Grizzly Bears', { oracle_id: 'bears', set: 'lea', type: 'Creature — Bear' }),
+    // A real card reprinted in a Universes Beyond product.
+    card('Sol Ring', { oracle_id: 'sol-ring', set: 'lea', type: 'Artifact', setIndex: 0, reprint: false }),
+    card('Sol Ring', { ...ub, oracle_id: 'sol-ring', set: 'ltc', type: 'Artifact', setIndex: 50, reprint: true }),
+  ];
+
+  beforeEach(() => {
+    mockCardCatalog.setdict = {};
+    mockCardCatalog.printedCardList = universesBeyondCards();
+    clearVocabularyCache();
+    clearClueContextCache();
+  });
+
+  afterEach(() => {
+    clearVocabularyCache();
+    clearClueContextCache();
+  });
+
+  const texts = () => getVocabulary().entries.map((entry) => entry.text);
+
+  it('leaves out every word only a Universes Beyond card supplies', () => {
+    // Card name, legend name and title, name word, creature type, keyword, acronym.
+    for (const gone of ['MOGMOOGLEWARRIOR', 'MOG', 'MOOGLEWARRIOR', 'MOOGLE', 'JOBSELECT', 'MMW']) {
+      expect(texts()).not.toContain(gone);
+    }
+    expect(texts()).toContain('GRIZZLYBEARS');
+    expect(texts()).toContain('BEAR');
+  });
+
+  it('keeps a card that was only reprinted in a Universes Beyond product', () => {
+    expect(texts()).toContain('SOLRING');
+  });
+
+  it('never puts a Universes Beyond card in front of the clue writer', () => {
+    const ctx = getClueContext();
+    expect([...ctx.byNameLower.keys()].sort()).toEqual(['grizzly bears', 'sol ring']);
+    for (const details of ctx.cards) {
+      expect(details.promo_types ?? []).not.toContain('universesbeyond');
+    }
+  });
+
+  it('uses the Universes Within name of a card whose Universes Beyond name came first', () => {
+    mockCardCatalog.printedCardList = [
+      card('Rick, Steadfast Leader', {
+        ...ub,
+        oracle_id: 'greymond',
+        set: 'sld',
+        type: 'Legendary Creature — Human Soldier',
+        setIndex: 5,
+        reprint: false,
+      }),
+      card("Greymond, Avacyn's Stalwart", {
+        oracle_id: 'greymond',
+        set: 'slx',
+        type: 'Legendary Creature — Human Soldier',
+        setIndex: 6,
+        reprint: true,
+      }),
+    ];
+    clearVocabularyCache();
+
+    expect(texts()).toContain('GREYMONDAVACYNSSTALWART');
+    expect(getVocabulary().entries.find((entry) => entry.text === 'GREYMOND')?.entryClass).toBe('legendName');
+    expect(texts()).not.toContain('RICKSTEADFASTLEADER');
+    expect(texts()).not.toContain('RICK');
+  });
+
+  it('drops the code of a set whose cards are all Universes Beyond', () => {
+    mockCardCatalog.setdict = {
+      fin: setInfo({ code: 'fin', name: 'Final Fantasy', setType: 'expansion', cardCount: 309 }),
+      lea: setInfo({ code: 'lea', name: 'Limited Edition Alpha', setType: 'core', cardCount: 295 }),
+      // Recognisable, with one Universes Beyond card among the rest: still a Magic set.
+      mix: setInfo({ code: 'mix', name: 'Mixed Set', setType: 'expansion', cardCount: 280 }),
+    };
+    mockCardCatalog.printedCardList = [
+      ...universesBeyondCards(),
+      card('Rick, Steadfast Leader', { ...ub, oracle_id: 'rick', set: 'mix' }),
+      card('Llanowar Elves', { oracle_id: 'elves', set: 'mix' }),
+    ];
+    clearVocabularyCache();
+
+    expect(
+      getVocabulary()
+        .entries.filter((entry) => entry.entryClass === 'setCode')
+        .map((entry) => entry.text)
+        .sort(),
+    ).toEqual(['LEA', 'MIX']);
+  });
+
+  it('leaves Universes Beyond names out of a theme', () => {
+    const themed = themedCardTexts('t:creature');
+    expect(themed).toEqual(new Set(['GRIZZLYBEARS']));
   });
 });
