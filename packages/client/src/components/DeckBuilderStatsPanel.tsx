@@ -157,12 +157,14 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
                   <div
                     className="absolute inset-0 flex items-center justify-center text-xs font-bold text-text"
                     data-testid="source-label"
+                    style={{ clipPath: `inset(0 0 0 ${sourcePercent}%)` }}
                   >
                     {sourcePercent}%
                   </div>
                   <div
                     className={`absolute inset-0 flex items-center justify-center text-xs font-bold ${onFillTextStyles[color]}`}
                     data-testid="source-label"
+                    aria-hidden="true"
                     style={{ clipPath: `inset(0 ${100 - sourcePercent}% 0 0)` }}
                   >
                     {sourcePercent}%

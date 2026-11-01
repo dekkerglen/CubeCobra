@@ -116,7 +116,13 @@ describe('DeckBuilderStatsPanel', () => {
     ) as HTMLElement[];
 
     expect(quarter).toHaveLength(2);
-    expect(quarter.some((label) => label.style.clipPath === 'inset(0 75% 0 0)')).toBe(true);
+
+    const onFill = quarter.filter((label) => label.style.clipPath === 'inset(0 75% 0 0)');
+    const offFill = quarter.filter((label) => label.style.clipPath === 'inset(0 0 0 25%)');
+
+    expect(onFill).toHaveLength(1);
+    expect(offFill).toHaveLength(1);
+    expect(onFill[0]).not.toBe(offFill[0]);
     expect(quarter.every((label) => label.style.width === '')).toBe(true);
   });
 });
