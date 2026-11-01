@@ -75,16 +75,15 @@ const CubeDeckPage: React.FC<CubeDeckPageProps> = ({ cube, draft }) => {
                 .flat(2)
                 .map((index) => hydratedDraft.cards[index])}
             />
-            <Row className="mt-3 mb-3">
-              <Col>
-                <DeckCard
-                  seat={hydratedDraft.seats[parseInt(seatIndex)]}
-                  draft={hydratedDraft}
-                  seatIndex={`${seatIndex}`}
-                  view={view}
-                />
-              </Col>
-            </Row>
+            {/* Edge to edge on phones, so the deck strips scroll off the screen's edges. */}
+            <div className="mt-3 mb-3 max-md:-mx-2">
+              <DeckCard
+                seat={hydratedDraft.seats[parseInt(seatIndex)]}
+                draft={hydratedDraft}
+                seatIndex={`${seatIndex}`}
+                view={view}
+              />
+            </div>
           </>
         ) : (
           <Row className="mt-3 mb-3">

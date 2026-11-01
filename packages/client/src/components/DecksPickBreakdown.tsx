@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { isVoucher } from '@utils/cardutil';
+import { cardName, isVoucher } from '@utils/cardutil';
 import Deck from '@utils/datatypes/Draft';
+import { hasDraftLog, ReplayCardAction, seatCardActions, seatLabel } from '@utils/drafting/draftEngine';
 import { getDrafterState } from '@utils/draftutil';
 
 import useQueryParam from '../hooks/useQueryParam';
@@ -23,9 +24,50 @@ interface BreakdownProps {
   setPickNumber: (pickNumber: string) => void;
 }
 
+// How a logged pick came about, when it wasn't a plain pick.
+const pickLabel = (action: ReplayCardAction, draft: Deck): string | undefined => {
+  const name = (card: number | undefined) =>
+    card !== undefined && draft.cards[card] ? cardName(draft.cards[card]) : '';
+  const parts: string[] = [];
+  if (action.loreSource !== null) parts.push(`Lore Seeker pack`);
+  switch (action.via) {
+    case 'extra':
+      parts.push(name(action.source));
+      break;
+    case 'takeAll':
+      parts.push(`Took the whole pack (${name(action.source)})`);
+      break;
+    case 'received':
+      parts.push(`Last card from ${seatLabel(action.from ?? 0)} (Canal Dredger)`);
+      break;
+    case 'removed':
+      parts.push('Removed from the draft');
+      break;
+    case 'blind':
+      parts.push('Random pick, pack face down (Archdemon of Paliano)');
+      break;
+    case 'random':
+      parts.push('Random pick');
+      break;
+    case 'trash':
+      parts.push('Trashed');
+      break;
+    default:
+      break;
+  }
+  return parts.length > 0 ? parts.join(' · ') : undefined;
+};
+
 const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber, setPickNumber }) => {
   const [ratings, setRatings] = useState<number[]>([]);
   const [showRatings, setShowRatings] = useState(true);
+
+  // Drafts with a decision log replay through the draft engine, which knows about
+  // extra picks, skipped packs, received cards and added packs.
+  const loggedActions = useMemo(
+    () => (hasDraftLog(draft) ? seatCardActions(draft, seatNumber) : null),
+    [draft, seatNumber],
+  );
 
   // Handle both CubeCobra and Draftmancer drafts
   const {
@@ -33,7 +75,31 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
     pick = 0,
     pack = 0,
     picksList,
-  } = useMemo(() => {
+    label,
+  } = useMemo((): {
+    cardsInPack: { cardIndex: number }[];
+    pick: number;
+    pack: number;
+    picksList: { cardIndex: number }[][];
+    label?: string;
+  } => {
+    if (loggedActions) {
+      const lists: { cardIndex: number }[][] = [];
+      for (const action of loggedActions) {
+        (lists[action.pack] ??= []).push({ cardIndex: action.selection });
+      }
+      const current = loggedActions[parseInt(pickNumber)];
+      if (!current) return { cardsInPack: [], pick: 0, pack: 0, picksList: lists };
+      const before = loggedActions.slice(0, parseInt(pickNumber)).filter((action) => action.pack === current.pack);
+      return {
+        cardsInPack: current.cardsInPack.map((index) => ({ cardIndex: index })),
+        pick: before.length + 1,
+        pack: current.pack,
+        picksList: lists.map((list) => list ?? []),
+        label: pickLabel(current, draft),
+      };
+    }
+
     // Draftmancer drafts
     if (draft.DraftmancerLog) {
       const log = draft.DraftmancerLog.players[seatNumber];
@@ -95,7 +161,7 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
         list.map((item) => ({ cardIndex: typeof item === 'number' ? item : item.cardIndex })),
       ),
     };
-  }, [draft, seatNumber, pickNumber]);
+  }, [draft, seatNumber, pickNumber, loggedActions]);
 
   // Get the actual pick that was made in this pack
   const currentPackPicks = picksList[pack] ?? [];
@@ -231,6 +297,7 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
       actualPickIndex={actualPickIndex}
       cards={draft.cards}
       onPickClick={onPickClick}
+      pickLabel={label}
     />
   );
 };

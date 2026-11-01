@@ -140,6 +140,7 @@ const handler = async (req: Request, res: Response) => {
       cubeOwner: cube.owner.id,
       date: new Date().valueOf(),
       InitialState: populated.InitialState,
+      LoreSeekerPacks: populated.LoreSeekerPacks,
       owner: req.user?.id,
       seats: populated.seats,
       type: 'd' as const,

@@ -367,6 +367,7 @@ const CardSearch: React.FC = () => {
                   value={filterText}
                   valid={(filterInput?.length ?? 0) > 0 ? filterValid : undefined}
                   onChange={(event) => setFilterText(event.target.value)}
+                  onClear={() => setFilterText('')}
                   className="!bg-white !text-gray-800 !placeholder-gray-500 !border-gray-300"
                   otherInputProps={{ enterKeyHint: 'search', name: 'f' }}
                 />

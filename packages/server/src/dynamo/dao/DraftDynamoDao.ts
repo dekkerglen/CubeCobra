@@ -21,7 +21,14 @@
 
 import { DynamoDBDocumentClient, QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import { NativeAttributeValue } from '@aws-sdk/lib-dynamodb';
-import DraftType, { DRAFT_TYPES, DraftmancerLog, HousmanLogEntry, REVERSE_TYPES } from '@utils/datatypes/Draft';
+import type { DraftLogEntry } from '@utils/drafting/draftEngine';
+import DraftType, {
+  DRAFT_TYPES,
+  DraftmancerLog,
+  HousmanLogEntry,
+  LoreSeekerPack,
+  REVERSE_TYPES,
+} from '@utils/datatypes/Draft';
 import DraftSeat from '@utils/datatypes/DraftSeat';
 import User from '@utils/datatypes/User';
 import { assessColors as assessDeckColors, type ColorAssessCard } from '@utils/drafting/assessColors';
@@ -223,6 +230,8 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       InitialState: seatsData.InitialState || [],
       DraftmancerLog: item.DraftmancerLog,
       HousmanLog: seatsData.HousmanLog,
+      LoreSeekerPacks: seatsData.LoreSeekerPacks,
+      DraftLog: seatsData.DraftLog,
       basicsBoard: item.basicsBoard,
       botDecksPending: item.botDecksPending,
       botDecksFailed: item.botDecksFailed,
@@ -276,6 +285,8 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
           basics: seatsData.basics || [],
           InitialState: seatsData.InitialState || [],
           HousmanLog: seatsData.HousmanLog,
+          LoreSeekerPacks: seatsData.LoreSeekerPacks,
+          DraftLog: seatsData.DraftLog,
         };
       }),
     );
@@ -313,6 +324,8 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         InitialState: data.InitialState,
         DraftmancerLog: item.DraftmancerLog,
         HousmanLog: data.HousmanLog,
+        LoreSeekerPacks: data.LoreSeekerPacks,
+        DraftLog: data.DraftLog,
         basicsBoard: item.basicsBoard,
         botDecksPending: item.botDecksPending,
         botDecksFailed: item.botDecksFailed,
@@ -840,6 +853,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
     basics?: number[];
     basicsBoard?: string;
     InitialState?: any;
+    LoreSeekerPacks?: LoreSeekerPack[];
     DraftmancerLog?: DraftmancerLog;
     seed?: string;
     seatNames?: string[];
@@ -900,6 +914,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
       basics: draftData.basics || [],
       basicsBoard: draftData.basicsBoard,
       InitialState: draftData.InitialState,
+      LoreSeekerPacks: draftData.LoreSeekerPacks,
       DraftmancerLog: draftData.DraftmancerLog,
       seed: draftData.seed,
       botDecksPending: draftData.botDecksPending,
@@ -921,6 +936,7 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         seats: draft.seats,
         basics: draft.basics,
         InitialState: draft.InitialState,
+        ...(draft.LoreSeekerPacks ? { LoreSeekerPacks: draft.LoreSeekerPacks } : {}),
       }),
     ]);
 
@@ -1238,6 +1254,8 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         basics: item.basics,
         InitialState: item.InitialState,
         HousmanLog: item.HousmanLog,
+        LoreSeekerPacks: item.LoreSeekerPacks,
+        DraftLog: item.DraftLog,
       }),
     ]);
 
@@ -1306,9 +1324,14 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   /**
    * Gets seats data from S3.
    */
-  private async getSeats(
-    id: string,
-  ): Promise<{ seats: DraftSeat[]; basics: number[]; InitialState: any; HousmanLog?: HousmanLogEntry[] }> {
+  private async getSeats(id: string): Promise<{
+    seats: DraftSeat[];
+    basics: number[];
+    InitialState: any;
+    HousmanLog?: HousmanLogEntry[];
+    LoreSeekerPacks?: LoreSeekerPack[];
+    DraftLog?: DraftLogEntry[];
+  }> {
     try {
       const data = await getObject(process.env.DATA_BUCKET!, `seats/${id}.json`);
       return data || { seats: [], basics: [], InitialState: [] };

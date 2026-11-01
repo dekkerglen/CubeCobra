@@ -458,3 +458,27 @@ describe('CardSearch failed searches', () => {
     expect(screen.queryByText('Search failed')).not.toBeInTheDocument();
   });
 });
+
+describe('CardSearch clear button', () => {
+  beforeEach(() => {
+    mockFetch.mockReset();
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ data: [], numResults: 0 }),
+    });
+    global.fetch = mockFetch as unknown as typeof fetch;
+  });
+
+  it('clears the filter text without searching', async () => {
+    renderSearch('f=set%3Aotj');
+
+    await waitFor(() => expect(mockFetch).toHaveBeenCalled());
+    const callsBefore = mockFetch.mock.calls.length;
+
+    fireEvent.click(screen.getByRole('button', { name: 'Clear' }));
+
+    expect(screen.getByPlaceholderText('Filter cards: e.g. name:"Ambush Viper"')).toHaveValue('');
+    expect(mockFetch.mock.calls).toHaveLength(callsBefore);
+    expect(urlParam('f')).toEqual('set:otj');
+  });
+});

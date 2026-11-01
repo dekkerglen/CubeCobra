@@ -1,10 +1,13 @@
 import React, { useMemo } from 'react';
 
+import { cardName } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
 import Deck from '@utils/datatypes/Draft';
 import DeckSeat from '@utils/datatypes/DraftSeat';
+import { noteText, seatLabel } from '@utils/drafting/draftEngine';
 import { sortDeep } from '@utils/sorting/Sort';
 
+import useMediaQuery from '../hooks/useMediaQuery';
 import { Card, CardBody, CardHeader } from './base/Card';
 import { Col, Flexbox, Row } from './base/Layout';
 import Text from './base/Text';
@@ -12,9 +15,13 @@ import CardGrid from './card/CardGrid';
 import CommentsSection from './comments/CommentsSection';
 import DecksPickBreakdown from './DecksPickBreakdown';
 import FoilCardImage from './FoilCardImage';
+import HorizontalScrollFade from './HorizontalScrollFade';
 import HousmanPickBreakdown from './HousmanPickBreakdown';
 import Markdown from './Markdown';
 import Username from './Username';
+import withAutocard from './WithAutocard';
+
+const TextAutocard = withAutocard('span');
 
 interface DeckStacksStaticProps {
   piles: number[][][];
@@ -23,42 +30,77 @@ interface DeckStacksStaticProps {
   className?: string;
 }
 
-export const DeckStacksStatic: React.FC<DeckStacksStaticProps> = ({ piles, cards, className }) => (
-  <CardBody className={className ?? 'pt-0 border-bottom'}>
-    {/* Guard against malformed/legacy deck data (e.g. old Mongo-ID decks) whose
-        mainboard/sideboard aren't the expected number[][][] — a mis-shaped row or
-        column would otherwise throw `.map is not a function` and blank the page. */}
-    {(Array.isArray(piles) ? piles : []).map((row, index) => (
-      <Row key={index} xs={2} md={4} lg={8}>
-        {(Array.isArray(row) ? row : []).map((column, index2) => {
-          const col = Array.isArray(column) ? column : [];
-          return (
-            <Col key={index2} xs={1}>
-              <div className="w-full text-center mb-1">
-                <b>{col.length > 0 ? col.length : ''}</b>
-              </div>
-              <div className="stack">
-                {col.map((cardIndex, index3) => {
-                  const card = cards[cardIndex];
-                  if (!card) return null;
-                  return (
-                    <div className="stacked" key={index3}>
-                      <a href={card.cardID ? `/tool/card/${card.cardID}` : undefined}>
-                        <FoilCardImage card={card} autocard />
-                      </a>
-                    </div>
-                  );
-                })}
-              </div>
-            </Col>
-          );
-        })}
-      </Row>
-    ))}
-  </CardBody>
+// One mana-value column: its count, then its cards stacked so each name shows.
+const StackColumn: React.FC<{ column: number[]; cards: any[] }> = ({ column, cards }) => (
+  <>
+    <div className="w-full text-center mb-1">
+      <b>{column.length > 0 ? column.length : ''}</b>
+    </div>
+    <div className="stack">
+      {column.map((cardIndex, index) => {
+        const card = cards[cardIndex];
+        if (!card) return null;
+        return (
+          <div className="stacked" key={index}>
+            <a href={card.cardID ? `/tool/card/${card.cardID}` : undefined}>
+              <FoilCardImage card={card} autocard />
+            </a>
+          </div>
+        );
+      })}
+    </div>
+  </>
 );
 
-// Mainboard cards in display order: color category, then mana value.
+// Guard against malformed/legacy deck data (e.g. old Mongo-ID decks) whose
+// mainboard/sideboard aren't the expected number[][][] — a mis-shaped row or
+// column would otherwise throw `.map is not a function` and blank the page.
+const safeRows = (piles: number[][][]) =>
+  (Array.isArray(piles) ? piles : []).map((row) =>
+    (Array.isArray(row) ? row : []).map((column) => (Array.isArray(column) ? column : [])),
+  );
+
+export const DeckStacksStatic: React.FC<DeckStacksStaticProps> = ({ piles, cards, className }) => {
+  const isPhone = useMediaQuery('(max-width: 767px)');
+  const rows = safeRows(piles);
+
+  if (isPhone) {
+    // Phones: every column at a readable width in one strip that scrolls sideways,
+    // with the rows stacked so their columns line up.
+    return (
+      <CardBody className={className ?? 'pt-0 px-0 pb-2 border-bottom'}>
+        <HorizontalScrollFade>
+          <div className="flex flex-col gap-2 w-max px-1.5">
+            {rows.map((row, index) => (
+              <div key={index} className="flex gap-1.5">
+                {row.map((column, index2) => (
+                  <div key={index2} className="w-[clamp(96px,32vw,170px)] shrink-0">
+                    <StackColumn column={column} cards={cards} />
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </HorizontalScrollFade>
+      </CardBody>
+    );
+  }
+
+  return (
+    <CardBody className={className ?? 'pt-0 border-bottom'}>
+      {rows.map((row, index) => (
+        <Row key={index} xs={2} md={4} lg={8}>
+          {row.map((column, index2) => (
+            <Col key={index2} xs={1}>
+              <StackColumn column={column} cards={cards} />
+            </Col>
+          ))}
+        </Row>
+      ))}
+    </CardBody>
+  );
+};
+
 const sortedDeckCards = (cards: CardType[]): CardType[] => {
   const deep = sortDeep(cards, true, 'Unsorted', 'Color Category', 'Mana Value Full', 'Unsorted') as [
     string,
@@ -130,6 +172,21 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
 
   const mbCount = sorted.length;
 
+  // What draft-matters cards noted during the draft, and the cards this seat removed from it.
+  const notes = useMemo(() => {
+    return Object.entries(seat?.draftNotes ?? {})
+      .map(([card, list]) => ({
+        card: draft.cards[Number(card)],
+        text: list.map((note) => noteText(note, seatLabel, draft.cards)).join(' · '),
+      }))
+      .filter((entry) => entry.card && entry.text);
+  }, [seat, draft.cards]);
+  const removed = (seat?.removedorder ?? [])
+    .slice()
+    .reverse()
+    .map((index) => draft.cards[index])
+    .filter(Boolean);
+
   if (!hasSeat) {
     return (
       <Card>
@@ -141,7 +198,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
   }
 
   return (
-    <Card>
+    <Card className="max-md:rounded-none max-md:border-x-0">
       <CardHeader>
         <Flexbox direction="col" alignItems="start" gap="1">
           <Text semibold lg>
@@ -181,7 +238,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
           <DeckStacksStatic piles={stackedDeck} cards={draft.cards} />
           {stackedSideboard && stackedSideboard.length > 0 && (
             <>
-              <CardBody className="border-bottom">
+              <CardBody className="border-bottom max-md:py-2">
                 <Text semibold lg>
                   Sideboard ({sbCount})
                 </Text>
@@ -211,6 +268,42 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
                 xs={8}
               />
             </>
+          )}
+        </CardBody>
+      )}
+      {view !== 'picks' && (notes.length > 0 || removed.length > 0) && (
+        <CardBody className="border-top flex flex-col gap-3">
+          {notes.length > 0 && (
+            <div>
+              <Text semibold lg>
+                Draft notes
+              </Text>
+              <div className="flex flex-col gap-1 mt-1">
+                {notes.map(({ card, text }) => (
+                  <Text sm key={card!.cardID + text}>
+                    <TextAutocard card={card} className="font-semibold">
+                      {cardName(card!)}
+                    </TextAutocard>
+                    <span className="text-text-secondary">: {text}</span>
+                  </Text>
+                ))}
+              </div>
+            </div>
+          )}
+          {removed.length > 0 && (
+            <div>
+              <Text semibold lg>
+                Removed ({removed.length})
+              </Text>
+              <Text sm className="block mt-1">
+                {removed.map((card, index) => (
+                  <React.Fragment key={`${card.cardID}-${index}`}>
+                    {index > 0 && ', '}
+                    <TextAutocard card={card}>{cardName(card)}</TextAutocard>
+                  </React.Fragment>
+                ))}
+              </Text>
+            </div>
           )}
         </CardBody>
       )}

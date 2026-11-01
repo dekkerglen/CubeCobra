@@ -1,4 +1,5 @@
 import { State } from '@utils/datatypes/DraftState';
+import { DraftLogEntry, replayLog } from '@utils/drafting/draftEngine';
 import { NotificationType } from '@utils/datatypes/Notification';
 import User from '@utils/datatypes/User';
 import { cubeDao, draftDao } from 'dynamo/daos';
@@ -14,7 +15,12 @@ interface FinishDraftBody {
   state: State;
   mainboard: number[][][];
   sideboard: number[][][];
+  // Every decision of the draft (see drafting/draftEngine). Absent from older clients.
+  log?: DraftLogEntry[];
 }
+
+// A long draft with plenty of seats and added packs stays well under this.
+const MAX_LOG_ENTRIES = 20000;
 
 const FinishDraftBodySchema = Joi.object({
   state: Joi.object({
@@ -38,6 +44,15 @@ const FinishDraftBodySchema = Joi.object({
   sideboard: Joi.array()
     .items(Joi.array().items(Joi.array().items(Joi.number())))
     .required(),
+  log: Joi.array()
+    .items(
+      Joi.object({
+        t: Joi.number().required(),
+        d: Joi.object().pattern(Joi.string(), Joi.object().unknown(true)),
+        c: Joi.object().unknown(true),
+      }),
+    )
+    .max(MAX_LOG_ENTRIES),
 }).unknown(true); // allow additional fields (e.g. legacy `botDecks` from older clients)
 
 export const validateBody = (req: Request, res: Response, next: NextFunction) => {
@@ -85,13 +100,17 @@ export const handler = async (req: Request, res: Response) => {
     }
 
     // Persist each seat's pick/trash order — the async bot-deckbuild Lambda rebuilds bot
-    // decks from seat.pickorder, so this must be saved before we enqueue the build.
-    for (let i = 0; i < body.state.seats.length; i += 1) {
-      const seat = draft.seats[i];
-      const stateSeat = body.state.seats[i];
-      if (seat && stateSeat) {
-        seat.pickorder = stateSeat.picks;
-        seat.trashorder = stateSeat.trashed;
+    // decks from seat.pickorder, so this must be saved before we enqueue the build. With
+    // a decision log, everything comes from replaying it, so the stored draft and its
+    // log can't disagree; without one (older clients), from the submitted state.
+    if (!applyLog(draft, body.log, req)) {
+      for (let i = 0; i < body.state.seats.length; i += 1) {
+        const seat = draft.seats[i];
+        const stateSeat = body.state.seats[i];
+        if (seat && stateSeat) {
+          seat.pickorder = stateSeat.picks;
+          seat.trashorder = stateSeat.trashed;
+        }
       }
     }
 
@@ -160,6 +179,34 @@ export const handler = async (req: Request, res: Response) => {
   } catch (err) {
     req.logger.error('Error finishing draft', err);
     return res.status(500).json({ error: 'Error finishing draft' });
+  }
+};
+
+// Replays a submitted decision log and stores its results on the draft. Returns
+// false (and leaves the draft untouched) if there's no log or it doesn't replay.
+const applyLog = (
+  draft: Awaited<ReturnType<typeof draftDao.getById>>,
+  log: DraftLogEntry[] | undefined,
+  req: Request,
+): boolean => {
+  if (!draft || !log || log.length === 0) return false;
+  try {
+    const { state } = replayLog({ ...draft, DraftLog: log });
+    if (!state.done) throw new Error('the log ends before the draft does');
+    state.seats.forEach((engineSeat, index) => {
+      const seat = draft.seats[index];
+      if (!seat) return;
+      // Stored newest first, like the old engine.
+      seat.pickorder = engineSeat.pool.slice().reverse();
+      seat.trashorder = engineSeat.trashed.slice().reverse();
+      seat.removedorder = engineSeat.removed.slice().reverse();
+      seat.draftNotes = engineSeat.notes;
+    });
+    draft.DraftLog = log;
+    return true;
+  } catch (err) {
+    req.logger.error('Draft log did not replay; using the submitted picks', err);
+    return false;
   }
 };
 

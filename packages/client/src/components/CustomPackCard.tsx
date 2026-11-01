@@ -20,7 +20,9 @@ interface CustomPackCardProps {
   canRemove: boolean;
   setPack: (pack: Pack) => void;
   removePack: () => void;
-  copyPack: () => void;
+  copyPack?: () => void;
+  // Shown in place of "Pack N".
+  title?: string;
 }
 
 const ACTION_LABELS: Record<string, string> = Object.freeze({
@@ -47,6 +49,7 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
   setPack,
   removePack,
   copyPack,
+  title,
 }) => {
   const [slotsOpen, toggleSlotsOpen] = useToggle(true);
   const [stepsOpen, toggleStepsOpen] = useToggle(false);
@@ -57,7 +60,7 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
       <CardHeader className="px-2">
         <Flexbox direction="row" gap="2" className="w-full" justify="between">
           <Text semibold lg>
-            Pack {packIndex + 1} - {pack.slots.length} cards
+            {title ?? `Pack ${packIndex + 1}`} - {pack.slots.length} cards
           </Text>
           {canRemove && (
             <Button color="danger" onClick={removePack}>
@@ -200,11 +203,13 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
           </Collapse>
         </Card>
       </div>
-      <CardFooter>
-        <Button color="accent" onClick={copyPack}>
-          Duplicate Pack
-        </Button>
-      </CardFooter>
+      {copyPack && (
+        <CardFooter>
+          <Button color="accent" onClick={copyPack}>
+            Duplicate Pack
+          </Button>
+        </CardFooter>
+      )}
     </Card>
   );
 };

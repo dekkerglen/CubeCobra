@@ -19,7 +19,11 @@ const Checkbox: React.FC<CheckboxProps> = ({ label, checked, setChecked, disable
       <input
         type="checkbox"
         className="form-checkbox h-5 w-5 text-primary-button"
-        checked={checked}
+        // Coerced so an undefined value (common when reading out of a sparse map, which the
+        // type system can't catch) can't silently leave the input uncontrolled: React would
+        // then stop managing its checked state, and the browser's own state would survive
+        // re-renders and any reuse of the DOM node.
+        checked={!!checked}
         disabled={disabled}
         onChange={handleChange}
       />
