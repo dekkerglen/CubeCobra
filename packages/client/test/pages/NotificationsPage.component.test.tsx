@@ -38,9 +38,27 @@ const n = (overrides: Partial<NotificationType> = {}): NotificationType => ({
 const follow = (id: string, status: NotificationStatus = NotificationStatus.UNREAD): NotificationType =>
   n({ id, status, type: NotificationKind.FOLLOW, subject: 'u1', toStatusComp: `u1:${status}` });
 
+// A notification with neither type nor subject can't be grouped, so each one is its own display row.
+const ungrouped = (index: number): NotificationType => n({ id: `u${index}`, body: `update ${index}` });
+
+const jsonResponse = (body: unknown) => ({ ok: true, json: async () => body });
+
 const renderPage = (notifications: NotificationType[], csrfFetch: jest.Mock = jest.fn(), lastKey?: string) =>
   render(
-    <CSRFContext.Provider value={{ csrfToken: 'token', csrfFetch, callApi: jest.fn() }}>
+    <CSRFContext.Provider
+      value={{
+        csrfToken: 'token',
+        csrfFetch,
+        // Mirrors the real provider, where callApi is csrfFetch with a JSON POST body, so both of
+        // the page's request paths stay observable through the single csrfFetch mock.
+        callApi: (route, body) =>
+          csrfFetch(route, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body),
+          }),
+      }}
+    >
       <NotificationsPage notifications={notifications} lastKey={lastKey} />
     </CSRFContext.Provider>,
   );
@@ -76,7 +94,7 @@ describe('NotificationsPage clear all', () => {
     // The endpoint only flips the status; the rows stay. Removing them would claim a deletion the
     // server never performed, and a reload would bring every one of them back.
     expect(screen.getByText(unread.body)).toBeInTheDocument();
-    expect(screen.getByText(/Notifications \(1\)/)).toBeInTheDocument();
+    expect(screen.getByText('Notifications')).toBeInTheDocument();
     // ...and they have to visibly become read, or emptying-then-refilling the list would look the same.
     expect(screen.queryByText('Unread')).not.toBeInTheDocument();
   });
@@ -180,5 +198,109 @@ describe('NotificationsPage clear all', () => {
     // statuses the clear just wrote survive.
     expect(screen.getByText('second body')).toBeInTheDocument();
     expect(screen.queryByText('Unread')).not.toBeInTheDocument();
+  });
+});
+
+describe('NotificationsPage pagination', () => {
+  it('shows no pager when there are no notifications', () => {
+    renderPage([]);
+
+    expect(screen.getByText(/don't have any notifications/)).toBeInTheDocument();
+    // A cursor list with nothing loaded has no page to honestly name; `Page 1 of 0` under the
+    // empty-state message is the bug this replaces.
+    expect(screen.queryByText(/Page/)).not.toBeInTheDocument();
+  });
+
+  it('renders no loaded-record count in the header', () => {
+    renderPage([ungrouped(1), ungrouped(2), ungrouped(3)]);
+
+    // The old `(3)` reported how many records this browser session had fetched — a fact about
+    // scroll history, not about the user's notifications.
+    expect(screen.getByText('Notifications')).toBeInTheDocument();
+    expect(screen.queryByText(/Notifications \(/)).not.toBeInTheDocument();
+  });
+
+  it('labels the page without a denominator when more notifications remain', () => {
+    renderPage([ungrouped(1)], jest.fn(), 'key-1');
+
+    expect(screen.getAllByText('Page 1').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/of \d/)).not.toBeInTheDocument();
+  });
+
+  it('counts grouped display rows, not raw notifications, for the page count', () => {
+    const notifications = [
+      ...Array.from({ length: 20 }, (_, i) => follow(`f${i}`)),
+      ...Array.from({ length: 10 }, (_, i) =>
+        n({ id: `d${i}`, type: NotificationKind.DRAFT, subject: 'cube-a', subjectName: 'Cube A' }),
+      ),
+      ...Array.from({ length: 10 }, (_, i) =>
+        n({ id: `c${i}`, type: NotificationKind.COMMENT_REPLY, subject: 'c1', subjectName: 'comment' }),
+      ),
+    ];
+
+    renderPage(notifications);
+
+    // 40 raw notifications, but only three display rows — well inside one page of 18.
+    expect(screen.getByText(/20 people followed you/)).toBeInTheDocument();
+    expect(screen.getByText(/There are 10 new drafts of Cube A/)).toBeInTheDocument();
+    expect(screen.getByText(/There are 10 new replies to your comment/)).toBeInTheDocument();
+    expect(screen.queryByText(/Page/)).not.toBeInTheDocument();
+  });
+
+  it('keeps fetching until the requested page holds a full window of display rows', async () => {
+    const csrfFetch = jest
+      .fn()
+      .mockResolvedValueOnce(
+        jsonResponse({
+          success: 'true',
+          notifications: Array.from({ length: 10 }, (_, i) => ungrouped(i + 1)),
+          lastKey: 'key-2',
+        }),
+      )
+      .mockResolvedValueOnce(
+        jsonResponse({
+          success: 'true',
+          notifications: Array.from({ length: 10 }, (_, i) => ungrouped(i + 11)),
+          lastKey: undefined,
+        }),
+      );
+
+    // 30 raw notifications that collapse into a single row, so counting items instead of rows
+    // would call the second page full after one fetch and then render nothing on it.
+    renderPage(
+      Array.from({ length: 30 }, (_, i) => follow(`f${i}`)),
+      csrfFetch,
+      'key-1',
+    );
+
+    await act(async () => {
+      fireEvent.click(nextPageButton());
+    });
+
+    expect(csrfFetch).toHaveBeenCalledTimes(2);
+    expect(screen.getAllByText('Page 2').length).toBeGreaterThan(0);
+    // 21 display rows: the group, then updates 1-20. Page two holds the last three.
+    expect(screen.getByText('update 18')).toBeInTheDocument();
+    expect(screen.getByText('update 20')).toBeInTheDocument();
+    expect(screen.queryByText('update 17')).not.toBeInTheDocument();
+  });
+
+  it('stays put when a fetch returns notifications that add no display rows', async () => {
+    const csrfFetch = jest
+      .fn()
+      .mockResolvedValue(
+        jsonResponse({ success: 'true', notifications: [follow('n3'), follow('n4')], lastKey: undefined }),
+      );
+
+    renderPage([follow('n1'), follow('n2')], csrfFetch, 'key-1');
+
+    await act(async () => {
+      fireEvent.click(nextPageButton());
+    });
+
+    // The fetched notifications all collapse into the existing group, so advancing would land on
+    // an empty page two.
+    expect(screen.getByText(/4 people followed you/)).toBeInTheDocument();
+    expect(screen.queryByText(/Page/)).not.toBeInTheDocument();
   });
 });
