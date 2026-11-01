@@ -4,14 +4,20 @@ import { QuestionIcon } from '@primer/octicons-react';
 import Record from '@utils/datatypes/Record';
 
 import { CardBody } from 'components/base/Card';
+import CursorPagination from 'components/base/CursorPagination';
 import FormatttedDate from 'components/base/FormatttedDate';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
-import Pagination from 'components/base/Pagination';
 import Table from 'components/base/Table';
 import Text from 'components/base/Text';
 import Tooltip from 'components/base/Tooltip';
 import { CSRFContext } from 'contexts/CSRFContext';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
 interface TrophyArchiveProps {
   records: Record[];
@@ -27,29 +33,29 @@ const TrophyArchive: React.FC<TrophyArchiveProps> = ({ records, lastKey }) => {
   const { callApi } = useContext(CSRFContext);
   const [page, setPage] = React.useState(0);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!lastKeyState;
+  const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(lastKeyState);
 
-  const fetchMore = useCallback(async () => {
-    if (loading || !lastKeyState) return;
-    setLoading(true);
-    try {
-      const response = await callApi('/api/draftreports', {
+  const fetchMore = useCallback(
+    async (targetPage: number) => {
+      if (loading) return;
+
+      await fetchIndefiniteMoreData<Record>({
+        callApi,
+        fetchMoreRoute: '/api/draftreports',
+        items,
+        setItems,
         lastKey: lastKeyState,
+        setLastKey: setLastKeyState,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'reports',
+        setLoading,
+        targetPage,
       });
-      const data = await response.json();
-      if (data.reports) {
-        setItems((prevItems) => [...prevItems, ...data.reports]);
-        setLastKeyState(data.lastKey);
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [loading, lastKeyState, callApi]);
-
-  const trophyCount = useMemo(() => {
-    return items.reduce((count, item) => count + item.trophy.length, 0);
-  }, [items]);
+    },
+    [loading, items, lastKeyState, callApi],
+  );
 
   const trophies = useMemo(() => {
     const itemPage = items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
@@ -103,16 +109,17 @@ const TrophyArchive: React.FC<TrophyArchiveProps> = ({ records, lastKey }) => {
   }, [items, page]);
 
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMore();
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData: fetchMore,
+        });
       }}
       loading={loading}
     />
@@ -124,8 +131,7 @@ const TrophyArchive: React.FC<TrophyArchiveProps> = ({ records, lastKey }) => {
         <Flexbox direction="col" gap="2">
           <Flexbox direction="row" justify="between" alignItems="center" className="w-full p-4">
             <Text lg semibold>
-              Trophies ({trophyCount}
-              {hasMore ? '+' : ''})
+              Trophies
             </Text>
             {pager}
           </Flexbox>
