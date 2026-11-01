@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 
 import { PencilIcon } from '@primer/octicons-react';
 import User, { UserRoles } from '@utils/datatypes/User';
+import classNames from 'classnames';
 
 import Button from 'components/base/Button';
 import { Flexbox } from 'components/base/Layout';
@@ -55,9 +56,14 @@ const UserLayout: React.FC<UserLayoutProps> = ({
 
   const userCard = (
     <div className="bg-bg-accent border border-border rounded-md overflow-hidden">
-      <div className="grid grid-cols-[auto_1fr] gap-3 p-3 lg:block lg:p-0">
+      <div
+        className={classNames('grid gap-3 p-3 lg:block lg:px-0 lg:pt-0 lg:pb-3', {
+          'grid-cols-[auto_1fr]': !!user.image,
+          'grid-cols-1': !user.image,
+        })}
+      >
         {user.image && (
-          <div className="relative sm:row-span-2">
+          <div className="relative self-start sm:row-span-2">
             <img
               className="w-28 h-28 sm:w-52 sm:h-52 lg:w-full lg:h-auto lg:aspect-square object-cover rounded-md lg:rounded-none"
               alt={`Art by ${user.image.artist}`}
@@ -71,8 +77,8 @@ const UserLayout: React.FC<UserLayoutProps> = ({
             )}
           </div>
         )}
-        <Flexbox direction="col" gap="3" className="min-w-0 lg:px-3 lg:pt-3">
-          <Text semibold lg>
+        <Flexbox direction="col" gap="3" className="min-w-0 lg:px-3 lg:pt-6">
+          <Text semibold lg className="break-words">
             {user.username}
           </Text>
           {(isAdmin || typeof patronLevel === 'number') && (
@@ -111,7 +117,11 @@ const UserLayout: React.FC<UserLayoutProps> = ({
           </Flexbox>
         </Flexbox>
 
-        <div className="col-span-2 sm:col-span-1 sm:col-start-2 lg:px-3 lg:pt-3">
+        <div
+          className={classNames('col-span-full lg:px-3 lg:pt-3', {
+            'sm:col-span-1 sm:col-start-2': !!user.image,
+          })}
+        >
           {canEdit ? (
             <Button type="link" color="accent" href="/user/account" block>
               <Flexbox direction="row" gap="2" alignItems="center" justify="center">
