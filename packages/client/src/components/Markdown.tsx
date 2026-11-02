@@ -1,18 +1,16 @@
 import React, { ComponentPropsWithoutRef, ReactNode, useMemo } from 'react';
 
-import { LinkIcon } from '@primer/octicons-react';
 import { cdnUrl } from '@utils/cdnUrl';
 import { CardDetails } from '@utils/datatypes/Card';
 import { safeHttpUrl } from '@utils/safeUrl';
 import { isInternalURL, isSamePageURL } from '@utils/Util';
 import { slug } from 'github-slugger';
-// @ts-expect-error This library has no types.
-import ReactMarkdown, { MarkdownProps } from 'react-markdown';
+import ReactMarkdown from 'react-markdown';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yDark, a11yLight } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import reactNodeToText from 'utils/reactNodeToText';
 
-import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS, NO_CONTAINER_PLUGINS } from 'markdown/parser';
+import { ALL_PLUGINS, NO_CARDROW_PLUGINS, NO_CONTAINER_PLUGINS, REHYPE_PLUGINS } from 'markdown/parser';
 
 import { Flexbox } from './base/Layout';
 import Link, { LinkProps } from './base/Link';
@@ -84,15 +82,6 @@ const renderLink: React.FC<RenderLinkProps> = (node) => {
   const ref = node.href ?? '';
 
   if (isInternalURL(ref)) {
-    // heading autolink
-    if (Array.isArray(node.children) && node.children[0]?.props?.className?.includes('icon')) {
-      return (
-        <a href={ref} className="float-left -ml-6 pr-2 align-middle">
-          <LinkIcon size={16} className="align-middle invisible group-hover:visible" />
-        </a>
-      );
-    }
-
     const props = isSamePageURL(ref) ? {} : { target: '_blank', rel: 'noopener noreferrer' };
     return (
       <Link href={ref} {...props}>
@@ -190,6 +179,7 @@ interface RenderCardImageProps {
   id: string;
   dfc?: boolean;
   inParagraph?: boolean;
+  inTable?: boolean;
   showBackImage?: boolean;
 }
 const renderCardImage: React.FC<RenderCardImageProps> = (node) => {
@@ -204,13 +194,23 @@ const renderCardImage: React.FC<RenderCardImageProps> = (node) => {
   }
 
   const tag = node.inParagraph ? 'span' : 'div';
-  return (
-    <div className="w-1/2 lg:w-1/4 p-2 markdown-card-image">
-      <Link href={`/tool/card/${idURL}`} target="_blank" rel="noopener noreferrer">
-        <FoilCardImage autocard card={{ details } as any} className="clickable" wrapperTag={tag} />
-      </Link>
-    </div>
+  const image = (
+    <Link href={`/tool/card/${idURL}`} target="_blank" rel="noopener noreferrer">
+      <FoilCardImage autocard card={{ details } as any} className="clickable" wrapperTag={tag} />
+    </Link>
   );
+
+  /* Table cells size themselves from their contents, so the percentage width used elsewhere resolves
+   * against a width the image itself determines - arbitrary, and collapsing to a few dozen pixels on
+   * a narrow screen. A fixed width sizes predictably and lets the table's own horizontal scroll deal
+   * with narrow viewports. Inline-block (on a span, to keep the cell's inline formatting context)
+   * is also what makes the column's text-align apply; a block box with a set width ignores it.
+   */
+  if (node.inTable) {
+    return <span className="inline-block w-44 max-w-full p-2 align-top markdown-card-image">{image}</span>;
+  }
+
+  return <div className="w-1/2 lg:w-1/4 p-2 markdown-card-image">{image}</div>;
 };
 interface RenderCenteringProps {
   children: ReactNode;
@@ -345,18 +345,30 @@ const RENDERERS = {
 };
 
 export interface MarkdownProps {
-  markdown: string;
-  limited?: boolean;
+  // Nullable by design: the component coerces with `markdown?.toString() ?? ''`, and several callers
+  // pass a value that may be absent.
+  markdown: string | null | undefined;
 }
 
-// The custom `centering` (>>> <<<) construct's tokenizer is O(n^2) and recurses one stack
-// frame per *nesting* level, so a deeply nested (or run-away unclosed) document can hang or
-// overflow the stack (and a blown-stack RangeError unwinds straight through React's error
-// boundary). What matters is nesting depth, NOT the number of blocks: a primer with hundreds
-// of flat, self-closing `>>> ... <<<` headers is O(n) and perfectly safe. So we measure the
-// maximum unclosed nesting depth; past this ceiling — far beyond any legitimate primer, which
-// never nests centering more than a couple levels — we drop the custom container extensions
-// rather than crash the whole page.
+// Two independent complexity guards, both O(n) pre-scans that swap in a reduced plugin set rather
+// than let a stored document hang the reader's browser. Markdown is only ever rendered client-side,
+// so an expensive document costs every *viewer*, not just its author.
+//
+// 1. The `centering` (>>> <<<) construct's tokenizer is O(n^2) and recurses one stack frame per
+//    *nesting* level, so a deeply nested (or run-away unclosed) document can hang or overflow the
+//    stack (and a blown-stack RangeError unwinds straight through React's error boundary). What
+//    matters is nesting depth, NOT the number of blocks: a primer with hundreds of flat,
+//    self-closing `>>> ... <<<` headers is O(n) and perfectly safe.
+//
+// 2. The `cardrow` (<< >>) tokenizer scans forward from every `<<` on a line looking for a closing
+//    `>>`, and nothing bounds (number of starts) x (distance each scans). A 30,000-character line -
+//    exactly the server's blog cap - measured ~5,500ms; dropping cardrow alone took the same input
+//    to ~38ms. Note a trailing `>>` does not help: `'<<'xN` and `'<<'xN + '>>'` measure within 3% of
+//    each other, so a guard keyed on whether the row is closed would miss half the attack surface.
+//    What is cheap: an isolated `<` that never forms `<<` (rejected at the second character), short
+//    scans (`<<x>>` rows), and the same volume split over short lines (a scan stops at end of line).
+//
+// Centering is checked first, so a document tripping both still drops both extensions.
 const MAX_CENTERING_DEPTH = 25;
 const OPEN_FENCE_RE = /^>{3,}/;
 const CLOSE_FENCE_RE = /^<{3,}\s*$/;
@@ -381,19 +393,65 @@ const maxCenteringDepth = (text: string): number => {
   return max;
 };
 
-const Markdown: React.FC<MarkdownProps> = ({ markdown, limited = false }) => {
+/**
+ * Estimates the character scanning `cardrow` will perform across the document: for each `<<`, the
+ * distance from its content start to the first `>>` on that line, or to the end of the line when
+ * there is none. This models the tokenizer's actual work rather than pattern-matching an attack
+ * shape, so every variant of the pathological input scores alike while ordinary content scores low.
+ *
+ * It must be `>>`, not a lone `>`. A single `>` fails the closing construct, gets swallowed by
+ * `consumeGt`, and the scan continues to end of line — so charging to the next `>` would let
+ * `'<<a>'` repeated to the 30,000-character blog cap score 7,500 while still costing ~8,700ms.
+ * A `<<` whose content would begin with `>` costs nothing instead, because `contentStart` rejects
+ * it outright; that is why `'<<>'` repeated is genuinely cheap.
+ *
+ * Runs right-to-left in a single pass per line with no allocation. Both characters of a `<<` are
+ * `<`, so no `>>` can begin at the marker and the first `>>` at or after it is also the first at or
+ * after the content start.
+ */
+export const cardrowScanWork = (text: string): number => {
+  let total = 0;
+  let inFence = false;
+  for (const line of text.split('\n')) {
+    const trimmed = line.trimStart();
+    // Cardrow is a text construct and never runs inside fenced code, so a pasted code sample full of
+    // `<<` must not trip the guard and cost that author their card rows elsewhere in the document.
+    if (trimmed.startsWith('```') || trimmed.startsWith('~~~')) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+
+    const len = line.length;
+    let nextGtGt = len;
+    for (let i = len - 1; i >= 0; i--) {
+      const c = line.charCodeAt(i);
+      if (c === 62 && i + 1 < len && line.charCodeAt(i + 1) === 62) nextGtGt = i;
+      if (c === 60 && i + 1 < len && line.charCodeAt(i + 1) === 60) {
+        const contentStart = i + 2;
+        if (contentStart >= len || line.charCodeAt(contentStart) === 62) continue;
+        total += (nextGtGt >= contentStart ? nextGtGt : len) - contentStart;
+      }
+    }
+  }
+  return total;
+};
+
+// Calibrated against measured renders: an attack scores 449,955,001 (~5,500ms), 6,000 legitimate card
+// rows score 6,000, the live wiki Markdown reference page scores 86. This ceiling is ~19x above the
+// worst legitimate case measured (256,500) and 1.1% of an attack - roughly 60ms of tokenizer work.
+export const MAX_CARDROW_WORK = 5_000_000;
+
+const Markdown: React.FC<MarkdownProps> = ({ markdown }) => {
   const markdownStr = markdown?.toString() ?? '';
-  const remarkPlugins = useMemo(
-    () => (maxCenteringDepth(markdownStr) > MAX_CENTERING_DEPTH ? NO_CONTAINER_PLUGINS : ALL_PLUGINS),
-    [markdownStr],
-  );
+  const remarkPlugins = useMemo(() => {
+    if (maxCenteringDepth(markdownStr) > MAX_CENTERING_DEPTH) return NO_CONTAINER_PLUGINS;
+    if (cardrowScanWork(markdownStr) > MAX_CARDROW_WORK) return NO_CARDROW_PLUGINS;
+    return ALL_PLUGINS;
+  }, [markdownStr]);
   return (
     <Flexbox className="markdown" direction="col" gap="2">
-      <ReactMarkdown
-        remarkPlugins={remarkPlugins as any}
-        rehypePlugins={limited ? LIMITED_REHYPE_PLUGINS : ALL_REHYPE_PLUGINS}
-        components={RENDERERS as any}
-      >
+      <ReactMarkdown remarkPlugins={remarkPlugins as any} rehypePlugins={REHYPE_PLUGINS} components={RENDERERS as any}>
         {markdownStr}
       </ReactMarkdown>
     </Flexbox>

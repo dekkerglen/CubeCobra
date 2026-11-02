@@ -218,7 +218,7 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
                 <img src={card.details?.image_normal} className="card-img-top" alt={card.details?.name} />
               </Link>
               <CardBody>
-                <Markdown markdown={cardDescription} cube={cube} />
+                <Markdown markdown={cardDescription} />
               </CardBody>
             </Card>
           </Col>

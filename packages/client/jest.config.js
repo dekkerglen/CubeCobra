@@ -35,7 +35,14 @@ module.exports = {
   // Transform ignore patterns - transform everything including node_modules for our packages.
   // uuid v14 is ESM-only for the browser/default export condition, which is what jsdom resolves,
   // so it has to go through babel to be loadable from CommonJS test code.
-  transformIgnorePatterns: ['node_modules/(?!(uuid|.*\\.mjs$))'],
+  //
+  // The remaining entries are the ESM-only unified/micromark/hast packages the Markdown pipeline
+  // pulls in, so tests can render `components/Markdown` for real instead of mocking react-markdown
+  // out. This costs the rest of the suite nothing: transformIgnorePatterns only applies to files a
+  // test actually requires, so a test that mocks react-markdown never loads any of them.
+  transformIgnorePatterns: [
+    'node_modules/(?!(uuid|github-slugger|react-markdown|remark-.*|rehype-.*|micromark.*|mdast-.*|hast-.*|hastscript|unist-.*|unified|vfile.*|bail|trough|is-plain-obj|decode-named-character-reference|character-entities.*|property-information|space-separated-tokens|comma-separated-tokens|html-void-elements|zwitch|longest-streak|ccount|escape-string-regexp|markdown-table|devlop|estree-util-.*|html-url-attributes|trim-lines|web-namespaces|stringify-entities|parse-entities|.*\\.mjs$))',
+  ],
 
   // Test file patterns
   testMatch: ['<rootDir>/test/**/*.test.(ts|tsx|js|jsx)'],

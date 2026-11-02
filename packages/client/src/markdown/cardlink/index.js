@@ -53,15 +53,32 @@ function oncard(node, index, parent) {
     id: node.id,
     dfc: node.dfc,
     inParagraph: node.inParagraph,
+    inTable: node.inTable,
     showBackImage: node.showBackImage,
   };
+}
+
+/* Mark every cardlink that lives anywhere inside a table cell. We walk each cell's whole subtree
+ * rather than testing `parent.type`, because a card image inside a `<<...>>` row has the cardrow as
+ * its parent, not the cell. This has to run before `oncard`, which rewrites `node.type` from
+ * 'cardlink' to 'cardimage'.
+ */
+function markCardlinksInTables(tree) {
+  visit(tree, 'tableCell', (cell) => {
+    visit(cell, 'cardlink', (node) => {
+      node.inTable = true;
+    });
+  });
 }
 
 function cardlinks() {
   const data = this.data();
   add(data, 'micromarkExtensions', syntax);
   add(data, 'fromMarkdownExtensions', fromMarkdown);
-  return (tree) => visit(tree, 'cardlink', oncard);
+  return (tree) => {
+    markCardlinksInTables(tree);
+    visit(tree, 'cardlink', oncard);
+  };
 }
 
 export default cardlinks;

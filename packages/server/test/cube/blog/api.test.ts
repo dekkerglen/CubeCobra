@@ -211,6 +211,28 @@ describe('Create Blog Post', () => {
     });
   });
 
+  it('should not notify users absent from the blog body', async () => {
+    const owner = createUser();
+    const cube = createCube({ owner });
+
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+    (blogDao.createBlog as jest.Mock).mockResolvedValueOnce('blog-id');
+    (feedDao.batchPutUnhydrated as jest.Mock).mockResolvedValue(undefined);
+    (userDao.getAllFollowers as jest.Mock).mockResolvedValue([]);
+    (userDao.getByUsername as jest.Mock).mockImplementation((username: string) =>
+      Promise.resolve({ id: `id-${username}`, username }),
+    );
+    (util.getSafeReferrer as jest.Mock).mockReturnValue(`/cube/blog/${cube.id}`);
+
+    await call(createBlogHandler)
+      .as(owner)
+      .withBody({ title: 'My blog title', markdown: 'My blog content', mentions: 'victim' })
+      .withParams({ id: cube.id })
+      .send();
+
+    expect(util.addNotification).not.toHaveBeenCalled();
+  });
+
   it('should handle errors gracefully', async () => {
     const owner = createUser();
     const error = new Error('something went wrong');

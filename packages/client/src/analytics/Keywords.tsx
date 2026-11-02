@@ -1,4 +1,4 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 
 import { cardColorIdentity, cardKeywords } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
@@ -23,7 +23,6 @@ import Text from '../components/base/Text';
 import Tooltip from '../components/base/Tooltip';
 import Markdown from '../components/Markdown';
 import { useAnalysisCards } from '../contexts/AnalysisViewContext';
-import CubeContext from '../contexts/CubeContext';
 import { getKeywordReminder } from '../utils/keywordReminderText';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, ChartTooltip, Legend);
@@ -285,7 +284,7 @@ const WordCloudView: React.FC<{ words: CloudInput[]; height?: number }> = ({ wor
 
 const MAX_CARDS_INLINE = 24;
 
-const KeywordReferenceCard: React.FC<{ stat: KeywordStat; cube: any }> = ({ stat, cube }) => {
+const KeywordReferenceCard: React.FC<{ stat: KeywordStat }> = ({ stat }) => {
   const shown = stat.cardNames.slice(0, MAX_CARDS_INLINE);
   const remaining = stat.cardNames.length - shown.length;
   const markdown = shown.map((c) => `[[${c.name}|${c.scryfallId}]]`).join(', ');
@@ -318,7 +317,7 @@ const KeywordReferenceCard: React.FC<{ stat: KeywordStat; cube: any }> = ({ stat
             </Text>
           )}
           <div className="text-sm">
-            <Markdown markdown={markdown} cube={cube} />
+            <Markdown markdown={markdown} />
             {remaining > 0 && <span className="text-text-secondary"> +{remaining} more</span>}
           </div>
         </Flexbox>
@@ -329,7 +328,6 @@ const KeywordReferenceCard: React.FC<{ stat: KeywordStat; cube: any }> = ({ stat
 
 // ─── Main component ───────────────────────────────────────────────────────────────
 const Keywords: React.FC = () => {
-  const { cube } = useContext(CubeContext);
   const cards = useAnalysisCards();
 
   const [densityMode, setDensityMode] = useState<'count' | 'density'>('count');
@@ -555,7 +553,7 @@ const Keywords: React.FC = () => {
         <Row className="g-3">
           {stats.map((s) => (
             <Col key={s.keyword} xs={12} md={6} lg={4}>
-              <KeywordReferenceCard stat={s} cube={cube} />
+              <KeywordReferenceCard stat={s} />
             </Col>
           ))}
         </Row>

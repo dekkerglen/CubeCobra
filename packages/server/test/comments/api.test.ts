@@ -478,7 +478,7 @@ describe('Add Comment', () => {
       .as(commenter)
       .withRequest({
         body: {
-          body: 'This is a new comment',
+          body: 'This is a new comment for @mentionuser1 and @mentionuser2',
           parent: 'parent-id',
           type: 'comment',
           mentions: 'mentionuser1;mentionuser2',
@@ -542,6 +542,72 @@ describe('Add Comment', () => {
     );
 
     expect(routeUtil.addNotification).toHaveBeenCalledTimes(1);
+  });
+
+  it('does not notify users absent from the comment body', async () => {
+    const commenter = createUser();
+
+    (routeUtil.addNotification as jest.Mock).mockResolvedValue(undefined);
+    (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(true);
+    (isNotifiableCommentType as jest.MockedFunction<typeof isNotifiableCommentType>).mockReturnValue(false);
+    (userDao.getByUsername as jest.Mock).mockImplementation((username: string) =>
+      Promise.resolve({ id: `id-${username}`, username: username }),
+    );
+
+    await call(addCommentHandler)
+      .as(commenter)
+      .withRequest({
+        body: { body: 'nothing to see here', parent: 'parent-id', type: 'comment', mentions: 'victim' },
+      })
+      .send();
+
+    expect(userDao.getByUsername).not.toHaveBeenCalled();
+    expect(routeUtil.addNotification).not.toHaveBeenCalled();
+  });
+
+  it('notifies a repeated mention only once', async () => {
+    const commenter = createUser();
+
+    (routeUtil.addNotification as jest.Mock).mockResolvedValue(undefined);
+    (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(true);
+    (isNotifiableCommentType as jest.MockedFunction<typeof isNotifiableCommentType>).mockReturnValue(false);
+    (userDao.getByUsername as jest.Mock).mockImplementation((username: string) =>
+      Promise.resolve({ id: `id-${username}`, username: username }),
+    );
+
+    await call(addCommentHandler)
+      .as(commenter)
+      .withRequest({
+        body: { body: '@bob @bob @bob', parent: 'parent-id', type: 'comment', mentions: 'bob;bob;bob' },
+      })
+      .send();
+
+    expect(routeUtil.addNotification).toHaveBeenCalledTimes(1);
+  });
+
+  it('ignores a mention that falls beyond the stored body', async () => {
+    const commenter = createUser();
+
+    (routeUtil.addNotification as jest.Mock).mockResolvedValue(undefined);
+    (isCommentType as jest.MockedFunction<typeof isCommentType>).mockReturnValue(true);
+    (isNotifiableCommentType as jest.MockedFunction<typeof isNotifiableCommentType>).mockReturnValue(false);
+    (userDao.getByUsername as jest.Mock).mockImplementation((username: string) =>
+      Promise.resolve({ id: `id-${username}`, username: username }),
+    );
+
+    await call(addCommentHandler)
+      .as(commenter)
+      .withRequest({
+        body: {
+          body: 'a'.repeat(5000) + ' @victim',
+          parent: 'parent-id',
+          type: 'comment',
+          mentions: 'victim',
+        },
+      })
+      .send();
+
+    expect(routeUtil.addNotification).not.toHaveBeenCalled();
   });
 });
 

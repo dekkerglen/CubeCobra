@@ -14,8 +14,8 @@ jest.mock('react-syntax-highlighter', () => ({ __esModule: true, default: () => 
 jest.mock('react-syntax-highlighter/dist/cjs/styles/hljs', () => ({ a11yDark: {}, a11yLight: {} }));
 jest.mock('markdown/parser', () => ({
   ALL_PLUGINS: [],
-  ALL_REHYPE_PLUGINS: [],
-  LIMITED_REHYPE_PLUGINS: [],
+  REHYPE_PLUGINS: [],
+  NO_CARDROW_PLUGINS: [],
   NO_CONTAINER_PLUGINS: [],
 }));
 
