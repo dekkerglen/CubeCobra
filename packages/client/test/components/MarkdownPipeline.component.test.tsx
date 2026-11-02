@@ -88,3 +88,23 @@ describe('card images in table cells', () => {
     expect(cell.querySelector('a')).toHaveTextContent('Sol Ring');
   });
 });
+
+/* Characterisation tests: these pin behaviour that must SURVIVE the removal of the inert `limited`
+ * mode and the dead heading-autolink branch, so they are green before and after by design. Heading ids
+ * come from generateHeadingId in the heading renderers, not from the rehype-slug plugin that was
+ * removed long ago - conflating the two would silently break every wiki table of contents.
+ */
+describe('heading anchors and links survive', () => {
+  it('still gives headings slugged ids for the table of contents', () => {
+    const container = renderMarkdown('# Basic Formatting\n\n## Linking Cards\n');
+    expect(container.querySelector('#basic-formatting')).toBeInTheDocument();
+    expect(container.querySelector('#linking-cards')).toBeInTheDocument();
+  });
+
+  it('renders ordinary internal and external links unchanged', () => {
+    const internal = renderMarkdown('[a cube](/cube/list/abc)\n').querySelector('a');
+    expect(internal).toHaveAttribute('href', '/cube/list/abc');
+    const external = renderMarkdown('[out](https://example.com/x)\n').querySelector('a');
+    expect(external).toHaveAttribute('href', '/leave?url=https%3A%2F%2Fexample.com%2Fx');
+  });
+});

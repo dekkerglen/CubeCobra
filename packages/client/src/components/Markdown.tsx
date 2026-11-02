@@ -1,6 +1,5 @@
 import React, { ComponentPropsWithoutRef, ReactNode, useMemo } from 'react';
 
-import { LinkIcon } from '@primer/octicons-react';
 import { cdnUrl } from '@utils/cdnUrl';
 import { CardDetails } from '@utils/datatypes/Card';
 import { safeHttpUrl } from '@utils/safeUrl';
@@ -12,13 +11,7 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yDark, a11yLight } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import reactNodeToText from 'utils/reactNodeToText';
 
-import {
-  ALL_PLUGINS,
-  ALL_REHYPE_PLUGINS,
-  LIMITED_REHYPE_PLUGINS,
-  NO_CARDROW_PLUGINS,
-  NO_CONTAINER_PLUGINS,
-} from 'markdown/parser';
+import { ALL_PLUGINS, NO_CARDROW_PLUGINS, NO_CONTAINER_PLUGINS, REHYPE_PLUGINS } from 'markdown/parser';
 
 import { Flexbox } from './base/Layout';
 import Link, { LinkProps } from './base/Link';
@@ -90,15 +83,6 @@ const renderLink: React.FC<RenderLinkProps> = (node) => {
   const ref = node.href ?? '';
 
   if (isInternalURL(ref)) {
-    // heading autolink
-    if (Array.isArray(node.children) && node.children[0]?.props?.className?.includes('icon')) {
-      return (
-        <a href={ref} className="float-left -ml-6 pr-2 align-middle">
-          <LinkIcon size={16} className="align-middle invisible group-hover:visible" />
-        </a>
-      );
-    }
-
     const props = isSamePageURL(ref) ? {} : { target: '_blank', rel: 'noopener noreferrer' };
     return (
       <Link href={ref} {...props}>
@@ -363,7 +347,6 @@ const RENDERERS = {
 
 export interface MarkdownProps {
   markdown: string;
-  limited?: boolean;
 }
 
 // Two independent complexity guards, both O(n) pre-scans that swap in a reduced plugin set rather
@@ -458,7 +441,7 @@ export const cardrowScanWork = (text: string): number => {
 // worst legitimate case measured (256,500) and 1.1% of an attack - roughly 60ms of tokenizer work.
 export const MAX_CARDROW_WORK = 5_000_000;
 
-const Markdown: React.FC<MarkdownProps> = ({ markdown, limited = false }) => {
+const Markdown: React.FC<MarkdownProps> = ({ markdown }) => {
   const markdownStr = markdown?.toString() ?? '';
   const remarkPlugins = useMemo(() => {
     if (maxCenteringDepth(markdownStr) > MAX_CENTERING_DEPTH) return NO_CONTAINER_PLUGINS;
@@ -467,11 +450,7 @@ const Markdown: React.FC<MarkdownProps> = ({ markdown, limited = false }) => {
   }, [markdownStr]);
   return (
     <Flexbox className="markdown" direction="col" gap="2">
-      <ReactMarkdown
-        remarkPlugins={remarkPlugins as any}
-        rehypePlugins={limited ? LIMITED_REHYPE_PLUGINS : ALL_REHYPE_PLUGINS}
-        components={RENDERERS as any}
-      >
+      <ReactMarkdown remarkPlugins={remarkPlugins as any} rehypePlugins={REHYPE_PLUGINS} components={RENDERERS as any}>
         {markdownStr}
       </ReactMarkdown>
     </Flexbox>

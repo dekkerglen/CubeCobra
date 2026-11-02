@@ -130,7 +130,7 @@ const Comment: React.FC<CommentProps> = ({
             </Text>
             <Collapse isOpen={!isEdit}>
               <div className="overflow-x-auto max-w-full">
-                <Markdown markdown={comment.body} limited />
+                <Markdown markdown={comment.body} />
               </div>
             </Collapse>
             <CommentEntry

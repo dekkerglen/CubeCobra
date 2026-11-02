@@ -106,7 +106,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false, 
           <Col xs={12} md={8}>
             <div style={scrollStyle}>
               <CardBody>
-                <Markdown markdown={post.body} limited />
+                <Markdown markdown={post.body} />
               </CardBody>
             </div>
           </Col>
@@ -115,7 +115,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false, 
       {!hasChangelist && hasBody && (
         <div style={scrollStyle}>
           <CardBody>
-            <Markdown markdown={post.body} limited />
+            <Markdown markdown={post.body} />
           </CardBody>
         </div>
       )}
