@@ -2,6 +2,7 @@ import CubeType from '@utils/datatypes/Cube';
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
 import UserType from '@utils/datatypes/User';
+import { resolveMentions } from '@utils/mentions';
 import { sanitizeChangelog } from 'dynamo/dao/ChangelogDynamoDao';
 import { blogDao, cubeDao, feedDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth, ensureAuthJson } from 'router/middleware';
@@ -119,15 +120,17 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       return;
     }
 
+    const storedMarkdown: string = req.body.markdown?.substring(0, 30000) || '';
     const id: string = await blogDao.createBlog({
-      body: req.body.markdown?.substring(0, 30000) || '',
+      body: storedMarkdown,
       owner: user.id,
       cube: cube.id,
       title: req.body.title,
     });
 
-    //Front-end joins the mentioned usernames with ; for the Form
-    const userMentions: string[] = req.body.mentions ? req.body.mentions.split(';') : [];
+    // The client extracts mentions from the markdown, so the submitted list is untrusted: validate it
+    // against the body we actually stored before notifying anyone.
+    const userMentions = resolveMentions(storedMarkdown, req.body.mentions);
     const mentionedUsers: UserType[] = [];
 
     // mentions are only added for new posts and ignored on edits

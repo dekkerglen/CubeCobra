@@ -3,6 +3,7 @@ import { isCommentType, isNotifiableCommentType, NotifiableCommentType } from '@
 import { NoticeStatus, NoticeType } from '@utils/datatypes/Notice';
 import { NotificationType } from '@utils/datatypes/Notification';
 import User from '@utils/datatypes/User';
+import { resolveMentions } from '@utils/mentions';
 import {
   articleDao,
   blogDao,
@@ -293,9 +294,10 @@ export const addCommentHandler = async (req: Request, res: Response) => {
   }
 
   const now = Date.now() - 1000;
+  const storedBody = body.substring(0, 5000);
   const comment: Omit<Comment, 'id'> = {
     owner: user,
-    body: body.substring(0, 5000),
+    body: storedBody,
     date: now,
     dateCreated: now,
     dateLastUpdated: now,
@@ -319,8 +321,9 @@ export const addCommentHandler = async (req: Request, res: Response) => {
     }
   }
 
-  //Front-end joins the mentioned usernames with ; for the Form
-  const userMentions: string[] = mentions ? mentions.split(';') : []; //Stupid JS thing where split of empty string is an array of empty string
+  // The client extracts mentions from the body, so the submitted list is untrusted: validate it against
+  // the body we actually stored before notifying anyone.
+  const userMentions = resolveMentions(storedBody, mentions);
   for (const mention of userMentions) {
     const mentioned = await userDao.getByUsername(mention);
     if (mentioned) {
