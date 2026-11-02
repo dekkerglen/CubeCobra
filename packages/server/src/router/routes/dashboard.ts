@@ -1,40 +1,35 @@
+import BlogPost from '@utils/datatypes/BlogPost';
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { sanitizeChangelog } from 'dynamo/dao/ChangelogDynamoDao';
-import { collaboratorIndexDao, cubeDao, draftDao, feedDao } from 'dynamo/daos';
+import { blogDao, collaboratorIndexDao, cubeDao, draftDao, feedDao } from 'dynamo/daos';
 import { pickDailyGame } from 'serverutils/dailyGamePick';
 import { getFeaturedCubes } from 'serverutils/featuredQueue';
+import { DEV_BLOG_CUBE, mergeFeedStreams, parseFeedCursor } from 'serverutils/feedMerge';
 import { getCubesSortValues, getPinnedCubesForOwner, handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../types/express';
 import { csrfProtection, ensureAuth } from '../middleware';
 
-// Feed items embed BlogPost.Changelog which is hydrated with full card
-// details by ChangelogDynamoDao.hydrateChangelog. We strip those before
-// shipping to the client — the React feed component rehydrates from
-// utils/cardDetailsCache. Mutates in place; safe because feedDao items
-// are not reused across requests.
-const stripFeedItemDetails = (item: any): any => {
-  if (item?.document?.Changelog) {
-    sanitizeChangelog(item.document.Changelog);
+const FEED_PAGE_SIZE = 50;
+const MAX_FEED_FETCH_ROUNDS = 5;
+
+// Blog posts embed a Changelog hydrated with full card details by
+// ChangelogDynamoDao.hydrateChangelog. We strip those before shipping to the
+// client — the React feed component rehydrates from utils/cardDetailsCache.
+// Mutates in place; safe because these items are not reused across requests.
+const stripBlogDetails = (blog: BlogPost): BlogPost => {
+  if (blog?.Changelog) {
+    sanitizeChangelog(blog.Changelog as any);
   }
-  return item;
+  return blog;
 };
 
-// Helper function to filter feed items based on cube privacy
-const filterFeedItemsByPrivacy = (feedItems: any[]): any[] => {
-  return feedItems.filter((item) => {
-    const blog = item.document;
-    if (!blog) return false;
-
-    // DEVLOG posts are always visible
-    if (blog.cube === 'DEVBLOG') {
-      return true;
-    }
-
-    // Only show feed items from public cubes
-    // Private and unlisted cube blogs should not appear in follower feeds
-    return blog.cubeVisibility === CUBE_VISIBILITY.PUBLIC;
-  });
+// Only public cubes' blog posts belong in a feed; private and unlisted ones must not leak.
+// Dev blog announcements belong to no cube and are exempt.
+const isPubliclyVisible = (blog: BlogPost): boolean => {
+  if (!blog) return false;
+  if (blog.cube === DEV_BLOG_CUBE) return true;
+  return blog.cubeVisibility === CUBE_VISIBILITY.PUBLIC;
 };
 
 const dashboardHandler = async (req: Request, res: Response) => {
@@ -112,18 +107,47 @@ const getMoreFeedItemsHandler = async (req: Request, res: Response) => {
     return res.status(401).send({ success: 'false', message: 'Unauthorized' });
   }
 
-  const { lastKey } = req.body;
   const { user } = req;
 
-  const result = await feedDao.getByTo(user.id, lastKey ?? undefined);
+  let cursor = parseFeedCursor(req.body.lastKey);
+  let items: BlogPost[] = [];
 
-  // Filter out blog posts from private cubes that the user doesn't own
-  const filteredItems = filterFeedItemsByPrivacy(result.items || []);
+  // A page can come back empty while records remain — every item in it may be a legacy
+  // DEVBLOG row or a post whose cube has since gone private. The client renders its
+  // "no feed items" state on an empty page and offers no way to advance, so keep fetching
+  // rather than stranding the viewer. Bounded so a long run of hidden records cannot hold
+  // the request open.
+  for (let round = 0; round < MAX_FEED_FETCH_ROUNDS; round += 1) {
+    // Two date-descending streams: what this user follows, and the site-wide announcements
+    // every user gets. Both are bounded by the cursor's date rather than resumed from a
+    // DynamoDB start key, because a merged page consumes a partial page from each.
+    const [personalResult, announcementResult] = await Promise.all([
+      feedDao.getByTo(user.id, undefined, FEED_PAGE_SIZE, cursor?.date),
+      blogDao.queryByCube(DEV_BLOG_CUBE, undefined, FEED_PAGE_SIZE, cursor?.date),
+    ]);
+
+    const merged = mergeFeedStreams({
+      personal: (personalResult.items || []).map((item: any) => item.document).filter(Boolean),
+      personalHasMore: !!personalResult.lastKey,
+      announcements: announcementResult.items || [],
+      announcementsHasMore: !!announcementResult.lastKey,
+      limit: FEED_PAGE_SIZE,
+      cursor,
+      isVisible: isPubliclyVisible,
+    });
+
+    items = merged.items;
+    cursor = merged.cursor;
+
+    if (items.length > 0 || !cursor) {
+      break;
+    }
+  }
 
   return res.status(200).send({
     success: 'true',
-    items: filteredItems.map((item: any) => stripFeedItemDetails(item).document),
-    lastKey: result.lastKey,
+    items: items.map(stripBlogDetails),
+    lastKey: cursor ?? null,
   });
 };
 
