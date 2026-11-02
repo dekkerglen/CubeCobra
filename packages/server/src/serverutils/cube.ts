@@ -12,6 +12,7 @@ import { csvRow } from './csv';
 import { CSVtoCards } from './cubefn';
 import { IMPORT_TOO_LARGE_MESSAGE, MAX_IMPORT_CARDS, parseNonCSVLine } from './importParsing';
 import { handleRouteError, redirect, render } from './render';
+import { exportFileName, mtgoName } from './textExport';
 
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
@@ -291,7 +292,7 @@ const exportToMtgo = (
   sideCards: Card[] | any[][],
   cards?: Card[],
 ) => {
-  res.setHeader('Content-disposition', `attachment; filename=${fileName.replace(/\W/g, '')}.txt`);
+  res.setHeader('Content-disposition', `attachment; filename=${exportFileName(fileName)}.txt`);
   res.setHeader('Content-type', 'text/plain');
   res.charset = 'UTF-8';
 
@@ -302,22 +303,21 @@ const exportToMtgo = (
 };
 
 const exportBoardToMtgo = (res: Response, boardCards: Card[] | any[][], allCards?: Card[]) => {
-  const cardSet: Record<string, number> = {};
+  const cardSet = new Map<string, number>();
   const flatCards = Array.isArray(boardCards[0]) ? boardCards.flat() : boardCards;
 
   for (const cardIndex of flatCards) {
-    const cardID = cardIndex.cardID || allCards?.[cardIndex]?.cardID;
-    if (!cardID) continue;
-    const { name } = cardFromId(cardID);
-    if (cardSet[name]) {
-      cardSet[name] += 1;
-    } else {
-      cardSet[name] = 1;
+    // Boards hold either card objects or indexes into the deck's card list, depending on caller.
+    const card: Card | undefined = cardIndex?.cardID ? cardIndex : allCards?.[cardIndex];
+    if (!card?.cardID) continue;
+    if (!card.details) {
+      card.details = cardFromId(card.cardID);
     }
+    const name = mtgoName(card);
+    cardSet.set(name, (cardSet.get(name) ?? 0) + 1);
   }
-  for (const [key, value] of Object.entries(cardSet)) {
-    const name = key.replace(' // ', '/');
-    res.write(`${value} ${name}\r\n`);
+  for (const [name, count] of cardSet) {
+    res.write(`${count} ${name}\r\n`);
   }
 };
 
