@@ -7,6 +7,7 @@ import { cardFromId, getAllMostReasonable } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { jsonLimiter } from 'serverutils/rateLimiters';
 import { recommendOrThrow } from 'serverutils/ml';
+import { applyUniversesBeyondSetting } from 'serverutils/universesBeyond';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -96,7 +97,10 @@ export const addsHandler = async (req: Request, res: Response) => {
     // tokens; isExcludedFromSmartSearch drops basics, special-zone cards, and
     // Mystery Booster playtest cards. Each eligible oracle maps to one
     // displayable (printing-preferred) card.
-    const eligible = getAllMostReasonable(filter, printingPreference);
+    const eligible = getAllMostReasonable(
+      applyUniversesBeyondSetting(filter, req.user, filterText)!,
+      printingPreference,
+    );
     const eligibleByOracle = new Map<string, CardDetails>();
     for (const card of eligible) {
       const oracleId = card.oracle_id;

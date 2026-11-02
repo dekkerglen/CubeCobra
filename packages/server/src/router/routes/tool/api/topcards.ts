@@ -4,6 +4,7 @@ import { SortDirections, SortDirectionsType } from '@utils/sorting/sortContext';
 import Joi from 'joi';
 import { expensiveGetLimiter } from 'serverutils/rateLimiters';
 import { searchCards } from 'serverutils/tools';
+import { applyUniversesBeyondSetting } from 'serverutils/universesBeyond';
 
 import { NextFunction, Request, Response } from '../../../../types/express';
 
@@ -42,7 +43,7 @@ export const getTopCardsPage = async (req: Request, res: Response) => {
     }
 
     const { data, numResults } = searchCards(
-      filter!, //On error the filter is null, which is handled
+      applyUniversesBeyondSetting(filter, req.user, req.query.f)!, //On error the filter is null, which is handled
       req.query.s as OrderedSortsType,
       parseInt(req.query.p as string, 10),
       req.query.d as SortDirectionsType,

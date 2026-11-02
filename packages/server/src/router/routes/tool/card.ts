@@ -12,6 +12,7 @@ import carddb, {
 } from 'serverutils/carddb';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { hidesUniversesBeyond } from 'serverutils/universesBeyond';
 import { getBaseUrl } from 'serverutils/util';
 import { validate as uuidValidate } from 'uuid';
 
@@ -88,7 +89,7 @@ export const getCardHandler = async (req: Request, res: Response) => {
     }
 
     const printingPreference = (req?.user?.defaultPrinting || DefaultPrintingPreference) as PrintingPreference;
-    const related = getRelatedCards(card.oracle_id, printingPreference);
+    const related = getRelatedCards(card.oracle_id, printingPreference, hidesUniversesBeyond(req.user));
 
     const baseUrl = getBaseUrl();
     const oracleVersions = carddb.oracleToId[card.oracle_id];
