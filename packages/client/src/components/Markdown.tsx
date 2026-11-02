@@ -5,8 +5,7 @@ import { CardDetails } from '@utils/datatypes/Card';
 import { safeHttpUrl } from '@utils/safeUrl';
 import { isInternalURL, isSamePageURL } from '@utils/Util';
 import { slug } from 'github-slugger';
-// @ts-expect-error This library has no types.
-import ReactMarkdown, { MarkdownProps } from 'react-markdown';
+import ReactMarkdown from 'react-markdown';
 import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yDark, a11yLight } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import reactNodeToText from 'utils/reactNodeToText';
@@ -346,7 +345,9 @@ const RENDERERS = {
 };
 
 export interface MarkdownProps {
-  markdown: string;
+  // Nullable by design: the component coerces with `markdown?.toString() ?? ''`, and several callers
+  // pass a value that may be absent.
+  markdown: string | null | undefined;
 }
 
 // Two independent complexity guards, both O(n) pre-scans that swap in a reduced plugin set rather
