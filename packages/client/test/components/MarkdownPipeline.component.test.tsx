@@ -35,3 +35,56 @@ describe('the real Markdown pipeline', () => {
     expect(wrapper).toHaveClass('w-1/2', 'lg:w-1/4');
   });
 });
+
+describe('card images in table cells', () => {
+  const cellWrapper = (markdown: string) =>
+    renderMarkdown(markdown).querySelector('td .markdown-card-image') as HTMLElement;
+
+  it('renders inline-block at a fixed width so the cell alignment applies', () => {
+    const wrapper = cellWrapper('| A |\n| :-: |\n| [[!Hexdrinker]] |\n');
+    expect(wrapper).toHaveClass('inline-block', 'w-44', 'max-w-full');
+    expect(wrapper).not.toHaveClass('w-1/2');
+    expect(wrapper).not.toHaveClass('lg:w-1/4');
+  });
+
+  it.each([
+    ['center', '| A |\n| :-: |\n| [[!Hexdrinker]] |\n'],
+    ['right', '| A |\n| --: |\n| [[!Hexdrinker]] |\n'],
+    ['left', '| A |\n| :-- |\n| [[!Hexdrinker]] |\n'],
+  ])('is alignment-agnostic for a %s-aligned column', (align, markdown) => {
+    const wrapper = cellWrapper(markdown);
+    expect(wrapper).toHaveClass('inline-block');
+    expect(wrapper.closest('td')!.style.textAlign).toBe(align);
+  });
+
+  it('applies inside a cardrow nested in a cell', () => {
+    const wrapper = cellWrapper('| A |\n| :-: |\n| <<[[!Hexdrinker]][[!Lotus Cobra]]>> |\n');
+    expect(wrapper).toHaveClass('inline-block');
+  });
+
+  it('applies to a double-faced card image after prefix stripping', () => {
+    const wrapper = cellWrapper('| A |\n| :-: |\n| [[!//Delver of Secrets]] |\n');
+    expect(wrapper).toHaveClass('inline-block');
+    expect(wrapper.querySelector('a')).toHaveAttribute('href', '/tool/card/Delver%20of%20Secrets');
+  });
+
+  it('flows several images in one cell', () => {
+    const container = renderMarkdown('| A |\n| :-: |\n| [[!Hexdrinker]] [[!Lotus Cobra]] |\n');
+    const wrappers = container.querySelectorAll('td .markdown-card-image');
+    expect(wrappers).toHaveLength(2);
+    wrappers.forEach((w) => expect(w).toHaveClass('inline-block'));
+  });
+
+  it('keeps an image and text in the same cell', () => {
+    const cell = renderMarkdown('| A |\n| :-: |\n| before [[!Hexdrinker]] after |\n').querySelector('td')!;
+    expect(cell).toHaveTextContent('before');
+    expect(cell).toHaveTextContent('after');
+    expect(cell.querySelector('.markdown-card-image')).toBeInTheDocument();
+  });
+
+  it('leaves a card link in a cell alone', () => {
+    const cell = renderMarkdown('| A |\n| :-: |\n| [[Sol Ring]] |\n').querySelector('td')!;
+    expect(cell.querySelector('.markdown-card-image')).not.toBeInTheDocument();
+    expect(cell.querySelector('a')).toHaveTextContent('Sol Ring');
+  });
+});

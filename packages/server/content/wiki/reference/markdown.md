@@ -53,6 +53,9 @@ Add an exclamation point before the card name to display its image instead of a 
 scale with the width of the screen. For double-faced cards, add a slash to show the back side in
 autocard, and a double slash to show the back side as the image.
 
+Inside a table cell an image instead renders at a fixed size and follows the column's alignment, so
+a row of cards stays tidy; the table scrolls sideways if it gets too wide for the screen.
+
 | Source                     | Result                   |
 | -------------------------- | ------------------------ |
 | `[[!Hexdrinker]]`          | [[!Hexdrinker]]          |

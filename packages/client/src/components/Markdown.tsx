@@ -190,6 +190,7 @@ interface RenderCardImageProps {
   id: string;
   dfc?: boolean;
   inParagraph?: boolean;
+  inTable?: boolean;
   showBackImage?: boolean;
 }
 const renderCardImage: React.FC<RenderCardImageProps> = (node) => {
@@ -204,13 +205,23 @@ const renderCardImage: React.FC<RenderCardImageProps> = (node) => {
   }
 
   const tag = node.inParagraph ? 'span' : 'div';
-  return (
-    <div className="w-1/2 lg:w-1/4 p-2 markdown-card-image">
-      <Link href={`/tool/card/${idURL}`} target="_blank" rel="noopener noreferrer">
-        <FoilCardImage autocard card={{ details } as any} className="clickable" wrapperTag={tag} />
-      </Link>
-    </div>
+  const image = (
+    <Link href={`/tool/card/${idURL}`} target="_blank" rel="noopener noreferrer">
+      <FoilCardImage autocard card={{ details } as any} className="clickable" wrapperTag={tag} />
+    </Link>
   );
+
+  /* Table cells size themselves from their contents, so the percentage width used elsewhere resolves
+   * against a width the image itself determines - arbitrary, and collapsing to a few dozen pixels on
+   * a narrow screen. A fixed width sizes predictably and lets the table's own horizontal scroll deal
+   * with narrow viewports. Inline-block (on a span, to keep the cell's inline formatting context)
+   * is also what makes the column's text-align apply; a block box with a set width ignores it.
+   */
+  if (node.inTable) {
+    return <span className="inline-block w-44 max-w-full p-2 align-top markdown-card-image">{image}</span>;
+  }
+
+  return <div className="w-1/2 lg:w-1/4 p-2 markdown-card-image">{image}</div>;
 };
 interface RenderCenteringProps {
   children: ReactNode;
