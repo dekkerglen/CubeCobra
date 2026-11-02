@@ -34,7 +34,7 @@ const Article: React.FC<ArticleProps> = ({ article }) => {
         <Markdown markdown={article.body ?? ''} />
       </CardBody>
       <div className="border-t border-border">
-        <CommentsSection parentType="article" parent={article.id} collapse={false} />
+        <CommentsSection parentType="article" parent={article.id} />
       </div>
     </>
   );

@@ -136,7 +136,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false, 
         </div>
       )}
       <div className="border-t border-border">
-        <CommentsSection parentType="blog" parent={post.id} collapse={false} comments={post.comments} />
+        <CommentsSection parentType="blog" parent={post.id} />
       </div>
     </Card>
   );

@@ -69,7 +69,7 @@ const Podcast: React.FC<PodcastProps> = ({ podcast, episodes }) => {
         )}
       </CardBody>
       <div className="border-top">
-        <CommentsSection parentType="podcast" parent={podcast.id} collapse={false} />
+        <CommentsSection parentType="podcast" parent={podcast.id} />
       </div>
     </>
   );
