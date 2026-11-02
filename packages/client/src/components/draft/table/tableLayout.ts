@@ -1,14 +1,17 @@
 /**
  * Pure geometry for the draft table. Every card on the table is
- * positioned from these numbers (in stage pixels), so the pack fan, the pool
+ * positioned from these numbers (in stage pixels), so the pack, the pool
  * stacks, and the drag hit-testing can never disagree with each other.
  *
- * The stage is split in two: the pack on top, the pool below. The pool is a
- * single band of CMC columns (0..6, 7+) followed by one sideboard column. The
- * pack is a fan, or overlapping rows when that doesn't make the cards much
- * smaller (the pool's columns usually cap the card size first).
+ * Desktop: the pack on top, the pool below. The pack is a fan, overlapping
+ * rows (when that doesn't make the cards much smaller), or a grid of cards side
+ * by side. Cards are sized for the largest pack and the window, so neither the
+ * cards nor the pack area change size as the pack shrinks. The pool is two
+ * bands of CMC columns (0..6, 7+), creatures over everything else, beside one
+ * sideboard column; it grows as tall as its stacks and the page scrolls.
  *
- * Phones show only the pack, as rows of small fans spread across the stage (the pool is in a tray).
+ * Phones show the pack in the top two thirds, as a grid of cards as big as fit,
+ * and the pool below, as one row of stacks that scrolls sideways.
  */
 
 // Height / width of a card image.
@@ -24,6 +27,7 @@ const PAD = 12; // px around the stage edges
 const COLUMN_GAP = 10; // px between pool columns
 const SIDEBOARD_GAP = 32; // px between the last CMC column and the sideboard
 const LABEL_HEIGHT = 22; // px for the column labels above the stacks
+const BAND_GAP = 14; // px between the pool's creature and non-creature bands
 const RAISE = 0.2; // how far a selected pack card lifts
 const PEEK = 0.09; // how far a hovered pack card lifts
 // A fan or row splays its cards: neighbors tilt a SPLAY apart at most, the
@@ -33,26 +37,8 @@ const TILT = 7;
 const FAN_SPLAY = 2.5;
 const FAN_SPACING = 0.78; // fraction of a card width between fan neighbors, at most
 const BAR = 0.112; // visible slice of each card in a pool stack (the name bar)
-const MIN_VISIBLE_BARS = 7; // the card size leaves room for this many bars per stack before the pool scrolls
+const MIN_VISIBLE_BARS = 7; // the card size leaves room for this many bars per stack in the window
 const MIN_CARD_WIDTH = 56;
-// Phones: the pack in rows, each a small fan like the desktop one, running
-// edge to edge and spread from top to bottom of the stage. Cards are a set
-// fraction of the stage width, small enough that a row of four barely
-// overlaps, so every card can be read; the room across is the scarcer, so rows
-// get as few cards as fit the pack in ROW_MAX_ROWS rows, overlapping the row
-// above when the stage is short.
-const ROW_PAD = 3; // px above and below the rows
-const ROW_MAX = 5; // cards per row, at most...
-const ROW_MIN = 3; // ...and at least
-const ROW_MAX_ROWS = 5; // rows, at most, unless a full ROW_MAX a row still needs more
-const ROW_CARD_WIDTH = 0.265; // fraction of the stage width
-const ROW_MAX_GAP = 0.5; // fraction of a card width between cards or rows, at most, so a small pack doesn't fly apart
-const ROW_ARC = 0.05;
-const ROW_TILT = 5;
-const ROW_SPLAY = 2.5;
-const ROW_RAISE = 0.08;
-const ROW_PEEK = 0.03;
-const MIN_ROW_CARD_WIDTH = 40;
 // Desktop: a pack of more than 8 cards in two rows, the lower one over the
 // text box of the upper, so the pool keeps room to show its stacks.
 const DESK_FAN_MAX = 8; // cards in a pack shown as a single fan, at most
@@ -65,14 +51,38 @@ const DESK_ROW_SPLAY = 0.75;
 const DESK_ROW_RAISE = 0.08;
 const DESK_ROW_PEEK = 0.04;
 const DESK_TILT_REACH = Math.sin((DESK_ROW_TILT * Math.PI) / 180);
-const DESK_POOL_MIN_BARS = 4; // the pool shows a card and this many name bars before it scrolls
+const DESK_POOL_MIN_BARS = 4; // the pool shows a card and this many name bars in the window
 // Rows win unless they'd make cards smaller than this fraction of the fan's.
 const DESK_ROWS_MIN_SIZE = 0.9;
+// Desktop grid: the fan's cards side by side, none covering another.
+const DESK_GRID_GAP = 10;
+// Phones: the pack as a grid of cards as big as the stage allows, so they grow
+// as the pack shrinks. A tapped card grows to be read.
+const GRID_PAD = 6; // px around the grid
+const GRID_GAP = 6; // px between cards, at least
+const GRID_MAX_GAP = 0.5; // fraction of a card width between cards or rows, at most, so a small pack doesn't fly apart
+const GRID_MAX_COLUMNS = 6;
+const MIN_GRID_CARD_WIDTH = 40;
+const FOCUS_WIDTH = 0.72; // a tapped card grows to this fraction of the stage width, or as tall as fits
+const FOCUS_LABEL_ROOM = 28; // px kept clear under a grown card for its label
+// Phones, with the pool on the table below the pack.
+const SPLIT_PACK_SHARE = 2 / 3; // of the stage height, for the pack
+export const SPLIT_TABS_HEIGHT = 34; // px for the pool's tabs
+export const SPLIT_LABEL_HEIGHT = 18; // px for the column labels
+const SPLIT_PAD = 6;
+const SPLIT_GAP = 6; // px between the pool's columns
+const SPLIT_CARD_WIDTH = 0.2; // fraction of the stage width a pool card is, at most
+export const SPLIT_SCROLLBAR_HEIGHT = 22; // px at the bottom for the row's scrollbar
+const MIN_SPLIT_CARD_WIDTH = 28;
+
+export type PackLayout = 'fan' | 'grid';
 
 export interface Pose {
   x: number;
   y: number;
   rotate: number;
+  // How much bigger than its size the card is drawn, about its bottom middle (1 when left out).
+  scale?: number;
 }
 
 export interface PackRows {
@@ -93,7 +103,8 @@ export interface PackRows {
   // to this, and squeeze closer when they have too many cards to fit.
   spacing: number;
   // How the rows splay (see splayTilts): the most a card tilts and neighbors
-  // tilt apart (degrees), and how far a card tilted all the way dips (px).
+  // tilt apart (degrees), and how far a card tilted all the way dips (px). All
+  // zero for a grid.
   arc: number;
   tilt: number;
   splay: number;
@@ -102,7 +113,7 @@ export interface PackRows {
 export interface TableGeometry {
   width: number;
   height: number;
-  // The pack is laid out in rows instead of a fan.
+  // The pack is laid out in rows (or a grid) instead of a fan.
   rows: PackRows | null;
   // The middle of the pack area, where a pack is opened and where it gathers into a pile.
   packCenterX: number;
@@ -111,13 +122,14 @@ export interface TableGeometry {
   cardH: number;
   raise: number;
   peek: number;
+  // How much a tapped card grows to be read (phones); 1 where it lifts by `raise` instead.
+  focus: number;
   // Top of the center fan card at rest, and the bottom of the pack region.
   fanTop: number;
   packBottom: number;
-  // The pool band: labels start at poolTop, stacks at stackTop.
+  // The pool: labels start at poolTop, stacks at stackTop.
   poolTop: number;
   stackTop: number;
-  poolBottom: number;
   bar: number;
   columnX: number[];
 }
@@ -133,7 +145,7 @@ const splayTilts = (count: number, tilt: number, splay: number): number[] => {
 };
 
 // How far a splayed card dips: with the square of its tilt, `arc` when it tilts the whole `tilt`.
-const tiltDip = (rotate: number, tilt: number, arc: number) => arc * (rotate / tilt) ** 2;
+const tiltDip = (rotate: number, tilt: number, arc: number) => (tilt > 0 ? arc * (rotate / tilt) ** 2 : 0);
 
 // Widest card that fits all pool columns across.
 const poolFromWidth = (width: number) =>
@@ -148,6 +160,8 @@ const poolColumnX = (width: number, cardW: number) => {
   );
 };
 
+// `height` is the window's room for the table, which only sizes the cards: the
+// pool below the pack grows as tall as it needs.
 const computeFanGeometry = (width: number, height: number): TableGeometry => {
   const fromWidth = poolFromWidth(width);
   // Tallest card that fits the fan plus a pool stack of MIN_VISIBLE_BARS cards.
@@ -175,17 +189,17 @@ const computeFanGeometry = (width: number, height: number): TableGeometry => {
     cardH,
     raise,
     peek: cardH * PEEK,
+    focus: 1,
     fanTop,
     packBottom,
     poolTop,
     stackTop,
-    poolBottom: height - PAD,
     bar: cardH * BAR,
     columnX: poolColumnX(width, cardW),
   };
 };
 
-// The pack in DESK_ROWS rows over the pool, which shows less before it scrolls.
+// The pack in DESK_ROWS rows over the pool, which shows less of itself in the window.
 const computeDeskRowsGeometry = (width: number, height: number, capacity: number): TableGeometry => {
   const rowCount = DESK_ROWS;
   const perRow = Math.ceil(capacity / rowCount);
@@ -233,11 +247,57 @@ const computeDeskRowsGeometry = (width: number, height: number, capacity: number
     cardH,
     raise,
     peek: cardH * DESK_ROW_PEEK,
+    focus: 1,
     fanTop: top,
     packBottom,
     poolTop,
     stackTop: poolTop + LABEL_HEIGHT,
-    poolBottom: height - PAD,
+    bar: cardH * BAR,
+    columnX: poolColumnX(width, cardW),
+  };
+};
+
+// The pack as a grid of `cardW` cards side by side, as many to a row as fit,
+// in as many rows as the largest pack needs.
+const computeDeskGridGeometry = (width: number, height: number, capacity: number, cardW: number): TableGeometry => {
+  const cardH = Math.round(cardW * CARD_ASPECT);
+  const cards = Math.max(1, capacity);
+  const rowWidth = width - 2 * PAD;
+  const fit = Math.max(1, Math.floor((rowWidth + DESK_GRID_GAP) / (cardW + DESK_GRID_GAP)));
+  const rowCount = Math.ceil(cards / fit);
+  const raise = cardH * DESK_ROW_RAISE;
+  const top = PAD + raise;
+  const blockHeight = rowCount * cardH + (rowCount - 1) * DESK_GRID_GAP;
+  const packBottom = top + blockHeight + 8;
+  const poolTop = packBottom + 4;
+
+  return {
+    width,
+    height,
+    rows: {
+      max: Math.ceil(cards / rowCount),
+      centerX: width / 2,
+      width: rowWidth,
+      top,
+      height: blockHeight,
+      rowHeight: cardH,
+      pitch: cardH + DESK_GRID_GAP,
+      spacing: cardW + DESK_GRID_GAP,
+      arc: 0,
+      tilt: 0,
+      splay: 0,
+    },
+    packCenterX: width / 2,
+    packCenterY: top + blockHeight / 2,
+    cardW,
+    cardH,
+    raise,
+    peek: cardH * DESK_ROW_PEEK,
+    focus: 1,
+    fanTop: top,
+    packBottom,
+    poolTop,
+    stackTop: poolTop + LABEL_HEIGHT,
     bar: cardH * BAR,
     columnX: poolColumnX(width, cardW),
   };
@@ -245,76 +305,142 @@ const computeDeskRowsGeometry = (width: number, height: number, capacity: number
 
 /**
  * Desktop: the pack in one fan, or in two overlapping rows when it has more
- * than 8 cards and that doesn't cost much card size, so no card is mostly hidden. Rows are sized for the largest pack
- * (`capacity`) so the layout holds steady as the pack shrinks.
+ * than 8 cards and that doesn't cost much card size, so no card is mostly
+ * hidden; or, as a `grid`, the same cards side by side. Sized for the largest
+ * pack (`capacity`) and the window's room for the table (`height`), so the
+ * layout holds steady as the pack shrinks.
  */
-export const computeGeometry = (width: number, height: number, capacity: number): TableGeometry => {
+export const computeGeometry = (
+  width: number,
+  height: number,
+  capacity: number,
+  layout: PackLayout = 'fan',
+): TableGeometry => {
   const fan = computeFanGeometry(width, height);
-  if (capacity <= DESK_FAN_MAX) return fan;
-  const rows = computeDeskRowsGeometry(width, height, capacity);
-  return rows.cardW >= fan.cardW * DESK_ROWS_MIN_SIZE ? rows : fan;
-};
-
-// A phone row of `perRow` cards: how far its end cards dip (a fraction of the
-// card height), and how far their outer lower corners hang below that (of the card width).
-const rowSag = (perRow: number) => {
-  const tilt = edgeTilt(perRow, ROW_TILT, ROW_SPLAY);
-  return { dip: tiltDip(tilt, ROW_TILT, ROW_ARC), hang: Math.sin((tilt * Math.PI) / 180) / 2 };
+  const rows = capacity > DESK_FAN_MAX ? computeDeskRowsGeometry(width, height, capacity) : null;
+  const fanned = rows && rows.cardW >= fan.cardW * DESK_ROWS_MIN_SIZE ? rows : fan;
+  return layout === 'grid' ? computeDeskGridGeometry(width, height, capacity, fanned.cardW) : fanned;
 };
 
 /**
- * The phone layout: just the pack, in rows of ROW_MIN to ROW_MAX cards, each
- * row a small fan whose end cards reach the edges of the stage. Cards are
- * ROW_CARD_WIDTH of the stage across, and rows take the fewest cards that fit
- * the pack in ROW_MAX_ROWS rows. Laid out for a pack of `count` cards, however
- * big it started; the rows spread from top to bottom, overlapping when there
- * isn't room. The pool's tab sits over the right edge.
+ * The phone layout: just the pack, as a grid with as many columns as make the
+ * cards biggest, so they grow as the pack shrinks. Laid out for a pack of
+ * `count` cards, however big it started; the rows spread from top to bottom
+ * and a short row sits in the middle. A tapped card grows to FOCUS_WIDTH of
+ * the stage so it can be read.
  */
-export const computeRowsGeometry = (width: number, height: number, count: number): TableGeometry => {
+export const computeGridGeometry = (width: number, height: number, count: number): TableGeometry => {
   const cards = Math.max(1, count);
-  const rowCount = Math.ceil(cards / Math.max(ROW_MIN, Math.min(ROW_MAX, Math.ceil(cards / ROW_MAX_ROWS))));
-  const perRow = Math.ceil(cards / rowCount);
-  const cardW = Math.max(MIN_ROW_CARD_WIDTH, Math.floor(width * ROW_CARD_WIDTH));
+  const roomW = width - 2 * GRID_PAD;
+  const roomH = height - 2 * GRID_PAD;
+  let columns = 1;
+  let best = 0;
+  for (let c = 1; c <= Math.min(cards, GRID_MAX_COLUMNS); c += 1) {
+    const rowCount = Math.ceil(cards / c);
+    const fit = Math.min(
+      (roomW - (c - 1) * GRID_GAP) / c,
+      (roomH - (rowCount - 1) * GRID_GAP) / rowCount / CARD_ASPECT,
+    );
+    if (fit > best) {
+      best = fit;
+      columns = c;
+    }
+  }
+  const cardW = Math.max(MIN_GRID_CARD_WIDTH, Math.floor(best));
   const cardH = Math.round(cardW * CARD_ASPECT);
-  const maxGap = cardW * ROW_MAX_GAP;
-
-  const raise = cardH * ROW_RAISE;
-  const top = ROW_PAD + raise;
-  const roomHeight = height - ROW_PAD - top;
-  const { dip, hang } = rowSag(perRow);
-  const rowHeight = cardH * (1 + dip) + cardW * hang;
+  const maxGap = cardW * GRID_MAX_GAP;
+  // Every row keeps a full row's spacing, so a short one lines up under the rest.
+  const spacing = columns > 1 ? Math.min(cardW + maxGap, (roomW - cardW) / (columns - 1)) : 0;
+  const focusW = Math.min(width * FOCUS_WIDTH, (roomH - FOCUS_LABEL_ROOM) / CARD_ASPECT);
 
   return {
     width,
     height,
     rows: {
-      max: perRow,
+      max: columns,
       centerX: width / 2,
-      width,
-      top,
-      height: roomHeight,
-      rowHeight,
-      pitch: rowHeight + maxGap,
-      spacing: cardW + maxGap,
-      arc: cardH * ROW_ARC,
-      tilt: ROW_TILT,
-      splay: ROW_SPLAY,
+      width: roomW,
+      top: GRID_PAD,
+      height: roomH,
+      rowHeight: cardH,
+      pitch: cardH + maxGap,
+      spacing,
+      arc: 0,
+      tilt: 0,
+      splay: 0,
     },
     packCenterX: width / 2,
-    packCenterY: top + roomHeight / 2,
+    packCenterY: height / 2,
     cardW,
     cardH,
-    raise,
-    peek: cardH * ROW_PEEK,
-    fanTop: top,
+    raise: 0,
+    peek: 0,
+    focus: Math.max(1, focusW / cardW),
+    fanTop: GRID_PAD,
     packBottom: height,
     // No pool on the stage.
     poolTop: height,
     stackTop: height,
-    poolBottom: height,
     bar: cardH * BAR,
     columnX: [],
   };
+};
+
+/** Phones with the pool on the table: the height of the pack's part, at the top. */
+export const splitPackHeight = (height: number) => Math.round(height * SPLIT_PACK_SHARE);
+
+// Phones with the pool on the table: the pool's part of the stage, below the pack.
+export interface SplitPool {
+  // The panel's top, where its tabs are; the labels, then the stacks, start below them.
+  top: number;
+  labelTop: number;
+  stackTop: number;
+  cardW: number;
+  cardH: number;
+  bar: number;
+  // In the row's own coordinates, which scroll sideways.
+  columnX: number[];
+  contentWidth: number;
+}
+
+/**
+ * The pool under the pack on a phone: `columns` stacks in one row, as wide as
+ * SPLIT_CARD_WIDTH of the stage, scrolling sideways when they don't fit across.
+ * Cards get smaller when the tallest stack (of `tallest` cards) would run off the
+ * bottom, so every name stays in view.
+ */
+export const computeSplitPool = (width: number, height: number, columns: number, tallest: number): SplitPool => {
+  const top = splitPackHeight(height);
+  const labelTop = top + SPLIT_TABS_HEIGHT;
+  const stackTop = labelTop + SPLIT_LABEL_HEIGHT;
+  const room = height - SPLIT_SCROLLBAR_HEIGHT - stackTop;
+  const fromHeight = room / (1 + (Math.max(1, tallest) - 1) * BAR) / CARD_ASPECT;
+  const cardW = Math.max(MIN_SPLIT_CARD_WIDTH, Math.floor(Math.min(width * SPLIT_CARD_WIDTH, fromHeight)));
+  const cardH = Math.round(cardW * CARD_ASPECT);
+  const columnX = Array.from({ length: columns }, (_, c) => SPLIT_PAD + c * (cardW + SPLIT_GAP));
+  const contentWidth = 2 * SPLIT_PAD + columns * cardW + Math.max(0, columns - 1) * SPLIT_GAP;
+  return { top, labelTop, stackTop, cardW, cardH, bar: cardH * BAR, columnX, contentWidth };
+};
+
+/** Where a card sits in a stack of the split pool, in the row's coordinates. */
+export const splitSlot = (pool: SplitPool, column: number, index: number): Pose => ({
+  x: pool.columnX[column],
+  y: pool.stackTop + index * pool.bar,
+  rotate: 0,
+});
+
+/** The split pool's column under a card centered at `centerX` (the row's coordinates), or null between or outside them. */
+export const splitColumnAt = (pool: SplitPool, centerX: number): number | null => {
+  let best: number | null = null;
+  let bestDistance = pool.cardW * 0.75;
+  pool.columnX.forEach((x, c) => {
+    const distance = Math.abs(x + pool.cardW / 2 - centerX);
+    if (distance < bestDistance) {
+      best = c;
+      bestDistance = distance;
+    }
+  });
+  return best;
 };
 
 /** Resting poses for a fan of `count` cards, left to right. */
@@ -360,6 +486,17 @@ export const packSlots = (g: TableGeometry, count: number): Pose[] => {
   return slots;
 };
 
+/** A tapped card on a phone, grown to be read: centered on its spot, kept on the stage with room for its label below. */
+export const focusPose = (g: TableGeometry, base: Pose): Pose => {
+  const scale = g.focus;
+  const w = g.cardW * scale;
+  const h = g.cardH * scale;
+  const left = Math.max(GRID_PAD, Math.min(g.width - GRID_PAD - w, base.x + (g.cardW - w) / 2));
+  const top = Math.max(GRID_PAD, Math.min(g.height - GRID_PAD - FOCUS_LABEL_ROOM - h, base.y + (g.cardH - h) / 2));
+  // Cards grow about their bottom middle, so put the card where that lands the grown one there.
+  return { x: left + (w - g.cardW) / 2, y: top + h - g.cardH, rotate: 0, scale };
+};
+
 /** Which of `count` pack slots is closest to a card centered at (centerX, centerY); a fan only looks across. */
 export const nearestPackSlot = (g: TableGeometry, count: number, centerX: number, centerY: number): number => {
   let best = 0;
@@ -375,22 +512,45 @@ export const nearestPackSlot = (g: TableGeometry, count: number, centerX: number
   return best;
 };
 
+/** How tall a pool stack of `count` cards is; an empty one still has room for a card to drop into. */
+export const poolStackHeight = (g: TableGeometry, count: number) => g.cardH + (Math.max(1, count) - 1) * g.bar;
+
 /**
- * Where a card sits in a pool stack, in pool content coordinates: stacks never
- * compress, so a tall stack runs past the bottom and the pool scrolls instead.
+ * Where the pool's two bands start: the creatures at the top, everything else
+ * below the tallest creature stack (of `tallestCreatures` cards).
  */
-export const stackSlot = (g: TableGeometry, column: number, index: number): Pose => ({
+export const poolBandTops = (g: TableGeometry, tallestCreatures: number): [number, number] => [
+  g.stackTop,
+  g.stackTop + poolStackHeight(g, tallestCreatures) + BAND_GAP,
+];
+
+/**
+ * The bottom of the pool's cards: the lower band's tallest stack, or the
+ * sideboard's when it runs longer. Stacks never squeeze; the table grows instead.
+ */
+export const poolBottom = (
+  g: TableGeometry,
+  bandTops: [number, number],
+  tallestOthers: number,
+  sideboardCount: number,
+): number => Math.max(bandTops[1] + poolStackHeight(g, tallestOthers), g.stackTop + poolStackHeight(g, sideboardCount));
+
+/** Where a card sits in a pool stack: a CMC column has a stack in each band, the sideboard one from the top. */
+export const stackSlot = (
+  g: TableGeometry,
+  bandTops: [number, number],
+  column: number,
+  band: number,
+  index: number,
+): Pose => ({
   x: g.columnX[column],
-  y: g.stackTop + index * g.bar,
+  y: (column === SIDEBOARD_COLUMN ? g.stackTop : bandTops[band]) + index * g.bar,
   rotate: 0,
 });
 
-/** How far the pool can scroll so the tallest stack (of `tallest` cards) is fully visible. */
-export const maxPoolScroll = (g: TableGeometry, tallest: number): number => {
-  if (tallest <= 0) return 0;
-  const contentBottom = g.stackTop + (tallest - 1) * g.bar + g.cardH;
-  return Math.max(0, Math.ceil(contentBottom - g.poolBottom));
-};
+/** Which band of a CMC column a card whose top edge is at `top` belongs to. */
+export const poolBandAt = (g: TableGeometry, bandTops: [number, number], top: number): number =>
+  top + g.bar * 0.5 >= bandTops[1] ? 1 : 0;
 
 /** Where a pack gathers into a pile before it is passed on or laid out. */
 export const gatherPose = (g: TableGeometry): Pose => ({
@@ -413,9 +573,6 @@ export const columnAt = (g: TableGeometry, centerX: number): number | null => {
   return best;
 };
 
-/**
- * Where a card whose top edge is at `top` (pool content coordinates) would be
- * inserted into a stack currently holding `count` cards.
- */
-export const stackInsertIndex = (g: TableGeometry, top: number, count: number): number =>
-  Math.max(0, Math.min(count, Math.round((top - g.stackTop) / g.bar)));
+/** Where a card whose top edge is at `top` would be inserted into a stack of `count` cards starting at `stackTop`. */
+export const stackInsertIndex = (g: TableGeometry, stackTop: number, top: number, count: number): number =>
+  Math.max(0, Math.min(count, Math.round((top - stackTop) / g.bar)));

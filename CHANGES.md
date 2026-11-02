@@ -162,3 +162,20 @@ The changes here are concise, one liners to be put in a future user facing blogp
 - Cards added to a cube from Smart Search, card pages, or the cube tray now get the cube's Default Status instead of always being marked Owned.
 - On a cube's list page, each view in the sidebar now shows how many cards it holds across its boards.
 - Basic lands in draft record decks now use the printing from your cube's Basics board, custom art included, instead of switching to a default printing when the deck was uploaded.
+- On phones, a draft pack is now a grid of cards that get bigger as the pack gets smaller, and tapping a card enlarges it so you can read it before tapping again to draft it.
+- On phones, the draft's pool button is now at the top right, where picks fly into it, and the menu is at the top left.
+- On desktop, a switch in the draft's header shows the pack fanned out or as a grid where no card covers another.
+- On desktop, your picks during a draft are now split into a row of creatures and a row of everything else, like in the deckbuilder.
+- On desktop, the draft and the deckbuilder no longer scroll inside the table: the table grows with your cards and the page scrolls.
+- On phones, you can pinch the deckbuilder to make the cards bigger or smaller.
+- On phones, a card you draft stays in front of the rest of the pack as it shrinks into your pool, instead of other cards flashing over it.
+- On phones, the rest of a draft pack now stays where it is after you draft a card, instead of rearranging and resizing before it's passed on.
+- On phones, moving a card between your mainboard and sideboard in the draft's pool now slides the cards below it into place instead of jumping.
+- On phones, the main menu and Your Cubes drawers now have a title at the top, and the main menu keeps your account at the bottom, always in view, while the rest scrolls.
+- On phones, a button in the draft's pool can move your pool onto the table under the pack: a row of card stacks you can scroll sideways, drag cards between, and drop picks into, with the cards shrinking when a stack gets too tall to fit.
+- On desktop, the rest of a draft pack now stays where it is after you draft a card, instead of sliding together before it's passed on.
+- In the phone deckbuilder, cards now pick up as soon as you drag them instead of needing a long press, and a scrollbar at the bottom of the screen scrolls the deck sideways.
+- On phones, your draft pool now always sits on the table under the pack, and the pool button in the draft's header is replaced by one that scrolls the draft back to fill the screen.
+- On phones, swiping sideways through your draft pool no longer scrolls the page up and down.
+- In the phone draft, cards now pick up as soon as you drag them, so you can rearrange the pack and drop picks into your pool like on desktop, and a scrollbar under your pool scrolls it sideways.
+- On phones, the Tap to draft label now sits under the enlarged card instead of over its rules text.

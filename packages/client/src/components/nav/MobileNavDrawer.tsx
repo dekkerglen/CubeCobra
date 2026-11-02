@@ -247,74 +247,74 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
     </div>
   );
 
+  // The rows scroll under the title; the account sits below them, always in view.
   const leftContent = (
-    <div className="flex flex-col">
-      {profileBlock}
+    <div className="flex min-h-0 flex-1 flex-col">
+      <div className="min-h-0 flex-1 overflow-y-auto p-2">
+        <NavRow row={{ label: 'Home', href: '/', icon: HomeIcon }} pathname={pathname} />
+        {user && (
+          <NavRow
+            row={{ label: 'Notifications', href: '/user/notifications', icon: BellFillIcon }}
+            pathname={pathname}
+            // render.ts forwards unread notifications through getByToAndStatus, which caps at 99, so
+            // the overflow form is defensive rather than reachable.
+            badge={unread > 0 ? (unread > 99 ? '99+' : `${unread}`) : undefined}
+          />
+        )}
+        {[...browseRows, ...dailyRows].map((row) => (
+          <NavRow key={row.href} row={row} pathname={pathname} />
+        ))}
+        {user && (
+          <>
+            <NavRow row={{ label: 'Profile', href: `/user/view/${user.id}`, icon: PersonIcon }} pathname={pathname} />
+            <NavRow row={{ label: 'Settings', href: '/user/account', icon: GearIcon }} pathname={pathname} />
+          </>
+        )}
+        {roleRows
+          .filter(({ role }) => user?.roles?.includes(role))
+          .map(({ row }) => (
+            <NavRow key={row.href} row={row} pathname={pathname} />
+          ))}
 
-      <Divider />
+        <Divider />
 
-      <NavRow row={{ label: 'Home', href: '/', icon: HomeIcon }} pathname={pathname} />
-      {user && (
-        <NavRow
-          row={{ label: 'Notifications', href: '/user/notifications', icon: BellFillIcon }}
-          pathname={pathname}
-          // render.ts forwards unread notifications through getByToAndStatus, which caps at 99, so
-          // the overflow form is defensive rather than reachable.
-          badge={unread > 0 ? (unread > 99 ? '99+' : `${unread}`) : undefined}
-        />
-      )}
-      {[...browseRows, ...dailyRows].map((row) => (
-        <NavRow key={row.href} row={row} pathname={pathname} />
-      ))}
-      {user && (
-        <>
-          <NavRow row={{ label: 'Profile', href: `/user/view/${user.id}`, icon: PersonIcon }} pathname={pathname} />
-          <NavRow row={{ label: 'Settings', href: '/user/account', icon: GearIcon }} pathname={pathname} />
-        </>
-      )}
-      {roleRows
-        .filter(({ role }) => user?.roles?.includes(role))
-        .map(({ row }) => (
+        {siteRows.map((row) => (
           <NavRow key={row.href} row={row} pathname={pathname} />
         ))}
 
-      <Divider />
-
-      {siteRows.map((row) => (
-        <NavRow key={row.href} row={row} pathname={pathname} />
-      ))}
-
-      {/* Signed-in only: a visitor is offered Sign in and Create account at the top instead. The
+        {/* Signed-in only: a visitor is offered Sign in and Create account at the top instead. The
           account page keeps its own logout, so this is a second route to it rather than the only
           one. */}
-      {user && (
-        <>
-          <Divider />
-          <LogoutRow />
-        </>
-      )}
+        {user && (
+          <>
+            <Divider />
+            <LogoutRow />
+          </>
+        )}
 
-      <Divider />
+        <Divider />
 
-      <div className="flex flex-row flex-wrap gap-x-4 gap-y-1 px-3 pb-2 text-sm">
-        <a href="/privacy" className="text-link">
-          Privacy Policy
-        </a>
-        <a href="/tos" className="text-link">
-          Terms &amp; Conditions
-        </a>
+        <div className="flex flex-row flex-wrap gap-x-4 gap-y-1 px-3 pb-2 text-sm">
+          <a href="/privacy" className="text-link">
+            Privacy Policy
+          </a>
+          <a href="/tos" className="text-link">
+            Terms &amp; Conditions
+          </a>
+        </div>
       </div>
+
+      <div className="shrink-0 border-t border-border p-2">{profileBlock}</div>
     </div>
   );
 
   // Nothing at all for a signed-out visitor: every destination here is personal, and user.id is
   // never read without a user.
   const rightContent = user ? (
-    <div className="flex min-h-0 flex-1 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col p-2">
       {/* min-h-0 is load-bearing: a flex item's automatic minimum size is its content, so without
           it a full cube list refuses to shrink and pushes the action block off the panel. */}
       <div className="flex-1 min-h-0 overflow-y-auto" data-testid="mobile-nav-cube-list">
-        <SectionHeading>Your Cubes</SectionHeading>
         {(user.cubes || []).length > 0 ? (
           (user.cubes || []).map((cube) => <CubeRow key={cube.id} cube={cube} />)
         ) : (
@@ -382,7 +382,7 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
             <DialogPanel
               as="nav"
               className={classNames(
-                'fixed inset-y-0 flex w-[82%] max-w-xs flex-col overflow-hidden border-border bg-bg-accent p-2',
+                'fixed inset-y-0 flex w-[82%] max-w-xs flex-col overflow-hidden border-border bg-bg-accent',
                 side === 'left' ? 'left-0 border-r' : 'right-0 border-l',
               )}
               // The NitroPay anchor is a fixed-bottom 320x50 third-party iframe that paints above
@@ -395,28 +395,20 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
                   side is empty exactly when MobileNav withholds the button that opens it. */}
               {panelContent && (
                 <>
-                  {/* Dismissal affordance matching the cube list's Edit sidebar: the chevron sits
-                      on the panel's inner edge and points the way the panel leaves. */}
-                  <div
-                    className={classNames(
-                      'flex shrink-0 items-center',
-                      side === 'left' ? 'justify-end' : 'justify-start',
-                    )}
-                  >
+                  {/* The title row, like the draft pool's tray: a close chevron pointing the way the
+                      panel leaves, then the drawer's name. */}
+                  <div className="flex shrink-0 items-center gap-3 border-b border-border px-4 py-3">
                     <button
                       type="button"
                       onClick={() => setOpen(false)}
                       aria-label={side === 'left' ? 'Close menu' : 'Close cubes'}
-                      className="cursor-pointer rounded-md p-2 text-text-secondary transition-colors hover:bg-bg-active hover:text-text"
+                      className="cursor-pointer text-text transition-colors hover:text-text-secondary"
                     >
                       {side === 'left' ? <ChevronLeftIcon size={20} /> : <ChevronRightIcon size={20} />}
                     </button>
+                    <h2 className="text-lg font-semibold">{side === 'left' ? 'Menu' : 'Your Cubes'}</h2>
                   </div>
-                  {side === 'left' ? (
-                    <div className="min-h-0 flex-1 overflow-y-auto">{panelContent}</div>
-                  ) : (
-                    panelContent
-                  )}
+                  {panelContent}
                 </>
               )}
             </DialogPanel>

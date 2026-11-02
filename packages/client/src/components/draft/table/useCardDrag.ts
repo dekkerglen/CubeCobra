@@ -28,6 +28,9 @@ export interface DragSession {
   // that zone's content coordinates until it's dropped.
   zone: string;
   scroll: MotionValue<number> | null;
+  // The zone's own sideways scroll, when it has one apart from the table's; x is
+  // in its content coordinates. Left out, the card goes with the table's.
+  scrollX?: MotionValue<number> | null;
   pointerId: number;
   // press: mouse down, becomes a drag once it moves. hold: touch down, becomes a
   // drag if held in place or a pan if it moves first. pan: scrolling the table.
@@ -44,8 +47,11 @@ export interface DragSession {
   // Latest pointer position, for scrolling a region while the card is held at its edge.
   pointerX: number;
   pointerY: number;
-  // Panning: the region being scrolled vertically, and recent positions for momentum.
+  // Panning: the regions being scrolled vertically and sideways, the one axis the
+  // swipe keeps to (the way it started), and recent positions for momentum.
   panRegion: ScrollRegion | null;
+  panX: HorizontalScroll | null;
+  panAxis: 'x' | 'y';
   panSamples: { t: number; x: number; y: number }[];
 }
 
@@ -58,7 +64,9 @@ export interface ActiveDrag<T> {
 export interface CardDragOptions<T> {
   stageRef: React.RefObject<HTMLDivElement | null>;
   // Where a card is picked up from, read when the pointer goes down; null if it can't be picked up.
-  locate: (id: SpriteId) => { zone: string; scroll: MotionValue<number> | null } | null;
+  locate: (
+    id: SpriteId,
+  ) => { zone: string; scroll: MotionValue<number> | null; scrollX?: MotionValue<number> | null } | null;
   // What a card drawn at this position (stage coordinates of its top-left) would drop onto.
   target: (session: DragSession, left: number, top: number) => T | null;
   sameTarget: (a: T | null, b: T | null) => boolean;
@@ -70,10 +78,16 @@ export interface CardDragOptions<T> {
   scrollRegions?: () => ScrollRegion[];
   // The table's sideways scroll, if it has one.
   horizontal?: () => HorizontalScroll | null;
+  // A part of the table that scrolls sideways on its own, at a point on the stage:
+  // swiping there scrolls it, and so does holding a card at its left or right edge.
+  horizontalAt?: (x: number, y: number) => HorizontalScroll | null;
   // The table is taller than its view and something around it does the vertical
   // scrolling: the page (window), or a scrolling panel the table sits in. Holding
   // a card near the top or bottom of that view scrolls it.
   verticalScroller?: () => HTMLElement | Window | null;
+  // A touch on a card picks it up as soon as it moves, as a mouse does, rather
+  // than after being held in place (when a swipe scrolls the table instead).
+  touchPicksUp?: boolean;
 }
 
 const TILT_SPRING = { type: 'spring', stiffness: 380, damping: 24 } as const;
@@ -130,8 +144,10 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
   const [drag, setDrag] = useState<ActiveDrag<T> | null>(null);
 
   const api = useMemo(() => {
-    const scrollX = () => latest.current.horizontal?.()?.scroll.get() ?? 0;
-    const drawnLeft = (handle: SpriteHandle) => handle.x.get() - scrollX();
+    // How far a card's zone is scrolled sideways: its own scroll, or the table's.
+    const offsetX = (s: Pick<DragSession, 'scrollX'> | null) =>
+      s?.scrollX !== undefined ? (s.scrollX?.get() ?? 0) : (latest.current.horizontal?.()?.scroll.get() ?? 0);
+    const drawnLeft = (s: Pick<DragSession, 'scrollX'> | null, handle: SpriteHandle) => handle.x.get() - offsetX(s);
     const drawnTop = (s: DragSession, handle: SpriteHandle) => handle.y.get() - (s.scroll?.get() ?? 0);
     const heldCard = (s: DragSession | null) =>
       s?.mode === 'drag' && s.id !== null ? handles.current.get(s.id) : undefined;
@@ -139,7 +155,7 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
     const retarget = (s: DragSession, handle: SpriteHandle) => {
       if (s.id === null) return;
       const { target, sameTarget } = latest.current;
-      const next = target(s, drawnLeft(handle), drawnTop(s, handle));
+      const next = target(s, drawnLeft(s, handle), drawnTop(s, handle));
       const id = s.id;
       setDrag((prev) => {
         if (!prev) return { id, zone: s.zone, target: next };
@@ -157,13 +173,20 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
       retarget(s, handle);
     };
 
-    // The table scrolled sideways under an active drag; every card moves with it.
-    const scrolledX = (delta: number) => {
+    // Something scrolled sideways under an active drag: a card picked up from
+    // what scrolled moves with it, so hold it under the pointer, then re-aim.
+    const scrolledAlong = (scroll: MotionValue<number>, delta: number) => {
       const s = session.current;
       const handle = heldCard(s);
       if (!s || !handle) return;
-      handle.x.set(handle.x.get() + delta);
+      const own = s.scrollX !== undefined ? s.scrollX : (latest.current.horizontal?.()?.scroll ?? null);
+      if (own === scroll) handle.x.set(handle.x.get() + delta);
       retarget(s, handle);
+    };
+    // The table scrolled sideways.
+    const scrolledX = (delta: number) => {
+      const table = latest.current.horizontal?.();
+      if (table) scrolledAlong(table.scroll, delta);
     };
 
     // The scrolling region at a point on the stage. A point past the stage's
@@ -188,7 +211,7 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
 
     // Put the held card under the pointer (stage and scroll positions may have changed).
     const follow = (s: DragSession, handle: SpriteHandle) => {
-      handle.x.set(s.pointerX - s.stageLeft - s.grabX + scrollX());
+      handle.x.set(s.pointerX - s.stageLeft - s.grabX + offsetX(s));
       handle.y.set(s.pointerY - s.stageTop - s.grabY + (s.scroll?.get() ?? 0));
     };
 
@@ -227,7 +250,7 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
         }
       }
 
-      const horizontal = latest.current.horizontal?.();
+      const horizontal = latest.current.horizontalAt?.(px, py) ?? latest.current.horizontal?.();
       let speedX = 0;
       if (horizontal && horizontal.max > 0) {
         const width = stage.clientWidth;
@@ -244,7 +267,7 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
         if (next !== before) {
           horizontal.scroll.stop();
           horizontal.scroll.set(next);
-          scrolledX(next - before);
+          scrolledAlong(horizontal.scroll, next - before);
         }
       }
 
@@ -292,12 +315,16 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
       edgeFrame.current = requestAnimationFrame((time) => edgeScroll(time, now));
     };
 
-    // Swiping scrolls the table sideways and the region under the finger
-    // vertically; once that region can't go further, whatever holds the table scrolls instead.
+    // A swipe across scrolls what's under the finger sideways, and nothing else; a
+    // swipe down scrolls the region under the finger, and once that can't go
+    // further, whatever holds the table.
     const panBy = (s: DragSession, dx: number, dy: number) => {
-      const horizontal = latest.current.horizontal?.();
-      if (horizontal && horizontal.max > 0)
-        horizontal.scroll.set(clamp(horizontal.scroll.get() - dx, 0, horizontal.max));
+      const horizontal = s.panX;
+      if (s.panAxis === 'x') {
+        if (horizontal && horizontal.max > 0)
+          horizontal.scroll.set(clamp(horizontal.scroll.get() - dx, 0, horizontal.max));
+        return;
+      }
       let leftover = -dy;
       const region = s.panRegion;
       if (region && region.max > 0) {
@@ -325,12 +352,12 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
         bounceStiffness: 400,
         bounceDamping: 40,
       } as const;
-      const horizontal = latest.current.horizontal?.();
-      if (horizontal && horizontal.max > 0 && Math.abs(vx) > 50) {
+      const horizontal = s.panX;
+      if (s.panAxis === 'x' && horizontal && horizontal.max > 0 && Math.abs(vx) > 50) {
         animate(horizontal.scroll, horizontal.scroll.get(), { ...inertia, velocity: -vx, min: 0, max: horizontal.max });
       }
       const region = s.panRegion;
-      if (region && region.max > 0 && Math.abs(vy) > 50) {
+      if (s.panAxis === 'y' && region && region.max > 0 && Math.abs(vy) > 50) {
         animate(region.scroll, region.scroll.get(), { ...inertia, velocity: -vy, min: 0, max: region.max });
       }
     };
@@ -364,6 +391,11 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
           if (holdTimer.current) clearTimeout(holdTimer.current);
           s.mode = 'pan';
           s.panRegion = regionAt(s.startX - s.stageLeft, s.startY - s.stageTop) ?? null;
+          s.panX =
+            latest.current.horizontalAt?.(s.startX - s.stageLeft, s.startY - s.stageTop) ??
+            latest.current.horizontal?.() ??
+            null;
+          s.panAxis = Math.abs(event.clientX - s.startX) > Math.abs(event.clientY - s.startY) ? 'x' : 'y';
         }
       }
 
@@ -405,7 +437,7 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
         return;
       }
       const handle = heldCard(s);
-      if (handle) latest.current.drop(s, latest.current.target(s, drawnLeft(handle), drawnTop(s, handle)));
+      if (handle) latest.current.drop(s, latest.current.target(s, drawnLeft(s, handle), drawnTop(s, handle)));
       setDrag(null);
     }
 
@@ -417,9 +449,11 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
     }
 
     // A touch stops any coasting, like it would in a native scroller.
-    const stopCoasting = () => {
+    const stopCoasting = (event: React.PointerEvent<HTMLDivElement>) => {
       latest.current.horizontal?.()?.scroll.stop();
       (latest.current.scrollRegions?.() ?? []).forEach((region) => region.scroll.stop());
+      const rect = latest.current.stageRef.current?.getBoundingClientRect();
+      if (rect) latest.current.horizontalAt?.(event.clientX - rect.left, event.clientY - rect.top)?.scroll.stop();
     };
 
     const startSession = (event: React.PointerEvent<HTMLDivElement>, fields: Partial<DragSession>) => {
@@ -443,6 +477,8 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
         pointerX: event.clientX,
         pointerY: event.clientY,
         panRegion: null,
+        panX: null,
+        panAxis: 'y',
         panSamples: [],
         ...fields,
       };
@@ -462,13 +498,15 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
       if (!stage || !handle || !from) return;
       event.preventDefault();
       event.stopPropagation();
-      stopCoasting();
+      stopCoasting(event);
       const rect = stage.getBoundingClientRect();
       const s = startSession(event, {
         id,
+        ...(latest.current.touchPicksUp ? { mode: 'press' as const } : {}),
         zone: from.zone,
         scroll: from.scroll,
-        grabX: event.clientX - rect.left - drawnLeft(handle),
+        ...(from.scrollX !== undefined ? { scrollX: from.scrollX } : {}),
+        grabX: event.clientX - rect.left - drawnLeft(from, handle),
         grabY: event.clientY - rect.top - (handle.y.get() - (from.scroll?.get() ?? 0)),
       });
       if (s?.mode === 'hold') {
@@ -483,13 +521,20 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
     // Touching an empty part of the table scrolls it.
     const backgroundPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
       if (event.pointerType !== 'touch' || session.current || event.target !== event.currentTarget) return;
-      stopCoasting();
+      stopCoasting(event);
       startSession(event, {});
     };
 
     const isDragging = () => session.current?.mode === 'drag';
 
-    return { pointerDown, backgroundPointerDown, scrolled, scrolledX, isDragging, end };
+    // Something else takes over the pointer (a pinch): drop whatever was held where it came from.
+    const cancelSession = () => {
+      if (!session.current) return;
+      end();
+      setDrag(null);
+    };
+
+    return { pointerDown, backgroundPointerDown, scrolled, scrolledX, isDragging, cancelSession, end };
   }, []);
 
   useEffect(() => api.end, [api]);
@@ -502,6 +547,7 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
     scrolled: api.scrolled,
     scrolledX: api.scrolledX,
     isDragging: api.isDragging,
+    cancel: api.cancelSession,
   };
 };
 
@@ -567,21 +613,4 @@ export const useClampScroll = (scroll: MotionValue<number>, max: number) => {
   useEffect(() => {
     if (scroll.get() > max) animate(scroll, max, { duration: 0.25, ease: 'easeOut' });
   }, [scroll, max]);
-};
-
-/** Scroll so content spanning [top, bottom] (content coordinates) is inside the view [viewTop, viewBottom]. */
-export const revealInView = (
-  scroll: MotionValue<number>,
-  top: number,
-  bottom: number,
-  viewTop: number,
-  viewBottom: number,
-  max: number,
-) => {
-  const current = scroll.get();
-  let next = current;
-  if (bottom - next > viewBottom) next = bottom - viewBottom;
-  if (top - next < viewTop) next = top - viewTop;
-  next = Math.max(0, Math.min(max, next));
-  if (next !== current) animate(scroll, next, { type: 'spring', stiffness: 220, damping: 30 });
 };

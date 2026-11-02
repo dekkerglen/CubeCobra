@@ -49,10 +49,6 @@ export interface ExitPlan {
   gatherX: number;
   gatherY: number;
   trashed: Set<SpriteId>;
-  // On phones the pool isn't on the table: a pick shrinks into the pool's tab, centered here.
-  picked: Set<SpriteId>;
-  pickedX: number;
-  pickedY: number;
   // A passed pack just goes, without gathering and sliding off (the player turned animations off).
   passInstantly: boolean;
 }
@@ -94,6 +90,8 @@ interface CardSpriteProps {
   held?: boolean;
   // 'pan-y' lets a vertical swipe on the card scroll the page natively (phone deckbuilder).
   touchAction?: 'none' | 'pan-y';
+  // Go straight to the pose without easing (following a pinch).
+  instant?: boolean;
   highlight: 'selected' | 'top' | 'armed' | null;
   // An ability ready to use: the card rocks gently in place.
   rocking?: boolean;
@@ -156,6 +154,7 @@ const CardSprite: React.FC<CardSpriteProps> = ({
   dragged,
   held = false,
   touchAction = 'none',
+  instant = false,
   highlight,
   rocking = false,
   faceDown = false,
@@ -169,14 +168,19 @@ const CardSprite: React.FC<CardSpriteProps> = ({
   const y = useMotionValue(enterFrom?.y ?? pose.y);
   const rotate = useMotionValue(enterFrom?.rotate ?? pose.rotate);
   const opacity = useMotionValue(enterFrom?.opacity ?? 1);
-  const scale = useMotionValue(1);
+  const scale = useMotionValue(enterFrom ? (enterFrom.scale ?? 1) : (pose.scale ?? 1));
   // Cards in a scrolling zone are drawn shifted up by its scroll.
   const offset = useMotionValue(0);
   const drawnY = useTransform([y, offset], ([value, shift]: number[]) => value - shift);
-  const noScrollX = useMotionValue(0);
-  const drawnX = useTransform([x, scrollX ?? noScrollX], ([value, shift]: number[]) => value - shift);
+  const offsetX = useMotionValue(0);
+  const drawnX = useTransform([x, offsetX], ([value, shift]: number[]) => value - shift);
+  // Size eases too, for a card moving to a zone where cards are drawn smaller.
+  const drawnWidth = useMotionValue(width);
+  const drawnHeight = useMotionValue(height);
   const clipPath = useMotionValue('none');
   const [isPresent, safeToRemove] = usePresence();
+  // A trashed card dropping away stays over every resting card on its way out.
+  const leavingAlone = !isPresent && exitPlan?.current.trashed.has(id);
 
   // Still travelling after a drop or a move between zones; it isn't clipped to
   // its zone's view until it lands.
@@ -207,6 +211,39 @@ const CardSprite: React.FC<CardSpriteProps> = ({
     offset.set(scroll.get());
     return scroll.on('change', (value) => offset.set(value));
   }, [scroll, y, offset]);
+  // The same sideways, for a zone that scrolls on its own (or with the table).
+  const linkedScrollX = useRef<MotionValue<number> | null | undefined>(undefined);
+  useLayoutEffect(() => {
+    const was = linkedScrollX.current;
+    linkedScrollX.current = scrollX;
+    if (was !== undefined && was !== scrollX) x.jump(x.get() - (was?.get() ?? 0) + (scrollX?.get() ?? 0));
+    if (!scrollX) {
+      offsetX.set(0);
+      return undefined;
+    }
+    offsetX.set(scrollX.get());
+    return scrollX.on('change', (value) => offsetX.set(value));
+  }, [scrollX, x, offsetX]);
+
+  useEffect(() => {
+    if (instant) {
+      drawnWidth.jump(width);
+      drawnHeight.jump(height);
+      return undefined;
+    }
+    const controls = [animate(drawnWidth, width, SPRING), animate(drawnHeight, height, SPRING)];
+    return () => controls.forEach((control) => control.stop());
+  }, [width, height, instant, drawnWidth, drawnHeight]);
+
+  // A card whose stacking drops while it's at rest (a grown or lifted card let
+  // go) stays over its neighbors until it's back in place, so none of them flash
+  // in front of it on the way.
+  const [stacking, setStacking] = useState({ z, dragged, floor: z });
+  if (z !== stacking.z || dragged !== stacking.dragged) {
+    const dropped = z < stacking.z && !stacking.dragged && !dragged;
+    setStacking({ z, dragged, floor: dropped ? Math.max(stacking.floor, stacking.z) : z });
+  }
+  const restingZ = Math.max(z, stacking.floor);
 
   // Released cards take their real stacking order straight away, so a card
   // dropped into the back of a stack eases in behind the cards in front of it.
@@ -264,12 +301,24 @@ const CardSprite: React.FC<CardSpriteProps> = ({
     }
     if (held) return undefined;
 
-    if (wasDragged.current || prevZone.current !== zone) {
+    const moved = wasDragged.current || prevZone.current !== zone;
+    wasDragged.current = false;
+    prevZone.current = zone;
+    if (instant) {
+      entering.current = null;
+      settlingRef.current = false;
+      setSettling(false);
+      x.jump(pose.x);
+      y.jump(pose.y);
+      rotate.jump(pose.rotate);
+      scale.jump(pose.scale ?? 1);
+      opacity.jump(1);
+      return undefined;
+    }
+    if (moved) {
       settlingRef.current = true;
       setSettling(true);
     }
-    wasDragged.current = false;
-    prevZone.current = zone;
 
     // The entrance shapes every move until it has played, so a layout change
     // while the card is still waiting (e.g. the stage settling its size) keeps
@@ -290,17 +339,18 @@ const CardSprite: React.FC<CardSpriteProps> = ({
         animate(x, pose.x, { ...spring, delay: startDelay }),
         animate(y, pose.y, { ...spring, delay: startDelay }),
         animate(rotate, pose.rotate, { ...spring, delay: startDelay }),
+        animate(scale, pose.scale ?? 1, { ...spring, delay: startDelay }),
         animate(opacity, 1, { duration: fade, delay: startDelay }),
       ];
-      if (settlingRef.current) {
-        Promise.all(controls.map((control) => control.finished)).then(() => {
-          if (run.current === token) {
-            settlingRef.current = false;
-            setSettling(false);
-            setElevated(false);
-          }
-        });
-      }
+      Promise.all(controls.map((control) => control.finished)).then(() => {
+        if (run.current !== token) return;
+        setStacking((current) => (current.floor === current.z ? current : { ...current, floor: current.z }));
+        if (settlingRef.current) {
+          settlingRef.current = false;
+          setSettling(false);
+          setElevated(false);
+        }
+      });
     };
 
     if (enter?.via) {
@@ -327,27 +377,31 @@ const CardSprite: React.FC<CardSpriteProps> = ({
       live = false;
       controls.forEach((control) => control.stop());
     };
-  }, [pose.x, pose.y, pose.rotate, dragged, held, zone, isPresent, x, y, rotate, opacity]);
+  }, [
+    pose.x,
+    pose.y,
+    pose.rotate,
+    pose.scale,
+    z,
+    dragged,
+    held,
+    instant,
+    zone,
+    isPresent,
+    x,
+    y,
+    rotate,
+    scale,
+    opacity,
+  ]);
 
   // Leaving the table: a passed pack gathers into a pile in the middle, then
-  // slides off toward the next drafter; a trashed card drops away; a pick on a
-  // phone shrinks into the pool's tab; anything else fades.
+  // slides off toward the next drafter; a trashed card drops away; anything else fades.
   useEffect(() => {
     if (isPresent) return;
     const plan = exitPlan?.current;
     let controls: AnimationPlaybackControls[];
-    if (plan?.picked.has(id)) {
-      // Scaled about its bottom edge, so aim the shrunken card's center at the tab.
-      const shrink = 0.2;
-      const timing = { duration: 0.45, ease: 'easeIn' as const };
-      controls = [
-        animate(x, plan.pickedX - width / 2, timing),
-        animate(y, plan.pickedY - height + (height * shrink) / 2, timing),
-        animate(rotate, 0, timing),
-        animate(scale, shrink, timing),
-        animate(opacity, 0, { duration: 0.15, delay: 0.3 }),
-      ];
-    } else if (plan?.trashed.has(id)) {
+    if (plan?.trashed.has(id)) {
       controls = [
         animate(y, y.get() + height * 0.8, { duration: 0.4, ease: 'easeIn' }),
         animate(rotate, rotate.get() + 16, { duration: 0.4, ease: 'easeIn' }),
@@ -355,7 +409,7 @@ const CardSprite: React.FC<CardSpriteProps> = ({
       ];
     } else if (plan && passOnExit && plan.passInstantly) {
       // Gone at once, though it stays mounted until every other leaving card (a
-      // pick shrinking into the pool's tab) has finished.
+      // trashed one dropping away) has finished.
       opacity.set(0);
       controls = [];
     } else if (plan && passOnExit) {
@@ -386,9 +440,9 @@ const CardSprite: React.FC<CardSpriteProps> = ({
         scale,
         opacity,
         clipPath,
-        width,
-        height,
-        zIndex: dragged ? 3000 : elevated ? 2500 : z,
+        width: drawnWidth,
+        height: drawnHeight,
+        zIndex: dragged ? 3000 : leavingAlone ? 2900 : elevated ? 2500 : restingZ,
         transformOrigin: '50% 100%',
         touchAction,
         // A long press picks the card up; don't let the browser show its own menu.

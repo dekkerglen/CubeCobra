@@ -1,44 +1,56 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { ChevronLeftIcon, CpuIcon, StackIcon, ZapIcon } from '@primer/octicons-react';
+import { AppsIcon, CpuIcon, ScreenFullIcon, StackIcon, VersionsIcon } from '@primer/octicons-react';
 import { cardName, makeSubtitle } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
 import { getCardDefaultRowColumn } from '@utils/draftutil';
-import { AnimatePresence, motion, MotionValue, useMotionValue } from 'framer-motion';
+import { animate, AnimatePresence, motion, MotionValue, useMotionValue, useTransform } from 'framer-motion';
 
 import AutocardContext from '../../../contexts/AutocardContext';
 import DisplayContext from '../../../contexts/DisplayContext';
 import TagColorContext from '../../../contexts/TagColorContext';
 import UserContext from '../../../contexts/UserContext';
 import DraftLocation from '../../../drafting/DraftLocation';
+import useLocalStorage from '../../../hooks/useLocalStorage';
 import Button from '../../base/Button';
 import Link from '../../base/Link';
 import Spinner from '../../base/Spinner';
 import Text from '../../base/Text';
-import FoilCardImage from '../../FoilCardImage';
 import BoosterPack from './BoosterPack';
 import CardSprite, { EnterFrom, ExitPlan, PASS_OUT_SECONDS, SpriteId } from './CardSprite';
 import { isCompactWidth } from './deckLayout';
+import HorizontalScrollbar from './HorizontalScrollbar';
 import { PhoneMenuButton, PhoneMenuPanel } from './PhoneMenu';
-import PoolTray, { PoolTab } from './PoolTray';
-import ScrollThumb from './ScrollThumb';
 import {
   COLUMN_LABELS,
   columnAt,
   computeGeometry,
-  computeRowsGeometry,
+  computeGridGeometry,
+  computeSplitPool,
+  focusPose,
   gatherPose,
   MAIN_COLUMNS,
-  maxPoolScroll,
   nearestPackSlot,
+  PackLayout,
   packSlots,
+  poolBandAt,
+  poolBandTops,
+  poolBottom,
+  poolStackHeight,
   Pose,
   SIDEBOARD_COLUMN,
+  SPLIT_LABEL_HEIGHT,
+  SPLIT_SCROLLBAR_HEIGHT,
+  SPLIT_TABS_HEIGHT,
+  splitColumnAt,
+  splitPackHeight,
+  SplitPool,
+  splitSlot,
   stackInsertIndex,
   stackSlot,
   TableGeometry,
 } from './tableLayout';
-import { DragSession, revealInView, ScrollRegion, useCardDrag, useClampScroll, useWheelScroll } from './useCardDrag';
+import { DragSession, useCardDrag, useClampScroll } from './useCardDrag';
 
 interface DraftTableProps {
   // All draft cards; every other prop refers to cards by their index in here.
@@ -108,8 +120,9 @@ interface DraftTableProps {
   effects?: React.ReactNode;
 }
 
-// One stored pile that feeds a pool column. A CMC column shows the creature row
-// then the non-creature row; the sideboard column shows all its piles in order.
+// One stored pile that feeds a pool column. A CMC column has a stack for each
+// band, the creature row above the non-creature row; the sideboard column shows
+// all its piles in order as one stack.
 interface Segment {
   board: 'deck' | 'sideboard';
   row: number;
@@ -117,16 +130,16 @@ interface Segment {
   ids: number[];
 }
 
-// 'tab': the pool's tab on phones, which drafts the card into its natural spot.
 // 'packDrop': a pool card dropped onto the pack to use it (Cogwork Librarian).
 type DropTarget =
   | { kind: 'pack'; index: number }
-  | { kind: 'pool'; column: number; index: number }
-  | { kind: 'tab' }
+  | { kind: 'pool'; column: number; band: number; index: number }
   | { kind: 'packDrop' }
   | null;
 
 type Zone = 'pack' | 'pool';
+// Phones: which of the pool's boards shows under the pack.
+type PoolTab = 'mainboard' | 'sideboard' | 'removed';
 
 interface Placement {
   pose: Pose;
@@ -158,10 +171,8 @@ interface Opening {
   burst: boolean;
 }
 
-// Phones: the pool's tab on the right edge of the table, and how close to that
-// edge a pack card has to be held to drop into it.
-const TAB_WIDTH = 22;
-const TAB_DROP_ZONE = 40;
+// Desktop: px below the pool's stacks.
+const POOL_PAD = 12;
 
 const LINK_CLASS =
   'flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2';
@@ -178,7 +189,7 @@ const EMPTY_TURNOVER: Turnover = {
 const sameTarget = (a: DropTarget, b: DropTarget): boolean => {
   if (a === null || b === null) return a === b;
   if (a.kind === 'pack' && b.kind === 'pack') return a.index === b.index;
-  if (a.kind === 'pool' && b.kind === 'pool') return a.column === b.column && a.index === b.index;
+  if (a.kind === 'pool' && b.kind === 'pool') return a.column === b.column && a.band === b.band && a.index === b.index;
   return a.kind === b.kind;
 };
 
@@ -205,8 +216,8 @@ const buildColumns = (mainboard: number[][][], sideboard: number[][][]): Segment
  * else eases out of the way. Click a pack card to draft it; on touch, tap to
  * raise it and tap again to draft it.
  *
- * On phones the table holds only the pack, laid out in rows; the pool is a
- * tray that slides in from a tab on the right, listing the mainboard and sideboard.
+ * On phones the pack is a grid in the top two thirds of the table, and the pool
+ * a row of stacks below it, one board at a time, that scrolls sideways.
  *
  * Draft rules stay in CubeDraftPage; the table only decides where cards are
  * drawn and translates drops into the page's existing pick/move handlers.
@@ -267,18 +278,29 @@ const DraftTable: React.FC<DraftTableProps> = ({
   // The room the table has, before its own margins: what decides the phone layout.
   const roomRef = useRef<HTMLDivElement>(null);
   const tableRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [roomWidth, setRoomWidth] = useState(0);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  // Desktop: the window's room for the stage, which sizes the cards. The table
+  // itself grows past it as the pool does, and the page scrolls.
+  const [viewRoom, setViewRoom] = useState(0);
+  const [packLayout, setPackLayout] = useLocalStorage<PackLayout>('draftPackLayout', 'fan');
+  // Phones: how far the pool's row of stacks, under the pack, is scrolled sideways.
+  const poolScrollX = useMotionValue(0);
+  const poolShift = useTransform(poolScrollX, (value) => -value);
 
   const [customOrder, setCustomOrder] = useState<number[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
   const [hovered, setHovered] = useState<number | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [poolOpen, setPoolOpen] = useState(false);
   const [poolTab, setPoolTab] = useState<PoolTab>('mainboard');
 
   // The handlers are defined further down; these wrappers only run on pointer events.
+  // Decided by the room rather than the stage, since the phone layout drops the
+  // table's margins and so widens the stage: deciding by the stage could flip back and forth.
+  const compact = roomWidth > 0 && isCompactWidth(roomWidth);
+
   const dragger = useCardDrag<DropTarget>({
     stageRef,
     locate: (id) => locate(Number(id)),
@@ -291,7 +313,12 @@ const DraftTable: React.FC<DraftTableProps> = ({
       setHovered(null);
       setSelected(null);
     },
-    scrollRegions: () => scrollRegions,
+    // Desktop: holding a card at the top or bottom of the window scrolls the page.
+    verticalScroller: () => (compact ? null : window),
+    // Phones: a touch picks a card up as soon as it moves, as a mouse does; a tap enlarges it.
+    touchPicksUp: compact,
+    // Phones with the pool on the table: its row of stacks scrolls sideways.
+    horizontalAt: (_x, y) => (splitPool && y >= splitPool.top ? { scroll: poolScrollX, max: maxPoolScrollX } : null),
   });
   const { drag } = dragger;
 
@@ -302,38 +329,56 @@ const DraftTable: React.FC<DraftTableProps> = ({
     const measure = () => {
       setStageSize({ width: el.clientWidth, height: el.clientHeight });
       setRoomWidth(room.clientWidth);
+      // The window less any bar fixed over its bottom (see CubeBottomNav), the header, and the table's border.
+      const covered =
+        parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bottom-nav-height')) || 0;
+      setViewRoom(window.innerHeight - covered - (headerRef.current?.offsetHeight ?? 0) - 2);
     };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     observer.observe(room);
-    return () => observer.disconnect();
+    window.addEventListener('resize', measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', measure);
+    };
   }, []);
 
-  // Decided by the room rather than the stage, since the phone layout drops the
-  // table's margins and so widens the stage: deciding by the stage could flip back and forth.
-  const compact = roomWidth > 0 && isCompactWidth(roomWidth);
-  // Phones lay out the pack as it is, so a pack of 15 always looks the same. The
-  // count keeps a pick that's in flight, so what's left of the pack holds its
-  // layout until the next pack arrives. Desktop is sized for the largest pack,
-  // so the pool holds still as the pack shrinks.
-  const packCount = pack.length + inPack.length;
+  // The pack as it was dealt for this pick. The page drops a card from the pack
+  // as soon as it's drafted, while the bots still pick; it keeps its place here
+  // until the next pick, so what's left holds its layout until the pack is passed.
+  const [dealt, setDealt] = useState<{ key: string; cards: number[] }>({ key: '', cards: [] });
+  const dealtKey = `${packNumber}:${pickNumber}`;
+  if (dealtKey !== dealt.key || [...pack, ...inPack].some((id) => !dealt.cards.includes(id))) {
+    setDealt({ key: dealtKey, cards: [...pack, ...inPack] });
+  }
+  // Phones lay out the pack as it is, so a pack of 15 always looks the same and
+  // cards grow as the pack shrinks. Desktop is sized for the largest pack, so
+  // neither the cards nor the pack area change as the pack shrinks.
+  const packCount = dealt.cards.length;
   const capacity = Math.max(packSize ?? 0, packCount);
   const geometry: TableGeometry | null = useMemo(() => {
-    if (stageSize.width <= 0 || stageSize.height <= 0) return null;
-    return compact
-      ? computeRowsGeometry(stageSize.width, stageSize.height, packCount)
-      : computeGeometry(stageSize.width, stageSize.height, capacity);
-  }, [stageSize.width, stageSize.height, compact, packCount, capacity]);
+    if (stageSize.width <= 0) return null;
+    if (compact) {
+      if (stageSize.height <= 0) return null;
+      return computeGridGeometry(stageSize.width, splitPackHeight(stageSize.height), packCount);
+    }
+    return viewRoom > 0 ? computeGeometry(stageSize.width, viewRoom, capacity, packLayout) : null;
+  }, [stageSize.width, stageSize.height, compact, packCount, viewRoom, capacity, packLayout]);
 
-  // Phones: once, ease the page down so the table exactly fills the screen.
+  // Phones: scroll the page so the table exactly fills the screen; once on its
+  // own, and again from the header's button.
+  const fitToScreen = useCallback(() => {
+    const table = tableRef.current;
+    if (table) window.scrollTo({ top: window.scrollY + table.getBoundingClientRect().top, behavior: 'smooth' });
+  }, []);
   const broughtIntoView = useRef(false);
   useEffect(() => {
     if (!compact || broughtIntoView.current) return;
     broughtIntoView.current = true;
-    const table = tableRef.current;
-    if (table) window.scrollTo({ top: window.scrollY + table.getBoundingClientRect().top, behavior: 'smooth' });
-  }, [compact]);
+    fitToScreen();
+  }, [compact, fitToScreen]);
 
   // The stored piles. Cards drawn in the pack (inPack) are still in them, but not drawn there.
   const columns = useMemo(() => buildColumns(mainboard, sideboard), [mainboard, sideboard]);
@@ -346,6 +391,67 @@ const DraftTable: React.FC<DraftTableProps> = ({
     () => new Set(columns.flat().flatMap((segment) => segment.ids.filter((id) => !inPackSet.has(id)))),
     [columns, inPackSet],
   );
+  // The pool's stacks as drawn, by column then band: a CMC column's creatures and
+  // everything else, and the sideboard column's piles as one stack.
+  const poolStacks = useMemo(
+    () =>
+      columns.map((segments, column) =>
+        column === SIDEBOARD_COLUMN
+          ? [shownInColumn(segments)]
+          : segments.map((segment) => segment.ids.filter((id) => !inPackSet.has(id))),
+      ),
+    [columns, shownInColumn, inPackSet],
+  );
+  // Phones with the pool on the table: the shown board's stacks in one row. A
+  // mainboard column runs its creatures then the rest; removed cards get a column each.
+  const removedSet = useMemo(() => new Set(removed), [removed]);
+  const splitColumns: Segment[][] = useMemo(
+    () =>
+      poolTab === 'removed'
+        ? []
+        : poolTab === 'mainboard'
+          ? columns.slice(0, MAIN_COLUMNS)
+          : (columns[SIDEBOARD_COLUMN] ?? []).map((segment) => [segment]),
+    [columns, poolTab],
+  );
+  const splitStacks: number[][] = useMemo(
+    () =>
+      poolTab === 'removed'
+        ? removed.filter((id) => cards[id]).map((id) => [id])
+        : splitColumns.map((segments) => shownInColumn(segments)),
+    [poolTab, removed, cards, splitColumns, shownInColumn],
+  );
+  const draggingId = drag ? Number(drag.id) : null;
+  const splitTallest = Math.max(
+    0,
+    ...splitStacks.map(
+      (ids, column) =>
+        ids.filter((id) => id !== draggingId).length +
+        (drag?.target?.kind === 'pool' && drag.target.column === column ? 1 : 0),
+    ),
+  );
+  const splitPool: SplitPool | null = useMemo(
+    () =>
+      compact && stageSize.width > 0 && stageSize.height > 0
+        ? computeSplitPool(stageSize.width, stageSize.height, splitStacks.length, splitTallest)
+        : null,
+    [compact, stageSize.width, stageSize.height, splitStacks.length, splitTallest],
+  );
+  const maxPoolScrollX = splitPool ? Math.max(0, Math.ceil(splitPool.contentWidth - stageSize.width)) : 0;
+  useClampScroll(poolScrollX, maxPoolScrollX);
+
+  // The tallest stack in a band of the CMC columns, leaving out one card and/or making room for one.
+  const tallestInBand = (band: number, without: number | null, gap: DropTarget) =>
+    Math.max(
+      0,
+      ...poolStacks
+        .slice(0, MAIN_COLUMNS)
+        .map(
+          (stacks, column) =>
+            (stacks[band] ?? []).filter((id) => id !== without).length +
+            (gap?.kind === 'pool' && gap.column === column && gap.band === band ? 1 : 0),
+        ),
+    );
 
   // A pick made while bots are still thinking is already in the pool but still
   // in the pack; the pool copy wins.
@@ -364,6 +470,16 @@ const DraftTable: React.FC<DraftTableProps> = ({
     const keptSet = new Set(kept);
     return [...kept, ...packIds.filter((id) => !keptSet.has(id))];
   }, [customOrder, packIds, packIdSet]);
+  // The same, with cards already drafted from the pack still in it: they leave
+  // their spots empty until the next pack arrives, so the rest hold still until
+  // the pack is passed.
+  const dealtOrder = useMemo(() => {
+    const onTable = dealt.cards.filter((id) => cards[id]);
+    const onTableSet = new Set(onTable);
+    const kept = customOrder.filter((id) => onTableSet.has(id));
+    const keptSet = new Set(kept);
+    return [...kept, ...onTable.filter((id) => !keptSet.has(id))];
+  }, [customOrder, dealt, cards]);
 
   const activeSelected = selected !== null && packIdSet.has(selected) ? selected : null;
 
@@ -387,17 +503,24 @@ const DraftTable: React.FC<DraftTableProps> = ({
     const draggedId = drag ? Number(drag.id) : null;
     const target = drag?.target ?? null;
 
-    const fan = packOrder.filter((id) => id !== draggedId);
+    // Rearranging the pack closes up any empty spots.
+    const fan = drag ? packOrder.filter((id) => id !== draggedId) : dealtOrder;
     const gapAt = target?.kind === 'pack' ? target.index : -1;
     const slots = packSlots(geometry, fan.length + (gapAt >= 0 ? 1 : 0));
     let slot = 0;
     fan.forEach((id) => {
       if (slot === gapAt) slot += 1;
+      // A drafted card's empty spot.
+      if (!packIdSet.has(id)) {
+        slot += 1;
+        return;
+      }
       const base = slots[slot];
       let pose = base;
       let z = 100 + slot;
       if (id === activeSelected) {
-        pose = { x: base.x, y: base.y - geometry.raise, rotate: 0 };
+        // Phones grow the card to be read; elsewhere it lifts.
+        pose = compact ? focusPose(geometry, base) : { x: base.x, y: base.y - geometry.raise, rotate: 0 };
         z = 600;
       } else if (id === hovered && !drag) {
         pose = { x: base.x, y: base.y - geometry.peek, rotate: 0 };
@@ -407,18 +530,37 @@ const DraftTable: React.FC<DraftTableProps> = ({
       slot += 1;
     });
 
-    // Phones keep the pool in a drawer, off the stage.
-    if (!compact) {
-      columns.forEach((segments, column) => {
-        const ids = shownInColumn(segments).filter((id) => id !== draggedId);
+    // Phones with the pool on the table: the shown board's stacks in a row under the pack.
+    if (splitPool) {
+      splitStacks.forEach((stack, column) => {
         const gap = target?.kind === 'pool' && target.column === column ? target.index : -1;
         let index = 0;
-        ids.forEach((id) => {
-          if (index === gap) index += 1;
-          result.set(id, { pose: stackSlot(geometry, column, index), z: 10 + index, zone: 'pool' });
-          index += 1;
-        });
+        stack
+          .filter((id) => id !== draggedId)
+          .forEach((id) => {
+            if (index === gap) index += 1;
+            result.set(id, { pose: splitSlot(splitPool, column, index), z: 10 + index, zone: 'pool' });
+            index += 1;
+          });
       });
+    }
+
+    // Otherwise phones keep the pool in a drawer, off the stage.
+    const bandTops = poolBandTops(geometry, tallestInBand(0, draggedId, target));
+    if (!compact) {
+      poolStacks.forEach((stacks, column) =>
+        stacks.forEach((stack, band) => {
+          const gap = target?.kind === 'pool' && target.column === column && target.band === band ? target.index : -1;
+          let index = 0;
+          stack
+            .filter((id) => id !== draggedId)
+            .forEach((id) => {
+              if (index === gap) index += 1;
+              result.set(id, { pose: stackSlot(geometry, bandTops, column, band, index), z: 10 + index, zone: 'pool' });
+              index += 1;
+            });
+        }),
+      );
     }
 
     // The dragged card keeps its home placement, so an illegal drop eases it back there.
@@ -427,19 +569,40 @@ const DraftTable: React.FC<DraftTableProps> = ({
       if (homeSlot >= 0) {
         const pose = packSlots(geometry, packOrder.length)[homeSlot];
         result.set(draggedId, { pose, z: 100 + homeSlot, zone: 'pack' });
-      } else {
-        columns.forEach((segments, column) => {
-          const ids = shownInColumn(segments);
-          const index = ids.indexOf(draggedId);
-          if (index >= 0) {
-            const pose = stackSlot(geometry, column, index);
-            result.set(draggedId, { pose, z: 10 + index, zone: 'pool' });
-          }
+      } else if (splitPool) {
+        splitStacks.forEach((stack, column) => {
+          const index = stack.indexOf(draggedId);
+          if (index >= 0)
+            result.set(draggedId, { pose: splitSlot(splitPool, column, index), z: 10 + index, zone: 'pool' });
         });
+      } else {
+        poolStacks.forEach((stacks, column) =>
+          stacks.forEach((stack, band) => {
+            const index = stack.indexOf(draggedId);
+            if (index >= 0) {
+              const pose = stackSlot(geometry, bandTops, column, band, index);
+              result.set(draggedId, { pose, z: 10 + index, zone: 'pool' });
+            }
+          }),
+        );
       }
     }
     return result;
-  }, [geometry, compact, packOrder, columns, shownInColumn, drag, activeSelected, hovered]);
+    // tallestInBand only reads poolStacks.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    geometry,
+    compact,
+    packOrder,
+    dealtOrder,
+    packIdSet,
+    poolStacks,
+    splitPool,
+    splitStacks,
+    drag,
+    activeSelected,
+    hovered,
+  ]);
 
   // ---- Pack turnover: where new cards come from, where leaving cards go ----
   // Pack 1 is passed left, so its packs arrive from the right and leftovers
@@ -451,9 +614,6 @@ const DraftTable: React.FC<DraftTableProps> = ({
     gatherX: 0,
     gatherY: 0,
     trashed: new Set(),
-    picked: new Set(),
-    pickedX: 0,
-    pickedY: 0,
     passInstantly: false,
   });
   useLayoutEffect(() => {
@@ -465,9 +625,6 @@ const DraftTable: React.FC<DraftTableProps> = ({
       const pile = gatherPose(geometry);
       exitPlan.current.gatherX = pile.x;
       exitPlan.current.gatherY = pile.y;
-      // The pool's tab, centered on the right edge.
-      exitPlan.current.pickedX = geometry.width - TAB_WIDTH / 2;
-      exitPlan.current.pickedY = geometry.height / 2;
     }
   });
 
@@ -552,77 +709,84 @@ const DraftTable: React.FC<DraftTableProps> = ({
     };
   };
 
-  // ---- Pool scrolling ----
-  // Stacks never squeeze; when the tallest one runs past the bottom, the pool scrolls.
-  const poolScroll = useMotionValue(0);
-  const tallestStack = Math.max(
-    0,
-    ...columns.map(
-      (segments, column) =>
-        shownInColumn(segments).length + (drag?.target?.kind === 'pool' && drag.target.column === column ? 1 : 0),
-    ),
-  );
-  const maxScroll = geometry && !compact ? maxPoolScroll(geometry, tallestStack) : 0;
-  useClampScroll(poolScroll, maxScroll);
-  const scrollRegions: ScrollRegion[] =
-    geometry && !compact
-      ? [
-          {
-            left: 0,
-            right: geometry.width,
-            top: geometry.poolTop,
-            viewTop: geometry.stackTop,
-            bottom: geometry.height,
-            scroll: poolScroll,
-            max: maxScroll,
-          },
-        ]
-      : [];
-  useWheelScroll(stageRef, scrollRegions, dragger.scrolled);
+  // ---- The pool's size ----
+  // Stacks never squeeze: the stage grows to hold the tallest, and the page scrolls.
+  const draggedNow = drag ? Number(drag.id) : null;
+  const gapNow = drag?.target ?? null;
+  const tallestNow = [tallestInBand(0, draggedNow, gapNow), tallestInBand(1, draggedNow, gapNow)];
+  const sideboardNow =
+    (poolStacks[SIDEBOARD_COLUMN]?.[0] ?? []).filter((id) => id !== draggedNow).length +
+    (gapNow?.kind === 'pool' && gapNow.column === SIDEBOARD_COLUMN ? 1 : 0);
+  const bandTopsNow = geometry ? poolBandTops(geometry, tallestNow[0]) : null;
+  const poolContentBottom =
+    geometry && bandTopsNow && !compact ? poolBottom(geometry, bandTopsNow, tallestNow[1], sideboardNow) + POOL_PAD : 0;
+  // Each stack's place in the pool, for the drop highlights.
+  const poolBands: { column: number; band: number; top: number; height: number }[] = [];
+  if (geometry && bandTopsNow && !compact) {
+    geometry.columnX.forEach((_, column) => {
+      if (column === SIDEBOARD_COLUMN) {
+        poolBands.push({ column, band: 0, top: geometry.stackTop, height: poolStackHeight(geometry, sideboardNow) });
+      } else {
+        [0, 1].forEach((band) =>
+          poolBands.push({ column, band, top: bandTopsNow[band], height: poolStackHeight(geometry, tallestNow[band]) }),
+        );
+      }
+    });
+  }
 
-  // After a pick, scroll the pool so the card's landing spot is in view.
+  // Phones with the pool on the table: once a pick lands, scroll the row so its stack is in view.
   const revealId = useRef<number | null>(null);
   useLayoutEffect(() => {
     const id = revealId.current;
-    if (id === null || !geometry) return;
+    if (id === null) return;
     const placement = placements.get(id);
-    if (!placement) {
-      revealId.current = null;
-      return;
-    }
     // Still in the pack until the page moves it.
-    if (placement.zone !== 'pool') return;
+    if (placement?.zone === 'pack') return;
     revealId.current = null;
-    const stack = shownInColumn(columns.find((segments) => shownInColumn(segments).includes(id)) ?? []);
-    // The last card in a stack shows its whole face, the others just their name bar.
-    const top = placement.pose.y;
-    const bottom = top + (stack[stack.length - 1] === id ? geometry.cardH : geometry.bar);
-    revealInView(poolScroll, top, bottom, geometry.stackTop, geometry.poolBottom, maxScroll);
+    if (!placement || !splitPool) return;
+    const current = poolScrollX.get();
+    const left = placement.pose.x - 6;
+    const right = placement.pose.x + splitPool.cardW + 6 - stageSize.width;
+    const next = Math.max(0, Math.min(maxPoolScrollX, left < current ? left : right > current ? right : current));
+    if (next !== current) animate(poolScrollX, next, { type: 'spring', stiffness: 220, damping: 30 });
   });
 
   // ---- Drag and click ----
   // Typed, since the drag hook that calls it is declared before the placements it reads.
-  const locate = (id: number): { zone: Zone; scroll: MotionValue<number> | null } | null =>
-    placements.has(id)
-      ? { zone: packIdSet.has(id) ? 'pack' : 'pool', scroll: packIdSet.has(id) ? null : poolScroll }
-      : null;
+  // Removed cards can't be picked up; on a phone, pool cards scroll sideways with their row.
+  // Typed, since the drag hook that calls it is declared before the placements it reads.
+  const locate = (id: number): { zone: Zone; scroll: null; scrollX: MotionValue<number> | null } | null => {
+    if (!placements.has(id) || removedSet.has(id)) return null;
+    const zone: Zone = packIdSet.has(id) ? 'pack' : 'pool';
+    return { zone, scroll: null, scrollX: zone === 'pool' && splitPool ? poolScrollX : null };
+  };
 
   const computeTarget = (s: DragSession, left: number, top: number): DropTarget => {
     if (!geometry) return null;
     const centerX = left + geometry.cardW / 2;
-    // Pack or pool by where the card is held, like the pool's edge scrolling.
+    // Pack or pool by where the card is held.
     const pointerY = top + s.grabY;
 
     const backToPool = inPackSet.has(Number(s.id)) && !locked;
-    if (compact) {
-      if (s.zone !== 'pack') return null;
-      if (left + s.grabX >= geometry.width - TAB_DROP_ZONE)
-        return canPlaceFromPack || backToPool ? { kind: 'tab' } : null;
+    if (splitPool) {
+      if (pointerY >= splitPool.top) {
+        if (locked || poolTab === 'removed') return null;
+        if (s.zone === 'pack' && !canPlaceFromPack && !backToPool) return null;
+        const heldW = s.zone === 'pool' ? splitPool.cardW : geometry.cardW;
+        const column = splitColumnAt(splitPool, left + heldW / 2 + poolScrollX.get());
+        if (column === null) return null;
+        const count = (splitStacks[column] ?? []).filter((id) => id !== Number(s.id)).length;
+        const index = Math.max(0, Math.min(count, Math.round((top - splitPool.stackTop) / splitPool.bar)));
+        return { kind: 'pool', column, band: 0, index };
+      }
+      // Pool cards can't go back into the pack, except to use one (Cogwork Librarian).
+      if (s.zone !== 'pack') return poolToPack.includes(Number(s.id)) && !locked ? { kind: 'packDrop' } : null;
       return {
         kind: 'pack',
         index: nearestPackSlot(geometry, packOrder.length, centerX, top + geometry.cardH / 2),
       };
     }
+    if (compact) return null;
 
     if (pointerY < geometry.packBottom) {
       // Pool cards can't go back into the pack, except to use one (Cogwork Librarian).
@@ -634,25 +798,25 @@ const DraftTable: React.FC<DraftTableProps> = ({
     if (locked) return null;
     const column = columnAt(geometry, centerX);
     if (column === null) return null;
-    const count = shownInColumn(columns[column]).filter((id) => id !== s.id).length;
-    return { kind: 'pool', column, index: stackInsertIndex(geometry, top + poolScroll.get(), count) };
+    const bandTops = poolBandTops(geometry, tallestInBand(0, Number(s.id), null));
+    const band = column === SIDEBOARD_COLUMN ? 0 : poolBandAt(geometry, bandTops, top);
+    const stackTop = column === SIDEBOARD_COLUMN ? geometry.stackTop : bandTops[band];
+    const count = (poolStacks[column]?.[band] ?? []).filter((id) => id !== s.id).length;
+    return { kind: 'pool', column, band, index: stackInsertIndex(geometry, stackTop, top, count) };
   };
 
-  // Turn a visual position in a column into a stored location. Indices are
+  // Turn a visual position in a stack into a stored location. Indices are
   // computed with the dragged card already removed, which is how the page's
-  // move handler applies them. At a boundary between piles (e.g. the last
-  // creature / first non-creature) the card's natural pile wins.
-  const resolveLocation = (id: number, column: number, index: number): DraftLocation => {
+  // move handler applies them. A stack can run several piles together (the
+  // sideboard column on desktop, a mainboard column on a phone); at a boundary
+  // between two of them the card's natural pile (`preferred`) wins.
+  const locationIn = (id: number, piles: Segment[], index: number, preferred: number): DraftLocation => {
     // As drawn: without the dragged card or cards drawn in the pack.
-    const segments = columns[column].map((segment) => ({
+    const segments = piles.map((segment) => ({
       ...segment,
       stored: segment.ids.filter((other) => other !== id),
       ids: segment.ids.filter((other) => other !== id && !inPackSet.has(other)),
     }));
-    const card = cards[id];
-    const natural = card ? getCardDefaultRowColumn(card) : { row: 1, col: 0 };
-    const preferred = column === SIDEBOARD_COLUMN ? natural.col : natural.row;
-
     let start = 0;
     let segment = segments[segments.length - 1];
     let at = segment.ids.length;
@@ -672,6 +836,18 @@ const DraftTable: React.FC<DraftTableProps> = ({
       ? DraftLocation.deck(segment.row, segment.col, stored)
       : DraftLocation.sideboard(segment.row, segment.col, stored);
   };
+
+  const naturalSpot = (id: number) => (cards[id] ? getCardDefaultRowColumn(cards[id]) : { row: 1, col: 0 });
+
+  // Desktop: a CMC column's bands are its two piles; the sideboard column runs its piles together.
+  const resolveLocation = (id: number, column: number, band: number, index: number): DraftLocation =>
+    column === SIDEBOARD_COLUMN
+      ? locationIn(id, columns[column], index, naturalSpot(id).col)
+      : locationIn(id, [columns[column][Math.min(band, columns[column].length - 1)]], index, 0);
+
+  // Phones with the pool on the table: a stack of the shown board.
+  const splitLocation = (id: number, column: number, index: number): DraftLocation =>
+    locationIn(id, splitColumns[column] ?? [], index, poolTab === 'mainboard' ? naturalSpot(id).row : 0);
 
   const findPoolLocation = (id: number): DraftLocation | null => {
     for (const segment of columns.flat()) {
@@ -695,7 +871,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
     }
 
     // A card drawn in the pack, put back in the pool.
-    if (inPackSet.has(id) && (target.kind === 'pool' || target.kind === 'tab')) {
+    if (inPackSet.has(id) && target.kind === 'pool') {
       onPoolCardPress?.(id);
       return;
     }
@@ -707,22 +883,13 @@ const DraftTable: React.FC<DraftTableProps> = ({
       return;
     }
 
-    if (target.kind === 'tab') {
-      const packIndex = pack.indexOf(id);
-      if (packIndex >= 0) {
-        exitPlan.current.picked.add(id);
-        onPick(packIndex);
-      }
-      return;
-    }
-
-    const location = resolveLocation(id, target.column, target.index);
+    const location = splitPool
+      ? splitLocation(id, target.column, target.index)
+      : resolveLocation(id, target.column, target.band, target.index);
     if (s.zone === 'pack') {
+      revealId.current = id;
       const packIndex = pack.indexOf(id);
-      if (packIndex >= 0) {
-        revealId.current = id;
-        onPickTo(packIndex, location);
-      }
+      if (packIndex >= 0) onPickTo(packIndex, location);
       return;
     }
 
@@ -772,13 +939,14 @@ const DraftTable: React.FC<DraftTableProps> = ({
       exitPlan.current.trashed.add(id);
       onTrash(packIndex);
     } else {
+      // On a phone the pick moves to its stack under the pack, so show its board.
+      if (compact && poolTab !== 'mainboard') setPoolTab('mainboard');
       revealId.current = id;
-      if (compact) exitPlan.current.picked.add(id);
       onPick(packIndex);
     }
   };
 
-  // ---- The pool tray (phones) ----
+  // ---- Pool taps ----
   // A tap sends a card to the other board, in its natural spot.
   const togglePoolCard = (source: DraftLocation) => {
     if (locked) return;
@@ -816,7 +984,9 @@ const DraftTable: React.FC<DraftTableProps> = ({
     [columns, cards],
   );
   const columnCounts = columns.map((segments) => shownInColumn(segments).length);
-  const hoveredColumn = drag?.target?.kind === 'pool' ? drag.target.column : null;
+  const mainCount = columnCounts.slice(0, MAIN_COLUMNS).reduce((sum, count) => sum + count, 0);
+  const sideCount = columnCounts[SIDEBOARD_COLUMN] ?? 0;
+  const poolTarget = drag?.target?.kind === 'pool' ? drag.target : null;
   const hasRatings = ratingById.size > 0;
 
   const sprites: React.ReactNode[] = [];
@@ -829,19 +999,24 @@ const DraftTable: React.FC<DraftTableProps> = ({
     const isTop = showRatings && rating !== undefined && rating === maxRating && maxRating > 0;
     const isArmed = armedSet.has(id);
     const cardNotes = inPackZone ? [] : (notes[id] ?? []);
+    // Phones with the pool on the table draw its cards smaller, in a row that scrolls sideways.
+    const inSplitPool = !inPackZone && splitPool !== null;
     sprites.push(
       <CardSprite
         key={`card-${id}`}
         id={id}
         card={card}
-        width={geometry!.cardW}
-        height={geometry!.cardH}
+        width={inSplitPool ? splitPool.cardW : geometry!.cardW}
+        height={inSplitPool ? splitPool.cardH : geometry!.cardH}
         pose={placement.pose}
         z={placement.z}
         zone={placement.zone}
-        scroll={placement.zone === 'pool' ? poolScroll : null}
-        clip={placement.zone === 'pool' ? { top: geometry!.stackTop, bottom: Infinity } : null}
-        landing={placement.zone === 'pool' ? { top: geometry!.poolTop, bottom: Infinity } : null}
+        scroll={null}
+        scrollX={inSplitPool ? poolScrollX : null}
+        clip={null}
+        landing={
+          placement.zone === 'pool' ? { top: splitPool ? splitPool.top : geometry!.poolTop, bottom: Infinity } : null
+        }
         passOnExit={placement.zone === 'pack'}
         enterFrom={enterFor(id, placement)}
         dragged={drag?.id === id}
@@ -873,8 +1048,16 @@ const DraftTable: React.FC<DraftTableProps> = ({
           </div>
         )}
         {isSelected && geometry!.rows && (
-          // No room below a card in rows, so the label sits on the card.
-          <div className="pointer-events-none absolute bottom-1 left-1/2 -translate-x-1/2 whitespace-nowrap">
+          // Under a grown card on a phone, at its own size, clear of the rules text. Desktop
+          // rows have no room below a card, so there it sits on the card.
+          <div
+            className={`pointer-events-none absolute left-1/2 whitespace-nowrap ${compact ? 'top-full flex' : 'bottom-1'}`}
+            style={{
+              // The gap under the card goes inside the counter-scaling, so it stays 4px on screen.
+              transform: `translateX(-50%) scale(${1 / geometry!.focus})${compact ? ' translateY(4px)' : ''}`,
+              transformOrigin: compact ? '50% 0' : '50% 100%',
+            }}
+          >
             <span
               className={`px-2 py-0.5 rounded-full text-xxs font-bold text-white shadow-lg ${
                 isTrashStep ? 'bg-button-danger' : 'bg-button-primary'
@@ -918,7 +1101,6 @@ const DraftTable: React.FC<DraftTableProps> = ({
     </Link>
   );
   const hasMenu = Boolean(menuActions) || Boolean(ratingsLink);
-  const tabTarget = drag?.target?.kind === 'tab';
   const packDropTarget = drag?.target?.kind === 'packDrop';
   const passButton = passOnly && onPass && (
     <Button color="primary" onClick={onPass} disabled={locked}>
@@ -931,28 +1113,59 @@ const DraftTable: React.FC<DraftTableProps> = ({
       {queueCount}
     </span>
   );
-  // Phones: ready and armed cards sit in the corner of the table, since the pool is in a tray.
-  const cornerCards = compact
-    ? [...armedCards, ...readyCards.filter((id) => !armedSet.has(id))].filter((id) => !inPackSet.has(id))
-    : [];
-
+  const layoutToggle = (
+    <div
+      className="flex shrink-0 rounded-md border border-border overflow-hidden"
+      role="group"
+      aria-label="Pack layout"
+    >
+      {(
+        [
+          ['fan', 'Fanned', VersionsIcon],
+          ['grid', 'Grid', AppsIcon],
+        ] as const
+      ).map(([layout, label, Icon]) => (
+        <button
+          key={layout}
+          type="button"
+          title={label}
+          aria-label={label}
+          aria-pressed={packLayout === layout}
+          onClick={() => setPackLayout(layout)}
+          className={`px-2 py-1.5 transition-colors ${
+            packLayout === layout ? 'bg-bg-active text-text' : 'text-text-secondary hover:text-text'
+          }`}
+        >
+          <Icon size={16} />
+        </button>
+      ))}
+    </div>
+  );
   return (
-    // Exactly one viewport tall (less the phone's bottom nav) regardless of the
-    // header above it: scroll past the header and the table fills the screen.
-    // In the phone layout it runs edge to edge, over the page's side padding.
+    // At least one viewport tall (less the phone's bottom nav) regardless of the
+    // header above it: scroll past the header and the table fills the screen. On
+    // desktop it grows past that with the pool. In the phone layout it's exactly
+    // the screen, edge to edge, over the page's side padding.
     <div ref={roomRef}>
       <div
         ref={tableRef}
         className={`relative mt-3 flex flex-col bg-bg-accent/80 shadow overflow-hidden ${
           compact ? '-mx-2 border-y border-border' : 'mx-2 rounded-md border border-border'
         }`}
-        style={{ height: 'calc(100dvh - var(--bottom-nav-height, 0px))', minHeight: 480 }}
+        style={
+          compact
+            ? { height: 'calc(100dvh - var(--bottom-nav-height, 0px))', minHeight: 480 }
+            : { minHeight: 'calc(100dvh - var(--bottom-nav-height, 0px))' }
+        }
       >
         {compact ? (
           // The menu drops over the table rather than pushing it down, so the cards keep their size.
-          <div className="relative z-10 border-b border-border">
+          <div ref={headerRef} className="relative z-10 border-b border-border">
             {/* A fixed height, so the cards don't resize when the waiting line comes and goes. */}
             <div className="flex items-center gap-2 h-11 px-2">
+              {hasMenu && (
+                <PhoneMenuButton open={menuOpen} onToggle={() => setMenuOpen((open) => !open)} label="Draft options" />
+              )}
               <div className="flex flex-col min-w-0">
                 <Text semibold className="truncate leading-5">
                   {title}
@@ -966,20 +1179,22 @@ const DraftTable: React.FC<DraftTableProps> = ({
               <div className="ml-auto flex items-center gap-2 shrink-0">
                 {queueBadge}
                 {passButton}
-                {hasMenu && (
-                  <PhoneMenuButton
-                    open={menuOpen}
-                    onToggle={() => setMenuOpen((open) => !open)}
-                    label="Draft options"
-                  />
-                )}
+                <button
+                  type="button"
+                  onClick={fitToScreen}
+                  aria-label="Fit table to screen"
+                  title="Fit table to screen"
+                  className="shrink-0 p-1 text-text-secondary hover:text-text"
+                >
+                  <ScreenFullIcon size={20} />
+                </button>
               </div>
             </div>
             {error && <div className="px-2 pb-2">{retryButton}</div>}
             {hasMenu && (
               <div className="absolute inset-x-0 top-full bg-bg-accent shadow-lg">
                 <PhoneMenuPanel open={menuOpen}>
-                  <div className="flex flex-col items-end gap-3 py-2 px-2 border-b border-border">
+                  <div className="flex flex-col items-start gap-3 py-2 px-2 border-b border-border">
                     {menuActions}
                     {ratingsLink}
                   </div>
@@ -989,7 +1204,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
           </div>
         ) : (
           // A fixed height, so the cards don't resize as the buttons and the waiting line come and go.
-          <div className="flex items-center gap-4 h-12 px-4 border-b border-border">
+          <div ref={headerRef} className="flex items-center gap-4 h-12 px-4 border-b border-border">
             <div className="flex flex-col shrink-0">
               <Text semibold lg className="whitespace-nowrap leading-6">
                 {title}
@@ -1005,6 +1220,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
               {makeSubtitle(mainboardCards.filter(Boolean))}
             </Text>
             <div className="flex shrink-0 gap-2 items-center">
+              {layoutToggle}
               {passButton}
               {headerActions}
               {error
@@ -1022,7 +1238,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
         <div
           ref={stageRef}
           className="relative flex-1 overflow-hidden select-none isolate"
-          style={{ touchAction: 'none' }}
+          style={{ touchAction: 'none', minHeight: compact ? undefined : poolContentBottom }}
           onPointerDown={(event) => {
             setMenuOpen(false);
             if (event.target === event.currentTarget) setSelected(null);
@@ -1052,24 +1268,105 @@ const DraftTable: React.FC<DraftTableProps> = ({
               {geometry.columnX.map((x, column) => (
                 <div
                   key={COLUMN_LABELS[column]}
-                  className={`absolute rounded-md pointer-events-none transition-colors duration-150 ${
-                    hoveredColumn === column ? 'bg-button-primary/15' : 'bg-transparent'
-                  }`}
-                  style={{ left: x - 4, width: geometry.cardW + 8, top: geometry.poolTop, bottom: 8 }}
+                  className="absolute text-center text-xs text-text-secondary leading-[22px] pointer-events-none"
+                  style={{ left: x - 4, width: geometry.cardW + 8, top: geometry.poolTop }}
                 >
-                  <div className="text-center text-xs text-text-secondary leading-[22px]">
-                    {COLUMN_LABELS[column]}
-                    {columnCounts[column] > 0 && <span className="opacity-60"> · {columnCounts[column]}</span>}
-                  </div>
+                  {COLUMN_LABELS[column]}
+                  {columnCounts[column] > 0 && <span className="opacity-60"> · {columnCounts[column]}</span>}
                 </div>
               ))}
-              <ScrollThumb
-                scroll={poolScroll}
-                max={maxScroll}
-                left={Math.min(geometry.width - 8, geometry.columnX[SIDEBOARD_COLUMN] + geometry.cardW + 12)}
-                top={geometry.stackTop}
-                height={geometry.poolBottom - geometry.stackTop}
+              {/* Drop highlights: one per stack (column and band). */}
+              {poolBands.map(({ column, band, top, height }) => (
+                <div
+                  key={`${column}-${band}`}
+                  className={`absolute rounded-md pointer-events-none transition-colors duration-150 ${
+                    poolTarget?.column === column && poolTarget.band === band
+                      ? 'bg-button-primary/15'
+                      : 'bg-transparent'
+                  }`}
+                  style={{
+                    left: geometry.columnX[column] - 4,
+                    width: geometry.cardW + 8,
+                    top: top - 4,
+                    height: height + 8,
+                  }}
+                />
+              ))}
+            </>
+          )}
+          {splitPool && (
+            // Phones with the pool on the table: its tabs, then a row of stacks that scrolls sideways.
+            <>
+              <div
+                className="absolute inset-x-0 bottom-0 border-t border-border bg-bg/60 pointer-events-none"
+                style={{ top: splitPool.top }}
               />
+              <div
+                role="tablist"
+                className="absolute inset-x-0 flex"
+                style={{ top: splitPool.top, height: SPLIT_TABS_HEIGHT, zIndex: 700 }}
+              >
+                {(
+                  [
+                    ['mainboard', 'Mainboard', mainCount],
+                    ['sideboard', 'Sideboard', sideCount],
+                    ...(removed.length > 0 ? ([['removed', 'Removed', removed.length]] as const) : []),
+                  ] as const
+                ).map(([key, label, total]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    role="tab"
+                    aria-selected={poolTab === key}
+                    onClick={() => setPoolTab(key)}
+                    className={`flex-1 text-sm font-semibold border-b-2 transition-colors ${
+                      poolTab === key ? 'border-link text-text' : 'border-transparent text-text-secondary'
+                    }`}
+                  >
+                    {label} · {total}
+                  </button>
+                ))}
+              </div>
+              <motion.div
+                className="absolute left-0 pointer-events-none"
+                style={{ x: poolShift, top: splitPool.labelTop, bottom: 0, width: splitPool.contentWidth }}
+              >
+                {splitStacks.map((stack, column) => (
+                  <div
+                    key={column}
+                    className={`absolute rounded-md transition-colors duration-150 ${
+                      poolTarget?.column === column ? 'bg-button-primary/15' : 'bg-transparent'
+                    }`}
+                    style={{
+                      left: splitPool.columnX[column] - 3,
+                      width: splitPool.cardW + 6,
+                      top: 0,
+                      bottom: SPLIT_SCROLLBAR_HEIGHT,
+                    }}
+                  >
+                    {poolTab !== 'removed' && (
+                      <div
+                        className="text-center text-xxs text-text-secondary"
+                        style={{ lineHeight: `${SPLIT_LABEL_HEIGHT}px` }}
+                      >
+                        {COLUMN_LABELS[column]}
+                        {stack.length > 0 && <span className="opacity-60"> · {stack.length}</span>}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </motion.div>
+              {/* A swipe on the row picks up a card, so it scrolls from here. */}
+              {maxPoolScrollX > 0 && (
+                <HorizontalScrollbar
+                  scroll={poolScrollX}
+                  max={maxPoolScrollX}
+                  viewWidth={stageSize.width}
+                  contentWidth={splitPool.contentWidth}
+                  className="absolute inset-x-0 bottom-0 flex flex-col justify-center px-3"
+                  style={{ height: SPLIT_SCROLLBAR_HEIGHT, zIndex: 700 }}
+                />
+              )}
             </>
           )}
           {geometry && (
@@ -1098,28 +1395,6 @@ const DraftTable: React.FC<DraftTableProps> = ({
                   style={{ height: geometry.packBottom - 8, zIndex: 50 }}
                 />
               )}
-              {cornerCards.length > 0 && (
-                <div className="absolute left-2 bottom-2 flex gap-1.5" style={{ zIndex: 3050 }}>
-                  {cornerCards.map((id) => (
-                    <motion.button
-                      key={id}
-                      type="button"
-                      onClick={() => onPoolCardPress?.(id)}
-                      className={`block w-12 card-border overflow-hidden shadow-lg ${
-                        armedSet.has(id) ? 'ring-[3px] ring-[#f59e0b]' : ''
-                      }`}
-                      animate={armedSet.has(id) ? { rotate: 0 } : { rotate: [0, 4, 0, -4, 0] }}
-                      transition={
-                        armedSet.has(id)
-                          ? { duration: 0.2 }
-                          : { duration: 2.4, ease: 'easeInOut', repeat: Infinity, delay: (id % 7) * 0.17 }
-                      }
-                    >
-                      <FoilCardImage card={cards[id]} />
-                    </motion.button>
-                  ))}
-                </div>
-              )}
               {opening && (
                 <BoosterPack
                   key={opening.id}
@@ -1135,65 +1410,10 @@ const DraftTable: React.FC<DraftTableProps> = ({
                   onDone={endOpening}
                 />
               )}
-              {compact && (
-                // Phones: opens the pool drawer. Over every card, even one being dragged onto it.
-                <motion.button
-                  type="button"
-                  aria-label="Open pool"
-                  onClick={() => setPoolOpen(true)}
-                  className={`absolute right-0 flex flex-col items-center gap-2 py-3 rounded-l-md border border-r-0 shadow-lg transition-colors ${
-                    tabTarget ? 'bg-button-primary/30 border-button-primary' : 'bg-bg-active border-border'
-                  }`}
-                  style={{ width: TAB_WIDTH, top: '50%', y: '-50%', zIndex: 3100, transformOrigin: '100% 50%' }}
-                  animate={readyCards.length > 0 ? { rotate: [0, 3, 0, -3, 0] } : { rotate: 0 }}
-                  transition={
-                    readyCards.length > 0 ? { duration: 2.4, ease: 'easeInOut', repeat: Infinity } : { duration: 0.2 }
-                  }
-                >
-                  {readyCards.length > 0 ? (
-                    <ZapIcon size={14} className="text-[#f59e0b]" />
-                  ) : (
-                    <ChevronLeftIcon size={16} />
-                  )}
-                  {/* Pops each time a card lands in the pool. */}
-                  <motion.span
-                    key={poolIds.size}
-                    initial={{ scale: 1.5 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 400, damping: 15 }}
-                    className="text-xs font-semibold"
-                  >
-                    {poolIds.size}
-                  </motion.span>
-                  <span
-                    className="text-xxs uppercase tracking-widest text-text-secondary"
-                    style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
-                  >
-                    Pool
-                  </span>
-                </motion.button>
-              )}
             </>
           )}
         </div>
 
-        {compact && (
-          <PoolTray
-            open={poolOpen}
-            onClose={() => setPoolOpen(false)}
-            tab={poolTab}
-            onTabChange={setPoolTab}
-            cards={cards}
-            mainboard={mainboard}
-            sideboard={sideboard}
-            onToggle={togglePoolCard}
-            readyCards={readyCards}
-            armedCards={armedCards}
-            onPress={onPoolCardPress}
-            notes={notes}
-            removed={removed}
-          />
-        )}
         {effects}
       </div>
     </div>

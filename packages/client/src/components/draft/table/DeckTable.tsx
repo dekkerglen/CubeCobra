@@ -2,12 +2,13 @@ import React, { useContext, useEffect, useLayoutEffect, useMemo, useRef, useStat
 
 import { makeSubtitle } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
-import { AnimatePresence, motion, MotionValue, useMotionValue, useTransform } from 'framer-motion';
+import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-motion';
 
 import AutocardContext from '../../../contexts/AutocardContext';
 import DisplayContext from '../../../contexts/DisplayContext';
 import TagColorContext from '../../../contexts/TagColorContext';
 import DraftLocation from '../../../drafting/DraftLocation';
+import useLocalStorage from '../../../hooks/useLocalStorage';
 import Text from '../../base/Text';
 import CardSprite, { Band, SpriteId } from './CardSprite';
 import {
@@ -20,24 +21,17 @@ import {
   deckInsertIndex,
   isCompactWidth,
   LABEL_HEIGHT,
-  maxRegionScroll,
+  MAX_ZOOM,
   MIN_COLUMNS,
+  MIN_ZOOM,
   removedPose,
   rowHeight,
   stackPose,
 } from './deckLayout';
 import { PhoneMenuButton, PhoneMenuPanel } from './PhoneMenu';
-import ScrollThumb from './ScrollThumb';
+import HorizontalScrollbar from './HorizontalScrollbar';
 import { Pose } from './tableLayout';
-import {
-  DragSession,
-  HorizontalScroll,
-  revealInView,
-  ScrollRegion,
-  useCardDrag,
-  useClampScroll,
-  useWheelScroll,
-} from './useCardDrag';
+import { DragSession, HorizontalScroll, useCardDrag, useClampScroll, useWheelScroll } from './useCardDrag';
 
 type Zone = BoardKey | 'removed';
 
@@ -106,12 +100,12 @@ const locationOf = (slot: Slot): DraftLocation =>
     : DraftLocation.sideboard(slot.row, slot.col, slot.index);
 
 /**
- * The deckbuilder as a table that fits the viewport: the deck on top, the
- * sideboard below (sharing columns, so a card dragged straight down stays in its
- * column), and a rail with the deck-art target and the removed pile. On phones
- * the removed pile is a strip under the sideboard and the table scrolls
- * sideways. Cards are sprites on one stage with the same drag-and-ease behavior
- * as the draft table; each region scrolls on its own when it holds more than fits.
+ * The deckbuilder as a table: the deck on top, the sideboard below (sharing
+ * columns, so a card dragged straight down stays in its column), and a rail with
+ * the deck-art target and the removed pile. On phones the removed pile is a
+ * strip under the sideboard, the table scrolls sideways, and a pinch sizes the
+ * cards. Cards are sprites on one stage with the same drag-and-ease behavior as
+ * the draft table; the boards grow to hold their cards and the page scrolls.
  *
  * Deck rules stay in the page; the table only decides where cards are drawn and
  * translates drops and taps into the page's handlers.
@@ -137,18 +131,37 @@ const DeckTable: React.FC<DeckTableProps> = ({
   const { showCustomImages } = useContext(DisplayContext);
   const tagColors = useContext(TagColorContext);
 
+  const tableRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
   const [stageSize, setStageSize] = useState({ width: 0, height: 0 });
+  // Desktop: the window's room for the stage, which sizes the cards.
+  const [viewRoom, setViewRoom] = useState(0);
   const [menuOpen, setMenuOpen] = useState(false);
   useLayoutEffect(() => {
     const el = stageRef.current;
     if (!el) return undefined;
-    const measure = () => setStageSize({ width: el.clientWidth, height: el.clientHeight });
+    const measure = () => {
+      setStageSize({ width: el.clientWidth, height: el.clientHeight });
+      // The window less any bar fixed over its bottom (see CubeBottomNav), what's above the stage, and the border.
+      const covered =
+        parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--bottom-nav-height')) || 0;
+      const above = el.getBoundingClientRect().top - (tableRef.current?.getBoundingClientRect().top ?? 0);
+      setViewRoom(window.innerHeight - covered - above - 2);
+    };
     measure();
     const observer = new ResizeObserver(measure);
     observer.observe(el);
-    return () => observer.disconnect();
+    window.addEventListener('resize', measure);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', measure);
+    };
   }, []);
+
+  const compact = stageSize.width > 0 && isCompactWidth(stageSize.width);
+  // Phones: the cards' size, as a pinch has left it (kept for next time), or as a pinch has it right now.
+  const [zoom, setZoom] = useLocalStorage<number>('deckbuilderZoom', 1);
+  const [pinchZoom, setPinchZoom] = useState<number | null>(null);
 
   // The handlers are defined further down; these wrappers only run on pointer events.
   const dragger = useCardDrag<DropTarget>({
@@ -159,9 +172,10 @@ const DeckTable: React.FC<DeckTableProps> = ({
     drop: (session, target) => drop(session, target),
     click: (id) => click(String(id)),
     dragStarted: () => hideCard(),
-    scrollRegions: () => scrollRegions,
     horizontal: () => horizontal,
-    verticalScroller: () => (geometry?.compact ? window : null),
+    verticalScroller: () => window,
+    // Phones: a touch picks a card up straight away; the sticky scrollbar does the sideways panning.
+    touchPicksUp: compact,
   });
   const { drag } = dragger;
 
@@ -212,41 +226,41 @@ const DeckTable: React.FC<DeckTableProps> = ({
       ),
     );
 
-  // On phones the boards grow to fit their cards (including the gap a dragged card opens).
+  // The boards grow to fit their cards (including the gap a dragged card opens).
   const gapTarget = drag?.target ?? null;
   const deckRows = tallestPerRow('deck', null, gapTarget);
   const sideboardRows = tallestPerRow('sideboard', null, gapTarget);
   const rowsKey = `${deckRows.join(',')}|${sideboardRows.join(',')}`;
 
-  const compact = stageSize.width > 0 && isCompactWidth(stageSize.width);
   const columnCount = Math.max(MIN_COLUMNS, ...BOARDS.flatMap((board) => stacks[board].map((row) => row.length)));
-  // Phones size the stage to the cards.
+  const removedCount = removedKeys.length + (gapTarget?.kind === 'removed' ? 1 : 0);
+  const cardZoom = pinchZoom ?? zoom;
+  // The stage is sized to the cards.
   const geometry: DeckGeometry | null = useMemo(
     () =>
-      stageSize.width > 0 && (compact || stageSize.height > 0)
-        ? computeDeckGeometry(stageSize.width, stageSize.height, columnCount, removedKeys.length, {
-            deck: deckRows,
-            sideboard: sideboardRows,
-          })
+      stageSize.width > 0 && (compact || viewRoom > 0)
+        ? computeDeckGeometry(
+            stageSize.width,
+            stageSize.height,
+            viewRoom,
+            columnCount,
+            removedCount,
+            { deck: deckRows, sideboard: sideboardRows },
+            cardZoom,
+          )
         : null,
     // deckRows/sideboardRows are captured by rowsKey.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [stageSize.width, stageSize.height, compact, columnCount, removedKeys.length, rowsKey],
+    [stageSize.width, stageSize.height, viewRoom, compact, columnCount, removedCount, rowsKey, cardZoom],
   );
 
-  const deckScroll = useMotionValue(0);
-  const sideboardScroll = useMotionValue(0);
-  const removedScroll = useMotionValue(0);
   const scrollX = useMotionValue(0);
   const contentShift = useTransform(scrollX, (value) => -value);
-  const deckShift = useTransform(deckScroll, (value) => -value);
-  const sideboardShift = useTransform(sideboardScroll, (value) => -value);
   // Fades at the left and right edges while there's more of the table that way.
   const leftFade = useTransform(scrollX, (value) => Math.min(1, value / FADE_RAMP));
   const rightFade = useMotionValue(0);
-  const scrollOf = (zone: Zone): MotionValue<number> =>
-    zone === 'deck' ? deckScroll : zone === 'sideboard' ? sideboardScroll : removedScroll;
-  const viewOf = (zone: Zone): Band | null =>
+  // A card travelling in from another zone stays on top until it's inside the zone's panel.
+  const landingOf = (zone: Zone): Band | null =>
     geometry ? { top: geometry[zone].viewTop, bottom: geometry[zone].bottom } : null;
 
   // ---- Where every card sits this render ----
@@ -304,19 +318,8 @@ const DeckTable: React.FC<DeckTableProps> = ({
   }, [geometry, stacks, removedKeys, slots, drag]);
 
   // ---- Scrolling ----
-  // Phones normally have no inner vertical scrolling: the boards fit their cards and the page scrolls.
-  const deckMax = geometry?.scrollsInside ? maxRegionScroll(geometry, geometry.deck, deckRows) : 0;
-  const sideboardMax = geometry?.scrollsInside ? maxRegionScroll(geometry, geometry.sideboard, sideboardRows) : 0;
-  // The phone layout's removed strip is a single row; it scrolls sideways with everything else.
-  const removedMax =
-    geometry && !geometry.compact
-      ? maxRegionScroll(geometry, geometry.removed, [removedKeys.length + (gapTarget?.kind === 'removed' ? 1 : 0)])
-      : 0;
-  const maxOf = (zone: Zone) => (zone === 'deck' ? deckMax : zone === 'sideboard' ? sideboardMax : removedMax);
+  // Only sideways, on phones, when the columns are wider than the screen; the page does the rest.
   const maxScrollX = geometry ? Math.max(0, Math.ceil(geometry.contentWidth - geometry.width)) : 0;
-  useClampScroll(deckScroll, deckMax);
-  useClampScroll(sideboardScroll, sideboardMax);
-  useClampScroll(removedScroll, removedMax);
   useClampScroll(scrollX, maxScrollX);
   useEffect(() => {
     const update = (value: number) => rightFade.set(Math.min(1, Math.max(0, maxScrollX - value) / FADE_RAMP));
@@ -325,6 +328,7 @@ const DeckTable: React.FC<DeckTableProps> = ({
   }, [scrollX, maxScrollX, rightFade]);
 
   const horizontal: HorizontalScroll | null = maxScrollX > 0 ? { scroll: scrollX, max: maxScrollX } : null;
+  useWheelScroll(stageRef, [], dragger.scrolled, horizontal, dragger.scrolledX);
 
   // Between the last column and the rail, in content coordinates (no rail on phones).
   const railEdge = geometry
@@ -332,62 +336,95 @@ const DeckTable: React.FC<DeckTableProps> = ({
       ? Infinity
       : (geometry.columnX[geometry.columns - 1] + geometry.cardW + geometry.railX) / 2
     : 0;
-  // Scroll regions are on-screen rectangles.
-  const scrollRegions: ScrollRegion[] =
-    geometry && geometry.scrollsInside
-      ? [
-          {
-            left: 0,
-            right: Math.min(railEdge, geometry.width),
-            top: geometry.deck.top,
-            viewTop: geometry.deck.viewTop,
-            bottom: geometry.deck.bottom,
-            scroll: deckScroll,
-            max: deckMax,
-          },
-          {
-            left: 0,
-            right: Math.min(railEdge, geometry.width),
-            top: geometry.sideboard.top,
-            viewTop: geometry.sideboard.viewTop,
-            bottom: geometry.compact ? geometry.sideboard.bottom : geometry.height,
-            scroll: sideboardScroll,
-            max: sideboardMax,
-          },
-          {
-            left: geometry.compact ? 0 : railEdge,
-            right: geometry.width,
-            top: geometry.removed.top,
-            viewTop: geometry.removed.viewTop,
-            bottom: geometry.height,
-            scroll: removedScroll,
-            max: removedMax,
-          },
-        ]
-      : [];
-  useWheelScroll(stageRef, scrollRegions, dragger.scrolled, horizontal, dragger.scrolledX);
 
-  // After a tap moves a card to the other board, scroll it into view there.
-  const revealKey = useRef<string | null>(null);
+  // ---- Pinching (phones) ----
+  // Two fingers size the cards, keeping what's between them under them. The
+  // layout follows the fingers as they move, and the size sticks when they lift.
+  const pinch = useRef<{
+    spread: number;
+    zoom: number;
+    cardW: number;
+    // The point between the fingers, in the table's content coordinates, and the stage's top on the page.
+    x: number;
+    y: number;
+    pageTop: number;
+    // Where the fingers are now, on screen.
+    midX: number;
+    midY: number;
+  } | null>(null);
+  const pinchState = useRef({ zoom: cardZoom, cardW: geometry?.cardW ?? 0, cancel: dragger.cancel, setZoom });
   useLayoutEffect(() => {
-    const key = revealKey.current;
-    if (key === null || !geometry) return;
-    revealKey.current = null;
-    const placement = placements.get(key);
-    const slot = slots.get(key);
-    if (!placement || !slot || slot.zone === 'removed') return;
-    const pile = stacks[slot.zone][slot.row]?.[slot.col] ?? [];
-    const region = geometry[slot.zone];
-    // The last card in a stack shows its whole face, the others just their name bar.
-    const top = placement.pose.y;
-    const bottom = top + (pile[pile.length - 1] === key ? geometry.cardH : geometry.bar);
-    revealInView(scrollOf(slot.zone), top, bottom, region.viewTop, region.bottom, maxOf(slot.zone));
+    pinchState.current = { zoom: cardZoom, cardW: geometry?.cardW ?? 0, cancel: dragger.cancel, setZoom };
   });
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage || !compact) return undefined;
+    const spread = (touches: TouchList) =>
+      Math.hypot(touches[0].clientX - touches[1].clientX, touches[0].clientY - touches[1].clientY);
+    const middle = (touches: TouchList) => ({
+      x: (touches[0].clientX + touches[1].clientX) / 2,
+      y: (touches[0].clientY + touches[1].clientY) / 2,
+    });
+    const start = (event: TouchEvent) => {
+      if (event.touches.length !== 2) return;
+      pinchState.current.cancel();
+      const rect = stage.getBoundingClientRect();
+      const mid = middle(event.touches);
+      pinch.current = {
+        spread: spread(event.touches),
+        zoom: pinchState.current.zoom,
+        cardW: pinchState.current.cardW,
+        x: mid.x - rect.left + scrollX.get(),
+        y: mid.y - rect.top,
+        pageTop: rect.top + window.scrollY,
+        midX: mid.x,
+        midY: mid.y,
+      };
+      setPinchZoom(pinchState.current.zoom);
+    };
+    const move = (event: TouchEvent) => {
+      const p = pinch.current;
+      if (!p || event.touches.length !== 2) return;
+      event.preventDefault();
+      const mid = middle(event.touches);
+      p.midX = mid.x;
+      p.midY = mid.y;
+      setPinchZoom(Math.max(MIN_ZOOM, Math.min(MAX_ZOOM, (p.zoom * spread(event.touches)) / p.spread)));
+    };
+    const end = (event: TouchEvent) => {
+      if (!pinch.current || event.touches.length >= 2) return;
+      pinch.current = null;
+      setPinchZoom((current) => {
+        if (current !== null) pinchState.current.setZoom(current);
+        return null;
+      });
+    };
+    stage.addEventListener('touchstart', start, { passive: true });
+    stage.addEventListener('touchmove', move, { passive: false });
+    stage.addEventListener('touchend', end);
+    stage.addEventListener('touchcancel', end);
+    return () => {
+      stage.removeEventListener('touchstart', start);
+      stage.removeEventListener('touchmove', move);
+      stage.removeEventListener('touchend', end);
+      stage.removeEventListener('touchcancel', end);
+    };
+  }, [compact, scrollX]);
+  // Once the cards have resized, scroll so the point that was between the fingers still is.
+  useLayoutEffect(() => {
+    const p = pinch.current;
+    const stage = stageRef.current;
+    if (!p || !geometry || !stage || p.cardW <= 0) return;
+    const scale = geometry.cardW / p.cardW;
+    const left = stage.getBoundingClientRect().left;
+    scrollX.set(Math.max(0, Math.min(maxScrollX, p.x * scale - (p.midX - left))));
+    window.scrollTo({ top: p.pageTop + p.y * scale - p.midY });
+  }, [geometry, maxScrollX, scrollX]);
 
   // ---- Drag and tap ----
   const locate = (key: string) => {
     const slot = slots.get(key);
-    return slot ? { zone: slot.zone, scroll: scrollOf(slot.zone) } : null;
+    return slot ? { zone: slot.zone, scroll: null } : null;
   };
 
   // left/top are where the card is drawn; columns and the rail are in content coordinates.
@@ -409,11 +446,10 @@ const DeckTable: React.FC<DeckTableProps> = ({
     const col = deckColumnAt(geometry, centerX);
     if (col === null) return null;
     const draggedKey = String(s.id);
-    const contentTop = top + scrollOf(board).get();
     const tops = bandTops(geometry, geometry[board], tallestPerRow(board, draggedKey, null));
-    const row = bandAt(geometry, tops, contentTop);
+    const row = bandAt(geometry, tops, top);
     const count = (rowsOf(board)[row]?.[col] ?? []).filter((key) => key !== draggedKey).length;
-    return { kind: 'board', board, row, col, index: deckInsertIndex(geometry, tops[row], contentTop, count) };
+    return { kind: 'board', board, row, col, index: deckInsertIndex(geometry, tops[row], top, count) };
   };
 
   const drop = (s: DragSession, target: DropTarget) => {
@@ -446,7 +482,6 @@ const DeckTable: React.FC<DeckTableProps> = ({
     const slot = slots.get(key);
     if (!slot || slot.zone === 'removed') return;
     hideCard();
-    revealKey.current = key;
     onToggleBoard(locationOf(slot));
   };
 
@@ -483,7 +518,6 @@ const DeckTable: React.FC<DeckTableProps> = ({
     const slot = slots.get(key);
     const card = slot ? cards[slot.cardIndex] : undefined;
     if (!card || !geometry) return;
-    const view = viewOf(placement.zone);
     sprites.push(
       <CardSprite
         key={key}
@@ -494,13 +528,14 @@ const DeckTable: React.FC<DeckTableProps> = ({
         pose={placement.pose}
         z={placement.z}
         zone={placement.zone}
-        scroll={scrollOf(placement.zone)}
+        scroll={null}
         scrollX={scrollX}
-        clip={view}
-        landing={view}
+        clip={null}
+        landing={landingOf(placement.zone)}
         enterFrom={{ ...placement.pose, opacity: 0, delay: 0 }}
         dragged={drag?.id === key}
-        touchAction={geometry.scrollsInside ? 'none' : 'pan-y'}
+        touchAction="none"
+        instant={pinchZoom !== null}
         highlight={null}
         register={dragger.register}
         onPointerDown={dragger.pointerDown}
@@ -544,8 +579,6 @@ const DeckTable: React.FC<DeckTableProps> = ({
 
   const columnsLeft = geometry ? geometry.columnX[0] - geometry.inset : 0;
   const columnsRight = geometry ? geometry.columnX[geometry.columns - 1] + geometry.cardW + geometry.inset : 0;
-  // Vertical scrollbars sit beside the columns, or at the screen edge when the table scrolls sideways.
-  const thumbLeft = geometry ? (geometry.compact ? geometry.width - 8 : columnsRight + 2) : 0;
 
   const subtitle = (
     <Text xs className={compact ? 'text-text-secondary' : 'text-text-secondary truncate min-w-0'}>
@@ -555,15 +588,16 @@ const DeckTable: React.FC<DeckTableProps> = ({
   const phoneMenu = compact && renderToolbar;
 
   return (
-    // On desktop exactly one viewport tall (less the phone's bottom nav), toolbar
+    // On desktop at least one viewport tall (less the phone's bottom nav), toolbar
     // included, regardless of the header above it: scroll past the header and the
-    // table fills the screen. On phones as tall as its cards. Not clipped, so the
-    // toolbar's menus can drop over the stage.
+    // table fills the screen, and it grows past that with the cards. On phones as
+    // tall as its cards. Not clipped, so the toolbar's menus can drop over the stage.
     <div
+      ref={tableRef}
       className={`flex flex-col bg-bg-accent/80 shadow border border-border ${
         compact ? 'mt-2 rounded-none border-x-0' : 'mt-3 rounded-md'
       }`}
-      style={compact ? undefined : { height: 'calc(100dvh - var(--bottom-nav-height, 0px))', minHeight: 480 }}
+      style={compact ? undefined : { minHeight: 'calc(100dvh - var(--bottom-nav-height, 0px))' }}
     >
       {renderToolbar && !compact && <div className="pb-2 border-b border-border">{renderToolbar('bar')}</div>}
       <div className={`flex items-center gap-3 min-w-0 ${compact ? 'py-1 px-2' : 'py-2 px-4 border-b border-border'}`}>
@@ -597,8 +631,12 @@ const DeckTable: React.FC<DeckTableProps> = ({
       {/* isolate: the cards' z-indexes stay inside the stage, under the toolbar's menus. */}
       <div
         ref={stageRef}
-        className={`relative overflow-hidden select-none isolate rounded-b-md ${compact ? '' : 'flex-1 min-h-0'}`}
-        style={compact ? { height: geometry?.contentHeight ?? 0, touchAction: 'pan-y' } : { touchAction: 'none' }}
+        className={`relative overflow-hidden select-none isolate rounded-b-md ${compact ? '' : 'flex-1'}`}
+        style={
+          compact
+            ? { height: geometry?.contentHeight ?? 0, touchAction: 'pan-y' }
+            : { minHeight: geometry?.contentHeight ?? 0, touchAction: 'none' }
+        }
         onPointerDown={dragger.backgroundPointerDown}
       >
         {geometry && (
@@ -643,52 +681,24 @@ const DeckTable: React.FC<DeckTableProps> = ({
                 }),
               )}
 
-              {/* Drop highlights: one per stack (row and column), scrolling and clipped with the board. */}
-              {BOARDS.map((board) => {
-                const region = geometry[board];
-                const clipTop = region.viewTop - 4;
-                return (
-                  <div
-                    key={`${board}-drop`}
-                    className="absolute overflow-hidden"
-                    style={{
-                      left: 0,
-                      width: geometry.contentWidth,
-                      top: clipTop,
-                      height: region.bottom + 4 - clipTop,
-                    }}
-                  >
-                    <motion.div
-                      className="absolute inset-0"
-                      style={{ y: board === 'deck' ? deckShift : sideboardShift }}
-                    >
-                      {bandsOf(board).map((band, row) =>
-                        geometry.columnX.map((x, col) => {
-                          const hovered =
-                            target?.kind === 'board' &&
-                            target.board === board &&
-                            target.row === row &&
-                            target.col === col;
-                          return (
-                            <div
-                              key={`${row}-${col}`}
-                              className={`absolute rounded-md transition-colors duration-150 ${
-                                hovered ? 'bg-button-primary/15' : 'bg-transparent'
-                              }`}
-                              style={{
-                                left: x - 4,
-                                width: geometry.cardW + 8,
-                                top: band.top - 4 - clipTop,
-                                height: band.height + 8,
-                              }}
-                            />
-                          );
-                        }),
-                      )}
-                    </motion.div>
-                  </div>
-                );
-              })}
+              {/* Drop highlights: one per stack (row and column). */}
+              {BOARDS.map((board) =>
+                bandsOf(board).map((band, row) =>
+                  geometry.columnX.map((x, col) => {
+                    const hovered =
+                      target?.kind === 'board' && target.board === board && target.row === row && target.col === col;
+                    return (
+                      <div
+                        key={`${board}-${row}-${col}`}
+                        className={`absolute rounded-md transition-colors duration-150 ${
+                          hovered ? 'bg-button-primary/15' : 'bg-transparent'
+                        }`}
+                        style={{ left: x - 4, width: geometry.cardW + 8, top: band.top - 4, height: band.height + 8 }}
+                      />
+                    );
+                  }),
+                ),
+              )}
 
               {geometry.compact ? (
                 // Phones: the removed pile is a strip under the sideboard.
@@ -763,28 +773,6 @@ const DeckTable: React.FC<DeckTableProps> = ({
               )}
             </motion.div>
 
-            <ScrollThumb
-              scroll={deckScroll}
-              max={deckMax}
-              left={thumbLeft}
-              top={geometry.deck.viewTop}
-              height={geometry.deck.bottom - geometry.deck.viewTop}
-            />
-            <ScrollThumb
-              scroll={sideboardScroll}
-              max={sideboardMax}
-              left={thumbLeft}
-              top={geometry.sideboard.viewTop}
-              height={geometry.sideboard.bottom - geometry.sideboard.viewTop}
-            />
-            <ScrollThumb
-              scroll={removedScroll}
-              max={removedMax}
-              left={Math.min(geometry.width - 8, geometry.railX + geometry.cardW + 10)}
-              top={geometry.removed.viewTop}
-              height={geometry.removed.bottom - geometry.removed.viewTop}
-            />
-
             <AnimatePresence>{sprites}</AnimatePresence>
 
             {/* Over resting cards, under a card being dragged or flying across. */}
@@ -803,6 +791,17 @@ const DeckTable: React.FC<DeckTableProps> = ({
           </>
         )}
       </div>
+      {geometry?.compact && maxScrollX > 0 && (
+        // Stuck to the bottom of the screen while the table is in view.
+        <HorizontalScrollbar
+          scroll={scrollX}
+          max={maxScrollX}
+          viewWidth={geometry.width}
+          contentWidth={geometry.contentWidth}
+          className="sticky z-10 px-3 py-3 bg-bg-accent/90 border-t border-border"
+          style={{ bottom: 'var(--bottom-nav-height, 0px)' }}
+        />
+      )}
     </div>
   );
 };

@@ -3,13 +3,11 @@
  * (top) and sideboard (bottom), which share the same columns so a card dragged
  * straight down lands in the same column, plus a rail on the right holding the
  * deck-art drop target and the removed pile. Each board's rows are drawn as
- * bands of column stacks one above the other; a board that holds more than fits
- * scrolls within its region.
+ * bands of column stacks one above the other. Nothing scrolls inside the table:
+ * each board is as tall as its cards and the page scrolls instead.
  *
  * On narrow (phone) stages there's no rail: the removed pile is a strip under
- * the sideboard, and the table scrolls sideways. Nothing scrolls inside the
- * table vertically: each board is as tall as its cards and the page scrolls
- * instead.
+ * the sideboard, the table scrolls sideways, and a pinch sizes the cards.
  */
 import { CARD_ASPECT, Pose } from './tableLayout';
 
@@ -24,7 +22,7 @@ export const LABEL_HEIGHT = 22;
 const BAND_GAP = 14; // px between a board's rows
 const DIVIDER = 10; // px between the deck and sideboard regions
 const BAR = 0.112; // visible slice of each card in a stack (the name bar)
-const SIDEBOARD_SHARE = 0.4; // fraction of the stage height given to the sideboard
+const SIDEBOARD_SHARE = 0.4; // fraction of the window's height that holds a sideboard card and a couple of name bars
 const ART_RATIO = 0.62; // deck-art target height / width
 export const MIN_COLUMNS = 8;
 const MIN_CARD_WIDTH = 56;
@@ -36,15 +34,18 @@ const COMPACT_GUTTER = 14;
 const COMPACT_COLUMN_GAP = 6;
 const COMPACT_BAND_GAP = 8;
 const COMPACT_DIVIDER = 6;
-const COMPACT_CARD_SHARE = 0.32; // card width as a fraction of the stage width
+const COMPACT_CARD_SHARE = 0.32; // card width as a fraction of the stage width, before any pinch...
 const COMPACT_MIN_CARD_WIDTH = 96;
 const COMPACT_MAX_CARD_WIDTH = 170;
+const ZOOMED_MIN_CARD_WIDTH = 48; // ...and the smallest and largest (of the stage width) a pinch makes them
+const ZOOMED_MAX_CARD_SHARE = 0.9;
+export const MIN_ZOOM = 0.4;
+export const MAX_ZOOM = 2.5;
 const COMPACT_REMOVED_PEEK = 0.3; // how much of each removed card the strip shows
 
 export const isCompactWidth = (width: number) => width < COMPACT_WIDTH;
 
-// A scrolling region. Content (card poses) is in stage coordinates at zero
-// scroll; stacks start at viewTop, and the region is visible down to bottom.
+// A board's region: its label at top, stacks from viewTop, and its panel down to bottom.
 export interface Region {
   top: number;
   viewTop: number;
@@ -56,10 +57,8 @@ export interface DeckGeometry {
   height: number;
   // Phone layout: no rail, removed pile in a strip under the sideboard, sideways scrolling.
   compact: boolean;
-  // Desktop: each board scrolls inside its region instead of growing.
-  scrollsInside: boolean;
   // Size of everything on the table: wider than the stage when it scrolls
-  // sideways, and on phones the height the stage should be.
+  // sideways, and the height the stage should be at least.
   contentWidth: number;
   contentHeight: number;
   cardW: number;
@@ -98,10 +97,10 @@ const computeCompactGeometry = (
   columns: number,
   removedCount: number,
   tallest: Record<BoardKey, number[]>,
+  zoom: number,
 ): DeckGeometry => {
-  const cardW = Math.round(
-    Math.max(COMPACT_MIN_CARD_WIDTH, Math.min(COMPACT_MAX_CARD_WIDTH, width * COMPACT_CARD_SHARE)),
-  );
+  const unzoomed = Math.max(COMPACT_MIN_CARD_WIDTH, Math.min(COMPACT_MAX_CARD_WIDTH, width * COMPACT_CARD_SHARE));
+  const cardW = Math.round(Math.max(ZOOMED_MIN_CARD_WIDTH, Math.min(width * ZOOMED_MAX_CARD_SHARE, unzoomed * zoom)));
   const cardH = Math.round(cardW * CARD_ASPECT);
   const bar = cardH * BAR;
 
@@ -125,7 +124,6 @@ const computeCompactGeometry = (
     width,
     height: contentHeight,
     compact: true,
-    scrollsInside: false,
     contentWidth,
     contentHeight,
     cardW,
@@ -147,27 +145,31 @@ const computeCompactGeometry = (
 };
 
 /**
- * `tallest` is the tallest stack in each row of each board; phones size the
- * boards to fit it, while the desktop layout scrolls instead.
+ * `tallest` is the tallest stack in each row of each board, which the boards
+ * grow to fit. On desktop `viewHeight` is the window's room for the stage,
+ * which sizes the cards, and `height` the stage's, which the panels reach down
+ * to; phones size cards by the stage width and `zoom` (a pinch).
  */
 export const computeDeckGeometry = (
   width: number,
   height: number,
+  viewHeight: number,
   columns: number,
   removedCount: number,
   tallest: Record<BoardKey, number[]>,
+  zoom = 1,
 ): DeckGeometry => {
-  if (isCompactWidth(width)) return computeCompactGeometry(width, columns, removedCount, tallest);
+  if (isCompactWidth(width)) return computeCompactGeometry(width, columns, removedCount, tallest, zoom);
 
   const fromWidth = (width - 2 * PAD - GUTTER - (columns - 1) * COLUMN_GAP - RAIL_GAP) / (columns + 1);
-  // The sideboard region should show at least a whole card and a couple of name bars.
-  const sideboardHeight = height * SIDEBOARD_SHARE;
-  const fromSideboard = (sideboardHeight - LABEL_HEIGHT - PAD) / (1 + 2 * BAR) / CARD_ASPECT;
+  // The window should show at least a whole sideboard card and a couple of name bars.
+  const fromSideboard = (viewHeight * SIDEBOARD_SHARE - LABEL_HEIGHT - PAD) / (1 + 2 * BAR) / CARD_ASPECT;
   // The rail stacks the art target over the removed pile.
-  const fromRail = (height - 2 * PAD - 2 * LABEL_HEIGHT - 12) / (CARD_ASPECT + ART_RATIO);
+  const fromRail = (viewHeight - 2 * PAD - 2 * LABEL_HEIGHT - 12) / (CARD_ASPECT + ART_RATIO);
 
   const cardW = Math.max(MIN_CARD_WIDTH, Math.floor(Math.min(fromWidth, fromSideboard, fromRail)));
   const cardH = Math.round(cardW * CARD_ASPECT);
+  const bar = cardH * BAR;
 
   const blockWidth = GUTTER + columns * cardW + (columns - 1) * COLUMN_GAP + RAIL_GAP + cardW;
   const left = Math.max(PAD, (width - blockWidth) / 2);
@@ -175,22 +177,26 @@ export const computeDeckGeometry = (
   const columnX = Array.from({ length: columns }, (_, c) => left + GUTTER + c * (cardW + COLUMN_GAP));
   const railX = columnX[columns - 1] + cardW + RAIL_GAP;
 
-  const deckBottom = Math.round(height - sideboardHeight - DIVIDER / 2);
+  const deckBottom = PAD + LABEL_HEIGHT + bandsHeight(cardH, bar, BAND_GAP, tallest.deck) + 4;
   const sideboardTop = deckBottom + DIVIDER;
+  const sideboardEnd = sideboardTop + LABEL_HEIGHT + bandsHeight(cardH, bar, BAND_GAP, tallest.sideboard) + 4;
   const artTop = PAD + LABEL_HEIGHT;
   const artBottom = artTop + cardW * ART_RATIO;
   const removedTop = artBottom + 12;
+  const removedEnd = removedTop + LABEL_HEIGHT + bandHeight(cardH, bar, removedCount) + 4;
+  const contentHeight = Math.max(sideboardEnd, removedEnd) + PAD;
+  // The sideboard and removed panels reach the bottom of the stage.
+  const bottom = Math.max(height, contentHeight) - PAD;
 
   return {
     width,
     height,
     compact: false,
-    scrollsInside: true,
     contentWidth: width,
-    contentHeight: height,
+    contentHeight,
     cardW,
     cardH,
-    bar: cardH * BAR,
+    bar,
     columns,
     gutterX,
     gutterWidth: 20,
@@ -200,8 +206,8 @@ export const computeDeckGeometry = (
     inset: 8,
     railX,
     deck: { top: PAD, viewTop: PAD + LABEL_HEIGHT, bottom: deckBottom },
-    sideboard: { top: sideboardTop, viewTop: sideboardTop + LABEL_HEIGHT, bottom: height - PAD },
-    removed: { top: removedTop, viewTop: removedTop + LABEL_HEIGHT, bottom: height - PAD },
+    sideboard: { top: sideboardTop, viewTop: sideboardTop + LABEL_HEIGHT, bottom },
+    removed: { top: removedTop, viewTop: removedTop + LABEL_HEIGHT, bottom },
     art: { top: artTop, bottom: artBottom },
   };
 };
@@ -218,15 +224,6 @@ export const bandTops = (g: DeckGeometry, region: Region, tallestPerRow: number[
     top += rowHeight(g, tallest) + g.bandGap;
   });
   return tops;
-};
-
-/** How far a region can scroll for its bands (see bandTops) to be fully visible. */
-export const maxRegionScroll = (g: DeckGeometry, region: Region, tallestPerRow: number[]): number => {
-  if (tallestPerRow.length === 0) return 0;
-  const tops = bandTops(g, region, tallestPerRow);
-  const last = tallestPerRow.length - 1;
-  const contentBottom = tops[last] + rowHeight(g, tallestPerRow[last]);
-  return Math.max(0, Math.ceil(contentBottom - region.bottom));
 };
 
 /** Where a card sits in the removed pile: a stack in the rail, or a row in the phone layout's strip. */
