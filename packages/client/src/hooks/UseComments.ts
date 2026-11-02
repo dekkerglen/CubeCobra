@@ -1,7 +1,6 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 
 import Comment from '@utils/datatypes/Comment';
-import { wait } from '@utils/Util';
 
 import { findUserLinks } from 'markdown/parser';
 
@@ -34,6 +33,7 @@ const parseJsonSafe = async <T>(response: Response): Promise<T | null> => {
 const useComments = (
   parent: string,
   type: string,
+  options?: { enabled?: boolean },
 ): [
   Comment[],
   (comment: string) => Promise<void>,
@@ -42,6 +42,7 @@ const useComments = (
   string | null,
   () => Promise<void>,
 ] => {
+  const enabled = options?.enabled ?? true;
   const { csrfFetch } = useContext(CSRFContext);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -124,6 +125,10 @@ const useComments = (
   );
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     const getData = async () => {
       const response = await csrfFetch(`/comment/getcomments`, {
         method: 'POST',
@@ -143,12 +148,10 @@ const useComments = (
     };
 
     getData();
-  }, [parent, csrfFetch]);
+  }, [parent, csrfFetch, enabled]);
 
   const getMore = useCallback(async () => {
     setLoading(true);
-    // intentionally wait to avoid too many DB queries
-    await wait(2000);
 
     const response = await csrfFetch(`/comment/getcomments`, {
       method: 'POST',

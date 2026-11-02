@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 
-import CommentData from '@utils/datatypes/Comment';
+import CommentData, { REPLY_COUNT_CAP } from '@utils/datatypes/Comment';
 import classNames from 'classnames';
 
 import Datetime from 'components/base/Datetime';
@@ -60,9 +60,16 @@ const Comment: React.FC<CommentProps> = ({
 
   const [replyExpanded, toggleReply] = useToggle(false);
   const [expanded, toggle] = useToggle(false);
-  const [comments, addComment, , editChildComment] = useComments(comment.id, 'comment');
   const [loaded, setLoaded] = useState(false);
+  // Replies are fetched only once the reader asks for them. Fetching on mount to learn the
+  // count made every page of comments cost one request per comment.
+  const [comments, addComment, , editChildComment] = useComments(comment.id, 'comment', { enabled: loaded });
   const [isEdit, setIsEdit] = useState(false);
+
+  // The server's count is bounded, so it says "more than ten" rather than a number it would
+  // have to scan a whole partition to know. Once the replies are in hand, count those instead.
+  const knownReplies = loaded ? comments.length : (comment.replyCount ?? 0);
+  const replyLabel = !loaded && knownReplies >= REPLY_COUNT_CAP ? `${REPLY_COUNT_CAP - 1}+` : `${knownReplies}`;
 
   const remove = () => {
     editComment({
@@ -158,21 +165,19 @@ const Comment: React.FC<CommentProps> = ({
                   </Link>
                 </>
               )}
-              {!noReplies && comments.length > 0 && depth < maxDepth && (
+              {!noReplies && knownReplies > 0 && depth < maxDepth && (
                 <Link
                   onClick={() => {
                     toggle();
                     setLoaded(true);
                   }}
                 >
-                  <Text sm>{`${expanded ? 'Hide' : 'View'} Replies (${comments.length})`}</Text>
+                  <Text sm>{`${expanded ? 'Hide' : 'View'} Replies (${replyLabel})`}</Text>
                 </Link>
               )}
-              {!noReplies && comments.length > 0 && depth >= maxDepth && (
+              {!noReplies && knownReplies > 0 && depth >= maxDepth && (
                 <Link className="m-2" href={`/comment/${comment.id}`}>
-                  <Text
-                    sm
-                  >{`View ${comments.length} ${comments.length > 1 ? 'replies' : 'reply'} in new page...`}</Text>
+                  <Text sm>{`View ${replyLabel} ${knownReplies > 1 ? 'replies' : 'reply'} in new page...`}</Text>
                 </Link>
               )}
               <ShareCommentModalButton modalprops={{ comment }}>
