@@ -69,10 +69,18 @@ describe('the cardrow complexity guard', () => {
     expect(container.querySelector('.text-center')).not.toBeInTheDocument();
   });
 
+  /* Coarse regression guard, not a performance target. Unguarded, these documents took 5,500-12,400ms;
+   * guarded they take roughly a second, most of which is React rendering 30,000 characters into jsdom
+   * rather than tokenizing. The bound is deliberately loose because wall-clock under a loaded machine is
+   * noisy - a 1,000ms bound flaked at 1,036ms when the full suite ran alongside a dev server. The
+   * deterministic signal that the guard engaged is the literal `<<` assertion, not the clock.
+   */
+  const GUARDED_RENDER_BUDGET_MS = 5000;
+
   it('renders a pathological document fast', () => {
     const start = Date.now();
     textOf('<<'.repeat(15000));
-    expect(Date.now() - start).toBeLessThan(1000);
+    expect(Date.now() - start).toBeLessThan(GUARDED_RENDER_BUDGET_MS);
   });
 
   it.each([
@@ -81,6 +89,6 @@ describe('the cardrow complexity guard', () => {
   ])('drops cardrow for %s, where lone > characters hide the cost', (_label, input) => {
     const start = Date.now();
     expect(textOf(input)).toContain('<<');
-    expect(Date.now() - start).toBeLessThan(1000);
+    expect(Date.now() - start).toBeLessThan(GUARDED_RENDER_BUDGET_MS);
   });
 });
