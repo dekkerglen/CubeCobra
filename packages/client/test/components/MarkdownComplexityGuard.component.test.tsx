@@ -37,6 +37,17 @@ describe('cardrow scan-work metric', () => {
     expect(cardrowScanWork('<<x>>'.repeat(6000))).toBeLessThan(MAX_CARDROW_WORK / 100);
     expect(cardrowScanWork('<<'.repeat(15000))).toBeGreaterThan(MAX_CARDROW_WORK * 50);
   });
+
+  /* A lone `>` does not end a cardrow scan: the closing construct needs `>>`, and on failure
+   * `consumeGt` swallows the `>` and keeps scanning to end of line. So interleaving single `>`
+   * characters must not collapse the score — the tokenizer still walks the whole line.
+   */
+  it.each([
+    ["'<<a>' x7500 (30k, single > after each start)", '<<a>'.repeat(7500)],
+    ["'<<<a>' x6000 (two starts per group)", '<<<a>'.repeat(6000)],
+  ])('scores %s above the threshold', (_label, input) => {
+    expect(cardrowScanWork(input)).toBeGreaterThan(MAX_CARDROW_WORK);
+  });
 });
 
 describe('the cardrow complexity guard', () => {
@@ -61,6 +72,15 @@ describe('the cardrow complexity guard', () => {
   it('renders a pathological document fast', () => {
     const start = Date.now();
     textOf('<<'.repeat(15000));
+    expect(Date.now() - start).toBeLessThan(1000);
+  });
+
+  it.each([
+    ["'<<a>' x7500", '<<a>'.repeat(7500)],
+    ["'<<<a>' x6000", '<<<a>'.repeat(6000)],
+  ])('drops cardrow for %s, where lone > characters hide the cost', (_label, input) => {
+    const start = Date.now();
+    expect(textOf(input)).toContain('<<');
     expect(Date.now() - start).toBeLessThan(1000);
   });
 });

@@ -411,12 +411,19 @@ const maxCenteringDepth = (text: string): number => {
 
 /**
  * Estimates the character scanning `cardrow` will perform across the document: for each `<<`, the
- * distance from its content start to the next `>` on that line, or to the end of the line when there
- * is none. This models the tokenizer's actual work rather than pattern-matching an attack shape, so
- * every variant of the pathological input scores the same while ordinary content scores near zero.
+ * distance from its content start to the first `>>` on that line, or to the end of the line when
+ * there is none. This models the tokenizer's actual work rather than pattern-matching an attack
+ * shape, so every variant of the pathological input scores alike while ordinary content scores low.
  *
- * Runs right-to-left in a single pass per line with no allocation. Both characters of a `<<` are `<`,
- * so the next `>` at or after the marker is also the next `>` at or after the content start.
+ * It must be `>>`, not a lone `>`. A single `>` fails the closing construct, gets swallowed by
+ * `consumeGt`, and the scan continues to end of line — so charging to the next `>` would let
+ * `'<<a>'` repeated to the 30,000-character blog cap score 7,500 while still costing ~8,700ms.
+ * A `<<` whose content would begin with `>` costs nothing instead, because `contentStart` rejects
+ * it outright; that is why `'<<>'` repeated is genuinely cheap.
+ *
+ * Runs right-to-left in a single pass per line with no allocation. Both characters of a `<<` are
+ * `<`, so no `>>` can begin at the marker and the first `>>` at or after it is also the first at or
+ * after the content start.
  */
 export const cardrowScanWork = (text: string): number => {
   let total = 0;
@@ -432,12 +439,14 @@ export const cardrowScanWork = (text: string): number => {
     if (inFence) continue;
 
     const len = line.length;
-    let nextGt = len;
+    let nextGtGt = len;
     for (let i = len - 1; i >= 0; i--) {
-      if (line.charCodeAt(i) === 62) nextGt = i;
-      if (line.charCodeAt(i) === 60 && i + 1 < len && line.charCodeAt(i + 1) === 60) {
+      const c = line.charCodeAt(i);
+      if (c === 62 && i + 1 < len && line.charCodeAt(i + 1) === 62) nextGtGt = i;
+      if (c === 60 && i + 1 < len && line.charCodeAt(i + 1) === 60) {
         const contentStart = i + 2;
-        total += (nextGt >= contentStart ? nextGt : len) - contentStart;
+        if (contentStart >= len || line.charCodeAt(contentStart) === 62) continue;
+        total += (nextGtGt >= contentStart ? nextGtGt : len) - contentStart;
       }
     }
   }
