@@ -12,7 +12,13 @@ import SyntaxHighlighter from 'react-syntax-highlighter';
 import { a11yDark, a11yLight } from 'react-syntax-highlighter/dist/cjs/styles/hljs';
 import reactNodeToText from 'utils/reactNodeToText';
 
-import { ALL_PLUGINS, ALL_REHYPE_PLUGINS, LIMITED_REHYPE_PLUGINS, NO_CONTAINER_PLUGINS } from 'markdown/parser';
+import {
+  ALL_PLUGINS,
+  ALL_REHYPE_PLUGINS,
+  LIMITED_REHYPE_PLUGINS,
+  NO_CARDROW_PLUGINS,
+  NO_CONTAINER_PLUGINS,
+} from 'markdown/parser';
 
 import { Flexbox } from './base/Layout';
 import Link, { LinkProps } from './base/Link';
@@ -360,14 +366,25 @@ export interface MarkdownProps {
   limited?: boolean;
 }
 
-// The custom `centering` (>>> <<<) construct's tokenizer is O(n^2) and recurses one stack
-// frame per *nesting* level, so a deeply nested (or run-away unclosed) document can hang or
-// overflow the stack (and a blown-stack RangeError unwinds straight through React's error
-// boundary). What matters is nesting depth, NOT the number of blocks: a primer with hundreds
-// of flat, self-closing `>>> ... <<<` headers is O(n) and perfectly safe. So we measure the
-// maximum unclosed nesting depth; past this ceiling — far beyond any legitimate primer, which
-// never nests centering more than a couple levels — we drop the custom container extensions
-// rather than crash the whole page.
+// Two independent complexity guards, both O(n) pre-scans that swap in a reduced plugin set rather
+// than let a stored document hang the reader's browser. Markdown is only ever rendered client-side,
+// so an expensive document costs every *viewer*, not just its author.
+//
+// 1. The `centering` (>>> <<<) construct's tokenizer is O(n^2) and recurses one stack frame per
+//    *nesting* level, so a deeply nested (or run-away unclosed) document can hang or overflow the
+//    stack (and a blown-stack RangeError unwinds straight through React's error boundary). What
+//    matters is nesting depth, NOT the number of blocks: a primer with hundreds of flat,
+//    self-closing `>>> ... <<<` headers is O(n) and perfectly safe.
+//
+// 2. The `cardrow` (<< >>) tokenizer scans forward from every `<<` on a line looking for a closing
+//    `>>`, and nothing bounds (number of starts) x (distance each scans). A 30,000-character line -
+//    exactly the server's blog cap - measured ~5,500ms; dropping cardrow alone took the same input
+//    to ~38ms. Note a trailing `>>` does not help: `'<<'xN` and `'<<'xN + '>>'` measure within 3% of
+//    each other, so a guard keyed on whether the row is closed would miss half the attack surface.
+//    What is cheap: an isolated `<` that never forms `<<` (rejected at the second character), short
+//    scans (`<<x>>` rows), and the same volume split over short lines (a scan stops at end of line).
+//
+// Centering is checked first, so a document tripping both still drops both extensions.
 const MAX_CENTERING_DEPTH = 25;
 const OPEN_FENCE_RE = /^>{3,}/;
 const CLOSE_FENCE_RE = /^<{3,}\s*$/;
@@ -392,12 +409,53 @@ const maxCenteringDepth = (text: string): number => {
   return max;
 };
 
+/**
+ * Estimates the character scanning `cardrow` will perform across the document: for each `<<`, the
+ * distance from its content start to the next `>` on that line, or to the end of the line when there
+ * is none. This models the tokenizer's actual work rather than pattern-matching an attack shape, so
+ * every variant of the pathological input scores the same while ordinary content scores near zero.
+ *
+ * Runs right-to-left in a single pass per line with no allocation. Both characters of a `<<` are `<`,
+ * so the next `>` at or after the marker is also the next `>` at or after the content start.
+ */
+export const cardrowScanWork = (text: string): number => {
+  let total = 0;
+  let inFence = false;
+  for (const line of text.split('\n')) {
+    const trimmed = line.trimStart();
+    // Cardrow is a text construct and never runs inside fenced code, so a pasted code sample full of
+    // `<<` must not trip the guard and cost that author their card rows elsewhere in the document.
+    if (trimmed.startsWith('```') || trimmed.startsWith('~~~')) {
+      inFence = !inFence;
+      continue;
+    }
+    if (inFence) continue;
+
+    const len = line.length;
+    let nextGt = len;
+    for (let i = len - 1; i >= 0; i--) {
+      if (line.charCodeAt(i) === 62) nextGt = i;
+      if (line.charCodeAt(i) === 60 && i + 1 < len && line.charCodeAt(i + 1) === 60) {
+        const contentStart = i + 2;
+        total += (nextGt >= contentStart ? nextGt : len) - contentStart;
+      }
+    }
+  }
+  return total;
+};
+
+// Calibrated against measured renders: an attack scores 449,955,001 (~5,500ms), 6,000 legitimate card
+// rows score 6,000, the live wiki Markdown reference page scores 86. This ceiling is ~19x above the
+// worst legitimate case measured (256,500) and 1.1% of an attack - roughly 60ms of tokenizer work.
+export const MAX_CARDROW_WORK = 5_000_000;
+
 const Markdown: React.FC<MarkdownProps> = ({ markdown, limited = false }) => {
   const markdownStr = markdown?.toString() ?? '';
-  const remarkPlugins = useMemo(
-    () => (maxCenteringDepth(markdownStr) > MAX_CENTERING_DEPTH ? NO_CONTAINER_PLUGINS : ALL_PLUGINS),
-    [markdownStr],
-  );
+  const remarkPlugins = useMemo(() => {
+    if (maxCenteringDepth(markdownStr) > MAX_CENTERING_DEPTH) return NO_CONTAINER_PLUGINS;
+    if (cardrowScanWork(markdownStr) > MAX_CARDROW_WORK) return NO_CARDROW_PLUGINS;
+    return ALL_PLUGINS;
+  }, [markdownStr]);
   return (
     <Flexbox className="markdown" direction="col" gap="2">
       <ReactMarkdown

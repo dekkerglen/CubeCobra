@@ -26,6 +26,12 @@ export const ALL_PLUGINS = [...BASE_PLUGINS, userlink, breaks];
 // gfm, ...) still works.
 export const NO_CONTAINER_PLUGINS = [math, cardlink, [gfm, { singleTilde: false }], symbols, userlink, breaks];
 
+// Fallback for the cardrow complexity guard. `cardrow`'s tokenizer scans forward from every `<<` on a
+// line, so cost grows as (number of `<<` starts) x (distance each scans) - quadratic on a long line of
+// them. Only cardrow is implicated, so this set keeps `centering`: an author who trips the cardrow
+// guard should not silently lose `>>> <<<` as well.
+export const NO_CARDROW_PLUGINS = [centering, math, cardlink, [gfm, { singleTilde: false }], symbols, userlink, breaks];
+
 // rehype plugins used in all use-cases, including limited Markdown versions (i.e. comments)
 export const LIMITED_REHYPE_PLUGINS = [rehypeKatex];
 
