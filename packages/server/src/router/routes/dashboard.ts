@@ -11,6 +11,7 @@ import { Request, Response } from '../../types/express';
 import { csrfProtection, ensureAuth } from '../middleware';
 
 const FEED_PAGE_SIZE = 50;
+const MAX_FEED_FETCH_ROUNDS = 5;
 
 // Blog posts embed a Changelog hydrated with full card details by
 // ChangelogDynamoDao.hydrateChangelog. We strip those before shipping to the
@@ -25,12 +26,11 @@ const stripBlogDetails = (blog: BlogPost): BlogPost => {
 
 // Only public cubes' blog posts belong in a feed; private and unlisted ones must not leak.
 // Dev blog announcements belong to no cube and are exempt.
-const filterByPrivacy = (posts: BlogPost[]): BlogPost[] =>
-  posts.filter((blog) => {
-    if (!blog) return false;
-    if (blog.cube === DEV_BLOG_CUBE) return true;
-    return blog.cubeVisibility === CUBE_VISIBILITY.PUBLIC;
-  });
+const isPubliclyVisible = (blog: BlogPost): boolean => {
+  if (!blog) return false;
+  if (blog.cube === DEV_BLOG_CUBE) return true;
+  return blog.cubeVisibility === CUBE_VISIBILITY.PUBLIC;
+};
 
 const dashboardHandler = async (req: Request, res: Response) => {
   try {
@@ -108,29 +108,46 @@ const getMoreFeedItemsHandler = async (req: Request, res: Response) => {
   }
 
   const { user } = req;
-  const cursor = parseFeedCursor(req.body.lastKey);
 
-  // Two date-descending streams: what this user follows, and the site-wide announcements
-  // every user gets. Both are bounded by the cursor's date rather than resumed from a
-  // DynamoDB start key, because a merged page consumes a partial page from each.
-  const [personalResult, announcementResult] = await Promise.all([
-    feedDao.getByTo(user.id, undefined, FEED_PAGE_SIZE, cursor?.date),
-    blogDao.queryByCube(DEV_BLOG_CUBE, undefined, FEED_PAGE_SIZE, cursor?.date),
-  ]);
+  let cursor = parseFeedCursor(req.body.lastKey);
+  let items: BlogPost[] = [];
 
-  const merged = mergeFeedStreams({
-    personal: (personalResult.items || []).map((item: any) => item.document).filter(Boolean),
-    personalHasMore: !!personalResult.lastKey,
-    announcements: announcementResult.items || [],
-    announcementsHasMore: !!announcementResult.lastKey,
-    limit: FEED_PAGE_SIZE,
-    cursor,
-  });
+  // A page can come back empty while records remain — every item in it may be a legacy
+  // DEVBLOG row or a post whose cube has since gone private. The client renders its
+  // "no feed items" state on an empty page and offers no way to advance, so keep fetching
+  // rather than stranding the viewer. Bounded so a long run of hidden records cannot hold
+  // the request open.
+  for (let round = 0; round < MAX_FEED_FETCH_ROUNDS; round += 1) {
+    // Two date-descending streams: what this user follows, and the site-wide announcements
+    // every user gets. Both are bounded by the cursor's date rather than resumed from a
+    // DynamoDB start key, because a merged page consumes a partial page from each.
+    const [personalResult, announcementResult] = await Promise.all([
+      feedDao.getByTo(user.id, undefined, FEED_PAGE_SIZE, cursor?.date),
+      blogDao.queryByCube(DEV_BLOG_CUBE, undefined, FEED_PAGE_SIZE, cursor?.date),
+    ]);
+
+    const merged = mergeFeedStreams({
+      personal: (personalResult.items || []).map((item: any) => item.document).filter(Boolean),
+      personalHasMore: !!personalResult.lastKey,
+      announcements: announcementResult.items || [],
+      announcementsHasMore: !!announcementResult.lastKey,
+      limit: FEED_PAGE_SIZE,
+      cursor,
+      isVisible: isPubliclyVisible,
+    });
+
+    items = merged.items;
+    cursor = merged.cursor;
+
+    if (items.length > 0 || !cursor) {
+      break;
+    }
+  }
 
   return res.status(200).send({
     success: 'true',
-    items: filterByPrivacy(merged.items).map(stripBlogDetails),
-    lastKey: merged.cursor ?? null,
+    items: items.map(stripBlogDetails),
+    lastKey: cursor ?? null,
   });
 };
 

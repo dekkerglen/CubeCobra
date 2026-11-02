@@ -44,6 +44,9 @@ const newestFirst = (a: BlogPost, b: BlogPost): number => b.date - a.date || a.i
  * Announcements reach the feed only through `announcements`; a `DEVBLOG` post found in
  * `personal` is a row left behind by the fan-out this replaced, and is dropped so followers
  * of an admin do not see announcements twice.
+ *
+ * `isVisible` is applied before the page is cut, not after. Filtering a page the caller has
+ * already sliced can empty it while items it could have shown sit just past the limit.
  */
 export const mergeFeedStreams = ({
   personal,
@@ -52,6 +55,7 @@ export const mergeFeedStreams = ({
   announcementsHasMore,
   limit,
   cursor,
+  isVisible = () => true,
 }: {
   personal: BlogPost[];
   personalHasMore: boolean;
@@ -59,11 +63,12 @@ export const mergeFeedStreams = ({
   announcementsHasMore: boolean;
   limit: number;
   cursor?: FeedCursor;
+  isVisible?: (item: BlogPost) => boolean;
 }): { items: BlogPost[]; cursor?: FeedCursor } => {
   const alreadyShown = new Set(cursor?.ids ?? []);
 
   const merged = [...personal.filter((item) => item.cube !== DEV_BLOG_CUBE), ...announcements]
-    .filter((item) => !alreadyShown.has(item.id))
+    .filter((item) => !alreadyShown.has(item.id) && isVisible(item))
     .sort(newestFirst);
 
   const items = merged.slice(0, limit);

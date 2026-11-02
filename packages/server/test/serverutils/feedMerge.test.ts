@@ -138,6 +138,53 @@ describe('mergeFeedStreams', () => {
 
     expect(items.map((i) => i.id)).toEqual(['a', 'b']);
   });
+
+  describe('visibility', () => {
+    const hidden = new Set(['hidden-1', 'hidden-2']);
+    const isVisible = (item: BlogPost) => !hidden.has(item.id);
+
+    it('excludes items the visibility predicate rejects', () => {
+      const { items } = mergeFeedStreams({
+        personal: [post('hidden-1', 300), post('shown', 200)],
+        personalHasMore: false,
+        announcements: [],
+        announcementsHasMore: false,
+        limit: 10,
+        isVisible,
+      });
+
+      expect(items.map((i) => i.id)).toEqual(['shown']);
+    });
+
+    it('fills the page from visible items rather than slicing before filtering', () => {
+      // Slicing first would emit only 'hidden-1', leaving the caller an empty page while
+      // visible items it could have shown sit just past the limit.
+      const { items } = mergeFeedStreams({
+        personal: [post('hidden-1', 300), post('hidden-2', 200), post('shown', 100)],
+        personalHasMore: false,
+        announcements: [],
+        announcementsHasMore: false,
+        limit: 1,
+        isVisible,
+      });
+
+      expect(items.map((i) => i.id)).toEqual(['shown']);
+    });
+
+    it('advances the cursor when every fetched item was invisible', () => {
+      const { items, cursor } = mergeFeedStreams({
+        personal: [post('hidden-1', 300), post('hidden-2', 200)],
+        personalHasMore: true,
+        announcements: [],
+        announcementsHasMore: false,
+        limit: 10,
+        isVisible,
+      });
+
+      expect(items).toEqual([]);
+      expect(cursor).toEqual({ date: 199, ids: [] });
+    });
+  });
 });
 
 describe('parseFeedCursor', () => {

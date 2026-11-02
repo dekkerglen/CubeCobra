@@ -150,4 +150,43 @@ describe('dashboard feed', () => {
 
     expect(res.status).toBe(401);
   });
+
+  describe('when a whole page is privacy-filtered', () => {
+    const privatePage = (count: number) =>
+      Array.from({ length: count }, (_, i) =>
+        post(`private-${i}`, 1000 - i, { cubeVisibility: CUBE_VISIBILITY.PRIVATE }),
+      );
+
+    it('keeps fetching rather than returning an empty page while more remains', async () => {
+      // The client renders its "no feed items" dead-end on an empty page and offers no way
+      // to advance, so an empty page with a cursor would strand the user short of the
+      // announcements this feature exists to deliver.
+      (feedDao.getByTo as jest.Mock)
+        .mockResolvedValueOnce(personalFeed(privatePage(50), { PK: 'FEED#x' }))
+        .mockResolvedValueOnce(personalFeed([post('public-1', 200)]));
+
+      const res = await fetchFeed();
+
+      expect(res.body.items.map((i: BlogPost) => i.id)).toEqual(['public-1']);
+      expect(feedDao.getByTo).toHaveBeenCalledTimes(2);
+    });
+
+    it('bounds the number of rounds it will fetch', async () => {
+      (feedDao.getByTo as jest.Mock).mockResolvedValue(personalFeed(privatePage(50), { PK: 'FEED#x' }));
+
+      const res = await fetchFeed();
+
+      expect(res.status).toBe(200);
+      expect(res.body.items).toEqual([]);
+      expect((feedDao.getByTo as jest.Mock).mock.calls.length).toBeLessThanOrEqual(5);
+    });
+
+    it('does not re-fetch when the first page already has items', async () => {
+      (feedDao.getByTo as jest.Mock).mockResolvedValue(personalFeed([post('public-1', 200)]));
+
+      await fetchFeed();
+
+      expect(feedDao.getByTo).toHaveBeenCalledTimes(1);
+    });
+  });
 });
