@@ -30,7 +30,7 @@ const cube = {
 
 const renderNav = (ui: React.ReactElement, search = '') => {
   window.history.replaceState({}, '', `/cube/list/c1${search}`);
-  const cubeValue = { cube, canEdit: false } as any;
+  const cubeValue = { cube, canEdit: false, unfilteredChangedCards: {} } as any;
   return render(
     <CubeContext.Provider value={cubeValue}>
       <DisplayContextProvider cubeID="c1" viewSlugs={['mainboard', 'base-packs', 'r-d', 'loreseeker-booster-tutor']}>
@@ -68,11 +68,13 @@ describe.each([
     window.history.replaceState({}, '', '/cube/list/c1');
   });
 
-  const linksNamed = (name: string) => screen.getAllByRole('link').filter((link) => link.textContent === name);
+  // The sidebar shows each view's card count after its name, so compare the name without it.
+  const linksNamed = (name: string) =>
+    screen.getAllByRole('link').filter((link) => link.textContent?.replace(/\d+$/, '') === name);
 
   it('links a view with special characters to its slug', () => {
     renderNav(ui());
-    const links = screen.getAllByRole('link', { name: 'R&D' });
+    const links = linksNamed('R&D');
     expect(links.length).toBeGreaterThan(0);
     for (const link of links) {
       expect(link).toHaveAttribute('href', '/cube/list/c1?view=r-d');
@@ -81,25 +83,22 @@ describe.each([
 
   it('writes the slug to the URL when a view is selected', () => {
     renderNav(ui());
-    fireEvent.click(screen.getAllByRole('link', { name: 'R&D' })[0]!);
+    fireEvent.click(linksNamed('R&D')[0]!);
     expect(viewParam()).toBe('r-d');
   });
 
   it('writes the slug for a multi-word view name', () => {
     renderNav(ui());
-    fireEvent.click(screen.getAllByRole('link', { name: 'Base Packs' })[0]!);
+    fireEvent.click(linksNamed('Base Packs')[0]!);
     expect(viewParam()).toBe('base-packs');
   });
 
   it('round trips a view name combining a slash and spaces', () => {
     renderNav(ui());
     const name = 'Loreseeker/Booster Tutor';
-    expect(screen.getAllByRole('link', { name })[0]!).toHaveAttribute(
-      'href',
-      '/cube/list/c1?view=loreseeker-booster-tutor',
-    );
+    expect(linksNamed(name)[0]!).toHaveAttribute('href', '/cube/list/c1?view=loreseeker-booster-tutor');
 
-    fireEvent.click(screen.getAllByRole('link', { name })[0]!);
+    fireEvent.click(linksNamed(name)[0]!);
 
     expect(viewParam()).toBe('loreseeker-booster-tutor');
     expect(window.location.search).toBe('?view=loreseeker-booster-tutor');
