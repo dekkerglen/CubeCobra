@@ -1,5 +1,5 @@
-import { DynamoDBDocumentClient, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
-import Comment, { UnhydratedComment } from '@utils/datatypes/Comment';
+import { DynamoDBDocumentClient, QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
+import Comment, { REPLY_COUNT_CAP, UnhydratedComment } from '@utils/datatypes/Comment';
 import { CubeImage } from '@utils/datatypes/Cube';
 import User from '@utils/datatypes/User';
 import { getImageData } from 'serverutils/imageutil';
@@ -186,6 +186,30 @@ export class CommentDynamoDao extends BaseDynamoDao<Comment, UnhydratedComment> 
     };
 
     return this.query(params);
+  }
+
+  /**
+   * Counts a comment's direct replies, up to REPLY_COUNT_CAP.
+   *
+   * Deliberately a single query with no LastEvaluatedKey loop, unlike the other COUNT helpers
+   * in this codebase. It runs once per comment on every page of a thread, so it must cost the
+   * same whether a comment has three replies or ten thousand.
+   */
+  public async countRepliesByParent(parent: string): Promise<number> {
+    const params: QueryCommandInput = {
+      TableName: this.tableName,
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :parent',
+      ExpressionAttributeValues: {
+        ':parent': `${this.itemType()}#PARENT#${parent}`,
+      },
+      Select: 'COUNT',
+      Limit: REPLY_COUNT_CAP,
+    };
+
+    const result = await this.dynamoClient.send(new QueryCommand(params));
+
+    return result.Count ?? 0;
   }
 
   /**

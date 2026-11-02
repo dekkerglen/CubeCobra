@@ -18,6 +18,13 @@ type Comment = Omit<UnhydratedComment, 'id' | 'owner'> & {
   image?: CubeImage;
 };
 
+/**
+ * Upper bound on the reply count returned with a comment. The UI only distinguishes none, an
+ * exact number up to ten, and "more than ten" — so the count query stops here rather than
+ * scanning a whole reply partition to produce a number nothing displays.
+ */
+export const REPLY_COUNT_CAP = 11;
+
 const allCommentTypes = [
   'comment',
   'blog',
