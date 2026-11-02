@@ -16,6 +16,11 @@ type Comment = Omit<UnhydratedComment, 'id' | 'owner'> & {
   id: string;
   owner?: User;
   image?: CubeImage;
+  /**
+   * Number of direct replies, capped at REPLY_COUNT_CAP. Supplied by the comments endpoint for
+   * display; it is not stored on the record, so anything that writes a comment omits it.
+   */
+  replyCount?: number;
 };
 
 /**

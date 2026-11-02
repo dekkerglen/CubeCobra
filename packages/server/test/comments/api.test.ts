@@ -19,6 +19,7 @@ jest.mock('../../src/dynamo/daos', () => ({
   commentDao: {
     getById: jest.fn(),
     queryByParent: jest.fn(),
+    countRepliesByParent: jest.fn(),
     put: jest.fn(),
     update: jest.fn(),
     createComment: jest.fn(),
@@ -194,6 +195,7 @@ describe('Get Comments', () => {
     };
 
     (commentDao.queryByParent as jest.Mock).mockResolvedValue(mockComments);
+    (commentDao.countRepliesByParent as jest.Mock).mockResolvedValue(2);
 
     const res = await call(getCommentsHandler)
       .withRequest({
@@ -208,7 +210,7 @@ describe('Get Comments', () => {
     expect(res.status).toEqual(200);
     expect(res.body).toEqual({
       success: 'true',
-      comments: mockComments.items,
+      comments: mockComments.items.map((item) => ({ ...item, replyCount: 2 })),
       lastKey: mockComments.lastKey,
     });
   });
