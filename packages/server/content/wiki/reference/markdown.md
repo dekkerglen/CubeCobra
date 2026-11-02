@@ -62,8 +62,7 @@ a row of cards stays tidy; the table scrolls sideways if it gets too wide for th
 | `[[!/Delver of Secrets]]`  | [[!/Delver of Secrets]]  |
 | `[[!//Delver of Secrets]]` | [[!//Delver of Secrets]] |
 
-To display card images alongside each other in a row, wrap them in double angle brackets. (This
-feature is not available in blog posts.)
+To display card images alongside each other in a row, wrap them in double angle brackets.
 
 ```
 <<[[!Hexdrinker]][[!Lotus Cobra]][[!Snake]]>>
