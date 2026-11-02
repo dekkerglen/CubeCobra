@@ -7,12 +7,19 @@
  *
  * The pattern below reproduces the userlink tokenizer's rule that `@` must follow the start of the text
  * or whitespace and nothing else — so `**@bob**`, `(@bob)`, `[@bob](url)` and `https://x.com/@bob` are
- * all non-mentions, matching the renderer. It cannot see Markdown structure, so unlike the tokenizer it
- * also matches inside code spans and code blocks. That over-matching is deliberate and safe: the result
- * is only ever intersected with the client's list, so it can widen what is allowed but never what is
- * sent. Using it on its own would start notifying for mentions the renderer does not link.
+ * all non-mentions, matching the renderer. `>` is accepted as a boundary as well, because a blockquote
+ * marker is block structure: the tokenizer strips it, so `>@bob` with no space is linkified just like
+ * `> @bob`. Matching on raw characters cannot tell that apart from a literal `>`, and accepting it is
+ * the safe direction — see below.
+ *
+ * The pattern must stay a SUPERSET of the tokenizer. It over-matches inside code spans and code blocks,
+ * and for a literal mid-line `>`; that is deliberate and safe, because the result is only ever
+ * intersected with the client's list, so it can widen what is allowed but never what is sent. Under-
+ * matching would be a real bug: a genuinely linked mention would be dropped and nobody notified.
+ * Using this on its own, without the intersection, would start notifying for mentions the renderer
+ * does not link.
  */
-const MENTION_RE = /(?<=^|[ \t\r\n])@([a-zA-Z0-9]+)/g;
+const MENTION_RE = /(?<=^|[ \t\r\n>])@([a-zA-Z0-9]+)/g;
 
 // Upper bound on how many people one post may notify. Well above a post thanking a handful of people,
 // far below anything useful for spam. Applied by truncation: the post itself still saves in full.

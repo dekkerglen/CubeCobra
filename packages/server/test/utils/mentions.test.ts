@@ -27,6 +27,30 @@ describe('extractMentions', () => {
   ])('extracts from %j', (input, expected) => {
     expect(extractMentions(input)).toEqual(expected);
   });
+
+  /* A blockquote marker is block structure: the tokenizer strips it, so `@` lands at the start of the
+   * block content and IS linkified, with or without a space after the `>`. The server pattern works on
+   * raw characters, so it has to accept `>` as a boundary too — otherwise it under-matches the
+   * renderer and a genuinely linked mention is silently dropped by the intersection.
+   */
+  it.each([
+    ['>@bob', ['bob']],
+    ['>>@bob', ['bob']],
+    ['> >@bob', ['bob']],
+    ['>line\n>@bob', ['bob']],
+    ['\n\n>@bob', ['bob']],
+    ['- >@bob', ['bob']],
+    ['>>>@bob', ['bob']],
+    ['>@bob and @carol', ['bob', 'carol']],
+  ])('extracts from blockquote form %j', (input, expected) => {
+    expect(extractMentions(input)).toEqual(expected);
+  });
+
+  // Accepted over-match: a literal `>` mid-line is not a blockquote, so the tokenizer declines. The
+  // pattern must stay a superset of the tokenizer, and over-matching is only ever widened here.
+  it('over-matches a mid-line > rather than risk under-matching', () => {
+    expect(extractMentions('a>@bob')).toEqual(['bob']);
+  });
 });
 
 describe('resolveMentions', () => {
@@ -65,5 +89,9 @@ describe('resolveMentions', () => {
   it('ignores a claim that only appears beyond a truncated body', () => {
     const stored = ('a'.repeat(5000) + ' @victim').substring(0, 5000);
     expect(resolveMentions(stored, 'victim')).toEqual([]);
+  });
+
+  it('still notifies a mention written directly against a blockquote marker', () => {
+    expect(resolveMentions('>@bob', 'bob')).toEqual(['bob']);
   });
 });
