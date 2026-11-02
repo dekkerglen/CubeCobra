@@ -1,7 +1,6 @@
-import { FeedTypes } from '@utils/datatypes/Feed';
 import { UserRoles } from '@utils/datatypes/User';
 import { sanitizeChangelog } from 'dynamo/dao/ChangelogDynamoDao';
-import { blogDao, feedDao, userDao } from 'dynamo/daos';
+import { blogDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { render } from 'serverutils/render';
 
@@ -51,19 +50,9 @@ export const blogPostHandler = async (req: Request, res: Response) => {
       title: req.body.title,
     };
 
-    const id = await blogDao.createBlog(blogpost);
-
-    const userFollowers = await userDao.getAllFollowers(req.user!.id);
-    const feedItems = userFollowers.map((follower) => ({
-      id,
-      to: follower,
-      date: Date.now().valueOf(),
-      type: FeedTypes.BLOG,
-    }));
-
-    if (feedItems.length > 0) {
-      await feedDao.batchPutUnhydrated(feedItems);
-    }
+    // No fan-out: dev blog posts are site-wide announcements, delivered to every user by
+    // the dashboard feed merge rather than written into individual feeds.
+    await blogDao.createBlog(blogpost);
 
     return res.status(200).send({
       success: 'true',
