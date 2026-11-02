@@ -206,21 +206,29 @@ export class BlogDynamoDao extends BaseDynamoDao<BlogPost, UnhydratedBlogPost> {
 
   /**
    * Queries blog posts by cube, ordered by date descending, with pagination.
+   *
+   * `before` bounds the query to posts at or older than that timestamp, inclusively. See
+   * FeedDynamoDao.getByTo for why the dashboard feed needs a date bound rather than a
+   * LastEvaluatedKey.
    */
   public async queryByCube(
     cube: string,
     lastKey?: Record<string, any>,
     limit: number = 36,
+    before?: number,
   ): Promise<{
     items: BlogPost[];
     lastKey?: Record<string, any>;
   }> {
+    const bounded = before !== undefined;
+
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
-      KeyConditionExpression: 'GSI1PK = :cube',
+      KeyConditionExpression: bounded ? 'GSI1PK = :cube AND GSI1SK <= :before' : 'GSI1PK = :cube',
       ExpressionAttributeValues: {
         ':cube': `${this.itemType()}#CUBE#${cube}`,
+        ...(bounded ? { ':before': `DATE#${before}` } : {}),
       },
       ScanIndexForward: false,
       Limit: limit,

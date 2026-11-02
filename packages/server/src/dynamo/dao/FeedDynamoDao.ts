@@ -163,21 +163,31 @@ export class FeedDynamoDao extends BaseDynamoDao<StoredFeedItem, StoredFeed> {
   /**
    * Gets feed items for a specific user, ordered by date descending, with pagination.
    * This is the main query method for feeds.
+   *
+   * `before` bounds the query to items at or older than that timestamp. The dashboard feed
+   * merges this stream with the DEVBLOG blog stream, and a merged page consumes a partial
+   * page from each, which an opaque LastEvaluatedKey cannot express. The bound is inclusive
+   * so an item sharing a millisecond with the previous page's last item is not skipped;
+   * the caller suppresses the ids it has already shown.
    */
   public async getByTo(
     user: string,
     lastKey?: Record<string, any>,
     limit: number = 50,
+    before?: number,
   ): Promise<{
     items: Feed[];
     lastKey?: Record<string, any>;
   }> {
+    const bounded = before !== undefined;
+
     const params: QueryCommandInput = {
       TableName: this.tableName,
       IndexName: 'GSI1',
-      KeyConditionExpression: 'GSI1PK = :to',
+      KeyConditionExpression: bounded ? 'GSI1PK = :to AND GSI1SK <= :before' : 'GSI1PK = :to',
       ExpressionAttributeValues: {
         ':to': `${this.itemType()}#TO#${user}`,
+        ...(bounded ? { ':before': `DATE#${before}` } : {}),
       },
       ScanIndexForward: false,
       Limit: limit,
