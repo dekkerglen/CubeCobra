@@ -26,6 +26,7 @@ import { Flexbox } from '../components/base/Layout';
 import { Col, Row } from '../components/base/Layout';
 import Link from '../components/base/Link';
 import Text from '../components/base/Text';
+import CardImage from '../components/card/CardImage';
 import Markdown from '../components/Markdown';
 import ManaPoolBulkButton from '../components/purchase/ManaPoolBulkButton';
 import TCGPlayerBulkButton from '../components/purchase/TCGPlayerBulkButton';
@@ -215,7 +216,7 @@ const Tokens: React.FC<TokensProps> = ({ tokenMap }) => {
           <Col key={index} xs={6} md={4} lg={3} xxl={2}>
             <Card className="mb-3">
               <Link href={getTCGLink(card)}>
-                <img src={card.details?.image_normal} className="card-img-top" alt={card.details?.name} />
+                <CardImage card={card} />
               </Link>
               <CardBody>
                 <Markdown markdown={cardDescription} />
