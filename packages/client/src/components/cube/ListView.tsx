@@ -54,6 +54,8 @@ const TOGGLEABLE_COLUMNS: ListViewColumn[] = [
   { key: 'colorIdentity', label: 'Color Identity' },
   { key: 'colorCategory', label: 'Color Category' },
   { key: 'rarity', label: 'Rarity' },
+  { key: 'imgUrl', label: 'Image URL' },
+  { key: 'imgBackUrl', label: 'Image Back URL' },
   { key: 'notes', label: 'Notes' },
   { key: 'tags', label: 'Tags' },
 ];
@@ -321,6 +323,24 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
         />
       );
     },
+    // Shows the per-card override only, never the Scryfall image it falls back to, so an
+    // empty cell reads as "no custom image" rather than suggesting one can be edited away.
+    imgUrl: (card) => (
+      <Input
+        type="text"
+        name="imgUrl"
+        value={card.imgUrl || ''}
+        onChange={(event) => updateField(card, 'imgUrl', event.target.value)}
+      />
+    ),
+    imgBackUrl: (card) => (
+      <Input
+        type="text"
+        name="imgBackUrl"
+        value={card.imgBackUrl || ''}
+        onChange={(event) => updateField(card, 'imgBackUrl', event.target.value)}
+      />
+    ),
     notes: (card) => (
       <Input
         type="text"

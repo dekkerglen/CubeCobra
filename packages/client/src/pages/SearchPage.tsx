@@ -6,9 +6,9 @@ import Cube from '@utils/datatypes/Cube';
 
 import Banner from 'components/Banner';
 import Container from 'components/base/Container';
+import CursorPagination, { willRenderCursorPager } from 'components/base/CursorPagination';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
-import Pagination from 'components/base/Pagination';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
@@ -22,6 +22,12 @@ import SideBanner from 'components/SideBanner';
 import { CSRFContext } from 'contexts/CSRFContext';
 import useLatestRequest from 'hooks/useLatestRequest';
 import MainLayout from 'layouts/MainLayout';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 import Query from 'utils/Query';
 
 interface SearchPageProps {
@@ -79,8 +85,8 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
     setAscendingText(currentAscending);
   }, [currentQuery, currentOrder, currentAscending]);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!currentLastKey;
+  const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(currentLastKey);
 
   // Doesn't touch the url: Search writes it first via go(), and back/forward has already restored it.
   const runSearch = useCallback(
@@ -151,54 +157,66 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
     [runSearch],
   );
 
-  const fetchMoreData = useCallback(async () => {
-    setLoading(true);
-    setFailed(false);
+  const fetchMoreData = useCallback(
+    async (targetPage: number) => {
+      setFailed(false);
 
-    const request = begin();
-    try {
-      const response = await csrfFetch(`/search/getmoresearchitems`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+      const request = begin();
+      // The shared helper knows nothing about request ordering, and must not: the eight other
+      // cursor lists it backs have no cancellation at all. It commits state only through the
+      // setters handed to it, so guarding those here keeps the stale-response rule at the call
+      // site, where the request context lives.
+      const whenCurrent =
+        <T,>(commit: (value: T) => void) =>
+        (value: T) => {
+          if (request.isCurrent()) {
+            commit(value);
+          }
+        };
+
+      let requestFailed = false;
+
+      try {
+        await fetchIndefiniteMoreData<Cube>({
+          callApi: async (route, body) => {
+            const response = await csrfFetch(route, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body),
+              signal: request.signal,
+            });
+
+            if (!response.ok) {
+              requestFailed = true;
+            }
+
+            return response;
+          },
+          fetchMoreRoute: '/search/getmoresearchitems',
+          items,
+          setItems: whenCurrent(setItems),
           lastKey: currentLastKey,
-          query: currentQuery,
-          order: currentOrder,
-          ascending: currentAscending,
-        }),
-        signal: request.signal,
-      });
-      const json = response.ok ? await response.json() : null;
-
-      if (!request.isCurrent()) {
-        return;
+          setLastKey: whenCurrent(setCurrentLastKey),
+          setPage: whenCurrent(setPage),
+          pageSize: PAGE_SIZE,
+          itemsKey: 'cubes',
+          setLoading: whenCurrent(setLoading),
+          targetPage,
+          body: { query: currentQuery, order: currentOrder, ascending: currentAscending },
+        });
+      } catch {
+        requestFailed = true;
       }
 
-      if (json && json.success === 'true') {
-        const newItems = [...items, ...json.cubes];
-        setItems(newItems);
-        setCurrentParsedQuery(json.parsedQuery);
-
-        const numItemsShowOnLastPage = items.length % PAGE_SIZE;
-        if (numItemsShowOnLastPage === 0 && json.cubes.length > 0) {
-          setPage(page + 1);
-        }
-        setCurrentLastKey(json.lastKey);
-      } else {
+      if (requestFailed && request.isCurrent()) {
+        // A stale lastKey would page through results no longer on screen.
         setCurrentLastKey(undefined);
         setFailed(true);
-      }
-    } catch {
-      if (request.isCurrent()) {
-        setCurrentLastKey(undefined);
-        setFailed(true);
-      }
-    } finally {
-      if (request.isCurrent()) {
         setLoading(false);
       }
-    }
-  }, [begin, csrfFetch, currentAscending, currentLastKey, currentOrder, currentQuery, items, page]);
+    },
+    [begin, csrfFetch, currentAscending, currentLastKey, currentOrder, currentQuery, items],
+  );
 
   // Back/forward restores the url; re-run the search so the cubes match it.
   useEffect(() => {
@@ -215,21 +233,27 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
   }, [runSearch]);
 
   const renderPager = (inverted: boolean) => (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMoreData();
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData,
+        });
       }}
       loading={loading}
       inverted={inverted}
     />
   );
+
+  // The strip above the grid is padded chrome of its own, so it only earns its space when it has
+  // something in it. With the count line gone, a single page of results leaves it otherwise empty.
+  const showHeaderBand =
+    loading || failed || (currentParsedQuery || []).length > 0 || willRenderCursorPager(pageCount, hasMore);
 
   return (
     <MainLayout useContainer={false} transparentNav>
@@ -336,25 +360,34 @@ const SearchPage: React.FC<SearchPageProps> = ({ cubes, lastKey, parsedQuery }) 
                 <SideBanner placementId="left-rail" />
               </ResponsiveDiv>
               <div className="flex-grow px-2 max-w-full min-w-0">
-                <Flexbox direction="col" gap="3" className="pt-3 md:pt-4 pb-3">
-                  <Flexbox direction="row" alignItems="center" justify="between" gap="3" wrap="wrap" className="w-full">
-                    <Flexbox direction="col" gap="1" alignItems="start" className="text-left min-w-0">
-                      <Text lg semibold className="!text-button-text">
-                        {loading
-                          ? 'Searching…'
-                          : failed
-                            ? 'Search failed'
-                            : `${items.length.toLocaleString()}${hasMore ? '+' : ''} cubes found`}
-                      </Text>
-                      {(currentParsedQuery || []).length > 0 && (
-                        <Text sm semibold italic className="!text-button-text/80 break-all">
-                          {(currentParsedQuery || []).join(', ')}
-                        </Text>
-                      )}
+                {showHeaderBand && (
+                  <Flexbox direction="col" gap="3" className="pt-3 md:pt-4 pb-3">
+                    <Flexbox
+                      direction="row"
+                      alignItems="center"
+                      justify="between"
+                      gap="3"
+                      wrap="wrap"
+                      className="w-full"
+                    >
+                      <Flexbox direction="col" gap="1" alignItems="start" className="text-left min-w-0">
+                        {/* No record count: it would only ever report how far this browser session
+                            had scrolled, not how many cubes match. The results are the evidence. */}
+                        {(loading || failed) && (
+                          <Text lg semibold className="!text-button-text">
+                            {loading ? 'Searching…' : 'Search failed'}
+                          </Text>
+                        )}
+                        {(currentParsedQuery || []).length > 0 && (
+                          <Text sm semibold italic className="!text-button-text/80 break-all">
+                            {(currentParsedQuery || []).join(', ')}
+                          </Text>
+                        )}
+                      </Flexbox>
+                      {renderPager(true)}
                     </Flexbox>
-                    {items.length > 0 && renderPager(true)}
                   </Flexbox>
-                </Flexbox>
+                )}
                 <DynamicFlash />
                 <Banner />
                 <Flexbox direction="col" gap="3" className="mt-3">

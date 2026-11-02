@@ -3,8 +3,8 @@ import React, { useCallback, useContext, useState } from 'react';
 import Cube from '@utils/datatypes/Cube';
 
 import { Card, CardBody, CardHeader } from 'components/base/Card';
+import CursorPagination from 'components/base/CursorPagination';
 import { Flexbox } from 'components/base/Layout';
-import Pagination from 'components/base/Pagination';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
 import CubePreview from 'components/cube/CubePreview';
@@ -12,6 +12,12 @@ import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import MainLayout from 'layouts/MainLayout';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
 interface RecentDraftsPageProps {
   cubes: Cube[];
@@ -25,52 +31,42 @@ const RecentDraftsPage: React.FC<RecentDraftsPageProps> = ({ cubes, lastKey }) =
   const [currentLastKey, setCurrentLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);
-  const { csrfFetch } = useContext(CSRFContext);
+  const { callApi } = useContext(CSRFContext);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!currentLastKey;
+  const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(currentLastKey);
 
-  const fetchMoreData = useCallback(async () => {
-    setLoading(true);
-
-    const response = await csrfFetch(`/recentdrafts/getmore`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+  const fetchMoreData = useCallback(
+    async (targetPage: number) => {
+      await fetchIndefiniteMoreData<Cube>({
+        callApi,
+        fetchMoreRoute: '/recentdrafts/getmore',
+        items,
+        setItems,
         lastKey: currentLastKey,
-      }),
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-      if (json.success === 'true') {
-        const newItems = [...items, ...json.cubes];
-        setItems(newItems);
-
-        const numItemsShowOnLastPage = items.length % PAGE_SIZE;
-        //If current page is full and we just fetched more items, then move to next page
-        if (numItemsShowOnLastPage === 0 && json.cubes.length > 0) {
-          setPage(page + 1);
-        }
-        setCurrentLastKey(json.lastKey);
-      }
-    }
-    setLoading(false);
-  }, [csrfFetch, currentLastKey, items, page]);
+        setLastKey: setCurrentLastKey,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'cubes',
+        setLoading,
+        targetPage,
+      });
+    },
+    [callApi, currentLastKey, items],
+  );
 
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMoreData();
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData,
+        });
       }}
       loading={loading}
     />
@@ -84,10 +80,9 @@ const RecentDraftsPage: React.FC<RecentDraftsPageProps> = ({ cubes, lastKey }) =
           <Flexbox direction="col" gap="2">
             <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
               <Text lg semibold>
-                Recently Drafted Cubes ({items.length}
-                {hasMore ? '+' : ''})
+                Recently Drafted Cubes
               </Text>
-              {items.length > 0 && pager}
+              {pager}
             </Flexbox>
           </Flexbox>
         </CardHeader>

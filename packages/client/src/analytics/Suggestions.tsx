@@ -4,8 +4,8 @@ import { detailsToCard } from '@utils/cardutil';
 import CardType, { CardDetails } from '@utils/datatypes/Card';
 
 import { Card, CardBody } from '../components/base/Card';
+import CursorPagination from '../components/base/CursorPagination';
 import { Flexbox } from '../components/base/Layout';
-import Paginate from '../components/base/Pagination';
 import ResponsiveDiv from '../components/base/ResponsiveDiv';
 import Spinner from '../components/base/Spinner';
 import Text from '../components/base/Text';
@@ -21,6 +21,7 @@ import { CubeTrayProvider } from '../contexts/CubeTrayContext';
 import DisplayContext from '../contexts/DisplayContext';
 import FilterContext from '../contexts/FilterContext';
 import { getCardDetails } from '../utils/cardDetailsCache';
+import { getIndefinitePageCount } from '../utils/indefinitePagination';
 
 // Display page size — how many cards a user sees per page.
 const PAGE_SIZE = 96;
@@ -254,10 +255,9 @@ const Suggestions: React.FC = () => {
 
   const noFilter = !filterInput || filterInput.trim().length === 0;
   const pageCards = allCards.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  const loadedPages = Math.max(1, Math.ceil(allCards.length / PAGE_SIZE));
-  // One extra page is reachable while the server still has results.
-  const pageCount = exhausted ? loadedPages : loadedPages + 1;
-  const hasMore = !exhausted || page + 1 < loadedPages;
+  // Pages actually fetched, never a total: the recommender's ranked list has no knowable length.
+  const loadedPages = getIndefinitePageCount(allCards, PAGE_SIZE);
+  const hasMore = !exhausted;
   // Spinner shows while we're actively filling the page being viewed. Already
   // loaded pages render instantly (loadingMore stays false for them).
   const showSpinner = loadingMore && pageCards.length === 0;
@@ -297,7 +297,13 @@ const Suggestions: React.FC = () => {
                 : `Smart-sorted results for the query: ${filterInput}`}
             </ResponsiveDiv>
           </Text>
-          <Paginate count={pageCount} active={page} onClick={goToPage} hasMore={hasMore} loading={loadingMore} />
+          <CursorPagination
+            active={page}
+            loadedPages={loadedPages}
+            onPageChange={goToPage}
+            hasMore={hasMore}
+            loading={loadingMore}
+          />
         </Flexbox>
         <CardGrid
           cards={pageCards}
@@ -312,7 +318,13 @@ const Suggestions: React.FC = () => {
           cubeTrayDraggable
         />
         <Flexbox direction="row" justify="end">
-          <Paginate count={pageCount} active={page} onClick={goToPage} hasMore={hasMore} loading={loadingMore} />
+          <CursorPagination
+            active={page}
+            loadedPages={loadedPages}
+            onPageChange={goToPage}
+            hasMore={hasMore}
+            loading={loadingMore}
+          />
         </Flexbox>
       </Flexbox>
     );

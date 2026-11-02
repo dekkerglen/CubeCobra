@@ -4,8 +4,8 @@ import CardPackageData from '@utils/datatypes/CardPackage';
 import User from '@utils/datatypes/User';
 
 import Button from 'components/base/Button';
+import CursorPagination from 'components/base/CursorPagination';
 import { Flexbox } from 'components/base/Layout';
-import Pagination from 'components/base/Pagination';
 import Text from 'components/base/Text';
 import CardPackage from 'components/card/CardPackage';
 import DynamicFlash from 'components/DynamicFlash';
@@ -14,6 +14,12 @@ import { CSRFContext } from 'contexts/CSRFContext';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
 interface UserPackagesPageProps {
   owner: User;
@@ -41,45 +47,47 @@ const UserPackagesPage: React.FC<UserPackagesPageProps> = ({
   likedPackagesCount,
 }) => {
   const user = useContext(UserContext);
-  const { csrfFetch } = useContext(CSRFContext);
+  const { callApi } = useContext(CSRFContext);
   const [items, setItems] = useState<CardPackageData[]>(initialPackages);
   const [currentLastKey, setLastKey] = useState(initialLastKey);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!currentLastKey;
+  const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(currentLastKey);
 
-  const fetchMoreData = useCallback(async () => {
-    setLoading(true);
-    const response = await csrfFetch(`/user/getmorepackages`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ owner: owner.id, lastKey: currentLastKey }),
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-      if (json.success === 'true') {
-        setItems([...items, ...(json.packages || [])]);
-        setPage(page + 1);
-        setLastKey(json.lastKey);
-      }
-    }
-    setLoading(false);
-  }, [csrfFetch, owner.id, currentLastKey, items, page]);
+  const fetchMoreData = useCallback(
+    async (targetPage: number) => {
+      await fetchIndefiniteMoreData<CardPackageData>({
+        callApi,
+        fetchMoreRoute: '/user/getmorepackages',
+        items,
+        setItems,
+        lastKey: currentLastKey,
+        setLastKey,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'packages',
+        setLoading,
+        targetPage,
+        body: { owner: owner.id },
+      });
+    },
+    [callApi, owner.id, currentLastKey, items],
+  );
 
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMoreData();
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData,
+        });
       }}
       loading={loading}
     />
@@ -103,8 +111,7 @@ const UserPackagesPage: React.FC<UserPackagesPageProps> = ({
         <Flexbox direction="col" className="mt-3" gap="2">
           <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap" className="w-full">
             <Text lg semibold>
-              Packages ({items.length}
-              {hasMore ? '+' : ''})
+              Packages
             </Text>
             <Flexbox direction="row" gap="2" wrap="wrap" alignItems="center">
               {isOwner && (
@@ -112,7 +119,7 @@ const UserPackagesPage: React.FC<UserPackagesPageProps> = ({
                   Create New
                 </Button>
               )}
-              {items.length > 0 && pager}
+              {pager}
             </Flexbox>
           </Flexbox>
 

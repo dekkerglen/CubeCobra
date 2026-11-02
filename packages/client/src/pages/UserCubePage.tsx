@@ -4,8 +4,8 @@ import Cube from '@utils/datatypes/Cube';
 import User from '@utils/datatypes/User';
 
 import Button from 'components/base/Button';
+import CursorPagination from 'components/base/CursorPagination';
 import { Flexbox } from 'components/base/Layout';
-import Pagination from 'components/base/Pagination';
 import Text from 'components/base/Text';
 import CubePreview from 'components/cube/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
@@ -15,6 +15,12 @@ import { CSRFContext } from 'contexts/CSRFContext';
 import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
 interface UserCubePageProps {
   owner: User;
@@ -44,52 +50,47 @@ export const UserCubePage: React.FC<UserCubePageProps> = ({
   likedPackagesCount,
 }) => {
   const user = useContext(UserContext);
-  const { csrfFetch } = useContext(CSRFContext);
+  const { callApi } = useContext(CSRFContext);
   const [items, setItems] = useState<Cube[]>(initialCubes);
   const [currentLastKey, setLastKey] = useState(initialLastKey);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!currentLastKey;
+  const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(currentLastKey);
 
-  const fetchMoreData = useCallback(async () => {
-    setLoading(true);
-
-    const response = await csrfFetch(`/user/getmorecubes`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        owner: owner.id,
+  const fetchMoreData = useCallback(
+    async (targetPage: number) => {
+      await fetchIndefiniteMoreData<Cube>({
+        callApi,
+        fetchMoreRoute: '/user/getmorecubes',
+        items,
+        setItems,
         lastKey: currentLastKey,
-      }),
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-      if (json.success === 'true') {
-        setItems([...items, ...json.cubes]);
-        setPage(page + 1);
-        setLastKey(json.lastKey);
-      }
-
-      setLoading(false);
-    }
-  }, [csrfFetch, owner.id, currentLastKey, items, page]);
+        setLastKey,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'cubes',
+        setLoading,
+        targetPage,
+        body: { owner: owner.id },
+      });
+    },
+    [callApi, owner.id, currentLastKey, items],
+  );
 
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMoreData();
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData,
+        });
       }}
       loading={loading}
     />
@@ -113,12 +114,11 @@ export const UserCubePage: React.FC<UserCubePageProps> = ({
         <Flexbox direction="col" className="mt-3" gap="2">
           <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap" className="w-full">
             <Text lg semibold>
-              Cubes ({items.length}
-              {hasMore ? '+' : ''})
+              Cubes
             </Text>
             <Flexbox direction="row" gap="2" wrap="wrap" alignItems="center">
               {isOwner && <CreateCubeButton color="primary">Create New</CreateCubeButton>}
-              {items.length > 0 && pager}
+              {pager}
             </Flexbox>
           </Flexbox>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5 5xl:grid-cols-6">
@@ -126,11 +126,9 @@ export const UserCubePage: React.FC<UserCubePageProps> = ({
               <CubePreview key={cube.id} cube={cube} />
             ))}
           </div>
-          {items.length > 0 && (
-            <Flexbox direction="row" justify="end" alignItems="center" className="w-full mt-3">
-              {pager}
-            </Flexbox>
-          )}
+          <Flexbox direction="row" justify="end" alignItems="center" className="w-full mt-3">
+            {pager}
+          </Flexbox>
           {items.length === 0 && <Text className="text-text-secondary">This user has not created any cubes yet.</Text>}
         </Flexbox>
       </UserLayout>

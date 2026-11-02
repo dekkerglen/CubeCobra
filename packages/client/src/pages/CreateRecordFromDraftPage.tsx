@@ -8,10 +8,10 @@ import Record from '@utils/datatypes/Record';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Checkbox from 'components/base/Checkbox';
+import CursorPagination from 'components/base/CursorPagination';
 import FormatttedDate from 'components/base/FormatttedDate';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
-import Pagination from 'components/base/Pagination';
 import Table from 'components/base/Table';
 import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
@@ -21,6 +21,12 @@ import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
 import EditDescription from '../records/EditDescription';
 
@@ -34,7 +40,7 @@ const PAGE_SIZE = 20;
 
 const CreateRecordFromDraftPage: React.FC<CreateRecordFromDraftPageProps> = ({ cube, decks, decksLastKey }) => {
   const [step, setStep] = useState(0);
-  const { csrfFetch } = useContext(CSRFContext);
+  const { callApi } = useContext(CSRFContext);
   const [record, setRecord] = useState<Partial<Record>>({});
   const formRef = createRef<HTMLFormElement>();
   const [items, setItems] = useState<Draft[]>(decks);
@@ -43,42 +49,40 @@ const CreateRecordFromDraftPage: React.FC<CreateRecordFromDraftPageProps> = ({ c
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!lastKey;
+  const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(lastKey);
 
-  const fetchMore = useCallback(async () => {
-    setLoading(true);
-    const response = await csrfFetch(`/cube/getmoredecks/${cube.id}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+  const fetchMore = useCallback(
+    async (targetPage: number) => {
+      await fetchIndefiniteMoreData<Draft>({
+        callApi,
+        fetchMoreRoute: `/cube/getmoredecks/${cube.id}`,
+        items,
+        setItems,
         lastKey,
-      }),
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-
-      setLastKey(json.lastKey);
-      setItems([...items, ...json.decks]);
-      setPage(page + 1);
-      setLoading(false);
-    }
-  }, [csrfFetch, cube.id, items, lastKey, page]);
+        setLastKey,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'decks',
+        setLoading,
+        targetPage,
+      });
+    },
+    [callApi, cube.id, items, lastKey],
+  );
 
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMore();
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData: fetchMore,
+        });
       }}
       loading={loading}
     />

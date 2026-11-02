@@ -380,6 +380,16 @@ const getBasicsFromCube = (
   legacyBasics?: string[],
 ): string[] => getBasicCardsFromCube(cubeCards, basicsBoard, legacyBasics).map((card) => card.cardID);
 
+/**
+ * The board a cube keeps its basics on.
+ *
+ * A cube that never set `basicsBoard` explicitly — the common case — still keeps its basics
+ * on the conventional "Basics" board, so passing the raw field through would fall to the
+ * legacy `cube.basics` array, which modern cubes leave empty. The explicit 'None' opt-out is
+ * preserved so getBasicCardsFromCube can honor it.
+ */
+const basicsBoardFor = (cube: { basicsBoard?: string }): string => cube.basicsBoard || 'Basics';
+
 const addBasics = (document: DraftDocument, basics: BasicCard[]) => {
   if (!document.cards) {
     throw new Error('Document must contains cards to add basics');
@@ -436,6 +446,7 @@ const rotateArrayLeft = <T>(arr: T[], k: number): T[] => rotateArrayRight(arr, a
 
 export {
   addBasics,
+  basicsBoardFor,
   bulkUpload,
   CARD_HEIGHT,
   CARD_WIDTH,

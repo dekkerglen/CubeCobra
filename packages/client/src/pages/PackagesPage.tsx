@@ -6,9 +6,9 @@ import CardPackageData from '@utils/datatypes/CardPackage';
 
 import Banner from 'components/Banner';
 import Container from 'components/base/Container';
+import CursorPagination, { willRenderCursorPager } from 'components/base/CursorPagination';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
-import Pagination from 'components/base/Pagination';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
@@ -22,6 +22,12 @@ import SideBanner from 'components/SideBanner';
 import { CSRFContext } from 'contexts/CSRFContext';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
 const PAGE_SIZE = 36;
 
@@ -37,7 +43,7 @@ interface PackagesPageProps {
 }
 
 const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey, parsedQuery }) => {
-  const { csrfFetch } = useContext(CSRFContext);
+  const { csrfFetch, callApi } = useContext(CSRFContext);
 
   const [query, setQuery] = useQueryParam('q', '');
   const [sort, setSort] = useQueryParam('s', 'votes');
@@ -60,8 +66,8 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey, parsedQuery
   const [currentParsedQuery, setParsedQuery] = useState<string[]>(parsedQuery || []);
   const [showSyntaxModal, setShowSyntaxModal] = useState(false);
 
-  const pageCount = Math.ceil(packages.length / PAGE_SIZE);
-  const hasMore = !!currentLastKey;
+  const pageCount = getIndefinitePageCount(packages, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(currentLastKey);
 
   const getData = useCallback(
     async (q: string | null, s: string | null, a: string | null, key: any) => {
@@ -76,23 +82,25 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey, parsedQuery
     [csrfFetch],
   );
 
-  const fetchMoreData = useCallback(async () => {
-    setLoading(true);
-    const result = await getData(query, sort, ascending, currentLastKey);
-
-    const newPackages = [...packages, ...result.packages];
-    setPackages(newPackages);
-    setLastKey(result.lastKey);
-    if (result.parsedQuery) setParsedQuery(result.parsedQuery);
-
-    const numItemsShowOnLastPage = packages.length % PAGE_SIZE;
-    const newItemsShowOnLastPage = newPackages.length % PAGE_SIZE;
-
-    if (numItemsShowOnLastPage === 0 && newItemsShowOnLastPage > 0) {
-      setPage(page + 1);
-    }
-    setLoading(false);
-  }, [getData, query, sort, ascending, currentLastKey, packages, page]);
+  const fetchMoreData = useCallback(
+    async (targetPage: number) => {
+      await fetchIndefiniteMoreData<CardPackageData>({
+        callApi,
+        fetchMoreRoute: '/packages/getmore',
+        items: packages,
+        setItems: setPackages,
+        lastKey: currentLastKey,
+        setLastKey,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'packages',
+        setLoading,
+        targetPage,
+        body: { query, sort, ascending },
+      });
+    },
+    [callApi, query, sort, ascending, currentLastKey, packages],
+  );
 
   const getNewData = useCallback(
     async (q: string, s: string, a: string) => {
@@ -113,21 +121,26 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey, parsedQuery
   );
 
   const renderPager = (inverted: boolean) => (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMoreData();
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData,
+        });
       }}
       loading={loading}
       inverted={inverted}
     />
   );
+
+  // The strip above the results is padded chrome of its own, so it only earns its space when it has
+  // something in it. With the count line gone, a single page of results leaves it otherwise empty.
+  const showHeaderBand = loading || currentParsedQuery.length > 0 || willRenderCursorPager(pageCount, hasMore);
 
   return (
     <MainLayout useContainer={false} transparentNav>
@@ -229,23 +242,34 @@ const PackagesPage: React.FC<PackagesPageProps> = ({ items, lastKey, parsedQuery
                 <SideBanner placementId="left-rail" />
               </ResponsiveDiv>
               <div className="flex-grow px-2 max-w-full min-w-0">
-                <Flexbox direction="col" gap="3" className="pt-3 md:pt-4 pb-3">
-                  <Flexbox direction="row" alignItems="center" justify="between" gap="3" wrap="wrap" className="w-full">
-                    <Flexbox direction="col" gap="1" alignItems="start" className="text-left min-w-0">
-                      <Text lg semibold className="!text-button-text">
-                        {loading
-                          ? 'Searching…'
-                          : `${packages.length.toLocaleString()}${hasMore ? '+' : ''} packages found`}
-                      </Text>
-                      {currentParsedQuery.length > 0 && (
-                        <Text sm semibold italic className="!text-button-text/80 break-all">
-                          {currentParsedQuery.join(', ')}
-                        </Text>
-                      )}
+                {showHeaderBand && (
+                  <Flexbox direction="col" gap="3" className="pt-3 md:pt-4 pb-3">
+                    <Flexbox
+                      direction="row"
+                      alignItems="center"
+                      justify="between"
+                      gap="3"
+                      wrap="wrap"
+                      className="w-full"
+                    >
+                      <Flexbox direction="col" gap="1" alignItems="start" className="text-left min-w-0">
+                        {/* No record count: it would only ever report how far this browser session
+                            had scrolled, not how many packages match. The results are the evidence. */}
+                        {loading && (
+                          <Text lg semibold className="!text-button-text">
+                            Searching…
+                          </Text>
+                        )}
+                        {currentParsedQuery.length > 0 && (
+                          <Text sm semibold italic className="!text-button-text/80 break-all">
+                            {currentParsedQuery.join(', ')}
+                          </Text>
+                        )}
+                      </Flexbox>
+                      {renderPager(true)}
                     </Flexbox>
-                    {packages.length > 0 && renderPager(true)}
                   </Flexbox>
-                </Flexbox>
+                )}
                 <DynamicFlash />
                 <Banner />
                 <Flexbox direction="col" gap="3" className="mt-3">

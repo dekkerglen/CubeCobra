@@ -10,7 +10,7 @@ import Text from 'components/base/Text';
 import DisplayContext from 'contexts/DisplayContext';
 import useChartTextColor from 'hooks/useChartTextColor';
 
-import { getCardCountByColor, getCurveByColors, getManaSymbolCount, getSourcesDistribution } from '../utils/deckutil';
+import { getDeckColorStats, percentOf } from '../utils/deckutil';
 import Tooltip from './base/Tooltip';
 
 // Register Chart.js components
@@ -20,17 +20,7 @@ interface DeckBuilderStatsPanelProps {
   cards: Card[];
 }
 
-const displayPercentage = (nom: number, denom: number): string => {
-  if (nom === 0) {
-    return '0%';
-  }
-
-  if (denom === 0) {
-    return '100%';
-  }
-
-  return `${((nom / denom) * 100).toFixed(0)}%`;
-};
+const displayPercentage = (nom: number, denom: number): string => `${percentOf(nom, denom)}%`;
 
 const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) => {
   const { showDeckBuilderStatsPanel } = useContext(DisplayContext);
@@ -40,69 +30,24 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
     return null;
   }
 
-  const manaSymbolCounts = getManaSymbolCount(cards);
-  const cardColorCounts = getCardCountByColor(cards);
-  const sourcesInDeck = getSourcesDistribution(cards);
-  const curveByColors = getCurveByColors(cards, [0, 1, 2, 3, 4, 5]);
+  const stats = getDeckColorStats(cards);
 
-  const manaData = [
-    {
-      color: 'White',
-      symbol: 'w',
-      cardCount: cardColorCounts.W,
-      symbolCount: manaSymbolCounts.W,
-      curve: curveByColors.W,
-      landProduction: sourcesInDeck.W,
-    },
-    {
-      color: 'Blue',
-      symbol: 'u',
-      cardCount: cardColorCounts.U,
-      symbolCount: manaSymbolCounts.U,
-      curve: curveByColors.U,
-      landProduction: sourcesInDeck.U,
-    },
-    {
-      color: 'Black',
-      symbol: 'b',
-      cardCount: cardColorCounts.B,
-      symbolCount: manaSymbolCounts.B,
-      curve: curveByColors.B,
-      landProduction: sourcesInDeck.B,
-    },
-    {
-      color: 'Red',
-      symbol: 'r',
-      cardCount: cardColorCounts.R,
-      symbolCount: manaSymbolCounts.R,
-      curve: curveByColors.R,
-      landProduction: sourcesInDeck.R,
-    },
-    {
-      color: 'Green',
-      symbol: 'g',
-      cardCount: cardColorCounts.G,
-      symbolCount: manaSymbolCounts.G,
-      curve: curveByColors.G,
-      landProduction: sourcesInDeck.G,
-    },
-    {
-      color: 'Colorless',
-      symbol: 'c',
-      cardCount: cardColorCounts.C,
-      symbolCount: manaSymbolCounts.C,
-      curve: curveByColors.C,
-      landProduction: sourcesInDeck.C,
-    },
-  ];
+  const fillStyles: Record<string, string> = {
+    White: 'bg-yellow-300',
+    Blue: 'bg-blue-500',
+    Black: 'bg-gray-500',
+    Red: 'bg-red-500',
+    Green: 'bg-green-500',
+    Colorless: 'bg-purple-600',
+  };
 
-  const colorStyles: Record<string, string> = {
-    White: `bg-yellow-300 text-gray-800`,
-    Blue: `bg-blue-500 text-white`,
-    Black: `bg-gray-500 text-white`,
-    Red: `bg-red-500 text-white`,
-    Green: `bg-green-500 text-white`,
-    Colorless: `bg-purple-600 text-white`,
+  const onFillTextStyles: Record<string, string> = {
+    White: 'text-gray-800',
+    Blue: 'text-white',
+    Black: 'text-white',
+    Red: 'text-white',
+    Green: 'text-white',
+    Colorless: 'text-white',
   };
 
   const colors: Record<string, string> = {
@@ -123,88 +68,122 @@ const DeckBuilderStatsPanel: React.FC<DeckBuilderStatsPanelProps> = ({ cards }) 
       </CardHeader>
       <CardBody>
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-6">
-          {manaData.map(({ color, symbol, cardCount, symbolCount, curve, landProduction }) => (
-            <div
-              key={color}
-              className="bg-bg-accent border border-border rounded-lg p-4 flex flex-col items-center text-center"
-            >
-              <img alt={symbol} className="w-16 h-16 mb-1" src={cdnUrl(`/content/symbols/${symbol}.png`)} />
+          {stats.colors.map(({ color, symbol, cardCount, symbolCount, symbolTotal, curve, sources, sourceTotal }) => {
+            const sourcePercent = percentOf(sources, sourceTotal);
 
-              {/* Percentage with Tooltip */}
-              <Tooltip text={`${cardCount ?? 0} of ${cards.length} cards are ${color}`}>
-                <h3 className="text-lg font-bold cursor-pointer">{displayPercentage(cardCount, cards.length)}</h3>
-              </Tooltip>
-
-              <Tooltip text={`${symbolCount ?? 0} of ${manaSymbolCounts.total} symbols are ${color.toLowerCase()}`}>
-                <p className="text-xs text-text-secondary mt-1">
-                  {displayPercentage(symbolCount, manaSymbolCounts.total)} of all symbols
-                </p>
-              </Tooltip>
-
-              {/* Mana Curve Bar Chart */}
-              <div className="w-full h-12 my-1">
-                <Bar
-                  data={{
-                    labels: ['0', '1', '2', '3', '4', '5+'],
-                    datasets: [
-                      {
-                        label: 'Cards',
-                        data: curve,
-                        backgroundColor: colors[color],
-                        borderColor: chartTextColor,
-                      },
-                    ],
-                  }}
-                  options={{
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: {
-                      x: {
-                        display: true,
-                        title: { display: false },
-                        ticks: {
-                          color: chartTextColor,
-                          font: {
-                            size: 10,
-                            lineHeight: 0.5,
-                          },
-                          maxRotation: 0,
-                          minRotation: 0,
-                          autoSkip: true,
-                          maxTicksLimit: 10,
-                          padding: 2,
-                        },
-                        grid: {
-                          display: false,
-                        },
-                      },
-                      y: { display: false },
-                    },
-                    plugins: { legend: { display: false } },
-                  }}
+            return (
+              <div
+                key={color}
+                className="bg-bg-accent border border-border rounded-lg p-4 flex flex-col items-center text-center"
+              >
+                <img
+                  alt={color}
+                  className="w-16 h-16 mb-1"
+                  src={cdnUrl(`/content/symbols/${symbol.toLowerCase()}.png`)}
                 />
-              </div>
 
-              <div className="w-full border-b-2 border-border opacity-50 my-1"></div>
-
-              {/* Mana Production Bar */}
-              <div className="w-full h-4 bg-bg-active rounded-full overflow-hidden relative">
-                <div
-                  className={`h-full ${colorStyles[color]} flex items-center justify-center text-xs font-bold`}
-                  style={{ width: `${displayPercentage(landProduction, sourcesInDeck.total)}` }}
+                {/* Percentage with Tooltip */}
+                <Tooltip
+                  text={
+                    color === 'Colorless'
+                      ? `${cardCount} of ${stats.spellCount} spells are colorless`
+                      : `${cardCount} of ${stats.spellCount} spells include ${color.toLowerCase()}`
+                  }
                 >
-                  {landProduction > 0 ? displayPercentage(landProduction, sourcesInDeck.total) : ''}
+                  <h3 className="text-lg font-bold cursor-pointer" data-testid="color-percentage">
+                    {displayPercentage(cardCount, stats.spellCount)}
+                  </h3>
+                </Tooltip>
+
+                <p className="text-xs text-text-secondary mt-1" data-testid="color-population">
+                  {cardCount} of {stats.spellCount} spells
+                </p>
+
+                <Tooltip text={`${symbolCount} of ${symbolTotal} mana symbols are ${color.toLowerCase()}`}>
+                  <p className="text-xs text-text-secondary mt-1">
+                    {displayPercentage(symbolCount, symbolTotal)} of mana symbols
+                  </p>
+                </Tooltip>
+
+                {/* Mana Curve Bar Chart */}
+                <div className="w-full h-12 my-1">
+                  <Bar
+                    data={{
+                      labels: ['0', '1', '2', '3', '4', '5+'],
+                      datasets: [
+                        {
+                          label: 'Cards',
+                          data: curve,
+                          backgroundColor: colors[color],
+                          borderColor: chartTextColor,
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      scales: {
+                        x: {
+                          display: true,
+                          title: { display: false },
+                          ticks: {
+                            color: chartTextColor,
+                            font: {
+                              size: 10,
+                              lineHeight: 0.5,
+                            },
+                            maxRotation: 0,
+                            minRotation: 0,
+                            autoSkip: true,
+                            maxTicksLimit: 10,
+                            padding: 2,
+                          },
+                          grid: {
+                            display: false,
+                          },
+                        },
+                        y: { display: false, beginAtZero: true, max: stats.curveMax },
+                      },
+                      plugins: { legend: { display: false } },
+                    }}
+                  />
                 </div>
+
+                <div className="w-full border-b-2 border-border opacity-50 my-1"></div>
+
+                {/* Mana Production Bar */}
+                <div className="w-full h-4 bg-bg-active rounded-full overflow-hidden relative">
+                  <div
+                    className={`h-full ${fillStyles[color]}`}
+                    data-testid="source-fill"
+                    style={{ width: `${sourcePercent}%` }}
+                  />
+                  <div
+                    className="absolute inset-0 flex items-center justify-center text-xs font-bold text-text"
+                    data-testid="source-label-track"
+                    style={{ clipPath: `inset(0 0 0 ${sourcePercent}%)` }}
+                  >
+                    {sourcePercent}%
+                  </div>
+                  <div
+                    className={`absolute inset-0 flex items-center justify-center text-xs font-bold ${onFillTextStyles[color]}`}
+                    data-testid="source-label-fill"
+                    aria-hidden="true"
+                    style={{ clipPath: `inset(0 ${100 - sourcePercent}% 0 0)` }}
+                  >
+                    {sourcePercent}%
+                  </div>
+                </div>
+                <p className="text-xs mt-1">
+                  {sources > 0
+                    ? sources === sourceTotal
+                      ? `All lands produce ${color.toLowerCase()}`
+                      : `${sources} out of ${sourceTotal} lands produce ${color.toLowerCase()}`
+                    : `No land produces ${color.toLowerCase()}`}
+                </p>
               </div>
-              <p className="text-xs">
-                {landProduction > 0
-                  ? landProduction === sourcesInDeck.total
-                    ? `All lands produce ${color.toLowerCase()}`
-                    : `${landProduction} out of ${sourcesInDeck.total} lands produce ${color.toLowerCase()}`
-                  : `No land produces ${color.toLowerCase()}`}
-              </p>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </CardBody>
     </CardComponent>

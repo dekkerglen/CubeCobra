@@ -28,9 +28,17 @@ const cube = {
   views: [view('Mainboard'), view('Base Packs'), view('R&D'), view('Loreseeker/Booster Tutor')],
 } as Cube;
 
+// Both navs read the cube's cards from context to count what each view holds. Every view
+// above shows the mainboard, so each one renders the same count beside its name.
+const CARD_COUNT = 3;
+const unfilteredChangedCards = {
+  mainboard: new Array(CARD_COUNT).fill({}),
+  maybeboard: [{}],
+};
+
 const renderNav = (ui: React.ReactElement, search = '') => {
   window.history.replaceState({}, '', `/cube/list/c1${search}`);
-  const cubeValue = { cube, canEdit: false, unfilteredChangedCards: {} } as any;
+  const cubeValue = { cube, canEdit: false, unfilteredChangedCards } as any;
   return render(
     <CubeContext.Provider value={cubeValue}>
       <DisplayContextProvider cubeID="c1" viewSlugs={['mainboard', 'base-packs', 'r-d', 'loreseeker-booster-tutor']}>
@@ -41,6 +49,14 @@ const renderNav = (ui: React.ReactElement, search = '') => {
 };
 
 const viewParam = () => new URLSearchParams(window.location.search).get('view');
+
+// A view link is "<view name><card count>", with the count in a trailing element. Strip it
+// so links can still be found by the view name alone.
+const linkName = (link: HTMLElement): string => {
+  const text = link.textContent ?? '';
+  const badge = link.lastElementChild?.textContent ?? '';
+  return badge && text.endsWith(badge) ? text.slice(0, -badge.length) : text;
+};
 
 // jsdom has no ResizeObserver; the sidebar's scroll-shadow container constructs one on mount.
 beforeAll(() => {
@@ -68,9 +84,7 @@ describe.each([
     window.history.replaceState({}, '', '/cube/list/c1');
   });
 
-  // The sidebar shows each view's card count after its name, so compare the name without it.
-  const linksNamed = (name: string) =>
-    screen.getAllByRole('link').filter((link) => link.textContent?.replace(/\d+$/, '') === name);
+  const linksNamed = (name: string) => screen.getAllByRole('link').filter((link) => linkName(link) === name);
 
   it('links a view with special characters to its slug', () => {
     renderNav(ui());
@@ -78,6 +92,15 @@ describe.each([
     expect(links.length).toBeGreaterThan(0);
     for (const link of links) {
       expect(link).toHaveAttribute('href', '/cube/list/c1?view=r-d');
+    }
+  });
+
+  it('shows how many cards each view holds', () => {
+    renderNav(ui());
+    const links = linksNamed('R&D');
+    expect(links.length).toBeGreaterThan(0);
+    for (const link of links) {
+      expect(link.lastElementChild).toHaveTextContent(String(CARD_COUNT));
     }
   });
 

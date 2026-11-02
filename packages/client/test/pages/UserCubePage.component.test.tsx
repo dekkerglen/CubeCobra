@@ -61,7 +61,7 @@ describe('UserCubePage', () => {
   it('still offers them when the owner has no cubes yet', () => {
     renderPage({ cubes: [] }, owner);
 
-    expect(screen.getByText('Cubes (0)')).toBeInTheDocument();
+    expect(screen.getByText('Cubes')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /create new/i })).toBeInTheDocument();
   });
 

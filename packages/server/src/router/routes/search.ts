@@ -9,6 +9,17 @@ import { Request, Response } from '../../types/express';
 
 type SortOrder = 'pop' | 'alpha' | 'cards' | 'date';
 
+const PAGE_SIZE = 36;
+
+// Visibility is filtered per-viewer after the query returns, so hidden cubes eat page capacity.
+// Refilling is an optimisation, not a correctness mechanism: the client accumulates and windows
+// regardless, and the cap stays low because this composes with the DAO's own 10-page internal
+// loop on the busiest route in the app.
+//
+// This bounds *fetches*, not refills: the mandatory initial query counts as pass 1, so 3 permits
+// the first query plus two refills. Do not raise it to "fix" an apparent off-by-one.
+const MAX_FETCH_PASSES = 3;
+
 // Arrives as a string from both the query and the JSON body, where "false" would otherwise be truthy.
 const toAscending = (value: unknown): boolean => value === true || value === 'true';
 
@@ -366,90 +377,117 @@ const performSearch = async (
   }
 
   try {
-    let cubes: any[];
-    let resultLastKey: any = null;
+    // The visibility predicate depends on the requesting user, so it cannot be pushed into the
+    // query; it stays here and the DAO stays user-agnostic.
+    const fetchPage = async (cursor: any): Promise<{ items: any[]; lastKey: any; scanExhausted?: boolean }> => {
+      if (hashes.length === 1) {
+        // Determine which query method to use based on hash prefix
+        const hash = hashes[0] || '';
+        let result;
 
-    if (hashes.length === 1) {
-      // Determine which query method to use based on hash prefix
-      const hash = hashes[0] || '';
-      let result;
+        if (hash.startsWith('oracle:')) {
+          const oracleId = hash.substring('oracle:'.length);
+          result = await cubeDao.queryByOracleId(
+            oracleId,
+            mapSortOrder(order),
+            ascending,
+            cursor,
+            PAGE_SIZE,
+            cardCountFilter,
+          );
+        } else if (hash.startsWith('tag:')) {
+          const tag = hash.substring('tag:'.length);
+          result = await cubeDao.queryByTag(tag, mapSortOrder(order), ascending, cursor, PAGE_SIZE, cardCountFilter);
+        } else if (hash.startsWith('keywords:')) {
+          const keywords = hash.substring('keywords:'.length);
+          result = await cubeDao.queryByKeyword(
+            keywords,
+            mapSortOrder(order),
+            ascending,
+            cursor,
+            PAGE_SIZE,
+            cardCountFilter,
+          );
+        } else if (hash.startsWith('category:')) {
+          const category = hash.substring('category:'.length);
+          result = await cubeDao.queryByCategory(
+            category,
+            mapSortOrder(order),
+            ascending,
+            cursor,
+            PAGE_SIZE,
+            cardCountFilter,
+          );
+        } else if (hash === 'featured:true') {
+          result = await cubeDao.queryByFeatured(mapSortOrder(order), ascending, cursor, PAGE_SIZE, cardCountFilter);
+        } else if (hash === 'cube:all') {
+          result = await cubeDao.queryAllCubes(mapSortOrder(order), ascending, cursor, PAGE_SIZE, cardCountFilter);
+        } else {
+          // Unknown hash type - return empty results
+          result = { items: [], lastKey: undefined };
+        }
 
-      if (hash.startsWith('oracle:')) {
-        const oracleId = hash.substring('oracle:'.length);
-        result = await cubeDao.queryByOracleId(
-          oracleId,
-          mapSortOrder(order),
-          ascending,
-          lastKey || undefined,
-          36,
-          cardCountFilter,
-        );
-      } else if (hash.startsWith('tag:')) {
-        const tag = hash.substring('tag:'.length);
-        result = await cubeDao.queryByTag(
-          tag,
-          mapSortOrder(order),
-          ascending,
-          lastKey || undefined,
-          36,
-          cardCountFilter,
-        );
-      } else if (hash.startsWith('keywords:')) {
-        const keywords = hash.substring('keywords:'.length);
-        result = await cubeDao.queryByKeyword(
-          keywords,
-          mapSortOrder(order),
-          ascending,
-          lastKey || undefined,
-          36,
-          cardCountFilter,
-        );
-      } else if (hash.startsWith('category:')) {
-        const category = hash.substring('category:'.length);
-        result = await cubeDao.queryByCategory(
-          category,
-          mapSortOrder(order),
-          ascending,
-          lastKey || undefined,
-          36,
-          cardCountFilter,
-        );
-      } else if (hash === 'featured:true') {
-        result = await cubeDao.queryByFeatured(
-          mapSortOrder(order),
-          ascending,
-          lastKey || undefined,
-          36,
-          cardCountFilter,
-        );
-      } else if (hash === 'cube:all') {
-        result = await cubeDao.queryAllCubes(mapSortOrder(order), ascending, lastKey || undefined, 36, cardCountFilter);
-      } else {
-        // Unknown hash type - return empty results
-        result = { items: [], lastKey: undefined };
+        return { items: result.items, lastKey: result.lastKey };
       }
 
-      cubes = result.items;
-      resultLastKey = result.lastKey;
-    } else {
       // Use queryByMultipleHashes from cubeDao (which efficiently handles cardCountFilter natively)
       const multiHashResult = await cubeDao.queryByMultipleHashes(
         hashes,
         mapSortOrder(order),
         ascending,
-        lastKey || undefined,
+        cursor,
         cardCountFilter,
       );
-      cubes = multiHashResult.items;
-      resultLastKey = multiHashResult.lastKey;
-    }
+      return {
+        items: multiHashResult.items,
+        lastKey: multiHashResult.lastKey,
+        scanExhausted: multiHashResult.scanExhausted,
+      };
+    };
 
-    // Filter by listing visibility
-    const visibleCubes = cubes.filter((cube: any) => isCubeListed(cube, user));
+    const visibleCubes: any[] = [];
+    let cursor: any = lastKey || undefined;
+    let resultLastKey: any = null;
+    let passes = 0;
+    let scanExhausted = false;
+
+    do {
+      let page: { items: any[]; lastKey: any; scanExhausted?: boolean };
+      try {
+        page = await fetchPage(cursor);
+      } catch (error) {
+        // A refill is best-effort: a transient failure must not discard the page already in hand,
+        // which is valid and carries a usable cursor. Only the first fetch failing is a real error.
+        if (passes > 0) {
+          break;
+        }
+        throw error;
+      }
+      passes += 1;
+
+      // Filter by listing visibility
+      visibleCubes.push(...page.items.filter((cube: any) => isCubeListed(cube, user)));
+      scanExhausted = page.scanExhausted === true;
+
+      // Always the cursor from the most recent request, never an earlier one: the next page must
+      // resume past everything scanned, including when the pass cap stops the refill early.
+      cursor = page.lastKey ?? null;
+      resultLastKey = cursor;
+    } while (visibleCubes.length < PAGE_SIZE && cursor && passes < MAX_FETCH_PASSES);
 
     return {
       cubes: visibleCubes,
       lastKey: resultLastKey,
+      // The multi-hash scan gave up at its page cap. That is a bounded search, not a failure, so the
+      // empty list stands and the tip is advice rather than an error — only worth saying when the
+      // user has nothing to look at.
+      ...(scanExhausted && visibleCubes.length === 0
+        ? {
+            error:
+              'No matches found before the search hit its scan limit. ' +
+              'Tip: Move the most restrictive criteria to the front of the query.',
+          }
+        : {}),
     };
   } catch (error: any) {
     return {

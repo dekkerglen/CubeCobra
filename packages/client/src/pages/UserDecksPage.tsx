@@ -3,8 +3,8 @@ import React, { useCallback, useContext, useState } from 'react';
 import Draft from '@utils/datatypes/Draft';
 import User from '@utils/datatypes/User';
 
+import CursorPagination from 'components/base/CursorPagination';
 import { Flexbox } from 'components/base/Layout';
-import Pagination from 'components/base/Pagination';
 import Text from 'components/base/Text';
 import DeckPreview from 'components/DeckPreview';
 import DynamicFlash from 'components/DynamicFlash';
@@ -12,6 +12,12 @@ import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
 interface UserDecksPageProps {
   owner: User;
@@ -38,51 +44,46 @@ const UserDecksPage: React.FC<UserDecksPageProps> = ({
   likedCubesCount,
   likedPackagesCount,
 }) => {
-  const { csrfFetch } = useContext(CSRFContext);
+  const { callApi } = useContext(CSRFContext);
   const [items, setItems] = useState<Draft[]>(decks);
   const [currentLastKey, setLastKey] = useState(lastKey);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = React.useState(0);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!currentLastKey;
+  const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(currentLastKey);
 
-  const fetchMoreData = useCallback(async () => {
-    setLoading(true);
-
-    const response = await csrfFetch(`/user/getmoredecks`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
+  const fetchMoreData = useCallback(
+    async (targetPage: number) => {
+      await fetchIndefiniteMoreData<Draft>({
+        callApi,
+        fetchMoreRoute: '/user/getmoredecks',
+        items,
+        setItems,
         lastKey: currentLastKey,
-      }),
-    });
-
-    if (response.ok) {
-      const json = await response.json();
-      if (json.success === 'true') {
-        setItems([...items, ...json.decks]);
-        setPage(page + 1);
-        setLastKey(json.lastKey);
-      }
-
-      setLoading(false);
-    }
-  }, [csrfFetch, currentLastKey, items, page]);
+        setLastKey,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'decks',
+        setLoading,
+        targetPage,
+      });
+    },
+    [callApi, currentLastKey, items],
+  );
 
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMoreData();
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData,
+        });
       }}
       loading={loading}
     />
@@ -104,10 +105,9 @@ const UserDecksPage: React.FC<UserDecksPageProps> = ({
         <Flexbox direction="col" gap="2" className="mt-3 w-full">
           <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
             <Text lg semibold>
-              Drafts ({items.length}
-              {hasMore ? '+' : ''})
+              Drafts
             </Text>
-            {items.length > 0 && pager}
+            {pager}
           </Flexbox>
 
           {items.length > 0 ? (

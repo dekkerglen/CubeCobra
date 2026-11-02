@@ -1,7 +1,7 @@
 import { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { cubeDao, draftDao } from 'dynamo/daos';
 import { body } from 'express-validator';
-import { addBasics, createPool, getBasicCardsFromCube, shuffle } from 'serverutils/cube';
+import { addBasics, basicsBoardFor, createPool, getBasicCardsFromCube, shuffle } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
 
@@ -73,7 +73,7 @@ export const startHousmanDraftHandler = async (req: Request, res: Response) => {
     }
 
     // Housman draft doesn't use format definitions, so default to "Basics" board
-    const basicsToAdd = getBasicCardsFromCube(cubeCards, 'Basics', cube.basics);
+    const basicsToAdd = getBasicCardsFromCube(cubeCards, basicsBoardFor(cube), cube.basics);
     addBasics(doc, basicsToAdd);
 
     // Seat 0 is the human; the remaining seats are bots.

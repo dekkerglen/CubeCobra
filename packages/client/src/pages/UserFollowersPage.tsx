@@ -2,8 +2,8 @@ import React, { useCallback, useContext, useState } from 'react';
 
 import User from '@utils/datatypes/User';
 
+import CursorPagination from 'components/base/CursorPagination';
 import { Col, Flexbox, Row } from 'components/base/Layout';
-import Pagination from 'components/base/Pagination';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
@@ -11,6 +11,12 @@ import UserPreview from 'components/UserPreview';
 import { CSRFContext } from 'contexts/CSRFContext';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
 const PAGE_SIZE = 36;
 
@@ -37,51 +43,46 @@ const UserFollowersPage: React.FC<UserFollowersPageProps> = ({
   likedCubesCount,
   likedPackagesCount,
 }) => {
-  const { csrfFetch } = useContext(CSRFContext);
+  const { callApi } = useContext(CSRFContext);
   const [items, setItems] = useState<User[]>(initialFollowers);
   const [currentLastKey, setLastKey] = useState<any>(initialLastKey);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!currentLastKey;
+  const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(currentLastKey);
 
   const fetchMore = useCallback(
     async (targetPage: number) => {
-      setLoading(true);
-      const response = await csrfFetch(`/user/followers/getmore/${owner.id}`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ lastKey: currentLastKey }),
+      await fetchIndefiniteMoreData<User>({
+        callApi,
+        fetchMoreRoute: `/user/followers/getmore/${owner.id}`,
+        items,
+        setItems,
+        lastKey: currentLastKey,
+        setLastKey,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'followers',
+        setLoading,
+        targetPage,
       });
-
-      if (response.ok) {
-        const json = await response.json();
-        if (json.success === 'true') {
-          const newItems = [...items, ...(json.followers || [])];
-          setItems(newItems);
-          setLastKey(json.lastKey);
-
-          const newPageCount = Math.max(1, Math.ceil(newItems.length / PAGE_SIZE));
-          setPage(Math.max(0, Math.min(targetPage, newPageCount - 1)));
-        }
-      }
-      setLoading(false);
     },
-    [csrfFetch, owner.id, currentLastKey, items],
+    [callApi, owner.id, currentLastKey, items],
   );
 
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchMore(newPage);
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData: fetchMore,
+        });
       }}
       loading={loading}
     />
@@ -108,7 +109,7 @@ const UserFollowersPage: React.FC<UserFollowersPageProps> = ({
             <Text lg semibold>
               Followers ({headerCount})
             </Text>
-            {totalShown > 0 && pager}
+            {pager}
           </Flexbox>
           {totalShown > 0 ? (
             <Row>
@@ -121,11 +122,9 @@ const UserFollowersPage: React.FC<UserFollowersPageProps> = ({
           ) : (
             <Text className="text-text-secondary">No followers yet.</Text>
           )}
-          {totalShown > 0 && (
-            <Flexbox direction="row" justify="end" alignItems="center" className="w-full mt-3">
-              {pager}
-            </Flexbox>
-          )}
+          <Flexbox direction="row" justify="end" alignItems="center" className="w-full mt-3">
+            {pager}
+          </Flexbox>
         </Flexbox>
       </UserLayout>
     </MainLayout>

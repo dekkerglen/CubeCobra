@@ -1,14 +1,38 @@
 import {
+  DECK_COLOR_NAMES,
+  DeckColorName,
+  DeckColorStat,
+  DeckColorStats,
   getCardCountByColor,
   getCurveByColors,
+  getDeckColorStats,
   getFetchableColors,
   getManaSymbolCount,
   getSourcesDistribution,
+  percentOf,
 } from '@client/utils/deckutil';
 import { cardGames, cardManaSymbols, reasonableCard } from '@utils/cardutil';
 import Card, { CardDetails } from '@utils/datatypes/Card';
 
-import { createBasicLand, createCard, createCardDetails, createCardFromDetails } from '../test-utils/data';
+import {
+  createBasicLand,
+  createCard,
+  createCardDetails,
+  createCardFromDetails,
+  createCardWithoutDetails,
+} from '../test-utils/data';
+
+describe('percentOf', () => {
+  it('returns a whole-number percentage', () => {
+    expect(percentOf(1, 4)).toEqual(25);
+    expect(percentOf(2, 3)).toEqual(67);
+  });
+
+  it('returns 0 when the denominator is 0', () => {
+    expect(percentOf(0, 0)).toEqual(0);
+    expect(percentOf(5, 0)).toEqual(0);
+  });
+});
 
 describe('getManaSymbolCount', () => {
   it('should return the count of each mana symbols found in the deck', () => {
@@ -53,6 +77,16 @@ describe('getCardColors', () => {
       C: 0,
       total: 4,
     });
+  });
+
+  it('counts a card with no colors as colorless', () => {
+    const result = getCardCountByColor([
+      createCard({ colors: ['W'] }),
+      createCard({ colors: [] }),
+      createCard({ colors: [] }),
+    ]);
+
+    expect(result).toEqual({ W: 1, U: 0, B: 0, R: 0, G: 0, C: 2, total: 3 });
   });
 });
 
@@ -460,5 +494,157 @@ describe('cardGames', () => {
     const card = createCardFromDetails({ games: ['paper', 'arena'] });
 
     expect(cardGames(card)).toEqual(['paper', 'arena']);
+  });
+});
+
+describe('getDeckColorStats', () => {
+  const statFor = (stats: DeckColorStats, color: DeckColorName): DeckColorStat =>
+    stats.colors.find((stat) => stat.color === color)!;
+
+  const createSpell = (overrides: Partial<CardDetails>): Card =>
+    createCardFromDetails({ type: 'Instant', colors: [], parsed_cost: [], cmc: 0, ...overrides });
+
+  const createDualLand = (): Card =>
+    createCardFromDetails({ type: 'Land', colors: [], parsed_cost: [], cmc: 0, produced_mana: ['R', 'G'] });
+
+  it('excludes lands from spellCount, cardCount, symbolCount and the curve', () => {
+    const stats = getDeckColorStats([
+      createSpell({ colors: ['R'], parsed_cost: ['1', 'r'], cmc: 2 }),
+      createBasicLand('Mountain'),
+      createDualLand(),
+    ]);
+
+    expect(stats.spellCount).toEqual(1);
+    expect(stats.landCount).toEqual(2);
+
+    const red = statFor(stats, 'Red');
+    expect(red.cardCount).toEqual(1);
+    expect(red.symbolCount).toEqual(1);
+    expect(red.symbolTotal).toEqual(1);
+    expect(red.curve).toEqual([0, 0, 1, 0, 0, 0]);
+    expect(red.sources).toEqual(2);
+    expect(red.sourceTotal).toEqual(2);
+
+    const colorless = statFor(stats, 'Colorless');
+    expect(colorless.cardCount).toEqual(0);
+    expect(colorless.curve).toEqual([0, 0, 0, 0, 0, 0]);
+  });
+
+  it('counts a two-color card once in each of its colors', () => {
+    const stats = getDeckColorStats([createSpell({ colors: ['R', 'G'], parsed_cost: ['r', 'g'], cmc: 2 })]);
+
+    expect(stats.spellCount).toEqual(1);
+    expect(statFor(stats, 'Red').cardCount).toEqual(1);
+    expect(statFor(stats, 'Green').cardCount).toEqual(1);
+  });
+
+  it('counts a colorless spell toward Colorless', () => {
+    const stats = getDeckColorStats([
+      createSpell({ type: 'Artifact', colors: [], parsed_cost: ['2'], cmc: 2 }),
+      createSpell({ colors: ['W'], parsed_cost: ['w'], cmc: 1 }),
+    ]);
+
+    expect(stats.spellCount).toEqual(2);
+    expect(statFor(stats, 'Colorless').cardCount).toEqual(1);
+  });
+
+  it('reports curveMax as the largest bucket across every color', () => {
+    const stats = getDeckColorStats([
+      createSpell({ colors: ['R'], parsed_cost: ['r'], cmc: 1 }),
+      createSpell({ colors: ['R'], parsed_cost: ['r'], cmc: 1 }),
+      createSpell({ colors: ['R'], parsed_cost: ['r'], cmc: 1 }),
+      createSpell({ colors: ['G'], parsed_cost: ['g'], cmc: 1 }),
+    ]);
+
+    expect(stats.curveMax).toEqual(3);
+    expect(statFor(stats, 'Red').curve).toEqual([0, 3, 0, 0, 0, 0]);
+    expect(statFor(stats, 'Green').curve).toEqual([0, 1, 0, 0, 0, 0]);
+  });
+
+  it('returns zeroed stats and a curveMax of 1 for an empty deck', () => {
+    const stats = getDeckColorStats([]);
+
+    expect(stats.spellCount).toEqual(0);
+    expect(stats.landCount).toEqual(0);
+    expect(stats.curveMax).toEqual(1);
+    expect(stats.colors.map((stat) => stat.color)).toEqual([...DECK_COLOR_NAMES]);
+    expect(stats.colors.map((stat) => stat.symbol)).toEqual(['W', 'U', 'B', 'R', 'G', 'C']);
+
+    for (const stat of stats.colors) {
+      expect(stat.cardCount).toEqual(0);
+      expect(stat.symbolCount).toEqual(0);
+      expect(stat.symbolTotal).toEqual(0);
+      expect(stat.curve).toEqual([0, 0, 0, 0, 0, 0]);
+      expect(stat.sources).toEqual(0);
+      expect(stat.sourceTotal).toEqual(0);
+    }
+  });
+
+  it('handles a deck of only lands', () => {
+    const stats = getDeckColorStats([createBasicLand('Mountain'), createBasicLand('Mountain'), createDualLand()]);
+
+    expect(stats.spellCount).toEqual(0);
+    expect(stats.landCount).toEqual(3);
+    expect(stats.curveMax).toEqual(1);
+    expect(stats.colors.map((stat) => stat.cardCount)).toEqual([0, 0, 0, 0, 0, 0]);
+
+    expect(statFor(stats, 'Red').sources).toEqual(3);
+    expect(statFor(stats, 'Green').sources).toEqual(1);
+    expect(statFor(stats, 'Red').sourceTotal).toEqual(3);
+  });
+
+  it('treats a card without details as a colorless spell', () => {
+    const stats = getDeckColorStats([createCardWithoutDetails()]);
+
+    expect(stats.spellCount).toEqual(1);
+    expect(stats.landCount).toEqual(0);
+
+    const colorless = statFor(stats, 'Colorless');
+    expect(colorless.cardCount).toEqual(1);
+    expect(colorless.curve).toEqual([1, 0, 0, 0, 0, 0]);
+  });
+
+  // Modal double-faced cards are stored front-face-only: the card update job's `convertType` takes
+  // `card_faces[0].type_line`, so no card in the catalog has `//` in its type. Bala Ged Recovery is
+  // `type: 'Sorcery'`, `colorcategory: 'Green'` with `produced_mana: ['G']` — a spell by `cardIsLand`,
+  // and not a mana source either, despite the land back. This pins that real shape; a `'Sorcery // Land'`
+  // type line is only reachable through an owner's manual type override or a custom card.
+  it('counts a modal double-faced card with a land back as a spell, not a mana source', () => {
+    const stats = getDeckColorStats([
+      createSpell({ type: 'Sorcery', colors: ['G'], parsed_cost: ['1', 'g'], cmc: 2, produced_mana: ['G'] }),
+    ]);
+
+    expect(stats.spellCount).toEqual(1);
+    expect(stats.landCount).toEqual(0);
+    expect(statFor(stats, 'Green').cardCount).toEqual(1);
+    expect(statFor(stats, 'Green').curve).toEqual([0, 0, 1, 0, 0, 0]);
+    expect(statFor(stats, 'Green').sources).toEqual(0);
+  });
+
+  it('treats an owner-overridden combined type line containing Land as a land', () => {
+    const stats = getDeckColorStats([
+      createSpell({ type: 'Sorcery // Land', colors: ['G'], parsed_cost: ['1', 'g'], cmc: 2 }),
+    ]);
+
+    expect(stats.spellCount).toEqual(0);
+    expect(stats.landCount).toEqual(1);
+    expect(statFor(stats, 'Green').cardCount).toEqual(0);
+  });
+
+  it('reports every spell as colorless when none has a color', () => {
+    const stats = getDeckColorStats([
+      createSpell({ type: 'Artifact', colors: [], parsed_cost: ['2'], cmc: 2 }),
+      createSpell({ type: 'Artifact', colors: [], parsed_cost: ['3'], cmc: 3 }),
+    ]);
+
+    expect(stats.spellCount).toEqual(2);
+    expect(statFor(stats, 'Colorless').cardCount).toEqual(2);
+    expect(stats.colors.map((stat) => stat.cardCount)).toEqual([0, 0, 0, 0, 0, 2]);
+  });
+
+  it('folds mana values above the top bucket into the 5+ bucket', () => {
+    const stats = getDeckColorStats([createSpell({ type: 'Sorcery', colors: ['R'], parsed_cost: ['7', 'r'], cmc: 8 })]);
+
+    expect(statFor(stats, 'Red').curve).toEqual([0, 0, 0, 0, 0, 1]);
   });
 });

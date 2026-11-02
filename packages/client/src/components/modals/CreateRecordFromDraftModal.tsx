@@ -3,15 +3,21 @@ import React, { createRef, useCallback, useContext, useEffect, useState } from '
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
 
+import CursorPagination from 'components/base/CursorPagination';
 import FormatttedDate from 'components/base/FormatttedDate';
 import { Flexbox } from 'components/base/Layout';
-import Pagination from 'components/base/Pagination';
 import Spinner from 'components/base/Spinner';
 import Table from 'components/base/Table';
 import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
 import LoadingButton from 'components/LoadingButton';
 import { CSRFContext } from 'contexts/CSRFContext';
+import {
+  fetchIndefiniteMoreData,
+  getIndefinitePageCount,
+  handleIndefinitePageSelection,
+  hasIndefiniteMore,
+} from 'utils/indefinitePagination';
 
 import { defaultRecordName } from '../../records/recordName';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
@@ -25,7 +31,7 @@ interface CreateRecordFromDraftModalProps {
 const PAGE_SIZE = 20;
 
 const CreateRecordFromDraftModal: React.FC<CreateRecordFromDraftModalProps> = ({ cube, isOpen, setOpen }) => {
-  const { csrfFetch } = useContext(CSRFContext);
+  const { csrfFetch, callApi } = useContext(CSRFContext);
   const formRef = createRef<HTMLFormElement>();
   const [items, setItems] = useState<Draft[]>([]);
   const [lastKey, setLastKey] = useState<any>(null);
@@ -63,25 +69,44 @@ const CreateRecordFromDraftModal: React.FC<CreateRecordFromDraftModalProps> = ({
     }
   }, [isOpen, loadedOnce, loading, fetchDrafts]);
 
-  const pageCount = Math.ceil(items.length / PAGE_SIZE);
-  const hasMore = !!lastKey;
+  const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
+  const hasMore = hasIndefiniteMore(lastKey);
   const selectedDraft = items.find((item) => item.id === selectedId);
   // Match the single-click "create new" behaviour: name the record after the
   // draft's date; the server defaults the date too.
   const name = selectedDraft ? defaultRecordName(new Date(selectedDraft.date as number)) : '';
 
+  const fetchMoreData = useCallback(
+    async (targetPage: number) => {
+      await fetchIndefiniteMoreData<Draft>({
+        callApi,
+        fetchMoreRoute: `/cube/getmoredecks/${cube.id}`,
+        items,
+        setItems,
+        lastKey,
+        setLastKey,
+        setPage,
+        pageSize: PAGE_SIZE,
+        itemsKey: 'decks',
+        setLoading,
+        targetPage,
+      });
+    },
+    [callApi, cube.id, items, lastKey],
+  );
+
   const pager = (
-    <Pagination
-      count={pageCount}
+    <CursorPagination
       active={page}
+      loadedPages={pageCount}
       hasMore={hasMore}
-      onClick={async (newPage) => {
-        if (newPage >= pageCount) {
-          await fetchDrafts(lastKey);
-          setPage(newPage);
-        } else {
-          setPage(newPage);
-        }
+      onPageChange={async (newPage) => {
+        await handleIndefinitePageSelection({
+          newPage,
+          pageCount,
+          setPage,
+          fetchMoreData,
+        });
       }}
       loading={loading}
     />

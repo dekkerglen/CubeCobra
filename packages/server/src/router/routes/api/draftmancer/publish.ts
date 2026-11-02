@@ -11,7 +11,7 @@ import Joi from 'joi';
 import { bodyValidation } from 'router/middleware';
 import { applyNaiveBotLayout, buildBotDecks } from 'serverutils/botDeckBuilder';
 import { cardFromId } from 'serverutils/carddb';
-import { getBasicsFromCube } from 'serverutils/cube';
+import { basicsBoardFor, getBasicsFromCube } from 'serverutils/cube';
 import { buildDeckbuildJob, writeDeckbuildJob } from 'serverutils/deckbuildJob';
 import { publishBotDeckBuild } from 'serverutils/deckbuildQueue';
 import { formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
@@ -73,7 +73,7 @@ export const handler = async (req: Request, res: Response) => {
 
     // Fetch cube cards to resolve basics from the designated board
     const cubeCards = await cubeDao.getCards(publishDraftBody.cubeID);
-    const basicsBoard = cube.basicsBoard || 'Basics';
+    const basicsBoard = basicsBoardFor(cube);
     const basicsCardIds = getBasicsFromCube(cubeCards, basicsBoard, cube.basics);
 
     // Pre-populate cards with basics so buildBotDeck can reference them by index

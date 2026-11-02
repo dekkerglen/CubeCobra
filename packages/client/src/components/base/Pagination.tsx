@@ -13,7 +13,6 @@ interface PaginateProps {
   urlF?: (index: number) => string;
   onClick?: (index: number) => void;
   className?: string;
-  hasMore?: boolean;
   loading?: boolean;
   justifyBetween?: boolean;
   inverted?: boolean;
@@ -24,7 +23,6 @@ const Paginate: React.FC<PaginateProps> = ({
   active,
   urlF,
   onClick,
-  hasMore = false,
   loading = false,
   className,
   justifyBetween = false,
@@ -69,7 +67,7 @@ const Paginate: React.FC<PaginateProps> = ({
         justify={justifyBetween ? 'between' : 'start'}
         className={className}
       >
-        <Text semibold className={labelClass}>{`Page ${active + 1} of ${count}${hasMore ? '+' : ''}`}</Text>
+        <Text semibold className={labelClass}>{`Page ${active + 1} of ${count}`}</Text>
         <Flexbox direction="row" gap="2" alignItems="center">
           {loading && <Spinner sm />}
           <Button color="primary" onClick={() => onClick(0)} disabled={active === 0 || loading}>
@@ -78,11 +76,7 @@ const Paginate: React.FC<PaginateProps> = ({
           <Button color="primary" onClick={() => onClick(active - 1)} disabled={active === 0 || loading}>
             <ArrowLeftIcon size={16} />
           </Button>
-          <Button
-            color="primary"
-            onClick={() => onClick(active + 1)}
-            disabled={(active === count - 1 && hasMore === false) || loading}
-          >
+          <Button color="primary" onClick={() => onClick(active + 1)} disabled={active === count - 1 || loading}>
             <ArrowRightIcon size={16} />
           </Button>
           <Button color="primary" onClick={() => onClick(count - 1)} disabled={active === count - 1 || loading}>
