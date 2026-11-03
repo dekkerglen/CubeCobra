@@ -1,10 +1,12 @@
-import { DRAFT_TYPES } from '@utils/datatypes/Draft';
+import DraftType, { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { PlayerList, Round, WinLossDraw } from '@utils/datatypes/Record';
-import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
+import UserType from '@utils/datatypes/User';
+import { cubeDao, draftDao, recordDao, userDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
-import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { realignDraftSeats } from 'serverutils/recordSeats';
+import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../../types/express';
 import { associateDecksWithExistingDraft, associateDecksWithNewDraft } from './uploaddeck';
@@ -203,7 +205,64 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
   }
 };
 
+// The workspace the above handler is the Save button for. Unlike the record page it is an
+// editing surface, so it is gated on edit permission rather than visibility.
+export const transcribeRecordPageHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.params.id) {
+      req.flash('danger', 'Invalid record ID');
+      return redirect(req, res, '/404');
+    }
+
+    const record = await recordDao.getById(req.params.id);
+
+    if (!record) {
+      req.flash('danger', 'Record not found');
+      return redirect(req, res, '/404');
+    }
+
+    const cube = await cubeDao.getById(record.cube);
+
+    if (!cube || !isCubeViewable(cube, req.user) || record.cube !== cube.id) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+
+    if (!isCubeEditable(cube, req.user)) {
+      req.flash('danger', 'You do not have permission to edit a record for this cube');
+      return redirect(req, res, `/cube/record/${record.id}`);
+    }
+
+    let draft: DraftType | undefined;
+    if (record.draft) {
+      draft = await draftDao.getById(record.draft);
+    }
+
+    // The accounts linked to the record's players, for their avatars in the player list.
+    let players: UserType[] = [];
+    const playerIds = record.players.map((player) => player.userId).filter((id) => id !== undefined);
+    if (playerIds.length > 0) {
+      players = (await userDao.batchGet(playerIds)).filter((user: UserType) => user !== undefined) as UserType[];
+    }
+
+    return render(
+      req,
+      res,
+      'RecordTranscribePage',
+      { cube, record, draft, players },
+      { title: `${abbreviate(cube.name)} - Enter Event Data` },
+    );
+  } catch (err) {
+    return handleRouteError(req, res, err as Error, `/cube/record/${req.params.id}`);
+  }
+};
+
 export const routes = [
+  {
+    method: 'get',
+    path: '/:id',
+    handler: [csrfProtection, ensureAuth, transcribeRecordPageHandler],
+  },
   {
     method: 'post',
     path: '/:id',

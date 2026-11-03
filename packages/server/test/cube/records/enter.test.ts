@@ -4,6 +4,14 @@ jest.mock('../../../src/dynamo/daos', () => ({
   cubeDao: { getById: jest.fn(), getCards: jest.fn(), update: jest.fn() },
   draftDao: { getById: jest.fn(), update: jest.fn() },
   recordDao: { getById: jest.fn(), update: jest.fn() },
+  userDao: { batchGet: jest.fn() },
+}));
+
+jest.mock('serverutils/render', () => ({
+  ...jest.requireActual('serverutils/render'),
+  handleRouteError: jest.fn(),
+  redirect: jest.fn(),
+  render: jest.fn(),
 }));
 
 jest.mock('../../../src/router/routes/cube/records/uploaddeck', () => ({
@@ -11,12 +19,13 @@ jest.mock('../../../src/router/routes/cube/records/uploaddeck', () => ({
   associateDecksWithExistingDraft: jest.fn(),
 }));
 
-import { cubeDao, draftDao, recordDao } from '../../../src/dynamo/daos';
-import { transcribeRecordHandler } from '../../../src/router/routes/cube/records/enter';
+import { cubeDao, draftDao, recordDao, userDao } from '../../../src/dynamo/daos';
+import { transcribeRecordHandler, transcribeRecordPageHandler } from '../../../src/router/routes/cube/records/enter';
 import {
   associateDecksWithExistingDraft,
   associateDecksWithNewDraft,
 } from '../../../src/router/routes/cube/records/uploaddeck';
+import { redirect, render } from '../../../src/serverutils/render';
 import { createCube, createUser } from '../../test-utils/data';
 import { call } from '../../test-utils/transport';
 
@@ -419,5 +428,66 @@ describe('transcribeRecordHandler', () => {
     // Only associateDecksWithNewDraft counts a new deck, and it does the increment itself.
     expect(cube.numDecks).toBe(0);
     expect(cubeDao.update).not.toHaveBeenCalled();
+  });
+});
+
+describe('transcribeRecordPageHandler', () => {
+  const cube = createCube({ id: 'my-cube' });
+  const flash = jest.fn();
+
+  const record = {
+    id: 'rec-1',
+    cube: cube.id,
+    date: 1,
+    name: 'A Record',
+    description: '',
+    players: [{ name: 'Alice', userId: 'alice-id' }, { name: 'Bob' }],
+    matches: [],
+    trophy: [],
+  };
+
+  const open = (user = cube.owner) =>
+    call(transcribeRecordPageHandler).as(user).withFlash(flash).withParams({ id: 'rec-1' }).send();
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+    (recordDao.getById as jest.Mock).mockResolvedValue(record);
+    (userDao.batchGet as jest.Mock).mockResolvedValue([{ id: 'alice-id', username: 'Alice' }]);
+  });
+
+  it('renders the workspace with the cube, record, hydrated draft and linked players', async () => {
+    const draft = { id: 'draft-1', cube: cube.id };
+    (recordDao.getById as jest.Mock).mockResolvedValue({ ...record, draft: 'draft-1' });
+    (draftDao.getById as jest.Mock).mockResolvedValue(draft);
+
+    await open();
+
+    expect(userDao.batchGet).toHaveBeenCalledWith(['alice-id']);
+    expect(render).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.anything(),
+      'RecordTranscribePage',
+      { cube, record: { ...record, draft: 'draft-1' }, draft, players: [{ id: 'alice-id', username: 'Alice' }] },
+      expect.anything(),
+    );
+  });
+
+  // The page is an editing surface, not a view of the record, so being able to see the cube
+  // is not enough to open it.
+  it('turns away a user who cannot edit the cube', async () => {
+    await open(createUser());
+
+    expect(render).not.toHaveBeenCalled();
+    expect(redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/record/rec-1');
+  });
+
+  it('turns away a record that belongs to another cube', async () => {
+    (recordDao.getById as jest.Mock).mockResolvedValue({ ...record, cube: 'other-cube' });
+
+    await open();
+
+    expect(render).not.toHaveBeenCalled();
+    expect(redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/404');
   });
 });

@@ -63,6 +63,9 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
   const showingAll = deckView === 'all';
 
   const isOwner = canEdit;
+  // The whole event in one editable page, for someone transcribing a draft they already have
+  // the data for rather than running one live.
+  const transcribeLink = isOwner && <Link href={`/cube/records/enter/${record.id}`}>Enter event data</Link>;
   const selectedPlayer = record.players[selectedUserIndex];
   const selectedHasDeck = seatHasDeck(draft, selectedUserIndex);
 
@@ -74,6 +77,7 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
           {isOwner && (
             <Flexbox direction="row" gap="4" wrap="wrap" alignItems="center">
               <EditPlayerListLink modalprops={{ record }}>Add players</EditPlayerListLink>
+              {transcribeLink}
               <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload a deck</Link>
             </Flexbox>
           )}
@@ -166,7 +170,10 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
     return (
       <CardBody>
         <Flexbox direction="col" gap="4">
-          {viewToggle}
+          <Flexbox direction="row" gap="4" justify="between" alignItems="center" wrap="wrap">
+            {viewToggle}
+            {transcribeLink}
+          </Flexbox>
           {draft ? (
             <RecordAllDecks
               record={record}
@@ -191,7 +198,10 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
   return (
     <CardBody>
       <Flexbox direction="col" gap="4">
-        {viewToggle}
+        <Flexbox direction="row" gap="4" justify="between" alignItems="center" wrap="wrap">
+          {viewToggle}
+          {transcribeLink}
+        </Flexbox>
         <Flexbox direction="col" gap="4" className="md:flex-row md:items-start">
           {/* Player list — a vertical pill selector that controls which deck shows. */}
           <Flexbox direction="col" gap="2" className="md:w-60 md:shrink-0">
