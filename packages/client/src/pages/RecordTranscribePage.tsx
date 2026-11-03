@@ -20,7 +20,7 @@ import MainLayout from 'layouts/MainLayout';
 
 import EditDescription from '../records/EditDescription';
 import TranscribePlayers from '../records/transcribe/TranscribePlayers';
-import TranscribeRounds, { ResultsMode } from '../records/transcribe/TranscribeRounds';
+import TranscribeRounds, { AddRoundButton, ResultsMode } from '../records/transcribe/TranscribeRounds';
 import {
   applyPlayerEdit,
   areSeatsEditable,
@@ -376,9 +376,15 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
               {resultsMode === 'pairings' && (
                 <Card>
                   <CardHeader>
-                    <Text lg semibold>
-                      Rounds
-                    </Text>
+                    <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
+                      <Text lg semibold>
+                        Rounds
+                      </Text>
+                      <AddRoundButton
+                        matches={state.matches}
+                        setMatches={(matches) => updateState((previous) => ({ ...previous, matches }))}
+                      />
+                    </Flexbox>
                   </CardHeader>
                   <CardBody>
                     <TranscribeRounds

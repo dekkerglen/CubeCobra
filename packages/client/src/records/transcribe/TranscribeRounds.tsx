@@ -16,6 +16,23 @@ import { MAX_ROUNDS } from './transcribeState';
 // side of it and is not rendered at all in the other mode.
 export type ResultsMode = 'pairings' | 'records';
 
+// Rendered in the section's own header rather than under its list: at the bottom it sat
+// below however many rounds were already entered, which is where it is least reachable.
+export const AddRoundButton: React.FC<{ matches: Round[]; setMatches: (matches: Round[]) => void }> = ({
+  matches,
+  setMatches,
+}) => (
+  <Button
+    color="primary"
+    onClick={() => setMatches([...matches, { matches: [] }])}
+    // The server caps a record at MAX_ROUNDS rounds. Adding past that is refused here
+    // rather than at Save.
+    disabled={matches.length >= MAX_ROUNDS}
+  >
+    <span className="text-nowrap">Add Round</span>
+  </Button>
+);
+
 interface TranscribeRoundsProps {
   players: PlayerList;
   matches: Round[];
@@ -25,6 +42,14 @@ interface TranscribeRoundsProps {
 const TranscribeRounds: React.FC<TranscribeRoundsProps> = ({ players, matches, setMatches }) => {
   const updateRound = (index: number, round: Round) =>
     setMatches(matches.map((existing, position) => (position === index ? round : existing)));
+
+  if (matches.length === 0) {
+    return (
+      <Text sm className="text-text-secondary">
+        No rounds yet. Add one to start entering pairings.
+      </Text>
+    );
+  }
 
   return (
     <Flexbox direction="col" gap="2">
@@ -50,17 +75,6 @@ const TranscribeRounds: React.FC<TranscribeRoundsProps> = ({ players, matches, s
           </CardBody>
         </Card>
       ))}
-      <Flexbox direction="row" justify="start">
-        <Button
-          color="primary"
-          onClick={() => setMatches([...matches, { matches: [] }])}
-          // The server caps a record at MAX_ROUNDS rounds. Adding past that is refused here
-          // rather than at Save.
-          disabled={matches.length >= MAX_ROUNDS}
-        >
-          Add Round
-        </Button>
-      </Flexbox>
     </Flexbox>
   );
 };

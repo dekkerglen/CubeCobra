@@ -150,7 +150,9 @@ describe('EditMatchRound', () => {
     render(<Harness initialRound={{ matches: [match('Alice', 'Bob', [2, 1, 0])] }} />);
 
     const headings = screen.getByTestId('match-column-headings');
-    for (const label of ['Player 1', 'Player 2', 'W', 'W', 'D']) {
+    // Not W/L/D: the three cells are the two players' win counts and the draws between
+    // them, so the headings name whose column each one is rather than a result type.
+    for (const label of ['Player 1', 'Player 2', 'P1 Wins', 'P2 Wins', 'Draws']) {
       expect(within(headings).getAllByText(label).length).toBeGreaterThan(0);
     }
 
@@ -166,11 +168,13 @@ describe('EditMatchRound', () => {
     expect(screen.queryByTestId('match-column-headings')).not.toBeInTheDocument();
   });
 
-  it('keeps Add Match to its own width rather than the full row', () => {
+  it('offers adding a match as a quiet control rather than a filled button', () => {
     render(<Harness initialRound={{ matches: [match('Alice', 'Bob', [2, 1, 0])] }} />);
 
     const add = screen.getByRole('button', { name: 'Add Match' });
     expect(add.parentElement).toHaveClass('justify-start');
+    // Adding a row to a round is routine; it was carrying the same weight as Save.
+    expect(add.className).not.toMatch(/bg-button/);
   });
 
   it('binds each editor to its own controls when two rounds are on the page', () => {

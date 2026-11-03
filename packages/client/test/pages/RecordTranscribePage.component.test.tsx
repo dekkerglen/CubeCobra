@@ -1057,9 +1057,9 @@ describe('RecordTranscribePage', () => {
 
     // Every row carries cells in both modes, so the headings are there from the start.
     const headings = screen.getByTestId('record-column-headings');
-    expect(within(headings).getByText('W')).toBeInTheDocument();
-    expect(within(headings).getByText('L')).toBeInTheDocument();
-    expect(within(headings).getByText('D')).toBeInTheDocument();
+    expect(within(headings).getByText('Wins')).toBeInTheDocument();
+    expect(within(headings).getByText('Losses')).toBeInTheDocument();
+    expect(within(headings).getByText('Draws')).toBeInTheDocument();
     expect(recordCell(1, 'Wins')).toHaveAttribute('title', 'Wins');
     expect(recordCell(1, 'Losses')).toHaveAttribute('title', 'Losses');
     expect(recordCell(1, 'Draws')).toHaveAttribute('title', 'Draws');
@@ -1076,7 +1076,7 @@ describe('RecordTranscribePage', () => {
 
     // A heading that is not the same width as its column is not a heading, it is a caption.
     const headings = screen.getByTestId('record-column-headings');
-    for (const label of ['W', 'L', 'D']) {
+    for (const label of ['Wins', 'Losses', 'Draws']) {
       expect(within(headings).getByText(label)).toHaveClass('w-20');
     }
     expect(recordCell(0, 'Wins').parentElement?.parentElement).toHaveClass('w-20');
@@ -1199,6 +1199,32 @@ describe('RecordTranscribePage', () => {
   });
 
   // Switching mode changes what Save writes, so it is a change like any other.
+  // Adding a round is an action on the section, not the last row of its list — at the bottom
+  // it sat below however many rounds were already there, which is where it is least reachable.
+  it('adds a round from the section header', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+
+    const header = screen.getByRole('button', { name: 'Add Round' }).closest('.border-b');
+    expect(header).not.toBeNull();
+    expect(within(header as HTMLElement).getByText('Rounds')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Round' }));
+    expect(screen.getByText('Round 2')).toBeInTheDocument();
+  });
+
+  // With the add control moved to the header, a record with no rounds would otherwise show
+  // an empty card body and nothing to say what belongs in it.
+  it('says what an empty rounds section is for', () => {
+    renderPage();
+
+    expect(screen.getByText(/No rounds yet/)).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Round' }));
+
+    expect(screen.queryByText(/No rounds yet/)).not.toBeInTheDocument();
+    expect(screen.getByText('Round 1')).toBeInTheDocument();
+  });
+
   it('counts a change of results mode as unsaved work', () => {
     renderPage({ record: createRecord({ matches: pairedRound() }) });
 

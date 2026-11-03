@@ -1,9 +1,8 @@
 import React, { useId } from 'react';
 
-import { XIcon } from '@primer/octicons-react';
+import { PlusIcon, XIcon } from '@primer/octicons-react';
 import { Match, PlayerList, Round } from '@utils/datatypes/Record';
 
-import Button from 'components/base/Button';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Select from 'components/base/Select';
@@ -58,7 +57,10 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
             <Text sm semibold className="grow min-w-0 text-text-secondary">
               Player 2
             </Text>
-            {['W', 'W', 'D'].map((heading, position) => (
+            {/* Abbreviated because the column is the width of the count it heads; it reads
+                against the "Player 1" and "Player 2" headings immediately to its left, and
+                each cell still carries the player's own name as its title. */}
+            {['P1 Wins', 'P2 Wins', 'Draws'].map((heading, position) => (
               <Text key={position} sm semibold className={`${NUMBER_COLUMN} text-text-secondary`}>
                 {heading}
               </Text>
@@ -122,8 +124,12 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
           </button>
         </Flexbox>
       ))}
+      {/* Adding a row to a round is routine, and a filled primary button gave it the same
+          weight as Save at the bottom of the page. */}
       <Flexbox direction="row" justify="start">
-        <Button
+        <button
+          type="button"
+          className="flex items-center gap-1 text-sm font-medium text-link hover:text-link-active"
           onClick={() => {
             const newMatch: Match = {
               p1: 'Unknown Opponent',
@@ -132,10 +138,10 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
             };
             setRound({ ...round, matches: [...round.matches, newMatch] });
           }}
-          color="primary"
         >
+          <PlusIcon size={16} />
           Add Match
-        </Button>
+        </button>
       </Flexbox>
     </Flexbox>
   );

@@ -580,7 +580,7 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
             <Flexbox direction="row" gap="1" alignItems="center">
               {RECORD_FIELDS.map(({ label, key }) => (
                 <Text key={key} sm semibold className={`${RECORD_COLUMN} text-text-secondary`}>
-                  {label.charAt(0)}
+                  {label}
                 </Text>
               ))}
             </Flexbox>
