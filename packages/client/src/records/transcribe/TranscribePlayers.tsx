@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { arrayMove } from '@dnd-kit/sortable';
-import { ChevronDownIcon, ChevronRightIcon, GrabberIcon, TrophyIcon } from '@primer/octicons-react';
+import { ChevronDownIcon, ChevronRightIcon, GrabberIcon, PencilIcon, TrophyIcon } from '@primer/octicons-react';
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
@@ -10,7 +10,6 @@ import User from '@utils/datatypes/User';
 
 import { UncontrolledAlertProps } from 'components/base/Alert';
 import Button from 'components/base/Button';
-import Checkbox from 'components/base/Checkbox';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
@@ -577,6 +576,7 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
             <Text sm semibold className={`${DECK_COLUMN} shrink-0 text-center text-text-secondary`}>
               Main / Side
             </Text>
+            <span aria-hidden="true" className="w-4 shrink-0" />
             <Flexbox direction="row" gap="1" alignItems="center">
               {RECORD_FIELDS.map(({ label, key }) => (
                 <Text key={key} sm semibold className={`${RECORD_COLUMN} text-text-secondary`}>
@@ -655,12 +655,6 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                         </Flexbox>
                         <Flexbox direction="row" alignItems="center" gap="2" wrap="wrap">
                           <DeckCounts deck={deck} />
-                          <PlayerRecord
-                            player={player}
-                            seed={seed}
-                            editable={cellsEditable}
-                            setOverride={(value) => setOverride(player.name, value)}
-                          />
                           {/* Always rendered, lit when held: a trophy that only appears once
                               awarded gives no affordance for awarding it in the first place. */}
                           <button
@@ -673,6 +667,33 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                           >
                             <TrophyIcon size={16} />
                           </button>
+                          <PlayerRecord
+                            player={player}
+                            seed={seed}
+                            editable={cellsEditable}
+                            setOverride={(value) => setOverride(player.name, value)}
+                          />
+                          {/* Pairings mode derives every record from the matches below; this is
+                              how one player is excused from that. Records mode has no use for it
+                              — there the typed record is the only source there is. */}
+                          {!records && (
+                            <button
+                              type="button"
+                              disabled={editsDisabled}
+                              aria-pressed={!!override}
+                              aria-label={`${override ? 'Stop overriding' : 'Override'} ${player.name}\u2019s record`}
+                              // Says what it is about to displace, because once it is on the
+                              // cells beside it stop showing the pairings entirely.
+                              title={`${override ? 'Stop overriding' : 'Override'} ${player.name}\u2019s record \u2014 their pairings give ${formatRecord(derived)}`}
+                              className={`shrink-0 ${override ? 'text-link' : 'text-text-secondary opacity-40'}`}
+                              // Seeded from the pairings rather than from zero, so turning it on
+                              // does not blank the record it is replacing. Turning it off removes
+                              // the override, which hands the player back.
+                              onClick={() => setOverride(player.name, override ? undefined : { ...derived })}
+                            >
+                              <PencilIcon size={16} />
+                            </button>
+                          )}
                           {/* Rightmost, and fixed width, so inserting it leaves the record cells
                               on the same x as every other row's. */}
                           <button
@@ -697,29 +718,6 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                               that re-base unambiguous: a rename, add, remove, shuffle or drop
                               applied mid-flight would be expressed against seats the server has
                               already moved, and the next save would misattribute every deck. */}
-                          {/* Pairings mode derives every record from the matches below; this is
-                              how one player is excused from that. Records mode has no use for
-                              it — there the typed record is the only source there is. */}
-                          {!records && (
-                            <fieldset disabled={editsDisabled} className="border-0 p-0 m-0">
-                              <Flexbox direction="col" gap="1">
-                                <Checkbox
-                                  label="Override final record"
-                                  checked={!!override}
-                                  // Seeded from the pairings rather than from zero, so throwing
-                                  // the switch does not blank the record it is replacing. Turning
-                                  // it off removes the override, which hands the player back.
-                                  setChecked={(checked) =>
-                                    setOverride(player.name, checked ? { ...derived } : undefined)
-                                  }
-                                />
-                                <Text sm className="text-text-secondary">
-                                  {`${player.name}\u2019s pairings give ${formatRecord(derived)}.`}
-                                </Text>
-                              </Flexbox>
-                            </fieldset>
-                          )}
-
                           {!deck || deck.editable ? (
                             <Flexbox direction="col" gap="2">
                               <UploadDeck

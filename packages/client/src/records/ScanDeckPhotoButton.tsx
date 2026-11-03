@@ -5,6 +5,7 @@ import Cube from '@utils/datatypes/Cube';
 import { CardDetails } from '@utils/datatypes/Card';
 
 import Alert, { UncontrolledAlertProps } from 'components/base/Alert';
+import Button from 'components/base/Button';
 import { Flexbox } from 'components/base/Layout';
 import { Modal, ModalBody, ModalHeader } from 'components/base/Modal';
 
@@ -48,14 +49,12 @@ const ScanDeckPhotoButton: React.FC<ScanDeckPhotoButtonProps> = ({
 
   return (
     <>
-      <button
-        type="button"
-        className="flex items-center gap-1 text-sm font-medium text-link hover:text-link-active"
-        onClick={() => setOpen(true)}
-      >
-        <DeviceCameraIcon size={16} />
-        Scan deck from photo
-      </button>
+      <Button color="accent" onClick={() => setOpen(true)}>
+        <Flexbox direction="row" alignItems="center" gap="1">
+          <DeviceCameraIcon size={16} />
+          <span className="text-nowrap">Scan deck from photo</span>
+        </Flexbox>
+      </Button>
       <Modal isOpen={open} setOpen={(value) => (value ? setOpen(true) : close())} xxl scrollable>
         <ModalHeader setOpen={(value) => (value ? setOpen(true) : close())}>Scan deck from photo</ModalHeader>
         <ModalBody scrollable>

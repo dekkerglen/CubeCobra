@@ -239,9 +239,9 @@ const nameField = (index = 0) => within(playerRow(index)).getByLabelText('Player
 // The deck column, as mainboard / sideboard counts.
 const deckCell = (index: number) => within(playerRow(index)).getByTestId('deck-counts');
 
-// The per-player override switch, which lives in the expanded body in pairings mode.
+// The per-player override control, on the row and only in pairings mode.
 const overrideToggle = (index: number) =>
-  within(playerRow(index)).getByLabelText('Override final record') as HTMLInputElement;
+  within(playerRow(index)).getByRole('button', { name: /^(Override|Stop overriding) / });
 
 // A row is open when its deck editor is mounted; the name field is no longer the tell.
 const rowExpanded = (index: number) => within(playerRow(index)).queryByText('Paste a decklist') !== null;
@@ -1111,13 +1111,13 @@ describe('RecordTranscribePage', () => {
     });
   });
 
-  it('turns a pairings-mode override on from the row body, seeded from the pairings', async () => {
-    const { csrfFetch } = renderPage({ record: createRecord({ matches: pairedRound() }), openRow: 0 });
+  it('turns a pairings-mode override on from the row, seeded from the pairings', async () => {
+    const { csrfFetch } = renderPage({ record: createRecord({ matches: pairedRound() }) });
 
-    expect(overrideToggle(0)).not.toBeChecked();
+    expect(overrideToggle(0)).toHaveAttribute('aria-pressed', 'false');
     expect(cellsEditable(0)).toBe(false);
-    // The body says what it is overriding, since the cells are about to stop showing it.
-    expect(within(playerRow(0)).getByText('Alice’s pairings give 1-0.')).toBeInTheDocument();
+    // The control says what it is about to displace, since the cells stop showing it.
+    expect(overrideToggle(0)).toHaveAttribute('title', 'Override Alice’s record — their pairings give 1-0');
 
     fireEvent.click(overrideToggle(0));
 
@@ -1139,13 +1139,12 @@ describe('RecordTranscribePage', () => {
   it('hands a player back to their pairings when the override is turned off', async () => {
     const { csrfFetch } = renderPage({
       record: createRecord({ matches: pairedRound(), overrides: aliceOverride() }),
-      openRow: 0,
     });
 
     // A stored override is what the record reads, so the cells show it rather than the
-    // pairings, and the switch is already on.
+    // pairings, and the control is already on.
     expect(roundsShown()).toBe(true);
-    expect(overrideToggle(0)).toBeChecked();
+    expect(overrideToggle(0)).toHaveAttribute('aria-pressed', 'true');
     expect(recordCell(0, 'Wins')).toHaveValue(3);
     expect(cellsEditable(0)).toBe(true);
     // The clear button it replaced is gone from the row.
@@ -1163,12 +1162,29 @@ describe('RecordTranscribePage', () => {
     expect(savedPayload(csrfFetch).overrides).toEqual({});
   });
 
-  it('offers no override switch in final records mode, where every cell is already typeable', () => {
-    renderPage({ record: createRecord({ matches: pairedRound() }), openRow: 0 });
+  it('keeps the outside-the-cube toggle with the field it filters', () => {
+    renderPage({ openRow: 0 });
+
+    // It only changes what the single-card autocomplete suggests — the paste box and the
+    // photo scanner resolve against the whole catalogue either way — so sitting on a line
+    // of controls above both columns said it governed all three.
+    const row = playerRow(0);
+    const toggle = within(row).getByLabelText('Use Cards Outside of Cube');
+    const addCard = within(row).getByPlaceholderText(/Card to Add to/);
+    expect(addCard.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(toggle.compareDocumentPosition(pasteBox(0)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+
+    const shared = within(row).getByTestId('deck-shared-controls');
+    expect(within(shared).queryByLabelText('Use Cards Outside of Cube')).not.toBeInTheDocument();
+    expect(within(shared).getByLabelText('Add to')).toBeInTheDocument();
+  });
+
+  it('offers no override control in final records mode, where every cell is already typeable', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
 
     fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
 
-    expect(within(playerRow(0)).queryByLabelText('Override final record')).not.toBeInTheDocument();
+    expect(within(playerRow(0)).queryByRole('button', { name: /[Oo]verrid/ })).not.toBeInTheDocument();
     expect(cellsEditable(0)).toBe(true);
   });
 
@@ -1277,14 +1293,15 @@ describe('RecordTranscribePage', () => {
   // the record it describes.
   // The override switch hides what it is replacing, so the reading it displaces is stated
   // right beside it rather than left for the user to work out from the rounds below.
-  it('states the pairing-derived reading beside the override switch', () => {
-    renderPage({ record: createRecord({ matches: pairedRound() }), openRow: 1 });
+  it('states the pairing-derived reading on the override control', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
 
-    expect(within(playerRow(1)).getByText('Bob\u2019s pairings give 0-1.')).toBeInTheDocument();
+    expect(overrideToggle(1)).toHaveAttribute('title', 'Override Bob\u2019s record — their pairings give 0-1');
 
-    // It belongs to the pairings, not to whether this player is overriding them.
+    // It belongs to the pairings, not to whether this player is overriding them — which is
+    // the whole point once the cells have stopped showing them.
     fireEvent.click(overrideToggle(1));
-    expect(within(playerRow(1)).getByText('Bob\u2019s pairings give 0-1.')).toBeInTheDocument();
+    expect(overrideToggle(1)).toHaveAttribute('title', 'Stop overriding Bob\u2019s record — their pairings give 0-1');
   });
 
   // The endpoint's Joi schema rejects a negative win count with a raw 400, and a number input
@@ -1337,15 +1354,15 @@ describe('RecordTranscribePage', () => {
     const from = sequence.indexOf(recordCell(0, 'Wins'));
 
     expect(from).toBeGreaterThan(-1);
-    // Three cells, then the row's own trophy and chevron, then the next row's name — four
+    // Three cells, then the row's chevron, then the next row's name and trophy — four
     // keystrokes between one player's wins and the next, with no expansion in between.
     expect(sequence.slice(from, from + 7)).toEqual([
       recordCell(0, 'Wins'),
       recordCell(0, 'Losses'),
       recordCell(0, 'Draws'),
-      trophyToggle(0),
       expandToggle(0),
       nameField(1),
+      trophyToggle(1),
       recordCell(1, 'Wins'),
     ]);
   });

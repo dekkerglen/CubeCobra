@@ -340,11 +340,6 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
                 ]}
               />
             </div>
-            <Checkbox
-              label="Use Cards Outside of Cube"
-              checked={allowCardsOutsideOfCube}
-              setChecked={(value) => setAllowCardsOutsideOfCube(value)}
-            />
           </Flexbox>
           {controlsExtra}
         </Flexbox>
@@ -378,6 +373,15 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
               <span className="text-nowrap">Add Cards</span>
             </Button>
           </Flexbox>
+          {/* Directly under the field it filters. It changes what this autocomplete offers
+              and nothing else — a name typed in full is resolved against the whole catalogue
+              either way, as are a pasted list and a scanned photo — so on a line of shared
+              controls it read as governing all three. */}
+          <Checkbox
+            label="Use Cards Outside of Cube"
+            checked={allowCardsOutsideOfCube}
+            setChecked={(value) => setAllowCardsOutsideOfCube(value)}
+          />
           {basicDetails.length > 0 && (
             <>
               <Button color="accent" onClick={() => setBasicsOpen(true)}>
