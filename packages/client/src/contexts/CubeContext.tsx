@@ -11,6 +11,7 @@ import React, {
 } from 'react';
 
 import { cardName, cardWithBaseAttributes, isVoucher, normalizeName } from '@utils/cardutil';
+import { stampQuantities } from '@utils/cubeCleanup';
 import Card, {
   BoardChanges,
   BoardType,
@@ -1108,16 +1109,10 @@ export function CubeContextProvider({
       : cardFilter.filter;
     for (const board of Object.keys(changed)) {
       if (Array.isArray(changed[board])) {
-        // Stamp per-board copy counts (grouped by name, matching Collapse Duplicates)
-        // so the `quantity` / `is:singleton` filters can key off it before we filter.
-        const countsByName = new Map<string, number>();
-        for (const card of changed[board]) {
-          const name = cardName(card);
-          countsByName.set(name, (countsByName.get(name) ?? 0) + 1);
-        }
-        for (const card of changed[board]) {
-          card.quantity = countsByName.get(cardName(card)) ?? 1;
-        }
+        // Stamp per-board copy counts so the `quantity` / `is:singleton` filters can key off
+        // them before we filter. Copies are counted by oracle identity, by name only for cards
+        // without one, and cards staged for removal are not counted.
+        stampQuantities(changed[board]);
         result[board] = changed[board].filter(effectiveFilter);
       }
     }
