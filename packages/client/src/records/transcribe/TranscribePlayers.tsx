@@ -95,13 +95,12 @@ const useResolvePlayer = () => {
   );
 };
 
-const summarize = (deck: TranscribeDeck | undefined): string => {
-  if (!deck || deck.mainboard.length === 0) {
-    return 'No deck yet';
-  }
-  const sideboard = deck.sideboard.length > 0 ? ` + ${deck.sideboard.length} sideboard` : '';
-  return `${deck.mainboard.length} cards${sideboard}`;
-};
+// Two numbers in a fixed column rather than a sentence, so sixteen rows of them read down
+// as a table. What they count is said by the column heading and the tooltip, not by the cell.
+const deckCounts = (deck: TranscribeDeck | undefined): { main: number; side: number } => ({
+  main: deck?.mainboard.length ?? 0,
+  side: deck?.sideboard.length ?? 0,
+});
 
 // What the name field shows for a player, and what a committed rename has to come back as
 // before the field stops offering to re-send it.
@@ -249,15 +248,73 @@ const RECORD_FIELDS: { label: string; key: keyof WinLossDraw }[] = [
 // 400 that rejects the entire transcription, not just the offending cell.
 const toCount = (raw: string): number => Math.max(0, Math.floor(Number(raw) || 0));
 
+// The width every column of the row and its headings is cut to.
+const DECK_COLUMN = 'w-24';
+const RECORD_COLUMN = 'w-20';
+
+// The mainboard and sideboard counts, as a column rather than a sentence.
+const DeckCounts: React.FC<{ deck: TranscribeDeck | undefined }> = ({ deck }) => {
+  const { main, side } = deckCounts(deck);
+  const unsaved = deck?.dirty ? ' — unsaved' : '';
+
+  return (
+    // A title rather than a hover card, matching the record cells beside it: two bare numbers
+    // and an asterisk need naming, and the column heading only has room to name them once.
+    <span
+      data-testid="deck-counts"
+      title={`${main} Mainboard / ${side} Sideboard${unsaved}`}
+      className={`${DECK_COLUMN} shrink-0 text-center text-sm ${deck?.dirty ? 'text-text' : 'text-text-secondary'}`}
+    >
+      {`${main} / ${side}${deck?.dirty ? ' *' : ''}`}
+    </span>
+  );
+};
+
+interface OverrideControlsProps {
+  player: Player;
+  derived: WinLossDraw;
+  override: WinLossDraw | undefined;
+  // Whether the record carries any pairings at all. With none there is no second reading to
+  // disclose, so a row carrying an override has nothing to show alongside it.
+  hasPairings: boolean;
+  clearOverride: () => void;
+}
+
+// What a row carrying an override shows beside it. Rendered left of every fixed column
+// rather than among them, because it is the one thing on the row whose width varies.
+const OverrideControls: React.FC<OverrideControlsProps> = ({
+  player,
+  derived,
+  override,
+  hasPairings,
+  clearOverride,
+}) => {
+  if (!override) {
+    return null;
+  }
+
+  return (
+    <Flexbox direction="row" alignItems="center" gap="1" wrap="wrap">
+      {hasPairings && (
+        // The precedence disclosure: this player's pairings say one thing and the record
+        // displays another, so both are on screen together.
+        <Text sm className="text-text-secondary text-nowrap">
+          {`From pairings: ${formatRecord(derived)}`}
+        </Text>
+      )}
+      <Button color="secondary" aria-label={`Clear ${player.name}'s record`} onClick={clearOverride}>
+        <span className="text-nowrap">Clear</span>
+      </Button>
+    </Flexbox>
+  );
+};
+
 interface PlayerRecordProps {
   player: Player;
   // What this player's pairings add up to, ignoring any override — the reading the override
   // is displacing, and what the cells are seeded with.
   derived: WinLossDraw;
   override: WinLossDraw | undefined;
-  // Whether the record carries any pairings at all. With none there is no second reading to
-  // disclose, so a row carrying an override has nothing to show alongside it.
-  hasPairings: boolean;
   // Records mode is nothing but cells; pairings mode derives every record from the matches
   // below, so its cells are read-only. They are rendered either way, so a row keeps the same
   // shape across both modes and the columns stay where the eye left them.
@@ -265,36 +322,16 @@ interface PlayerRecordProps {
   setOverride: (value: WinLossDraw | undefined) => void;
 }
 
-// A player's record as it sits on their collapsed row.
-const PlayerRecord: React.FC<PlayerRecordProps> = ({
-  player,
-  derived,
-  override,
-  hasPairings,
-  editable,
-  setOverride,
-}) => {
+// A player's three record cells, and nothing else — every neighbour is fixed-width, so the
+// three of them land at the same x on every row and the headings above the list stay true.
+const PlayerRecord: React.FC<PlayerRecordProps> = ({ player, derived, override, editable, setOverride }) => {
   // What the record actually reads: playerRecord prefers any present override, so showing a
   // derived total while an override is stored would be a lie — including in pairings mode,
   // where Clear is then the only way to hand the player back to their matches.
   const seed = override ?? derived;
 
   return (
-    // Everything that varies in width sits to the left of the cells, so the three of them
-    // land at the same x on every row and the column headings above the list stay true.
-    <Flexbox direction="row" alignItems="center" gap="1" wrap="wrap">
-      {override && hasPairings && (
-        // The precedence disclosure: this player's pairings say one thing and the record
-        // displays another, so both are on screen together.
-        <Text sm className="text-text-secondary text-nowrap">
-          {`From pairings: ${formatRecord(derived)}`}
-        </Text>
-      )}
-      {override && (
-        <Button color="secondary" aria-label={`Clear ${player.name}'s record`} onClick={() => setOverride(undefined)}>
-          <span className="text-nowrap">Clear</span>
-        </Button>
-      )}
+    <Flexbox direction="row" alignItems="center" gap="1">
       {RECORD_FIELDS.map(({ label, key }) => (
         <Input
           key={key}
@@ -307,7 +344,7 @@ const PlayerRecord: React.FC<PlayerRecordProps> = ({
           // title is the per-cell cue that names the box without taking a line, alongside the
           // column headings above the list.
           otherInputProps={{ min: 0, title: label, 'aria-label': `${label} for ${player.name}` }}
-          wrapperClassName="w-20"
+          wrapperClassName={RECORD_COLUMN}
         />
       ))}
     </Flexbox>
@@ -575,17 +612,26 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
         // at anything. Each heading is `w-20` like the cell beneath it, right-aligned to the
         // same card padding, so the three columns read top to bottom.
         <div data-testid="record-column-headings" className="px-4">
-          {/* Mirrors the right-hand group of a row — cells at gap-1 inside, then a gap-2 and
-              the chevron's fixed width — so the headings land over the columns rather than
-              24px right of them. */}
-          <Flexbox direction="row" justify="end" gap="2" alignItems="center">
-            <Flexbox direction="row" justify="end" gap="1" alignItems="center">
+          {/* Mirrors a row's own layout element for element — the handle and avatar it leads
+              with, then the name, then every fixed column, then the two icons it ends with —
+              because a heading that is not over its column is a caption, not a heading. */}
+          <Flexbox direction="row" gap="2" alignItems="center">
+            {seatsEditable && <span aria-hidden="true" className="w-4 shrink-0" />}
+            <span aria-hidden="true" className="w-6 shrink-0" />
+            <Text sm semibold className="grow min-w-0 text-text-secondary">
+              Name
+            </Text>
+            <Text sm semibold className={`${DECK_COLUMN} shrink-0 text-center text-text-secondary`}>
+              Main / Side
+            </Text>
+            <Flexbox direction="row" gap="1" alignItems="center">
               {RECORD_FIELDS.map(({ label, key }) => (
-                <Text key={key} sm semibold className="w-20 text-text-secondary">
+                <Text key={key} sm semibold className={`${RECORD_COLUMN} text-text-secondary`}>
                   {label.charAt(0)}
                 </Text>
               ))}
             </Flexbox>
+            <span aria-hidden="true" className="w-4 shrink-0" />
             <span aria-hidden="true" className="w-4 shrink-0" />
           </Flexbox>
         </div>
@@ -638,6 +684,33 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                           ) : (
                             <span className="w-6 h-6 rounded-full bg-bg-active border border-border shrink-0" />
                           )}
+                          <PlayerNameField
+                            id={`transcribe-player-name-${index}`}
+                            player={player}
+                            duplicate={duplicate}
+                            disabled={editsDisabled}
+                            onRename={(raw) => renamePlayer(index, raw)}
+                          />
+                        </Flexbox>
+                        <Flexbox direction="row" alignItems="center" gap="2" wrap="wrap">
+                          {/* Left of the deck column, not between it and the cells: these appear
+                              only on a row carrying an override, and anything of varying width
+                              in between would shunt that row's counts out of their column. */}
+                          <OverrideControls
+                            player={player}
+                            derived={playerRecord(withoutOverrides, player.name)}
+                            override={override}
+                            hasPairings={hasPairings}
+                            clearOverride={() => setOverride(player.name, undefined)}
+                          />
+                          <DeckCounts deck={deck} />
+                          <PlayerRecord
+                            player={player}
+                            derived={playerRecord(withoutOverrides, player.name)}
+                            override={override}
+                            editable={resultsMode === 'records'}
+                            setOverride={(value) => setOverride(player.name, value)}
+                          />
                           {/* Always rendered, lit when held: a trophy that only appears once
                               awarded gives no affordance for awarding it in the first place. */}
                           <button
@@ -650,26 +723,6 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                           >
                             <TrophyIcon size={16} />
                           </button>
-                          <PlayerNameField
-                            id={`transcribe-player-name-${index}`}
-                            player={player}
-                            duplicate={duplicate}
-                            disabled={editsDisabled}
-                            onRename={(raw) => renamePlayer(index, raw)}
-                          />
-                        </Flexbox>
-                        <Flexbox direction="row" alignItems="center" gap="2" wrap="wrap">
-                          <Text sm className="text-text-secondary shrink-0">
-                            {`${summarize(deck)}${deck?.dirty ? ' • unsaved' : ''}`}
-                          </Text>
-                          <PlayerRecord
-                            player={player}
-                            derived={playerRecord(withoutOverrides, player.name)}
-                            override={override}
-                            hasPairings={hasPairings}
-                            editable={resultsMode === 'records'}
-                            setOverride={(value) => setOverride(player.name, value)}
-                          />
                           {/* Rightmost, and fixed width, so inserting it leaves the record cells
                               on the same x as every other row's. */}
                           <button
@@ -694,33 +747,38 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                               that re-base unambiguous: a rename, add, remove, shuffle or drop
                               applied mid-flight would be expressed against seats the server has
                               already moved, and the next save would misattribute every deck. */}
-                          {seatsEditable && (
-                            <fieldset disabled={editsDisabled} className="min-w-0 border-0 p-0 m-0">
-                              <Flexbox direction="row" justify="end">
-                                <Button
-                                  color="danger"
-                                  aria-label={`Remove ${player.name}`}
-                                  onClick={() => removePlayer(index)}
-                                >
-                                  <span className="text-nowrap">Remove player</span>
-                                </Button>
-                              </Flexbox>
-                            </fieldset>
-                          )}
-
                           {!deck || deck.editable ? (
                             <Flexbox direction="col" gap="2">
-                              <UploadDeckFromPhoto
-                                cube={cube}
-                                setMainboardCards={setters[index].setMainboard}
-                                setSideboardCards={setters[index].setSideboard}
-                                setAlerts={setAlerts}
-                              />
                               <UploadDeck
                                 // Whose deck this is, is the row it is in.
                                 selectedUser={1}
                                 setSelectedUser={() => {}}
                                 showPlayerPicker={false}
+                                // deck.editable is areSeatsEditable(draft), the same value
+                                // seatsEditable holds — so a row whose deck cannot be edited
+                                // has no remove control to place, and this branch is the only
+                                // one that ever needs to carry it.
+                                controlsExtra={
+                                  seatsEditable && (
+                                    <fieldset disabled={editsDisabled} className="border-0 p-0 m-0">
+                                      <Button
+                                        color="danger"
+                                        aria-label={`Remove ${player.name}`}
+                                        onClick={() => removePlayer(index)}
+                                      >
+                                        <span className="text-nowrap">Remove player</span>
+                                      </Button>
+                                    </fieldset>
+                                  )
+                                }
+                                photoScanner={
+                                  <UploadDeckFromPhoto
+                                    cube={cube}
+                                    setMainboardCards={setters[index].setMainboard}
+                                    setSideboardCards={setters[index].setSideboard}
+                                    setAlerts={setAlerts}
+                                  />
+                                }
                                 record={{ ...record, players: [player] }}
                                 mainboardCards={deck?.mainboard ?? []}
                                 setMainboardCards={setters[index].setMainboard}

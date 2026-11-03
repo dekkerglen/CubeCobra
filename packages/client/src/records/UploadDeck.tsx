@@ -39,6 +39,13 @@ interface UploadDeckProps {
   // the transcription workspace renders one per row — answers that question by its position,
   // so it turns the picker off rather than asking again.
   showPlayerPicker?: boolean;
+  // Rendered at the end of the shared controls line, which spans both columns because what
+  // sits there governs both. The transcription workspace puts its remove-player control here
+  // rather than on a line of its own.
+  controlsExtra?: React.ReactNode;
+  // Rendered below the single-card controls in the left column. The photo scanner is a third
+  // way to enter the same deck, so a caller that shows it belongs beside the other two.
+  photoScanner?: React.ReactNode;
   // Optional: when provided, an inline "+ Add new player" option is offered.
   newPlayerName?: string;
   setNewPlayerName?: (name: string) => void;
@@ -66,6 +73,8 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
   selectedUser,
   setSelectedUser,
   showPlayerPicker = true,
+  controlsExtra,
+  photoScanner,
   newPlayerName,
   setNewPlayerName,
   renamePlayer,
@@ -314,24 +323,32 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
       )}
       {/* One board selector above both columns: typing a card, adding basics and parsing a
           paste all land on the same board, and two copies of the control could disagree. */}
-      <Flexbox direction="row" justify="start" gap="3" alignItems="end" wrap="wrap">
-        <Select
-          id="upload-deck-board"
-          label="Add to"
-          value={targetBoard}
-          setValue={(value) => setTargetBoard(value as DecklistBoard)}
-          options={[
-            { value: 'mainboard', label: 'Mainboard' },
-            { value: 'sideboard', label: 'Sideboard' },
-          ]}
-          dense
-        />
-        <Checkbox
-          label="Use Cards Outside of Cube"
-          checked={allowCardsOutsideOfCube}
-          setChecked={(value) => setAllowCardsOutsideOfCube(value)}
-        />
-      </Flexbox>
+      <div data-testid="deck-shared-controls">
+        <Flexbox direction="row" justify="between" gap="3" alignItems="end" wrap="wrap">
+          <Flexbox direction="row" justify="start" gap="3" alignItems="end" wrap="wrap">
+            {/* Fixed width: the control is the same control whichever board is selected, and
+                letting it resize to its value moves everything beside it. */}
+            <div className="w-40 shrink-0">
+              <Select
+                id="upload-deck-board"
+                label="Add to"
+                value={targetBoard}
+                setValue={(value) => setTargetBoard(value as DecklistBoard)}
+                options={[
+                  { value: 'mainboard', label: 'Mainboard' },
+                  { value: 'sideboard', label: 'Sideboard' },
+                ]}
+              />
+            </div>
+            <Checkbox
+              label="Use Cards Outside of Cube"
+              checked={allowCardsOutsideOfCube}
+              setChecked={(value) => setAllowCardsOutsideOfCube(value)}
+            />
+          </Flexbox>
+          {controlsExtra}
+        </Flexbox>
+      </div>
       {/* Two ways in, side by side rather than stacked: typing cards one at a time and pasting
           a list are alternatives, and stacking them buried the paste box below a fold while
           leaving both at a width neither needs. */}
@@ -378,6 +395,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
               />
             </>
           )}
+          {photoScanner}
         </Flexbox>
 
         <Flexbox direction="col" gap="2" className="md:w-1/2 min-w-0">

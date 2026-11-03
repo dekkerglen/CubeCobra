@@ -227,6 +227,9 @@ const tabOrder = () =>
 // Every row carries one now, so it is addressed through the row rather than globally.
 const nameField = (index = 0) => within(playerRow(index)).getByLabelText('Player name') as HTMLInputElement;
 
+// The deck column, as mainboard / sideboard counts.
+const deckCell = (index: number) => within(playerRow(index)).getByTestId('deck-counts');
+
 // A row is open when its deck editor is mounted; the name field is no longer the tell.
 const rowExpanded = (index: number) => within(playerRow(index)).queryByText('Paste a decklist') !== null;
 
@@ -296,13 +299,13 @@ describe('RecordTranscribePage', () => {
   it('shows the deck summary and the unsaved marker on the collapsed row', async () => {
     renderPage();
 
-    expect(playerRow(1)).toHaveTextContent('No deck yet');
+    expect(deckCell(1)).toHaveTextContent('0 / 0');
     expect(playerRow(1)).not.toHaveTextContent('unsaved');
 
     fireEvent.change(pasteBox(0), { target: { value: '2x Lightning Bolt\nSideboard\nPyroblast' } });
     fireEvent.click(screen.getByRole('button', { name: /Parse and Add to Mainboard/ }));
 
-    await waitFor(() => expect(playerRow(0)).toHaveTextContent('2 cards + 1 sideboard • unsaved'));
+    await waitFor(() => expect(deckCell(0)).toHaveTextContent('2 / 1'));
     // The marker is the deck's, so it does not spread to a player whose deck is untouched.
     expect(playerRow(1)).not.toHaveTextContent('unsaved');
   });
@@ -421,15 +424,15 @@ describe('RecordTranscribePage', () => {
 
     fireEvent.change(pasteBox(0), { target: { value: '2x Lightning Bolt\nSideboard\nPyroblast' } });
     fireEvent.click(screen.getByRole('button', { name: /Parse and Add to Mainboard/ }));
-    await waitFor(() => expect(playerRow(0)).toHaveTextContent('2 cards + 1 sideboard'));
+    await waitFor(() => expect(deckCell(0)).toHaveTextContent('2 / 1'));
 
     dragPlayer(0, 1);
 
     expect(nameField(0)).toHaveValue('Bob');
-    expect(playerRow(0)).toHaveTextContent('No deck yet');
+    expect(deckCell(0)).toHaveTextContent('0 / 0');
     // The deck is keyed by position, so it only stays with Alice if the move re-keys it.
     expect(nameField(1)).toHaveValue('Alice');
-    expect(playerRow(1)).toHaveTextContent('2 cards + 1 sideboard');
+    expect(deckCell(1)).toHaveTextContent('2 / 1');
   });
 
   it('submits a seatOrder matching the new order after a reorder', async () => {
@@ -1062,7 +1065,7 @@ describe('RecordTranscribePage', () => {
     // The cells sit at the same x on every row only if everything that varies in width —
     // the deck summary, a Clear control, a from-pairings reading — is left of them.
     const row = playerRow(0);
-    const summary = within(row).getByText(/No deck yet/);
+    const summary = deckCell(0);
     const wins = recordCell(0, 'Wins');
     expect(summary.compareDocumentPosition(wins) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
@@ -1099,11 +1102,76 @@ describe('RecordTranscribePage', () => {
     // The identity half used to be the hit region, which made the control invisible — and
     // now holds a name field, which a row-wide toggle would collapse out from under.
     fireEvent.click(nameField(1));
-    fireEvent.click(within(playerRow(1)).getByText(/No deck yet/));
+    fireEvent.click(deckCell(1));
     expect(rowExpanded(1)).toBe(false);
 
     fireEvent.click(expandToggle(1));
     expect(rowExpanded(1)).toBe(true);
+  });
+
+  it('reads the deck as mainboard / sideboard counts, explained on hover', async () => {
+    renderPage();
+
+    expect(deckCell(1)).toHaveTextContent('0 / 0');
+
+    fireEvent.change(pasteBox(0), { target: { value: 'Lightning Bolt\nCounterspell\nSideboard\nPyroblast' } });
+    fireEvent.click(screen.getByRole('button', { name: /Parse and Add to/ }));
+    await waitFor(() => expect(deckCell(0)).toHaveTextContent('2 / 1'));
+
+    // Two bare numbers need saying once what they count; the column heading is the other half.
+    expect(deckCell(0)).toHaveAttribute('title', '2 Mainboard / 1 Sideboard — unsaved');
+    expect(deckCell(1)).toHaveAttribute('title', '0 Mainboard / 0 Sideboard');
+  });
+
+  it('heads the name and deck columns alongside the record ones', () => {
+    renderPage();
+
+    const headings = screen.getByTestId('record-column-headings');
+    expect(within(headings).getByText('Name')).toBeInTheDocument();
+    expect(within(headings).getByText('Main / Side')).toBeInTheDocument();
+    // The deck column is fixed-width so the counts stay under their heading.
+    expect(within(headings).getByText('Main / Side')).toHaveClass('w-24');
+    expect(deckCell(0)).toHaveClass('w-24');
+  });
+
+  it('puts the trophy right of the record cells', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+
+    const draws = recordCell(1, 'Draws');
+    const trophy = trophyToggle(1);
+    expect(draws.compareDocumentPosition(trophy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // ...and still left of the chevron, which stays the rightmost thing on the row.
+    expect(trophy.compareDocumentPosition(expandToggle(1)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('keeps the deck column left of the record cells and clear of the override controls', () => {
+    renderPage({ record: createRecord({ matches: pairedRound(), overrides: aliceOverride() }) });
+
+    // Clear only appears on a row carrying an override. Were it between the deck column and
+    // the cells, one row's override would shunt that row's counts out of the column.
+    const clear = within(playerRow(0)).getByRole('button', { name: "Clear Alice's record" });
+    expect(clear.compareDocumentPosition(deckCell(0)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(deckCell(0).compareDocumentPosition(recordCell(0, 'Wins')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('puts the shared deck controls on the same line as removing the player', () => {
+    renderPage();
+
+    const controls = within(playerRow(0)).getByTestId('deck-shared-controls');
+    expect(within(controls).getByLabelText('Add to')).toBeInTheDocument();
+    expect(within(controls).getByLabelText('Use Cards Outside of Cube')).toBeInTheDocument();
+    expect(within(controls).getByRole('button', { name: 'Remove Alice' })).toBeInTheDocument();
+  });
+
+  it('puts the photo scanner under the single-card controls, not above the editor', () => {
+    renderPage();
+
+    const row = playerRow(0);
+    const addCard = within(row).getByPlaceholderText(/Card to Add to/);
+    const scanner = within(row).getByText('Scan deck from photo');
+    expect(addCard.compareDocumentPosition(scanner) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    // ...and in the left column, so it stays clear of the paste box.
+    expect(scanner.compareDocumentPosition(pasteBox(0)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
   it('puts the chevron right of the record cells', () => {
@@ -1289,14 +1357,14 @@ describe('RecordTranscribePage', () => {
     const from = sequence.indexOf(recordCell(0, 'Wins'));
 
     expect(from).toBeGreaterThan(-1);
-    // Three cells, then the row's own chevron, then the next row's trophy — four keystrokes
-    // between one player's wins and the next, with no expansion in between.
+    // Three cells, then the row's own trophy and chevron, then the next row's name — four
+    // keystrokes between one player's wins and the next, with no expansion in between.
     expect(sequence.slice(from, from + 7)).toEqual([
       recordCell(0, 'Wins'),
       recordCell(0, 'Losses'),
       recordCell(0, 'Draws'),
+      trophyToggle(0),
       expandToggle(0),
-      trophyToggle(1),
       nameField(1),
       recordCell(1, 'Wins'),
     ]);
