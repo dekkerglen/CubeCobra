@@ -1,4 +1,4 @@
-import { cardOracleId, isCustomOrVoucher } from './cardutil';
+import { cardName, cardOracleId, isCustomOrVoucher } from './cardutil';
 import Card, { BoardType, Changes, isBoardChanges } from './datatypes/Card';
 
 export interface CleanupCardRef {
@@ -135,6 +135,35 @@ export const findOverlapRemovals = (
   }
 
   return removals.sort((a, b) => a.index - b.index);
+};
+
+/*
+ * The key copies are counted under: oracle identity, or the card's name when it has none.
+ * The `name:` prefix keeps a name key from ever colliding with a real oracle id, and means
+ * custom cards and vouchers — which cleanup abstains on — still count copies of each other.
+ */
+const quantityKey = (card: Card): string => cleanupOracleKey(card) ?? `name:${cardName(card)}`;
+
+/**
+ * Stamps each card's `quantity` with how many copies of it the given board holds, counting
+ * by the key above. Cards staged for removal are left out of the counts and stamped 1, so a
+ * staged cleanup immediately stops reporting the duplicates it is about to remove.
+ */
+export const stampQuantities = (cards: Card[]): void => {
+  const counts = new Map<string, number>();
+
+  for (const card of cards) {
+    if (card.markedForDelete) {
+      continue;
+    }
+
+    const key = quantityKey(card);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
+  }
+
+  for (const card of cards) {
+    card.quantity = card.markedForDelete ? 1 : (counts.get(quantityKey(card)) ?? 1);
+  }
 };
 
 const swapPositionKey = (board: BoardType, index: number): string => `${board}:${index}`;
