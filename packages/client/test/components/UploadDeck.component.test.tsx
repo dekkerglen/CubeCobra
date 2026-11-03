@@ -161,6 +161,28 @@ describe('UploadDeck paste', () => {
     expect(textarea()).toHaveValue('2 Notacard');
   });
 
+  it('keeps each retained line on its own board when a partly-failed paste is retried', async () => {
+    const { setMainboardCards, setSideboardCards } = renderUploadDeck({
+      csrfFetch: makeCsrfFetch(['Notacard', 'Alsonotacard']),
+    });
+
+    paste('2 Lightning Bolt\nNotacard\nSideboard\nPyroblast\nAlsonotacard');
+
+    await waitFor(() => expect(screen.getByText('Could not find card: "Notacard"')).toBeInTheDocument());
+    expect(screen.getByText('Could not find card: "Alsonotacard"')).toBeInTheDocument();
+    // The Sideboard marker has to come back with the text: without it the retry would silently
+    // reroute Alsonotacard's replacement to the mainboard.
+    await waitFor(() => expect(textarea()).toHaveValue('Notacard\nSideboard\nAlsonotacard'));
+
+    // The user fixes the two typos, leaving the marker the component wrote back in place.
+    paste(textarea().value.replace('Notacard', 'Counterspell').replace('Alsonotacard', 'Negate'));
+
+    await waitFor(() => expect(textarea()).toHaveValue(''));
+    expect(addedNames(setMainboardCards)).toEqual(['Lightning Bolt', 'Lightning Bolt', 'Counterspell']);
+    expect(addedNames(setSideboardCards)).toEqual(['Pyroblast', 'Negate']);
+    expect(screen.queryByText(/Could not find/)).not.toBeInTheDocument();
+  });
+
   it('clears the textarea when every line resolves', async () => {
     const { setMainboardCards } = renderUploadDeck();
 

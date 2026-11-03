@@ -3,7 +3,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { detailsToCard } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
 import Record from '@utils/datatypes/Record';
-import { parseDecklist } from '@utils/decklistParsing';
+import { DecklistBoard, parseDecklist } from '@utils/decklistParsing';
 
 import Alert, { UncontrolledAlertProps } from 'components/base/Alert';
 import AutocompleteInput from 'components/base/AutocompleteInput';
@@ -24,6 +24,14 @@ import { getCards } from 'utils/cards/getCards';
 
 // Select sentinel for "add a new player inline" (vs. an existing player index).
 export const NEW_PLAYER = -1;
+
+// Section markers written back into the textarea alongside lines that failed to resolve, so a
+// retried paste keeps each line on the board it was parsed onto. Both round-trip through
+// parseDecklist.
+const BOARD_MARKER_LINES: { [board in DecklistBoard]: string } = {
+  mainboard: 'Mainboard',
+  sideboard: 'Sideboard',
+};
 
 interface UploadDeckProps {
   selectedUser: number;
@@ -174,11 +182,11 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
       setIsParsing(true);
       setParseErrors([]);
 
+      const defaultBoard: DecklistBoard = addToSideboard ? 'sideboard' : 'mainboard';
+
       // Comment lines ("// Lands", as Cockatrice and TappedOut emit) parse as card lines. Drop them
       // rather than reporting them as cards that couldn't be found.
-      const entries = parseDecklist(text, addToSideboard ? 'sideboard' : 'mainboard').filter(
-        (entry) => !entry.name.startsWith('//'),
-      );
+      const entries = parseDecklist(text, defaultBoard).filter((entry) => !entry.name.startsWith('//'));
 
       if (entries.length === 0) {
         // Nothing but markers and comments: say so rather than silently emptying the box.
@@ -198,11 +206,18 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
         const erroredLines: string[] = [];
         const mainboardToAdd: CardDetails[] = [];
         const sideboardToAdd: CardDetails[] = [];
+        // The board the retained text is sitting in as it's rebuilt. Markers are re-emitted whenever
+        // it changes, so a retried paste routes its surviving lines to the boards they came from.
+        let retainedBoard = defaultBoard;
 
         entries.forEach((entry, index) => {
           const card = resolved[index];
           if (!card) {
             errors.push(`Could not find card: "${entry.line}"`);
+            if (entry.board !== retainedBoard) {
+              erroredLines.push(BOARD_MARKER_LINES[entry.board]);
+              retainedBoard = entry.board;
+            }
             erroredLines.push(entry.line);
             return;
           }

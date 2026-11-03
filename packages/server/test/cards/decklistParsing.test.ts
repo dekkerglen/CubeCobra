@@ -16,6 +16,11 @@ describe('decklistSectionMarker', () => {
     expect(decklistSectionMarker('Main')).toBe('mainboard');
   });
 
+  it('matches Mainboard', () => {
+    expect(decklistSectionMarker('Mainboard')).toBe('mainboard');
+    expect(decklistSectionMarker('// Mainboard:')).toBe('mainboard');
+  });
+
   it('is case insensitive', () => {
     expect(decklistSectionMarker('sideboard')).toBe('sideboard');
     expect(decklistSectionMarker('SIDEBOARD')).toBe('sideboard');
@@ -79,6 +84,15 @@ describe('parseDecklist', () => {
 
   it('returns to the mainboard on a Deck marker', () => {
     const entries = parseDecklist('Sideboard\nNegate\nDeck\nLightning Bolt', 'mainboard');
+
+    expect(entries.map((entry) => [entry.board, entry.name])).toEqual([
+      ['sideboard', 'Negate'],
+      ['mainboard', 'Lightning Bolt'],
+    ]);
+  });
+
+  it('returns to the mainboard on a Mainboard marker', () => {
+    const entries = parseDecklist('Sideboard\nNegate\nMainboard\nLightning Bolt', 'mainboard');
 
     expect(entries.map((entry) => [entry.board, entry.name])).toEqual([
       ['sideboard', 'Negate'],

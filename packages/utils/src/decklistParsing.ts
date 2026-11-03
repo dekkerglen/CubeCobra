@@ -20,6 +20,7 @@ const SECTION_MARKERS = new Map<string, DecklistBoard>([
   ['deck', 'mainboard'],
   ['maindeck', 'mainboard'],
   ['main', 'mainboard'],
+  ['mainboard', 'mainboard'],
   ['sideboard', 'sideboard'],
   ['sb', 'sideboard'],
 ]);
