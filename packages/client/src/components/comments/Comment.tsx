@@ -208,7 +208,7 @@ const Comment: React.FC<CommentProps> = ({
             .reverse()
             .map((item, pos) => (
               <Comment
-                key={`comment-${comment.id}`}
+                key={`comment-${item.id}`}
                 comment={item}
                 index={index + comments.length - pos}
                 depth={depth + 1}

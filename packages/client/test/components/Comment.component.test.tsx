@@ -137,3 +137,30 @@ describe('Comment reply loading', () => {
     expect(screen.getByText('Hide Replies (2)')).toBeInTheDocument();
   });
 });
+
+describe('Comment reply keys', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  it('gives each reply its own React key', () => {
+    // Every reply used to be keyed on the PARENT comment's id, so siblings collided. React
+    // may then duplicate or drop rows, and per-comment state (the edit box, the reply box,
+    // the expanded toggle) can attach to the wrong row.
+    const replies = [buildComment({ id: 'r-1' }), buildComment({ id: 'r-2' }), buildComment({ id: 'r-3' })];
+    mockUseComments.mockReturnValue([replies as any, jest.fn(), false, jest.fn(), null, jest.fn()]);
+    const errors: string[] = [];
+    const spy = jest.spyOn(console, 'error').mockImplementation((...args) => {
+      errors.push(args.map(String).join(' '));
+    });
+
+    try {
+      render(<Comment comment={buildComment({ id: 'parent-1', replyCount: 3 })} index={0} editComment={jest.fn()} />);
+      fireEvent.click(screen.getByText(/View Replies/));
+    } finally {
+      spy.mockRestore();
+    }
+
+    expect(errors.filter((e) => /same key/i.test(e))).toEqual([]);
+  });
+});
