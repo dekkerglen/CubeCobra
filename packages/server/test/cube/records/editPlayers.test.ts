@@ -1,0 +1,213 @@
+import { DRAFT_TYPES } from '@utils/datatypes/Draft';
+
+import { editRecordPlayersHandler } from '../../../src/router/routes/cube/records/edit/players';
+import { createCube } from '../../test-utils/data';
+import { call } from '../../test-utils/transport';
+
+jest.mock('serverutils/render', () => ({
+  ...jest.requireActual('serverutils/render'),
+  redirect: jest.fn(),
+}));
+
+jest.mock('../../../src/dynamo/daos', () => ({
+  cubeDao: { getById: jest.fn() },
+  draftDao: { getById: jest.fn(), update: jest.fn() },
+  recordDao: { getById: jest.fn(), update: jest.fn() },
+}));
+
+import { cubeDao, draftDao, recordDao } from '../../../src/dynamo/daos';
+
+// A played draft's seats carry history: a deck name its owner typed, the real drafter,
+// and pick orders that reference an InitialState tied to the seats by position.
+const playedSeat = (title: string, owner: string) => ({
+  title,
+  owner,
+  mainboard: [[[1]]],
+  sideboard: [[[2]]],
+  pickorder: [1, 2, 3],
+});
+
+describe('editRecordPlayersHandler', () => {
+  const cube = createCube({ id: 'my-cube' });
+  const flash = jest.fn();
+
+  const record = (draftId?: string) => ({
+    id: 'rec-1',
+    cube: cube.id,
+    players: [{ name: 'Alice', userId: 'user-alice' }, { name: 'Bob' }],
+    matches: [{ matches: [{ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] }] }],
+    trophy: ['Alice'],
+    overrides: { Alice: { wins: 3, losses: 0, draws: 0 } },
+    draft: draftId,
+  });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+  });
+
+  const editPlayers = (players: unknown, seatOrder: unknown) =>
+    call(editRecordPlayersHandler)
+      .as(cube.owner)
+      .withFlash(flash)
+      .withParams({ id: 'rec-1' })
+      .withBody({ players: JSON.stringify(players), seatOrder: JSON.stringify(seatOrder) })
+      .send();
+
+  describe('against a played draft', () => {
+    const seats = [playedSeat('Jeskai Control', 'user-alice'), playedSeat('Rakdos Sacrifice', 'user-bob')];
+
+    beforeEach(() => {
+      (recordDao.getById as jest.Mock).mockResolvedValue(record('draft-1'));
+      (draftDao.getById as jest.Mock).mockResolvedValue({ id: 'draft-1', type: DRAFT_TYPES.DRAFT, seats });
+    });
+
+    it('leaves the draft untouched when nothing changed', async () => {
+      await editPlayers([{ name: 'Alice', userId: 'user-alice' }, { name: 'Bob' }], [0, 1]);
+
+      expect(draftDao.update).not.toHaveBeenCalled();
+      expect(recordDao.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('renames a player without rewriting the seats', async () => {
+      await editPlayers([{ name: 'Alice', userId: 'user-alice' }, { name: 'Robert' }], [0, 1]);
+
+      expect(draftDao.update).not.toHaveBeenCalled();
+      const saved = (recordDao.update as jest.Mock).mock.calls[0][0];
+      expect(saved.players[1].name).toBe('Robert');
+      expect(saved.matches[0].matches[0].p2).toBe('Robert');
+    });
+
+    it('preserves the seat titles that name the draft and its decks', async () => {
+      const draft = { id: 'draft-1', type: DRAFT_TYPES.DRAFT, seats };
+      (draftDao.getById as jest.Mock).mockResolvedValue(draft);
+
+      await editPlayers([{ name: 'Alice', userId: 'user-alice' }, { name: 'Robert' }], [0, 1]);
+
+      expect(draft.seats.map((seat) => seat.title)).toEqual(['Jeskai Control', 'Rakdos Sacrifice']);
+      expect(recordDao.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('preserves the real drafter on each seat', async () => {
+      const draft = { id: 'draft-1', type: DRAFT_TYPES.DRAFT, seats };
+      (draftDao.getById as jest.Mock).mockResolvedValue(draft);
+
+      await editPlayers([{ name: 'Alice' }, { name: 'Bob' }], [0, 1]);
+
+      expect(draft.seats.map((seat) => seat.owner)).toEqual(['user-alice', 'user-bob']);
+      expect(recordDao.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('refuses a reorder and writes nothing', async () => {
+      await editPlayers([{ name: 'Bob' }, { name: 'Alice', userId: 'user-alice' }], [1, 0]);
+
+      expect(flash).toHaveBeenCalledWith('danger', expect.stringMatching(/played draft/i));
+      expect(draftDao.update).not.toHaveBeenCalled();
+      expect(recordDao.update).not.toHaveBeenCalled();
+    });
+
+    it('refuses an added player and writes nothing', async () => {
+      await editPlayers([{ name: 'Alice', userId: 'user-alice' }, { name: 'Bob' }, { name: 'Carol' }], [0, 1, -1]);
+
+      expect(flash).toHaveBeenCalledWith('danger', expect.stringMatching(/played draft/i));
+      expect(draftDao.update).not.toHaveBeenCalled();
+      expect(recordDao.update).not.toHaveBeenCalled();
+    });
+
+    it('refuses a permuted player list that claims an identity seat order', async () => {
+      // seatOrder is client-supplied and defaults to identity when absent, so the gate
+      // cannot take it at its word: the submitted players must still describe the seats
+      // they claim to occupy, or the record would be saved permuted against fixed seats.
+      await call(editRecordPlayersHandler)
+        .as(cube.owner)
+        .withFlash(flash)
+        .withParams({ id: 'rec-1' })
+        .withBody({ players: JSON.stringify([{ name: 'Bob' }, { name: 'Alice', userId: 'user-alice' }]) })
+        .send();
+
+      expect(flash).toHaveBeenCalledWith('danger', expect.stringMatching(/played draft/i));
+      expect(draftDao.update).not.toHaveBeenCalled();
+      expect(recordDao.update).not.toHaveBeenCalled();
+    });
+
+    it('allows unlinking a player from their account, which moves no seat', async () => {
+      await editPlayers([{ name: 'Alice' }, { name: 'Bob' }], [0, 1]);
+
+      expect(draftDao.update).not.toHaveBeenCalled();
+      expect(recordDao.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('allows linking a previously unlinked player to an account', async () => {
+      await editPlayers(
+        [
+          { name: 'Alice', userId: 'user-alice' },
+          { name: 'Bob', userId: 'user-bob' },
+        ],
+        [0, 1],
+      );
+
+      expect(draftDao.update).not.toHaveBeenCalled();
+      expect(recordDao.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('allows a rename submitted without a seat order', async () => {
+      await call(editRecordPlayersHandler)
+        .as(cube.owner)
+        .withFlash(flash)
+        .withParams({ id: 'rec-1' })
+        .withBody({ players: JSON.stringify([{ name: 'Alice', userId: 'user-alice' }, { name: 'Robert' }]) })
+        .send();
+
+      expect(draftDao.update).not.toHaveBeenCalled();
+      expect(recordDao.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('refuses a removed player and writes nothing', async () => {
+      await editPlayers([{ name: 'Alice', userId: 'user-alice' }], [0]);
+
+      expect(flash).toHaveBeenCalledWith('danger', expect.stringMatching(/played draft/i));
+      expect(draftDao.update).not.toHaveBeenCalled();
+      expect(recordDao.update).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('against an upload draft', () => {
+    beforeEach(() => {
+      (recordDao.getById as jest.Mock).mockResolvedValue(record('draft-1'));
+      (draftDao.getById as jest.Mock).mockResolvedValue({
+        id: 'draft-1',
+        type: DRAFT_TYPES.UPLOAD,
+        seats: [playedSeat('Alice', 'user-alice'), playedSeat('Bob', 'user-bob')],
+      });
+    });
+
+    it('still realigns seats on a reorder, carrying each deck with its player', async () => {
+      await editPlayers([{ name: 'Bob' }, { name: 'Alice', userId: 'user-alice' }], [1, 0]);
+
+      expect(draftDao.update).toHaveBeenCalledTimes(1);
+      const saved = (draftDao.update as jest.Mock).mock.calls[0][0];
+      expect(saved.seats.map((seat: { title: string }) => seat.title)).toEqual(['Bob', 'Alice']);
+      expect(recordDao.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('propagates a rename to the seat title, which is the player name by convention', async () => {
+      await editPlayers([{ name: 'Alice', userId: 'user-alice' }, { name: 'Robert' }], [0, 1]);
+
+      const saved = (draftDao.update as jest.Mock).mock.calls[0][0];
+      expect(saved.seats[1].title).toBe('Robert');
+    });
+  });
+
+  describe('with no draft', () => {
+    beforeEach(() => {
+      (recordDao.getById as jest.Mock).mockResolvedValue(record(undefined));
+    });
+
+    it('saves the players without looking for a draft', async () => {
+      await editPlayers([{ name: 'Alice', userId: 'user-alice' }, { name: 'Robert' }], [0, 1]);
+
+      expect(draftDao.getById).not.toHaveBeenCalled();
+      expect(recordDao.update).toHaveBeenCalledTimes(1);
+    });
+  });
+});

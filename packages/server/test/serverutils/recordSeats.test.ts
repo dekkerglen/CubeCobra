@@ -1,8 +1,9 @@
+import Draft, { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import DraftSeat from '@utils/datatypes/DraftSeat';
 import { PlayerList } from '@utils/datatypes/Record';
 import { setupPicks } from '@utils/draftutil';
 import { createPool } from 'serverutils/cube';
-import { realignDraftSeats } from 'serverutils/recordSeats';
+import { isPlayedDraft, realignDraftSeats, seatAlignmentUnchanged } from 'serverutils/recordSeats';
 
 const seatFor = (label: string, card: number): DraftSeat => ({
   description: `${label} deck`,
@@ -115,5 +116,48 @@ describe('realignDraftSeats', () => {
     const seats = [seatFor('Alice', 1), seatFor('Bob', 2)];
 
     expect(realignDraftSeats(seats, [], [])).toEqual([]);
+  });
+});
+
+describe('isPlayedDraft', () => {
+  it('is false when there is no draft', () => {
+    expect(isPlayedDraft(undefined)).toBe(false);
+  });
+
+  it('is false for an upload draft', () => {
+    expect(isPlayedDraft({ type: DRAFT_TYPES.UPLOAD } as Draft)).toBe(false);
+  });
+
+  it.each([DRAFT_TYPES.DRAFT, DRAFT_TYPES.GRID, DRAFT_TYPES.SEALED, DRAFT_TYPES.HOUSMAN])(
+    'is true for draft type %s',
+    (type) => {
+      expect(isPlayedDraft({ type } as Draft)).toBe(true);
+    },
+  );
+});
+
+describe('seatAlignmentUnchanged', () => {
+  it('is true for an identity order matching the seat count', () => {
+    expect(seatAlignmentUnchanged([0, 1, 2], 3)).toBe(true);
+  });
+
+  it('is false for a reordered seat order', () => {
+    expect(seatAlignmentUnchanged([1, 0], 2)).toBe(false);
+  });
+
+  it('is false when a player was added', () => {
+    expect(seatAlignmentUnchanged([0, 1, -1], 2)).toBe(false);
+  });
+
+  it('is false when a player was removed', () => {
+    expect(seatAlignmentUnchanged([0], 2)).toBe(false);
+  });
+
+  it('is false for an added-plus-removed order that keeps the length', () => {
+    expect(seatAlignmentUnchanged([0, -1], 2)).toBe(false);
+  });
+
+  it('is true for an empty order against no seats', () => {
+    expect(seatAlignmentUnchanged([], 0)).toBe(true);
   });
 });

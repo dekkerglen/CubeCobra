@@ -4,7 +4,7 @@ import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { bodyValidation } from 'router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
-import { realignDraftSeats } from 'serverutils/recordSeats';
+import { isPlayedDraft, realignDraftSeats, seatAlignmentUnchanged } from 'serverutils/recordSeats';
 import { redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../../../types/express';
@@ -69,6 +69,7 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
 
     // A player that kept their seat but changed name was renamed: carry the new
     // name through the matches, overrides and trophies that reference the old one.
+    const previousPlayers = record.players;
     const renames = new Map<string, string>();
     players.forEach((player: { name: string }, index: number) => {
       const seat = seatOrder[index];
@@ -85,8 +86,46 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
     if (record.draft) {
       const draft = await draftDao.getById(record.draft);
       if (draft) {
-        draft.seats = realignDraftSeats(draft.seats, seatOrder, players);
-        await draftDao.update(draft);
+        // A played draft's seats are not ours to rewrite. `title` is a deck name its
+        // owner typed (and names the whole draft, via seats[0]), `owner` is the person
+        // who actually drafted, and InitialState[i] is tied to seats[i] by position — so
+        // realigning would rename every deck and desynchronize the pack history.
+        // An upload draft has none of that: its seats exist only to hold record decks and
+        // their titles are the player names, so realignment there is both safe and needed.
+        if (isPlayedDraft(draft)) {
+          // seatOrder arrives from the client and falls back to identity when absent, so
+          // the claim that nobody moved cannot be taken at its word. Corroborate it against
+          // the players we already had: the same count, and no linked account that has
+          // changed seats. Renaming a player, linking one to an account, and unlinking one
+          // all leave the seats alone, so all three stay allowed; only moving an existing
+          // account to a different index is a reorder wearing a rename's clothes.
+          const previousSeatOf = new Map<string, number>();
+          previousPlayers.forEach((player, index) => {
+            if (player.userId) {
+              previousSeatOf.set(player.userId, index);
+            }
+          });
+          const sameSeats =
+            seatAlignmentUnchanged(seatOrder, draft.seats.length) &&
+            previousPlayers.length === players.length &&
+            players.every((player: { userId?: string }, index: number) => {
+              const previousSeat = player.userId === undefined ? undefined : previousSeatOf.get(player.userId);
+              return previousSeat === undefined || previousSeat === index;
+            });
+
+          if (!sameSeats) {
+            req.flash(
+              'danger',
+              'This record is attached to a played draft, so its players cannot be added, removed or reordered. Renaming a player is still allowed.',
+            );
+            return redirect(req, res, `/cube/record/${req.params.id}`);
+          }
+          // Every player kept their seat, so the renames above describe the same seats as
+          // before and the draft needs no write at all.
+        } else {
+          draft.seats = realignDraftSeats(draft.seats, seatOrder, players);
+          await draftDao.update(draft);
+        }
       }
     }
 

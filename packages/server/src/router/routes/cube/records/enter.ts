@@ -1,11 +1,11 @@
-import DraftType, { DRAFT_TYPES } from '@utils/datatypes/Draft';
+import DraftType from '@utils/datatypes/Draft';
 import { PlayerList, Round, WinLossDraw } from '@utils/datatypes/Record';
 import UserType from '@utils/datatypes/User';
 import { cubeDao, draftDao, recordDao, userDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
-import { realignDraftSeats } from 'serverutils/recordSeats';
+import { isPlayedDraft, realignDraftSeats, seatAlignmentUnchanged } from 'serverutils/recordSeats';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../../types/express';
@@ -131,9 +131,9 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
     // A record made by "Create from Draft" points at a real played draft, carrying pick and
     // trash orders and the pack history, and an InitialState positionally tied to its seats.
     // Such a draft is never written by this handler: not its pools, and not its seats.
-    const isPlayedDraft = !!draft && draft.type !== DRAFT_TYPES.UPLOAD;
+    const playedDraft = isPlayedDraft(draft);
 
-    if (isPlayedDraft && draft) {
+    if (playedDraft && draft) {
       if (hasDeckEdits) {
         // Replacing a played draft's seat pools would orphan all of the above.
         return res.status(400).json({
@@ -147,11 +147,7 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
       // silently attribute played decks to the wrong people, so it is refused outright rather
       // than realigned — realigning would overwrite each seat's real drafter and title, and
       // desynchronize the pack history that is tied to the seats by position.
-      const seatsUnchanged =
-        submission.seatOrder.length === draft.seats.length &&
-        submission.seatOrder.every((origin, index) => origin === index);
-
-      if (!seatsUnchanged) {
+      if (!seatAlignmentUnchanged(submission.seatOrder, draft.seats.length)) {
         return res.status(400).json({
           success: 'false',
           message:
@@ -178,18 +174,15 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
     record.trophy = submission.trophy.filter((name) => submittedNames.has(name));
     record.dateLastUpdated = Date.now();
 
-    if (draft && !isPlayedDraft) {
+    if (draft && !playedDraft) {
       // Realigning stamps every seat with its player's name, and DraftDynamoDao.update then
       // renames the whole draft after seat one. For a draft imported from a file or from
       // Hedron that is a real change: associateDecksWithNewDraft deliberately leaves the seat
       // titles unset so createDraft names each seat by its archetype. Doing it on a save that
       // only touched the overview would retitle every deck for nothing, so the realign — and
       // the draft write that persists it — are skipped unless the seats actually moved.
-      const identityOrder =
-        submission.seatOrder.length === draft.seats.length &&
-        submission.seatOrder.every((origin, index) => origin === index);
       const playersUnchanged =
-        identityOrder &&
+        seatAlignmentUnchanged(submission.seatOrder, draft.seats.length) &&
         previousPlayers.length === submission.players.length &&
         submission.players.every(
           (player, index) =>

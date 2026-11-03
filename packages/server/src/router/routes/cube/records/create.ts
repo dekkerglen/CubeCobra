@@ -241,6 +241,22 @@ export const createRecordFromDraftHandler = async (req: Request, res: Response) 
       return redirect(req, res, `/cube/records/${req.params.id}`);
     }
 
+    // A record's players must be uniquely named — editing them is refused otherwise —
+    // and a draft's ownerless seats all come through as "Unknown Player", so without
+    // disambiguation a bot draft would produce a record whose players could never be
+    // edited. Matching is case-insensitive, like the uniqueness check on edit.
+    const usedNames = new Set<string>();
+    const uniqueName = (name: string): string => {
+      let candidate = name;
+      let suffix = 1;
+      while (usedNames.has(candidate.toLowerCase())) {
+        suffix += 1;
+        candidate = `${name} ${suffix}`;
+      }
+      usedNames.add(candidate.toLowerCase());
+      return candidate;
+    };
+
     const newRecord: DraftRecord = {
       cube: cube.id,
       date: record.date || new Date().valueOf(),
@@ -251,11 +267,11 @@ export const createRecordFromDraftHandler = async (req: Request, res: Response) 
           return {
             // if it's a string use it, otherwise use .id
             userId: typeof seat.owner === 'string' ? seat.owner : seat.owner.id,
-            name: typeof seat.owner === 'string' ? seat.owner : seat.owner.username,
+            name: uniqueName(typeof seat.owner === 'string' ? seat.owner : seat.owner.username),
           };
         }
         return {
-          name: seat.playerName || 'Unknown Player',
+          name: uniqueName(seat.playerName || 'Unknown Player'),
         };
       }),
       matches: record.matches || [],
