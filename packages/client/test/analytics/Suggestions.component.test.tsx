@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -75,6 +75,16 @@ const searchResponse = (data: CardDetails[], numResults: number) => ({
 });
 
 const skipOf = (call: unknown[]): number => JSON.parse((call[1] as { body: string }).body).skip;
+
+// A response the test holds open, so one is genuinely in flight while something
+// else supersedes it.
+const deferredResponse = () => {
+  let resolve!: (response: unknown) => void;
+  const promise = new Promise<unknown>((r) => {
+    resolve = r;
+  });
+  return { promise, resolve };
+};
 
 interface RenderOptions {
   csrfFetch: jest.Mock;
@@ -188,6 +198,43 @@ describe('Smart Search pagination', () => {
 
     expect(await screen.findByText('Card B')).toBeInTheDocument();
     expect(screen.queryByText('Card A')).not.toBeInTheDocument();
+  });
+
+  // The filter-change test above cannot reach the staleness guard: its response has
+  // already committed by the time the filter changes. This one holds a response open
+  // across the supersession, so the guard is what decides the outcome.
+  it('ignores a response superseded by a new search', async () => {
+    const held = deferredResponse();
+    const csrfFetch = jest.fn().mockImplementation(async (_url: string, options: { body: string }) => {
+      const { filterText } = JSON.parse(options.body);
+      // The first search never answers until the test says so.
+      return filterText === 'cmc:1' ? held.promise : addsResponse(makeIds(FETCH_LIMIT, 'new'), 250);
+    });
+
+    const { rerender } = renderSuggestions({ csrfFetch });
+    // Still in flight — nothing has been committed for the first search.
+    expect(screen.queryByText(/Page \d+ of/)).not.toBeInTheDocument();
+
+    rerender(tree({ csrfFetch, filterInput: 'cmc:2' }));
+    expect(await findPageLabel('Page 1 of 3')).toBeInTheDocument();
+
+    // The abandoned search answers late, with a different list and a different total.
+    await act(async () => {
+      held.resolve(addsResponse(makeIds(FETCH_LIMIT, 'old'), 960));
+    });
+
+    expect(await findPageLabel('Page 1 of 3')).toBeInTheDocument();
+    expect(screen.getByText('new-0')).toBeInTheDocument();
+    expect(screen.queryByText('old-0')).not.toBeInTheDocument();
+
+    // Nor may it have written its window into the live search's cache: the second
+    // page of that same window still comes from the search the user is looking at.
+    clickNext();
+
+    expect(await findPageLabel('Page 2 of 3')).toBeInTheDocument();
+    expect(screen.getByText(`new-${PAGE_SIZE}`)).toBeInTheDocument();
+    expect(screen.queryByText(`old-${PAGE_SIZE}`)).not.toBeInTheDocument();
+    expect(csrfFetch).toHaveBeenCalledTimes(2);
   });
 
   // Review Focus 2
