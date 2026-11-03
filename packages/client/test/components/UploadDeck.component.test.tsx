@@ -1,0 +1,209 @@
+import React from 'react';
+
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+
+import '@testing-library/jest-dom';
+
+import { CardDetails } from '@utils/datatypes/Card';
+import Record from '@utils/datatypes/Record';
+
+import { CSRFContext } from 'contexts/CSRFContext';
+
+import { createCardDetails } from '../../../server/test/test-utils/data';
+import UploadDeck from '../../src/records/UploadDeck';
+
+const record: Record = {
+  id: 'record-id',
+  cube: 'cube-id',
+  date: 0,
+  name: 'A Record',
+  description: '',
+  players: [{ name: 'Alice' }],
+  matches: [],
+  trophy: [],
+};
+
+const GET_CARDS_URL = '/cube/api/getcardsforcube';
+
+// Resolves every name the component asks for to a card of that name, except those listed in
+// `unresolved`, which come back null the way the real endpoint reports a name it couldn't find.
+const makeCsrfFetch = (unresolved: string[] = []) =>
+  jest.fn(async (url: RequestInfo, init?: RequestInit) => {
+    if (typeof url === 'string' && url.startsWith('/cube/api/cubecardpool/')) {
+      return { ok: true, json: async () => ({ success: 'true', basics: [] }) } as Response;
+    }
+    if (url === GET_CARDS_URL) {
+      const { names } = JSON.parse(`${init?.body}`) as { names: string[] };
+      return {
+        ok: true,
+        json: async () => ({
+          success: 'true',
+          cards: names.map((name) =>
+            unresolved.some((missing) => missing.toLowerCase() === name.toLowerCase())
+              ? null
+              : createCardDetails({ name }),
+          ),
+        }),
+      } as Response;
+    }
+    return { ok: false, status: 404, json: async () => ({ success: 'false' }) } as Response;
+  });
+
+const renderUploadDeck = ({ csrfFetch = makeCsrfFetch() } = {}) => {
+  const setMainboardCards = jest.fn();
+  const setSideboardCards = jest.fn();
+
+  render(
+    <CSRFContext.Provider value={{ csrfToken: 'token', csrfFetch, callApi: jest.fn() } as any}>
+      <UploadDeck
+        selectedUser={1}
+        setSelectedUser={jest.fn()}
+        record={record}
+        mainboardCards={[]}
+        setMainboardCards={setMainboardCards}
+        sideboardCards={[]}
+        setSideboardCards={setSideboardCards}
+        setAlerts={jest.fn()}
+        cubeId="cube-id"
+      />
+    </CSRFContext.Provider>,
+  );
+
+  return { csrfFetch, setMainboardCards, setSideboardCards };
+};
+
+// The component appends through a state updater, so replay the recorded updates against an empty
+// board to get the names it actually added.
+const addedNames = (setCards: jest.Mock): string[] =>
+  setCards.mock.calls
+    .reduce<CardDetails[]>(
+      (cards, [update]) => (typeof update === 'function' ? update(cards) : (update as CardDetails[])),
+      [],
+    )
+    .map((card) => card.name);
+
+const paste = (text: string) => {
+  fireEvent.change(screen.getByPlaceholderText(/Paste your decklist here/), { target: { value: text } });
+  fireEvent.click(screen.getByRole('button', { name: /Parse and Add to/ }));
+};
+
+const textarea = () => screen.getByPlaceholderText(/Paste your decklist here/) as HTMLTextAreaElement;
+
+const cardRequests = (csrfFetch: jest.Mock) => csrfFetch.mock.calls.filter(([url]) => url === GET_CARDS_URL);
+
+describe('UploadDeck paste', () => {
+  it('renders the paste textarea without clicking anything', () => {
+    renderUploadDeck();
+
+    // Collapse hides with a CSS class rather than unmounting, so being in the document isn't enough:
+    // the section has to actually be open.
+    expect(textarea().closest('.max-h-0')).toBeNull();
+    expect(screen.getByRole('button', { name: /Hide Paste Decklist/ })).toBeInTheDocument();
+  });
+
+  it('sends one request for a multi-line list, not one per line', async () => {
+    const { csrfFetch, setMainboardCards } = renderUploadDeck();
+
+    paste('Lightning Bolt\nCounterspell\nBirds of Paradise\nSol Ring');
+
+    await waitFor(() => expect(setMainboardCards).toHaveBeenCalled());
+    const requests = cardRequests(csrfFetch);
+    expect(requests).toHaveLength(1);
+    expect(JSON.parse(`${requests[0]![1].body}`).names).toEqual([
+      'Lightning Bolt',
+      'Counterspell',
+      'Birds of Paradise',
+      'Sol Ring',
+    ]);
+  });
+
+  it('routes cards beneath a Sideboard marker to the sideboard', async () => {
+    const { csrfFetch, setMainboardCards, setSideboardCards } = renderUploadDeck();
+
+    paste('2 Lightning Bolt\nSideboard\nPyroblast\n1 Red Elemental Blast');
+
+    await waitFor(() => expect(setSideboardCards).toHaveBeenCalled());
+    expect(cardRequests(csrfFetch)).toHaveLength(1);
+    expect(addedNames(setMainboardCards)).toEqual(['Lightning Bolt', 'Lightning Bolt']);
+    expect(addedNames(setSideboardCards)).toEqual(['Pyroblast', 'Red Elemental Blast']);
+  });
+
+  it('respects the Add to Sideboard checkbox when the text has no marker', async () => {
+    const { setMainboardCards, setSideboardCards } = renderUploadDeck();
+
+    fireEvent.click(screen.getByLabelText('Add to Sideboard'));
+    paste('Pyroblast\nSurgical Extraction');
+
+    await waitFor(() => expect(setSideboardCards).toHaveBeenCalled());
+    expect(addedNames(setSideboardCards)).toEqual(['Pyroblast', 'Surgical Extraction']);
+    expect(setMainboardCards).not.toHaveBeenCalled();
+  });
+
+  it('expands a quantity into that many copies', async () => {
+    const { csrfFetch, setMainboardCards } = renderUploadDeck();
+
+    paste('3x Island\n2 Mountain');
+
+    await waitFor(() => expect(setMainboardCards).toHaveBeenCalled());
+    // One lookup per distinct line, not one per copy.
+    expect(JSON.parse(`${cardRequests(csrfFetch)[0]![1].body}`).names).toEqual(['Island', 'Mountain']);
+    expect(addedNames(setMainboardCards)).toEqual(['Island', 'Island', 'Island', 'Mountain', 'Mountain']);
+  });
+
+  it('lists unresolved lines and leaves them in the textarea', async () => {
+    const { setMainboardCards } = renderUploadDeck({ csrfFetch: makeCsrfFetch(['Notacard']) });
+
+    paste('Lightning Bolt\n2 Notacard\nCounterspell');
+
+    await waitFor(() => expect(screen.getByText(/Could not find card/)).toBeInTheDocument());
+    expect(screen.getByText('Could not find card: "2 Notacard"')).toBeInTheDocument();
+    expect(addedNames(setMainboardCards)).toEqual(['Lightning Bolt', 'Counterspell']);
+    expect(textarea()).toHaveValue('2 Notacard');
+  });
+
+  it('clears the textarea when every line resolves', async () => {
+    const { setMainboardCards } = renderUploadDeck();
+
+    paste('Lightning Bolt\nCounterspell');
+
+    await waitFor(() => expect(setMainboardCards).toHaveBeenCalled());
+    await waitFor(() => expect(textarea()).toHaveValue(''));
+    expect(screen.queryByText(/Could not find card/)).not.toBeInTheDocument();
+  });
+
+  it('reports every line and keeps the text when nothing resolves', async () => {
+    const { setMainboardCards, setSideboardCards } = renderUploadDeck({
+      csrfFetch: makeCsrfFetch(['Nope', 'Also Nope']),
+    });
+
+    paste('Nope\nAlso Nope');
+
+    await waitFor(() => expect(screen.getByText('Could not find card: "Nope"')).toBeInTheDocument());
+    expect(screen.getByText('Could not find card: "Also Nope"')).toBeInTheDocument();
+    expect(textarea()).toHaveValue('Nope\nAlso Nope');
+    expect(setMainboardCards).not.toHaveBeenCalled();
+    expect(setSideboardCards).not.toHaveBeenCalled();
+  });
+
+  it('ignores comment lines rather than reporting them as missing cards', async () => {
+    const { csrfFetch, setMainboardCards } = renderUploadDeck();
+
+    paste('// Creatures\nLightning Bolt\n// Lands\n2 Island');
+
+    await waitFor(() => expect(setMainboardCards).toHaveBeenCalled());
+    expect(JSON.parse(`${cardRequests(csrfFetch)[0]![1].body}`).names).toEqual(['Lightning Bolt', 'Island']);
+    expect(addedNames(setMainboardCards)).toEqual(['Lightning Bolt', 'Island', 'Island']);
+    expect(screen.queryByText(/Could not find/)).not.toBeInTheDocument();
+    expect(textarea()).toHaveValue('');
+  });
+
+  it('warns and keeps the text when the paste holds no cards at all', async () => {
+    const { csrfFetch } = renderUploadDeck();
+
+    paste('// Creatures\nSideboard');
+
+    await waitFor(() => expect(screen.getByText('Could not find any cards in the pasted text.')).toBeInTheDocument());
+    expect(cardRequests(csrfFetch)).toHaveLength(0);
+    expect(textarea()).toHaveValue('// Creatures\nSideboard');
+  });
+});

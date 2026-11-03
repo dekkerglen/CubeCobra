@@ -3,6 +3,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { detailsToCard } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
 import Record from '@utils/datatypes/Record';
+import { parseDecklist } from '@utils/decklistParsing';
 
 import Alert, { UncontrolledAlertProps } from 'components/base/Alert';
 import AutocompleteInput from 'components/base/AutocompleteInput';
@@ -19,6 +20,7 @@ import BasicsModal from 'components/modals/BasicsModal';
 import { CSRFContext } from 'contexts/CSRFContext';
 import { cardNameMatches, cubeCardNameMatches } from 'utils/cardAutocomplete';
 import { getCard } from 'utils/cards/getCard';
+import { getCards } from 'utils/cards/getCards';
 
 // Select sentinel for "add a new player inline" (vs. an existing player index).
 export const NEW_PLAYER = -1;
@@ -65,7 +67,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
   const [decklistText, setDecklistText] = useState<string>('');
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [isParsing, setIsParsing] = useState<boolean>(false);
-  const [showPasteForm, setShowPasteForm] = useState<boolean>(false);
+  const [showPasteForm, setShowPasteForm] = useState<boolean>(true);
   // The cube's basic lands, fed to the same Add Basic Lands modal the deckbuilder
   // uses. They live on their own board, so they're absent from the cube autocomplete
   // and tedious to type a mana base out of.
@@ -160,7 +162,10 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
     [csrfFetch, setAlerts, setMainboardCards, setSideboardCards, addToSideboard],
   );
 
-  const parseDecklist = useCallback(
+  // Pasted decklists go through the same line parser the cube bulk importer uses, so quantities,
+  // set codes and collector numbers are handled identically, and "Sideboard" style section markers
+  // split the paste across boards. Every name is resolved in one request.
+  const handleParseDecklist = useCallback(
     async (text: string) => {
       if (!text.trim()) {
         return;
@@ -169,51 +174,64 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
       setIsParsing(true);
       setParseErrors([]);
 
-      const lines = text.match(/[^\r\n]+/g) || [];
-      const errors: string[] = [];
-      const erroredLines: string[] = [];
-      const cardsToAdd: CardDetails[] = [];
+      // Comment lines ("// Lands", as Cockatrice and TappedOut emit) parse as card lines. Drop them
+      // rather than reporting them as cards that couldn't be found.
+      const entries = parseDecklist(text, addToSideboard ? 'sideboard' : 'mainboard').filter(
+        (entry) => !entry.name.startsWith('//'),
+      );
 
-      for (const line of lines) {
-        const item = line.toLowerCase().trim();
-        if (!item) continue;
+      if (entries.length === 0) {
+        // Nothing but markers and comments: say so rather than silently emptying the box.
+        setParseErrors(['Could not find any cards in the pasted text.']);
+        setIsParsing(false);
+        return;
+      }
 
-        // Parse quantity (e.g., "2x cardname" or "2 cardname")
-        const numericMatch = item.match(/([0-9]+)x?\s+(.*)/);
-        const cardName = numericMatch ? numericMatch[2] : item;
-        const quantity = numericMatch ? parseInt(numericMatch[1], 10) : 1;
+      try {
+        const resolved = await getCards(
+          csrfFetch,
+          '',
+          entries.map((entry) => entry.name),
+        );
 
-        try {
-          const card = await getCard(csrfFetch, '', cardName, setAlerts);
-          if (card) {
-            // Add the card 'quantity' times
-            for (let i = 0; i < quantity; i++) {
-              cardsToAdd.push(card);
-            }
-          } else {
-            errors.push(`Could not find card: "${line}"`);
-            erroredLines.push(line);
+        const errors: string[] = [];
+        const erroredLines: string[] = [];
+        const mainboardToAdd: CardDetails[] = [];
+        const sideboardToAdd: CardDetails[] = [];
+
+        entries.forEach((entry, index) => {
+          const card = resolved[index];
+          if (!card) {
+            errors.push(`Could not find card: "${entry.line}"`);
+            erroredLines.push(entry.line);
+            return;
           }
-        } catch {
-          errors.push(`Error parsing line: "${line}"`);
-          erroredLines.push(line);
+
+          const board = entry.board === 'sideboard' ? sideboardToAdd : mainboardToAdd;
+          for (let i = 0; i < entry.count; i++) {
+            board.push(card);
+          }
+        });
+
+        if (mainboardToAdd.length > 0) {
+          setMainboardCards((prevCards) => [...prevCards, ...mainboardToAdd]);
         }
+        if (sideboardToAdd.length > 0) {
+          setSideboardCards((prevCards) => [...prevCards, ...sideboardToAdd]);
+        }
+
+        setParseErrors(errors);
+        // Keep only errored lines in the textarea, so the paste can be fixed up and retried.
+        setDecklistText(erroredLines.join('\n'));
+      } catch (e) {
+        console.error(e);
+        // The paste is left alone so it can be retried once the lookup works again.
+        setParseErrors(['Could not look these cards up. Please try again.']);
+      } finally {
+        setIsParsing(false);
       }
-
-      // Add all found cards to the appropriate list
-      if (addToSideboard) {
-        setSideboardCards((prevCards) => [...prevCards, ...cardsToAdd]);
-      } else {
-        setMainboardCards((prevCards) => [...prevCards, ...cardsToAdd]);
-      }
-
-      setParseErrors(errors);
-      setIsParsing(false);
-
-      // Keep only errored lines in the textarea
-      setDecklistText(erroredLines.join('\n'));
     },
-    [csrfFetch, setAlerts, setMainboardCards, setSideboardCards, addToSideboard],
+    [csrfFetch, setMainboardCards, setSideboardCards, addToSideboard],
   );
 
   return (
@@ -305,7 +323,10 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
 
       <Collapse isOpen={showPasteForm}>
         <Flexbox direction="col" gap="2" className="mt-2">
-          <Text sm>Acceptable formats: one card per line, or with quantity like "2x Island"</Text>
+          <Text sm>
+            Acceptable formats: one card per line, with an optional quantity like "2x Island". A "Sideboard" line sends
+            everything below it to the sideboard.
+          </Text>
           <TextArea
             value={decklistText}
             onChange={(e) => setDecklistText(e.target.value)}
@@ -314,13 +335,16 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
 e.g.:
 2x Lightning Bolt
 4 Island
-Counterspell`}
+Counterspell
+
+Sideboard
+2 Pyroblast`}
             rows={8}
           />
           <Button
             color="primary"
             disabled={!decklistText.trim() || isParsing}
-            onClick={() => parseDecklist(decklistText)}
+            onClick={() => handleParseDecklist(decklistText)}
             block
           >
             {isParsing ? 'Parsing...' : `Parse and Add to ${addToSideboard ? 'Sideboard' : 'Mainboard'}`}
