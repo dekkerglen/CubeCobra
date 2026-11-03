@@ -234,7 +234,7 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
               })}
             </Flexbox>
             {isOwner && (
-              <Link href={`/cube/records/uploaddeck/${record.id}`}>
+              <Link href={`/cube/records/uploaddeck/${record.id}?player=${selectedUserIndex + 1}`}>
                 <Text sm>Upload a deck</Text>
               </Link>
             )}
@@ -268,7 +268,11 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
                     ? 'No deck has been uploaded for this player yet.'
                     : 'No draft data available for this record.'}
                 </Text>
-                {isOwner && <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload a deck to this record</Link>}
+                {isOwner && (
+                  <Link href={`/cube/records/uploaddeck/${record.id}?player=${selectedUserIndex + 1}`}>
+                    Upload a deck to this record
+                  </Link>
+                )}
               </Flexbox>
             )}
           </Flexbox>

@@ -25,12 +25,14 @@ interface RecordUploadDeckPageProps {
   cube: Cube;
   record: Record;
   draft?: Draft;
+  // 1-based player index to open with selected, matching `selectedUser` below.
+  initialPlayerIndex?: number;
 }
 
-const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, record, draft }) => {
+const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, record, draft, initialPlayerIndex }) => {
   const user = useContext(UserContext);
   const formRef = createRef<HTMLFormElement>();
-  const [selectedUser, setSelectedUser] = useState<number>(0);
+  const [selectedUser, setSelectedUser] = useState<number>(initialPlayerIndex ?? 0);
   // Default a new player to the uploader's linked account (a leading @ links it
   // to their CubeCobra account server-side).
   const [newPlayerName, setNewPlayerName] = useState<string>(user?.username ? `@${user.username}` : '');

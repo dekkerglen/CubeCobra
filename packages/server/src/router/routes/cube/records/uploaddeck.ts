@@ -16,6 +16,23 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../../types/express';
 
+// `?player=` arrives from a player's row on the record's Decks tab, so the upload form can
+// open with that player already chosen. 1-based, matching UploadDeck's `selectedUser`, where
+// 0 means "no player selected". Anything unparseable or out of range is dropped rather than
+// turned into a selection that does not exist.
+const parsePlayerIndex = (raw: unknown, playerCount: number): number | undefined => {
+  if (typeof raw !== 'string') {
+    return undefined;
+  }
+
+  const index = Number(raw);
+  if (!Number.isInteger(index) || index < 1 || index > playerCount) {
+    return undefined;
+  }
+
+  return index;
+};
+
 export const uploadDeckPageHandler = async (req: Request, res: Response) => {
   try {
     if (!req.params.id) {
@@ -42,6 +59,8 @@ export const uploadDeckPageHandler = async (req: Request, res: Response) => {
       draft = await draftDao.getById(record.draft);
     }
 
+    const initialPlayerIndex = parsePlayerIndex(req.query.player, record.players.length);
+
     return render(
       req,
       res,
@@ -50,6 +69,7 @@ export const uploadDeckPageHandler = async (req: Request, res: Response) => {
         cube,
         record,
         draft,
+        ...(initialPlayerIndex !== undefined && { initialPlayerIndex }),
       },
       { title: `${abbreviate(cube.name)} - Upload Deck` },
     );
