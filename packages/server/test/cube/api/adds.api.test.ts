@@ -1,3 +1,4 @@
+import { MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
 import { cardFromId, getAllMostReasonable } from 'serverutils/carddb';
 import CubeFn from 'serverutils/cubefn';
 import { recommendOrThrow } from 'serverutils/ml';
@@ -88,5 +89,111 @@ describe('POST /cube/api/adds board selection', () => {
 
     expect(res.status).toBe(200);
     expect(cubeOraclesSent()).toEqual(['main-card-oracle']);
+  });
+});
+
+describe('POST /cube/api/adds totals', () => {
+  const cube = createCube({ id: 'cube-1' });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getCards as jest.Mock).mockResolvedValue({ mainboard: [{ cardID: 'main-card' }] });
+    (cardFromId as jest.Mock).mockImplementation((id: string) => ({ oracle_id: `${id}-oracle` }));
+    (getAllMostReasonable as jest.Mock).mockReturnValue([
+      { oracle_id: 'oracle-a', scryfall_id: 'card-a', type: 'Creature' },
+      { oracle_id: 'oracle-b', scryfall_id: 'card-b', type: 'Creature' },
+      { oracle_id: 'oracle-c', scryfall_id: 'card-c', type: 'Creature' },
+    ]);
+    (recommendOrThrow as jest.Mock).mockResolvedValue({
+      adds: [
+        { oracle: 'oracle-a', rating: 0.9 },
+        { oracle: 'oracle-b', rating: 0.8 },
+        { oracle: 'oracle-c', rating: 0.7 },
+      ],
+      totalAdds: 250,
+    });
+  });
+
+  it('returns the recommender total alongside the page', async () => {
+    const res = await call(addsHandler).as(createUser()).withBody({ cubeID: cube.id, filterText: 't:creature' }).send();
+
+    expect(res.status).toBe(200);
+    expect(res.body.cardIDs).toEqual(['card-a', 'card-b', 'card-c']);
+    expect(res.body.totalAdds).toBe(250);
+    expect(res.body.hasMoreAdds).toBe(true);
+  });
+
+  it('still reports hasMoreAdds false on the last page', async () => {
+    const res = await call(addsHandler)
+      .as(createUser())
+      .withBody({ cubeID: cube.id, filterText: 't:creature', skip: 200, limit: 96 })
+      .send();
+
+    expect(res.status).toBe(200);
+    expect(res.body.hasMoreAdds).toBe(false);
+    expect(res.body.totalAdds).toBe(250);
+  });
+
+  it('returns totalAdds 0 when the cube ID is missing', async () => {
+    const res = await call(addsHandler).as(createUser()).withBody({ filterText: 't:creature' }).send();
+
+    expect(res.status).toBe(400);
+    expect(res.body).toMatchObject({ cardIDs: [], hasMoreAdds: false, totalAdds: 0 });
+  });
+
+  it('returns totalAdds 0 when the cube is not viewable', async () => {
+    (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(false);
+
+    const res = await call(addsHandler).as(createUser()).withBody({ cubeID: cube.id, filterText: 't:creature' }).send();
+
+    expect(res.status).toBe(404);
+    expect(res.body).toMatchObject({ cardIDs: [], hasMoreAdds: false, totalAdds: 0 });
+  });
+
+  it('returns totalAdds 0 when no filter is given', async () => {
+    const res = await call(addsHandler).as(createUser()).withBody({ cubeID: cube.id, filterText: '   ' }).send();
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ cardIDs: [], hasMoreAdds: false, totalAdds: 0 });
+  });
+
+  it('returns totalAdds 0 when the filter cannot be parsed', async () => {
+    const res = await call(addsHandler)
+      .as(createUser())
+      .withBody({ cubeID: cube.id, filterText: 't'.repeat(MAX_SEARCH_FILTER_LENGTH + 1) })
+      .send();
+
+    expect(res.status).toBe(400);
+    expect(res.body).toMatchObject({ cardIDs: [], hasMoreAdds: false, totalAdds: 0 });
+  });
+
+  it('returns totalAdds 0 when the filter matches nothing', async () => {
+    (getAllMostReasonable as jest.Mock).mockReturnValue([]);
+
+    const res = await call(addsHandler).as(createUser()).withBody({ cubeID: cube.id, filterText: 't:creature' }).send();
+
+    expect(res.status).toBe(200);
+    expect(res.body).toMatchObject({ cardIDs: [], hasMoreAdds: false, totalAdds: 0 });
+    expect(recommendOrThrow as jest.Mock).not.toHaveBeenCalled();
+  });
+
+  it('returns totalAdds 0 when the recommender is unavailable', async () => {
+    (recommendOrThrow as jest.Mock).mockRejectedValue(new Error('ml down'));
+
+    const res = await call(addsHandler).as(createUser()).withBody({ cubeID: cube.id, filterText: 't:creature' }).send();
+
+    expect(res.status).toBe(503);
+    expect(res.body).toMatchObject({ mlUnavailable: true, cardIDs: [], hasMoreAdds: false, totalAdds: 0 });
+  });
+
+  it('returns totalAdds 0 when the request fails unexpectedly', async () => {
+    (cubeDao.getById as jest.Mock).mockRejectedValue(new Error('dynamo exploded'));
+
+    const res = await call(addsHandler).as(createUser()).withBody({ cubeID: cube.id, filterText: 't:creature' }).send();
+
+    expect(res.status).toBe(500);
+    expect(res.body).toMatchObject({ cardIDs: [], hasMoreAdds: false, totalAdds: 0 });
   });
 });
