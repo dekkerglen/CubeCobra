@@ -1162,21 +1162,27 @@ describe('RecordTranscribePage', () => {
     expect(savedPayload(csrfFetch).overrides).toEqual({});
   });
 
-  it('keeps the outside-the-cube toggle with the field it filters', () => {
+  // Neither control is shared. The toggle filters one autocomplete's suggestions; the board
+  // selector sets where a typed card and the basics below it land. The paste box routes
+  // itself from section markers and the scanner from its own per-card checkboxes, so a line
+  // of controls above both columns claimed a reach neither of them has.
+  it('keeps the board selector and cube filter with the field they serve', () => {
     renderPage({ openRow: 0 });
 
-    // It only changes what the single-card autocomplete suggests — the paste box and the
-    // photo scanner resolve against the whole catalogue either way — so sitting on a line
-    // of controls above both columns said it governed all three.
     const row = playerRow(0);
-    const toggle = within(row).getByLabelText('Show Cards not in Cube');
     const addCard = within(row).getByPlaceholderText(/Card to Add to/);
-    expect(addCard.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(toggle.compareDocumentPosition(pasteBox(0)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
-    const shared = within(row).getByTestId('deck-shared-controls');
-    expect(within(shared).queryByLabelText('Show Cards not in Cube')).not.toBeInTheDocument();
-    expect(within(shared).getByLabelText('Add to')).toBeInTheDocument();
+    for (const control of [
+      within(row).getByLabelText('Add to'),
+      within(row).getByLabelText('Show Cards not in Cube'),
+    ]) {
+      expect(addCard.compareDocumentPosition(control) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      expect(control.compareDocumentPosition(pasteBox(0)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    }
+
+    // Removing the player is a row action, and all that is left on its own line.
+    expect(within(row).queryByTestId('deck-shared-controls')).not.toBeInTheDocument();
+    expect(within(row).getByRole('button', { name: 'Remove Alice' })).toBeInTheDocument();
   });
 
   it('offers no override control in final records mode, where every cell is already typeable', () => {

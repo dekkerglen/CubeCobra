@@ -212,7 +212,10 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
       setIsParsing(true);
       setParseErrors([]);
 
-      const defaultBoard: DecklistBoard = addToSideboard ? 'sideboard' : 'mainboard';
+      // Unmarked lines are mainboard. The board selector belongs to the single-card field
+      // and the basics beside it; a paste says where its own cards go, and the overwhelming
+      // majority of exported lists open with the maindeck.
+      const defaultBoard: DecklistBoard = 'mainboard';
 
       // Comment lines ("// Lands", as Cockatrice and TappedOut emit) parse as card lines. Drop them
       // rather than reporting them as cards that couldn't be found.
@@ -238,7 +241,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
         const sideboardToAdd: CardDetails[] = [];
         // The board the retained text is sitting in as it's rebuilt. Markers are re-emitted whenever
         // it changes, so a retried paste routes its surviving lines to the boards they came from.
-        let retainedBoard = defaultBoard;
+        let retainedBoard: DecklistBoard = defaultBoard;
 
         entries.forEach((entry, index) => {
           const card = resolved[index];
@@ -276,7 +279,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
         setIsParsing(false);
       }
     },
-    [csrfFetch, setMainboardCards, setSideboardCards, setDecklistText, setParseErrors, addToSideboard],
+    [csrfFetch, setMainboardCards, setSideboardCards, setDecklistText, setParseErrors],
   );
 
   return (
@@ -321,29 +324,11 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
           autoComplete="off"
         />
       )}
-      {/* One board selector above both columns: typing a card, adding basics and parsing a
-          paste all land on the same board, and two copies of the control could disagree. */}
-      <div data-testid="deck-shared-controls">
-        <Flexbox direction="row" justify="between" gap="3" alignItems="end" wrap="wrap">
-          <Flexbox direction="row" justify="start" gap="3" alignItems="end" wrap="wrap">
-            {/* Fixed width: the control is the same control whichever board is selected, and
-                letting it resize to its value moves everything beside it. */}
-            <div className="w-40 shrink-0">
-              <Select
-                id="upload-deck-board"
-                label="Add to"
-                value={targetBoard}
-                setValue={(value) => setTargetBoard(value as DecklistBoard)}
-                options={[
-                  { value: 'mainboard', label: 'Mainboard' },
-                  { value: 'sideboard', label: 'Sideboard' },
-                ]}
-              />
-            </div>
-          </Flexbox>
+      {controlsExtra && (
+        <Flexbox direction="row" justify="end">
           {controlsExtra}
         </Flexbox>
-      </div>
+      )}
       {/* Two ways in, side by side rather than stacked: typing cards one at a time and pasting
           a list are alternatives, and stacking them buried the paste box below a fold while
           leaving both at a width neither needs. */}
@@ -377,17 +362,36 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
               and nothing else — a name typed in full is resolved against the whole catalogue
               either way, as are a pasted list and a scanned photo — so on a line of shared
               controls it read as governing all three. */}
-          <Checkbox
-            label="Show Cards not in Cube"
-            checked={allowCardsOutsideOfCube}
-            setChecked={(value) => setAllowCardsOutsideOfCube(value)}
-          />
+          {/* Under the field it serves, not on a line of its own above both columns, where
+              it looked like it governed the paste box and the scanner too. It does not: the
+              scanner routes per card from its own checkboxes, and a paste is routed by its
+              own section markers. It sets the board for a typed card and for the basics
+              below. Fixed width, because a control that resizes to its value moves
+              everything beside it. */}
+          <Flexbox direction="row" justify="start" gap="3" alignItems="end" wrap="wrap">
+            <div className="w-40 shrink-0">
+              <Select
+                id="upload-deck-board"
+                label="Add to"
+                value={targetBoard}
+                setValue={(value) => setTargetBoard(value as DecklistBoard)}
+                options={[
+                  { value: 'mainboard', label: 'Mainboard' },
+                  { value: 'sideboard', label: 'Sideboard' },
+                ]}
+              />
+            </div>
+            <Checkbox
+              label="Show Cards not in Cube"
+              checked={allowCardsOutsideOfCube}
+              setChecked={(value) => setAllowCardsOutsideOfCube(value)}
+            />
+          </Flexbox>
           {/* Adding basics and scanning a photo are not steps after typing a card name;
               they are two more ways to fill the same deck. */}
           {basicDetails.length > 0 && (
             <>
-              <hr className="text-border my-1" />
-              <Button color="accent" onClick={() => setBasicsOpen(true)}>
+              <Button className="mt-4" color="accent" onClick={() => setBasicsOpen(true)}>
                 <span className="text-nowrap">Add Basic Lands</span>
               </Button>
               {/* Rendered only once the basics have loaded: the modal seeds its per-land
@@ -402,12 +406,11 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
               />
             </>
           )}
-          {photoScanner && (
-            <>
-              <hr className="text-border my-1" />
-              {photoScanner}
-            </>
-          )}
+          {/* Space rather than a rule: these are three ways to fill the same deck, and a
+              line across the column shouted a separation that a gap states quietly. */}
+          {/* A flex column, so the scanner's button fills the column the way the one above
+              it does rather than shrinking to its label. */}
+          {photoScanner && <div className="mt-4 flex flex-col">{photoScanner}</div>}
         </Flexbox>
 
         <Flexbox direction="col" gap="2" className="md:w-1/2 min-w-0">
@@ -415,7 +418,8 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
             Paste a decklist
           </Text>
           <Text sm className="text-text-secondary">
-            {`One card per line, with an optional quantity like "2x Island". Lines go to the ${targetBoard} unless the list has its own "Mainboard" or "Sideboard" line, which sends everything below it to that board instead.`}
+            One card per line, with an optional quantity like &quot;2x Island&quot;. Lines go to the mainboard until a
+            &quot;Sideboard&quot; line, which sends everything below it to the sideboard.
           </Text>
           <TextArea
             value={decklistText}

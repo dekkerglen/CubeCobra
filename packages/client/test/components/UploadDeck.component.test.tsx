@@ -169,15 +169,28 @@ describe('UploadDeck paste', () => {
     expect(addedNames(setSideboardCards)).toEqual(['Pyroblast', 'Red Elemental Blast']);
   });
 
-  it('respects the board dropdown when the text has no marker', async () => {
+  // The dropdown belongs to the single-card field and the basics beside it. A paste routes
+  // itself from its own section markers, and an unmarked list is a maindeck.
+  it('ignores the board dropdown, which belongs to the field above it', async () => {
     const { setMainboardCards, setSideboardCards } = renderUploadDeck();
 
     fireEvent.change(screen.getByLabelText('Add to'), { target: { value: 'sideboard' } });
     paste('Pyroblast\nSurgical Extraction');
 
+    await waitFor(() => expect(setMainboardCards).toHaveBeenCalled());
+    expect(addedNames(setMainboardCards)).toEqual(['Pyroblast', 'Surgical Extraction']);
+    expect(setSideboardCards).not.toHaveBeenCalled();
+  });
+
+  it('still routes a marked section while the dropdown says sideboard', async () => {
+    const { setMainboardCards, setSideboardCards } = renderUploadDeck();
+
+    fireEvent.change(screen.getByLabelText('Add to'), { target: { value: 'sideboard' } });
+    paste('Lightning Bolt\nSideboard\nPyroblast');
+
     await waitFor(() => expect(setSideboardCards).toHaveBeenCalled());
-    expect(addedNames(setSideboardCards)).toEqual(['Pyroblast', 'Surgical Extraction']);
-    expect(setMainboardCards).not.toHaveBeenCalled();
+    expect(addedNames(setMainboardCards)).toEqual(['Lightning Bolt']);
+    expect(addedNames(setSideboardCards)).toEqual(['Pyroblast']);
   });
 
   it('expands a quantity into that many copies', async () => {
