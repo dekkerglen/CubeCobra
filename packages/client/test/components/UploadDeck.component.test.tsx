@@ -49,7 +49,7 @@ const makeCsrfFetch = (unresolved: string[] = []) =>
     return { ok: false, status: 404, json: async () => ({ success: 'false' }) } as Response;
   });
 
-const renderUploadDeck = ({ csrfFetch = makeCsrfFetch() } = {}) => {
+const renderUploadDeck = ({ csrfFetch = makeCsrfFetch(), showPlayerPicker = true } = {}) => {
   const setMainboardCards = jest.fn();
   const setSideboardCards = jest.fn();
 
@@ -58,6 +58,7 @@ const renderUploadDeck = ({ csrfFetch = makeCsrfFetch() } = {}) => {
       <UploadDeck
         selectedUser={1}
         setSelectedUser={jest.fn()}
+        showPlayerPicker={showPlayerPicker}
         record={record}
         mainboardCards={[]}
         setMainboardCards={setMainboardCards}
@@ -92,13 +93,37 @@ const textarea = () => screen.getByPlaceholderText(/Paste your decklist here/) a
 const cardRequests = (csrfFetch: jest.Mock) => csrfFetch.mock.calls.filter(([url]) => url === GET_CARDS_URL);
 
 describe('UploadDeck paste', () => {
-  it('renders the paste textarea without clicking anything', () => {
+  it('renders the paste textarea without clicking anything, and offers no way to hide it', () => {
     renderUploadDeck();
 
-    // Collapse hides with a CSS class rather than unmounting, so being in the document isn't enough:
-    // the section has to actually be open.
+    expect(textarea()).toBeInTheDocument();
+    // It used to live behind a Collapse, which hides with a CSS class rather than unmounting.
     expect(textarea().closest('.max-h-0')).toBeNull();
-    expect(screen.getByRole('button', { name: /Hide Paste Decklist/ })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Paste Decklist/ })).not.toBeInTheDocument();
+  });
+
+  it('picks the board from a dropdown rather than a sideboard toggle', () => {
+    renderUploadDeck();
+
+    const board = screen.getByLabelText('Add to') as HTMLSelectElement;
+    expect([...board.options].map((option) => option.label)).toEqual(['Mainboard', 'Sideboard']);
+    expect(board).toHaveValue('mainboard');
+    expect(screen.queryByLabelText('Add to Sideboard')).not.toBeInTheDocument();
+  });
+
+  // The transcription workspace renders one editor per player row, where whose deck this is
+  // is the row it is in — a picker there is a second answer to a question already answered.
+  it('hides the player picker when the caller says the player is implicit', () => {
+    renderUploadDeck({ showPlayerPicker: false });
+
+    expect(screen.queryByLabelText('Upload deck for player')).not.toBeInTheDocument();
+    expect(textarea()).toBeInTheDocument();
+  });
+
+  it('keeps the player picker by default', () => {
+    renderUploadDeck();
+
+    expect(screen.getByLabelText('Upload deck for player')).toBeInTheDocument();
   });
 
   it('sends one request for a multi-line list, not one per line', async () => {
@@ -128,10 +153,10 @@ describe('UploadDeck paste', () => {
     expect(addedNames(setSideboardCards)).toEqual(['Pyroblast', 'Red Elemental Blast']);
   });
 
-  it('respects the Add to Sideboard checkbox when the text has no marker', async () => {
+  it('respects the board dropdown when the text has no marker', async () => {
     const { setMainboardCards, setSideboardCards } = renderUploadDeck();
 
-    fireEvent.click(screen.getByLabelText('Add to Sideboard'));
+    fireEvent.change(screen.getByLabelText('Add to'), { target: { value: 'sideboard' } });
     paste('Pyroblast\nSurgical Extraction');
 
     await waitFor(() => expect(setSideboardCards).toHaveBeenCalled());

@@ -11,7 +11,6 @@ import User from '@utils/datatypes/User';
 import { UncontrolledAlertProps } from 'components/base/Alert';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Checkbox from 'components/base/Checkbox';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
@@ -156,20 +155,35 @@ interface PlayerNameFieldProps {
   // when the entry was empty, or 'duplicate' when it would have taken another player's name,
   // or undefined when a save in flight refused the edit.
   onRename: (raw: string) => Promise<Player | null | undefined | typeof COLLISION>;
+  // The row's name field lives outside the body's fieldset, so it carries its own copy of
+  // the hold a save in flight puts on every player edit.
+  disabled: boolean;
 }
 
 // Commits on blur and on Enter: with the player's whole body on screen there is nothing for
 // a dedicated save button to disambiguate, and it wrapped.
-const PlayerNameField: React.FC<PlayerNameFieldProps> = ({ id, player, duplicate, onRename }) => {
-  const [value, setValue] = useState<string>(() => displayName(player));
+const PlayerNameField: React.FC<PlayerNameFieldProps> = ({ id, player, duplicate, onRename, disabled }) => {
+  const committed = displayName(player);
+  const [value, setValue] = useState<string>(committed);
   const [empty, setEmpty] = useState<boolean>(false);
   // The name a refused commit tried to take. Held here rather than derived from state
   // because the rename never landed: the record still holds this player under their old
   // name, and the only trace of the attempt is the text still in this field.
   const [collision, setCollision] = useState<string>('');
+  // What the draft above was seeded from. The field is mounted for every row now, open or
+  // shut, and the rows are keyed by seat rather than by player — so a reorder hands this
+  // component a different player without remounting it, and an untracked draft would show
+  // one player's name over another's row and rename them on the next blur.
+  const [seed, setSeed] = useState<string>(committed);
+  if (seed !== committed) {
+    setSeed(committed);
+    setValue(committed);
+    setEmpty(false);
+    setCollision('');
+  }
 
   const commit = async () => {
-    if (value.trim() === displayName(player).trim()) {
+    if (value.trim() === committed.trim()) {
       return;
     }
     const landed = await onRename(value);
@@ -199,18 +213,18 @@ const PlayerNameField: React.FC<PlayerNameFieldProps> = ({ id, player, duplicate
         : '';
 
   return (
-    <Flexbox direction="col" gap="1">
+    <Flexbox direction="col" gap="1" className="min-w-0 grow">
       <Input
         id={id}
-        label="Player name"
         value={value}
+        disabled={disabled}
         onChange={(event) => {
           setValue(event.target.value);
           setEmpty(false);
           setCollision('');
         }}
         onEnter={commit}
-        otherInputProps={{ onBlur: commit }}
+        otherInputProps={{ onBlur: commit, 'aria-label': 'Player name' }}
         placeholder="Prefix with @ to link a CubeCobra account"
         valid={error ? false : undefined}
       />
@@ -636,9 +650,13 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                           >
                             <TrophyIcon size={16} />
                           </button>
-                          <Text semibold className="truncate">
-                            {player.name}
-                          </Text>
+                          <PlayerNameField
+                            id={`transcribe-player-name-${index}`}
+                            player={player}
+                            duplicate={duplicate}
+                            disabled={editsDisabled}
+                            onRename={(raw) => renamePlayer(index, raw)}
+                          />
                         </Flexbox>
                         <Flexbox direction="row" alignItems="center" gap="2" wrap="wrap">
                           <Text sm className="text-text-secondary shrink-0">
@@ -676,32 +694,19 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                               that re-base unambiguous: a rename, add, remove, shuffle or drop
                               applied mid-flight would be expressed against seats the server has
                               already moved, and the next save would misattribute every deck. */}
-                          <fieldset disabled={editsDisabled} className="min-w-0 border-0 p-0 m-0">
-                            <Flexbox direction="col" gap="2">
-                              <PlayerNameField
-                                id={`transcribe-player-name-${index}`}
-                                player={player}
-                                duplicate={duplicate}
-                                onRename={(raw) => renamePlayer(index, raw)}
-                              />
-                              <Flexbox direction="row" gap="3" alignItems="center" wrap="wrap">
-                                <Checkbox
-                                  label="Trophy"
-                                  checked={held}
-                                  setChecked={(checked) => toggleTrophy(player.name, checked)}
-                                />
-                                {seatsEditable && (
-                                  <Button
-                                    color="danger"
-                                    aria-label={`Remove ${player.name}`}
-                                    onClick={() => removePlayer(index)}
-                                  >
-                                    <span className="text-nowrap">Remove player</span>
-                                  </Button>
-                                )}
+                          {seatsEditable && (
+                            <fieldset disabled={editsDisabled} className="min-w-0 border-0 p-0 m-0">
+                              <Flexbox direction="row" justify="end">
+                                <Button
+                                  color="danger"
+                                  aria-label={`Remove ${player.name}`}
+                                  onClick={() => removePlayer(index)}
+                                >
+                                  <span className="text-nowrap">Remove player</span>
+                                </Button>
                               </Flexbox>
-                            </Flexbox>
-                          </fieldset>
+                            </fieldset>
+                          )}
 
                           {!deck || deck.editable ? (
                             <Flexbox direction="col" gap="2">
@@ -712,12 +717,10 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                                 setAlerts={setAlerts}
                               />
                               <UploadDeck
-                                // This row is already bound to one player, so UploadDeck's picker
-                                // has nothing to choose: it is handed a one-player record and a
-                                // setter that does nothing, which leaves it showing whose deck is
-                                // being entered.
+                                // Whose deck this is, is the row it is in.
                                 selectedUser={1}
                                 setSelectedUser={() => {}}
+                                showPlayerPicker={false}
                                 record={{ ...record, players: [player] }}
                                 mainboardCards={deck?.mainboard ?? []}
                                 setMainboardCards={setters[index].setMainboard}

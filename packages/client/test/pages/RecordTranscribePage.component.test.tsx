@@ -224,7 +224,11 @@ const tabOrder = () =>
   ).filter((element) => !element.hasAttribute('disabled'));
 
 // Only one row is expanded at a time, so each of these addresses the open row's body.
-const nameField = () => screen.getByLabelText('Player name') as HTMLInputElement;
+// Every row carries one now, so it is addressed through the row rather than globally.
+const nameField = (index = 0) => within(playerRow(index)).getByLabelText('Player name') as HTMLInputElement;
+
+// A row is open when its deck editor is mounted; the name field is no longer the tell.
+const rowExpanded = (index: number) => within(playerRow(index)).queryByText('Paste a decklist') !== null;
 
 const trophyToggle = (index = 0) => within(playerRow(index)).getByRole('button', { name: /trophy/i });
 
@@ -253,8 +257,8 @@ const reversePlayerList = () => {
     random.mockRestore();
   }
 
-  expect(playerRow(0)).toHaveTextContent('Bob');
-  expect(playerRow(1)).toHaveTextContent('Alice');
+  expect(nameField(0)).toHaveValue('Bob');
+  expect(nameField(1)).toHaveValue('Alice');
 };
 
 // Drops the player at `from` onto the row at `to`, through the handler and the ids dnd-kit
@@ -280,8 +284,8 @@ describe('RecordTranscribePage', () => {
 
     const rows = playerRows();
     expect(rows).toHaveLength(2);
-    expect(rows[0]).toHaveTextContent('Alice');
-    expect(rows[1]).toHaveTextContent('Bob');
+    expect(nameField(0)).toHaveValue('Alice');
+    expect(nameField(1)).toHaveValue('Bob');
     expect(screen.getByText('2 players')).toBeInTheDocument();
 
     // The decks used to be a second list of the same people under their own heading.
@@ -309,13 +313,16 @@ describe('RecordTranscribePage', () => {
     // A pod of eight would otherwise fetch the cube's pool eight times over on mount.
     expect(screen.getAllByPlaceholderText(/Paste your decklist here/)).toHaveLength(1);
     expect(within(playerRow(0)).getByPlaceholderText(/Paste your decklist here/)).toBeInTheDocument();
-    expect(screen.getAllByLabelText('Player name')).toHaveLength(1);
+    // Every row carries a name field whether open or shut, so it is the deck editor that
+    // says which row is expanded.
+    expect(screen.getAllByLabelText('Player name')).toHaveLength(2);
+    expect(rowExpanded(1)).toBe(false);
 
     toggleRow(1);
 
     expect(screen.getAllByPlaceholderText(/Paste your decklist here/)).toHaveLength(1);
     expect(within(playerRow(1)).getByPlaceholderText(/Paste your decklist here/)).toBeInTheDocument();
-    expect(screen.getAllByLabelText('Player name')).toHaveLength(1);
+    expect(rowExpanded(0)).toBe(false);
   });
 
   it('adds a player from the section header', async () => {
@@ -325,7 +332,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add Player' }));
 
     await waitFor(() => expect(playerRows()).toHaveLength(3));
-    expect(playerRow(2)).toHaveTextContent('Carol');
+    expect(nameField(2)).toHaveValue('Carol');
     expect(screen.getByText('3 players')).toBeInTheDocument();
     expect(screen.getByPlaceholderText(ADD_PLAYER_INPUT)).toHaveValue('');
 
@@ -346,8 +353,9 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Add Player' }));
 
     await waitFor(() => expect(playerRows()).toHaveLength(3));
-    // The account's own spelling, not the handle as typed.
-    expect(playerRow(2)).toHaveTextContent('Carol');
+    // The account's own spelling, not the handle as typed, and still carrying the @ that
+    // says this seat is a linked account rather than a bare name.
+    expect(nameField(2)).toHaveValue('@Carol');
 
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
@@ -361,7 +369,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Remove Alice' }));
 
     expect(playerRows()).toHaveLength(1);
-    expect(playerRow(0)).toHaveTextContent('Bob');
+    expect(nameField(0)).toHaveValue('Bob');
     expect(screen.getByText('1 player')).toBeInTheDocument();
 
     fireEvent.click(saveButton());
@@ -374,13 +382,13 @@ describe('RecordTranscribePage', () => {
   it('closes the expansion when the expanded player is removed', () => {
     renderPage();
 
-    expect(nameField()).toBeInTheDocument();
+    expect(rowExpanded(0)).toBe(true);
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove Alice' }));
 
     // The body that held the remove control belonged to a player who is gone; leaving the
     // expansion on that index would open it onto whoever moved up into the seat.
-    expect(screen.queryByLabelText('Player name')).not.toBeInTheDocument();
+    expect(rowExpanded(0)).toBe(false);
     expect(screen.queryByPlaceholderText(/Paste your decklist here/)).not.toBeInTheDocument();
     expect(playerRows()).toHaveLength(1);
   });
@@ -417,10 +425,10 @@ describe('RecordTranscribePage', () => {
 
     dragPlayer(0, 1);
 
-    expect(playerRow(0)).toHaveTextContent('Bob');
+    expect(nameField(0)).toHaveValue('Bob');
     expect(playerRow(0)).toHaveTextContent('No deck yet');
     // The deck is keyed by position, so it only stays with Alice if the move re-keys it.
-    expect(playerRow(1)).toHaveTextContent('Alice');
+    expect(nameField(1)).toHaveValue('Alice');
     expect(playerRow(1)).toHaveTextContent('2 cards + 1 sideboard');
   });
 
@@ -429,7 +437,7 @@ describe('RecordTranscribePage', () => {
 
     dragPlayer(1, 0);
 
-    expect(playerRow(0)).toHaveTextContent('Bob');
+    expect(nameField(0)).toHaveValue('Bob');
 
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
@@ -467,8 +475,8 @@ describe('RecordTranscribePage', () => {
 
     dragPlayer(0, 1);
 
-    expect(playerRow(0)).toHaveTextContent('Alice');
-    expect(playerRow(1)).toHaveTextContent('Bob');
+    expect(nameField(0)).toHaveValue('Alice');
+    expect(nameField(1)).toHaveValue('Bob');
 
     await release();
     await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
@@ -476,8 +484,8 @@ describe('RecordTranscribePage', () => {
     // ...and the same drop goes through once the save has landed.
     dragPlayer(0, 1);
 
-    expect(playerRow(0)).toHaveTextContent('Bob');
-    expect(playerRow(1)).toHaveTextContent('Alice');
+    expect(nameField(0)).toHaveValue('Bob');
+    expect(nameField(1)).toHaveValue('Alice');
   });
 
   // The expansion is a position, and a reorder moves players under it. Leaving it where it
@@ -491,9 +499,29 @@ describe('RecordTranscribePage', () => {
 
     dragPlayer(0, 1);
 
-    expect(screen.getAllByLabelText('Player name')).toHaveLength(1);
-    expect(within(playerRow(1)).getByLabelText('Player name')).toHaveValue('Alice');
+    expect(rowExpanded(0)).toBe(false);
+    expect(nameField(1)).toHaveValue('Alice');
     expect(pasteBox(1)).toHaveValue("Alice's deck");
+  });
+
+  // The field is mounted for every row, open or shut, and the rows are keyed by seat rather
+  // than by player — so a reorder hands one component a different player without remounting
+  // it. An untracked draft would leave Alice's name sitting over Bob's row and rename him to
+  // it on the next blur.
+  it("re-seeds a row's name field when a reorder moves another player into it", () => {
+    const { csrfFetch } = renderPage();
+
+    dragPlayer(0, 1);
+
+    expect(nameField(0)).toHaveValue('Bob');
+    expect(nameField(1)).toHaveValue('Alice');
+
+    // Nothing was typed, so blurring the moved-into field must not commit a rename.
+    fireEvent.blur(nameField(0));
+    fireEvent.click(saveButton());
+    return waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1)).then(() => {
+      expect(savedPayload(csrfFetch).players).toEqual([{ name: 'Bob' }, { name: 'Alice' }]);
+    });
   });
 
   // The row body holds the name input and the paste box. Were the row itself the drag target,
@@ -518,7 +546,7 @@ describe('RecordTranscribePage', () => {
 
     await renameOpenRow('Alicia');
 
-    expect(playerRow(0)).toHaveTextContent('Alicia');
+    expect(nameField(0)).toHaveValue('Alicia');
 
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
@@ -531,7 +559,7 @@ describe('RecordTranscribePage', () => {
 
     await renameOpenRow('Alicia', 'enter');
 
-    expect(playerRow(0)).toHaveTextContent('Alicia');
+    expect(nameField(0)).toHaveValue('Alicia');
 
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
@@ -552,10 +580,11 @@ describe('RecordTranscribePage', () => {
 
     expect(screen.getByText('Another player is already named Bob')).toBeInTheDocument();
     // Nothing is thrown away: the refusal leaves the entry where it is to be corrected.
-    expect(nameField()).toHaveValue('Bob');
-    // ...and the list is untouched, so there is no second Bob and nothing page-wide to say.
-    expect(playerRow(0)).toHaveTextContent('Alice');
-    expect(playerRow(1)).toHaveTextContent('Bob');
+    expect(nameField(0)).toHaveValue('Bob');
+    // ...and the list underneath is untouched, so there is no second Bob, nothing page-wide
+    // to say, and nothing to save. The row still belongs to Alice — only the draft says Bob.
+    expect(within(playerRow(0)).getByLabelText('Drag Alice to reorder')).toBeInTheDocument();
+    expect(nameField(1)).toHaveValue('Bob');
     expect(screen.queryByText(/Two players cannot share a name/)).not.toBeInTheDocument();
     expect(screen.getByText('No unsaved changes')).toBeInTheDocument();
   });
@@ -566,7 +595,7 @@ describe('RecordTranscribePage', () => {
     await renameOpenRow('bob');
 
     expect(screen.getByText('Another player is already named bob')).toBeInTheDocument();
-    expect(playerRow(0)).toHaveTextContent('Alice');
+    expect(within(playerRow(0)).getByLabelText('Drag Alice to reorder')).toBeInTheDocument();
     expect(screen.getByText('No unsaved changes')).toBeInTheDocument();
   });
 
@@ -597,8 +626,8 @@ describe('RecordTranscribePage', () => {
     await renameOpenRow('Alice');
 
     expect(playerRows()).toHaveLength(2);
-    expect(playerRow(0)).toHaveTextContent('Alice');
-    expect(playerRow(1)).toHaveTextContent('Bob');
+    expect(nameField(0)).toHaveValue('Alice');
+    expect(nameField(1)).toHaveValue('Bob');
     expect(screen.queryByText(/Two players cannot share a name/)).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
@@ -710,7 +739,7 @@ describe('RecordTranscribePage', () => {
 
     await renameOpenRow('Alicia');
 
-    expect(playerRow(0)).toHaveTextContent('Alicia');
+    expect(nameField(0)).toHaveValue('Alicia');
 
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
@@ -773,7 +802,7 @@ describe('RecordTranscribePage', () => {
 
     await renameOpenRow('Alicia');
 
-    expect(playerRow(0)).toHaveTextContent('Alicia');
+    expect(nameField(0)).toHaveValue('Alicia');
 
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
@@ -987,7 +1016,7 @@ describe('RecordTranscribePage', () => {
 
     // Bob's row is shut, and his record is still typeable: making someone expand sixteen
     // rows in turn would regress the standings-sheet case this mode exists for.
-    expect(within(playerRow(1)).queryByLabelText('Player name')).not.toBeInTheDocument();
+    expect(rowExpanded(1)).toBe(false);
     expect(recordCell(1, 'Wins')).toHaveValue(0);
     expect(recordCell(1, 'Losses')).toHaveValue(0);
     expect(recordCell(1, 'Draws')).toHaveValue(0);
@@ -1064,16 +1093,17 @@ describe('RecordTranscribePage', () => {
     expect(within(playerRow(1)).getByRole('button', { name: /Collapse Bob/ })).toHaveAttribute('aria-expanded', 'true');
   });
 
-  it('expands only from the chevron, not from the player name', () => {
+  it('expands only from the chevron, not from the rest of the row', () => {
     renderPage({ record: createRecord({ matches: pairedRound() }) });
 
-    // The name used to be the hit region, which made the control invisible. Clicking it
-    // now does nothing, so the chevron is the only way in.
-    fireEvent.click(within(playerRow(1)).getByText('Bob'));
-    expect(within(playerRow(1)).queryByLabelText('Player name')).not.toBeInTheDocument();
+    // The identity half used to be the hit region, which made the control invisible — and
+    // now holds a name field, which a row-wide toggle would collapse out from under.
+    fireEvent.click(nameField(1));
+    fireEvent.click(within(playerRow(1)).getByText(/No deck yet/));
+    expect(rowExpanded(1)).toBe(false);
 
     fireEvent.click(expandToggle(1));
-    expect(within(playerRow(1)).getByLabelText('Player name')).toBeInTheDocument();
+    expect(rowExpanded(1)).toBe(true);
   });
 
   it('puts the chevron right of the record cells', () => {
@@ -1253,7 +1283,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
     // The page opens on the first deckless player; shut it so every row is a summary line.
     toggleRow(0);
-    expect(screen.queryByLabelText('Player name')).not.toBeInTheDocument();
+    expect(rowExpanded(0)).toBe(false);
 
     const sequence = tabOrder();
     const from = sequence.indexOf(recordCell(0, 'Wins'));
@@ -1261,12 +1291,13 @@ describe('RecordTranscribePage', () => {
     expect(from).toBeGreaterThan(-1);
     // Three cells, then the row's own chevron, then the next row's trophy — four keystrokes
     // between one player's wins and the next, with no expansion in between.
-    expect(sequence.slice(from, from + 6)).toEqual([
+    expect(sequence.slice(from, from + 7)).toEqual([
       recordCell(0, 'Wins'),
       recordCell(0, 'Losses'),
       recordCell(0, 'Draws'),
       expandToggle(0),
       trophyToggle(1),
+      nameField(1),
       recordCell(1, 'Wins'),
     ]);
   });
@@ -1410,14 +1441,14 @@ describe('RecordTranscribePage', () => {
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
     await renameOpenRow('Alicia');
-    expect(playerRow(0)).toHaveTextContent('Alice');
-    expect(playerRow(0)).not.toHaveTextContent('Alicia');
+    expect(nameField(0)).toHaveValue('Alice');
+    expect(nameField(0)).not.toHaveValue('Alicia');
 
     await release();
     await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
 
     await renameOpenRow('Alicia');
-    expect(playerRow(0)).toHaveTextContent('Alicia');
+    expect(nameField(0)).toHaveValue('Alicia');
   });
 
   it('refuses an add, remove or shuffle attempted while a save is in flight', async () => {
@@ -1438,7 +1469,7 @@ describe('RecordTranscribePage', () => {
 
     // Nothing applied: the rows still read in the order that was submitted.
     expect(playerRows()).toHaveLength(2);
-    expect(playerRow(0)).toHaveTextContent('Alice');
+    expect(nameField(0)).toHaveValue('Alice');
     expect(JSON.parse(`${saveCalls(csrfFetch)[0][1].body}`).seatOrder).toEqual([0, 1]);
 
     await release();
@@ -1507,8 +1538,11 @@ describe('RecordTranscribePage', () => {
 
     await releaseLookup();
 
-    expect(playerRow(0)).toHaveTextContent('Alice');
-    expect(screen.queryByText('Carol')).not.toBeInTheDocument();
+    // The refusal leaves the typed handle in the field to be retried, and the player
+    // underneath it untouched — no Carol was ever added to the list.
+    expect(nameField(0)).toHaveValue('@carol');
+    expect(within(playerRow(0)).getByLabelText('Drag Alice to reorder')).toBeInTheDocument();
+    expect(playerRows()).toHaveLength(2);
 
     await releaseSave();
     await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
@@ -1542,7 +1576,7 @@ describe('RecordTranscribePage', () => {
     await releaseLookup();
 
     expect(playerRows()).toHaveLength(1);
-    expect(playerRow(0)).toHaveTextContent('Bob');
+    expect(nameField(0)).toHaveValue('Bob');
     expect(screen.queryByText('Alice')).not.toBeInTheDocument();
     expect(screen.queryByText('Carol')).not.toBeInTheDocument();
 

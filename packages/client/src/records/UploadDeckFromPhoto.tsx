@@ -615,19 +615,27 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
       </Text>
 
       {status === 'idle' && !deckMode && (
-        <input
-          ref={fileRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          className="text-sm"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) {
-              onFileSelected(file);
-            }
-          }}
-        />
+        // The bare file input renders as a system "Choose File" link that reads as neither a
+        // control nor the page's own styling. The real input is kept for the picker and the
+        // reset at line ~276, and driven by a button that looks like every other one here.
+        <Flexbox direction="row" gap="2" alignItems="center">
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            className="hidden"
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              if (file) {
+                onFileSelected(file);
+              }
+            }}
+          />
+          <Button color="accent" onClick={() => fileRef.current?.click()}>
+            <span className="text-nowrap">Choose Photo</span>
+          </Button>
+        </Flexbox>
       )}
       {status === 'idle' && deckMode && (
         <Flexbox direction="row" gap="2" alignItems="center">
