@@ -1,11 +1,10 @@
 import { applyPlayerRenames } from '@utils/datatypes/Record';
-import { setupPicks } from '@utils/draftutil';
 import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { bodyValidation } from 'router/middleware';
-import { createPool } from 'serverutils/cube';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { realignDraftSeats } from 'serverutils/recordSeats';
 import { redirect } from 'serverutils/render';
 
 import { Request, Response } from '../../../../../types/express';
@@ -83,24 +82,10 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
     record.players = players;
 
     // Keep the associated draft's seats positionally aligned with the players.
-    // Reusing the old seat at seatOrder[i] keeps each player's deck attached as
-    // they move; -1 yields a fresh empty seat for a newly added player.
     if (record.draft) {
       const draft = await draftDao.getById(record.draft);
       if (draft) {
-        const oldSeats = draft.seats;
-        draft.seats = players.map((player: { name: string; userId?: string }, index: number) => {
-          const origin = seatOrder[index] ?? -1;
-          const base =
-            origin >= 0 && origin < oldSeats.length
-              ? oldSeats[origin]
-              : { mainboard: createPool(), sideboard: setupPicks(1, 8) };
-          return {
-            ...base,
-            owner: player.userId,
-            title: player.name,
-          };
-        });
+        draft.seats = realignDraftSeats(draft.seats, seatOrder, players);
         await draftDao.update(draft);
       }
     }
