@@ -463,8 +463,9 @@ Available options are "Not Owned", "Ordered", "Owned", "Premium Owned", "Proxied
 many copies of a card exist in the same board. Copies are counted by oracle identity, so two
 differently-named printings of the same card count as copies of each other. Cards without an oracle
 ID — custom cards and vouchers — are counted by name instead. Cards staged for removal are not
-counted. `is:singleton` and `not:singleton` are convenience aliases for `quantity=1` and
-`quantity>1`.
+counted, and a staged card reports a single copy of itself — so with `not:singleton` active,
+staging a duplicate removal clears the view, because the copies left behind drop to one as well.
+`is:singleton` and `not:singleton` are convenience aliases for `quantity=1` and `quantity>1`.
 
 Outside a cube list (global card search, Smart Search, etc.) every card is treated as one copy, so
 `quantity>1` returns nothing and `is:singleton` matches everything.

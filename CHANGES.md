@@ -11,6 +11,8 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - Cards you drag in a draft or the deckbuilder now lean gently into the motion and settle back smoothly, without bouncing.
 - Choose which daily games can show up on your dashboard under Display Preferences in your account settings. Daily P1P1 now has its own checkbox instead of following Hide featured cubes.
 - Card pages have a new Tags tab listing the card's Scryfall oracle tags and the printing's art tags. Click a tag to search for every card that has it.
+- A new Cleanup menu in the cube list's edit panel clears out a board in one click: drop its duplicate entries, or drop everything already sitting on another board. The removals land in your change list to review before you save.
+- Filtering a cube by quantity, count, copies, or singleton now counts copies of the same card together even when they're different printings under different names, and stops counting cards you've already staged for removal.
 
 ## Bug Fixes
 
