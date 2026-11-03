@@ -62,6 +62,7 @@ interface CleanupDropdownProps {
   duplicateRemovals: CleanupCardRef[];
   overlapRemovals: Record<string, CleanupCardRef[]>;
   onCleanup: (removals: CleanupCardRef[], event: string, otherBoard?: string) => void;
+  className?: string;
 }
 
 /*
@@ -74,6 +75,7 @@ const CleanupDropdown: React.FC<CleanupDropdownProps> = ({
   duplicateRemovals,
   overlapRemovals,
   onCleanup,
+  className,
 }) => {
   const otherBoards = boardOptions.filter((board) => board.value !== boardToEdit);
   // The displayed board and the Board select can disagree — a view spanning several boards
@@ -82,6 +84,7 @@ const CleanupDropdown: React.FC<CleanupDropdownProps> = ({
 
   return (
     <Dropdown
+      className={className}
       trigger={
         <Button color="secondary" block>
           Cleanup
@@ -600,7 +603,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
             </div>
           </div>
 
-          {/* Second Row: Specify Versions, Show Extras, Create Blog Post, Import */}
+          {/* Second Row: Specify Versions, Show Extras, Create Blog Post, and the action buttons */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-4">
             {/* Checkboxes - share a single wrapping row so spacing stays even and they never overlap */}
             <div className="flex flex-wrap items-center gap-x-4 gap-y-2 lg:col-span-2">
@@ -628,9 +631,11 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
               </div>
             </div>
 
-            {/* Import */}
-            <div className="flex flex-col gap-2">
+            {/* Import, Cleanup and Add Package share one row so this block stays a single row tall,
+                which keeps the checkbox column beside it from stranding empty space. */}
+            <div className="flex flex-row gap-2">
               <Dropdown
+                className="flex-1"
                 trigger={
                   <Button color="secondary" block>
                     Import
@@ -651,15 +656,18 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
                 </Flexbox>
               </Dropdown>
               <CleanupDropdown
+                className="flex-1"
                 boardOptions={boardOptions}
                 boardToEdit={boardToEdit}
                 duplicateRemovals={duplicateRemovals}
                 overlapRemovals={overlapRemovals}
                 onCleanup={handleCleanup}
               />
-              <AddPackageButton color="secondary" block modalprops={{ boardToEdit }}>
-                Add Package
-              </AddPackageButton>
+              <div className="flex-1">
+                <AddPackageButton color="secondary" block modalprops={{ boardToEdit }}>
+                  Add Package
+                </AddPackageButton>
+              </div>
             </div>
           </div>
 
