@@ -203,7 +203,7 @@ const playerRows = () => screen.getAllByTestId('transcribe-player-row');
 
 const playerRow = (index: number) => playerRows()[index];
 
-const expandToggle = (index: number) => within(playerRow(index)).getAllByRole('button')[0];
+const expandToggle = (index: number) => within(playerRow(index)).getByRole('button', { name: /^(Expand|Collapse) / });
 
 const toggleRow = (index: number) => fireEvent.click(expandToggle(index));
 
@@ -212,7 +212,8 @@ const toggleRow = (index: number) => fireEvent.click(expandToggle(index));
 const recordCell = (index: number, field: 'Wins' | 'Losses' | 'Draws') =>
   within(playerRow(index)).getByLabelText(new RegExp(`^${field} for `)) as HTMLInputElement;
 
-const hasRecordCells = (index: number) => within(playerRow(index)).queryByLabelText(/^Wins for /) !== null;
+// Every row shows cells now; what varies is whether they can be typed into.
+const cellsEditable = (index: number) => !recordCell(index, 'Wins').disabled;
 
 // jsdom does not implement Tab and @testing-library/user-event is not a dependency here.
 // Native tabbing visits focusable elements in document order, so this is the sequence Tab
@@ -225,7 +226,7 @@ const tabOrder = () =>
 // Only one row is expanded at a time, so each of these addresses the open row's body.
 const nameField = () => screen.getByLabelText('Player name') as HTMLInputElement;
 
-const trophyToggle = () => screen.getByRole('checkbox', { name: 'Trophy' });
+const trophyToggle = (index = 0) => within(playerRow(index)).getByRole('button', { name: /trophy/i });
 
 const pasteBox = (index: number) =>
   within(playerRow(index)).getByPlaceholderText(/Paste your decklist here/) as HTMLTextAreaElement;
@@ -662,21 +663,23 @@ describe('RecordTranscribePage', () => {
     expect(saveButton()).toBeDisabled();
   });
 
-  it('toggles a trophy from the row body', async () => {
+  it('toggles a trophy from the row itself', async () => {
     const { csrfFetch } = renderPage();
 
-    expect(within(playerRow(0)).queryByRole('img', { name: 'Trophy' })).not.toBeInTheDocument();
+    // Rendered on every row whether or not it is held, so there is something to press in
+    // the first place — the pressed state is what says who won.
+    expect(trophyToggle(0)).toHaveAttribute('aria-pressed', 'false');
 
-    fireEvent.click(trophyToggle());
+    fireEvent.click(trophyToggle(0));
 
-    expect(within(playerRow(0)).getByRole('img', { name: 'Trophy' })).toBeInTheDocument();
-    expect(within(playerRow(1)).queryByRole('img', { name: 'Trophy' })).not.toBeInTheDocument();
+    expect(trophyToggle(0)).toHaveAttribute('aria-pressed', 'true');
+    expect(trophyToggle(1)).toHaveAttribute('aria-pressed', 'false');
 
     // ...and back off again, so the control is a toggle rather than a one-way award.
-    fireEvent.click(trophyToggle());
-    expect(within(playerRow(0)).queryByRole('img', { name: 'Trophy' })).not.toBeInTheDocument();
+    fireEvent.click(trophyToggle(0));
+    expect(trophyToggle(0)).toHaveAttribute('aria-pressed', 'false');
 
-    fireEvent.click(trophyToggle());
+    fireEvent.click(trophyToggle(0));
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
     expect(savedPayload(csrfFetch).trophy).toEqual(['Alice']);
@@ -978,7 +981,7 @@ describe('RecordTranscribePage', () => {
   it('puts the record cells on the collapsed row in final records mode', () => {
     renderPage();
 
-    expect(hasRecordCells(1)).toBe(false);
+    expect(cellsEditable(1)).toBe(false);
 
     fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
 
@@ -996,10 +999,7 @@ describe('RecordTranscribePage', () => {
   it('heads the record columns, once above the list and on each cell', () => {
     renderPage({ record: createRecord({ matches: pairedRound() }) });
 
-    // Nothing is showing cells yet in pairings mode, so there are no columns to head.
-    expect(screen.queryByTestId('record-column-headings')).not.toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: "Edit Bob's record" }));
+    // Every row carries cells in both modes, so the headings are there from the start.
     const headings = screen.getByTestId('record-column-headings');
     expect(within(headings).getByText('W')).toBeInTheDocument();
     expect(within(headings).getByText('L')).toBeInTheDocument();
@@ -1058,45 +1058,70 @@ describe('RecordTranscribePage', () => {
     renderPage({ record: createRecord({ matches: pairedRound() }) });
 
     const toggle = within(playerRow(1)).getByRole('button', { name: /Expand Bob/ });
-    expect(within(toggle).getByTestId('expand-indicator')).toBeInTheDocument();
+    expect(toggle).toHaveAttribute('data-testid', 'expand-indicator');
 
     fireEvent.click(toggle);
     expect(within(playerRow(1)).getByRole('button', { name: /Collapse Bob/ })).toHaveAttribute('aria-expanded', 'true');
   });
 
+  it('expands only from the chevron, not from the player name', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+
+    // The name used to be the hit region, which made the control invisible. Clicking it
+    // now does nothing, so the chevron is the only way in.
+    fireEvent.click(within(playerRow(1)).getByText('Bob'));
+    expect(within(playerRow(1)).queryByLabelText('Player name')).not.toBeInTheDocument();
+
+    fireEvent.click(expandToggle(1));
+    expect(within(playerRow(1)).getByLabelText('Player name')).toBeInTheDocument();
+  });
+
+  it('puts the chevron right of the record cells', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+
+    const wins = recordCell(1, 'Wins');
+    const toggle = expandToggle(1);
+    expect(wins.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('shows disabled record cells in pairings mode, carrying the derived reading', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+
+    // Alice took the match 2-1, so her row reads 1-0 and Bob's 0-1 — in cells, not text,
+    // so the row keeps the shape it has in final records mode.
+    expect(recordCell(0, 'Wins')).toHaveValue(1);
+    expect(recordCell(0, 'Losses')).toHaveValue(0);
+    expect(recordCell(0, 'Wins')).toBeDisabled();
+    expect(recordCell(1, 'Wins')).toHaveValue(0);
+    expect(recordCell(1, 'Losses')).toHaveValue(1);
+    expect(recordCell(1, 'Losses')).toBeDisabled();
+  });
+
+  it('keeps the cells enabled for every row in final records mode', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
+
+    expect(recordCell(0, 'Wins')).toBeEnabled();
+    expect(recordCell(1, 'Wins')).toBeEnabled();
+  });
+
   it('shows a read-only derived record in pairings mode', () => {
     renderPage({ record: createRecord({ matches: pairedRound() }) });
 
-    // Alice took the one match 2-1, so the row reads what the pairings add up to.
-    expect(playerRow(0)).toHaveTextContent('1-0');
-    expect(playerRow(1)).toHaveTextContent('0-1');
-    expect(hasRecordCells(0)).toBe(false);
-    expect(hasRecordCells(1)).toBe(false);
-  });
-
-  it('reveals the cells from the edit control in pairings mode', () => {
-    renderPage({ record: createRecord({ matches: pairedRound() }) });
-
-    fireEvent.click(screen.getByRole('button', { name: "Edit Bob's record" }));
-
-    // Seeded from the pairings rather than from zero, so the cells start at the reading they
-    // replaced.
-    expect(recordCell(1, 'Wins')).toHaveValue(0);
+    // Alice took the one match 2-1, so the row reads what the pairings add up to — and it
+    // is the pairings that say so, which is why there is nothing here to type into.
+    expect(recordCell(0, 'Wins')).toHaveValue(1);
     expect(recordCell(1, 'Losses')).toHaveValue(1);
-    // One row at a time: revealing Bob's cells leaves Alice reading her pairings.
-    expect(hasRecordCells(0)).toBe(false);
-    expect(playerRow(0)).toHaveTextContent('1-0');
+    expect(cellsEditable(0)).toBe(false);
+    expect(cellsEditable(1)).toBe(false);
+    expect(screen.queryByRole('button', { name: /'s record$/ })).not.toBeInTheDocument();
   });
 
-  // playerRecord prefers any present override, so a 0-0-0 written the moment the cells
-  // appeared would silently replace what a player's pairings add up to.
-  it('writes no override when the cells are revealed and nothing is changed', async () => {
+  // playerRecord prefers any present override, so a 0-0-0 written for every row the moment
+  // the cells appeared would silently replace what the pairings add up to.
+  it('writes no override for a record left to its pairings', async () => {
     const { csrfFetch } = renderPage({ record: createRecord({ matches: pairedRound() }) });
 
-    fireEvent.click(screen.getByRole('button', { name: "Edit Alice's record" }));
-    fireEvent.click(screen.getByRole('button', { name: "Edit Bob's record" }));
-
-    // The cells are showing the derived record, but nothing has been written behind them.
     expect(recordCell(0, 'Wins')).toHaveValue(1);
     expect(screen.getByText('No unsaved changes')).toBeInTheDocument();
 
@@ -1109,14 +1134,14 @@ describe('RecordTranscribePage', () => {
 
   it('writes an override once a cell changes', async () => {
     const { csrfFetch } = renderPage({ record: createRecord({ matches: pairedRound() }) });
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
 
-    fireEvent.click(screen.getByRole('button', { name: "Edit Alice's record" }));
     fireEvent.change(recordCell(0, 'Draws'), { target: { value: '2' } });
 
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    // The seed the cells were revealed with, carrying the one field that was edited.
+    // The pairings the cells were seeded from, carrying the one field that was edited.
     expect(savedPayload(csrfFetch).overrides).toEqual({ Alice: { wins: 1, losses: 0, draws: 2 } });
     // Bob's cells were never touched, so his record is still his pairings'.
     expect(savedPayload(csrfFetch).overrides.Bob).toBeUndefined();
@@ -1125,15 +1150,18 @@ describe('RecordTranscribePage', () => {
   it('clears an override from pairings mode', async () => {
     const { csrfFetch } = renderPage({ record: createRecord({ matches: pairedRound(), overrides: aliceOverride() }) });
 
-    // An override is what will be displayed, so its cells are on the row without being asked
-    // for — reading a derived record the record does not use would be a lie.
+    // An override is what will be displayed, so the cells read it rather than the pairings
+    // even here — showing a derived record the record does not use would be a lie.
     expect(roundsShown()).toBe(true);
     expect(recordCell(0, 'Wins')).toHaveValue(3);
+    expect(cellsEditable(0)).toBe(false);
 
+    // Clearing it is the one record edit this mode allows, because it is the only way to
+    // hand a player back to their pairings once something else is stored over them.
     fireEvent.click(screen.getByRole('button', { name: "Clear Alice's record" }));
 
-    expect(hasRecordCells(0)).toBe(false);
-    expect(playerRow(0)).toHaveTextContent('1-0');
+    expect(recordCell(0, 'Wins')).toHaveValue(1);
+    expect(recordCell(0, 'Losses')).toHaveValue(0);
 
     fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
     fireEvent.click(saveButton());
@@ -1231,11 +1259,14 @@ describe('RecordTranscribePage', () => {
     const from = sequence.indexOf(recordCell(0, 'Wins'));
 
     expect(from).toBeGreaterThan(-1);
-    expect(sequence.slice(from, from + 5)).toEqual([
+    // Three cells, then the row's own chevron, then the next row's trophy — four keystrokes
+    // between one player's wins and the next, with no expansion in between.
+    expect(sequence.slice(from, from + 6)).toEqual([
       recordCell(0, 'Wins'),
       recordCell(0, 'Losses'),
       recordCell(0, 'Draws'),
-      expandToggle(1),
+      expandToggle(0),
+      trophyToggle(1),
       recordCell(1, 'Wins'),
     ]);
   });

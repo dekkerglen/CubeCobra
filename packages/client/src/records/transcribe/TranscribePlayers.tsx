@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { arrayMove } from '@dnd-kit/sortable';
-import { ChevronDownIcon, ChevronRightIcon, GrabberIcon } from '@primer/octicons-react';
+import { ChevronDownIcon, ChevronRightIcon, GrabberIcon, TrophyIcon } from '@primer/octicons-react';
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
@@ -244,65 +244,49 @@ interface PlayerRecordProps {
   // Whether the record carries any pairings at all. With none there is no second reading to
   // disclose, so a row carrying an override has nothing to show alongside it.
   hasPairings: boolean;
-  // Cells in records mode, which is nothing but cells; in pairings mode only once this row's
-  // edit control has been used, or when an override is already what gets displayed.
-  cellsShown: boolean;
-  onReveal: () => void;
+  // Records mode is nothing but cells; pairings mode derives every record from the matches
+  // below, so its cells are read-only. They are rendered either way, so a row keeps the same
+  // shape across both modes and the columns stay where the eye left them.
+  editable: boolean;
   setOverride: (value: WinLossDraw | undefined) => void;
 }
 
-// A player's record as it sits on their collapsed row. The override is written when a cell
-// changes and not before: playerRecord prefers any present override, so a 0-0-0 created by
-// merely showing the cells would silently replace what the pairings say.
+// A player's record as it sits on their collapsed row.
 const PlayerRecord: React.FC<PlayerRecordProps> = ({
   player,
   derived,
   override,
   hasPairings,
-  cellsShown,
-  onReveal,
+  editable,
   setOverride,
 }) => {
-  if (!cellsShown) {
-    return (
-      <Flexbox direction="row" alignItems="center" gap="2">
-        <Text sm className="text-text-secondary">
-          {formatRecord(derived)}
-        </Text>
-        <Button color="secondary" aria-label={`Edit ${player.name}'s record`} onClick={onReveal}>
-          <span className="text-nowrap">Edit</span>
-        </Button>
-      </Flexbox>
-    );
-  }
-
-  // Revealed cells start from the reading they are replacing, so typing one number does not
-  // throw the other two away.
+  // What the record actually reads: playerRecord prefers any present override, so showing a
+  // derived total while an override is stored would be a lie — including in pairings mode,
+  // where Clear is then the only way to hand the player back to their matches.
   const seed = override ?? derived;
 
   return (
     // Everything that varies in width sits to the left of the cells, so the three of them
     // land at the same x on every row and the column headings above the list stay true.
     <Flexbox direction="row" alignItems="center" gap="1" wrap="wrap">
+      {override && hasPairings && (
+        // The precedence disclosure: this player's pairings say one thing and the record
+        // displays another, so both are on screen together.
+        <Text sm className="text-text-secondary text-nowrap">
+          {`From pairings: ${formatRecord(derived)}`}
+        </Text>
+      )}
       {override && (
-        <>
-          {hasPairings && (
-            // The precedence disclosure: this player's pairings say one thing and the record
-            // displays another, so both are on screen together.
-            <Text sm className="text-text-secondary text-nowrap">
-              {`From pairings: ${formatRecord(derived)}`}
-            </Text>
-          )}
-          <Button color="secondary" aria-label={`Clear ${player.name}'s record`} onClick={() => setOverride(undefined)}>
-            <span className="text-nowrap">Clear</span>
-          </Button>
-        </>
+        <Button color="secondary" aria-label={`Clear ${player.name}'s record`} onClick={() => setOverride(undefined)}>
+          <span className="text-nowrap">Clear</span>
+        </Button>
       )}
       {RECORD_FIELDS.map(({ label, key }) => (
         <Input
           key={key}
           type="number"
           value={`${seed[key]}`}
+          disabled={!editable}
           onChange={(event) => setOverride({ ...seed, [key]: toCount(event.target.value) })}
           // Named rather than labelled: a visible label on all three would break the one-line
           // `[W] [L] [D]` reading the row is for, and sixteen rows of them is unreadable. The
@@ -350,12 +334,6 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
   // Why the last add did not land, when it was refused for taking a name already in the
   // list. The entry stays in the field so it can be corrected rather than retyped.
   const [addError, setAddError] = useState<string>('');
-  // Which rows have been asked to show their record cells in pairings mode. Presentation
-  // only — it never reaches TranscribeState, because revealing the cells is not an edit.
-  // Keyed by name rather than by seat so a shuffle does not hand one player's open cells to
-  // whoever lands in their seat.
-  const [revealed, setRevealed] = useState<string[]>([]);
-
   // A record can hold both pairings and overrides at once, and the override wins. The row
   // only has a second reading worth disclosing when there are pairings behind it.
   const hasPairings = useMemo(() => (record.matches ?? []).some((round) => round.matches.length > 0), [record.matches]);
@@ -363,14 +341,6 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
   // playerRecord prefers any present override, so reading what a player's pairings alone say
   // means asking it against a record carrying none.
   const withoutOverrides = useMemo(() => ({ ...record, overrides: {} }), [record]);
-
-  // Whether any row is showing its record cells, which is what the legend above the list is
-  // for. Matches the per-row cellsShown test below.
-  const anyRecordCells = useMemo(
-    () =>
-      players.some((player) => resultsMode === 'records' || !!overrides[player.name] || revealed.includes(player.name)),
-    [players, resultsMode, overrides, revealed],
-  );
 
   // The add and rename commits await an @handle lookup before they apply, so by the time they
   // do, the list their render closed over may be several edits out of date — the player being
@@ -585,18 +555,24 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
         </Text>
       )}
 
-      {anyRecordCells && (
+      {players.length > 0 && (
         // Column headings rather than a sentence: the three cells on each row carry no visible
         // label, and a caption that is not the width of the column it describes does not point
         // at anything. Each heading is `w-20` like the cell beneath it, right-aligned to the
         // same card padding, so the three columns read top to bottom.
         <div data-testid="record-column-headings" className="px-4">
-          <Flexbox direction="row" justify="end" gap="1" alignItems="center">
-            {RECORD_FIELDS.map(({ label, key }) => (
-              <Text key={key} sm semibold className="w-20 text-text-secondary">
-                {label.charAt(0)}
-              </Text>
-            ))}
+          {/* Mirrors the right-hand group of a row — cells at gap-1 inside, then a gap-2 and
+              the chevron's fixed width — so the headings land over the columns rather than
+              24px right of them. */}
+          <Flexbox direction="row" justify="end" gap="2" alignItems="center">
+            <Flexbox direction="row" justify="end" gap="1" alignItems="center">
+              {RECORD_FIELDS.map(({ label, key }) => (
+                <Text key={key} sm semibold className="w-20 text-text-secondary">
+                  {label.charAt(0)}
+                </Text>
+              ))}
+            </Flexbox>
+            <span aria-hidden="true" className="w-4 shrink-0" />
           </Flexbox>
         </div>
       )}
@@ -614,9 +590,6 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
             (other, seat) => seat !== index && other.name.toLowerCase() === player.name.toLowerCase(),
           );
           const override = overrides[player.name];
-          // An override is what the record displays, so its cells are never hidden behind an
-          // edit control: offering a derived reading the record does not use would be a lie.
-          const cellsShown = resultsMode === 'records' || !!override || revealed.includes(player.name);
 
           return (
             // The caller-supplied role is what keeps dnd-kit's own button attributes off this
@@ -641,40 +614,32 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                             <GrabberIcon size={16} />
                           </span>
                         )}
-                        {/* Only the identity half toggles the row — the record cells sit beside
-                            it rather than inside it, so typing a number does not collapse the
-                            row. The chevron is what makes that half legible as a control:
-                            without it the hit region is an unmarked stretch of the header. */}
-                        <button
-                          type="button"
-                          className="min-w-0 grow text-left"
-                          onClick={() => setExpanded(open ? -1 : index)}
-                          aria-expanded={open}
-                          aria-label={`${open ? 'Collapse' : 'Expand'} ${player.name}`}
-                        >
-                          <Flexbox direction="row" alignItems="center" gap="2" className="min-w-0">
-                            <span data-testid="expand-indicator" className="shrink-0 text-text-secondary">
-                              {open ? <ChevronDownIcon size={16} /> : <ChevronRightIcon size={16} />}
-                            </span>
-                            {linked?.image?.uri ? (
-                              <img
-                                src={linked.image.uri}
-                                alt=""
-                                className="w-6 h-6 rounded-full object-cover shrink-0"
-                              />
-                            ) : (
-                              <span className="w-6 h-6 rounded-full bg-bg-active border border-border shrink-0" />
-                            )}
-                            {held && (
-                              <span role="img" aria-label="Trophy" className="shrink-0">
-                                🏆
-                              </span>
-                            )}
-                            <Text semibold className="truncate">
-                              {player.name}
-                            </Text>
-                          </Flexbox>
-                        </button>
+                        {/* The identity half is not a control. Awarding a trophy and expanding
+                            the row both live here, and an unmarked stretch of header that
+                            swallows clicks is indistinguishable from one that is merely
+                            decorative — so the chevron below is the only way to open a row. */}
+                        <Flexbox direction="row" alignItems="center" gap="2" className="min-w-0 grow">
+                          {linked?.image?.uri ? (
+                            <img src={linked.image.uri} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
+                          ) : (
+                            <span className="w-6 h-6 rounded-full bg-bg-active border border-border shrink-0" />
+                          )}
+                          {/* Always rendered, lit when held: a trophy that only appears once
+                              awarded gives no affordance for awarding it in the first place. */}
+                          <button
+                            type="button"
+                            disabled={editsDisabled}
+                            aria-pressed={held}
+                            aria-label={`${held ? 'Remove' : 'Award'} trophy for ${player.name}`}
+                            className={`shrink-0 ${held ? 'text-yellow-500' : 'text-text-secondary opacity-40'}`}
+                            onClick={() => toggleTrophy(player.name, !held)}
+                          >
+                            <TrophyIcon size={16} />
+                          </button>
+                          <Text semibold className="truncate">
+                            {player.name}
+                          </Text>
+                        </Flexbox>
                         <Flexbox direction="row" alignItems="center" gap="2" wrap="wrap">
                           <Text sm className="text-text-secondary shrink-0">
                             {`${summarize(deck)}${deck?.dirty ? ' • unsaved' : ''}`}
@@ -684,10 +649,21 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                             derived={playerRecord(withoutOverrides, player.name)}
                             override={override}
                             hasPairings={hasPairings}
-                            cellsShown={cellsShown}
-                            onReveal={() => setRevealed((previous) => [...previous, player.name])}
+                            editable={resultsMode === 'records'}
                             setOverride={(value) => setOverride(player.name, value)}
                           />
+                          {/* Rightmost, and fixed width, so inserting it leaves the record cells
+                              on the same x as every other row's. */}
+                          <button
+                            type="button"
+                            data-testid="expand-indicator"
+                            className="shrink-0 text-text-secondary"
+                            onClick={() => setExpanded(open ? -1 : index)}
+                            aria-expanded={open}
+                            aria-label={`${open ? 'Collapse' : 'Expand'} ${player.name}`}
+                          >
+                            {open ? <ChevronDownIcon size={16} /> : <ChevronRightIcon size={16} />}
+                          </button>
                         </Flexbox>
                       </Flexbox>
                     </CardHeader>
