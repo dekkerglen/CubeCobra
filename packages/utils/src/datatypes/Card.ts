@@ -267,7 +267,9 @@ export interface VoucherCard {
 export default interface Card {
   index?: number;
   board?: BoardType;
-  // Number of copies of this card (by name) in the same board as this card.
+  // Number of copies of this card in the same board as this card, counted by oracle identity —
+  // by name only for cards without an oracle ID (custom cards, vouchers). Cards staged for
+  // removal are not counted.
   // Stamped in the client cube list before filtering; not persisted.
   quantity?: number;
   markedForDelete?: boolean;
