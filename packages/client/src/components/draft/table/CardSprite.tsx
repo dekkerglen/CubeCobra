@@ -49,6 +49,9 @@ export interface ExitPlan {
   gatherX: number;
   gatherY: number;
   trashed: Set<SpriteId>;
+  // A card sent to a board that isn't showing shrinks into that board's tab,
+  // centered here (stage coordinates); read once, when the card leaves.
+  toward: Map<SpriteId, { x: number; y: number }>;
   // A passed pack just goes, without gathering and sliding off (the player turned animations off).
   passInstantly: boolean;
 }
@@ -179,8 +182,12 @@ const CardSprite: React.FC<CardSpriteProps> = ({
   const drawnHeight = useMotionValue(height);
   const clipPath = useMotionValue('none');
   const [isPresent, safeToRemove] = usePresence();
-  // A trashed card dropping away stays over every resting card on its way out.
-  const leavingAlone = !isPresent && exitPlan?.current.trashed.has(id);
+  // A trashed card dropping away, or a card shrinking into a board's tab, stays
+  // over every resting card on its way out (held, since its tab is read only once).
+  const [leavingAlone, setLeavingAlone] = useState(false);
+  if (!isPresent && !leavingAlone && (exitPlan?.current.trashed.has(id) || exitPlan?.current.toward.has(id))) {
+    setLeavingAlone(true);
+  }
 
   // Still travelling after a drop or a move between zones; it isn't clipped to
   // its zone's view until it lands.
@@ -396,12 +403,26 @@ const CardSprite: React.FC<CardSpriteProps> = ({
   ]);
 
   // Leaving the table: a passed pack gathers into a pile in the middle, then
-  // slides off toward the next drafter; a trashed card drops away; anything else fades.
+  // slides off toward the next drafter; a trashed card drops away; a card sent to
+  // a board that isn't showing shrinks into its tab; anything else fades.
   useEffect(() => {
     if (isPresent) return;
     const plan = exitPlan?.current;
+    const into = plan?.toward.get(id);
     let controls: AnimationPlaybackControls[];
-    if (plan?.trashed.has(id)) {
+    if (into) {
+      plan?.toward.delete(id);
+      // Scaled about its bottom edge, so aim the shrunken card's middle at the tab.
+      const shrink = 0.2;
+      const timing = { duration: 0.4, ease: 'easeIn' as const };
+      controls = [
+        animate(x, into.x - width / 2 + offsetX.get(), timing),
+        animate(y, into.y - height + (height * shrink) / 2 + offset.get(), timing),
+        animate(rotate, 0, timing),
+        animate(scale, shrink, timing),
+        animate(opacity, 0, { duration: 0.12, delay: 0.28 }),
+      ];
+    } else if (plan?.trashed.has(id)) {
       controls = [
         animate(y, y.get() + height * 0.8, { duration: 0.4, ease: 'easeIn' }),
         animate(rotate, rotate.get() + 16, { duration: 0.4, ease: 'easeIn' }),

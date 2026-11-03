@@ -1,6 +1,8 @@
 import React, { useContext, useMemo, useState } from 'react';
 
 import { DefaultPrintingPreference, PrintingPreference } from '@utils/datatypes/Card';
+import { DAILY_GAME_KEYS, DailyGameKey } from '@utils/datatypes/DailyGameStats';
+import { DAILY_GAME_NAMES } from '@utils/datatypes/DailyGameTeaser';
 import {
   DefaultGridTightnessPreference,
   DefaultYourCubesSortOrder,
@@ -30,6 +32,7 @@ const UserThemeForm: React.FC = () => {
   const [disableFollowAlerts, setDisableFollowAlerts] = useState(user?.disableFollowAlerts || false);
   const [disableCubeTray, setDisableCubeTray] = useState(user?.disableCubeTray || false);
   const [hideUniversesBeyond, setHideUniversesBeyond] = useState(user?.hideUniversesBeyond || false);
+  const [hiddenDailyGames, setHiddenDailyGames] = useState<DailyGameKey[]>(user?.hiddenDailyGames || []);
   const formRef = React.useRef<HTMLFormElement>(null);
   const formData = useMemo(
     () => ({
@@ -44,6 +47,7 @@ const UserThemeForm: React.FC = () => {
       disableFollowAlerts: `${disableFollowAlerts}`,
       disableCubeTray: `${disableCubeTray}`,
       hideUniversesBeyond: `${hideUniversesBeyond}`,
+      hiddenDailyGames: hiddenDailyGames.join(','),
     }),
     [
       selectedTheme,
@@ -57,8 +61,12 @@ const UserThemeForm: React.FC = () => {
       disableFollowAlerts,
       disableCubeTray,
       hideUniversesBeyond,
+      hiddenDailyGames,
     ],
   );
+
+  const setDailyGameShown = (game: DailyGameKey, shown: boolean) =>
+    setHiddenDailyGames((hidden) => (shown ? hidden.filter((g) => g !== game) : [...hidden, game]));
 
   return (
     <CSRFForm method="POST" action="/user/changedisplay" ref={formRef} formData={formData}>
@@ -121,6 +129,17 @@ const UserThemeForm: React.FC = () => {
           checked={disableCubeTray}
           setChecked={setDisableCubeTray}
         />
+        <fieldset className="flex flex-col gap-2">
+          <legend className="block text-sm font-medium text-text mb-2">Dailies on dashboard</legend>
+          {DAILY_GAME_KEYS.map((game) => (
+            <Checkbox
+              key={game}
+              label={DAILY_GAME_NAMES[game]}
+              checked={!hiddenDailyGames.includes(game)}
+              setChecked={(shown) => setDailyGameShown(game, shown)}
+            />
+          ))}
+        </fieldset>
         <Select
           label="Your cubes sort order"
           value={formData.yourCubesSortOrder}

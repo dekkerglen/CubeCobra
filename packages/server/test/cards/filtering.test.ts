@@ -313,6 +313,13 @@ describe('Oracle tag and art tag filter syntax', () => {
     assertFilteredScryfall('otag=wipe', []);
   });
 
+  it('Quoted tag values are exact matches (card page tag links)', async () => {
+    assertFilteredScryfall('otag="removal"', ['OT01']);
+    assertFilteredScryfall('otag="spot-removal"', ['OT02']);
+    assertFilteredScryfall('atag="dragon"', ['AT01']);
+    assertFilteredScryfall('atag="landscap"', []);
+  });
+
   it('Oracle tag matching ignores hyphens on both sides', async () => {
     assertFilteredScryfall('otag:board-wipe', ['OT01']);
     assertFilteredScryfall('otag:boardwipe', ['OT01']);

@@ -7,7 +7,8 @@ export interface NotificationGroup {
   subject: string;
   // The merged, human-readable text shown for the whole group (e.g. "There are 3 new drafts of My Cube").
   body: string;
-  // Where clicking the group navigates to (the newest member's url).
+  // Where clicking the group navigates to: a list of everything in the group where one exists (a
+  // cube's drafts), otherwise the newest member's url.
   url?: string;
   // Number of notifications collapsed into this row.
   count: number;
@@ -39,6 +40,16 @@ const mergedBody = (type: NotificationType, count: number, subjectName?: string)
       return `${count} people followed you`;
     default:
       return `${count} new notifications`;
+  }
+};
+
+const groupUrl = (type: NotificationType, subject: string, newestUrl?: string): string | undefined => {
+  switch (type) {
+    case NotificationType.DRAFT:
+      // Draft notifications are keyed on the cube id.
+      return `/cube/playtest/${encodeURIComponent(subject)}?view=decks`;
+    default:
+      return newestUrl;
   }
 };
 
@@ -95,7 +106,7 @@ export const groupNotifications = (notifications: Notification[]): NotificationD
       type: n.type!,
       subject: n.subject!,
       body: mergedBody(n.type!, bucket.length, n.subjectName),
-      url: n.url,
+      url: groupUrl(n.type!, n.subject!, n.url),
       count: bucket.length,
       ids: bucket.map((item) => item.id),
       unreadCount: bucket.filter((item) => item.status === NotificationStatus.UNREAD).length,

@@ -65,6 +65,12 @@ const GRID_MAX_COLUMNS = 6;
 const MIN_GRID_CARD_WIDTH = 40;
 const FOCUS_WIDTH = 0.72; // a tapped card grows to this fraction of the stage width, or as tall as fits
 const FOCUS_LABEL_ROOM = 28; // px kept clear under a grown card for its label
+// How far a pinch sizes the pack's cards from their best fit, and the pool's from their usual size.
+export const PACK_SCROLLBAR_WIDTH = 14; // px kept on the right for the pack's scrollbar, when it scrolls
+export const MIN_PACK_ZOOM = 0.6;
+export const MAX_PACK_ZOOM = 2.5;
+export const MIN_POOL_ZOOM = 0.5;
+export const MAX_POOL_ZOOM = 2.5;
 // Phones, with the pool on the table below the pack.
 const SPLIT_PACK_SHARE = 2 / 3; // of the stage height, for the pack
 export const SPLIT_TABS_HEIGHT = 34; // px for the pool's tabs
@@ -127,6 +133,8 @@ export interface TableGeometry {
   // Top of the center fan card at rest, and the bottom of the pack region.
   fanTop: number;
   packBottom: number;
+  // How tall the pack's cards run: past `height` on a phone zoomed in, where the pack scrolls.
+  contentHeight: number;
   // The pool: labels start at poolTop, stacks at stackTop.
   poolTop: number;
   stackTop: number;
@@ -192,6 +200,7 @@ const computeFanGeometry = (width: number, height: number): TableGeometry => {
     focus: 1,
     fanTop,
     packBottom,
+    contentHeight: height,
     poolTop,
     stackTop,
     bar: cardH * BAR,
@@ -250,6 +259,7 @@ const computeDeskRowsGeometry = (width: number, height: number, capacity: number
     focus: 1,
     fanTop: top,
     packBottom,
+    contentHeight: height,
     poolTop,
     stackTop: poolTop + LABEL_HEIGHT,
     bar: cardH * BAR,
@@ -296,6 +306,7 @@ const computeDeskGridGeometry = (width: number, height: number, capacity: number
     focus: 1,
     fanTop: top,
     packBottom,
+    contentHeight: height,
     poolTop,
     stackTop: poolTop + LABEL_HEIGHT,
     bar: cardH * BAR,
@@ -329,11 +340,11 @@ export const computeGeometry = (
  * and a short row sits in the middle. A tapped card grows to FOCUS_WIDTH of
  * the stage so it can be read.
  */
-export const computeGridGeometry = (width: number, height: number, count: number): TableGeometry => {
+export const computeGridGeometry = (width: number, height: number, count: number, zoom = 1): TableGeometry => {
   const cards = Math.max(1, count);
   const roomW = width - 2 * GRID_PAD;
   const roomH = height - 2 * GRID_PAD;
-  let columns = 1;
+  let bestColumns = 1;
   let best = 0;
   for (let c = 1; c <= Math.min(cards, GRID_MAX_COLUMNS); c += 1) {
     const rowCount = Math.ceil(cards / c);
@@ -343,14 +354,26 @@ export const computeGridGeometry = (width: number, height: number, count: number
     );
     if (fit > best) {
       best = fit;
-      columns = c;
+      bestColumns = c;
     }
   }
-  const cardW = Math.max(MIN_GRID_CARD_WIDTH, Math.floor(best));
+  // A pinch sizes the cards from their best fit: zoomed in, fewer fit across and
+  // the rows run past the bottom (the pack scrolls); zoomed out, more fit across.
+  const cardW = Math.max(MIN_GRID_CARD_WIDTH, Math.floor(Math.min(roomW, best * zoom)));
   const cardH = Math.round(cardW * CARD_ASPECT);
+  const layOut = (across: number) => {
+    const fit = Math.max(1, Math.floor((across + GRID_GAP) / (cardW + GRID_GAP)));
+    const columns = Math.min(cards, zoom > 1 ? Math.min(bestColumns, fit) : Math.max(bestColumns, fit));
+    const rowCount = Math.ceil(cards / columns);
+    return { across, columns, blockHeight: rowCount * cardH + (rowCount - 1) * GRID_GAP };
+  };
+  // Rows running past the bottom leave room on the right for the scrollbar.
+  const full = layOut(roomW);
+  const overflows = full.blockHeight > roomH;
+  const { across: rowWidth, columns, blockHeight } = overflows ? layOut(roomW - PACK_SCROLLBAR_WIDTH) : full;
   const maxGap = cardW * GRID_MAX_GAP;
   // Every row keeps a full row's spacing, so a short one lines up under the rest.
-  const spacing = columns > 1 ? Math.min(cardW + maxGap, (roomW - cardW) / (columns - 1)) : 0;
+  const spacing = columns > 1 ? Math.min(cardW + maxGap, (rowWidth - cardW) / (columns - 1)) : 0;
   const focusW = Math.min(width * FOCUS_WIDTH, (roomH - FOCUS_LABEL_ROOM) / CARD_ASPECT);
 
   return {
@@ -358,12 +381,13 @@ export const computeGridGeometry = (width: number, height: number, count: number
     height,
     rows: {
       max: columns,
-      centerX: width / 2,
-      width: roomW,
+      centerX: GRID_PAD + rowWidth / 2,
+      width: rowWidth,
       top: GRID_PAD,
-      height: roomH,
+      // Rows that run past the bottom sit a gap apart; otherwise they spread out to fill.
+      height: overflows ? blockHeight : roomH,
       rowHeight: cardH,
-      pitch: cardH + maxGap,
+      pitch: cardH + (overflows ? GRID_GAP : maxGap),
       spacing,
       arc: 0,
       tilt: 0,
@@ -378,6 +402,7 @@ export const computeGridGeometry = (width: number, height: number, count: number
     focus: Math.max(1, focusW / cardW),
     fanTop: GRID_PAD,
     packBottom: height,
+    contentHeight: overflows ? blockHeight + 2 * GRID_PAD : height,
     // No pool on the stage.
     poolTop: height,
     stackTop: height,
@@ -409,13 +434,23 @@ export interface SplitPool {
  * Cards get smaller when the tallest stack (of `tallest` cards) would run off the
  * bottom, so every name stays in view.
  */
-export const computeSplitPool = (width: number, height: number, columns: number, tallest: number): SplitPool => {
+export const computeSplitPool = (
+  width: number,
+  height: number,
+  columns: number,
+  tallest: number,
+  zoom = 1,
+): SplitPool => {
   const top = splitPackHeight(height);
   const labelTop = top + SPLIT_TABS_HEIGHT;
   const stackTop = labelTop + SPLIT_LABEL_HEIGHT;
   const room = height - SPLIT_SCROLLBAR_HEIGHT - stackTop;
   const fromHeight = room / (1 + (Math.max(1, tallest) - 1) * BAR) / CARD_ASPECT;
-  const cardW = Math.max(MIN_SPLIT_CARD_WIDTH, Math.floor(Math.min(width * SPLIT_CARD_WIDTH, fromHeight)));
+  // A pinch sizes the cards, short of a stack running off the bottom.
+  const cardW = Math.max(
+    MIN_SPLIT_CARD_WIDTH,
+    Math.floor(Math.min(width * SPLIT_CARD_WIDTH * zoom, width * 0.9, fromHeight)),
+  );
   const cardH = Math.round(cardW * CARD_ASPECT);
   const columnX = Array.from({ length: columns }, (_, c) => SPLIT_PAD + c * (cardW + SPLIT_GAP));
   const contentWidth = 2 * SPLIT_PAD + columns * cardW + Math.max(0, columns - 1) * SPLIT_GAP;
@@ -486,13 +521,19 @@ export const packSlots = (g: TableGeometry, count: number): Pose[] => {
   return slots;
 };
 
-/** A tapped card on a phone, grown to be read: centered on its spot, kept on the stage with room for its label below. */
-export const focusPose = (g: TableGeometry, base: Pose): Pose => {
+/**
+ * A tapped card on a phone, grown to be read: centered on its spot, kept in the
+ * part of the pack in view (scrolled down `scrollTop`) with room for its label below.
+ */
+export const focusPose = (g: TableGeometry, base: Pose, scrollTop = 0): Pose => {
   const scale = g.focus;
   const w = g.cardW * scale;
   const h = g.cardH * scale;
   const left = Math.max(GRID_PAD, Math.min(g.width - GRID_PAD - w, base.x + (g.cardW - w) / 2));
-  const top = Math.max(GRID_PAD, Math.min(g.height - GRID_PAD - FOCUS_LABEL_ROOM - h, base.y + (g.cardH - h) / 2));
+  const top = Math.max(
+    scrollTop + GRID_PAD,
+    Math.min(scrollTop + g.height - GRID_PAD - FOCUS_LABEL_ROOM - h, base.y + (g.cardH - h) / 2),
+  );
   // Cards grow about their bottom middle, so put the card where that lands the grown one there.
   return { x: left + (w - g.cardW) / 2, y: top + h - g.cardH, rotate: 0, scale };
 };

@@ -166,6 +166,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
       disableFollowAlerts: item.disableFollowAlerts,
       disableCubeTray: item.disableCubeTray,
       hideUniversesBeyond: item.hideUniversesBeyond,
+      hiddenDailyGames: item.hiddenDailyGames,
     };
 
     // Preserve sensitive data if it exists
@@ -259,6 +260,12 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
 
     if (typeof hydrated.hideUniversesBeyond === 'undefined') {
       hydrated.hideUniversesBeyond = false;
+    }
+
+    // Before this setting existed, "hide featured cubes" is what kept Daily P1P1 off the
+    // dashboard. Users who have never saved it keep that behavior.
+    if (!hydrated.hiddenDailyGames) {
+      hydrated.hiddenDailyGames = hydrated.hideFeatured ? ['dailyp1p1'] : [];
     }
 
     return hydrated;

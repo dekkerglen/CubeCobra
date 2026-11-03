@@ -1,5 +1,6 @@
 import { cdnUrl } from '@utils/cdnUrl';
 import CubeType from '@utils/datatypes/Cube';
+import { DailyGameKey } from '@utils/datatypes/DailyGameStats';
 import Image from '@utils/datatypes/Image';
 import { NotificationStatus } from '@utils/datatypes/Notification';
 import User, { UserRoles, YourCubesSortOrder } from '@utils/datatypes/User';
@@ -227,6 +228,7 @@ interface ReactProps {
     useTextOverIcons?: boolean;
     disableCubeTray?: boolean;
     hideUniversesBeyond?: boolean;
+    hiddenDailyGames?: DailyGameKey[];
   };
   nitroPayEnabled?: boolean;
   baseUrl?: string;
@@ -289,6 +291,7 @@ const render = (
         useTextOverIcons: req.user.useTextOverIcons,
         disableCubeTray: req.user.disableCubeTray,
         hideUniversesBeyond: req.user.hideUniversesBeyond,
+        hiddenDailyGames: req.user.hiddenDailyGames,
       };
     }
 

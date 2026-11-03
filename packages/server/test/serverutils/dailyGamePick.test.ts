@@ -399,10 +399,12 @@ describe('pickDailyGame', () => {
     });
   });
 
-  describe('opting out of featured cube content', () => {
-    it('never shows Daily P1P1 and never reads it', async () => {
+  describe('limited to the games the viewer left on', () => {
+    const WITHOUT_P1P1: DailyGameKey[] = ['manamatrix', 'synergyconnect', 'crossword'];
+
+    it('never shows a game that is off and never reads it', async () => {
       for (let attempt = 0; attempt < 12; attempt++) {
-        const result = await pickDailyGame({ userId: `user-${attempt}`, today: DATE, includeDailyP1P1: false });
+        const result = await pickDailyGame({ userId: `user-${attempt}`, today: DATE, games: WITHOUT_P1P1 });
         expect(result.teaser?.game).not.toEqual('dailyp1p1');
       }
 
@@ -410,15 +412,39 @@ describe('pickDailyGame', () => {
       expect(p1p1PackDao.getMetadataById).not.toHaveBeenCalled();
     });
 
-    it('is all-played once the other three are done', async () => {
+    it('shows the one game left on, whatever the rotation would have picked', async () => {
+      for (let attempt = 0; attempt < 12; attempt++) {
+        const result = await pickDailyGame({ userId: `user-${attempt}`, today: DATE, games: ['crossword'] });
+        expect(result.teaser?.game).toEqual('crossword');
+      }
+
+      expect(manaMatrixPuzzleDao.getActive).not.toHaveBeenCalled();
+      expect(synergyConnectPuzzleDao.getActive).not.toHaveBeenCalled();
+      expect(manaMatrixSubmissionDao.getByUserAndDate).not.toHaveBeenCalled();
+      expect(synergyConnectSubmissionDao.getByUserAndDate).not.toHaveBeenCalled();
+    });
+
+    it('is all-played once the games left on are done', async () => {
       markTouched('manamatrix');
       markTouched('synergyconnect');
       markTouched('crossword');
 
-      expect(await pickDailyGame({ userId: USER, today: DATE, includeDailyP1P1: false })).toEqual({
+      expect(await pickDailyGame({ userId: USER, today: DATE, games: WITHOUT_P1P1 })).toEqual({
         teaser: null,
         allPlayed: true,
       });
+    });
+
+    it('leaves the slot empty without reading anything when every game is off', async () => {
+      expect(await pickDailyGame({ userId: USER, today: DATE, games: [] })).toEqual({
+        teaser: null,
+        allPlayed: false,
+      });
+
+      expect(dailyP1P1Dao.getCurrentDailyP1P1).not.toHaveBeenCalled();
+      expect(manaMatrixPuzzleDao.getActive).not.toHaveBeenCalled();
+      expect(synergyConnectPuzzleDao.getActive).not.toHaveBeenCalled();
+      expect(crosswordPuzzleDao.getActive).not.toHaveBeenCalled();
     });
   });
 

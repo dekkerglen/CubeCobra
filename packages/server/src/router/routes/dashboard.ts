@@ -1,4 +1,5 @@
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
+import { DAILY_GAME_KEYS } from '@utils/datatypes/DailyGameStats';
 import { sanitizeChangelog } from 'dynamo/dao/ChangelogDynamoDao';
 import { collaboratorIndexDao, cubeDao, draftDao, feedDao } from 'dynamo/daos';
 import { pickDailyGame } from 'serverutils/dailyGamePick';
@@ -44,19 +45,18 @@ const dashboardHandler = async (req: Request, res: Response) => {
     }
 
     const { sort, ascending } = getCubesSortValues(req.user);
+    const hiddenDailyGames = req.user.hiddenDailyGames ?? [];
 
     // The dashboard is a hot page, so everything that does not depend on something
     // else goes out together. The only serial step left is the collaborating-cube
     // batchGet, which needs the ids this wave resolves.
     const [featured, dailyGame, collaboratingCubeIds, userCubes, { pinnedCubes, pinnedIds }] = await Promise.all([
       getFeaturedCubes(8),
-      // One of the four dailies, chosen from the ones this user hasn't started today.
+      // One of the dailies this user has left on, chosen from the ones they haven't started today.
       pickDailyGame({
         logger: req.logger,
         userId: req.user.id,
-        // "Hide featured cubes" used to suppress the Daily P1P1 card, which leads with
-        // a cube and its owner; it now takes P1P1 out of the rotation instead.
-        includeDailyP1P1: !req.user.hideFeatured,
+        games: DAILY_GAME_KEYS.filter((game) => !hiddenDailyGames.includes(game)),
       }),
       collaboratorIndexDao.getCubeIdsForUser(req.user.id),
       cubeDao.queryByOwner(req.user.id, sort, ascending, undefined, 36),

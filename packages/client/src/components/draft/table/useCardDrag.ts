@@ -88,9 +88,12 @@ export interface CardDragOptions<T> {
   // A touch on a card picks it up as soon as it moves, as a mouse does, rather
   // than after being held in place (when a swipe scrolls the table instead).
   touchPicksUp?: boolean;
+  // The held card leans into the direction it moves; off when the player turned animations off.
+  lean?: boolean;
 }
 
-const TILT_SPRING = { type: 'spring', stiffness: 380, damping: 24 } as const;
+// Just short of critically damped, so a held card leans and settles without bouncing.
+const TILT_SPRING = { type: 'spring', stiffness: 380, damping: 38 } as const;
 const DRAG_THRESHOLD = 6;
 // On touch, holding a card this long picks it up; moving sooner scrolls instead.
 const HOLD_DELAY = 220;
@@ -417,9 +420,11 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
       follow(s, handle);
 
       // Lean into the direction of travel, then settle upright when the pointer rests.
-      animate(handle.rotate, clamp(dx * 1.4, -16, 16), TILT_SPRING);
-      if (tiltTimer.current) clearTimeout(tiltTimer.current);
-      tiltTimer.current = setTimeout(() => animate(handle.rotate, 0, TILT_SPRING), 70);
+      if (latest.current.lean !== false) {
+        animate(handle.rotate, clamp(dx * 0.7, -8, 8), TILT_SPRING);
+        if (tiltTimer.current) clearTimeout(tiltTimer.current);
+        tiltTimer.current = setTimeout(() => animate(handle.rotate, 0, TILT_SPRING), 70);
+      }
 
       retarget(s, handle);
     }

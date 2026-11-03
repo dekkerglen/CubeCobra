@@ -164,7 +164,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
     >
       <Flexbox direction="col" gap="1" className="max-h-96 overflow-auto p-2">
         {(user.cubes || []).slice(0, 20).map((item) => (
-          <NavLink key={`dropdown_cube_${item.name}`} href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}>
+          <NavLink key={`dropdown_cube_${item.id}`} href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}>
             {item.name}
           </NavLink>
         ))}
@@ -242,7 +242,7 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
             <Flexbox direction="col" gap="2">
               <div className="text-xs uppercase font-bold text-text-secondary tracking-wide">Your Cubes</div>
               {(user.cubes || []).slice(0, 20).map((item) => (
-                <NavLink key={`combined_cube_${item.name}`} href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}>
+                <NavLink key={`combined_cube_${item.id}`} href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}>
                   {item.name}
                 </NavLink>
               ))}
@@ -410,4 +410,5 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
   );
 };
 
-export default Navbar;
+// Memoized: the page under it (a draft, say) re-renders often, and the navbar has nothing to redraw then.
+export default React.memo(Navbar);

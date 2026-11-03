@@ -1,4 +1,5 @@
 import { PrintingPreference } from '@utils/datatypes/Card';
+import { DAILY_GAME_KEYS } from '@utils/datatypes/DailyGameStats';
 import { GridTightnessPreference, YourCubesSortOrder } from '@utils/datatypes/User';
 import { userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
@@ -52,6 +53,12 @@ export const handler = async (req: Request, res: Response) => {
     user.disableFollowAlerts = req.body.disableFollowAlerts === 'true';
     user.disableCubeTray = req.body.disableCubeTray === 'true';
     user.hideUniversesBeyond = req.body.hideUniversesBeyond === 'true';
+    // Only touched when the form sent it, so a submit from a page that predates the field
+    // can't reset someone's choice.
+    if (typeof req.body.hiddenDailyGames === 'string') {
+      const hidden = req.body.hiddenDailyGames.split(',');
+      user.hiddenDailyGames = DAILY_GAME_KEYS.filter((game) => hidden.includes(game));
+    }
 
     await userDao.update(user as any);
 

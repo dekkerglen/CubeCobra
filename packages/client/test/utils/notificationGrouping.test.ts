@@ -47,6 +47,14 @@ describe('groupNotifications', () => {
     expect(groupsOf(entries)[0].unreadCount).toBe(0);
   });
 
+  it('links a group of drafts to the cube drafts list instead of the newest draft', () => {
+    const draft = (id: string) =>
+      n({ id, type: NotificationType.DRAFT, subject: 'cube1', subjectName: 'My Cube', url: `/cube/deck/${id}` });
+    const entries = groupNotifications([draft('d1'), draft('d2')]);
+
+    expect(groupsOf(entries)[0].url).toBe('/cube/playtest/cube1?view=decks');
+  });
+
   it('leaves singletons and untyped notifications ungrouped', () => {
     const entries = groupNotifications([follow('n1', NotificationStatus.UNREAD), n({ id: 'n2' })]);
 

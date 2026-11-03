@@ -1,5 +1,6 @@
 import { PrintingPreference } from './Card';
 import Cube from './Cube';
+import { DailyGameKey } from './DailyGameStats';
 import Image from './Image';
 import Notification from './Notification';
 
@@ -76,6 +77,8 @@ export interface UnhydratedUser {
   disableCubeTray?: boolean;
   // Leave cards that only exist as Universes Beyond printings out of card search and recommendations.
   hideUniversesBeyond?: boolean;
+  /** Dailies kept out of the dashboard's daily-game slot. Stored as the hidden set so a new daily shows up by default. */
+  hiddenDailyGames?: DailyGameKey[];
 }
 
 export interface UserWithSensitiveInformation extends UnhydratedUser {

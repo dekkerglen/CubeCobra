@@ -59,15 +59,17 @@ describe('dashboard handler', () => {
       .as(createUser({ id: 'user-1' }))
       .send();
 
-    expect(pickDailyGame).toHaveBeenCalledWith(expect.objectContaining({ userId: 'user-1', includeDailyP1P1: true }));
+    expect(pickDailyGame).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'user-1', games: ['manamatrix', 'synergyconnect', 'crossword', 'dailyp1p1'] }),
+    );
   });
 
-  it('keeps Daily P1P1 out of the rotation for users who hid featured cubes', async () => {
+  it('keeps the dailies a user turned off out of the rotation', async () => {
     await call(dashboardHandler as any)
-      .as(createUser({ id: 'user-1', hideFeatured: true }))
+      .as(createUser({ id: 'user-1', hiddenDailyGames: ['crossword', 'dailyp1p1'] }))
       .send();
 
-    expect(pickDailyGame).toHaveBeenCalledWith(expect.objectContaining({ includeDailyP1P1: false }));
+    expect(pickDailyGame).toHaveBeenCalledWith(expect.objectContaining({ games: ['manamatrix', 'synergyconnect'] }));
   });
 
   it('issues the independent reads together rather than one after another', async () => {

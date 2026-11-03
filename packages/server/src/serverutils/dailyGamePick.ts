@@ -3,7 +3,8 @@
  *
  * The dashboard used to show Daily P1P1 unconditionally. It now shows one of the four
  * dailies — Daily P1P1, Mana Matrix, Synergy Connect, the Crossword — chosen from the
- * ones that viewer has not started yet today.
+ * ones that viewer has not turned off in their display settings and has not started yet
+ * today.
  *
  * Two things this module is careful about, because the dashboard is a hot page:
  *
@@ -103,12 +104,11 @@ export interface PickDailyGameOptions {
   /** Overridable for tests. Defaults to the UTC day. */
   today?: string;
   /**
-   * Whether Daily P1P1 may be picked. The dashboard passes false for viewers who set
-   * "hide featured cubes", which is what used to suppress the P1P1 card: that card
-   * leads with a cube and its owner, so the preference still applies. Those viewers get
-   * a three-game rotation.
+   * The games that may be picked — the viewer's dashboard setting. Defaults to all of
+   * them. A game left out is never read, so it costs nothing and cannot count toward
+   * the all-played state.
    */
-  includeDailyP1P1?: boolean;
+  games?: DailyGameKey[];
 }
 
 /**
@@ -121,15 +121,19 @@ export const pickDailyGame = async ({
   logger,
   userId,
   today = utcToday(),
-  includeDailyP1P1 = true,
+  games = DAILY_GAME_KEYS,
 }: PickDailyGameOptions = {}): Promise<DailyGameTeaserResult> => {
   try {
+    const offered = new Set(games);
+
     // Wave 1: which puzzle is live for each game. Four independent reads, one round trip.
+    // A game the viewer turned off reads as having no puzzle, which keeps it out of
+    // everything below.
     const [dailyP1P1Record, manaMatrixPuzzle, synergyConnectPuzzle, crosswordPuzzle] = await Promise.all([
-      includeDailyP1P1 ? dailyP1P1Dao.getCurrentDailyP1P1() : undefined,
-      manaMatrixPuzzleDao.getActive(),
-      synergyConnectPuzzleDao.getActive(),
-      crosswordPuzzleDao.getActive(),
+      offered.has('dailyp1p1') ? dailyP1P1Dao.getCurrentDailyP1P1() : undefined,
+      offered.has('manamatrix') ? manaMatrixPuzzleDao.getActive() : undefined,
+      offered.has('synergyconnect') ? synergyConnectPuzzleDao.getActive() : undefined,
+      offered.has('crossword') ? crosswordPuzzleDao.getActive() : undefined,
     ]);
 
     // Wave 2: what this viewer has already done with them. Issued together, not in

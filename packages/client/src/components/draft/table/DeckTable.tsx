@@ -7,6 +7,7 @@ import { AnimatePresence, motion, useMotionValue, useTransform } from 'framer-mo
 import AutocardContext from '../../../contexts/AutocardContext';
 import DisplayContext from '../../../contexts/DisplayContext';
 import TagColorContext from '../../../contexts/TagColorContext';
+import UserContext from '../../../contexts/UserContext';
 import DraftLocation from '../../../drafting/DraftLocation';
 import useLocalStorage from '../../../hooks/useLocalStorage';
 import Text from '../../base/Text';
@@ -29,7 +30,7 @@ import {
   stackPose,
 } from './deckLayout';
 import { PhoneMenuButton, PhoneMenuPanel } from './PhoneMenu';
-import HorizontalScrollbar from './HorizontalScrollbar';
+import Scrollbar from './Scrollbar';
 import { Pose } from './tableLayout';
 import { DragSession, HorizontalScroll, useCardDrag, useClampScroll, useWheelScroll } from './useCardDrag';
 
@@ -130,6 +131,8 @@ const DeckTable: React.FC<DeckTableProps> = ({
   const { showCard, hideCard } = useContext(AutocardContext);
   const { showCustomImages } = useContext(DisplayContext);
   const tagColors = useContext(TagColorContext);
+  // The player turned animations off: a held card doesn't lean as it moves.
+  const animationsOff = useContext(UserContext)?.disableAnimations ?? false;
 
   const tableRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -176,6 +179,7 @@ const DeckTable: React.FC<DeckTableProps> = ({
     verticalScroller: () => window,
     // Phones: a touch picks a card up straight away; the sticky scrollbar does the sideways panning.
     touchPicksUp: compact,
+    lean: !animationsOff,
   });
   const { drag } = dragger;
 
@@ -793,11 +797,11 @@ const DeckTable: React.FC<DeckTableProps> = ({
       </div>
       {geometry?.compact && maxScrollX > 0 && (
         // Stuck to the bottom of the screen while the table is in view.
-        <HorizontalScrollbar
+        <Scrollbar
           scroll={scrollX}
           max={maxScrollX}
-          viewWidth={geometry.width}
-          contentWidth={geometry.contentWidth}
+          view={geometry.width}
+          content={geometry.contentWidth}
           className="sticky z-10 px-3 py-3 bg-bg-accent/90 border-t border-border"
           style={{ bottom: 'var(--bottom-nav-height, 0px)' }}
         />

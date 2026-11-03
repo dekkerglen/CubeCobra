@@ -1,181 +1,22 @@
-The changes here are concise, one liners to be put in a future user facing blogpost. Focus on the effect of the new feature, no technical details.
+The changes here are concise, one liners to be put in a future user facing blogpost. Focus on the effect of the new feature, no technical details. Do not create line items for revisions to features introduced in the current changeset - a session of rapid revisions would pollute the changelog for what is effectively an entirely new feature.
 
-- The Winrate Analytics page loads again — it had been showing a "Something went wrong" error.
-- Playtest analysis now works on cubes with lots of drafts — it no longer stops partway through downloading draft data, shows how many decks it has loaded so far, and tells you if something goes wrong instead of silently closing.
-- The `~` card-name placeholder in oracle text searches now matches the way Scryfall does: it also finds cards that refer to themselves as "this creature", "this artifact", "this enchantment" and so on, and it works for the back face of double-faced cards.
-- Switching between views on the cube list now works for views with a slash or other special characters in their name, instead of needing to leave the page first.
-- Cubes with emoji tags now show a row of quick-filter buttons under the filter bar on the cube list — click one to show just the cards with that tag, and click it again to clear. You can hide the row from the Display options.
-- Players in a draft record can now be renamed — fix a misspelling or swap a real name for an @username — without losing their deck or results, and players can correct their own name from the deck collection link.
-- Tag searches now ignore hyphens, so `otag:boardwipe` finds board wipes just like `otag:board-wipe`.
-- You can now use `has:` as an alias for `is:` in card searches (e.g. `has:commander`).
-- Tag searches (cube tags, oracle tags, and art tags) now support exact matching with the `=` operator, so `otag=removal` finds only the exact tag while `otag:removal` still matches any tag containing it.
-- Oracle and art tag searches now respect Scryfall's tag hierarchy, so searching a broad tag also finds cards that only carry a more specific one — e.g. `otag:leaves-body-behind` now finds Wurmcoil Engine (tagged `splits-on-death`).
-- The cube tray is now available on card pages, so you can drag related, synergistic, and other-printing cards straight into your cube boards.
-- Older cubes can be edited again — saving no longer fails with a "cube was updated since editing began" error.
-- The wiki has been built out with new guides for the cube page and each of its tabs, search syntax, packages, profiles, and account settings.
-- New sets and printings are importing again after a change on Scryfall's end stalled card updates.
-- You can now export a cube as Card Versions (.txt), which lists each card with its set and collector number.
-- Print and Play PDFs export correctly again — every card image had been failing to load.
-- The sample pack buttons no longer run off the edge of the screen on narrow phones.
-- Deleting a Pack 1 Pick 1 poll now removes it completely, instead of leaving behind an entry that couldn't be deleted.
-- The draft simulator no longer treats cards from brand-new sets as near-guaranteed first picks.
-- Closing the Set Tag Colors window without saving now discards the preview instead of leaving unsaved colors applied, and a save that fails keeps the window open and tells you.
-- Bot decks no longer get stuck on "building" when you save your own deck while they're still being built, and a build that genuinely fails now says so instead of spinning forever.
-- Resetting your password no longer asks you to re-enter your email address — the link from the email is all you need, and it now stops working once used or after six hours.
-- Signed-out pages like login and password reset can no longer show you another visitor's error message.
-- Three new daily puzzle games under Games → Dailies: Mana Matrix, a 3×3 grid where you name a card matching each row and column; Synergy Connect, where you sort sixteen cards into four groups that each go with the same legendary creature; and a Magic crossword built fresh every day, which gets larger and harder from Monday through Sunday.
-- Your dashboard now shows one daily game you haven't played yet, rotating through them instead of always showing the same one.
-- Mana Matrix keeps your history and streaks, shows how unusual each of your answers was, and lets you see how everyone else answered once you've submitted.
-- Card art on the daily games now uses each card's first printing, so you see the version you recognize rather than an alternate-art reprint.
-- The Print and Play export now uses the art you picked for each card, and can print straight from the browser instead of only downloading a PDF.
-- Cube lists can be filtered by how many copies of a card you have, including singleton-only.
-- Card searches support `words`, `wc`, or `wordcount` to find cards by roughly how much text they have.
-- A new Type (Primary) sort groups by a card's main type instead of its full type line.
-- Set (Release Date) sort no longer shows the same set twice.
-- The Combos analytics tab now shows how many combos it found in its header.
-- The cube sidebar now remembers whether you collapsed it on every cube page, instead of springing back open on pages like blog, followers, and records.
-- Fixed an error that could make every page fail to load with an unrelated-looking message, caused by a stored login session going bad.
-- Linking your Patreon account works again — it had been failing with an "undefined" error after Patreon retired an older version of their API.
-- Newly spoiled cards no longer stay stuck showing a foreign-language version or "Invalid Card" after the real card data arrives — they now refresh as soon as the site updates its card data.
-- Card images that were stuck showing a foreign-language spoiler (e.g. Craftwork Crusher in Japanese) now show the English card, and future image updates show up right away.
-- Winrate Analytics can now include cards that have since been cut from the cube, marked with an icon so you can tell them apart.
-- The All Cards table in Winrate Analytics has two new columns: In Cube, counting the events where a card was in the cube list on the event's date, and Play Rate, showing how often it made a deck in those events.
-- The All Cards table in Winrate Analytics now lists cards in your cube that haven't made a single recorded deck, so you can spot never-played cards at a glance.
-- Draft records can now be exported to a file — one record or a whole cube's worth — and imported into any cube you manage. Anyone who can view a cube can export its records, so you can bring records from a clone of your cube back into the original. The file format is documented so other tools can create records to import too.
-- Changing the email on your account now asks for your current password and only takes effect once you click the confirmation link sent to the new address; your old address gets a heads-up so you can catch a change you didn't make.
-- Changing your password or email now signs you out on every other device.
-- You'll be asked to log in again after 90 days, even if you've been using the site the whole time.
-- After several failed login attempts in a row, logging in is paused for a few minutes; password reset and verification emails are limited the same way.
-- Imports and decklist uploads now accept at most 100 copies of a card per line.
-- Images in comments, blog posts and descriptions that point back at Cube Cobra pages are no longer shown; images hosted elsewhere display as before.
-- When adding a card or package to a cube, the Board menu now lists the boards that cube actually has, including any custom boards, instead of the same default list for every cube.
-- Cards on a card page — the Often Drafted With, Often Cubed With and Synergistic Cards lists, plus the other printings — can now be dragged onto the cube tray to add them to your cube boards.
-- Comparing a cube with an earlier version of itself now labels the two sides by date and "Present", and the date links to the cube list as it was then.
-- The public API can now fetch a cube's card list as of any past change and list a cube's change history; see the API docs page.
-- The Visual Spoiler now follows Collapse Duplicates, showing each card once with a count badge; cube owners can click a stack to edit every copy at once.
-- Cube primers can now be split into up to 10 tabs, each with its own title and its own link.
-- Default sorts saved on a view with more than one word in its name now stick, and links to views with characters like & or # in their name open the right view.
-- Saving tag colors no longer wipes the color of a tag that's only used on a custom board, and those tags now show up in the tag list.
-- Pack 1 Pick 1 polls made from a sample pack now show the right card, with its tags and custom art, when it comes from a custom board.
-- Custom images on your cube's Basics board now carry over to the basics added to new drafted, sealed and uploaded decks, and show in the Add Basics window.
-- Labeled text fields no longer spill over whatever sits below them, most noticeably the tab title field in the primer editor.
-- Clicking New Record on a records page you'd left open overnight now dates the record today, not the day you opened the page.
-- New card searches for checking how cards have been customized in your cube: `is:custom` finds custom cards, `is:override` (or `is:overridden`) finds cards whose colors, mana value, type, rarity or image you've changed, and `is:image`, `is:imageUrl` and `is:imageBackUrl` find cards with custom art.
-- Editing and deleting your comments works again — the changes had been failing to save.
-- Deleting your account no longer fails partway through when you've left comments.
-- Patrons whose membership lapsed can link their Patreon account again, instead of being told it belongs to another account.
-- Saving a default sort or answering the advertising email-consent prompt now tells you if the save failed, for example because you'd been logged out, instead of looking like it worked.
-- Card pages load faster: images on the other tabs only load once you open that tab.
-- Play rates on card pages now track Legacy and Modern cubes properly — they had been reading 0.00% — and empty cubes no longer count toward any play rate.
-- Card pages now show play rates in Pioneer cubes alongside Vintage, Legacy and Modern, and a format with no data says so instead of showing 0.00%.
-- Cube search now sorts in the direction you pick — searches run from the search page had been coming back in ascending order every time.
-- Card and cube search now keep their sort and display options in the page address, so reloading, sharing a link, or using Back and Forward shows the same search, and a search that fails says so instead of spinning forever.
-- The link from the Sets page to card search now shows the Printings option it's actually using, instead of saying Cards.
-- Messages after submitting a form show up again — a failed registration, for example, had been reloading the page without saying what was wrong.
-- Cube and package searches now work for cards with a colon in their name, like `card:"Summon: Esper Valigarmanda"`, and for tags that contain a colon.
-- Banned accounts are now signed out and told why, instead of running into error pages.
-- Sorting cube search results by followers, name, card count or date now reflects each cube's latest save, rather than the one before it.
-- The cube header now remembers whether you collapsed it on each About tab, even when you switch tabs without reloading.
-- When adding a package to a cube, you can now choose to use the cube's Default Printing for each card instead of the printing saved in the package.
-- Cards added from the Packages page now get the cube's default status instead of always being marked Owned.
-- Adding a package from the cube list sidebar can now tag the cards with the package name, just like the Packages page.
-- The note linking each added card back to its package can now be turned off, and turning off tagging no longer also drops that note and the package's blog post.
-- Cube owners can now save the cube list's display options — Show Unsorted Cards, Collapse Duplicates, inline emojis, tag colors, tag quick filters, Show All Boards and Use Base Card Data — as the defaults everyone sees. Anyone can still change them while browsing, but those changes now last only until you leave the page, and Reset Options puts them back.
-- Turning tag colors on or off now takes effect right away instead of after a reload; it's now one of the cube's display options rather than an account setting, and signed-out visitors see tag colors too.
-- The sort menu now tells you how many cards the current sorts are hiding, with a one-click way to show them.
-- The cube list's sort and display menu is split into sort, display and Rotisserie sections, and each sort level now says what it controls.
-- Rotisserie drafts can now be set up from the Playtest page too, and the button no longer appears on a cube's past-version list, where clicking it caused an error.
-- Cloning a cube now copies all of its display options.
-- The Asfans analysis now lists Standard Draft in its format menu — it was already showing Standard Draft numbers but couldn't show that choice.
-- Cube analytics now open on the cube's default draft format instead of always Standard Draft.
-- Cubes with Standard Draft turned off no longer offer it in the draft simulator or as the default format, and deleting the default custom format no longer switches the default back to Standard Draft.
-- Format menus no longer go blank when the cube's default format has been deleted.
-- Cube owners can now pick a banner color for their cube — White, Blue, Black, Red or Green — from the cube's overview settings.
-- The cube overview editor uses the same sections in the same order in both the settings page and the edit window: Cube Name, Brief Description, Image, Banner Color, Categories and Custom URL.
-- The Report button in a cube's banner now looks like the buttons next to it, and the banner's buttons show a pointer cursor.
-- Blog posts in your dashboard feed now show the cube's image, so you can tell at a glance which cube they're from.
-- Hovering over a date like "3 days ago" now shows the full date and time.
-- Links that open in a new tab, like View Card Analytics or View on Scryfall in the card window, no longer get stuck on a loading spinner and stop working.
-- Every page now has its own browser tab title — pages like Search Cubes, Resources, Mana Matrix and Log In had just said "Cube Cobra" — and link previews use the same title.
-- Card pages now show play rate and Elo with a small chart of their history and how much each has moved over the last 4 and 12 weeks.
-- The Purchase section on card pages is now a single table of every store, including foil and etched prices, replacing the duplicate price badges under the card image.
-- The card window on the cube list now uses the same Purchase table, adding the foil and Cardhoarder prices it was missing, and shows the card's ID below its image.
-- The printings list on a card page now includes the printing you're viewing, in bold, and every price shows two decimal places.
-- Cubes with this Card and Packages with this Card now sit with the Scryfall, EDHREC and MTG Top 8 links on card pages.
-- The button that flips a card to its back face now says Transform only for transforming cards, and Turn Over for modal double-faced cards, double-faced tokens and other two-sided cards.
-- Format legality on card pages no longer cuts off format names like Commander and Premodern on phones.
-- The card page tabs fit on one row on phones instead of wrapping and pushing the set name onto a second line.
-- The card image on card pages no longer shrinks on very wide screens.
-- The checkboxes in the cube list's edit bar no longer overlap each other.
-- Cards you drag out of your deck in the deckbuilder now go to a Removed pile you can drag them back from until you save.
-- Choosing None for a draft format's Basics board now really leaves basic lands out; a new Default option uses the cube's Basics board as before.
-- When a draft has no basic lands to add, the Add Basics window now explains why, and tells cube owners how to fix it.
-- Deck stats can now be shown on a deck's page as well as in the deckbuilder, from a Show Deck Stats button in the menu bar.
-- The deck stats panel now follows the site's light or dark theme instead of showing white boxes in dark mode.
-- You can now name your deck right next to its title in the deckbuilder, and Save Deck stands out as the main button.
-- With Collapse Duplicates on, the Visual Spoiler now combines copies only within each sort section, the same way Table view does, instead of across the whole list.
-- Cube analytics pages have a new board picker next to the filter, so you can choose which boards (Mainboard, Maybeboard, Basics or any custom board) count toward the analytics.
-- The "Showing X / Y cards" line under the analytics filter now lists only the boards you've picked.
-- Switching away from the Keywords analytics page no longer reloads the page and clears your filter.
-- Clicking a bar or slice on the At a Glance and Chart analytics pages, or a cell in the Table analytics page, now opens a list of the cards it counts.
-- Smart Search now has the analytics board picker too: the boards you pick are what it treats as your cube when ranking suggestions, and cards already on those boards aren't suggested.
-- Finished drafts now show the art of your first pick (P1P1) on their deck tile and in shared links, instead of the cube's image.
-- You can change a deck's image in the deckbuilder: drag any card onto the Deck art spot to use its art.
-- In Mana Matrix, typing a card's full name now still shows it in the suggestions, confirming it's a real card.
-- Mana Matrix no longer lets you save a cell with a name that isn't a real card; it asks you to pick one from the suggestions instead.
-- Conspiracy's draft-matters cards now work when you draft against bots: Cogwork Librarian, Leovold's Operative, Agent of Acquisitions, Lore Seeker, Canal Dredger, Archdemon of Paliano and the rest do what they say, and the bots use them too.
-- Cards in your pool with an ability you can use rock back and forth; tap one to use it. You're told when a bot drafts a face-up card or uses one, and a Table log lists everything that happened at the table.
-- What draft-matters cards note during the draft, like Garbage Fire's pick number or the colors chosen for Paliano, the High City, shows on the card while drafting, in the deckbuilder and on the deck page, along with any cards you removed from the draft.
-- The pick-by-pick breakdown now shows extra picks, whole packs taken, random picks, cards received from a Canal Dredger, Lore Seeker packs and removed cards.
-- Cube owners can set the booster pack a Lore Seeker adds to the draft from the card's window on the cube list, and it can include cards from other boards.
-- Drafting and deckbuilding now happen on a table: cards can be dragged anywhere and ease into place, and packs open and pass with animation.
-- On phones, the draft shows just your pack, fanned out in rows, with your pool in a drawer that opens from a tab on the right.
-- On phones, the deckbuilder and deck page scroll sideways, the deckbuilder's tools are in a menu, and Save Deck stays on screen.
-- Signing in successfully no longer counts toward the login limit, so people who sign in often don't get locked out; only failed attempts count.
-- Once you show CubeCobra Bot Ratings in a draft, they stay on for every pick until you hide them again, instead of switching off after each pick.
-- Cards that tie on a sort, like two cards with the same mana value, are now listed alphabetically in cube lists, exports, card search and Top Cards, instead of in the order they were added or an order that could change from day to day.
-- Finished drafts against bots now show your actual first pick on their deck tile and in shared links — they had been showing your last pick.
-- The card preview that pops up when you hover over a card no longer appears in the wrong spot after you scroll, or gets stuck on screen following your cursor after it leaves the window, and Escape now closes it.
-- Hover previews of double-faced cards no longer run off the right edge on mid-sized screens, and long tags beside a preview wrap instead of stretching off the page.
-- Card previews now show on touchscreen laptops with a mouse, and when you tab to a card with the keyboard.
-- Alpha printings now show with their rounder corners instead of white corner specks, and both faces of a double-faced card preview have properly rounded corners.
-- User profiles have a new Collaborations tab listing the cubes that person collaborates on; on your own profile it includes your unlisted and private ones too.
-- Your own profile now has a Create New button for starting a cube, even before you've made one.
-- The cube list filter now has its clear button at every screen size, and the analytics filter and the cube, card and package search boxes have one too.
-- The analytics filter now stretches to use the space beside it.
-- The Rarity Breakdown and Price Distribution charts in analytics now explain that they're based on the printing of each card in your cube.
-- The release year chart in analytics now always runs from 1993 to this year, so it's easy to compare between cubes.
-- Clicking a chart legend to hide a series in analytics now visibly dims that entry, and the draft simulator's donut charts now mark hidden slices in their legend instead of still showing them as active.
-- Checking cards in the cube list's List View no longer makes cards on other pages look checked.
-- The navigation bar on phones is now a slim bar: the menu opens a drawer with every page and your account, and a Your Cubes button opens a drawer with the cubes you own and collaborate on.
-- Unread notifications now stand out from ones you've read, and the Notifications page has a Clear All button that marks them all read.
-- Your account page now has a Logout button.
-- You can now build your own Pack 1 Pick 1 poll from the Playtest page or a sample pack: pick each card by name, or fill empty slots at random or with a balanced pick, and the bot ratings update as you go.
-- Hand-built Pack 1 Pick 1 polls credit the person who built them.
-- Cube collaborators can now delete Pack 1 Pick 1 polls on their cube.
-- The daily crossword no longer uses Universes Beyond cards: no answers, clues or themes come from Final Fantasy, Marvel, The Lord of the Rings or the other crossover sets, and cards that also have a Magic version appear under their Magic name.
-- On phones, the cards in a draft pack now spread edge to edge across the screen instead of bunching up in the middle, sized so you can read every card in a row of four.
-- On desktop, a draft pack of more than 8 cards is now laid out in two overlapping rows at most, leaving more room for your picks below.
-- The scrollbars beside the columns in the deck editor and the draft pool can now be dragged, and clicking one jumps to that spot.
-- With Disable Animations turned on in your account settings, draft packs now appear and get passed instantly, without the pack opening and passing animations.
-- Cards whose hybrid mana only uses colors the card already requires, like Practiced Scrollsmith ({R}{R/W}{W}), are now counted as gold instead of hybrid in searches and the Manacost Type sort.
-- Cards added to a cube from Smart Search, card pages, or the cube tray now get the cube's Default Status instead of always being marked Owned.
-- On a cube's list page, each view in the sidebar now shows how many cards it holds across its boards.
-- Basic lands in draft record decks now use the printing from your cube's Basics board, custom art included, instead of switching to a default printing when the deck was uploaded.
-- On phones, a draft pack is now a grid of cards that get bigger as the pack gets smaller, and tapping a card enlarges it so you can read it before tapping again to draft it.
-- On phones, the draft's pool button is now at the top right, where picks fly into it, and the menu is at the top left.
-- On desktop, a switch in the draft's header shows the pack fanned out or as a grid where no card covers another.
-- On desktop, your picks during a draft are now split into a row of creatures and a row of everything else, like in the deckbuilder.
-- On desktop, the draft and the deckbuilder no longer scroll inside the table: the table grows with your cards and the page scrolls.
-- On phones, you can pinch the deckbuilder to make the cards bigger or smaller.
-- On phones, a card you draft stays in front of the rest of the pack as it shrinks into your pool, instead of other cards flashing over it.
-- On phones, the rest of a draft pack now stays where it is after you draft a card, instead of rearranging and resizing before it's passed on.
-- On phones, moving a card between your mainboard and sideboard in the draft's pool now slides the cards below it into place instead of jumping.
-- On phones, the main menu and Your Cubes drawers now have a title at the top, and the main menu keeps your account at the bottom, always in view, while the rest scrolls.
-- On phones, a button in the draft's pool can move your pool onto the table under the pack: a row of card stacks you can scroll sideways, drag cards between, and drop picks into, with the cards shrinking when a stack gets too tall to fit.
-- On desktop, the rest of a draft pack now stays where it is after you draft a card, instead of sliding together before it's passed on.
-- In the phone deckbuilder, cards now pick up as soon as you drag them instead of needing a long press, and a scrollbar at the bottom of the screen scrolls the deck sideways.
-- On phones, your draft pool now always sits on the table under the pack, and the pool button in the draft's header is replaced by one that scrolls the draft back to fill the screen.
-- On phones, swiping sideways through your draft pool no longer scrolls the page up and down.
-- In the phone draft, cards now pick up as soon as you drag them, so you can rearrange the pack and drop picks into your pool like on desktop, and a scrollbar under your pool scrolls it sideways.
-- On phones, the Tap to draft label now sits under the enlarged card instead of over its rules text.
+New Features and Bug Fixes should be self explanatory, however technical changes are changes to how the site works that don't significantly impact the end user, but we still want to document. For example a technical change may be a security patch or switching to a different linter.
+
+/////////////////
+
+
+## New Features
+
+- In the phone draft, pinch the pack or your pool to make its cards bigger or smaller. Each keeps its own size, and a zoomed-in pack scrolls.
+- Cards you drag in a draft or the deckbuilder now lean gently into the motion and settle back smoothly, without bouncing.
+- Choose which daily games can show up on your dashboard under Display Preferences in your account settings. Daily P1P1 now has its own checkbox instead of following Hide featured cubes.
+- Card pages have a new Tags tab listing the card's Scryfall oracle tags and the printing's art tags. Click a tag to search for every card that has it.
+
+## Bug Fixes
+
+- With Disable Animations turned on, cards you drag in a draft or the deckbuilder no longer tilt back and forth as you move them.
+- In a draft, a card you draft on a phone, or click over to your sideboard or back, now lands in full view at the bottom of its stack, instead of getting tucked into the middle of it.
+
+## Technical Changes
+
+- The navigation bar no longer redraws every time a draft updates, and keeps cubes that share a name apart.

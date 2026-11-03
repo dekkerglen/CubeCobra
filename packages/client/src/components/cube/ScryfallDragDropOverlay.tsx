@@ -11,34 +11,41 @@ import Text from '../base/Text';
 
 /**
  * Extracts the Scryfall card ID from a Scryfall image URL
- * Pattern: https://cards.scryfall.io/{size}/front/f/b/fbdaa29b-85ff-4a06-b27e-fcdbdfd4a3fe.jpg
+ * Pattern: https://cards.scryfall.io/{size}/{face}/f/b/fbdaa29b-85ff-4a06-b27e-fcdbdfd4a3fe.{jpg|png|webp}?1234
  * Returns: fbdaa29b-85ff-4a06-b27e-fcdbdfd4a3fe
  */
 const extractScryfallId = (url: string): string | null => {
-  try {
-    const match = url.match(/cards\.scryfall\.io\/[^/]+\/[^/]+\/[^/]+\/[^/]+\/([a-f0-9-]+)\.(jpg|png)/i);
-    return match ? match[1] : null;
-  } catch {
-    return null;
-  }
+  const match = url.match(
+    /cards\.scryfall\.io\/(?:[^/?#]+\/)+([0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12})\.[a-z]+/i,
+  );
+  return match ? match[1].toLowerCase() : null;
 };
 
 /**
- * Extracts the image URL from the drag data
+ * Extracts candidate image URLs from the drag data, most specific first
  */
-const getImageUrlFromDrag = (dataTransfer: DataTransfer): string | null => {
+const getImageUrlsFromDrag = (dataTransfer: DataTransfer): string[] => {
+  const urls: string[] = [];
+
   const html = dataTransfer.getData('text/html');
-  if (!html) return null;
+  if (html) {
+    const doc = new DOMParser().parseFromString(html, 'text/html');
+    doc.querySelectorAll('img').forEach((img) => {
+      const src = img.getAttribute('src');
+      if (src) urls.push(src);
+    });
+  }
 
-  // Parse HTML to find the img tag
-  const parser = new DOMParser();
-  const doc = parser.parseFromString(html, 'text/html');
-  const img = doc.querySelector('img');
+  // text/uri-list may hold several lines, with comments starting with '#'
+  const uriList = dataTransfer.getData('text/uri-list');
+  if (uriList) {
+    urls.push(...uriList.split(/\r?\n/).filter((line) => line && !line.startsWith('#')));
+  }
 
-  if (!img) return null;
+  const text = dataTransfer.getData('text/plain');
+  if (text) urls.push(text.trim());
 
-  const src = img.getAttribute('src');
-  return src || null;
+  return urls;
 };
 
 const ScryfallDragDropOverlay: React.FC = () => {
@@ -99,8 +106,8 @@ const ScryfallDragDropOverlay: React.FC = () => {
         return;
       }
 
-      const imageUrl = getImageUrlFromDrag(e.dataTransfer!);
-      if (!imageUrl) {
+      const imageUrls = getImageUrlsFromDrag(e.dataTransfer!);
+      if (imageUrls.length === 0) {
         setAlerts((prev) => [...prev, { color: 'danger', message: 'Could not find image URL from dragged content.' }]);
 
         // Auto-dismiss error alert after 5 seconds
@@ -110,7 +117,7 @@ const ScryfallDragDropOverlay: React.FC = () => {
         return;
       }
 
-      const scryfallId = extractScryfallId(imageUrl);
+      const scryfallId = imageUrls.map(extractScryfallId).find((id) => id !== null) ?? null;
       if (!scryfallId) {
         setAlerts((prev) => [...prev, { color: 'danger', message: 'Could not extract Scryfall ID from image URL.' }]);
 

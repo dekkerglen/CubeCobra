@@ -14,6 +14,7 @@ import CardBreakdownElo from './Elo';
 import CardBreakdownInfo from './Info';
 import CardBreakdownPlayRate from './PlayRate';
 import CardBreakdownStats from './Stats';
+import CardBreakdownTags from './Tags';
 
 interface CardPageProps {
   card: CardDetails;
@@ -51,6 +52,10 @@ const CardBreakdown: React.FC<CardPageProps> = ({ card, history }) => {
                 label: 'Play Rate',
                 onClick: () => setSelectedTab('2'),
               },
+              {
+                label: 'Tags',
+                onClick: () => setSelectedTab('3'),
+              },
             ]}
             activeTab={parseInt(selectedTab || '0', 10)}
           />
@@ -66,6 +71,7 @@ const CardBreakdown: React.FC<CardPageProps> = ({ card, history }) => {
               <CardBreakdownInfo card={card} history={history} key="info" />,
               <CardBreakdownElo card={card} history={history} key="elo" />,
               <CardBreakdownPlayRate card={card} history={history} key="playrate" />,
+              <CardBreakdownTags card={card} key="tags" />,
             ]}
             activeTab={parseInt(selectedTab || '0', 10)}
           />

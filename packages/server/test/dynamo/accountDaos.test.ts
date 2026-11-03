@@ -135,6 +135,34 @@ describe('UserDynamoDao sensitive data', () => {
   });
 });
 
+describe('UserDynamoDao dashboard dailies', () => {
+  let send: jest.Mock;
+  let dao: UserDynamoDao;
+
+  beforeEach(() => {
+    send = jest.fn();
+    dao = new UserDynamoDao({ send } as unknown as DynamoDBDocumentClient, TABLE);
+  });
+
+  it('shows every daily to users who never chose', async () => {
+    send.mockResolvedValue(getResponse(storedUser()));
+
+    expect((await dao.getById('user-1'))?.hiddenDailyGames).toEqual([]);
+  });
+
+  it('keeps Daily P1P1 off for users who hid featured cubes before the setting existed', async () => {
+    send.mockResolvedValue(getResponse(storedUser({ hideFeatured: true })));
+
+    expect((await dao.getById('user-1'))?.hiddenDailyGames).toEqual(['dailyp1p1']);
+  });
+
+  it('respects a saved choice over hide featured cubes', async () => {
+    send.mockResolvedValue(getResponse(storedUser({ hideFeatured: true, hiddenDailyGames: [] })));
+
+    expect((await dao.getById('user-1'))?.hiddenDailyGames).toEqual([]);
+  });
+});
+
 describe('PatronDynamoDao Patreon user id', () => {
   let send: jest.Mock;
   let dao: PatronDynamoDao;

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext } from 'react';
 
 import { DAILY_GAME_KEYS } from '@utils/datatypes/DailyGameStats';
 import { DAILY_GAME_HREFS, DAILY_GAME_NAMES, DailyGameTeaserResult } from '@utils/datatypes/DailyGameTeaser';
@@ -11,37 +11,43 @@ import DailyCrosswordCard from 'components/crossword/DailyCrosswordCard';
 import DailyManaMatrixCard from 'components/manamatrix/DailyManaMatrixCard';
 import DailyP1P1Card from 'components/p1p1/DailyP1P1Card';
 import DailySynergyConnectCard from 'components/synergyconnect/DailySynergyConnectCard';
+import UserContext from 'contexts/UserContext';
 
 /**
  * Shown once the viewer has started every daily there is today.
  *
  * Deliberately not a fallback to one of the games they already played: re-rendering a
  * board they have finished reads as a bug, and the honest answer to "nothing new" is a
- * small, cheap acknowledgement plus the same links the Dailies menu carries.
+ * small, cheap acknowledgement plus links to the dailies the viewer has left on.
  */
-const AllPlayedCard: React.FC = () => (
-  <Card>
-    <CardHeader>
-      <Text semibold lg>
-        Today's Dailies
-      </Text>
-    </CardHeader>
-    <CardBody>
-      <Flexbox direction="col" gap="2">
-        <Text sm className="text-text-secondary">
-          You've played today's games. New puzzles land every day — until then, the archives are open.
+const AllPlayedCard: React.FC = () => {
+  const user = useContext(UserContext);
+  const games = DAILY_GAME_KEYS.filter((game) => !user?.hiddenDailyGames?.includes(game));
+
+  return (
+    <Card>
+      <CardHeader>
+        <Text semibold lg>
+          Today's Dailies
         </Text>
-        <Flexbox direction="row" gap="3" wrap="wrap">
-          {DAILY_GAME_KEYS.map((game) => (
-            <Link key={game} href={DAILY_GAME_HREFS[game]}>
-              {DAILY_GAME_NAMES[game]}
-            </Link>
-          ))}
+      </CardHeader>
+      <CardBody>
+        <Flexbox direction="col" gap="2">
+          <Text sm className="text-text-secondary">
+            You've played today's games. New puzzles land every day — until then, the archives are open.
+          </Text>
+          <Flexbox direction="row" gap="3" wrap="wrap">
+            {games.map((game) => (
+              <Link key={game} href={DAILY_GAME_HREFS[game]}>
+                {DAILY_GAME_NAMES[game]}
+              </Link>
+            ))}
+          </Flexbox>
         </Flexbox>
-      </Flexbox>
-    </CardBody>
-  </Card>
-);
+      </CardBody>
+    </Card>
+  );
+};
 
 export interface DailyGameCardProps {
   dailyGame?: DailyGameTeaserResult | null;
