@@ -29,6 +29,11 @@ const Paginate: React.FC<PaginateProps> = ({
   inverted = false,
 }) => {
   const labelClass = inverted ? 'mr-4 !text-button-text' : 'mr-4';
+  // With no pages there is no page to honestly label, so no control may offer to navigate to one
+  const isEmpty = count < 1;
+  const label = isEmpty ? 'No results' : `Page ${active + 1} of ${count}`;
+  const backDisabled = isEmpty || active === 0 || loading;
+  const forwardDisabled = isEmpty || active === count - 1 || loading;
 
   if (urlF) {
     return (
@@ -39,18 +44,20 @@ const Paginate: React.FC<PaginateProps> = ({
         justify={justifyBetween ? 'between' : 'start'}
         className={className}
       >
-        <Text semibold className={labelClass}>{`Page ${active + 1} of ${count}`}</Text>
+        <Text semibold className={labelClass}>
+          {label}
+        </Text>
         <Flexbox direction="row" gap="2" alignItems="center">
-          <Button color="primary" href={urlF(0)} disabled={active === 0 || loading}>
+          <Button color="primary" href={urlF(0)} disabled={backDisabled}>
             <MoveToStartIcon size={16} />
           </Button>
-          <Button color="primary" href={urlF(active - 1)} disabled={active === 0 || loading}>
+          <Button color="primary" href={urlF(active - 1)} disabled={backDisabled}>
             <ArrowLeftIcon size={16} />
           </Button>
-          <Button color="primary" href={urlF(active + 1)} disabled={active === count - 1 || loading}>
+          <Button color="primary" href={urlF(active + 1)} disabled={forwardDisabled}>
             <ArrowRightIcon size={16} />
           </Button>
-          <Button color="primary" href={urlF(count - 1)} disabled={active === count - 1 || loading}>
+          <Button color="primary" href={urlF(count - 1)} disabled={forwardDisabled}>
             <MoveToEndIcon size={16} />
           </Button>
         </Flexbox>
@@ -67,26 +74,32 @@ const Paginate: React.FC<PaginateProps> = ({
         justify={justifyBetween ? 'between' : 'start'}
         className={className}
       >
-        <Text semibold className={labelClass}>{`Page ${active + 1} of ${count}`}</Text>
+        <Text semibold className={labelClass}>
+          {label}
+        </Text>
         <Flexbox direction="row" gap="2" alignItems="center">
           {loading && <Spinner sm />}
-          <Button color="primary" onClick={() => onClick(0)} disabled={active === 0 || loading}>
+          <Button color="primary" onClick={() => onClick(0)} disabled={backDisabled}>
             <MoveToStartIcon size={16} />
           </Button>
-          <Button color="primary" onClick={() => onClick(active - 1)} disabled={active === 0 || loading}>
+          <Button color="primary" onClick={() => onClick(active - 1)} disabled={backDisabled}>
             <ArrowLeftIcon size={16} />
           </Button>
-          <Button color="primary" onClick={() => onClick(active + 1)} disabled={active === count - 1 || loading}>
+          <Button color="primary" onClick={() => onClick(active + 1)} disabled={forwardDisabled}>
             <ArrowRightIcon size={16} />
           </Button>
-          <Button color="primary" onClick={() => onClick(count - 1)} disabled={active === count - 1 || loading}>
+          <Button color="primary" onClick={() => onClick(count - 1)} disabled={forwardDisabled}>
             <MoveToEndIcon size={16} />
           </Button>
         </Flexbox>
       </Flexbox>
     );
   }
-  return <Text semibold className={className}>{`Page ${active + 1} of ${count}`}</Text>;
+  return (
+    <Text semibold className={className}>
+      {label}
+    </Text>
+  );
 };
 
 export default Paginate;
