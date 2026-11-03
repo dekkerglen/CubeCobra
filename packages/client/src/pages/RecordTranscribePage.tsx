@@ -263,92 +263,120 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                 all with one Save.
               </Text>
 
-              <EditDescription
-                value={{ name: state.name, date: state.date, description: state.description }}
-                setValue={(value) =>
-                  updateState((previous) => ({
-                    ...previous,
-                    name: value.name ?? '',
-                    // A cleared date field reports undefined. Keeping it as NaN rather than
-                    // falling back to a number leaves it visibly unset and fails validation,
-                    // instead of silently dating the record to the epoch.
-                    date: value.date ?? NaN,
-                    description: value.description ?? '',
-                  }))
-                }
-              />
-
-              <Flexbox direction="col" gap="2">
-                <Text lg semibold>
-                  Results
-                </Text>
-                <Text sm className="text-text-secondary">
-                  Are you transcribing every pairing, or only each player&apos;s final record?
-                </Text>
-                <Flexbox direction="row" gap="2" alignItems="center">
-                  {[
-                    { value: 'pairings' as const, label: 'Pairings' },
-                    { value: 'records' as const, label: 'Final records only' },
-                  ].map((option) => (
-                    <button
-                      key={option.value}
-                      type="button"
-                      onClick={() => setResultsMode(option.value)}
-                      // The selected mode is otherwise conveyed by colour alone, and this
-                      // toggle governs whether half the page renders.
-                      aria-pressed={resultsMode === option.value}
-                      className={classNames(
-                        'rounded-full border px-3 py-1 text-sm font-medium transition-colors',
-                        resultsMode === option.value ? 'border-link bg-bg-active' : 'border-border hover:bg-bg-active',
-                      )}
-                    >
-                      {option.label}
-                    </button>
-                  ))}
-                </Flexbox>
-                {resultsMode === 'records' && anyPairings(state.matches) && (
-                  <Text sm className="text-text-secondary">
-                    Rounds of pairings are hidden in this mode. They are still recorded, and Save keeps them.
+              {/* One card per section. The headings alone said where a section began but
+                  never where it ended, so Players ran into Rounds with nothing between. */}
+              <Card>
+                <CardHeader>
+                  <Text lg semibold>
+                    Event details
                   </Text>
-                )}
-              </Flexbox>
+                </CardHeader>
+                <CardBody>
+                  <EditDescription
+                    value={{ name: state.name, date: state.date, description: state.description }}
+                    setValue={(value) =>
+                      updateState((previous) => ({
+                        ...previous,
+                        name: value.name ?? '',
+                        // A cleared date field reports undefined. Keeping it as NaN rather than
+                        // falling back to a number leaves it visibly unset and fails validation,
+                        // instead of silently dating the record to the epoch.
+                        date: value.date ?? NaN,
+                        description: value.description ?? '',
+                      }))
+                    }
+                  />
+                </CardBody>
+              </Card>
 
-              <Flexbox direction="col" gap="2">
-                <Text lg semibold>
-                  Players
-                </Text>
-                <TranscribePlayers
-                  cube={cube}
-                  record={liveRecord}
-                  draft={draft}
-                  linkedUsers={players}
-                  decks={state.decks}
-                  setDeckBoard={setDeckBoard}
-                  setTrophy={(trophy) => updateState((previous) => ({ ...previous, trophy }))}
-                  resultsMode={resultsMode}
-                  overrides={state.overrides}
-                  setOverride={setOverride}
-                  seatsEditable={seatsEditable}
-                  editsDisabled={saving}
-                  onApplyPlayers={applyPlayers}
-                  pastes={pastes}
-                  setPasteText={setPasteText}
-                  setPasteErrors={setPasteErrors}
-                  setAlerts={setAlerts}
-                />
-              </Flexbox>
+              <Card>
+                <CardHeader>
+                  <Text lg semibold>
+                    Results
+                  </Text>
+                </CardHeader>
+                <CardBody>
+                  <Flexbox direction="col" gap="2">
+                    <Text sm className="text-text-secondary">
+                      Are you transcribing every pairing, or only each player&apos;s final record?
+                    </Text>
+                    <Flexbox direction="row" gap="2" alignItems="center">
+                      {[
+                        { value: 'pairings' as const, label: 'Pairings' },
+                        { value: 'records' as const, label: 'Final records only' },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setResultsMode(option.value)}
+                          // The selected mode is otherwise conveyed by colour alone, and this
+                          // toggle governs whether half the page renders.
+                          aria-pressed={resultsMode === option.value}
+                          className={classNames(
+                            'rounded-full border px-3 py-1 text-sm font-medium transition-colors',
+                            resultsMode === option.value
+                              ? 'border-link bg-bg-active'
+                              : 'border-border hover:bg-bg-active',
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </Flexbox>
+                    {resultsMode === 'records' && anyPairings(state.matches) && (
+                      <Text sm className="text-text-secondary">
+                        Rounds of pairings are hidden in this mode, and ignored: each player&apos;s record is whatever
+                        you type below. They are still recorded, and Save keeps them.
+                      </Text>
+                    )}
+                  </Flexbox>
+                </CardBody>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <Text lg semibold>
+                    Players
+                  </Text>
+                </CardHeader>
+                <CardBody>
+                  <TranscribePlayers
+                    cube={cube}
+                    record={liveRecord}
+                    draft={draft}
+                    linkedUsers={players}
+                    decks={state.decks}
+                    setDeckBoard={setDeckBoard}
+                    setTrophy={(trophy) => updateState((previous) => ({ ...previous, trophy }))}
+                    resultsMode={resultsMode}
+                    overrides={state.overrides}
+                    setOverride={setOverride}
+                    seatsEditable={seatsEditable}
+                    editsDisabled={saving}
+                    onApplyPlayers={applyPlayers}
+                    pastes={pastes}
+                    setPasteText={setPasteText}
+                    setPasteErrors={setPasteErrors}
+                    setAlerts={setAlerts}
+                  />
+                </CardBody>
+              </Card>
 
               {resultsMode === 'pairings' && (
-                <Flexbox direction="col" gap="2">
-                  <Text lg semibold>
-                    Rounds
-                  </Text>
-                  <TranscribeRounds
-                    players={state.players}
-                    matches={state.matches}
-                    setMatches={(matches) => updateState((previous) => ({ ...previous, matches }))}
-                  />
-                </Flexbox>
+                <Card>
+                  <CardHeader>
+                    <Text lg semibold>
+                      Rounds
+                    </Text>
+                  </CardHeader>
+                  <CardBody>
+                    <TranscribeRounds
+                      players={state.players}
+                      matches={state.matches}
+                      setMatches={(matches) => updateState((previous) => ({ ...previous, matches }))}
+                    />
+                  </CardBody>
+                </Card>
               )}
 
               {alerts.map(({ color, message }, index) => (

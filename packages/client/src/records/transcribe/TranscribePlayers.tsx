@@ -377,10 +377,9 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
   const players = record.players;
 
   // Open on the first player still missing a deck — the next one to transcribe.
-  const [expanded, setExpanded] = useState<number>(() => {
-    const firstDeckless = players.findIndex((_, index) => (decks[index]?.mainboard.length ?? 0) === 0);
-    return firstDeckless === -1 ? 0 : firstDeckless;
-  });
+  // Every row shut. Opening one on load guesses at what the page is for — a row's summary
+  // line carries its name, deck counts and record, which is what most visits come to read.
+  const [expanded, setExpanded] = useState<number>(-1);
   const [newPlayer, setNewPlayer] = useState<string>('');
   // Why the last add did not land, when it was refused for taking a name already in the
   // list. The entry stays in the field so it can be corrected rather than retyped.

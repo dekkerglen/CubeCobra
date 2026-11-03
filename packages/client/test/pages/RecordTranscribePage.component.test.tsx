@@ -177,16 +177,25 @@ const makeInterleavableCsrfFetch = (saveResponse: any = { success: 'true' }) => 
   return { csrfFetch, releaseSave: save.release, releaseLookup: lookup.release };
 };
 
+// `openRow` expands one row after mount. The page opens with every row shut, so a test that
+// needs a row's body has to say which one rather than inheriting a guess.
 const renderPage = ({
   record = createRecord(),
   draft,
   csrfFetch = makeCsrfFetch(),
-}: { record?: Record; draft?: Draft; csrfFetch?: jest.Mock } = {}) => {
+  openRow,
+}: { record?: Record; draft?: Draft; csrfFetch?: jest.Mock; openRow?: number } = {}) => {
   const result = render(
     <CSRFContext.Provider value={{ csrfToken: 'token', csrfFetch, callApi: jest.fn() } as any}>
       <RecordTranscribePage cube={cube} record={record} draft={draft} players={[]} />
     </CSRFContext.Provider>,
   );
+
+  if (openRow !== undefined) {
+    fireEvent.click(
+      within(screen.getAllByTestId('transcribe-player-row')[openRow]).getByRole('button', { name: /^Expand / }),
+    );
+  }
 
   return { ...result, csrfFetch };
 };
@@ -297,7 +306,7 @@ describe('RecordTranscribePage', () => {
   });
 
   it('shows the deck summary and the unsaved marker on the collapsed row', async () => {
-    renderPage();
+    renderPage({ openRow: 0 });
 
     expect(deckCell(1)).toHaveTextContent('0 / 0');
     expect(playerRow(1)).not.toHaveTextContent('unsaved');
@@ -310,8 +319,19 @@ describe('RecordTranscribePage', () => {
     expect(playerRow(1)).not.toHaveTextContent('unsaved');
   });
 
-  it('keeps the deck editor mounted for only the expanded row', () => {
+  // Opening a row on load guesses at what the visit is for, and the guess cost a reader the
+  // one row whose summary they came to check — it was replaced by a deck editor.
+  it('opens with every row collapsed', () => {
     renderPage();
+
+    expect(playerRows()).toHaveLength(2);
+    expect(rowExpanded(0)).toBe(false);
+    expect(rowExpanded(1)).toBe(false);
+    expect(screen.queryByPlaceholderText(/Paste your decklist here/)).not.toBeInTheDocument();
+  });
+
+  it('keeps the deck editor mounted for only the expanded row', () => {
+    renderPage({ openRow: 0 });
 
     // A pod of eight would otherwise fetch the cube's pool eight times over on mount.
     expect(screen.getAllByPlaceholderText(/Paste your decklist here/)).toHaveLength(1);
@@ -367,7 +387,7 @@ describe('RecordTranscribePage', () => {
   });
 
   it('removes a player from their row body', async () => {
-    const { csrfFetch } = renderPage();
+    const { csrfFetch } = renderPage({ openRow: 0 });
 
     fireEvent.click(screen.getByRole('button', { name: 'Remove Alice' }));
 
@@ -383,7 +403,7 @@ describe('RecordTranscribePage', () => {
   });
 
   it('closes the expansion when the expanded player is removed', () => {
-    renderPage();
+    renderPage({ openRow: 0 });
 
     expect(rowExpanded(0)).toBe(true);
 
@@ -420,7 +440,7 @@ describe('RecordTranscribePage', () => {
   });
 
   it('reorders players on drag end, carrying each deck with its player', async () => {
-    renderPage();
+    renderPage({ openRow: 0 });
 
     fireEvent.change(pasteBox(0), { target: { value: '2x Lightning Bolt\nSideboard\nPyroblast' } });
     fireEvent.click(screen.getByRole('button', { name: /Parse and Add to Mainboard/ }));
@@ -494,7 +514,7 @@ describe('RecordTranscribePage', () => {
   // The expansion is a position, and a reorder moves players under it. Leaving it where it
   // was would hand one player's half-typed name and paste to whoever landed in their place.
   it('keeps the expansion on the same player after a reorder', () => {
-    renderPage();
+    renderPage({ openRow: 0 });
 
     // Alice's row opens on load as the first player still missing a deck.
     expect(within(playerRow(0)).getByLabelText('Player name')).toHaveValue('Alice');
@@ -530,7 +550,7 @@ describe('RecordTranscribePage', () => {
   // The row body holds the name input and the paste box. Were the row itself the drag target,
   // a drag begun in either would start a sort instead of selecting text.
   it('does not put drag listeners on the name input', () => {
-    renderPage();
+    renderPage({ openRow: 0 });
 
     const row = playerRow(0);
     expect(dragSurfaces(0)).toHaveLength(1);
@@ -720,7 +740,7 @@ describe('RecordTranscribePage', () => {
   // The endpoint refuses a save that adds, removes or reorders players on a played draft, so
   // the page must not put those controls in front of the user at all.
   it('offers no add, remove or shuffle when seats are not editable', () => {
-    const { unmount } = renderPage();
+    const { unmount } = renderPage({ openRow: 0 });
     expect(screen.getByRole('button', { name: 'Add Player' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Shuffle Players' })).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Remove Alice' })).toBeInTheDocument();
@@ -767,7 +787,7 @@ describe('RecordTranscribePage', () => {
   });
 
   it('shows the read-only deck and deckbuilder link for a played-draft seat', () => {
-    renderPage({ draft: playedDraft() });
+    renderPage({ draft: playedDraft(), openRow: 0 });
 
     expect(within(playerRow(0)).getByText('Lightning Bolt')).toBeInTheDocument();
     expect(within(playerRow(0)).getByText('Pyroblast')).toBeInTheDocument();
@@ -823,7 +843,7 @@ describe('RecordTranscribePage', () => {
   // player's row is opened. Holding its text inside the editor would throw a half-entered
   // decklist away.
   it('keeps a paste across a collapse and re-expand', () => {
-    renderPage();
+    renderPage({ openRow: 0 });
 
     fireEvent.change(pasteBox(0), { target: { value: '2x Lightning Bolt\nCounterspell' } });
 
@@ -840,7 +860,7 @@ describe('RecordTranscribePage', () => {
   // The lines that failed to resolve are left in the box next to their errors: that is the
   // designed way to fix up a partly-failed paste, and it has to survive looking elsewhere.
   it('keeps the retained lines and their errors from a partly-failed paste across a collapse', async () => {
-    renderPage({ csrfFetch: makeCsrfFetch({ success: 'true' }, ['Notacard']) });
+    renderPage({ csrfFetch: makeCsrfFetch({ success: 'true' }, ['Notacard']), openRow: 0 });
 
     fireEvent.change(pasteBox(0), { target: { value: 'Lightning Bolt\nNotacard' } });
     fireEvent.click(screen.getByRole('button', { name: /Parse and Add to Mainboard/ }));
@@ -860,7 +880,7 @@ describe('RecordTranscribePage', () => {
   // Each row owns its own paste, so working through one player's list does not put text in
   // front of the next player.
   it("keeps each player's paste to their own row", () => {
-    renderPage();
+    renderPage({ openRow: 0 });
 
     fireEvent.change(pasteBox(0), { target: { value: "Alice's deck" } });
     toggleRow(1);
@@ -873,7 +893,7 @@ describe('RecordTranscribePage', () => {
   });
 
   it('submits a pasted decklist under the seat it was entered against', async () => {
-    const { csrfFetch } = renderPage();
+    const { csrfFetch } = renderPage({ openRow: 0 });
 
     fireEvent.change(screen.getByPlaceholderText(/Paste your decklist here/), {
       target: { value: '2x Lightning Bolt\nSideboard\nPyroblast' },
@@ -1110,7 +1130,7 @@ describe('RecordTranscribePage', () => {
   });
 
   it('reads the deck as mainboard / sideboard counts, explained on hover', async () => {
-    renderPage();
+    renderPage({ openRow: 0 });
 
     expect(deckCell(1)).toHaveTextContent('0 / 0');
 
@@ -1155,7 +1175,7 @@ describe('RecordTranscribePage', () => {
   });
 
   it('puts the shared deck controls on the same line as removing the player', () => {
-    renderPage();
+    renderPage({ openRow: 0 });
 
     const controls = within(playerRow(0)).getByTestId('deck-shared-controls');
     expect(within(controls).getByLabelText('Add to')).toBeInTheDocument();
@@ -1164,7 +1184,7 @@ describe('RecordTranscribePage', () => {
   });
 
   it('puts the photo scanner under the single-card controls, not above the editor', () => {
-    renderPage();
+    renderPage({ openRow: 0 });
 
     const row = playerRow(0);
     const addCard = within(row).getByPlaceholderText(/Card to Add to/);
@@ -1346,7 +1366,7 @@ describe('RecordTranscribePage', () => {
   // Someone copying a standings sheet works straight down the list, so the cells have to be
   // reachable one row after another rather than behind sixteen expansions.
   it("tabs from one player's wins cell to the next without expanding a row", () => {
-    renderPage();
+    renderPage({ openRow: 0 });
 
     fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
     // The page opens on the first deckless player; shut it so every row is a summary line.
@@ -1454,7 +1474,7 @@ describe('RecordTranscribePage', () => {
 
   it('disables every player edit while a save is in flight', async () => {
     const { csrfFetch, release } = makeDeferredCsrfFetch();
-    renderPage({ csrfFetch });
+    renderPage({ csrfFetch, openRow: 0 });
 
     fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
     expect(screen.getByRole('button', { name: 'Add Player' })).toBeEnabled();
@@ -1521,7 +1541,7 @@ describe('RecordTranscribePage', () => {
 
   it('refuses an add, remove or shuffle attempted while a save is in flight', async () => {
     const { csrfFetch, release } = makeDeferredCsrfFetch();
-    renderPage({ csrfFetch });
+    renderPage({ csrfFetch, openRow: 0 });
 
     fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
     fireEvent.click(saveButton());
@@ -1630,7 +1650,7 @@ describe('RecordTranscribePage', () => {
   // back. It has to resolve against the list as it stands when the lookup lands.
   it('does not resurrect a removed player when their rename lookup resolves afterwards', async () => {
     const { csrfFetch, releaseLookup } = makeInterleavableCsrfFetch();
-    renderPage({ csrfFetch });
+    renderPage({ csrfFetch, openRow: 0 });
 
     fireEvent.change(nameField(), { target: { value: '@carol' } });
     fireEvent.blur(nameField());
