@@ -10,6 +10,7 @@ import User from '@utils/datatypes/User';
 
 import { UncontrolledAlertProps } from 'components/base/Alert';
 import Button from 'components/base/Button';
+import Checkbox from 'components/base/Checkbox';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
@@ -248,6 +249,9 @@ const RECORD_FIELDS: { label: string; key: keyof WinLossDraw }[] = [
 // 400 that rejects the entire transcription, not just the offending cell.
 const toCount = (raw: string): number => Math.max(0, Math.floor(Number(raw) || 0));
 
+// What a player's record reads before anything has been typed into it.
+const NO_RECORD: WinLossDraw = { wins: 0, losses: 0, draws: 0 };
+
 // The width every column of the row and its headings is cut to.
 const DECK_COLUMN = 'w-24';
 const RECORD_COLUMN = 'w-20';
@@ -270,66 +274,20 @@ const DeckCounts: React.FC<{ deck: TranscribeDeck | undefined }> = ({ deck }) =>
   );
 };
 
-interface OverrideControlsProps {
-  player: Player;
-  derived: WinLossDraw;
-  override: WinLossDraw | undefined;
-  // Whether the record carries any pairings at all. With none there is no second reading to
-  // disclose, so a row carrying an override has nothing to show alongside it.
-  hasPairings: boolean;
-  clearOverride: () => void;
-}
-
-// What a row carrying an override shows beside it. Rendered left of every fixed column
-// rather than among them, because it is the one thing on the row whose width varies.
-const OverrideControls: React.FC<OverrideControlsProps> = ({
-  player,
-  derived,
-  override,
-  hasPairings,
-  clearOverride,
-}) => {
-  if (!override) {
-    return null;
-  }
-
-  return (
-    <Flexbox direction="row" alignItems="center" gap="1" wrap="wrap">
-      {hasPairings && (
-        // The precedence disclosure: this player's pairings say one thing and the record
-        // displays another, so both are on screen together.
-        <Text sm className="text-text-secondary text-nowrap">
-          {`From pairings: ${formatRecord(derived)}`}
-        </Text>
-      )}
-      <Button color="secondary" aria-label={`Clear ${player.name}'s record`} onClick={clearOverride}>
-        <span className="text-nowrap">Clear</span>
-      </Button>
-    </Flexbox>
-  );
-};
-
 interface PlayerRecordProps {
   player: Player;
-  // What this player's pairings add up to, ignoring any override — the reading the override
-  // is displacing, and what the cells are seeded with.
-  derived: WinLossDraw;
-  override: WinLossDraw | undefined;
-  // Records mode is nothing but cells; pairings mode derives every record from the matches
-  // below, so its cells are read-only. They are rendered either way, so a row keeps the same
-  // shape across both modes and the columns stay where the eye left them.
+  // What the cells show, and what an edit to one of them is applied on top of.
+  seed: WinLossDraw;
+  // Whether this player's record is being typed rather than derived. They are rendered
+  // either way, so a row keeps the same shape across both modes and across the override
+  // switch, and the columns stay where the eye left them.
   editable: boolean;
-  setOverride: (value: WinLossDraw | undefined) => void;
+  setOverride: (value: WinLossDraw) => void;
 }
 
 // A player's three record cells, and nothing else — every neighbour is fixed-width, so the
 // three of them land at the same x on every row and the headings above the list stay true.
-const PlayerRecord: React.FC<PlayerRecordProps> = ({ player, derived, override, editable, setOverride }) => {
-  // What the record actually reads: playerRecord prefers any present override, so showing a
-  // derived total while an override is stored would be a lie — including in pairings mode,
-  // where Clear is then the only way to hand the player back to their matches.
-  const seed = override ?? derived;
-
+const PlayerRecord: React.FC<PlayerRecordProps> = ({ player, seed, editable, setOverride }) => {
   return (
     <Flexbox direction="row" alignItems="center" gap="1">
       {RECORD_FIELDS.map(({ label, key }) => (
@@ -384,10 +342,6 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
   // Why the last add did not land, when it was refused for taking a name already in the
   // list. The entry stays in the field so it can be corrected rather than retyped.
   const [addError, setAddError] = useState<string>('');
-  // A record can hold both pairings and overrides at once, and the override wins. The row
-  // only has a second reading worth disclosing when there are pairings behind it.
-  const hasPairings = useMemo(() => (record.matches ?? []).some((round) => round.matches.length > 0), [record.matches]);
-
   // playerRecord prefers any present override, so reading what a player's pairings alone say
   // means asking it against a record carrying none.
   const withoutOverrides = useMemo(() => ({ ...record, overrides: {} }), [record]);
@@ -649,6 +603,14 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
             (other, seat) => seat !== index && other.name.toLowerCase() === player.name.toLowerCase(),
           );
           const override = overrides[player.name];
+          const derived = playerRecord(withoutOverrides, player.name);
+          // Final records mode is the only source of a player's record, so it never reads the
+          // matches — an untouched player starts empty rather than at what the pairings say.
+          // Pairings mode is the other way round: the matches are the source unless this
+          // player's override switch has been thrown.
+          const records = resultsMode === 'records';
+          const cellsEditable = records || !!override;
+          const seed = override ?? (records ? NO_RECORD : derived);
 
           return (
             // The caller-supplied role is what keeps dnd-kit's own button attributes off this
@@ -692,22 +654,11 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                           />
                         </Flexbox>
                         <Flexbox direction="row" alignItems="center" gap="2" wrap="wrap">
-                          {/* Left of the deck column, not between it and the cells: these appear
-                              only on a row carrying an override, and anything of varying width
-                              in between would shunt that row's counts out of their column. */}
-                          <OverrideControls
-                            player={player}
-                            derived={playerRecord(withoutOverrides, player.name)}
-                            override={override}
-                            hasPairings={hasPairings}
-                            clearOverride={() => setOverride(player.name, undefined)}
-                          />
                           <DeckCounts deck={deck} />
                           <PlayerRecord
                             player={player}
-                            derived={playerRecord(withoutOverrides, player.name)}
-                            override={override}
-                            editable={resultsMode === 'records'}
+                            seed={seed}
+                            editable={cellsEditable}
                             setOverride={(value) => setOverride(player.name, value)}
                           />
                           {/* Always rendered, lit when held: a trophy that only appears once
@@ -746,6 +697,29 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                               that re-base unambiguous: a rename, add, remove, shuffle or drop
                               applied mid-flight would be expressed against seats the server has
                               already moved, and the next save would misattribute every deck. */}
+                          {/* Pairings mode derives every record from the matches below; this is
+                              how one player is excused from that. Records mode has no use for
+                              it — there the typed record is the only source there is. */}
+                          {!records && (
+                            <fieldset disabled={editsDisabled} className="border-0 p-0 m-0">
+                              <Flexbox direction="col" gap="1">
+                                <Checkbox
+                                  label="Override final record"
+                                  checked={!!override}
+                                  // Seeded from the pairings rather than from zero, so throwing
+                                  // the switch does not blank the record it is replacing. Turning
+                                  // it off removes the override, which hands the player back.
+                                  setChecked={(checked) =>
+                                    setOverride(player.name, checked ? { ...derived } : undefined)
+                                  }
+                                />
+                                <Text sm className="text-text-secondary">
+                                  {`${player.name}\u2019s pairings give ${formatRecord(derived)}.`}
+                                </Text>
+                              </Flexbox>
+                            </fieldset>
+                          )}
+
                           {!deck || deck.editable ? (
                             <Flexbox direction="col" gap="2">
                               <UploadDeck

@@ -275,7 +275,11 @@ export const validationErrors = (state: TranscribeState): string[] => {
   return errors;
 };
 
-export const toTranscribePayload = (state: TranscribeState): TranscribePayload => {
+// `finalRecordsOnly` is the page's results mode. In that mode the matches are not what a
+// player's record comes from, so every player is given an explicit one — playerRecord prefers
+// an override and otherwise falls back to the pairings, and a player left untouched would
+// silently be scored off the matches the mode exists to ignore.
+export const toTranscribePayload = (state: TranscribeState, finalRecordsOnly = false): TranscribePayload => {
   const decks: TranscribePayload['decks'] = {};
   for (const [playerIndex, deck] of Object.entries(state.decks)) {
     if (!deck.dirty) {
@@ -290,11 +294,17 @@ export const toTranscribePayload = (state: TranscribeState): TranscribePayload =
   }
 
   const overrides: { [playerName: string]: WinLossDraw } = {};
-  for (const [name, value] of Object.entries(state.overrides)) {
-    // A `0-0-0` posted for an untouched player would mask every pairing-derived standing,
-    // because playerRecord prefers any present override.
-    if (value) {
-      overrides[name] = value;
+  if (finalRecordsOnly) {
+    for (const player of state.players) {
+      overrides[player.name] = state.overrides[player.name] ?? { wins: 0, losses: 0, draws: 0 };
+    }
+  } else {
+    for (const [name, value] of Object.entries(state.overrides)) {
+      // Outside that mode a `0-0-0` posted for an untouched player would mask every
+      // pairing-derived standing, for the same reason.
+      if (value) {
+        overrides[name] = value;
+      }
     }
   }
 

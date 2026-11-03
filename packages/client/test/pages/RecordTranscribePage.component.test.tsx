@@ -239,6 +239,10 @@ const nameField = (index = 0) => within(playerRow(index)).getByLabelText('Player
 // The deck column, as mainboard / sideboard counts.
 const deckCell = (index: number) => within(playerRow(index)).getByTestId('deck-counts');
 
+// The per-player override switch, which lives in the expanded body in pairings mode.
+const overrideToggle = (index: number) =>
+  within(playerRow(index)).getByLabelText('Override final record') as HTMLInputElement;
+
 // A row is open when its deck editor is mounted; the name field is no longer the tell.
 const rowExpanded = (index: number) => within(playerRow(index)).queryByText('Paste a decklist') !== null;
 
@@ -1090,166 +1094,6 @@ describe('RecordTranscribePage', () => {
     expect(summary.compareDocumentPosition(wins) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
   });
 
-  it('puts a clear control and the from-pairings reading left of the cells too', () => {
-    renderPage({ record: createRecord({ matches: pairedRound() }) });
-    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
-    fireEvent.change(recordCell(0, 'Wins'), { target: { value: '3' } });
-
-    const row = playerRow(0);
-    const clear = within(row).getByRole('button', { name: "Clear Alice's record" });
-    const wins = recordCell(0, 'Wins');
-    expect(clear.compareDocumentPosition(wins) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(
-      within(row)
-        .getByText(/From pairings/)
-        .compareDocumentPosition(wins) & Node.DOCUMENT_POSITION_FOLLOWING,
-    ).toBeTruthy();
-  });
-
-  it('gives each row a visible expand indicator that toggles it', () => {
-    renderPage({ record: createRecord({ matches: pairedRound() }) });
-
-    const toggle = within(playerRow(1)).getByRole('button', { name: /Expand Bob/ });
-    expect(toggle).toHaveAttribute('data-testid', 'expand-indicator');
-
-    fireEvent.click(toggle);
-    expect(within(playerRow(1)).getByRole('button', { name: /Collapse Bob/ })).toHaveAttribute('aria-expanded', 'true');
-  });
-
-  it('expands only from the chevron, not from the rest of the row', () => {
-    renderPage({ record: createRecord({ matches: pairedRound() }) });
-
-    // The identity half used to be the hit region, which made the control invisible — and
-    // now holds a name field, which a row-wide toggle would collapse out from under.
-    fireEvent.click(nameField(1));
-    fireEvent.click(deckCell(1));
-    expect(rowExpanded(1)).toBe(false);
-
-    fireEvent.click(expandToggle(1));
-    expect(rowExpanded(1)).toBe(true);
-  });
-
-  it('reads the deck as mainboard / sideboard counts, explained on hover', async () => {
-    renderPage({ openRow: 0 });
-
-    expect(deckCell(1)).toHaveTextContent('0 / 0');
-
-    fireEvent.change(pasteBox(0), { target: { value: 'Lightning Bolt\nCounterspell\nSideboard\nPyroblast' } });
-    fireEvent.click(screen.getByRole('button', { name: /Parse and Add to/ }));
-    await waitFor(() => expect(deckCell(0)).toHaveTextContent('2 / 1'));
-
-    // Two bare numbers need saying once what they count; the column heading is the other half.
-    expect(deckCell(0)).toHaveAttribute('title', '2 Mainboard / 1 Sideboard — unsaved');
-    expect(deckCell(1)).toHaveAttribute('title', '0 Mainboard / 0 Sideboard');
-  });
-
-  it('heads the name and deck columns alongside the record ones', () => {
-    renderPage();
-
-    const headings = screen.getByTestId('record-column-headings');
-    expect(within(headings).getByText('Name')).toBeInTheDocument();
-    expect(within(headings).getByText('Main / Side')).toBeInTheDocument();
-    // The deck column is fixed-width so the counts stay under their heading.
-    expect(within(headings).getByText('Main / Side')).toHaveClass('w-24');
-    expect(deckCell(0)).toHaveClass('w-24');
-  });
-
-  it('puts the trophy right of the record cells', () => {
-    renderPage({ record: createRecord({ matches: pairedRound() }) });
-
-    const draws = recordCell(1, 'Draws');
-    const trophy = trophyToggle(1);
-    expect(draws.compareDocumentPosition(trophy) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    // ...and still left of the chevron, which stays the rightmost thing on the row.
-    expect(trophy.compareDocumentPosition(expandToggle(1)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
-  it('keeps the deck column left of the record cells and clear of the override controls', () => {
-    renderPage({ record: createRecord({ matches: pairedRound(), overrides: aliceOverride() }) });
-
-    // Clear only appears on a row carrying an override. Were it between the deck column and
-    // the cells, one row's override would shunt that row's counts out of the column.
-    const clear = within(playerRow(0)).getByRole('button', { name: "Clear Alice's record" });
-    expect(clear.compareDocumentPosition(deckCell(0)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    expect(deckCell(0).compareDocumentPosition(recordCell(0, 'Wins')) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
-  it('puts the shared deck controls on the same line as removing the player', () => {
-    renderPage({ openRow: 0 });
-
-    const controls = within(playerRow(0)).getByTestId('deck-shared-controls');
-    expect(within(controls).getByLabelText('Add to')).toBeInTheDocument();
-    expect(within(controls).getByLabelText('Use Cards Outside of Cube')).toBeInTheDocument();
-    expect(within(controls).getByRole('button', { name: 'Remove Alice' })).toBeInTheDocument();
-  });
-
-  it('puts the photo scanner under the single-card controls, not above the editor', () => {
-    renderPage({ openRow: 0 });
-
-    const row = playerRow(0);
-    const addCard = within(row).getByPlaceholderText(/Card to Add to/);
-    const scanner = within(row).getByText('Scan deck from photo');
-    expect(addCard.compareDocumentPosition(scanner) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-    // ...and in the left column, so it stays clear of the paste box.
-    expect(scanner.compareDocumentPosition(pasteBox(0)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
-  it('puts the chevron right of the record cells', () => {
-    renderPage({ record: createRecord({ matches: pairedRound() }) });
-
-    const wins = recordCell(1, 'Wins');
-    const toggle = expandToggle(1);
-    expect(wins.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
-  });
-
-  it('shows disabled record cells in pairings mode, carrying the derived reading', () => {
-    renderPage({ record: createRecord({ matches: pairedRound() }) });
-
-    // Alice took the match 2-1, so her row reads 1-0 and Bob's 0-1 — in cells, not text,
-    // so the row keeps the shape it has in final records mode.
-    expect(recordCell(0, 'Wins')).toHaveValue(1);
-    expect(recordCell(0, 'Losses')).toHaveValue(0);
-    expect(recordCell(0, 'Wins')).toBeDisabled();
-    expect(recordCell(1, 'Wins')).toHaveValue(0);
-    expect(recordCell(1, 'Losses')).toHaveValue(1);
-    expect(recordCell(1, 'Losses')).toBeDisabled();
-  });
-
-  it('keeps the cells enabled for every row in final records mode', () => {
-    renderPage({ record: createRecord({ matches: pairedRound() }) });
-    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
-
-    expect(recordCell(0, 'Wins')).toBeEnabled();
-    expect(recordCell(1, 'Wins')).toBeEnabled();
-  });
-
-  it('shows a read-only derived record in pairings mode', () => {
-    renderPage({ record: createRecord({ matches: pairedRound() }) });
-
-    // Alice took the one match 2-1, so the row reads what the pairings add up to — and it
-    // is the pairings that say so, which is why there is nothing here to type into.
-    expect(recordCell(0, 'Wins')).toHaveValue(1);
-    expect(recordCell(1, 'Losses')).toHaveValue(1);
-    expect(cellsEditable(0)).toBe(false);
-    expect(cellsEditable(1)).toBe(false);
-    expect(screen.queryByRole('button', { name: /'s record$/ })).not.toBeInTheDocument();
-  });
-
-  // playerRecord prefers any present override, so a 0-0-0 written for every row the moment
-  // the cells appeared would silently replace what the pairings add up to.
-  it('writes no override for a record left to its pairings', async () => {
-    const { csrfFetch } = renderPage({ record: createRecord({ matches: pairedRound() }) });
-
-    expect(recordCell(0, 'Wins')).toHaveValue(1);
-    expect(screen.getByText('No unsaved changes')).toBeInTheDocument();
-
-    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
-    fireEvent.click(saveButton());
-    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
-
-    expect(savedPayload(csrfFetch).overrides).toEqual({});
-  });
-
   it('writes an override once a cell changes', async () => {
     const { csrfFetch } = renderPage({ record: createRecord({ matches: pairedRound() }) });
     fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
@@ -1259,72 +1103,149 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    // The pairings the cells were seeded from, carrying the one field that was edited.
-    expect(savedPayload(csrfFetch).overrides).toEqual({ Alice: { wins: 1, losses: 0, draws: 2 } });
-    // Bob's cells were never touched, so his record is still his pairings'.
-    expect(savedPayload(csrfFetch).overrides.Bob).toBeUndefined();
+    // Started from nothing rather than from Alice's 1-0, because this mode does not read the
+    // matches — and Bob, untouched, is given an explicit empty record for the same reason.
+    expect(savedPayload(csrfFetch).overrides).toEqual({
+      Alice: { wins: 0, losses: 0, draws: 2 },
+      Bob: { wins: 0, losses: 0, draws: 0 },
+    });
   });
 
-  it('clears an override from pairings mode', async () => {
-    const { csrfFetch } = renderPage({ record: createRecord({ matches: pairedRound(), overrides: aliceOverride() }) });
+  it('turns a pairings-mode override on from the row body, seeded from the pairings', async () => {
+    const { csrfFetch } = renderPage({ record: createRecord({ matches: pairedRound() }), openRow: 0 });
 
-    // An override is what will be displayed, so the cells read it rather than the pairings
-    // even here — showing a derived record the record does not use would be a lie.
-    expect(roundsShown()).toBe(true);
-    expect(recordCell(0, 'Wins')).toHaveValue(3);
+    expect(overrideToggle(0)).not.toBeChecked();
     expect(cellsEditable(0)).toBe(false);
+    // The body says what it is overriding, since the cells are about to stop showing it.
+    expect(within(playerRow(0)).getByText('Alice’s pairings give 1-0.')).toBeInTheDocument();
 
-    // Clearing it is the one record edit this mode allows, because it is the only way to
-    // hand a player back to their pairings once something else is stored over them.
-    fireEvent.click(screen.getByRole('button', { name: "Clear Alice's record" }));
+    fireEvent.click(overrideToggle(0));
 
+    // Seeded from the pairings, so turning it on does not blank the record to 0-0-0.
+    expect(cellsEditable(0)).toBe(true);
+    expect(recordCell(0, 'Wins')).toHaveValue(1);
+    // One row at a time: Bob is still on his pairings.
+    expect(cellsEditable(1)).toBe(false);
+
+    fireEvent.change(recordCell(0, 'Draws'), { target: { value: '2' } });
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    expect(savedPayload(csrfFetch).overrides).toEqual({ Alice: { wins: 1, losses: 0, draws: 2 } });
+    // The matches are still the source for everybody else.
+    expect(savedPayload(csrfFetch).matches).toEqual(pairedRound());
+  });
+
+  it('hands a player back to their pairings when the override is turned off', async () => {
+    const { csrfFetch } = renderPage({
+      record: createRecord({ matches: pairedRound(), overrides: aliceOverride() }),
+      openRow: 0,
+    });
+
+    // A stored override is what the record reads, so the cells show it rather than the
+    // pairings, and the switch is already on.
+    expect(roundsShown()).toBe(true);
+    expect(overrideToggle(0)).toBeChecked();
+    expect(recordCell(0, 'Wins')).toHaveValue(3);
+    expect(cellsEditable(0)).toBe(true);
+    // The clear button it replaced is gone from the row.
+    expect(screen.queryByRole('button', { name: "Clear Alice's record" })).not.toBeInTheDocument();
+
+    fireEvent.click(overrideToggle(0));
+
+    expect(cellsEditable(0)).toBe(false);
     expect(recordCell(0, 'Wins')).toHaveValue(1);
     expect(recordCell(0, 'Losses')).toHaveValue(0);
 
-    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
     expect(savedPayload(csrfFetch).overrides).toEqual({});
   });
 
-  it('clears an override from final records mode', async () => {
-    const { csrfFetch } = renderPage({ record: createRecord({ overrides: aliceOverride() }) });
+  it('offers no override switch in final records mode, where every cell is already typeable', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }), openRow: 0 });
 
-    expect(roundsShown()).toBe(false);
-    expect(recordCell(0, 'Wins')).toHaveValue(3);
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
 
-    fireEvent.click(screen.getByRole('button', { name: "Clear Alice's record" }));
+    expect(within(playerRow(0)).queryByLabelText('Override final record')).not.toBeInTheDocument();
+    expect(cellsEditable(0)).toBe(true);
+  });
 
-    // This mode is nothing but cells, so they stay — emptied, with nothing written behind.
+  // "Final records only" has to mean it: playerRecord prefers an override and falls back to
+  // the pairings, so a player left untouched would silently be scored off the matches this
+  // mode exists to ignore.
+  it('ignores the matches entirely in final records mode', async () => {
+    const { csrfFetch } = renderPage({ record: createRecord({ matches: pairedRound() }) });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
+
+    // Alice won her match, but this mode does not read matches — her record starts empty.
     expect(recordCell(0, 'Wins')).toHaveValue(0);
-    expect(screen.queryByRole('button', { name: "Clear Alice's record" })).not.toBeInTheDocument();
+    expect(recordCell(1, 'Losses')).toHaveValue(0);
 
-    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+    fireEvent.change(recordCell(0, 'Wins'), { target: { value: '3' } });
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    expect(savedPayload(csrfFetch).overrides).toEqual({});
+    // Every player is given an explicit record, including the ones left alone, so nothing
+    // falls back to the pairings.
+    expect(savedPayload(csrfFetch).overrides).toEqual({
+      Alice: { wins: 3, losses: 0, draws: 0 },
+      Bob: { wins: 0, losses: 0, draws: 0 },
+    });
+    // ...and the pairings are kept, so switching back restores them.
+    expect(savedPayload(csrfFetch).matches).toEqual(pairedRound());
+  });
+
+  // Switching mode changes what Save writes, so it is a change like any other.
+  it('counts a change of results mode as unsaved work', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+
+    expect(screen.getByText('No unsaved changes')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
+    expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Pairings' }));
+    expect(screen.getByText('No unsaved changes')).toBeInTheDocument();
+  });
+
+  it('empties a record in final records mode by typing over it', async () => {
+    const { csrfFetch } = renderPage({ record: createRecord({ overrides: aliceOverride() }) });
+
+    // A record carrying overrides and no pairings opens in this mode.
+    expect(roundsShown()).toBe(false);
+    expect(recordCell(0, 'Wins')).toHaveValue(3);
+
+    // The cells are the only control here, so clearing one is typing a zero into it — there
+    // is no second reading to fall back to, which is what Clear used to mean.
+    fireEvent.change(recordCell(0, 'Wins'), { target: { value: '0' } });
+
+    expect(recordCell(0, 'Wins')).toHaveValue(0);
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    expect(savedPayload(csrfFetch).overrides).toEqual({
+      Alice: { wins: 0, losses: 0, draws: 0 },
+      Bob: { wins: 0, losses: 0, draws: 0 },
+    });
   });
 
   // The page has to say plainly when an override is what will be displayed. That disclosure
   // used to be a warning in the results section, which is now rounds-only, so it sits next to
   // the record it describes.
-  it('shows the pairing-derived reading next to a row that carries an override', () => {
-    const { unmount } = renderPage({ record: createRecord({ matches: pairedRound(), overrides: aliceOverride() }) });
+  // The override switch hides what it is replacing, so the reading it displaces is stated
+  // right beside it rather than left for the user to work out from the rounds below.
+  it('states the pairing-derived reading beside the override switch', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }), openRow: 1 });
 
-    expect(within(playerRow(0)).getByText(/From pairings: 1-0/)).toBeInTheDocument();
-    // Nothing of Bob's is being overridden, so there is no precedence to disclose.
-    expect(within(playerRow(1)).queryByText(/From pairings/)).not.toBeInTheDocument();
+    expect(within(playerRow(1)).getByText('Bob\u2019s pairings give 0-1.')).toBeInTheDocument();
 
-    // It belongs to the override, not to the mode, so it follows it across the toggle.
-    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
-    expect(within(playerRow(0)).getByText(/From pairings: 1-0/)).toBeInTheDocument();
-    unmount();
-
-    // ...and there is nothing to compare an override against when the record has no pairings.
-    renderPage({ record: createRecord({ overrides: aliceOverride() }) });
-    expect(screen.queryByText(/From pairings/)).not.toBeInTheDocument();
+    // It belongs to the pairings, not to whether this player is overriding them.
+    fireEvent.click(overrideToggle(1));
+    expect(within(playerRow(1)).getByText('Bob\u2019s pairings give 0-1.')).toBeInTheDocument();
   });
 
   // The endpoint's Joi schema rejects a negative win count with a raw 400, and a number input
@@ -1341,7 +1262,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
 
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
-    expect(savedPayload(csrfFetch).overrides).toEqual({ Alice: { wins: 0, losses: 2, draws: 0 } });
+    expect(savedPayload(csrfFetch).overrides).toMatchObject({ Alice: { wins: 0, losses: 2, draws: 0 } });
   });
 
   // The same schema is `integer()` as well as `min(0)`, and the input's step does not hold
@@ -1360,7 +1281,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
 
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
-    expect(savedPayload(csrfFetch).overrides).toEqual({ Alice: { wins: 1, losses: 0, draws: 0 } });
+    expect(savedPayload(csrfFetch).overrides).toMatchObject({ Alice: { wins: 1, losses: 0, draws: 0 } });
   });
 
   // Someone copying a standings sheet works straight down the list, so the cells have to be
