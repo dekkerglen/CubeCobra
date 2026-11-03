@@ -725,6 +725,9 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                                 selectedUser={1}
                                 setSelectedUser={() => {}}
                                 showPlayerPicker={false}
+                                // The body is the player's deck and nothing else now that
+                                // their name, record and trophy are all on the row.
+                                heading="Deck"
                                 // deck.editable is areSeatsEditable(draft), the same value
                                 // seatsEditable holds — so a row whose deck cannot be edited
                                 // has no remove control to place, and this branch is the only

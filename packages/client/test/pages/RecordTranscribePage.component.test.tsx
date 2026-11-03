@@ -1162,6 +1162,18 @@ describe('RecordTranscribePage', () => {
     expect(savedPayload(csrfFetch).overrides).toEqual({});
   });
 
+  // The row carries the player's name, record and trophy, so everything left in the body is
+  // about their deck — and the heading is what says so.
+  it('heads the row body as the deck, beside removing the player', () => {
+    renderPage({ openRow: 0 });
+
+    const heading = within(playerRow(0)).getByText('Deck');
+    const remove = within(playerRow(0)).getByRole('button', { name: 'Remove Alice' });
+    // Same flex row, heading first.
+    expect(heading.closest('div')).toBe(remove.closest('div'));
+    expect(heading.compareDocumentPosition(remove) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   // Neither control is shared. The toggle filters one autocomplete's suggestions; the board
   // selector sets where a typed card and the basics below it land. The paste box routes
   // itself from section markers and the scanner from its own per-card checkboxes, so a line
@@ -1172,10 +1184,7 @@ describe('RecordTranscribePage', () => {
     const row = playerRow(0);
     const addCard = within(row).getByPlaceholderText(/Card to Add to/);
 
-    for (const control of [
-      within(row).getByLabelText('Add to'),
-      within(row).getByLabelText('Show Cards not in Cube'),
-    ]) {
+    for (const control of [within(row).getByLabelText('Board'), within(row).getByLabelText('Show Cards not in Cube')]) {
       expect(addCard.compareDocumentPosition(control) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
       expect(control.compareDocumentPosition(pasteBox(0)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     }

@@ -121,7 +121,7 @@ describe('UploadDeck paste', () => {
   it('picks the board from a dropdown rather than a sideboard toggle', () => {
     renderUploadDeck();
 
-    const board = screen.getByLabelText('Add to') as HTMLSelectElement;
+    const board = screen.getByLabelText('Board') as HTMLSelectElement;
     expect([...board.options].map((option) => option.label)).toEqual(['Mainboard', 'Sideboard']);
     expect(board).toHaveValue('mainboard');
     expect(screen.queryByLabelText('Add to Sideboard')).not.toBeInTheDocument();
@@ -174,7 +174,7 @@ describe('UploadDeck paste', () => {
   it('ignores the board dropdown, which belongs to the field above it', async () => {
     const { setMainboardCards, setSideboardCards } = renderUploadDeck();
 
-    fireEvent.change(screen.getByLabelText('Add to'), { target: { value: 'sideboard' } });
+    fireEvent.change(screen.getByLabelText('Board'), { target: { value: 'sideboard' } });
     paste('Pyroblast\nSurgical Extraction');
 
     await waitFor(() => expect(setMainboardCards).toHaveBeenCalled());
@@ -185,7 +185,7 @@ describe('UploadDeck paste', () => {
   it('still routes a marked section while the dropdown says sideboard', async () => {
     const { setMainboardCards, setSideboardCards } = renderUploadDeck();
 
-    fireEvent.change(screen.getByLabelText('Add to'), { target: { value: 'sideboard' } });
+    fireEvent.change(screen.getByLabelText('Board'), { target: { value: 'sideboard' } });
     paste('Lightning Bolt\nSideboard\nPyroblast');
 
     await waitFor(() => expect(setSideboardCards).toHaveBeenCalled());

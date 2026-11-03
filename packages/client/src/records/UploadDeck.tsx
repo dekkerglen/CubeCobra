@@ -39,10 +39,12 @@ interface UploadDeckProps {
   // the transcription workspace renders one per row — answers that question by its position,
   // so it turns the picker off rather than asking again.
   showPlayerPicker?: boolean;
-  // Rendered at the end of the shared controls line, which spans both columns because what
-  // sits there governs both. The transcription workspace puts its remove-player control here
-  // rather than on a line of its own.
+  // Rendered at the end of the editor's own heading line. The transcription workspace puts
+  // its remove-player control here rather than on a line of its own.
   controlsExtra?: React.ReactNode;
+  // Names what this editor is, for a surface where it is one section among several rather
+  // than the whole page.
+  heading?: string;
   // Rendered below the single-card controls in the left column. The photo scanner is a third
   // way to enter the same deck, so a caller that shows it belongs beside the other two.
   photoScanner?: React.ReactNode;
@@ -74,6 +76,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
   setSelectedUser,
   showPlayerPicker = true,
   controlsExtra,
+  heading,
   photoScanner,
   newPlayerName,
   setNewPlayerName,
@@ -324,8 +327,9 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
           autoComplete="off"
         />
       )}
-      {controlsExtra && (
-        <Flexbox direction="row" justify="end">
+      {(heading || controlsExtra) && (
+        <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
+          {heading ? <Text semibold>{heading}</Text> : <span />}
           {controlsExtra}
         </Flexbox>
       )}
@@ -335,7 +339,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
       <Flexbox direction="row" gap="4" className="items-stretch flex-col md:flex-row">
         <Flexbox direction="col" gap="2" className="md:w-1/2 min-w-0">
           <Text sm semibold>
-            Add cards one at a time
+            Add Card
           </Text>
           <Flexbox direction="row" justify="start" gap="2">
             <AutocompleteInput
@@ -355,7 +359,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
               className="square-right"
             />
             <Button color="primary" disabled={cardNameValue.length === 0} onClick={(e) => handleAdd(e, cardNameValue)}>
-              <span className="text-nowrap">Add Cards</span>
+              <span className="text-nowrap">Add</span>
             </Button>
           </Flexbox>
           {/* Directly under the field it filters. It changes what this autocomplete offers
@@ -372,7 +376,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
             <div className="w-40 shrink-0">
               <Select
                 id="upload-deck-board"
-                label="Add to"
+                label="Board"
                 value={targetBoard}
                 setValue={(value) => setTargetBoard(value as DecklistBoard)}
                 options={[
