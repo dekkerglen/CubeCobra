@@ -27,6 +27,7 @@ jest.mock('components/TextEntry', () => ({ __esModule: true, default: () => <div
 
 const SAVE_URL = '/cube/records/enter/rec-1';
 const NAME_INPUT = 'Enter a name for the record';
+const ADD_PLAYER_INPUT = /Add a player/;
 
 const cube = { id: 'cube-1', name: 'My Cube' } as unknown as Cube;
 
@@ -61,13 +62,24 @@ const playedDraft = (): Draft =>
     ],
   }) as unknown as Draft;
 
-// Answers the cube-pool lookup UploadDeck makes on mount, resolves pasted card names, and
-// records the save POST. Names listed in `unresolved` come back null, the way the real
-// endpoint reports a name it could not find.
+// Answers the cube-pool lookup UploadDeck makes on mount, the @handle lookup behind adding
+// and renaming a player, resolves pasted card names, and records the save POST. Names listed
+// in `unresolved` come back null, the way the real endpoint reports a name it could not find.
 const makeCsrfFetch = (saveResponse: any = { success: 'true' }, unresolved: string[] = []) =>
   jest.fn(async (url: RequestInfo, init?: RequestInit) => {
     if (typeof url === 'string' && url.startsWith('/cube/api/cubecardpool/')) {
       return { ok: true, json: async () => ({ success: 'true', basics: [] }) } as Response;
+    }
+    if (typeof url === 'string' && url.startsWith('/api/user/getByUsername/')) {
+      // The real endpoint answers with the account's own casing, which is how a linked
+      // player ends up displayed as the site spells them rather than as they were typed.
+      const handle = decodeURIComponent(url.slice('/api/user/getByUsername/'.length));
+      return {
+        ok: true,
+        json: async () => ({
+          user: { id: `user-${handle}`, username: `${handle[0].toUpperCase()}${handle.slice(1)}` },
+        }),
+      } as Response;
     }
     if (url === '/cube/api/getcardsforcube') {
       const { names } = JSON.parse(`${init?.body}`) as { names: string[] };
@@ -128,65 +140,278 @@ const savedPayload = (csrfFetch: jest.Mock) => JSON.parse(`${saveCalls(csrfFetch
 
 const saveButton = () => screen.getByRole('button', { name: 'Save' });
 
-// Reverses the player list through the real editor. EditPlayerList shuffles with
-// `sort(() => Math.random() - 0.5)`, which reverses a list deterministically once
-// Math.random is pinned below 0.5; the assertion afterwards fails loudly if it ever stops.
+// One collapsible row per player. The expand toggle is the row's first button, which stays
+// addressable when two rows read the same name — exactly the case the duplicate tests make.
+const playerRows = () => screen.getAllByTestId('transcribe-player-row');
+
+const playerRow = (index: number) => playerRows()[index];
+
+const toggleRow = (index: number) => fireEvent.click(within(playerRow(index)).getAllByRole('button')[0]);
+
+// Only one row is expanded at a time, so each of these addresses the open row's body.
+const nameField = () => screen.getByLabelText('Player name') as HTMLInputElement;
+
+const trophyToggle = () => screen.getByRole('checkbox', { name: 'Trophy' });
+
+const pasteBox = (index: number) =>
+  within(playerRow(index)).getByPlaceholderText(/Paste your decklist here/) as HTMLTextAreaElement;
+
+const renameOpenRow = async (value: string, commit: 'blur' | 'enter' = 'blur') => {
+  fireEvent.change(nameField(), { target: { value } });
+  if (commit === 'enter') {
+    fireEvent.keyDown(nameField(), { key: 'Enter', code: 'Enter' });
+  } else {
+    fireEvent.blur(nameField());
+  }
+  // The commit resolves a possible @handle before it lands, so it is always a tick away.
+  await act(async () => {});
+};
+
+// Reverses the player list through the section header's Shuffle. EditPlayerList's idiom,
+// `sort(() => Math.random() - 0.5)`, reverses a list deterministically once Math.random is
+// pinned below 0.5; the assertion afterwards fails loudly if it ever stops.
 const reversePlayerList = () => {
-  fireEvent.click(screen.getByRole('button', { name: 'Edit players' }));
   const random = jest.spyOn(Math, 'random').mockReturnValue(0);
   try {
     fireEvent.click(screen.getByRole('button', { name: 'Shuffle Players' }));
   } finally {
     random.mockRestore();
   }
-  fireEvent.click(screen.getByRole('button', { name: 'Apply player changes' }));
 
-  expect(screen.getByRole('button', { name: 'Rename Bob' })).toBeInTheDocument();
-  expect(screen.getAllByTestId('transcribe-deck-row')[0]).toHaveTextContent('Bob');
+  expect(playerRow(0)).toHaveTextContent('Bob');
+  expect(playerRow(1)).toHaveTextContent('Alice');
 };
 
 describe('RecordTranscribePage', () => {
-  it('renders a deck section per player with the paste box ready', () => {
+  it('renders one row per player and no separate decks section', () => {
     renderPage();
 
-    const rows = screen.getAllByTestId('transcribe-deck-row');
+    const rows = playerRows();
     expect(rows).toHaveLength(2);
-    expect(within(rows[0]).getByRole('button', { name: /Alice/ })).toBeInTheDocument();
-    expect(within(rows[1]).getByRole('button', { name: /Bob/ })).toBeInTheDocument();
+    expect(rows[0]).toHaveTextContent('Alice');
+    expect(rows[1]).toHaveTextContent('Bob');
+    expect(screen.getByText('2 players')).toBeInTheDocument();
 
-    // Only the row being worked on mounts an editor, and Task 2 leaves its paste box open.
-    expect(screen.getAllByPlaceholderText(/Paste your decklist here/)).toHaveLength(1);
-    expect(within(rows[0]).getByPlaceholderText(/Paste your decklist here/)).toBeInTheDocument();
+    // The decks used to be a second list of the same people under their own heading.
+    expect(screen.queryByText('Decks')).not.toBeInTheDocument();
+    expect(screen.queryAllByTestId('transcribe-deck-row')).toHaveLength(0);
   });
 
-  it('renders existing decks read-only when the draft is not an upload draft', () => {
-    renderPage({ draft: playedDraft() });
+  it('shows the deck summary and the unsaved marker on the collapsed row', async () => {
+    renderPage();
 
-    const rows = screen.getAllByTestId('transcribe-deck-row');
-    expect(within(rows[0]).getByText('Lightning Bolt')).toBeInTheDocument();
-    expect(within(rows[0]).getByText('Pyroblast')).toBeInTheDocument();
+    expect(playerRow(1)).toHaveTextContent('No deck yet');
+    expect(playerRow(1)).not.toHaveTextContent('unsaved');
 
+    fireEvent.change(pasteBox(0), { target: { value: '2x Lightning Bolt\nSideboard\nPyroblast' } });
+    fireEvent.click(screen.getByRole('button', { name: /Parse and Add to Mainboard/ }));
+
+    await waitFor(() => expect(playerRow(0)).toHaveTextContent('2 cards + 1 sideboard • unsaved'));
+    // The marker is the deck's, so it does not spread to a player whose deck is untouched.
+    expect(playerRow(1)).not.toHaveTextContent('unsaved');
+  });
+
+  it('keeps the deck editor mounted for only the expanded row', () => {
+    renderPage();
+
+    // A pod of eight would otherwise fetch the cube's pool eight times over on mount.
+    expect(screen.getAllByPlaceholderText(/Paste your decklist here/)).toHaveLength(1);
+    expect(within(playerRow(0)).getByPlaceholderText(/Paste your decklist here/)).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Player name')).toHaveLength(1);
+
+    toggleRow(1);
+
+    expect(screen.getAllByPlaceholderText(/Paste your decklist here/)).toHaveLength(1);
+    expect(within(playerRow(1)).getByPlaceholderText(/Paste your decklist here/)).toBeInTheDocument();
+    expect(screen.getAllByLabelText('Player name')).toHaveLength(1);
+  });
+
+  it('adds a player from the section header', async () => {
+    const { csrfFetch } = renderPage();
+
+    fireEvent.change(screen.getByPlaceholderText(ADD_PLAYER_INPUT), { target: { value: 'Carol' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add Player' }));
+
+    await waitFor(() => expect(playerRows()).toHaveLength(3));
+    expect(playerRow(2)).toHaveTextContent('Carol');
+    expect(screen.getByText('3 players')).toBeInTheDocument();
+    expect(screen.getByPlaceholderText(ADD_PLAYER_INPUT)).toHaveValue('');
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    // -1 is how the server is told this seat is new rather than moved.
+    expect(savedPayload(csrfFetch)).toMatchObject({
+      players: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Carol' }],
+      seatOrder: [0, 1, -1],
+    });
+  });
+
+  it('resolves an @handle when adding a player', async () => {
+    const { csrfFetch } = renderPage();
+
+    fireEvent.change(screen.getByPlaceholderText(ADD_PLAYER_INPUT), { target: { value: '@carol' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add Player' }));
+
+    await waitFor(() => expect(playerRows()).toHaveLength(3));
+    // The account's own spelling, not the handle as typed.
+    expect(playerRow(2)).toHaveTextContent('Carol');
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    expect(savedPayload(csrfFetch).players[2]).toEqual({ name: 'Carol', userId: 'user-carol' });
+  });
+
+  it('removes a player from their row body', async () => {
+    const { csrfFetch } = renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Alice' }));
+
+    expect(playerRows()).toHaveLength(1);
+    expect(playerRow(0)).toHaveTextContent('Bob');
+    expect(screen.getByText('1 player')).toBeInTheDocument();
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    // Bob keeps pointing at the draft seat he actually sat in.
+    expect(savedPayload(csrfFetch)).toMatchObject({ players: [{ name: 'Bob' }], seatOrder: [1] });
+  });
+
+  it('closes the expansion when the expanded player is removed', () => {
+    renderPage();
+
+    expect(nameField()).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Alice' }));
+
+    // The body that held the remove control belonged to a player who is gone; leaving the
+    // expansion on that index would open it onto whoever moved up into the seat.
+    expect(screen.queryByLabelText('Player name')).not.toBeInTheDocument();
     expect(screen.queryByPlaceholderText(/Paste your decklist here/)).not.toBeInTheDocument();
-    expect(within(rows[0]).getByText(/attached to a played draft/)).toBeInTheDocument();
-    // Telling the user to edit the deck elsewhere is only useful alongside the way there.
-    expect(within(rows[0]).getByRole('link', { name: /deckbuilder/ })).toHaveAttribute(
-      'href',
-      '/draft/deckbuilder/draft-1?seat=0',
-    );
+    expect(playerRows()).toHaveLength(1);
+  });
+
+  it('shuffles from the section header', async () => {
+    const { csrfFetch } = renderPage();
+
+    reversePlayerList();
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    expect(savedPayload(csrfFetch)).toMatchObject({
+      players: [{ name: 'Bob' }, { name: 'Alice' }],
+      seatOrder: [1, 0],
+    });
+  });
+
+  it('renames a player from their row body, committing on blur', async () => {
+    const { csrfFetch } = renderPage();
+
+    await renameOpenRow('Alicia');
+
+    expect(playerRow(0)).toHaveTextContent('Alicia');
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    expect(savedPayload(csrfFetch).players).toEqual([{ name: 'Alicia' }, { name: 'Bob' }]);
+  });
+
+  it('renames a player committing on Enter', async () => {
+    const { csrfFetch } = renderPage();
+
+    await renameOpenRow('Alicia', 'enter');
+
+    expect(playerRow(0)).toHaveTextContent('Alicia');
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    expect(savedPayload(csrfFetch).players).toEqual([{ name: 'Alicia' }, { name: 'Bob' }]);
+  });
+
+  // A collision is tolerated in state rather than refused at the field, so the typing is not
+  // thrown away — but it has to stay visible once the row it was typed into is shut again.
+  it('reports a duplicate name on the row and keeps Save blocked after the row is collapsed', async () => {
+    renderPage();
+
+    await renameOpenRow('Bob');
+
+    expect(screen.getByText('Another player is already named Bob')).toBeInTheDocument();
+
+    toggleRow(0);
+
+    expect(screen.queryByText('Another player is already named Bob')).not.toBeInTheDocument();
+    expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+    expect(saveButton()).toBeDisabled();
+  });
+
+  it('names the offending player in the page-level error', async () => {
+    renderPage();
+
+    await renameOpenRow('Bob');
+
+    expect(screen.getByText(/Two players cannot share a name: Bob\./)).toBeInTheDocument();
+  });
+
+  it('toggles a trophy from the row body', async () => {
+    const { csrfFetch } = renderPage();
+
+    expect(within(playerRow(0)).queryByRole('img', { name: 'Trophy' })).not.toBeInTheDocument();
+
+    fireEvent.click(trophyToggle());
+
+    expect(within(playerRow(0)).getByRole('img', { name: 'Trophy' })).toBeInTheDocument();
+    expect(within(playerRow(1)).queryByRole('img', { name: 'Trophy' })).not.toBeInTheDocument();
+
+    // ...and back off again, so the control is a toggle rather than a one-way award.
+    fireEvent.click(trophyToggle());
+    expect(within(playerRow(0)).queryByRole('img', { name: 'Trophy' })).not.toBeInTheDocument();
+
+    fireEvent.click(trophyToggle());
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+    expect(savedPayload(csrfFetch).trophy).toEqual(['Alice']);
   });
 
   // The endpoint refuses a save that adds, removes or reorders players on a played draft, so
   // the page must not put those controls in front of the user at all.
-  it('offers no way to add, remove or reorder players on a played draft', () => {
+  it('offers no add, remove or shuffle when seats are not editable', () => {
     const { unmount } = renderPage();
-    expect(screen.getByRole('button', { name: 'Edit players' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add Player' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Shuffle Players' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Remove Alice' })).toBeInTheDocument();
     unmount();
 
     renderPage({ draft: playedDraft() });
 
-    expect(screen.queryByRole('button', { name: 'Edit players' })).not.toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(ADD_PLAYER_INPUT)).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Add Player' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Remove Last Player' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Shuffle Players' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Remove Alice' })).not.toBeInTheDocument();
+    expect(screen.getByText(/cannot be added, removed or reordered here/)).toBeInTheDocument();
+  });
+
+  // Renaming is the one player edit a played draft accepts, and it must not drag a deck edit
+  // along with it: a dirty flag on a seat this record does not own is rejected wholesale.
+  it('still offers rename when seats are not editable', async () => {
+    const { csrfFetch } = renderPage({ draft: playedDraft() });
+
+    await renameOpenRow('Alicia');
+
+    expect(playerRow(0)).toHaveTextContent('Alicia');
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    expect(savedPayload(csrfFetch)).toMatchObject({
+      players: [{ name: 'Alicia' }, { name: 'Bob' }],
+      seatOrder: [0, 1],
+      decks: {},
+    });
   });
 
   // Whether this page owns the seats is a fact about the draft, not about the seeded decks:
@@ -195,9 +420,25 @@ describe('RecordTranscribePage', () => {
   it('offers no player editing on a played draft with no players yet', () => {
     renderPage({ record: createRecord({ players: [] }), draft: playedDraft() });
 
-    expect(screen.queryAllByTestId('transcribe-deck-row')).toHaveLength(0);
-    expect(screen.queryByRole('button', { name: 'Edit players' })).not.toBeInTheDocument();
+    expect(screen.queryAllByTestId('transcribe-player-row')).toHaveLength(0);
+    expect(screen.getByText('0 players')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Player' })).not.toBeInTheDocument();
     expect(screen.getByText(/attached to a played draft/)).toBeInTheDocument();
+  });
+
+  it('shows the read-only deck and deckbuilder link for a played-draft seat', () => {
+    renderPage({ draft: playedDraft() });
+
+    expect(within(playerRow(0)).getByText('Lightning Bolt')).toBeInTheDocument();
+    expect(within(playerRow(0)).getByText('Pyroblast')).toBeInTheDocument();
+
+    expect(screen.queryByPlaceholderText(/Paste your decklist here/)).not.toBeInTheDocument();
+    expect(within(playerRow(0)).getByText(/attached to a played draft/)).toBeInTheDocument();
+    // Telling the user to edit the deck elsewhere is only useful alongside the way there.
+    expect(within(playerRow(0)).getByRole('link', { name: /deckbuilder/ })).toHaveAttribute(
+      'href',
+      '/draft/deckbuilder/draft-1?seat=0',
+    );
   });
 
   // A played draft's seats are written by the draft, not by this page. A dirty flag on one of
@@ -222,11 +463,9 @@ describe('RecordTranscribePage', () => {
     });
     const { csrfFetch } = renderPage({ record });
 
-    fireEvent.click(screen.getByRole('button', { name: 'Rename Alice' }));
-    fireEvent.change(screen.getByPlaceholderText(/Player name/), { target: { value: 'Alicia' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Save name' }));
+    await renameOpenRow('Alicia');
 
-    await waitFor(() => expect(screen.getByRole('button', { name: 'Rename Alicia' })).toBeInTheDocument());
+    expect(playerRow(0)).toHaveTextContent('Alicia');
 
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
@@ -240,28 +479,20 @@ describe('RecordTranscribePage', () => {
     expect(payload.seatOrder).toEqual([0, 1]);
   });
 
-  // Only one deck editor is mounted at a time — a pod of eight would otherwise fetch the
-  // cube's pool eight times — so the paste box is unmounted whenever another player's row is
-  // opened. Holding its text inside the editor would throw a half-entered decklist away.
-  const pasteBox = (playerIndex: number) =>
-    within(screen.getAllByTestId('transcribe-deck-row')[playerIndex]).getByPlaceholderText(
-      /Paste your decklist here/,
-    ) as HTMLTextAreaElement;
-
-  const toggleRow = (playerIndex: number, name: RegExp) =>
-    fireEvent.click(within(screen.getAllByTestId('transcribe-deck-row')[playerIndex]).getByRole('button', { name }));
-
-  it('keeps a half-typed paste when its row is collapsed and reopened', () => {
+  // Only one deck editor is mounted at a time, so the paste box is unmounted whenever another
+  // player's row is opened. Holding its text inside the editor would throw a half-entered
+  // decklist away.
+  it('keeps a paste across a collapse and re-expand', () => {
     renderPage();
 
     fireEvent.change(pasteBox(0), { target: { value: '2x Lightning Bolt\nCounterspell' } });
 
     // Open Bob's row, which collapses Alice's and unmounts her editor.
-    toggleRow(1, /Bob/);
+    toggleRow(1);
     expect(screen.getAllByPlaceholderText(/Paste your decklist here/)).toHaveLength(1);
     expect(pasteBox(1)).toHaveValue('');
 
-    toggleRow(0, /Alice/);
+    toggleRow(0);
 
     expect(pasteBox(0)).toHaveValue('2x Lightning Bolt\nCounterspell');
   });
@@ -277,10 +508,10 @@ describe('RecordTranscribePage', () => {
     await waitFor(() => expect(screen.getByText('Could not find card: "Notacard"')).toBeInTheDocument());
     expect(pasteBox(0)).toHaveValue('Notacard');
 
-    toggleRow(1, /Bob/);
+    toggleRow(1);
     expect(screen.queryByText('Could not find card: "Notacard"')).not.toBeInTheDocument();
 
-    toggleRow(0, /Alice/);
+    toggleRow(0);
 
     expect(pasteBox(0)).toHaveValue('Notacard');
     expect(screen.getByText('Could not find card: "Notacard"')).toBeInTheDocument();
@@ -292,12 +523,12 @@ describe('RecordTranscribePage', () => {
     renderPage();
 
     fireEvent.change(pasteBox(0), { target: { value: "Alice's deck" } });
-    toggleRow(1, /Bob/);
+    toggleRow(1);
     fireEvent.change(pasteBox(1), { target: { value: "Bob's deck" } });
-    toggleRow(0, /Alice/);
+    toggleRow(0);
 
     expect(pasteBox(0)).toHaveValue("Alice's deck");
-    toggleRow(1, /Bob/);
+    toggleRow(1);
     expect(pasteBox(1)).toHaveValue("Bob's deck");
   });
 
@@ -484,8 +715,8 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    expect(screen.getByRole('button', { name: 'Edit players' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Rename Bob' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Shuffle Players' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add Player' })).toBeDisabled();
 
     await release();
     await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
@@ -507,25 +738,30 @@ describe('RecordTranscribePage', () => {
     });
   });
 
-  it('holds every player edit shut while a save is in flight and gives them back when it lands', async () => {
+  it('disables every player edit while a save is in flight', async () => {
     const { csrfFetch, release } = makeDeferredCsrfFetch();
     renderPage({ csrfFetch });
 
     fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
-    expect(screen.getByRole('button', { name: 'Edit players' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Rename Alice' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Add Player' })).toBeEnabled();
+    expect(nameField()).toBeEnabled();
 
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    expect(screen.getByRole('button', { name: 'Edit players' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Rename Alice' })).toBeDisabled();
+    expect(screen.getByPlaceholderText(ADD_PLAYER_INPUT)).toBeDisabled();
+    for (const name of ['Add Player', 'Shuffle Players', 'Remove Alice']) {
+      expect(screen.getByRole('button', { name })).toBeDisabled();
+    }
+    expect(nameField()).toBeDisabled();
+    expect(trophyToggle()).toBeDisabled();
 
     await release();
     await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
 
-    expect(screen.getByRole('button', { name: 'Edit players' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Rename Alice' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Add Player' })).toBeEnabled();
+    expect(nameField()).toBeEnabled();
+    expect(trophyToggle()).toBeEnabled();
   });
 
   // A rejected save leaves the record exactly where it was, so the edits come straight back.
@@ -537,43 +773,19 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    expect(screen.getByRole('button', { name: 'Edit players' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Rename Alice' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Add Player' })).toBeDisabled();
+    expect(nameField()).toBeDisabled();
 
     await release();
     await waitFor(() => expect(screen.getByText('Could not save')).toBeInTheDocument());
 
-    expect(screen.getByRole('button', { name: 'Edit players' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Rename Alice' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Add Player' })).toBeEnabled();
+    expect(nameField()).toBeEnabled();
   });
 
-  // While the editor is open the add/remove/reorder controls belong to EditPlayerList, which
-  // takes no disabled prop of its own — the rail holds them shut from the outside.
-  it('holds the open player editor shut while a save is in flight', async () => {
-    const { csrfFetch, release } = makeDeferredCsrfFetch();
-    renderPage({ csrfFetch });
-
-    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Edit players' }));
-    expect(screen.getByRole('button', { name: 'Add Player' })).toBeEnabled();
-
-    fireEvent.click(saveButton());
-    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
-
-    for (const name of ['Add Player', 'Remove Last Player', 'Shuffle Players', 'Apply player changes']) {
-      expect(screen.getByRole('button', { name })).toBeDisabled();
-    }
-
-    await release();
-    await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
-
-    expect(screen.getByRole('button', { name: 'Add Player' })).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Apply player changes' })).toBeEnabled();
-  });
-
-  // jsdom still dispatches a click on a button inside a disabled fieldset, where a browser
-  // would not deliver it at all. These two pin the handler-level refusal underneath the
-  // greying out, because the unconditional seatOrder re-base above depends on it holding.
+  // jsdom still delivers events to controls inside a disabled fieldset, where a browser would
+  // not. These two pin the handler-level refusal underneath the greying out, because the
+  // unconditional seatOrder re-base above depends on it holding.
   it('refuses a rename attempted while a save is in flight', async () => {
     const { csrfFetch, release } = makeDeferredCsrfFetch();
     renderPage({ csrfFetch });
@@ -582,41 +794,43 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Rename Alice' }));
-    expect(screen.queryByPlaceholderText(/Player name/)).not.toBeInTheDocument();
+    await renameOpenRow('Alicia');
+    expect(playerRow(0)).toHaveTextContent('Alice');
+    expect(playerRow(0)).not.toHaveTextContent('Alicia');
 
     await release();
     await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
 
-    fireEvent.click(screen.getByRole('button', { name: 'Rename Alice' }));
-    expect(screen.getByPlaceholderText(/Player name/)).toBeInTheDocument();
+    await renameOpenRow('Alicia');
+    expect(playerRow(0)).toHaveTextContent('Alicia');
   });
 
-  it('refuses a staged reorder applied while a save is in flight', async () => {
+  it('refuses an add, remove or shuffle attempted while a save is in flight', async () => {
     const { csrfFetch, release } = makeDeferredCsrfFetch();
     renderPage({ csrfFetch });
 
     fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
-    fireEvent.click(screen.getByRole('button', { name: 'Edit players' }));
-    const random = jest.spyOn(Math, 'random').mockReturnValue(0);
-    fireEvent.click(screen.getByRole('button', { name: 'Shuffle Players' }));
-    random.mockRestore();
-
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    fireEvent.click(screen.getByRole('button', { name: 'Apply player changes' }));
+    fireEvent.change(screen.getByPlaceholderText(ADD_PLAYER_INPUT), { target: { value: 'Carol' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add Player' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Alice' }));
+    const random = jest.spyOn(Math, 'random').mockReturnValue(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Shuffle Players' }));
+    random.mockRestore();
+    await act(async () => {});
 
-    // Nothing applied: the deck rows still read in the order that was submitted.
-    expect(screen.getAllByTestId('transcribe-deck-row')[0]).toHaveTextContent('Alice');
+    // Nothing applied: the rows still read in the order that was submitted.
+    expect(playerRows()).toHaveLength(2);
+    expect(playerRow(0)).toHaveTextContent('Alice');
     expect(JSON.parse(`${saveCalls(csrfFetch)[0][1].body}`).seatOrder).toEqual([0, 1]);
 
     await release();
     await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
 
-    // The staged reversal is still there, and applying it now goes through.
-    fireEvent.click(screen.getByRole('button', { name: 'Apply player changes' }));
-    expect(screen.getAllByTestId('transcribe-deck-row')[0]).toHaveTextContent('Bob');
+    // ...and the same shuffle goes through once the save has landed.
+    reversePlayerList();
   });
 
   // The server's Joi schema caps a record at 50 rounds, so the page refuses the 51st at the
@@ -631,17 +845,6 @@ describe('RecordTranscribePage', () => {
     renderPage({ record: createRecord({ matches: Array.from({ length: 50 }, round) }) });
 
     expect(screen.getByRole('button', { name: 'Add Round' })).toBeDisabled();
-  });
-
-  // Every result is keyed by player name, so two players sharing one makes their records
-  // indistinguishable. Joi rejects it outright; the page stops it before the save.
-  it('blocks Save when a rename collides with another player', () => {
-    renderPage({ record: createRecord({ players: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'ALICE' }] }) });
-
-    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
-
-    expect(screen.getByText(/Two players cannot share a name: ALICE\./)).toBeInTheDocument();
-    expect(saveButton()).toBeDisabled();
   });
 
   // The server's Joi schema caps the player list at 16, so the page has to stop the user

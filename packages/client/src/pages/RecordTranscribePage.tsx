@@ -19,8 +19,7 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
 import EditDescription from '../records/EditDescription';
-import TranscribeDecks from '../records/transcribe/TranscribeDecks';
-import TranscribePlayerRail from '../records/transcribe/TranscribePlayerRail';
+import TranscribePlayers from '../records/transcribe/TranscribePlayers';
 import TranscribeRounds, { ResultsMode } from '../records/transcribe/TranscribeRounds';
 import {
   applyPlayerEdit,
@@ -103,8 +102,8 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
   // flag from exactly this, so a zero-player record cannot drift from its seats.
   const seatsEditable = areSeatsEditable(draft);
 
-  // The live state as a Record, so the rail and the results section can use playerRecord,
-  // formatRecord and EditTrophies rather than reimplementing them against TranscribeState.
+  // The live state as a Record, so the players section can use playerRecord and formatRecord
+  // rather than reimplementing them against TranscribeState.
   const liveRecord: Record = useMemo(
     () => ({
       ...record,
@@ -198,9 +197,9 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
         const wasSubmitted = (index: number, deck: TranscribeDeck) => submitted.decks[index] === deck;
         // The server rewrote the draft's seats into the submitted player order, so every
         // player now sits where they are listed and identity is the only correct seatOrder
-        // for the next save. The rail holds every player edit shut for the length of the
-        // request, so no other permutation can have been created in the meantime — which is
-        // what lets this re-base be unconditional.
+        // for the next save. The players section holds every player edit shut for the length
+        // of the request, so no other permutation can have been created in the meantime —
+        // which is what lets this re-base be unconditional.
         const identity = submitted.players.map((_, index) => index);
         const settled = {
           ...submitted,
@@ -295,27 +294,17 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                 <Text lg semibold>
                   Players
                 </Text>
-                <TranscribePlayerRail
+                <TranscribePlayers
+                  cube={cube}
                   record={liveRecord}
+                  draft={draft}
                   linkedUsers={players}
                   decks={state.decks}
+                  setDeckBoard={setDeckBoard}
                   setTrophy={(trophy) => updateState((previous) => ({ ...previous, trophy }))}
                   seatsEditable={seatsEditable}
                   editsDisabled={saving}
                   onApplyPlayers={applyPlayers}
-                />
-              </Flexbox>
-
-              <Flexbox direction="col" gap="2">
-                <Text lg semibold>
-                  Decks
-                </Text>
-                <TranscribeDecks
-                  cube={cube}
-                  record={liveRecord}
-                  draft={draft}
-                  decks={state.decks}
-                  setDeckBoard={setDeckBoard}
                   pastes={pastes}
                   setPasteText={setPasteText}
                   setPasteErrors={setPasteErrors}
