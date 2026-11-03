@@ -51,6 +51,7 @@ export const addsHandler = async (req: Request, res: Response) => {
         message: 'Cube ID is required',
         cardIDs: [],
         hasMoreAdds: false,
+        totalAdds: 0,
       });
     }
 
@@ -61,6 +62,7 @@ export const addsHandler = async (req: Request, res: Response) => {
         message: 'Cube not found',
         cardIDs: [],
         hasMoreAdds: false,
+        totalAdds: 0,
       });
     }
 
@@ -72,7 +74,7 @@ export const addsHandler = async (req: Request, res: Response) => {
     // Smart Search is filter-driven. With no filter there is nothing to rank,
     // so return empty instead of dumping the whole recommender list.
     if (!filterText || `${filterText}`.trim().length === 0) {
-      return res.status(200).send({ cardIDs: [], hasMoreAdds: false });
+      return res.status(200).send({ cardIDs: [], hasMoreAdds: false, totalAdds: 0 });
     }
 
     const { err, filter } =
@@ -84,6 +86,7 @@ export const addsHandler = async (req: Request, res: Response) => {
         success: 'false',
         cardIDs: [],
         hasMoreAdds: false,
+        totalAdds: 0,
       });
     }
 
@@ -113,7 +116,7 @@ export const addsHandler = async (req: Request, res: Response) => {
 
     // Filter matched nothing — skip the ML round trip entirely.
     if (eligibleOracles.length === 0) {
-      return res.status(200).send({ cardIDs: [], hasMoreAdds: false });
+      return res.status(200).send({ cardIDs: [], hasMoreAdds: false, totalAdds: 0 });
     }
 
     const cubeCards = await cubeCardsPromise;
@@ -141,6 +144,7 @@ export const addsHandler = async (req: Request, res: Response) => {
           'The card recommender is temporarily unavailable, so Smart Search results would be unranked. Please try again in a moment.',
         cardIDs: [],
         hasMoreAdds: false,
+        totalAdds: 0,
       });
     }
 
@@ -157,6 +161,7 @@ export const addsHandler = async (req: Request, res: Response) => {
     return res.status(200).send({
       cardIDs,
       hasMoreAdds: skip + limit < result.totalAdds,
+      totalAdds: result.totalAdds,
     });
   } catch (err) {
     const error = err as Error;
@@ -166,6 +171,7 @@ export const addsHandler = async (req: Request, res: Response) => {
       message: 'Error retrieving recommendations',
       cardIDs: [],
       hasMoreAdds: false,
+      totalAdds: 0,
     });
   }
 };
