@@ -1,7 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { arrayMove } from '@dnd-kit/sortable';
-import { GrabberIcon } from '@primer/octicons-react';
+import { ChevronDownIcon, ChevronRightIcon, GrabberIcon } from '@primer/octicons-react';
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
@@ -281,7 +281,23 @@ const PlayerRecord: React.FC<PlayerRecordProps> = ({
   const seed = override ?? derived;
 
   return (
+    // Everything that varies in width sits to the left of the cells, so the three of them
+    // land at the same x on every row and the column headings above the list stay true.
     <Flexbox direction="row" alignItems="center" gap="1" wrap="wrap">
+      {override && (
+        <>
+          {hasPairings && (
+            // The precedence disclosure: this player's pairings say one thing and the record
+            // displays another, so both are on screen together.
+            <Text sm className="text-text-secondary text-nowrap">
+              {`From pairings: ${formatRecord(derived)}`}
+            </Text>
+          )}
+          <Button color="secondary" aria-label={`Clear ${player.name}'s record`} onClick={() => setOverride(undefined)}>
+            <span className="text-nowrap">Clear</span>
+          </Button>
+        </>
+      )}
       {RECORD_FIELDS.map(({ label, key }) => (
         <Input
           key={key}
@@ -291,25 +307,11 @@ const PlayerRecord: React.FC<PlayerRecordProps> = ({
           // Named rather than labelled: a visible label on all three would break the one-line
           // `[W] [L] [D]` reading the row is for, and sixteen rows of them is unreadable. The
           // title is the per-cell cue that names the box without taking a line, alongside the
-          // legend above the list.
+          // column headings above the list.
           otherInputProps={{ min: 0, title: label, 'aria-label': `${label} for ${player.name}` }}
           wrapperClassName="w-20"
         />
       ))}
-      {override && (
-        <>
-          <Button color="secondary" aria-label={`Clear ${player.name}'s record`} onClick={() => setOverride(undefined)}>
-            <span className="text-nowrap">Clear</span>
-          </Button>
-          {hasPairings && (
-            // The precedence disclosure: this player's pairings say one thing and the record
-            // displays another, so both are on screen together.
-            <Text sm className="text-text-secondary text-nowrap">
-              {`From pairings: ${formatRecord(derived)}`}
-            </Text>
-          )}
-        </>
-      )}
     </Flexbox>
   );
 };
@@ -584,11 +586,19 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
       )}
 
       {anyRecordCells && (
-        // The three record cells on each row carry no visible label, so the list says once
-        // what they are. Without it a pod of sixteen is forty-eight unnamed boxes.
-        <Text sm className="text-text-secondary">
-          Each record reads W / L / D — wins, losses and draws.
-        </Text>
+        // Column headings rather than a sentence: the three cells on each row carry no visible
+        // label, and a caption that is not the width of the column it describes does not point
+        // at anything. Each heading is `w-20` like the cell beneath it, right-aligned to the
+        // same card padding, so the three columns read top to bottom.
+        <div data-testid="record-column-headings" className="px-4">
+          <Flexbox direction="row" justify="end" gap="1" alignItems="center">
+            {RECORD_FIELDS.map(({ label, key }) => (
+              <Text key={key} sm semibold className="w-20 text-text-secondary">
+                {label.charAt(0)}
+              </Text>
+            ))}
+          </Flexbox>
+        </div>
       )}
 
       {/* The rows stay sortable on a played draft too: what is withheld there is the handle,
@@ -633,14 +643,19 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                         )}
                         {/* Only the identity half toggles the row — the record cells sit beside
                             it rather than inside it, so typing a number does not collapse the
-                            row. */}
+                            row. The chevron is what makes that half legible as a control:
+                            without it the hit region is an unmarked stretch of the header. */}
                         <button
                           type="button"
                           className="min-w-0 grow text-left"
                           onClick={() => setExpanded(open ? -1 : index)}
                           aria-expanded={open}
+                          aria-label={`${open ? 'Collapse' : 'Expand'} ${player.name}`}
                         >
                           <Flexbox direction="row" alignItems="center" gap="2" className="min-w-0">
+                            <span data-testid="expand-indicator" className="shrink-0 text-text-secondary">
+                              {open ? <ChevronDownIcon size={16} /> : <ChevronRightIcon size={16} />}
+                            </span>
                             {linked?.image?.uri ? (
                               <img
                                 src={linked.image.uri}
@@ -661,6 +676,9 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                           </Flexbox>
                         </button>
                         <Flexbox direction="row" alignItems="center" gap="2" wrap="wrap">
+                          <Text sm className="text-text-secondary shrink-0">
+                            {`${summarize(deck)}${deck?.dirty ? ' • unsaved' : ''}`}
+                          </Text>
                           <PlayerRecord
                             player={player}
                             derived={playerRecord(withoutOverrides, player.name)}
@@ -670,9 +688,6 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                             onReveal={() => setRevealed((previous) => [...previous, player.name])}
                             setOverride={(value) => setOverride(player.name, value)}
                           />
-                          <Text sm className="text-text-secondary shrink-0">
-                            {`${summarize(deck)}${deck?.dirty ? ' • unsaved' : ''}`}
-                          </Text>
                         </Flexbox>
                       </Flexbox>
                     </CardHeader>

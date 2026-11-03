@@ -993,22 +993,75 @@ describe('RecordTranscribePage', () => {
   // Three bare number boxes per row, times sixteen players, with no column heading. The
   // cells stay unlabelled to keep the row on one line, so the list says once what they are
   // and each cell names itself on hover.
-  it('says what the record cells are, once above the list and on each cell', () => {
+  it('heads the record columns, once above the list and on each cell', () => {
     renderPage({ record: createRecord({ matches: pairedRound() }) });
 
-    // Nothing is showing cells yet in pairings mode, so there is nothing to explain.
-    expect(screen.queryByText(/Each record reads W \/ L \/ D/)).not.toBeInTheDocument();
+    // Nothing is showing cells yet in pairings mode, so there are no columns to head.
+    expect(screen.queryByTestId('record-column-headings')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: "Edit Bob's record" }));
-    expect(screen.getByText(/Each record reads W \/ L \/ D/)).toBeInTheDocument();
+    const headings = screen.getByTestId('record-column-headings');
+    expect(within(headings).getByText('W')).toBeInTheDocument();
+    expect(within(headings).getByText('L')).toBeInTheDocument();
+    expect(within(headings).getByText('D')).toBeInTheDocument();
     expect(recordCell(1, 'Wins')).toHaveAttribute('title', 'Wins');
     expect(recordCell(1, 'Losses')).toHaveAttribute('title', 'Losses');
     expect(recordCell(1, 'Draws')).toHaveAttribute('title', 'Draws');
 
-    // Every row carries cells in final records mode, so the legend is there from the start.
+    // Every row carries cells in final records mode, so the headings are there from the start.
     fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
-    expect(screen.getByText(/Each record reads W \/ L \/ D/)).toBeInTheDocument();
+    expect(screen.getByTestId('record-column-headings')).toBeInTheDocument();
     expect(recordCell(0, 'Wins')).toHaveAttribute('title', 'Wins');
+  });
+
+  it('aligns each column heading with the cell beneath it', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
+
+    // A heading that is not the same width as its column is not a heading, it is a caption.
+    const headings = screen.getByTestId('record-column-headings');
+    for (const label of ['W', 'L', 'D']) {
+      expect(within(headings).getByText(label)).toHaveClass('w-20');
+    }
+    expect(recordCell(0, 'Wins').parentElement?.parentElement).toHaveClass('w-20');
+  });
+
+  it('keeps the record cells rightmost, with the deck summary to their left', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
+
+    // The cells sit at the same x on every row only if everything that varies in width —
+    // the deck summary, a Clear control, a from-pairings reading — is left of them.
+    const row = playerRow(0);
+    const summary = within(row).getByText(/No deck yet/);
+    const wins = recordCell(0, 'Wins');
+    expect(summary.compareDocumentPosition(wins) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
+  it('puts a clear control and the from-pairings reading left of the cells too', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
+    fireEvent.change(recordCell(0, 'Wins'), { target: { value: '3' } });
+
+    const row = playerRow(0);
+    const clear = within(row).getByRole('button', { name: "Clear Alice's record" });
+    const wins = recordCell(0, 'Wins');
+    expect(clear.compareDocumentPosition(wins) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(
+      within(row)
+        .getByText(/From pairings/)
+        .compareDocumentPosition(wins) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
+  it('gives each row a visible expand indicator that toggles it', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+
+    const toggle = within(playerRow(1)).getByRole('button', { name: /Expand Bob/ });
+    expect(within(toggle).getByTestId('expand-indicator')).toBeInTheDocument();
+
+    fireEvent.click(toggle);
+    expect(within(playerRow(1)).getByRole('button', { name: /Collapse Bob/ })).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('shows a read-only derived record in pairings mode', () => {
