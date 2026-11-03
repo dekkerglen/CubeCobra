@@ -20,7 +20,7 @@ import { SortableItem, SortableList } from 'components/DND';
 import { CSRFContext } from 'contexts/CSRFContext';
 
 import UploadDeck from '../UploadDeck';
-import UploadDeckFromPhoto from '../UploadDeckFromPhoto';
+import ScanDeckPhotoButton from '../ScanDeckPhotoButton';
 import { DeckBoard, TranscribeDeck, TranscribePaste } from './transcribeState';
 import { ResultsMode } from './TranscribeRounds';
 
@@ -745,7 +745,7 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                                   )
                                 }
                                 photoScanner={
-                                  <UploadDeckFromPhoto
+                                  <ScanDeckPhotoButton
                                     cube={cube}
                                     setMainboardCards={setters[index].setMainboard}
                                     setSideboardCards={setters[index].setSideboard}

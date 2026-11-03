@@ -8,6 +8,14 @@ import { Flexbox } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 
+// The shape a match starts in, shared with whatever creates a round so a new one arrives
+// with a row in it rather than an empty body and a second click to make.
+export const emptyMatch = (): Match => ({
+  p1: 'Unknown Opponent',
+  p2: 'Unknown Opponent',
+  results: [0, 0, 0],
+});
+
 interface EditMatchRoundProps {
   players: PlayerList;
   round: Round;
@@ -130,14 +138,7 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
         <button
           type="button"
           className="flex items-center gap-1 text-sm font-medium text-link hover:text-link-active"
-          onClick={() => {
-            const newMatch: Match = {
-              p1: 'Unknown Opponent',
-              p2: 'Unknown Opponent',
-              results: [0, 0, 0],
-            };
-            setRound({ ...round, matches: [...round.matches, newMatch] });
-          }}
+          onClick={() => setRound({ ...round, matches: [...round.matches, emptyMatch()] })}
         >
           <PlusIcon size={16} />
           Add Match

@@ -39,6 +39,13 @@ interface UploadDeckFromPhotoProps {
   photos?: DeckPhoto[];
   onCardsChange?: (cardNames: string[], autoBuild: boolean) => void;
   header?: React.ReactNode;
+  // Fired when a scan has been added in full and the scanner has reset itself. A partial
+  // add does not fire it: the rows that failed to resolve are still on screen to be fixed,
+  // which is the one case where the scanner has something left to say.
+  onComplete?: () => void;
+  // Drops the bordered container and the title, for a caller that already frames this —
+  // a modal whose own header says what it is.
+  bare?: boolean;
 }
 
 interface Bbox {
@@ -171,6 +178,8 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
   setAlerts,
   photos,
   onCardsChange,
+  onComplete,
+  bare,
   header,
 }) => {
   const deckMode = !!photos;
@@ -531,6 +540,7 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
           },
         ]);
         reset();
+        onComplete?.();
       } else {
         // Partial success: keep the cards we resolved, but leave the rows that
         // couldn't be resolved (and any still-unnamed ones) up for fixing rather
@@ -547,7 +557,7 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
     } finally {
       setAdding(false);
     }
-  }, [rows, csrfFetch, cube.defaultPrinting, setMainboardCards, setSideboardCards, setAlerts, reset]);
+  }, [rows, csrfFetch, cube.defaultPrinting, setMainboardCards, setSideboardCards, setAlerts, reset, onComplete]);
 
   const addableCount = rows.filter((row) => row.name.trim()).length;
   const sideboardCount = setSideboardCards ? rows.filter((row) => row.name.trim() && row.sideboard).length : 0;
@@ -607,9 +617,9 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
     ) : null;
 
   return (
-    <Flexbox direction="col" gap="2" className="border border-border rounded-md p-3">
+    <Flexbox direction="col" gap="2" className={bare ? '' : 'border border-border rounded-md p-3'}>
       {header}
-      <Text semibold>Scan deck from photo</Text>
+      {!bare && <Text semibold>Scan deck from photo</Text>}
       <Text sm className="text-text-secondary">
         Recognition runs entirely in your browser — the photo is never uploaded.
       </Text>

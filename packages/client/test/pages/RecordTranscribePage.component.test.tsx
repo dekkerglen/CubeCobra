@@ -1212,6 +1212,19 @@ describe('RecordTranscribePage', () => {
     expect(screen.getByText('Round 2')).toBeInTheDocument();
   });
 
+  // A round with no matches is a heading over an empty body, and the only thing to do with
+  // it is make the row that was already asked for.
+  it('seeds a new round with one match', () => {
+    renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add Round' }));
+
+    expect(screen.getAllByLabelText('Player 1')).toHaveLength(1);
+    // Both seats start unassigned, so both win cells are named for the same placeholder.
+    expect(screen.getAllByLabelText('Unknown Opponent Wins')).toHaveLength(2);
+    expect(screen.getByRole('button', { name: 'Remove match 1' })).toBeInTheDocument();
+  });
+
   // With the add control moved to the header, a record with no rounds would otherwise show
   // an empty card body and nothing to say what belongs in it.
   it('says what an empty rounds section is for', () => {

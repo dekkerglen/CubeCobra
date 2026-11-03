@@ -8,7 +8,7 @@ import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 
-import EditMatchRound from '../EditMatchRound';
+import EditMatchRound, { emptyMatch } from '../EditMatchRound';
 import { MAX_ROUNDS } from './transcribeState';
 
 // Two ways into the same standings: transcribe every pairing, or just type each player's
@@ -24,7 +24,9 @@ export const AddRoundButton: React.FC<{ matches: Round[]; setMatches: (matches: 
 }) => (
   <Button
     color="primary"
-    onClick={() => setMatches([...matches, { matches: [] }])}
+    // Seeded with one match: a round with none is a heading over an empty body, and the
+    // only thing to do with it is make the row the user already asked for.
+    onClick={() => setMatches([...matches, { matches: [emptyMatch()] }])}
     // The server caps a record at MAX_ROUNDS rounds. Adding past that is refused here
     // rather than at Save.
     disabled={matches.length >= MAX_ROUNDS}

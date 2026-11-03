@@ -17,7 +17,7 @@ import RenderToRoot from 'components/RenderToRoot';
 import MainLayout from 'layouts/MainLayout';
 
 import UploadDeck, { NEW_PLAYER } from '../records/UploadDeck';
-import UploadDeckFromPhoto from '../records/UploadDeckFromPhoto';
+import ScanDeckPhotoButton from '../records/ScanDeckPhotoButton';
 
 interface ContributeDeckPageProps {
   cube: Cube;
@@ -84,7 +84,7 @@ const ContributeDeckPage: React.FC<ContributeDeckPageProps> = ({ cube, record, t
           <Flexbox direction="col" gap="2">
             <UploadDeck
               photoScanner={
-                <UploadDeckFromPhoto
+                <ScanDeckPhotoButton
                   cube={cube}
                   setMainboardCards={setMainboardCards}
                   setSideboardCards={setSideboardCards}
