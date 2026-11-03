@@ -433,6 +433,17 @@ describe('landscape previews', () => {
     expect(landscapeFrame('autocardImageBack')).toBeNull();
   });
 
+  it('tops the faces rather than stretching the landscape one', () => {
+    // The row defaults to items-stretch, which overrides the landscape frame's
+    // aspect-ratio: beside a Battle's taller portrait back, the rotated front would
+    // float mid-column with accent background above and below it.
+    hover(battle);
+
+    const row = document.getElementById('autocardImageFront')!.closest('.flex') as HTMLElement;
+    expect(row).toHaveClass('items-start');
+    expect(row).not.toHaveClass('items-stretch');
+  });
+
   it('keeps a landscape preview inside the viewport near the right edge', () => {
     // The landscape popup is ~40% wider than a portrait one; the clamp has to measure
     // the box it actually reserves rather than assume 15rem.

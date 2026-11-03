@@ -228,7 +228,10 @@ const CardDiv: React.FC<CardDivProps> = ({
     <>
       <div id="autocardPopup" style={popupStyle} ref={autocardPopup}>
         <div className="autocard-background bg-bg-accent">
-          <Flexbox direction="row">
+          {/* Top-aligned, not stretched: a Battle pairs a landscape front with a portrait
+              back, and stretching would override the landscape frame's aspect ratio and
+              leave the rotated card floating mid-column. */}
+          <Flexbox direction="row" alignItems="start">
             {front && (
               <CardOrientationFrame orientation={orientations.front} width={`${faceWidthRem(orientations.front)}rem`}>
                 <div className="col position-relative">
