@@ -4,8 +4,8 @@ import { detailsToCard } from '@utils/cardutil';
 import CardType, { CardDetails } from '@utils/datatypes/Card';
 
 import { Card, CardBody } from '../components/base/Card';
-import CursorPagination from '../components/base/CursorPagination';
 import { Flexbox } from '../components/base/Layout';
+import Pagination from '../components/base/Pagination';
 import ResponsiveDiv from '../components/base/ResponsiveDiv';
 import Spinner from '../components/base/Spinner';
 import Text from '../components/base/Text';
@@ -21,17 +21,19 @@ import { CubeTrayProvider } from '../contexts/CubeTrayContext';
 import DisplayContext from '../contexts/DisplayContext';
 import FilterContext from '../contexts/FilterContext';
 import { getCardDetails } from '../utils/cardDetailsCache';
-import { getIndefinitePageCount } from '../utils/indefinitePagination';
 
 // Display page size — how many cards a user sees per page.
 const PAGE_SIZE = 96;
-// How many results to request from the server per fetch. Larger than PAGE_SIZE
-// so a single fetch usually fills a page even when some results don't resolve
-// to displayable cards (keeps the number of round trips down).
+// How many results one fetch asks the recommender for. A fetch covers a whole
+// window of display pages, so moving between pages inside a window costs no
+// round trip, and a window that loses a few unresolvable ids still fills its
+// first page.
 const FETCH_LIMIT = PAGE_SIZE * 2;
-// Safety cap on fetches per fill, against a pathological filter that returns
-// results the client can't resolve. Far more than enough to fill one page.
-const MAX_BATCHES_PER_FILL = 25;
+const PAGES_PER_WINDOW = FETCH_LIMIT / PAGE_SIZE;
+// A shrinking total retargets the fetch at the last page that still exists.
+// Two retries is already far past what a single stale total can need; the cap
+// only exists so a pathologically unstable total can't loop.
+const MAX_FETCH_ATTEMPTS = 3;
 
 type ErrorState = 'none' | 'ml-unavailable' | 'generic';
 
@@ -51,30 +53,35 @@ const Suggestions: React.FC = () => {
   // Keep the floating tray clear of the cube sidebar (expanded w-52 / collapsed w-16).
   const trayLeftClassName = cubeSidebarExpanded ? 'left-4 sm:left-[14rem]' : 'left-4 sm:left-20';
 
-  // All results fetched so far, in rank order. A "page" is just a slice of
-  // this — navigating to an already-loaded page is instant, no fetch.
-  const [allCards, setAllCards] = useState<CardType[]>([]);
+  // The cards on the page being shown. Other pages live in the window cache
+  // below, not in state — a page is served from there without a fetch.
+  const [pageCards, setPageCards] = useState<CardType[]>([]);
   const [page, setPage] = useState(0);
-  // True only while actively fetching more to fill a not-yet-loaded page.
+  // The server's count of every result matching the filter, before pagination.
+  // The only source of the page count.
+  const [total, setTotal] = useState(0);
+  // True only while actively fetching a window the cache doesn't hold.
   const [loadingMore, setLoadingMore] = useState(false);
-  // The server has no more results past what we've fetched.
-  const [exhausted, setExhausted] = useState(false);
   const [errorState, setErrorState] = useState<ErrorState>('none');
   const [modalCard, setModalCard] = useState<CardType | null>(null);
 
-  // Mutable state for the fill routine. Refs (not state) so the routine sees
+  // Mutable state for the fetch routine. Refs (not state) so the routine sees
   // live values and stays a stable callback that doesn't churn effects.
   const generationRef = useRef(0); // bumps on every new search; cancels stale fetches
-  const skipRef = useRef(0); // next `skip` offset to request from the server (recommender)
-  const searchPageRef = useRef(0); // next page to request (empty-cube Elo fallback)
-  const cardsRef = useRef<CardType[]>([]); // mirror of allCards for the loop
-  const exhaustedRef = useRef(false);
-  const loadingRef = useRef(false); // a fill loop is currently running
-  const targetPageRef = useRef(0); // highest page the running loop should fill to
+  // Results already fetched, keyed by window index (recommender) or by page
+  // index (empty-cube search, which is already one request per page). Replaced
+  // wholesale on every generation bump, so it can never outlive its search.
+  const cacheRef = useRef<Map<number, CardType[]>>(new Map());
+  // The total the cached windows were fetched under. A different total means the
+  // ranked list changed under us, so windows cached against the old one no
+  // longer describe the same results and are dropped.
+  const totalRef = useRef(0);
+  // Only the newest navigation may commit; an older fetch still in flight is dropped.
+  const requestRef = useRef(0);
 
-  // Latest request params, read by the (otherwise stable) fill routine.
+  // Latest request params, read by the (otherwise stable) fetch routine.
   // react/refs flags the render-phase write. This is the "latest ref" idiom: the object is
-  // only read from the async fill loop, which always runs after render.
+  // only read from the async fetch routine, which always runs after render.
   const paramsRef = useRef({
     cubeId: cube.id,
     filterText: filterInput,
@@ -91,42 +98,51 @@ const Suggestions: React.FC = () => {
     boards,
   };
 
-  // Fetch successive server windows until `allCards` holds enough cards to fill
-  // the requested display page, or the server runs out. Pages already in the
-  // buffer need no fetch — this returns immediately. If a fill is already
-  // running, the running loop picks up the raised target instead.
-  const loadThroughPage = useCallback(
-    async (targetPage: number): Promise<void> => {
-      targetPageRef.current = Math.max(targetPageRef.current, targetPage);
-
-      // A fill is already in flight — it re-reads targetPageRef each iteration,
-      // so it will keep going to the new target on its own.
-      if (loadingRef.current) return;
-      // Already buffered enough, or nothing more to fetch.
-      if (cardsRef.current.length >= (targetPageRef.current + 1) * PAGE_SIZE || exhaustedRef.current) {
-        return;
-      }
-
+  // Resolve the page the user asked for: serve it from the window cache when it
+  // is there, otherwise fetch the one window that contains it. Random access —
+  // no page before it is fetched, and the server's total comes back with it.
+  const loadPage = useCallback(
+    async (requestedPage: number): Promise<void> => {
       const generation = generationRef.current;
-      loadingRef.current = true;
-      setLoadingMore(true);
+      const requestId = (requestRef.current += 1);
+      // A newer search or a newer navigation has taken over; this fetch must not commit.
+      const isStale = () => generationRef.current !== generation || requestRef.current !== requestId;
 
-      try {
-        let batches = 0;
-        while (
-          generationRef.current === generation &&
-          cardsRef.current.length < (targetPageRef.current + 1) * PAGE_SIZE &&
-          !exhaustedRef.current &&
-          batches < MAX_BATCHES_PER_FILL
-        ) {
-          batches += 1;
-          const { cubeId, filterText, printingPreference, isEmpty, boards: boardKeys } = paramsRef.current;
+      let targetPage = requestedPage;
 
-          // Empty cube: fall back to plain card search sorted by Elo. The search
-          // endpoint is page-based and returns full details, so no per-id lookup.
+      // One pass per fetch. A second pass only happens when the server's total
+      // shrank and the requested page no longer exists, which retargets at the
+      // last page that does.
+      for (let attempt = 0; attempt < MAX_FETCH_ATTEMPTS; attempt += 1) {
+        const { cubeId, filterText, printingPreference, isEmpty, boards: boardKeys } = paramsRef.current;
+        // Empty-cube search is already one request per display page, so its cache
+        // key is the page itself and the whole response is the page.
+        const key = isEmpty ? targetPage : Math.floor(targetPage / PAGES_PER_WINDOW);
+        const offset = isEmpty ? 0 : (targetPage % PAGES_PER_WINDOW) * PAGE_SIZE;
+
+        const cached = cacheRef.current.get(key);
+        if (cached) {
+          setPageCards(cached.slice(offset, offset + PAGE_SIZE));
+          setErrorState('none');
+          setLoadingMore(false);
+          return;
+        }
+
+        // Nothing honest to show for a page we don't have yet: the spinner takes
+        // over rather than leaving the last page's cards under a new page number.
+        setPageCards([]);
+        setLoadingMore(true);
+
+        let fetched: CardType[];
+        let serverTotal: number;
+
+        try {
           if (isEmpty) {
+            // Empty cube: fall back to plain card search sorted by Elo. The search
+            // endpoint pages at PAGE_SIZE and takes the page number directly, and
+            // returns full details, so no windowing and no per-id lookup.
             const params = new URLSearchParams({
-              p: searchPageRef.current.toString(),
+              p: targetPage.toString(),
               f: filterText ?? '',
               s: 'Elo',
               d: 'descending',
@@ -134,132 +150,122 @@ const Suggestions: React.FC = () => {
             });
             const searchRes = await fetch(`/tool/api/searchcards/?${params.toString()}`);
             const searchJson = await searchRes.json().catch(() => ({}));
-            if (generationRef.current !== generation) return;
+            if (isStale()) return;
             if (!searchRes.ok) {
-              exhaustedRef.current = true;
               setErrorState('generic');
-              break;
+              setLoadingMore(false);
+              return;
             }
-            searchPageRef.current += 1;
-            const data = (searchJson.data || []) as CardDetails[];
-            cardsRef.current = cardsRef.current.concat(data.map((d) => detailsToCard(d)));
-            const total = Number(searchJson.numResults ?? 0);
-            if (data.length === 0 || cardsRef.current.length >= total) {
-              exhaustedRef.current = true;
+            fetched = ((searchJson.data || []) as CardDetails[]).map((details) => detailsToCard(details));
+            serverTotal = Number(searchJson.numResults ?? 0);
+          } else {
+            const res = await csrfFetch('/cube/api/adds', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                cubeID: cubeId,
+                skip: key * FETCH_LIMIT,
+                limit: FETCH_LIMIT,
+                filterText,
+                printingPreference,
+                boards: boardKeys,
+              }),
+            });
+            const json = await res.json().catch(() => ({}));
+            if (isStale()) return;
+
+            // Every response carries a total, including the failures, where it is
+            // 0 — so the status decides whether this is an error, never the total.
+            if (!res.ok) {
+              // 503 with mlUnavailable means the recommender is down; anything
+              // else is a generic failure.
+              if (json?.mlUnavailable) setErrorState('ml-unavailable');
+              else setErrorState('generic');
+              setLoadingMore(false);
+              return;
             }
-            continue;
+
+            const cardIDs: string[] = json.cardIDs || [];
+            const detailsById = cardIDs.length > 0 ? await getCardDetails(cardIDs) : {};
+            if (isStale()) return;
+
+            fetched = cardIDs
+              .map((id) => detailsById[id])
+              .filter((d): d is NonNullable<typeof d> => !!d)
+              .map((details) => detailsToCard(details));
+            // The recommender's count of eligible adds before pagination. Ids that
+            // fail to resolve here shorten the window, never the count of results.
+            serverTotal = Number(json.totalAdds ?? 0);
           }
-
-          const res = await csrfFetch('/cube/api/adds', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              cubeID: cubeId,
-              skip: skipRef.current,
-              limit: FETCH_LIMIT,
-              filterText,
-              printingPreference,
-              boards: boardKeys,
-            }),
-          });
-          const json = await res.json().catch(() => ({}));
-          if (generationRef.current !== generation) return; // a new search started
-
-          if (!res.ok) {
-            // 503 with mlUnavailable means the recommender is down; anything
-            // else is a generic failure. Stop paginating either way.
-            exhaustedRef.current = true;
-            if (json?.mlUnavailable) setErrorState('ml-unavailable');
-            else setErrorState('generic');
-            break;
+        } catch {
+          if (!isStale()) {
+            setErrorState('generic');
+            setLoadingMore(false);
           }
-
-          const cardIDs: string[] = json.cardIDs || [];
-          // Advance by the requested limit: the server's skip is positional in
-          // the ranked list, so the next window starts past this whole window
-          // regardless of how many cards resolved.
-          skipRef.current += FETCH_LIMIT;
-
-          const detailsById = cardIDs.length > 0 ? await getCardDetails(cardIDs) : {};
-          if (generationRef.current !== generation) return;
-
-          const newCards = cardIDs
-            .map((id) => detailsById[id])
-            .filter((d): d is NonNullable<typeof d> => !!d)
-            .map((details) => detailsToCard(details));
-
-          cardsRef.current = cardsRef.current.concat(newCards);
-          if (!json.hasMoreAdds) exhaustedRef.current = true;
+          return;
         }
 
-        // Bailed on the batch cap without filling the page — treat as exhausted
-        // so the UI shows what we have instead of spinning forever.
-        if (
-          generationRef.current === generation &&
-          !exhaustedRef.current &&
-          cardsRef.current.length < (targetPageRef.current + 1) * PAGE_SIZE
-        ) {
-          exhaustedRef.current = true;
+        if (totalRef.current !== serverTotal) {
+          cacheRef.current.clear();
+          totalRef.current = serverTotal;
         }
-      } catch {
-        if (generationRef.current === generation) {
-          exhaustedRef.current = true;
-          if (cardsRef.current.length === 0) setErrorState('generic');
+        cacheRef.current.set(key, fetched);
+        setTotal(serverTotal);
+
+        // The total can shrink between requests (the cube or the catalog changed
+        // under us). Land on the last page that exists rather than on an empty one.
+        const lastPage = Math.max(0, Math.ceil(serverTotal / PAGE_SIZE) - 1);
+        if (targetPage > lastPage) {
+          targetPage = lastPage;
+          setPage(lastPage);
+          continue;
         }
-      } finally {
-        // Commit results once, after the loop — never mid-fill, so the user
-        // never sees a half-filled page flash before it's complete. Only the
-        // loop owning the current generation commits; a stale loop leaves
-        // state for the new generation (reset in the effect above).
-        if (generationRef.current === generation) {
-          setAllCards(cardsRef.current);
-          setExhausted(exhaustedRef.current);
-          loadingRef.current = false;
-          setLoadingMore(false);
-        }
+
+        setPageCards(fetched.slice(offset, offset + PAGE_SIZE));
+        setErrorState('none');
+        setLoadingMore(false);
+        return;
       }
+
+      if (!isStale()) setLoadingMore(false);
     },
     [csrfFetch],
   );
 
   // New search: reset everything and load the first page. Bumping the
-  // generation cancels any in-flight fill from the previous search.
+  // generation cancels any in-flight fetch from the previous search and
+  // invalidates its cached windows.
   useEffect(() => {
     generationRef.current += 1;
-    skipRef.current = 0;
-    searchPageRef.current = 0;
-    cardsRef.current = [];
-    exhaustedRef.current = false;
-    loadingRef.current = false;
-    targetPageRef.current = 0;
+    cacheRef.current = new Map();
+    totalRef.current = 0;
 
-    setAllCards([]);
-    setExhausted(false);
+    setPageCards([]);
+    setTotal(0);
     setErrorState('none');
     setLoadingMore(false);
     setPage(0);
 
     if (filterInput && filterInput.trim().length > 0) {
-      loadThroughPage(0);
+      loadPage(0);
     }
-  }, [filterInput, cube.id, cube.defaultPrinting, isEmptyCube, boardsKey, loadThroughPage]);
+  }, [filterInput, cube.id, cube.defaultPrinting, isEmptyCube, boardsKey, loadPage]);
 
   const goToPage = useCallback(
     (newPage: number) => {
       setPage(newPage);
-      // Fetches more only if this page isn't already buffered.
-      loadThroughPage(newPage);
+      // Fetches only if the window holding this page isn't cached.
+      loadPage(newPage);
     },
-    [loadThroughPage],
+    [loadPage],
   );
 
   const noFilter = !filterInput || filterInput.trim().length === 0;
-  const pageCards = allCards.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
-  // Pages actually fetched, never a total: the recommender's ranked list has no knowable length.
-  const loadedPages = getIndefinitePageCount(allCards, PAGE_SIZE);
-  const hasMore = !exhausted;
-  // Spinner shows while we're actively filling the page being viewed. Already
-  // loaded pages render instantly (loadingMore stays false for them).
+  // The server's total, never pages fetched so far: every page it counts is
+  // reachable in one request.
+  const pageCount = Math.ceil(total / PAGE_SIZE);
+  // Spinner shows while we're fetching the page being viewed. A page served
+  // from the window cache renders instantly (loadingMore never goes true).
   const showSpinner = loadingMore && pageCards.length === 0;
 
   let body: React.ReactNode;
@@ -288,22 +294,13 @@ const Suggestions: React.FC = () => {
       <Flexbox direction="col" gap="2" className="mt-2">
         <Flexbox direction="row" justify="between" wrap="wrap" alignItems="center">
           <Text lg semibold className="whitespace-nowrap">
-            <ResponsiveDiv baseVisible sm>
-              {`Page ${page + 1}`}
-            </ResponsiveDiv>
             <ResponsiveDiv md>
               {isEmptyCube
                 ? `Elo-sorted results for the query: ${filterInput}`
                 : `Smart-sorted results for the query: ${filterInput}`}
             </ResponsiveDiv>
           </Text>
-          <CursorPagination
-            active={page}
-            loadedPages={loadedPages}
-            onPageChange={goToPage}
-            hasMore={hasMore}
-            loading={loadingMore}
-          />
+          <Pagination count={pageCount} active={page} onClick={goToPage} loading={loadingMore} />
         </Flexbox>
         <CardGrid
           cards={pageCards}
@@ -318,13 +315,7 @@ const Suggestions: React.FC = () => {
           cubeTrayDraggable
         />
         <Flexbox direction="row" justify="end">
-          <CursorPagination
-            active={page}
-            loadedPages={loadedPages}
-            onPageChange={goToPage}
-            hasMore={hasMore}
-            loading={loadingMore}
-          />
+          <Pagination count={pageCount} active={page} onClick={goToPage} loading={loadingMore} />
         </Flexbox>
       </Flexbox>
     );
