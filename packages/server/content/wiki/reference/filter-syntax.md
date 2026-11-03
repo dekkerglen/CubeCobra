@@ -467,6 +467,11 @@ counted, and a staged card reports a single copy of itself — so with `not:sing
 staging a duplicate removal clears the view, because the copies left behind drop to one as well.
 `is:singleton` and `not:singleton` are convenience aliases for `quantity=1` and `quantity>1`.
 
+Because custom cards and vouchers are counted here but skipped by the cube list's **Cleanup** menu,
+`not:singleton` is not a reliable preview of what **Remove Duplicates** will stage on a board
+holding them — it will list repeated custom cards that Cleanup leaves alone. The count shown on the
+menu item itself is always exact.
+
 Outside a cube list (global card search, Smart Search, etc.) every card is treated as one copy, so
 `quantity>1` returns nothing and `is:singleton` matches everything.
 

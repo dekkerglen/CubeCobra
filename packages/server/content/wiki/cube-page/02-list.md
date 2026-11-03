@@ -117,7 +117,9 @@ the filter is neither removed nor treated as already present elsewhere. Two entr
 same card when they share an oracle identity, whatever printing they use and whatever name that
 printing carries. When duplicates are removed, the copy that survives is the one with the most
 tags, then the longest notes, then the earliest added date. Custom cards and vouchers are skipped
-entirely, since there's no way to tell whether two of them are meant to be the same card.
+entirely, since there's no way to tell whether two of them are meant to be the same card — so a
+`not:singleton` filter can show repeated custom cards that Cleanup will not touch. The count on the
+menu item is the reliable preview.
 
 Nothing is committed: the removals land in the change list like any other edit, for you to review
 and save or discard.
