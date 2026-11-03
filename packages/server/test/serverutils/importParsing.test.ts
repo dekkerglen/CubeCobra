@@ -1,4 +1,4 @@
-import { MAX_IMPORT_LINE_COUNT, parseNonCSVLine } from 'serverutils/importParsing';
+import { MAX_IMPORT_LINE_COUNT, parseNonCSVLine } from '@utils/importParsing';
 
 describe('parseNonCSVLine', () => {
   describe('empty / invalid input', () => {
