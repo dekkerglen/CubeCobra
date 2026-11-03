@@ -74,6 +74,33 @@ describe('realignDraftSeats', () => {
     expect(result).toEqual([seatFor('Bob', 2), seatFor('Alice', 1)]);
   });
 
+  it('overwrites the owner and title of a reused seat, keeping its deck', () => {
+    const seats = [seatFor('Alice', 1)];
+    const players: PlayerList = [{ name: 'Renamed', userId: 'user-9' }];
+
+    const result = realignDraftSeats(seats, [0], players);
+
+    expect(result[0]!.title).toBe('Renamed');
+    expect(result[0]!.owner).toBe('user-9');
+    expect(result[0]!.mainboard).toEqual([[[1]]]);
+    expect(result[0]!.sideboard).toEqual([[[101]]]);
+    expect(result[0]!.pickorder).toEqual([1]);
+    expect(seats[0]).toEqual(seatFor('Alice', 1));
+  });
+
+  it('returns a fresh empty seat when the origin index is out of range', () => {
+    const result = realignDraftSeats([seatFor('Alice', 1)], [5], [playerFor('Bob')]);
+
+    expect(result).toEqual([
+      {
+        mainboard: createPool(),
+        sideboard: setupPicks(1, 8),
+        owner: 'user-Bob',
+        title: 'Bob',
+      },
+    ]);
+  });
+
   it('sets the owner of a new seat from the player userId, and leaves it undefined when unlinked', () => {
     const players: PlayerList = [{ name: 'Linked', userId: 'user-9' }, { name: 'Unlinked' }];
 
