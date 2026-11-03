@@ -11,9 +11,7 @@ import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 
 import EditMatchRound from '../EditMatchRound';
-
-// The server caps a record at 50 rounds. Adding past that is refused here rather than at Save.
-export const MAX_ROUNDS = 50;
+import { MAX_ROUNDS } from './transcribeState';
 
 type ResultsMode = 'pairings' | 'records';
 
@@ -101,6 +99,8 @@ const TranscribeResults: React.FC<TranscribeResultsProps> = ({
           <Button
             color="primary"
             onClick={() => setMatches([...matches, { matches: [] }])}
+            // The server caps a record at MAX_ROUNDS rounds. Adding past that is refused
+            // here rather than at Save.
             disabled={matches.length >= MAX_ROUNDS}
           >
             Add Round

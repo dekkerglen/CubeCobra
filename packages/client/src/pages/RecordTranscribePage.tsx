@@ -1,9 +1,8 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
-import Record, { applyPlayerRenames, PlayerList, WinLossDraw } from '@utils/datatypes/Record';
+import Record, { PlayerList, WinLossDraw } from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
 
 import Alert, { UncontrolledAlertProps } from 'components/base/Alert';
@@ -19,21 +18,22 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
 import EditDescription from '../records/EditDescription';
-import TranscribeDecks, { DeckBoard } from '../records/transcribe/TranscribeDecks';
+import TranscribeDecks from '../records/transcribe/TranscribeDecks';
 import TranscribePlayerRail from '../records/transcribe/TranscribePlayerRail';
-import TranscribeResults, { MAX_ROUNDS } from '../records/transcribe/TranscribeResults';
+import TranscribeResults from '../records/transcribe/TranscribeResults';
 import {
+  applyPlayerEdit,
+  areSeatsEditable,
+  CardsUpdate,
+  DeckBoard,
   isDirty,
   seedTranscribeState,
+  setDeckCards,
   toTranscribePayload,
   TranscribeDeck,
   TranscribeState,
+  validationErrors,
 } from '../records/transcribe/transcribeState';
-
-// Mirrors the endpoint's Joi schema. Every one of these is a 400 the user would otherwise
-// only see after typing out a whole event, so Save is held back until they are satisfied.
-const MAX_PLAYERS = 16;
-const MAX_DECK_CARDS = 200;
 
 interface RecordTranscribePageProps {
   cube: Cube;
@@ -78,8 +78,9 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
     setWorkspace((previous) => ({ ...previous, state: update(previous.state) }));
   }, []);
 
-  // Every seat is editable or none is, so the first one answers for the record.
-  const seatsEditable = state.decks[0]?.editable ?? true;
+  // The draft answers for the whole record: the state module seeds every seat's editable
+  // flag from exactly this, so a zero-player record cannot drift from its seats.
+  const seatsEditable = areSeatsEditable(draft);
 
   // The live state as a Record, so the rail and the results section can use playerRecord,
   // formatRecord and EditTrophies rather than reimplementing them against TranscribeState.
@@ -99,81 +100,15 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
     [record, state.name, state.date, state.description, state.players, state.matches, state.trophy, state.overrides],
   );
 
-  // Deck edits are refused for a seat the record does not own. One stray dirty flag on a
-  // played draft's seat makes the server reject the entire save, overview and pairings
-  // included, so the guard lives here rather than only in what gets rendered.
   const setDeckBoard = useCallback(
-    (playerIndex: number, board: DeckBoard, update: React.SetStateAction<CardDetails[]>) =>
-      updateState((previous) => {
-        const deck = previous.decks[playerIndex];
-        if (!deck || !deck.editable) {
-          return previous;
-        }
-        const cards = typeof update === 'function' ? update(deck[board]) : update;
-        return {
-          ...previous,
-          decks: { ...previous.decks, [playerIndex]: { ...deck, [board]: cards, dirty: true } },
-        };
-      }),
+    (playerIndex: number, board: DeckBoard, update: CardsUpdate) =>
+      updateState((previous) => setDeckCards(previous, playerIndex, board, update)),
     [updateState],
   );
 
-  // The edited player list, plus the seat each entry came from in the list the editor was
-  // opened on. Everything keyed by player — standings, trophies, pairings — is re-keyed from
-  // that mapping here: the endpoint drops any key that is not a submitted player name, so a
-  // rename that stopped at the player list would quietly throw that player's results away.
   const applyPlayers = useCallback(
     (edited: PlayerList, originSeats: number[]) =>
-      updateState((previous) => {
-        const renames = new Map<string, string>();
-        edited.forEach((player, index) => {
-          const origin = originSeats[index];
-          const before = origin >= 0 ? previous.players[origin]?.name : undefined;
-          if (before && before !== player.name) {
-            renames.set(before, player.name);
-          }
-        });
-
-        // applyPlayerRenames takes the whole mapping at once, so a straight swap of two
-        // names resolves against the originals instead of chaining through itself.
-        const renamed = {
-          matches: previous.matches,
-          trophy: previous.trophy,
-          overrides: { ...previous.overrides },
-        } as Record;
-        applyPlayerRenames(renamed, renames);
-
-        const names = new Set(edited.map((player) => player.name));
-        const overrides: TranscribeState['overrides'] = {};
-        for (const [name, value] of Object.entries(renamed.overrides ?? {})) {
-          if (names.has(name)) {
-            overrides[name] = value;
-          }
-        }
-
-        const decks: { [playerIndex: number]: TranscribeDeck } = {};
-        edited.forEach((_, index) => {
-          const origin = originSeats[index];
-          decks[index] = (origin >= 0 ? previous.decks[origin] : undefined) ?? {
-            mainboard: [],
-            sideboard: [],
-            dirty: false,
-            editable: seatsEditable,
-          };
-        });
-
-        return {
-          ...previous,
-          players: edited,
-          // originSeats indexes the list as it stood; seatOrder has to keep pointing at the
-          // draft seats the record was loaded with.
-          seatOrder: originSeats.map((origin) => (origin >= 0 ? (previous.seatOrder[origin] ?? -1) : -1)),
-          matches: renamed.matches,
-          trophy: (renamed.trophy ?? []).filter((name) => names.has(name)),
-          overrides,
-          decks,
-        };
-      }),
+      updateState((previous) => applyPlayerEdit(previous, edited, originSeats, seatsEditable)),
     [updateState, seatsEditable],
   );
 
@@ -183,52 +118,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
     [updateState],
   );
 
-  const validationErrors = useMemo(() => {
-    const errors: string[] = [];
-
-    if (!state.name.trim()) {
-      errors.push('Give this record a name.');
-    }
-    if (!Number.isFinite(state.date)) {
-      errors.push('Give this record a date.');
-    }
-    if (state.players.length > MAX_PLAYERS) {
-      errors.push(`A record holds at most ${MAX_PLAYERS} players, and this one has ${state.players.length}.`);
-    }
-
-    const seen = new Set<string>();
-    const duplicates = new Set<string>();
-    for (const player of state.players) {
-      const key = player.name.toLowerCase();
-      if (seen.has(key)) {
-        duplicates.add(player.name);
-      }
-      seen.add(key);
-    }
-    if (duplicates.size > 0) {
-      errors.push(`Two players cannot share a name: ${[...duplicates].join(', ')}.`);
-    }
-
-    if (state.matches.length > MAX_ROUNDS) {
-      errors.push(`A record holds at most ${MAX_ROUNDS} rounds, and this one has ${state.matches.length}.`);
-    }
-
-    // Only an edited deck is submitted, so only an edited deck can be rejected for its size.
-    for (const [key, deck] of Object.entries(state.decks)) {
-      if (!deck.dirty) {
-        continue;
-      }
-      const name = state.players[Number(key)]?.name ?? `Seat ${Number(key) + 1}`;
-      if (deck.mainboard.length > MAX_DECK_CARDS) {
-        errors.push(`${name}'s mainboard has ${deck.mainboard.length} cards, over the ${MAX_DECK_CARDS} limit.`);
-      }
-      if (deck.sideboard.length > MAX_DECK_CARDS) {
-        errors.push(`${name}'s sideboard has ${deck.sideboard.length} cards, over the ${MAX_DECK_CARDS} limit.`);
-      }
-    }
-
-    return errors;
-  }, [state]);
+  const errors = useMemo(() => validationErrors(state), [state]);
 
   const dirty = useMemo(() => isDirty(state, seeded), [state, seeded]);
 
@@ -267,10 +157,11 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
 
       setWorkspace((previous) => {
         const wasSubmitted = (index: number, deck: TranscribeDeck) => submitted.decks[index] === deck;
-        // The server realigned the draft's seats into the submitted order, so every player
-        // now sits where they are listed. Only re-base when the list has not moved again
-        // since: an edit made while the request was in flight is still expressed against the
-        // seats the record was loaded with.
+        // The server rewrote the draft's seats into the submitted player order, so every
+        // player now sits where they are listed and identity is the only correct seatOrder
+        // for the next save. The rail holds every player edit shut for the length of the
+        // request, so no other permutation can have been created in the meantime — which is
+        // what lets this re-base be unconditional.
         const identity = submitted.players.map((_, index) => index);
         const settled = {
           ...submitted,
@@ -280,7 +171,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
         return {
           state: {
             ...previous.state,
-            ...(previous.state.seatOrder === submitted.seatOrder ? { seatOrder: identity } : {}),
+            seatOrder: identity,
             decks: clearedDecks(previous.state.decks, wasSubmitted),
           },
           seeded: settled,
@@ -339,6 +230,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                   decks={state.decks}
                   setTrophy={(trophy) => updateState((previous) => ({ ...previous, trophy }))}
                   seatsEditable={seatsEditable}
+                  editsDisabled={saving}
                   onApplyPlayers={applyPlayers}
                 />
               </Flexbox>
@@ -380,10 +272,10 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
 
         <div className="sticky bottom-0 z-10 border-t border-border bg-bg p-3">
           <Flexbox direction="col" gap="2">
-            {validationErrors.length > 0 && (
+            {errors.length > 0 && (
               <Alert color="warning">
                 <ul className="mb-0">
-                  {validationErrors.map((error) => (
+                  {errors.map((error) => (
                     <li key={error}>
                       <Text sm>{error}</Text>
                     </li>
@@ -405,7 +297,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
               <Text sm className="text-text-secondary">
                 {dirty ? 'Unsaved changes' : 'No unsaved changes'}
               </Text>
-              <Button color="primary" onClick={save} disabled={!dirty || saving || validationErrors.length > 0}>
+              <Button color="primary" onClick={save} disabled={!dirty || saving || errors.length > 0}>
                 {saving ? 'Saving...' : 'Save'}
               </Button>
             </Flexbox>

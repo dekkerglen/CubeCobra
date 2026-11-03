@@ -11,9 +11,7 @@ import Text from 'components/base/Text';
 
 import UploadDeck from '../UploadDeck';
 import UploadDeckFromPhoto from '../UploadDeckFromPhoto';
-import { TranscribeDeck } from './transcribeState';
-
-export type DeckBoard = 'mainboard' | 'sideboard';
+import { DeckBoard, TranscribeDeck } from './transcribeState';
 
 interface TranscribeDecksProps {
   cube: Cube;

@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -84,6 +84,25 @@ const makeCsrfFetch = (saveResponse: any = { success: 'true' }) =>
     return { ok: false, status: 404, json: async () => ({ success: 'false' }) } as Response;
   });
 
+// Holds the save request open so the page can be inspected while it is in flight. Every
+// other request is answered as usual.
+const makeDeferredCsrfFetch = (saveResponse: any = { success: 'true' }) => {
+  const base = makeCsrfFetch(saveResponse);
+  let release: () => void = () => {};
+  const inFlight = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+
+  const csrfFetch = jest.fn(async (url: RequestInfo, init?: RequestInit) => {
+    if (url === SAVE_URL) {
+      await inFlight;
+    }
+    return base(url, init);
+  });
+
+  return { csrfFetch, release: () => act(async () => release()) };
+};
+
 const renderPage = ({
   record = createRecord(),
   draft,
@@ -103,6 +122,23 @@ const saveCalls = (csrfFetch: jest.Mock) => csrfFetch.mock.calls.filter(([url]) 
 const savedPayload = (csrfFetch: jest.Mock) => JSON.parse(`${saveCalls(csrfFetch)[0][1].body}`);
 
 const saveButton = () => screen.getByRole('button', { name: 'Save' });
+
+// Reverses the player list through the real editor. EditPlayerList shuffles with
+// `sort(() => Math.random() - 0.5)`, which reverses a list deterministically once
+// Math.random is pinned below 0.5; the assertion afterwards fails loudly if it ever stops.
+const reversePlayerList = () => {
+  fireEvent.click(screen.getByRole('button', { name: 'Edit players' }));
+  const random = jest.spyOn(Math, 'random').mockReturnValue(0);
+  try {
+    fireEvent.click(screen.getByRole('button', { name: 'Shuffle Players' }));
+  } finally {
+    random.mockRestore();
+  }
+  fireEvent.click(screen.getByRole('button', { name: 'Apply player changes' }));
+
+  expect(screen.getByRole('button', { name: 'Rename Bob' })).toBeInTheDocument();
+  expect(screen.getAllByTestId('transcribe-deck-row')[0]).toHaveTextContent('Bob');
+};
 
 describe('RecordTranscribePage', () => {
   it('renders a deck section per player with the paste box ready', () => {
@@ -141,6 +177,17 @@ describe('RecordTranscribePage', () => {
     expect(screen.queryByRole('button', { name: 'Edit players' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Add Player' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Remove Last Player' })).not.toBeInTheDocument();
+  });
+
+  // Whether this page owns the seats is a fact about the draft, not about the seeded decks:
+  // a record with no players yet has no deck to read the flag off, and reading one would
+  // leave it looking editable.
+  it('offers no player editing on a played draft with no players yet', () => {
+    renderPage({ record: createRecord({ players: [] }), draft: playedDraft() });
+
+    expect(screen.queryAllByTestId('transcribe-deck-row')).toHaveLength(0);
+    expect(screen.queryByRole('button', { name: 'Edit players' })).not.toBeInTheDocument();
+    expect(screen.getByText(/attached to a played draft/)).toBeInTheDocument();
   });
 
   // A played draft's seats are written by the draft, not by this page. A dirty flag on one of
@@ -276,6 +323,181 @@ describe('RecordTranscribePage', () => {
     renderPage();
 
     expect(screen.getByText('No unsaved changes')).toBeInTheDocument();
+    expect(saveButton()).toBeDisabled();
+  });
+
+  // After a successful save the server has rewritten draft.seats into the submitted player
+  // order, so the only seatOrder that addresses those seats correctly on the next save is
+  // identity. The page re-bases unconditionally, which is sound only because no player edit
+  // can create a second permutation while the request is open — hence the assertions in the
+  // middle. Resubmitting [1, 0] here would swap both decks a second time, silently attaching
+  // each one to the wrong player.
+  it('submits an identity seatOrder on the save after a reorder', async () => {
+    const { csrfFetch, release } = makeDeferredCsrfFetch();
+    renderPage({ csrfFetch });
+
+    reversePlayerList();
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    expect(screen.getByRole('button', { name: 'Edit players' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Rename Bob' })).toBeDisabled();
+
+    await release();
+    await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
+
+    // The first save carried the permutation the user actually made.
+    expect(JSON.parse(`${saveCalls(csrfFetch)[0][1].body}`)).toMatchObject({
+      players: [{ name: 'Bob' }, { name: 'Alice' }],
+      seatOrder: [1, 0],
+    });
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(2));
+
+    // ...and the second addresses the seats as the server left them.
+    expect(JSON.parse(`${saveCalls(csrfFetch)[1][1].body}`)).toMatchObject({
+      players: [{ name: 'Bob' }, { name: 'Alice' }],
+      seatOrder: [0, 1],
+    });
+  });
+
+  it('holds every player edit shut while a save is in flight and gives them back when it lands', async () => {
+    const { csrfFetch, release } = makeDeferredCsrfFetch();
+    renderPage({ csrfFetch });
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+    expect(screen.getByRole('button', { name: 'Edit players' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Rename Alice' })).toBeEnabled();
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    expect(screen.getByRole('button', { name: 'Edit players' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Rename Alice' })).toBeDisabled();
+
+    await release();
+    await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
+
+    expect(screen.getByRole('button', { name: 'Edit players' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Rename Alice' })).toBeEnabled();
+  });
+
+  // A rejected save leaves the record exactly where it was, so the edits come straight back.
+  it('gives player editing back when a save fails', async () => {
+    const { csrfFetch, release } = makeDeferredCsrfFetch({ success: 'false', message: 'Could not save' });
+    renderPage({ csrfFetch });
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    expect(screen.getByRole('button', { name: 'Edit players' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: 'Rename Alice' })).toBeDisabled();
+
+    await release();
+    await waitFor(() => expect(screen.getByText('Could not save')).toBeInTheDocument());
+
+    expect(screen.getByRole('button', { name: 'Edit players' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Rename Alice' })).toBeEnabled();
+  });
+
+  // While the editor is open the add/remove/reorder controls belong to EditPlayerList, which
+  // takes no disabled prop of its own — the rail holds them shut from the outside.
+  it('holds the open player editor shut while a save is in flight', async () => {
+    const { csrfFetch, release } = makeDeferredCsrfFetch();
+    renderPage({ csrfFetch });
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit players' }));
+    expect(screen.getByRole('button', { name: 'Add Player' })).toBeEnabled();
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    for (const name of ['Add Player', 'Remove Last Player', 'Shuffle Players', 'Apply player changes']) {
+      expect(screen.getByRole('button', { name })).toBeDisabled();
+    }
+
+    await release();
+    await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
+
+    expect(screen.getByRole('button', { name: 'Add Player' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Apply player changes' })).toBeEnabled();
+  });
+
+  // jsdom still dispatches a click on a button inside a disabled fieldset, where a browser
+  // would not deliver it at all. These two pin the handler-level refusal underneath the
+  // greying out, because the unconditional seatOrder re-base above depends on it holding.
+  it('refuses a rename attempted while a save is in flight', async () => {
+    const { csrfFetch, release } = makeDeferredCsrfFetch();
+    renderPage({ csrfFetch });
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rename Alice' }));
+    expect(screen.queryByPlaceholderText(/Player name/)).not.toBeInTheDocument();
+
+    await release();
+    await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Rename Alice' }));
+    expect(screen.getByPlaceholderText(/Player name/)).toBeInTheDocument();
+  });
+
+  it('refuses a staged reorder applied while a save is in flight', async () => {
+    const { csrfFetch, release } = makeDeferredCsrfFetch();
+    renderPage({ csrfFetch });
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Edit players' }));
+    const random = jest.spyOn(Math, 'random').mockReturnValue(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Shuffle Players' }));
+    random.mockRestore();
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    fireEvent.click(screen.getByRole('button', { name: 'Apply player changes' }));
+
+    // Nothing applied: the deck rows still read in the order that was submitted.
+    expect(screen.getAllByTestId('transcribe-deck-row')[0]).toHaveTextContent('Alice');
+    expect(JSON.parse(`${saveCalls(csrfFetch)[0][1].body}`).seatOrder).toEqual([0, 1]);
+
+    await release();
+    await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
+
+    // The staged reversal is still there, and applying it now goes through.
+    fireEvent.click(screen.getByRole('button', { name: 'Apply player changes' }));
+    expect(screen.getAllByTestId('transcribe-deck-row')[0]).toHaveTextContent('Bob');
+  });
+
+  // The server's Joi schema caps a record at 50 rounds, so the page refuses the 51st at the
+  // Add control rather than letting the user type it and lose the save.
+  it('refuses to add a round past the cap the server enforces', () => {
+    const round = () => ({ matches: [] });
+
+    const { unmount } = renderPage({ record: createRecord({ matches: Array.from({ length: 49 }, round) }) });
+    expect(screen.getByRole('button', { name: 'Add Round' })).toBeEnabled();
+    unmount();
+
+    renderPage({ record: createRecord({ matches: Array.from({ length: 50 }, round) }) });
+
+    expect(screen.getByRole('button', { name: 'Add Round' })).toBeDisabled();
+  });
+
+  // Every result is keyed by player name, so two players sharing one makes their records
+  // indistinguishable. Joi rejects it outright; the page stops it before the save.
+  it('blocks Save when a rename collides with another player', () => {
+    renderPage({ record: createRecord({ players: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'ALICE' }] }) });
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+
+    expect(screen.getByText(/Two players cannot share a name: ALICE\./)).toBeInTheDocument();
     expect(saveButton()).toBeDisabled();
   });
 
