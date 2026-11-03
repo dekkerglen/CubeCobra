@@ -241,6 +241,65 @@ describe('transcribeRecordHandler', () => {
     ]);
   });
 
+  // A draft that came from a file or Hedron import has no seat titles at all:
+  // associateDecksWithNewDraft deliberately leaves them unset so createDraft names each seat
+  // by its mainboard archetype. Realigning stamps the player names over them, and
+  // DraftDynamoDao.update then renames the whole draft after seat one — so an unconditional
+  // realign would retitle the draft and every deck heading on a save that touched neither.
+  it('does not write the draft when nothing about the seats changed', async () => {
+    const draft = uploadDraft({
+      seats: [
+        { mainboard: 'alice-pool', sideboard: 'alice-side' },
+        { mainboard: 'bob-pool', sideboard: 'bob-side' },
+      ],
+    });
+    (recordDao.getById as jest.Mock).mockResolvedValue(existingRecord({ draft: draft.id }));
+    (draftDao.getById as jest.Mock).mockResolvedValue(draft);
+
+    const res = await save(payload({ description: 'Rewrote the event writeup' }));
+
+    expect(res.status).toBe(200);
+    expect(draftDao.update).not.toHaveBeenCalled();
+    expect(associateDecksWithExistingDraft).not.toHaveBeenCalled();
+    // The seats are left exactly as the import made them, untitled.
+    expect(draft.seats.map((seat: any) => seat.title)).toEqual([undefined, undefined]);
+    // The record itself is still saved — this is only about the draft.
+    expect(recordDao.update).toHaveBeenCalledTimes(1);
+    expect(savedRecord().description).toEqual('Rewrote the event writeup');
+  });
+
+  it('writes the draft when a player is renamed in place', async () => {
+    const draft = uploadDraft();
+    (recordDao.getById as jest.Mock).mockResolvedValue(existingRecord({ draft: draft.id }));
+    (draftDao.getById as jest.Mock).mockResolvedValue(draft);
+
+    const res = await save(payload({ players: [{ name: 'Alicia' }, { name: 'Bob' }] }));
+
+    expect(res.status).toBe(200);
+    // Renames still propagate to the seat titles, matching what edit/players.ts does.
+    expect(draftDao.update).toHaveBeenCalledTimes(1);
+    expect((draftDao.update as jest.Mock).mock.calls[0][0].seats.map((seat: any) => seat.title)).toEqual([
+      'Alicia',
+      'Bob',
+    ]);
+  });
+
+  it('writes the draft when a player links their account', async () => {
+    const draft = uploadDraft();
+    (recordDao.getById as jest.Mock).mockResolvedValue(existingRecord({ draft: draft.id }));
+    (draftDao.getById as jest.Mock).mockResolvedValue(draft);
+
+    const res = await save(payload({ players: [{ name: 'Alice', userId: 'alice-id' }, { name: 'Bob' }] }));
+
+    expect(res.status).toBe(200);
+    // The seat owner is what changed, so the draft still has to be rewritten.
+    expect(draftDao.update).toHaveBeenCalledTimes(1);
+    expect((draftDao.update as jest.Mock).mock.calls[0][0].seats.map((seat: any) => seat.owner)).toEqual([
+      'alice-id',
+      undefined,
+    ]);
+  });
+
   it('drops an override keyed to a player not in the submitted list', async () => {
     const res = await save(
       payload({ overrides: { Alice: { wins: 1, losses: 0, draws: 0 }, Ghost: { wins: 9, losses: 0, draws: 0 } } }),

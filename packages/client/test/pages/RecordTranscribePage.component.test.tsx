@@ -62,8 +62,9 @@ const playedDraft = (): Draft =>
   }) as unknown as Draft;
 
 // Answers the cube-pool lookup UploadDeck makes on mount, resolves pasted card names, and
-// records the save POST.
-const makeCsrfFetch = (saveResponse: any = { success: 'true' }) =>
+// records the save POST. Names listed in `unresolved` come back null, the way the real
+// endpoint reports a name it could not find.
+const makeCsrfFetch = (saveResponse: any = { success: 'true' }, unresolved: string[] = []) =>
   jest.fn(async (url: RequestInfo, init?: RequestInit) => {
     if (typeof url === 'string' && url.startsWith('/cube/api/cubecardpool/')) {
       return { ok: true, json: async () => ({ success: 'true', basics: [] }) } as Response;
@@ -74,7 +75,11 @@ const makeCsrfFetch = (saveResponse: any = { success: 'true' }) =>
         ok: true,
         json: async () => ({
           success: 'true',
-          cards: names.map((name) => createCardDetails({ name, oracle_id: `oracle-${name}` })),
+          cards: names.map((name) =>
+            unresolved.some((missing) => missing.toLowerCase() === name.toLowerCase())
+              ? null
+              : createCardDetails({ name, oracle_id: `oracle-${name}` }),
+          ),
         }),
       } as Response;
     }
@@ -163,6 +168,11 @@ describe('RecordTranscribePage', () => {
 
     expect(screen.queryByPlaceholderText(/Paste your decklist here/)).not.toBeInTheDocument();
     expect(within(rows[0]).getByText(/attached to a played draft/)).toBeInTheDocument();
+    // Telling the user to edit the deck elsewhere is only useful alongside the way there.
+    expect(within(rows[0]).getByRole('link', { name: /deckbuilder/ })).toHaveAttribute(
+      'href',
+      '/draft/deckbuilder/draft-1?seat=0',
+    );
   });
 
   // The endpoint refuses a save that adds, removes or reorders players on a played draft, so
@@ -230,6 +240,67 @@ describe('RecordTranscribePage', () => {
     expect(payload.seatOrder).toEqual([0, 1]);
   });
 
+  // Only one deck editor is mounted at a time — a pod of eight would otherwise fetch the
+  // cube's pool eight times — so the paste box is unmounted whenever another player's row is
+  // opened. Holding its text inside the editor would throw a half-entered decklist away.
+  const pasteBox = (playerIndex: number) =>
+    within(screen.getAllByTestId('transcribe-deck-row')[playerIndex]).getByPlaceholderText(
+      /Paste your decklist here/,
+    ) as HTMLTextAreaElement;
+
+  const toggleRow = (playerIndex: number, name: RegExp) =>
+    fireEvent.click(within(screen.getAllByTestId('transcribe-deck-row')[playerIndex]).getByRole('button', { name }));
+
+  it('keeps a half-typed paste when its row is collapsed and reopened', () => {
+    renderPage();
+
+    fireEvent.change(pasteBox(0), { target: { value: '2x Lightning Bolt\nCounterspell' } });
+
+    // Open Bob's row, which collapses Alice's and unmounts her editor.
+    toggleRow(1, /Bob/);
+    expect(screen.getAllByPlaceholderText(/Paste your decklist here/)).toHaveLength(1);
+    expect(pasteBox(1)).toHaveValue('');
+
+    toggleRow(0, /Alice/);
+
+    expect(pasteBox(0)).toHaveValue('2x Lightning Bolt\nCounterspell');
+  });
+
+  // The lines that failed to resolve are left in the box next to their errors: that is the
+  // designed way to fix up a partly-failed paste, and it has to survive looking elsewhere.
+  it('keeps the retained lines and their errors from a partly-failed paste across a collapse', async () => {
+    renderPage({ csrfFetch: makeCsrfFetch({ success: 'true' }, ['Notacard']) });
+
+    fireEvent.change(pasteBox(0), { target: { value: 'Lightning Bolt\nNotacard' } });
+    fireEvent.click(screen.getByRole('button', { name: /Parse and Add to Mainboard/ }));
+
+    await waitFor(() => expect(screen.getByText('Could not find card: "Notacard"')).toBeInTheDocument());
+    expect(pasteBox(0)).toHaveValue('Notacard');
+
+    toggleRow(1, /Bob/);
+    expect(screen.queryByText('Could not find card: "Notacard"')).not.toBeInTheDocument();
+
+    toggleRow(0, /Alice/);
+
+    expect(pasteBox(0)).toHaveValue('Notacard');
+    expect(screen.getByText('Could not find card: "Notacard"')).toBeInTheDocument();
+  });
+
+  // Each row owns its own paste, so working through one player's list does not put text in
+  // front of the next player.
+  it("keeps each player's paste to their own row", () => {
+    renderPage();
+
+    fireEvent.change(pasteBox(0), { target: { value: "Alice's deck" } });
+    toggleRow(1, /Bob/);
+    fireEvent.change(pasteBox(1), { target: { value: "Bob's deck" } });
+    toggleRow(0, /Alice/);
+
+    expect(pasteBox(0)).toHaveValue("Alice's deck");
+    toggleRow(1, /Bob/);
+    expect(pasteBox(1)).toHaveValue("Bob's deck");
+  });
+
   it('submits a pasted decklist under the seat it was entered against', async () => {
     const { csrfFetch } = renderPage();
 
@@ -268,6 +339,23 @@ describe('RecordTranscribePage', () => {
 
     expect(screen.getByRole('button', { name: 'Add Round' })).toBeInTheDocument();
     expect(screen.queryAllByLabelText('Wins')).toHaveLength(0);
+  });
+
+  // The endpoint's Joi schema rejects a negative win count with a raw 400, and a number input
+  // reports whatever was typed regardless of its min attribute.
+  it('clamps a negative override to zero', async () => {
+    const { csrfFetch } = renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
+    fireEvent.change(screen.getAllByLabelText('Wins')[0], { target: { value: '-1' } });
+
+    expect(screen.getAllByLabelText('Wins')[0]).toHaveValue(0);
+
+    fireEvent.change(screen.getAllByLabelText('Losses')[0], { target: { value: '2' } });
+    fireEvent.click(saveButton());
+
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+    expect(savedPayload(csrfFetch).overrides).toEqual({ Alice: { wins: 0, losses: 2, draws: 0 } });
   });
 
   it('warns that an override takes precedence when both an override and pairings exist', () => {

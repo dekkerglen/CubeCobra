@@ -115,9 +115,14 @@ const TranscribeResults: React.FC<TranscribeResultsProps> = ({
             const override = overrides[player.name];
             const value = override ?? EMPTY_RECORD;
             const update = (changes: Partial<WinLossDraw>) => setOverride(player.name, { ...value, ...changes });
+            // Clamped here as well as with min=0: a number input still reports a typed "-1",
+            // which the endpoint answers with a raw 400.
+            const count = (raw: string) => Math.max(0, Number(raw) || 0);
 
             return (
-              <Flexbox key={player.name} direction="row" gap="2" alignItems="end" wrap="wrap">
+              // Keyed by position, not by name: validation lets the user hold two players
+              // with the same name mid-rename, and a colliding key drops one of these rows.
+              <Flexbox key={index} direction="row" gap="2" alignItems="end" wrap="wrap">
                 <Text sm className="w-40 truncate">
                   {player.name}
                 </Text>
@@ -126,7 +131,7 @@ const TranscribeResults: React.FC<TranscribeResultsProps> = ({
                   label="Wins"
                   type="number"
                   value={`${value.wins}`}
-                  onChange={(e) => update({ wins: Number(e.target.value) })}
+                  onChange={(e) => update({ wins: count(e.target.value) })}
                   otherInputProps={{ min: 0 }}
                 />
                 <Input
@@ -134,7 +139,7 @@ const TranscribeResults: React.FC<TranscribeResultsProps> = ({
                   label="Losses"
                   type="number"
                   value={`${value.losses}`}
-                  onChange={(e) => update({ losses: Number(e.target.value) })}
+                  onChange={(e) => update({ losses: count(e.target.value) })}
                   otherInputProps={{ min: 0 }}
                 />
                 <Input
@@ -142,7 +147,7 @@ const TranscribeResults: React.FC<TranscribeResultsProps> = ({
                   label="Draws"
                   type="number"
                   value={`${value.draws}`}
-                  onChange={(e) => update({ draws: Number(e.target.value) })}
+                  onChange={(e) => update({ draws: count(e.target.value) })}
                   otherInputProps={{ min: 0 }}
                 />
                 <Button color="secondary" disabled={!override} onClick={() => setOverride(player.name, undefined)}>

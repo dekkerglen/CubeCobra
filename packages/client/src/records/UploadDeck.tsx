@@ -50,6 +50,13 @@ interface UploadDeckProps {
   setSideboardCards: React.Dispatch<React.SetStateAction<CardDetails[]>>;
   setAlerts: React.Dispatch<React.SetStateAction<UncontrolledAlertProps[]>>;
   cubeId: string;
+  // Optional: when provided, the pasted text and the lines that failed to resolve live in
+  // the caller instead of here, so they survive this editor being unmounted. A surface that
+  // owns a whole page has no need for them and keeps the local state below.
+  decklistText?: string;
+  setDecklistText?: (text: string) => void;
+  parseErrors?: string[];
+  setParseErrors?: (errors: string[]) => void;
 }
 
 const UploadDeck: React.FC<UploadDeckProps> = ({
@@ -66,14 +73,22 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
   setSideboardCards,
   setAlerts,
   cubeId,
+  decklistText: controlledDecklistText,
+  setDecklistText: setControlledDecklistText,
+  parseErrors: controlledParseErrors,
+  setParseErrors: setControlledParseErrors,
 }) => {
   const [allowCardsOutsideOfCube, setAllowCardsOutsideOfCube] = useState<boolean>(false);
   const [addToSideboard, setAddToSideboard] = useState<boolean>(false);
   const { csrfFetch } = useContext(CSRFContext);
   const removeRef = useRef<HTMLInputElement>(null);
   const [cardNameValue, setCardNameValue] = useState<string>('');
-  const [decklistText, setDecklistText] = useState<string>('');
-  const [parseErrors, setParseErrors] = useState<string[]>([]);
+  const [localDecklistText, setLocalDecklistText] = useState<string>('');
+  const [localParseErrors, setLocalParseErrors] = useState<string[]>([]);
+  const decklistText = controlledDecklistText ?? localDecklistText;
+  const setDecklistText = setControlledDecklistText ?? setLocalDecklistText;
+  const parseErrors = controlledParseErrors ?? localParseErrors;
+  const setParseErrors = setControlledParseErrors ?? setLocalParseErrors;
   const [isParsing, setIsParsing] = useState<boolean>(false);
   const [showPasteForm, setShowPasteForm] = useState<boolean>(true);
   // The cube's basic lands, fed to the same Add Basic Lands modal the deckbuilder
@@ -246,7 +261,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
         setIsParsing(false);
       }
     },
-    [csrfFetch, setMainboardCards, setSideboardCards, addToSideboard],
+    [csrfFetch, setMainboardCards, setSideboardCards, setDecklistText, setParseErrors, addToSideboard],
   );
 
   return (

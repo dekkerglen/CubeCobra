@@ -164,6 +164,9 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
     record.date = submission.date;
     record.description = submission.description;
 
+    // Read before the submitted list replaces it: whether the draft has to be rewritten at all
+    // is decided by comparing the two.
+    const previousPlayers = record.players;
     record.players = submission.players;
 
     // A key for a player dropped in this same save is discarded rather than persisted.
@@ -176,13 +179,32 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
     record.dateLastUpdated = Date.now();
 
     if (draft && !isPlayedDraft) {
-      draft.seats = realignDraftSeats(draft.seats, submission.seatOrder, submission.players);
+      // Realigning stamps every seat with its player's name, and DraftDynamoDao.update then
+      // renames the whole draft after seat one. For a draft imported from a file or from
+      // Hedron that is a real change: associateDecksWithNewDraft deliberately leaves the seat
+      // titles unset so createDraft names each seat by its archetype. Doing it on a save that
+      // only touched the overview would retitle every deck for nothing, so the realign — and
+      // the draft write that persists it — are skipped unless the seats actually moved.
+      const identityOrder =
+        submission.seatOrder.length === draft.seats.length &&
+        submission.seatOrder.every((origin, index) => origin === index);
+      const playersUnchanged =
+        identityOrder &&
+        previousPlayers.length === submission.players.length &&
+        submission.players.every(
+          (player, index) =>
+            player.name === previousPlayers[index]?.name && player.userId === previousPlayers[index]?.userId,
+        );
+
+      if (!playersUnchanged) {
+        draft.seats = realignDraftSeats(draft.seats, submission.seatOrder, submission.players);
+      }
 
       // One draft write either way: associateDecksWithExistingDraft issues its own, so calling
       // it with nothing to write would only burn a no-change update on top of this one.
       if (hasDeckEdits) {
         await associateDecksWithExistingDraft(cube, draft, submission.decks);
-      } else {
+      } else if (!playersUnchanged) {
         await draftDao.update(draft);
       }
 

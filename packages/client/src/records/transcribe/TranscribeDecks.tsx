@@ -2,22 +2,31 @@ import React, { useMemo, useState } from 'react';
 
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
+import Draft from '@utils/datatypes/Draft';
 import Record from '@utils/datatypes/Record';
 
 import { UncontrolledAlertProps } from 'components/base/Alert';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
+import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 
 import UploadDeck from '../UploadDeck';
 import UploadDeckFromPhoto from '../UploadDeckFromPhoto';
-import { DeckBoard, TranscribeDeck } from './transcribeState';
+import { DeckBoard, TranscribeDeck, TranscribePaste } from './transcribeState';
 
 interface TranscribeDecksProps {
   cube: Cube;
   record: Record;
+  draft?: Draft;
   decks: { [playerIndex: number]: TranscribeDeck };
   setDeckBoard: (playerIndex: number, board: DeckBoard, update: React.SetStateAction<CardDetails[]>) => void;
+  // A half-finished paste per player. It is held by the page rather than by the deck editor
+  // because that editor is unmounted the moment another player's row is opened, and rather
+  // than by this component because it has to follow its player through a reorder.
+  pastes: { [playerIndex: number]: TranscribePaste };
+  setPasteText: (playerIndex: number, text: string) => void;
+  setPasteErrors: (playerIndex: number, errors: string[]) => void;
   setAlerts: React.Dispatch<React.SetStateAction<UncontrolledAlertProps[]>>;
 }
 
@@ -51,13 +60,22 @@ const CardNameList: React.FC<{ title: string; cards: CardDetails[] }> = ({ title
 
 // One row per player, only one of them open. Collapsed rows mount nothing: the deck editor
 // loads the cube's basics on mount, and a pod of eight would do that eight times over.
-const TranscribeDecks: React.FC<TranscribeDecksProps> = ({ cube, record, decks, setDeckBoard, setAlerts }) => {
+const TranscribeDecks: React.FC<TranscribeDecksProps> = ({
+  cube,
+  record,
+  draft,
+  decks,
+  setDeckBoard,
+  pastes,
+  setPasteText,
+  setPasteErrors,
+  setAlerts,
+}) => {
   // Open on the first player still missing a deck — the next one to transcribe.
   const [expanded, setExpanded] = useState<number>(() => {
     const firstDeckless = record.players.findIndex((_, index) => (decks[index]?.mainboard.length ?? 0) === 0);
     return firstDeckless === -1 ? 0 : firstDeckless;
   });
-
   const setters = useMemo(
     () =>
       record.players.map((_, index) => ({
@@ -65,8 +83,10 @@ const TranscribeDecks: React.FC<TranscribeDecksProps> = ({ cube, record, decks, 
           setDeckBoard(index, 'mainboard', update)) as React.Dispatch<React.SetStateAction<CardDetails[]>>,
         setSideboard: ((update: React.SetStateAction<CardDetails[]>) =>
           setDeckBoard(index, 'sideboard', update)) as React.Dispatch<React.SetStateAction<CardDetails[]>>,
+        setDecklistText: (text: string) => setPasteText(index, text),
+        setParseErrors: (errors: string[]) => setPasteErrors(index, errors),
       })),
-    [record.players, setDeckBoard],
+    [record.players, setDeckBoard, setPasteText, setPasteErrors],
   );
 
   return (
@@ -116,14 +136,25 @@ const TranscribeDecks: React.FC<TranscribeDecksProps> = ({ cube, record, decks, 
                         setSideboardCards={setters[index].setSideboard}
                         setAlerts={setAlerts}
                         cubeId={cube.id}
+                        // Held outside the editor, so collapsing this row to look at another
+                        // player does not discard a paste mid-correction.
+                        decklistText={pastes[index]?.text ?? ''}
+                        setDecklistText={setters[index].setDecklistText}
+                        parseErrors={pastes[index]?.errors ?? []}
+                        setParseErrors={setters[index].setParseErrors}
                       />
                     </Flexbox>
                   ) : (
                     <Flexbox direction="col" gap="2">
                       <Text sm className="text-text-secondary">
                         This record is attached to a played draft, so this deck is tied to the seat that drafted it and
-                        cannot be re-entered here. Edit it in the deckbuilder instead.
+                        cannot be re-entered here.
                       </Text>
+                      {draft && (
+                        <Link href={`/draft/deckbuilder/${draft.id}?seat=${index}`}>
+                          Edit this deck in the deckbuilder
+                        </Link>
+                      )}
                       <CardNameList title="Mainboard" cards={deck.mainboard} />
                       <CardNameList title="Sideboard" cards={deck.sideboard} />
                     </Flexbox>

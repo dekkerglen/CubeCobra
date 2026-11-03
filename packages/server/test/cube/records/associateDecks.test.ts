@@ -72,9 +72,9 @@ describe('associateDecksWithExistingDraft', () => {
     const draft = existingDraft(3);
 
     await associateDecksWithExistingDraft(cube, draft, {
-      1: { mainboard: ['bolt-oracle'] },
-      2: { mainboard: ['bear-oracle'] },
-      3: { mainboard: ['titan-oracle'] },
+      1: { mainboard: ['bolt-oracle'], sideboard: [] },
+      2: { mainboard: ['bear-oracle'], sideboard: [] },
+      3: { mainboard: ['titan-oracle'], sideboard: [] },
     });
 
     expect(cubeDao.getCards).toHaveBeenCalledTimes(1);
@@ -101,7 +101,7 @@ describe('associateDecksWithExistingDraft', () => {
     untouchedPool[1][1].push(0);
     const untouchedSideboard = draft.seats[2].sideboard;
 
-    await associateDecksWithExistingDraft(cube, draft, { 1: { mainboard: ['bolt-oracle'] } });
+    await associateDecksWithExistingDraft(cube, draft, { 1: { mainboard: ['bolt-oracle'], sideboard: [] } });
 
     expect(draft.seats[2].mainboard).toBe(untouchedPool);
     expect(draft.seats[2].mainboard[1][1]).toEqual([0]);
@@ -118,7 +118,7 @@ describe('associateDecksWithExistingDraft', () => {
     draft.seats[0].mainboard[1][1].push(0);
     draft.seats[0].sideboard[0][1].push(0);
 
-    await associateDecksWithExistingDraft(cube, draft, { 1: { mainboard: [] } });
+    await associateDecksWithExistingDraft(cube, draft, { 1: { mainboard: [], sideboard: [] } });
 
     expect(draft.seats[0].mainboard.flat(3)).toEqual([]);
     expect(draft.seats[0].sideboard.flat(3)).toEqual([]);
@@ -145,7 +145,12 @@ describe('associateDecksWithExistingDraft', () => {
   it('uses preloadedCubeCards instead of calling cubeDao.getCards', async () => {
     const draft = existingDraft(1);
 
-    await associateDecksWithExistingDraft(cube, draft, { 1: { mainboard: ['bear-oracle'] } }, cubeCards());
+    await associateDecksWithExistingDraft(
+      cube,
+      draft,
+      { 1: { mainboard: ['bear-oracle'], sideboard: [] } },
+      cubeCards(),
+    );
 
     expect(cubeDao.getCards).not.toHaveBeenCalled();
     expect(poolCards(draft, draft.seats[0].mainboard)).toEqual([expect.objectContaining({ cardID: 'bear-cube' })]);
@@ -155,8 +160,8 @@ describe('associateDecksWithExistingDraft', () => {
     const draft = existingDraft(2);
 
     await associateDecksWithExistingDraft(cube, draft, {
-      1: { mainboard: ['bolt-oracle'] },
-      9: { mainboard: ['bear-oracle'] },
+      1: { mainboard: ['bolt-oracle'], sideboard: [] },
+      9: { mainboard: ['bear-oracle'], sideboard: [] },
     });
 
     // The missing seat's cards must not be resolved into the shared card list either,

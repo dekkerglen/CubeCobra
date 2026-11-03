@@ -250,7 +250,9 @@ export const associateWithExistingDraft = async (
 export const associateDecksWithExistingDraft = async (
   cube: CubeType,
   draft: Draft,
-  decksByIndex: { [userIndex: number]: { mainboard: string[]; sideboard?: string[] } },
+  // sideboard is required rather than optional: an omitted one resolves to an empty pool and
+  // wipes whatever the seat was holding, so leaving it out has to be a deliberate clear.
+  decksByIndex: { [userIndex: number]: { mainboard: string[]; sideboard: string[] } },
   // Pass the cube's cards when attaching decks to many records, to load them once.
   preloadedCubeCards?: CubeCards,
 ) => {
@@ -276,7 +278,7 @@ export const associateDecksWithExistingDraft = async (
       processCard(oracle, seatMainboard, false);
     }
 
-    for (const oracle of deck.sideboard ?? []) {
+    for (const oracle of deck.sideboard) {
       processCard(oracle, seatSideboard, true);
     }
 

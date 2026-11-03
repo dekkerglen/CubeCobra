@@ -9,6 +9,8 @@ import Record, { applyPlayerRenames, PlayerList, Round, WinLossDraw } from '@uti
 export const MAX_PLAYERS = 16;
 export const MAX_DECK_CARDS = 200;
 export const MAX_ROUNDS = 50;
+export const MAX_NAME_LENGTH = 255;
+export const MAX_DESCRIPTION_LENGTH = 1000;
 
 export type DeckBoard = 'mainboard' | 'sideboard';
 
@@ -26,6 +28,32 @@ export interface TranscribeDeck {
   // pick and trash orders and pack history.
   editable: boolean;
 }
+
+// A paste the user is still working through: the text in the box, and the lines from the
+// last attempt that could not be resolved. It is the user's typing rather than part of the
+// record, so it is deliberately not in TranscribeState — it is neither submitted nor counted
+// as an unsaved change.
+export interface TranscribePaste {
+  text: string;
+  errors: string[];
+}
+
+// Carries each pending paste to wherever its player ended up, the same way applyPlayerEdit
+// carries the decks. Without this a half-typed decklist would stay at its old position and
+// end up sitting under a different player's name.
+export const movePastes = (
+  pastes: { [playerIndex: number]: TranscribePaste },
+  originSeats: number[],
+): { [playerIndex: number]: TranscribePaste } => {
+  const next: { [playerIndex: number]: TranscribePaste } = {};
+  originSeats.forEach((origin, index) => {
+    const carried = origin >= 0 ? pastes[origin] : undefined;
+    if (carried) {
+      next[index] = carried;
+    }
+  });
+  return next;
+};
 
 export interface TranscribeState {
   name: string;
@@ -193,8 +221,19 @@ export const validationErrors = (state: TranscribeState): string[] => {
   if (!state.name.trim()) {
     errors.push('Give this record a name.');
   }
+  if (state.name.length > MAX_NAME_LENGTH) {
+    errors.push(`A record name is at most ${MAX_NAME_LENGTH} characters, and this one has ${state.name.length}.`);
+  }
   if (!Number.isFinite(state.date)) {
     errors.push('Give this record a date.');
+  }
+  // The file importer accepts descriptions up to 5000 characters, so a record can arrive
+  // already past this endpoint's cap — which would otherwise only surface as a raw Joi
+  // message after the whole event had been typed out.
+  if (state.description.length > MAX_DESCRIPTION_LENGTH) {
+    errors.push(
+      `A record description is at most ${MAX_DESCRIPTION_LENGTH} characters, and this one has ${state.description.length}.`,
+    );
   }
   if (state.players.length > MAX_PLAYERS) {
     errors.push(`A record holds at most ${MAX_PLAYERS} players, and this one has ${state.players.length}.`);

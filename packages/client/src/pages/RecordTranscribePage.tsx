@@ -27,10 +27,12 @@ import {
   CardsUpdate,
   DeckBoard,
   isDirty,
+  movePastes,
   seedTranscribeState,
   setDeckCards,
   toTranscribePayload,
   TranscribeDeck,
+  TranscribePaste,
   TranscribeState,
   validationErrors,
 } from '../records/transcribe/transcribeState';
@@ -67,6 +69,11 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
     const seeded = seedTranscribeState(record, draft);
     return { state: seeded, seeded };
   });
+  // The decklist each player's paste box is holding, plus the lines the last parse could not
+  // resolve. Kept here rather than in the deck editor, which is unmounted the moment another
+  // player's row is opened — the retained-errored-lines correction path is the whole reason
+  // that text is still on screen, and collapsing a row must not throw it away.
+  const [pastes, setPastes] = useState<{ [playerIndex: number]: TranscribePaste }>({});
   const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
   const [saveError, setSaveError] = useState<string>('');
   const [saving, setSaving] = useState<boolean>(false);
@@ -107,9 +114,24 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
   );
 
   const applyPlayers = useCallback(
-    (edited: PlayerList, originSeats: number[]) =>
-      updateState((previous) => applyPlayerEdit(previous, edited, originSeats, seatsEditable)),
+    (edited: PlayerList, originSeats: number[]) => {
+      updateState((previous) => applyPlayerEdit(previous, edited, originSeats, seatsEditable));
+      // A pending paste follows its player, exactly as applyPlayerEdit moves their deck.
+      setPastes((previous) => movePastes(previous, originSeats));
+    },
     [updateState, seatsEditable],
+  );
+
+  const setPasteText = useCallback(
+    (playerIndex: number, text: string) =>
+      setPastes((previous) => ({ ...previous, [playerIndex]: { text, errors: previous[playerIndex]?.errors ?? [] } })),
+    [],
+  );
+
+  const setPasteErrors = useCallback(
+    (playerIndex: number, errors: string[]) =>
+      setPastes((previous) => ({ ...previous, [playerIndex]: { text: previous[playerIndex]?.text ?? '', errors } })),
+    [],
   );
 
   const setOverride = useCallback(
@@ -242,8 +264,12 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                 <TranscribeDecks
                   cube={cube}
                   record={liveRecord}
+                  draft={draft}
                   decks={state.decks}
                   setDeckBoard={setDeckBoard}
+                  pastes={pastes}
+                  setPasteText={setPasteText}
+                  setPasteErrors={setPasteErrors}
                   setAlerts={setAlerts}
                 />
               </Flexbox>

@@ -63,9 +63,9 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
   const showingAll = deckView === 'all';
 
   const isOwner = canEdit;
-  // The whole event in one editable page, for someone transcribing a draft they already have
-  // the data for rather than running one live.
-  const transcribeLink = isOwner && <Link href={`/cube/records/enter/${record.id}`}>Enter event data</Link>;
+  // The deck upload page, pre-selecting whichever player is showing. Built once: the empty
+  // state, the player rail and the no-deck placeholder all link to the same place.
+  const uploadDeckHref = `/cube/records/uploaddeck/${record.id}?player=${selectedUserIndex + 1}`;
   const selectedPlayer = record.players[selectedUserIndex];
   const selectedHasDeck = seatHasDeck(draft, selectedUserIndex);
 
@@ -77,7 +77,6 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
           {isOwner && (
             <Flexbox direction="row" gap="4" wrap="wrap" alignItems="center">
               <EditPlayerListLink modalprops={{ record }}>Add players</EditPlayerListLink>
-              {transcribeLink}
               <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload a deck</Link>
             </Flexbox>
           )}
@@ -170,10 +169,7 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
     return (
       <CardBody>
         <Flexbox direction="col" gap="4">
-          <Flexbox direction="row" gap="4" justify="between" alignItems="center" wrap="wrap">
-            {viewToggle}
-            {transcribeLink}
-          </Flexbox>
+          {viewToggle}
           {draft ? (
             <RecordAllDecks
               record={record}
@@ -198,10 +194,7 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
   return (
     <CardBody>
       <Flexbox direction="col" gap="4">
-        <Flexbox direction="row" gap="4" justify="between" alignItems="center" wrap="wrap">
-          {viewToggle}
-          {transcribeLink}
-        </Flexbox>
+        {viewToggle}
         <Flexbox direction="col" gap="4" className="md:flex-row md:items-start">
           {/* Player list — a vertical pill selector that controls which deck shows. */}
           <Flexbox direction="col" gap="2" className="md:w-60 md:shrink-0">
@@ -244,7 +237,7 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
               })}
             </Flexbox>
             {isOwner && (
-              <Link href={`/cube/records/uploaddeck/${record.id}?player=${selectedUserIndex + 1}`}>
+              <Link href={uploadDeckHref}>
                 <Text sm>Upload a deck</Text>
               </Link>
             )}
@@ -278,11 +271,7 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
                     ? 'No deck has been uploaded for this player yet.'
                     : 'No draft data available for this record.'}
                 </Text>
-                {isOwner && (
-                  <Link href={`/cube/records/uploaddeck/${record.id}?player=${selectedUserIndex + 1}`}>
-                    Upload a deck to this record
-                  </Link>
-                )}
+                {isOwner && <Link href={uploadDeckHref}>Upload a deck to this record</Link>}
               </Flexbox>
             )}
           </Flexbox>

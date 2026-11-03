@@ -8,8 +8,11 @@ import {
   areSeatsEditable,
   isDirty,
   MAX_DECK_CARDS,
+  MAX_DESCRIPTION_LENGTH,
+  MAX_NAME_LENGTH,
   MAX_PLAYERS,
   MAX_ROUNDS,
+  movePastes,
   seedTranscribeState,
   setDeckCards,
   toTranscribePayload,
@@ -610,6 +613,35 @@ describe('validationErrors', () => {
   });
 
   it.each([
+    [MAX_NAME_LENGTH - 1, false],
+    [MAX_NAME_LENGTH, false],
+    [MAX_NAME_LENGTH + 1, true],
+  ])('reports a %i-character name as over the cap: %s', (length, expected) => {
+    const state = seedTranscribeState(createRecord({ name: 'n'.repeat(length) }));
+
+    expect(validationErrors(state)).toEqual(
+      expected ? [`A record name is at most ${MAX_NAME_LENGTH} characters, and this one has ${length}.`] : [],
+    );
+  });
+
+  // The file importer accepts a description of up to 5000 characters, so a record can arrive
+  // already past this endpoint's cap. Without this check the only way to find out is a raw
+  // Joi message in the footer, after a whole event has been typed out.
+  it.each([
+    [MAX_DESCRIPTION_LENGTH - 1, false],
+    [MAX_DESCRIPTION_LENGTH, false],
+    [MAX_DESCRIPTION_LENGTH + 1, true],
+  ])('reports a %i-character description as over the cap: %s', (length, expected) => {
+    const state = seedTranscribeState(createRecord({ description: 'd'.repeat(length) }));
+
+    expect(validationErrors(state)).toEqual(
+      expected
+        ? [`A record description is at most ${MAX_DESCRIPTION_LENGTH} characters, and this one has ${length}.`]
+        : [],
+    );
+  });
+
+  it.each([
     [MAX_PLAYERS - 1, false],
     [MAX_PLAYERS, false],
     [MAX_PLAYERS + 1, true],
@@ -673,5 +705,31 @@ describe('validationErrors', () => {
     expect(validationErrors(state)).toEqual([
       `Seat 1's mainboard has ${MAX_DECK_CARDS + 1} cards, over the ${MAX_DECK_CARDS} limit.`,
     ]);
+  });
+});
+
+// Pastes are not part of TranscribeState — they are what the user is still typing — but they
+// have to follow their player through a reorder the same way applyPlayerEdit moves the decks,
+// or a half-entered decklist ends up under somebody else's name.
+describe('movePastes', () => {
+  const pastes = {
+    0: { text: "Alice's list", errors: ['Could not find card: "Notacard"'] },
+    1: { text: "Bob's list", errors: [] },
+  };
+
+  it("carries each paste to its player's new position", () => {
+    expect(movePastes(pastes, [1, 0])).toEqual({ 0: pastes[1], 1: pastes[0] });
+  });
+
+  it('gives a newly added player an empty box', () => {
+    expect(movePastes(pastes, [0, -1, 1])).toEqual({ 0: pastes[0], 2: pastes[1] });
+  });
+
+  it('drops the paste of a player who was removed', () => {
+    expect(movePastes(pastes, [1])).toEqual({ 0: pastes[1] });
+  });
+
+  it('leaves an untouched list exactly as it was', () => {
+    expect(movePastes(pastes, [0, 1])).toEqual(pastes);
   });
 });
