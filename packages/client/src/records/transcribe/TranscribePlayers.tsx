@@ -5,7 +5,7 @@ import { ChevronDownIcon, ChevronRightIcon, GrabberIcon, PencilIcon, TrophyIcon 
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
-import Record, { formatRecord, PlayerList, playerRecord, WinLossDraw } from '@utils/datatypes/Record';
+import Record, { PlayerList, playerRecord, WinLossDraw } from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
 
 import { UncontrolledAlertProps } from 'components/base/Alert';
@@ -517,7 +517,10 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
   return (
     <Flexbox direction="col" gap="2">
       <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
-        {seatsEditable ? (
+        <Text sm className="text-text-secondary">
+          {`${players.length} ${players.length === 1 ? 'player' : 'players'}`}
+        </Text>
+        {seatsEditable && (
           <fieldset disabled={editsDisabled} className="min-w-0 border-0 p-0 m-0">
             <Flexbox direction="col" gap="1">
               <Flexbox direction="row" gap="2" alignItems="center" wrap="wrap">
@@ -546,12 +549,7 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
               )}
             </Flexbox>
           </fieldset>
-        ) : (
-          <span />
         )}
-        <Text sm className="text-text-secondary">
-          {`${players.length} ${players.length === 1 ? 'player' : 'players'}`}
-        </Text>
       </Flexbox>
 
       {!seatsEditable && (
@@ -682,12 +680,10 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                           {!records && (
                             // A hover card rather than a native title: a pencil on a row of
                             // numbers does not say what it edits, and a title takes a second
-                            // of stillness before it admits to anything.
-                            <Tooltip
-                              text={`${override ? 'Stop overriding' : 'Override'} ${player.name}\u2019s record \u2014 their pairings give ${formatRecord(derived)}`}
-                              wrapperTag="span"
-                              className="shrink-0"
-                            >
+                            // of stillness before it admits to anything. The accessible name
+                            // below names the player; the card is read in place, where the
+                            // row it is on already says whose.
+                            <Tooltip text="Override Player Record" wrapperTag="span" className="shrink-0">
                               <button
                                 type="button"
                                 disabled={editsDisabled}

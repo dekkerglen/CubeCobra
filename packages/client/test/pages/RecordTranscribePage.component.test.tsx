@@ -247,7 +247,7 @@ const overrideToggle = (index: number) =>
 // React synthesises onMouseEnter from mouseover, which is what fireEvent.mouseEnter is not.
 const overrideHint = (index: number): string | null => {
   fireEvent.mouseOver(overrideToggle(index));
-  return screen.queryByText(/^(Override|Stop overriding) /)?.textContent ?? null;
+  return screen.queryByText('Override Player Record')?.textContent ?? null;
 };
 
 // A row is open when its deck editor is mounted; the name field is no longer the tell.
@@ -1123,8 +1123,8 @@ describe('RecordTranscribePage', () => {
 
     expect(overrideToggle(0)).toHaveAttribute('aria-pressed', 'false');
     expect(cellsEditable(0)).toBe(false);
-    // The control says what it is about to displace, since the cells stop showing it.
-    expect(overrideHint(0)).toBe('Override Alice’s record — their pairings give 1-0');
+    // A pencil on a row of numbers does not say what it edits.
+    expect(overrideHint(0)).toBe('Override Player Record');
 
     fireEvent.click(overrideToggle(0));
 
@@ -1315,15 +1315,16 @@ describe('RecordTranscribePage', () => {
   // the record it describes.
   // The override switch hides what it is replacing, so the reading it displaces is stated
   // right beside it rather than left for the user to work out from the rounds below.
-  it('states the pairing-derived reading on the override control', () => {
+  // The card is read in place, where the row it sits on already says whose record it is;
+  // the accessible name carries the player, so two rows are never ambiguous to a reader.
+  it('names the player in the override control without repeating it in the card', () => {
     renderPage({ record: createRecord({ matches: pairedRound() }) });
 
-    expect(overrideHint(1)).toBe('Override Bob\u2019s record — their pairings give 0-1');
+    expect(overrideToggle(1)).toHaveAccessibleName('Override Bob\u2019s record');
+    expect(overrideHint(1)).toBe('Override Player Record');
 
-    // It belongs to the pairings, not to whether this player is overriding them — which is
-    // the whole point once the cells have stopped showing them.
     fireEvent.click(overrideToggle(1));
-    expect(overrideHint(1)).toBe('Stop overriding Bob\u2019s record — their pairings give 0-1');
+    expect(overrideToggle(1)).toHaveAccessibleName('Stop overriding Bob\u2019s record');
   });
 
   // The endpoint's Joi schema rejects a negative win count with a raw 400, and a number input
