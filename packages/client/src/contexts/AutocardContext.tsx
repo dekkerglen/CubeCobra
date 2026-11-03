@@ -1,6 +1,13 @@
 import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 
-import { cardTags, isAlphaPrinting, isCardFoil, showsBlackBorderForFoil } from '@utils/cardutil';
+import {
+  cardFaceOrientations,
+  CardFaceOrientations,
+  cardTags,
+  isAlphaPrinting,
+  isCardFoil,
+  showsBlackBorderForFoil,
+} from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
 import Card from '@utils/datatypes/Card';
 import { TagColor } from '@utils/datatypes/Cube';
@@ -9,6 +16,7 @@ import { getTagColorClass, getTagColorStyle } from '../../../utils/src/Util';
 import BlackBorderOverlay from '../components/BlackBorderOverlay';
 import { Flexbox } from '../components/base/Layout';
 import Tag from '../components/base/Tag';
+import CardOrientationFrame from '../components/card/CardOrientationFrame';
 
 interface Tag {
   value: string;
@@ -20,6 +28,7 @@ interface CardDivProps {
   hidden: boolean;
   front: string | null;
   back: string | null;
+  orientations: CardFaceOrientations;
   tags: Tag[];
   foilOverlay: boolean;
   blackBorder: boolean;
@@ -37,6 +46,18 @@ const TAG_MAX_WIDTH = 160;
 // Above every overlay the app puts up (dropdowns at 1050, the draft table at 1300). The
 // preview is transient and pointer-events: none, so nothing should ever cover it.
 const POPUP_Z_INDEX = 2000;
+
+// A portrait face renders at the size every preview has always been. A landscape face is
+// the same card turned a quarter turn, so it renders at the same scale — its width is
+// what a portrait face's height would be. The popup is free-floating, so there is no
+// reason to shrink the card to keep the box narrow.
+const PORTRAIT_FACE_WIDTH_REM = 15;
+const LANDSCAPE_FACE_WIDTH_REM = Number(((PORTRAIT_FACE_WIDTH_REM * 680) / 488).toFixed(4));
+
+const faceWidthRem = (orientation: CardFaceOrientations['front']): number =>
+  orientation === 'landscape' ? LANDSCAPE_FACE_WIDTH_REM : PORTRAIT_FACE_WIDTH_REM;
+
+const PORTRAIT_FACES: CardFaceOrientations = { front: 'portrait', back: 'portrait' };
 
 interface Layout {
   left: number;
@@ -67,6 +88,7 @@ const CardDiv: React.FC<CardDivProps> = ({
   hidden,
   front,
   back,
+  orientations,
   tags,
   foilOverlay,
   blackBorder,
@@ -179,10 +201,16 @@ const CardDiv: React.FC<CardDivProps> = ({
 
   const borderClass = alphaBorder ? 'card-border card-border-alpha' : 'card-border';
 
+  // The popup is sized from the faces it is actually showing. A landscape face reserves a
+  // wider box, and the clamping above measures that box, so it has to be real layout
+  // width rather than a transform applied to a portrait one.
+  const popupWidthRem = (front ? faceWidthRem(orientations.front) : 0) + (back ? faceWidthRem(orientations.back) : 0);
+
   const popupStyle: React.CSSProperties = {
     zIndex: POPUP_Z_INDEX,
     left: layout?.left ?? 0,
     top: layout?.top ?? 0,
+    width: `${Number(popupWidthRem.toFixed(4))}rem`,
     visibility: ready ? 'visible' : 'hidden',
   };
 
@@ -198,34 +226,38 @@ const CardDiv: React.FC<CardDivProps> = ({
 
   return (
     <>
-      <div className={back ? 'double-width' : undefined} id="autocardPopup" style={popupStyle} ref={autocardPopup}>
+      <div id="autocardPopup" style={popupStyle} ref={autocardPopup}>
         <div className="autocard-background bg-bg-accent">
           <Flexbox direction="row">
             {front && (
-              <div className="col position-relative">
-                {blackBorder && <BlackBorderOverlay />}
-                {foilOverlay && (
-                  <img
-                    className={`foilOverlay ${borderClass}`}
-                    src={cdnUrl('/content/foilOverlay.png')}
-                    alt="foil overlay"
-                  />
-                )}
-                <img className={borderClass} id="autocardImageFront" src={front} alt={front} key={front} />
-              </div>
+              <CardOrientationFrame orientation={orientations.front} width={`${faceWidthRem(orientations.front)}rem`}>
+                <div className="col position-relative">
+                  {blackBorder && <BlackBorderOverlay />}
+                  {foilOverlay && (
+                    <img
+                      className={`foilOverlay ${borderClass}`}
+                      src={cdnUrl('/content/foilOverlay.png')}
+                      alt="foil overlay"
+                    />
+                  )}
+                  <img className={borderClass} id="autocardImageFront" src={front} alt={front} key={front} />
+                </div>
+              </CardOrientationFrame>
             )}
             {back && (
-              <div className="col position-relative">
-                {blackBorder && <BlackBorderOverlay />}
-                {foilOverlay && (
-                  <img
-                    className={`foilOverlay ${borderClass}`}
-                    src={cdnUrl('/content/foilOverlay.png')}
-                    alt="foil overlay"
-                  />
-                )}
-                <img className={borderClass} id="autocardImageBack" src={back} alt={back} key={back} />
-              </div>
+              <CardOrientationFrame orientation={orientations.back} width={`${faceWidthRem(orientations.back)}rem`}>
+                <div className="col position-relative">
+                  {blackBorder && <BlackBorderOverlay />}
+                  {foilOverlay && (
+                    <img
+                      className={`foilOverlay ${borderClass}`}
+                      src={cdnUrl('/content/foilOverlay.png')}
+                      alt="foil overlay"
+                    />
+                  )}
+                  <img className={borderClass} id="autocardImageBack" src={back} alt={back} key={back} />
+                </div>
+              </CardOrientationFrame>
             )}
           </Flexbox>
         </div>
@@ -272,6 +304,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
   const [alphaBorder, setAlphaBorder] = useState(false);
   const [front, setFront] = useState<string | null>(null);
   const [back, setBack] = useState<string | null>(null);
+  const [orientations, setOrientations] = useState<CardFaceOrientations>(PORTRAIT_FACES);
   const [stopAutocard, setStopAutocard] = useState(false);
   const [tags, setTags] = useState<Tag[]>([]);
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
@@ -289,6 +322,9 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
       setAlphaBorder(isAlphaPrinting(card));
       setFront(((showCustomImages && card.imgUrl) || card.details?.image_normal) ?? null);
       setBack(((showCustomImages && card.imgBackUrl) || card.details?.image_flip) ?? null);
+      // Orientation follows the card, not the image: a custom image on a Plane is still
+      // rotated, because what is sideways is the printing.
+      setOrientations(cardFaceOrientations(card));
       setTags(
         cardTags(card).map((tag) => ({
           value: tag,
@@ -318,6 +354,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
     setAlphaBorder(false);
     setFront(null);
     setBack(null);
+    setOrientations(PORTRAIT_FACES);
     setTags([]);
     setAnchor(null);
   }, []);
@@ -372,6 +409,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
         hidden={hidden}
         front={front}
         back={back}
+        orientations={orientations}
         tags={tags}
         foilOverlay={foilOverlay}
         blackBorder={blackBorder}

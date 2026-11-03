@@ -298,7 +298,7 @@ describe('autocard previews', () => {
     fireEvent.mouseEnter(screen.getByText('Lightning Bolt'));
 
     const popup = document.getElementById('autocardPopup') as HTMLDivElement;
-    expect(popup).toHaveClass('double-width');
+    expect(popup).toHaveStyle({ width: '30rem' });
 
     const faces = [
       document.getElementById('autocardImageFront'),
@@ -369,5 +369,85 @@ describe('autocard previews', () => {
     moveCursorTo(100, 100);
     fireEvent.mouseEnter(screen.getByText('Lightning Bolt'));
     expect(isShowing()).toBe(false);
+  });
+});
+
+describe('landscape previews', () => {
+  // Cards printed sideways — Planes, Phenomena, Schemes, old split cards, and the front
+  // face of a Battle. Scryfall still ships them 488x680 portrait, so the preview rotates
+  // them and the popup has to reserve the wider box.
+  const plane = {
+    ...card,
+    details: { ...card.details, layout: 'planar' },
+  } as unknown as Card;
+
+  const battle = {
+    ...card,
+    details: {
+      ...card.details,
+      layout: 'transform',
+      type: 'Battle — Siege',
+      image_flip: 'https://example.com/bolt-back.jpg',
+    },
+  } as unknown as Card;
+
+  const landscapeFrame = (id: string) => document.getElementById(id)!.closest('[style*="680 / 488"]');
+
+  const hover = (preview: Card) => {
+    render(
+      <AutocardContextProvider>
+        <AutocardDiv card={preview}>Lightning Bolt</AutocardDiv>
+      </AutocardContextProvider>,
+    );
+    moveCursorTo(100, 100);
+    fireEvent.mouseEnter(screen.getByText('Lightning Bolt'));
+  };
+
+  it('sizes a single portrait preview to one face', () => {
+    hover(card);
+    expect(popup()).toHaveStyle({ width: '15rem' });
+    expect(landscapeFrame('autocardImageFront')).toBeNull();
+  });
+
+  it('sizes a two-portrait-face preview to two faces', () => {
+    const dfc = {
+      ...card,
+      details: { ...card.details, layout: 'transform', image_flip: 'https://example.com/bolt-back.jpg' },
+    } as unknown as Card;
+    hover(dfc);
+    expect(popup()).toHaveStyle({ width: '30rem' });
+    expect(landscapeFrame('autocardImageFront')).toBeNull();
+    expect(landscapeFrame('autocardImageBack')).toBeNull();
+  });
+
+  it('sizes a landscape preview to the rotated face width', () => {
+    hover(plane);
+    expect(popup()).toHaveStyle({ width: '20.9016rem' });
+    expect(landscapeFrame('autocardImageFront')).not.toBeNull();
+  });
+
+  it('sizes a battle preview to a landscape front beside a portrait back', () => {
+    hover(battle);
+    expect(popup()).toHaveStyle({ width: '35.9016rem' });
+    expect(landscapeFrame('autocardImageFront')).not.toBeNull();
+    expect(landscapeFrame('autocardImageBack')).toBeNull();
+  });
+
+  it('keeps a landscape preview inside the viewport near the right edge', () => {
+    // The landscape popup is ~40% wider than a portrait one; the clamp has to measure
+    // the box it actually reserves rather than assume 15rem.
+    popupSize = { width: 334, height: 240 };
+
+    render(
+      <AutocardContextProvider>
+        <AutocardDiv card={plane}>Lightning Bolt</AutocardDiv>
+      </AutocardContextProvider>,
+    );
+    moveCursorTo(VIEWPORT.width - 20, 100);
+    fireEvent.mouseEnter(screen.getByText('Lightning Bolt'));
+
+    expect(isShowing()).toBe(true);
+    expect(popupLeft()).toBeGreaterThanOrEqual(0);
+    expect(popupLeft() + popupSize.width).toBeLessThanOrEqual(VIEWPORT.width);
   });
 });
