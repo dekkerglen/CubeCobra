@@ -3,6 +3,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 import { ArrowSwitchIcon } from '@primer/octicons-react';
 import {
   cardColorCategory,
+  cardFaceOrientations,
   cardFaceToggleLabel,
   cardColorIdentity,
   cardElo,
@@ -36,6 +37,8 @@ import AddToCubeModal from 'components/modals/AddToCubeModal';
 import PurchaseTable from 'components/purchase/PurchaseTable';
 
 import CardIdBadge from './CardIdBadge';
+import CardOrientationFrame from './CardOrientationFrame';
+import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
 
 import { cardImageBackUrl, cardImageUrl } from '../../../../utils/src/cardutil';
@@ -65,6 +68,11 @@ import VersionSelect from './VersionSelect';
 
 type FoilCardImageProps = FoilOverlayProps & ImageFallbackProps;
 const FoilCardImage: React.FC<FoilCardImageProps> = FoilOverlay(ImageFallback);
+// A landscape card is constrained to this column's width, so it renders smaller than a
+// normal card and its rules text is a squint. Hovering raises the ordinary autocard
+// preview at full size — the modal panel is overflow-hidden, so expanding in place
+// would simply be clipped.
+const HoverPreviewFrame = withAutocard(CardOrientationFrame);
 const AddToCubeButton = withModal(Button, AddToCubeModal);
 
 export interface CardModalProps {
@@ -167,6 +175,10 @@ const CardModal: React.FC<CardModalProps> = ({
   const [prevCardID, setPrevCardID] = useState(card.cardID);
   const [isFrontImage, setIsFrontImage] = useState(true);
   const [imageUsed, setImageUsed] = useState(getCardFrontImage(card));
+  // Orientation is per face: a Battle has a landscape front and a portrait back, so the
+  // image's box changes shape when the card is turned over.
+  const faceOrientations = cardFaceOrientations(card);
+  const displayedOrientation = isFrontImage ? faceOrientations.front : faceOrientations.back;
   //When the card id changes, then update the image used. If we just checked card, it would be different
   //if any field in the modal is edited, which would lead the image to reset to the front face.
   if (prevCardID !== card.cardID) {
@@ -252,13 +264,25 @@ const CardModal: React.FC<CardModalProps> = ({
           <Row>
             <Col xs={12} sm={6}>
               <Flexbox direction="col" gap="2">
-                <FoilCardImage
-                  card={card}
-                  className="w-full"
-                  src={imageUsed}
-                  fallbackSrc={cdnUrl('/content/loadingcard.png')}
-                  alt={cardName(card)}
-                />
+                {displayedOrientation === 'landscape' ? (
+                  <HoverPreviewFrame orientation="landscape" card={card}>
+                    <FoilCardImage
+                      card={card}
+                      className="w-full"
+                      src={imageUsed}
+                      fallbackSrc={cdnUrl('/content/loadingcard.png')}
+                      alt={cardName(card)}
+                    />
+                  </HoverPreviewFrame>
+                ) : (
+                  <FoilCardImage
+                    card={card}
+                    className="w-full"
+                    src={imageUsed}
+                    fallbackSrc={cdnUrl('/content/loadingcard.png')}
+                    alt={cardName(card)}
+                  />
+                )}
                 {getCardBackImage(card) && (
                   <Button
                     color="accent"

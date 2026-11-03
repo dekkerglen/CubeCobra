@@ -8,6 +8,7 @@ import { detailsToCard } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 
 import CardModal from 'components/card/CardModal';
+import { AutocardContextProvider } from 'contexts/AutocardContext';
 import { getPlaceholderCardDetails } from 'utils/placeholderCardDetails';
 
 jest.mock('components/modals/AddToCubeModal', () => ({ __esModule: true, default: () => <div /> }));
@@ -108,5 +109,66 @@ describe('card modal corner radius', () => {
     // ImageFallback spreads its remaining props onto the <img>, so `card` has to be
     // destructured out or React warns about an unknown DOM attribute.
     expect(imageOf(cardWith({ set: 'lea' })).hasAttribute('card')).toBe(false);
+  });
+});
+
+describe('landscape card images', () => {
+  const landscapeFrameAround = (image: HTMLElement) => image.closest('[style*="680 / 488"]');
+
+  it('wraps a planar card image in a landscape frame', () => {
+    render(<CardModal {...props} card={cardWith({ layout: 'planar' })} />);
+
+    expect(landscapeFrameAround(screen.getByAltText('Delver of Secrets'))).not.toBeNull();
+  });
+
+  it('leaves an ordinary card unwrapped', () => {
+    render(<CardModal {...props} card={cardWith({ layout: 'normal' })} />);
+
+    expect(landscapeFrameAround(screen.getByAltText('Delver of Secrets'))).toBeNull();
+  });
+
+  it('reflows to portrait when a battle is turned over', () => {
+    // A Battle is a transform card with a landscape front and an ordinary portrait back,
+    // so the box has to change shape with the face.
+    render(
+      <CardModal {...props} card={cardWith({ layout: 'transform', type: 'Battle — Siege', image_flip: 'back.jpg' })} />,
+    );
+
+    expect(landscapeFrameAround(screen.getByAltText('Delver of Secrets'))).not.toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Transform' }));
+
+    expect(landscapeFrameAround(screen.getByAltText('Delver of Secrets'))).toBeNull();
+  });
+
+  it('raises the autocard preview when a landscape image is hovered', () => {
+    // The modal panel is overflow-hidden, so an in-place expansion would be clipped.
+    // The autocard popup is already fixed-position and viewport-clamped.
+    render(
+      <AutocardContextProvider>
+        <CardModal {...props} card={cardWith({ layout: 'planar' })} />
+      </AutocardContextProvider>,
+    );
+
+    const frame = landscapeFrameAround(screen.getByAltText('Delver of Secrets')) as HTMLElement;
+    // The provider positions from the recorded pointer, so without a move it has
+    // nowhere to place the preview and leaves it hidden.
+    fireEvent.mouseMove(document, { clientX: 100, clientY: 100 });
+    fireEvent.mouseEnter(frame);
+
+    expect((document.getElementById('autocardPopup') as HTMLDivElement).style.visibility).toBe('visible');
+  });
+
+  it('does not raise a preview from a portrait image', () => {
+    render(
+      <AutocardContextProvider>
+        <CardModal {...props} card={cardWith({ layout: 'normal' })} />
+      </AutocardContextProvider>,
+    );
+
+    fireEvent.mouseMove(document, { clientX: 100, clientY: 100 });
+    fireEvent.mouseEnter(screen.getByAltText('Delver of Secrets'));
+
+    expect((document.getElementById('autocardPopup') as HTMLDivElement).style.visibility).toBe('hidden');
   });
 });

@@ -4,6 +4,7 @@ import { ArrowSwitchIcon, PlusIcon, TrashIcon, XIcon } from '@primer/octicons-re
 import {
   cardColorCategory,
   cardColorIdentity,
+  cardFaceOrientations,
   cardFaceToggleLabel,
   cardFinish,
   cardImageBackUrl,
@@ -23,6 +24,7 @@ import { getLabels } from '@utils/sorting/Sort';
 import { getTagColorClass, getTagColorStyle } from '@utils/Util';
 
 import ImageFallback from 'components/ImageFallback';
+import withAutocard from 'components/WithAutocard';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
 import CubeContext from '../../contexts/CubeContext';
@@ -45,7 +47,12 @@ import BoardMoveControl from '../BoardMoveControl';
 import { ColorChecksAddon } from '../ColorCheck';
 import TagInput from '../TagInput';
 import AutocardListItem from './AutocardListItem';
+import CardOrientationFrame from './CardOrientationFrame';
 import VersionSelect from './VersionSelect';
+
+// Constrained to this column, a landscape card renders smaller than a normal one; the
+// hover raises the ordinary autocard preview at full size.
+const HoverPreviewFrame = withAutocard(CardOrientationFrame);
 
 export interface VoucherCardModalProps {
   isOpen: boolean;
@@ -270,6 +277,13 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
     return '/content/vouchercard.png';
   }, [selection, imageUsed, selectedSubCard]);
 
+  // A voucher's sub-cards are ordinary cards, so one of them can be printed sideways.
+  // The voucher itself only ever shows its front unless it has a back image.
+  const previewCard = selection === 'voucher' ? card : selectedSubCard;
+  const previewOrientations = cardFaceOrientations(previewCard);
+  const displayedOrientation =
+    selection === 'voucher' && !isFrontImage ? previewOrientations.back : previewOrientations.front;
+
   return (
     <Modal lg isOpen={isOpen} setOpen={setOpen}>
       <ModalHeader setOpen={setOpen}>
@@ -380,13 +394,25 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
 
               {/* Selected card preview */}
               <div className="mt-2">
-                <ImageFallback
-                  card={selection === 'voucher' ? card : selectedSubCard?.details}
-                  src={getSelectedImage()}
-                  fallbackSrc="/content/vouchercard.png"
-                  alt={selection === 'voucher' ? cardName(card) : selectedSubCard?.details?.name || 'Card'}
-                  className="w-full rounded"
-                />
+                {displayedOrientation === 'landscape' ? (
+                  <HoverPreviewFrame orientation="landscape" card={previewCard ?? undefined}>
+                    <ImageFallback
+                      card={selection === 'voucher' ? card : selectedSubCard?.details}
+                      src={getSelectedImage()}
+                      fallbackSrc="/content/vouchercard.png"
+                      alt={selection === 'voucher' ? cardName(card) : selectedSubCard?.details?.name || 'Card'}
+                      className="w-full rounded"
+                    />
+                  </HoverPreviewFrame>
+                ) : (
+                  <ImageFallback
+                    card={selection === 'voucher' ? card : selectedSubCard?.details}
+                    src={getSelectedImage()}
+                    fallbackSrc="/content/vouchercard.png"
+                    alt={selection === 'voucher' ? cardName(card) : selectedSubCard?.details?.name || 'Card'}
+                    className="w-full rounded"
+                  />
+                )}
               </div>
 
               <Text xs className="text-text-secondary">
