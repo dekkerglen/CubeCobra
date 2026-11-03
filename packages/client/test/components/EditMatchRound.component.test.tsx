@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -82,7 +82,7 @@ describe('EditMatchRound', () => {
     const onChange = jest.fn();
     render(<Harness initialRound={{ matches: [match('Alice', 'Bob', [2, 1, 0])] }} onChange={onChange} />);
 
-    fireEvent.click(screen.getByText('Add Match'));
+    fireEvent.click(screen.getByRole('button', { name: 'Add Match' }));
 
     expect(onChange).toHaveBeenCalledWith({
       matches: [
@@ -112,7 +112,7 @@ describe('EditMatchRound', () => {
       />,
     );
 
-    fireEvent.click(screen.getAllByText('Remove Match')[1]);
+    fireEvent.click(screen.getByRole('button', { name: 'Remove match 2' }));
 
     expect(onChange).toHaveBeenCalledWith({
       matches: [
@@ -129,7 +129,8 @@ describe('EditMatchRound', () => {
   // Seven controls share one row — two player selects, three result counts and Remove — so
   // the counts are narrowed rather than each claiming the full width of the row. The Input
   // escape hatch *replaces* the default `block w-full`, so `w-full` has to be gone from the
-  // wrapper rather than merely overridden by a later class.
+  // wrapper rather than merely overridden by a later class. `shrink-0` is the other half:
+  // without it the two selects beside them squeeze a w-20 cell down to a third of that.
   it('narrows the three result inputs to the width of a count', () => {
     render(<Harness initialRound={{ matches: [match('Alice', 'Bob', [2, 1, 0])] }} />);
 
@@ -137,8 +138,39 @@ describe('EditMatchRound', () => {
       // wrapper > div.relative > input
       const wrapper = screen.getByLabelText(label).parentElement!.parentElement!;
       expect(wrapper).toHaveClass('w-20');
+      expect(wrapper).toHaveClass('shrink-0');
       expect(wrapper).not.toHaveClass('w-full');
     }
+  });
+
+  // The per-control labels stacked above a 33px box and wrapped onto two lines. They are
+  // kept as accessible names — "Alice Wins" says more than a column can — and said once
+  // visibly, above the list, like the player rows do it.
+  it('heads the match columns once rather than labelling every cell', () => {
+    render(<Harness initialRound={{ matches: [match('Alice', 'Bob', [2, 1, 0])] }} />);
+
+    const headings = screen.getByTestId('match-column-headings');
+    for (const label of ['Player 1', 'Player 2', 'W', 'W', 'D']) {
+      expect(within(headings).getAllByText(label).length).toBeGreaterThan(0);
+    }
+
+    // Still reachable by name, and still carrying a per-cell hint.
+    expect(screen.getByLabelText('Alice Wins')).toHaveAttribute('title', 'Alice Wins');
+    // ...but no longer rendered as a visible label above a narrow box.
+    expect(screen.queryByText('Alice Wins')).not.toBeInTheDocument();
+  });
+
+  it('offers no headings when a round has no matches yet', () => {
+    render(<Harness initialRound={{ matches: [] }} />);
+
+    expect(screen.queryByTestId('match-column-headings')).not.toBeInTheDocument();
+  });
+
+  it('keeps Add Match to its own width rather than the full row', () => {
+    render(<Harness initialRound={{ matches: [match('Alice', 'Bob', [2, 1, 0])] }} />);
+
+    const add = screen.getByRole('button', { name: 'Add Match' });
+    expect(add.parentElement).toHaveClass('justify-start');
   });
 
   it('binds each editor to its own controls when two rounds are on the page', () => {

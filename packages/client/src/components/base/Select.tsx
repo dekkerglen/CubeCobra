@@ -23,6 +23,8 @@ interface SelectProps {
   dense?: boolean;
   disabled?: boolean;
   loading?: boolean;
+  // For a select whose name is said by a column heading rather than by a label of its own.
+  'aria-label'?: string;
   onPointerDown?: React.PointerEventHandler<HTMLSelectElement>;
 }
 
@@ -39,6 +41,7 @@ const Select: React.FC<SelectProps> = ({
   disabled,
   loading,
   onPointerDown,
+  'aria-label': ariaLabel,
 }) => {
   const handleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     if (disabled) {
@@ -87,6 +90,7 @@ const Select: React.FC<SelectProps> = ({
           id={id}
           value={value}
           disabled={disabled}
+          aria-label={ariaLabel}
         >
           {options.map((option) => (
             <option key={option.value} value={option.value}>

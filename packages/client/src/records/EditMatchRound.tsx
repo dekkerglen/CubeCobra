@@ -1,5 +1,6 @@
 import React, { useId } from 'react';
 
+import { XIcon } from '@primer/octicons-react';
 import { Match, PlayerList, Round } from '@utils/datatypes/Record';
 
 import Button from 'components/base/Button';
@@ -39,81 +40,103 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
     updateMatch(index, { results });
   };
 
+  // The columns a match row is cut into, so the headings above the list and the cells below
+  // it are the same widths.
+  const NUMBER_COLUMN = 'w-20 shrink-0';
+
   return (
     <Flexbox direction="col" gap="2">
+      {round.matches.length > 0 && (
+        // Said once, above the list. Each cell's own name — "Alice Wins" — stays as its
+        // accessible name and its title, because a column heading cannot say whose.
+        <div data-testid="match-column-headings">
+          <Flexbox direction="row" gap="2" alignItems="center">
+            <span aria-hidden="true" className="w-6 shrink-0" />
+            <Text sm semibold className="grow min-w-0 text-text-secondary">
+              Player 1
+            </Text>
+            <Text sm semibold className="grow min-w-0 text-text-secondary">
+              Player 2
+            </Text>
+            {['W', 'W', 'D'].map((heading, position) => (
+              <Text key={position} sm semibold className={`${NUMBER_COLUMN} text-text-secondary`}>
+                {heading}
+              </Text>
+            ))}
+            <span aria-hidden="true" className="w-6 shrink-0" />
+          </Flexbox>
+        </div>
+      )}
       {round.matches.map((match, index) => (
-        <Flexbox key={index} direction="row" gap="2" alignItems="end">
-          <Text sm>{`${index + 1}`}</Text>
-          <Select
-            id={`${idPrefix}-match-${index}-p1`}
-            label="Player 1"
-            value={match.p1}
-            setValue={(value) => updateMatch(index, { p1: value })}
-            options={playerOptions}
-          />
-          <Select
-            id={`${idPrefix}-match-${index}-p2`}
-            label="Player 2"
-            value={match.p2}
-            setValue={(value) => updateMatch(index, { p2: value })}
-            options={playerOptions}
-          />
-          {/* The three result cells are narrowed so a seven-control match row — two player
-              selects, three counts and Remove — fits on one line rather than each count
-              claiming the full width of the row. wrapperClassName replaces the default
-              `block w-full` rather than adding to it. */}
-          <Input
-            id={`${idPrefix}-match-${index}-p1-wins`}
-            label={`${match.p1} Wins`}
-            type="number"
-            value={`${match.results[0]}`}
-            onChange={(e) => updateResult(index, 0, e.target.value)}
-            otherInputProps={{ min: 0, max: 100 }}
-            wrapperClassName="w-20"
-          />
-          <Input
-            id={`${idPrefix}-match-${index}-p2-wins`}
-            label={`${match.p2} Wins`}
-            type="number"
-            value={`${match.results[1]}`}
-            onChange={(e) => updateResult(index, 1, e.target.value)}
-            otherInputProps={{ min: 0, max: 100 }}
-            wrapperClassName="w-20"
-          />
-          <Input
-            id={`${idPrefix}-match-${index}-draws`}
-            label="Draws"
-            type="number"
-            value={`${match.results[2]}`}
-            onChange={(e) => updateResult(index, 2, e.target.value)}
-            otherInputProps={{ min: 0, max: 100 }}
-            wrapperClassName="w-20"
-          />
-          <Button
+        <Flexbox key={index} direction="row" gap="2" alignItems="center">
+          <Text sm className="w-6 shrink-0 text-text-secondary">{`${index + 1}`}</Text>
+          <div className="grow min-w-0">
+            <Select
+              id={`${idPrefix}-match-${index}-p1`}
+              aria-label="Player 1"
+              value={match.p1}
+              setValue={(value) => updateMatch(index, { p1: value })}
+              options={playerOptions}
+            />
+          </div>
+          <div className="grow min-w-0">
+            <Select
+              id={`${idPrefix}-match-${index}-p2`}
+              aria-label="Player 2"
+              value={match.p2}
+              setValue={(value) => updateMatch(index, { p2: value })}
+              options={playerOptions}
+            />
+          </div>
+          {/* `shrink-0` as well as the width: these sit beside two growing selects, which
+              squeeze a plain w-20 cell to a third of it. wrapperClassName replaces the
+              default `block w-full` rather than adding to it. */}
+          {[
+            { position: 0 as const, name: `${match.p1} Wins` },
+            { position: 1 as const, name: `${match.p2} Wins` },
+            { position: 2 as const, name: 'Draws' },
+          ].map(({ position, name }) => (
+            <Input
+              key={position}
+              id={`${idPrefix}-match-${index}-${position}`}
+              type="number"
+              value={`${match.results[position]}`}
+              onChange={(e) => updateResult(index, position, e.target.value)}
+              otherInputProps={{ min: 0, max: 100, title: name, 'aria-label': name }}
+              wrapperClassName={NUMBER_COLUMN}
+            />
+          ))}
+          {/* Removing one match of a round is routine bookkeeping, not the destructive act a
+              filled danger button announces. */}
+          <button
+            type="button"
+            aria-label={`Remove match ${index + 1}`}
+            className="w-6 shrink-0 text-text-secondary hover:text-red-600"
             onClick={() => {
               const newMatches = [...round.matches];
               newMatches.splice(index, 1);
               setRound({ ...round, matches: newMatches });
             }}
-            color="danger"
           >
-            <span className="text-nowrap">Remove Match</span>
-          </Button>
+            <XIcon size={16} />
+          </button>
         </Flexbox>
       ))}
-      <Button
-        onClick={() => {
-          const newMatch: Match = {
-            p1: 'Unknown Opponent',
-            p2: 'Unknown Opponent',
-            results: [0, 0, 0],
-          };
-          setRound({ ...round, matches: [...round.matches, newMatch] });
-        }}
-        color="primary"
-      >
-        Add Match
-      </Button>
+      <Flexbox direction="row" justify="start">
+        <Button
+          onClick={() => {
+            const newMatch: Match = {
+              p1: 'Unknown Opponent',
+              p2: 'Unknown Opponent',
+              results: [0, 0, 0],
+            };
+            setRound({ ...round, matches: [...round.matches, newMatch] });
+          }}
+          color="primary"
+        >
+          Add Match
+        </Button>
+      </Flexbox>
     </Flexbox>
   );
 };

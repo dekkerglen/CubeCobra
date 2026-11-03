@@ -1,5 +1,6 @@
 import React from 'react';
 
+import { XIcon } from '@primer/octicons-react';
 import { PlayerList, Round } from '@utils/datatypes/Record';
 
 import Button from 'components/base/Button';
@@ -32,9 +33,16 @@ const TranscribeRounds: React.FC<TranscribeRoundsProps> = ({ players, matches, s
           <CardHeader>
             <Flexbox direction="row" justify="between" alignItems="center">
               <Text semibold>{`Round ${index + 1}`}</Text>
-              <Button color="danger" onClick={() => setMatches(matches.filter((_, position) => position !== index))}>
-                <span className="text-nowrap">Remove Round</span>
-              </Button>
+              {/* Subtle for the same reason the per-match one is: removing an empty round
+                  you just added is the common case, not a destructive act to be warned about. */}
+              <button
+                type="button"
+                aria-label={`Remove round ${index + 1}`}
+                className="shrink-0 text-text-secondary hover:text-red-600"
+                onClick={() => setMatches(matches.filter((_, position) => position !== index))}
+              >
+                <XIcon size={16} />
+              </button>
             </Flexbox>
           </CardHeader>
           <CardBody>
@@ -42,15 +50,17 @@ const TranscribeRounds: React.FC<TranscribeRoundsProps> = ({ players, matches, s
           </CardBody>
         </Card>
       ))}
-      <Button
-        color="primary"
-        onClick={() => setMatches([...matches, { matches: [] }])}
-        // The server caps a record at MAX_ROUNDS rounds. Adding past that is refused here
-        // rather than at Save.
-        disabled={matches.length >= MAX_ROUNDS}
-      >
-        Add Round
-      </Button>
+      <Flexbox direction="row" justify="start">
+        <Button
+          color="primary"
+          onClick={() => setMatches([...matches, { matches: [] }])}
+          // The server caps a record at MAX_ROUNDS rounds. Adding past that is refused here
+          // rather than at Save.
+          disabled={matches.length >= MAX_ROUNDS}
+        >
+          Add Round
+        </Button>
+      </Flexbox>
     </Flexbox>
   );
 };
