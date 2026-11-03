@@ -106,11 +106,12 @@ normally hidden.
 
 ### Cleaning up a board
 
-The **Cleanup** menu tidies the board picked in the **Board** dropdown. **Remove Duplicates**
-stages every repeated entry on that board, keeping one copy of each card. **Remove cards also
-in…** lists the cube's other boards; picking one stages every entry on the edited board that
-already exists on the board you picked. Each item shows how many cards it would stage before you
-click it, and an item with nothing to do is greyed out.
+The **Cleanup** menu tidies the board picked in the **Board** dropdown, which is named at the top
+of the menu — it is not always the board on screen, so check it before you click. **Remove
+Duplicates** stages every repeated entry on that board, keeping one copy of each card. **Remove
+cards also in…** lists the cube's other boards; picking one stages every entry on the edited board
+that already exists on the board you picked. Each item shows how many cards it would stage before
+you click it, and an item with nothing to do is greyed out.
 
 Both actions only ever touch cards the active filter is showing, on both boards — a card hidden by
 the filter is neither removed nor treated as already present elsewhere. Two entries count as the

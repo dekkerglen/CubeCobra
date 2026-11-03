@@ -141,6 +141,19 @@ describe('CubeListEditSidebar cleanup dropdown', () => {
     expect(bulkRemoveCard.mock.calls[1][0]).toEqual([{ index: 2, board: 'mainboard' }]);
   });
 
+  /*
+   * The displayed board and the Board select can disagree — a view spanning several boards
+   * defaults the select to the first one — so an unlabelled menu leaves the user reading
+   * "Mainboard (3)" while looking at the mainboard and assuming it describes what's on screen.
+   */
+  it('names the board it is about to clean, by label rather than board key', () => {
+    renderSidebar({ changedCards, unfilteredChangedCards });
+
+    fireEvent.click(screen.getByText('Cleanup'));
+
+    expect(screen.getByText(/^Cleaning/)).toHaveTextContent('Cleaning Mainboard');
+  });
+
   it('omits the board being edited from the "also in" list', () => {
     renderSidebar({ changedCards, unfilteredChangedCards });
 
