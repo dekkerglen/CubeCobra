@@ -16,8 +16,8 @@
     "model:export": ".venv/bin/python training/export_web.py"
   },
   "dependencies": {
-    "@napi-rs/canvas": "^1.0.0",
-    "onnxruntime-web": "^1.26.0",
+    "@napi-rs/canvas": "^1.0.13",
+    "onnxruntime-web": "^1.31.1",
     "react": "^19.3.1",
     "react-dom": "^19.3.1"
   },
