@@ -21,11 +21,18 @@ export const cleanupOracleKey = (card: Card): string | null => {
 };
 
 /*
- * Shared by every cleanup rule: a card is only a cleanup candidate if it has a usable
- * identity, has not already been staged for removal, and has not been swapped out.
+ * Shared by every cleanup rule: returns the key a card should be grouped under, or null if
+ * the card is not a cleanup candidate — no usable identity, no stamped board position,
+ * already staged for removal, or swapped out.
  */
-const isCleanupEligible = (card: Card, isSwapped?: (card: Card) => boolean): boolean =>
-  cleanupOracleKey(card) !== null && !card.markedForDelete && !isSwapped?.(card);
+const cleanupGroupKey = (card: Card, isSwapped?: (card: Card) => boolean): string | null => {
+  const oracleKey = cleanupOracleKey(card);
+  if (oracleKey === null || card.index === undefined || card.board === undefined) {
+    return null;
+  }
+
+  return card.markedForDelete || isSwapped?.(card) ? null : oracleKey;
+};
 
 const addedTmspValue = (card: Card): number => {
   // Missing, blank, or unparseable timestamps sort as the newest, so a card with no
@@ -41,14 +48,28 @@ const addedTmspValue = (card: Card): number => {
 };
 
 /*
+ * Oldest first. Compared rather than subtracted so two missing timestamps give 0 instead
+ * of the NaN that Infinity - Infinity would produce.
+ */
+const compareAddedTmsp = (a: Card, b: Card): number => {
+  const aValue = addedTmspValue(a);
+  const bValue = addedTmspValue(b);
+  if (aValue === bValue) {
+    return 0;
+  }
+
+  return aValue < bValue ? -1 : 1;
+};
+
+/*
  * Orders a group best-survivor first: most tags, then longest notes, then oldest
  * addedTmsp, then lowest index so the result never depends on array order.
  */
 const compareSurvivors = (a: Card, b: Card): number =>
   (b.tags?.length ?? 0) - (a.tags?.length ?? 0) ||
   (b.notes?.length ?? 0) - (a.notes?.length ?? 0) ||
-  addedTmspValue(a) - addedTmspValue(b) ||
-  (a.index ?? 0) - (b.index ?? 0);
+  compareAddedTmsp(a, b) ||
+  a.index! - b.index!;
 
 /**
  * Finds the redundant entries within a single board: for every oracle id with more than
@@ -58,11 +79,11 @@ export const findDuplicateRemovals = (cards: Card[], isSwapped?: (card: Card) =>
   const groups = new Map<string, Card[]>();
 
   for (const card of cards) {
-    if (!isCleanupEligible(card, isSwapped)) {
+    const key = cleanupGroupKey(card, isSwapped);
+    if (key === null) {
       continue;
     }
 
-    const key = cleanupOracleKey(card)!;
     const group = groups.get(key);
     if (group) {
       group.push(card);

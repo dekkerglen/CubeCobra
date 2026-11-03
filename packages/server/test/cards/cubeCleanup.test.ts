@@ -248,6 +248,25 @@ describe('findDuplicateRemovals', () => {
     expect(findDuplicateRemovals(cards)).toEqual([{ index: 0, board: 'mainboard' }]);
   });
 
+  it('skips cards that carry no index or no board', () => {
+    const cards = [
+      createCard({ index: undefined, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+      createCard({ index: 1, board: undefined, details: createCardDetails({ oracle_id: 'abc' }) }),
+      createCard({ index: 2, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+    ];
+
+    expect(findDuplicateRemovals(cards)).toEqual([]);
+  });
+
+  it('groups on oracle id alone, never consulting the board, so callers must pass one board at a time', () => {
+    const cards = [
+      createCard({ index: 0, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+      createCard({ index: 1, board: 'maybeboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+    ];
+
+    expect(findDuplicateRemovals(cards)).toEqual([{ index: 1, board: 'maybeboard' }]);
+  });
+
   it('returns an empty array for an empty board', () => {
     expect(findDuplicateRemovals([])).toEqual([]);
   });
