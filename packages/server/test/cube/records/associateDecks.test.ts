@@ -23,7 +23,10 @@ jest.mock('../../../src/dynamo/daos', () => ({
 }));
 
 import { cubeDao, draftDao } from '../../../src/dynamo/daos';
-import { associateDecksWithExistingDraft } from '../../../src/router/routes/cube/records/uploaddeck';
+import {
+  associateDecksWithExistingDraft,
+  associateWithExistingDraft,
+} from '../../../src/router/routes/cube/records/uploaddeck';
 import { createCube } from '../../test-utils/data';
 
 const cubeCards = (): CubeCards =>
@@ -161,5 +164,41 @@ describe('associateDecksWithExistingDraft', () => {
     expect(draft.cards).toHaveLength(1);
     expect(poolCards(draft, draft.seats[0].mainboard)).toEqual([expect.objectContaining({ cardID: 'bolt-cube' })]);
     expect(draftDao.update).toHaveBeenCalledTimes(1);
+  });
+});
+
+// The single-seat writer appends to `draft.cards`, which already holds the other seats'
+// cards. Resolving into a fresh list instead would hand back index 0 for the first card
+// and silently repoint every seat at the wrong printing.
+describe('associateWithExistingDraft', () => {
+  const cube = createCube({ id: 'cube-1' });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (cubeDao.getCards as jest.Mock).mockResolvedValue(cubeCards());
+  });
+
+  it('appends to a pre-populated draft.cards instead of restarting at index 0', async () => {
+    const draft = existingDraft(2);
+    // Seat 2 already holds a deck, so draft.cards is not empty when seat 1 is written.
+    draft.cards.push({ cardID: 'already-here', details: DETAILS['bolt-cube'] });
+    draft.seats[1].mainboard[1][1].push(0);
+
+    await associateWithExistingDraft(cube, draft, 1, ['bear-oracle'], ['bolt-oracle']);
+
+    expect(draft.cards).toHaveLength(3);
+    expect(draft.cards[0]).toEqual(expect.objectContaining({ cardID: 'already-here' }));
+
+    // Creature, mana value 2: row 0, column 2 — holding the appended index, not 0.
+    expect(draft.seats[0].mainboard[0][2]).toEqual([1]);
+    expect(draft.seats[0].sideboard[0][1]).toEqual([2]);
+    expect(poolCards(draft, draft.seats[0].mainboard)).toEqual([expect.objectContaining({ cardID: 'bear-cube' })]);
+    expect(poolCards(draft, draft.seats[0].sideboard)).toEqual([expect.objectContaining({ cardID: 'bolt-cube' })]);
+
+    // Seat 2's existing index still resolves to the card it was written for.
+    expect(poolCards(draft, draft.seats[1].mainboard)).toEqual([expect.objectContaining({ cardID: 'already-here' })]);
+
+    expect(cubeDao.getCards).toHaveBeenCalledTimes(1);
+    expect(draftDao.update).toHaveBeenCalledWith(draft);
   });
 });
