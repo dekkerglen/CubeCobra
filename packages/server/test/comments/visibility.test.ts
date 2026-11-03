@@ -22,7 +22,12 @@ jest.mock('serverutils/util', () => ({
 }));
 
 jest.mock('../../src/dynamo/daos', () => ({
-  commentDao: { getById: jest.fn(), queryByParent: jest.fn(), createComment: jest.fn(), countRepliesByParent: jest.fn() },
+  commentDao: {
+    getById: jest.fn(),
+    queryByParent: jest.fn(),
+    createComment: jest.fn(),
+    countRepliesByParent: jest.fn(),
+  },
   cubeDao: { getById: jest.fn() },
   blogDao: { getById: jest.fn() },
   draftDao: { getById: jest.fn() },
