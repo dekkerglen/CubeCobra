@@ -385,11 +385,16 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
                 ]}
               />
             </div>
-            <Checkbox
-              label="Show Cards not in Cube"
-              checked={allowCardsOutsideOfCube}
-              setChecked={(value) => setAllowCardsOutsideOfCube(value)}
-            />
+            {/* The Select carries a label above its box and the checkbox does not, so
+                bottom-aligning the two leaves the checkbox sitting ~7px below the Select's
+                centre line. This lifts it back onto it. */}
+            <div className="pb-1.5">
+              <Checkbox
+                label="Show Cards not in Cube"
+                checked={allowCardsOutsideOfCube}
+                setChecked={(value) => setAllowCardsOutsideOfCube(value)}
+              />
+            </div>
           </Flexbox>
           {/* Adding basics and scanning a photo are not steps after typing a card name;
               they are two more ways to fill the same deck. */}

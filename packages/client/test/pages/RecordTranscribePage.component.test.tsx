@@ -243,6 +243,13 @@ const deckCell = (index: number) => within(playerRow(index)).getByTestId('deck-c
 const overrideToggle = (index: number) =>
   within(playerRow(index)).getByRole('button', { name: /^(Override|Stop overriding) / });
 
+// Its hover card portals to the body, so it is read from the screen rather than the row.
+// React synthesises onMouseEnter from mouseover, which is what fireEvent.mouseEnter is not.
+const overrideHint = (index: number): string | null => {
+  fireEvent.mouseOver(overrideToggle(index));
+  return screen.queryByText(/^(Override|Stop overriding) /)?.textContent ?? null;
+};
+
 // A row is open when its deck editor is mounted; the name field is no longer the tell.
 const rowExpanded = (index: number) => within(playerRow(index)).queryByText('Paste a decklist') !== null;
 
@@ -1117,7 +1124,7 @@ describe('RecordTranscribePage', () => {
     expect(overrideToggle(0)).toHaveAttribute('aria-pressed', 'false');
     expect(cellsEditable(0)).toBe(false);
     // The control says what it is about to displace, since the cells stop showing it.
-    expect(overrideToggle(0)).toHaveAttribute('title', 'Override Alice’s record — their pairings give 1-0');
+    expect(overrideHint(0)).toBe('Override Alice’s record — their pairings give 1-0');
 
     fireEvent.click(overrideToggle(0));
 
@@ -1311,12 +1318,12 @@ describe('RecordTranscribePage', () => {
   it('states the pairing-derived reading on the override control', () => {
     renderPage({ record: createRecord({ matches: pairedRound() }) });
 
-    expect(overrideToggle(1)).toHaveAttribute('title', 'Override Bob\u2019s record — their pairings give 0-1');
+    expect(overrideHint(1)).toBe('Override Bob\u2019s record — their pairings give 0-1');
 
     // It belongs to the pairings, not to whether this player is overriding them — which is
     // the whole point once the cells have stopped showing them.
     fireEvent.click(overrideToggle(1));
-    expect(overrideToggle(1)).toHaveAttribute('title', 'Stop overriding Bob\u2019s record — their pairings give 0-1');
+    expect(overrideHint(1)).toBe('Stop overriding Bob\u2019s record — their pairings give 0-1');
   });
 
   // The endpoint's Joi schema rejects a negative win count with a raw 400, and a number input

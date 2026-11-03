@@ -15,6 +15,7 @@ import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
+import Tooltip from 'components/base/Tooltip';
 import { SortableItem, SortableList } from 'components/DND';
 import { CSRFContext } from 'contexts/CSRFContext';
 
@@ -516,10 +517,7 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
   return (
     <Flexbox direction="col" gap="2">
       <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
-        <Text sm className="text-text-secondary">
-          {`${players.length} ${players.length === 1 ? 'player' : 'players'}`}
-        </Text>
-        {seatsEditable && (
+        {seatsEditable ? (
           <fieldset disabled={editsDisabled} className="min-w-0 border-0 p-0 m-0">
             <Flexbox direction="col" gap="1">
               <Flexbox direction="row" gap="2" alignItems="center" wrap="wrap">
@@ -548,7 +546,12 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
               )}
             </Flexbox>
           </fieldset>
+        ) : (
+          <span />
         )}
+        <Text sm className="text-text-secondary">
+          {`${players.length} ${players.length === 1 ? 'player' : 'players'}`}
+        </Text>
       </Flexbox>
 
       {!seatsEditable && (
@@ -677,22 +680,28 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                               how one player is excused from that. Records mode has no use for it
                               — there the typed record is the only source there is. */}
                           {!records && (
-                            <button
-                              type="button"
-                              disabled={editsDisabled}
-                              aria-pressed={!!override}
-                              aria-label={`${override ? 'Stop overriding' : 'Override'} ${player.name}\u2019s record`}
-                              // Says what it is about to displace, because once it is on the
-                              // cells beside it stop showing the pairings entirely.
-                              title={`${override ? 'Stop overriding' : 'Override'} ${player.name}\u2019s record \u2014 their pairings give ${formatRecord(derived)}`}
-                              className={`shrink-0 ${override ? 'text-link' : 'text-text-secondary opacity-40'}`}
-                              // Seeded from the pairings rather than from zero, so turning it on
-                              // does not blank the record it is replacing. Turning it off removes
-                              // the override, which hands the player back.
-                              onClick={() => setOverride(player.name, override ? undefined : { ...derived })}
+                            // A hover card rather than a native title: a pencil on a row of
+                            // numbers does not say what it edits, and a title takes a second
+                            // of stillness before it admits to anything.
+                            <Tooltip
+                              text={`${override ? 'Stop overriding' : 'Override'} ${player.name}\u2019s record \u2014 their pairings give ${formatRecord(derived)}`}
+                              wrapperTag="span"
+                              className="shrink-0"
                             >
-                              <PencilIcon size={16} />
-                            </button>
+                              <button
+                                type="button"
+                                disabled={editsDisabled}
+                                aria-pressed={!!override}
+                                aria-label={`${override ? 'Stop overriding' : 'Override'} ${player.name}\u2019s record`}
+                                className={`shrink-0 ${override ? 'text-link' : 'text-text-secondary opacity-40'}`}
+                                // Seeded from the pairings rather than from zero, so turning it on
+                                // does not blank the record it is replacing. Turning it off removes
+                                // the override, which hands the player back.
+                                onClick={() => setOverride(player.name, override ? undefined : { ...derived })}
+                              >
+                                <PencilIcon size={16} />
+                              </button>
+                            </Tooltip>
                           )}
                           {/* Rightmost, and fixed width, so inserting it leaves the record cells
                               on the same x as every other row's. */}
