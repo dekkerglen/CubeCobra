@@ -538,28 +538,128 @@ describe('RecordTranscribePage', () => {
     expect(savedPayload(csrfFetch).players).toEqual([{ name: 'Alicia' }, { name: 'Bob' }]);
   });
 
-  // A collision is tolerated in state rather than refused at the field, so the typing is not
-  // thrown away — but it has to stay visible once the row it was typed into is shut again.
-  it('reports a duplicate name on the row and keeps Save blocked after the row is collapsed', async () => {
+  // A rename onto another player's name is refused at the field rather than applied.
+  // Applying it was destructive in a way no page-level error could undo: applyPlayerEdit
+  // runs applyPlayerRenames, which rewrites every key derived from a player's name, so the
+  // collision folds both players' pairings, trophies and overrides onto one name — and the
+  // user's immediate correction renames the merged result back, leaving no duplicate left
+  // to report and Save enabled over a destroyed record.
+  it("refuses a rename onto another player's name, keeping the typed text on the row", async () => {
     renderPage();
 
     await renameOpenRow('Bob');
 
     expect(screen.getByText('Another player is already named Bob')).toBeInTheDocument();
-
-    toggleRow(0);
-
-    expect(screen.queryByText('Another player is already named Bob')).not.toBeInTheDocument();
-    expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
-    expect(saveButton()).toBeDisabled();
+    // Nothing is thrown away: the refusal leaves the entry where it is to be corrected.
+    expect(nameField()).toHaveValue('Bob');
+    // ...and the list is untouched, so there is no second Bob and nothing page-wide to say.
+    expect(playerRow(0)).toHaveTextContent('Alice');
+    expect(playerRow(1)).toHaveTextContent('Bob');
+    expect(screen.queryByText(/Two players cannot share a name/)).not.toBeInTheDocument();
+    expect(screen.getByText('No unsaved changes')).toBeInTheDocument();
   });
 
-  it('names the offending player in the page-level error', async () => {
+  it('refuses a rename that collides only in case', async () => {
     renderPage();
 
-    await renameOpenRow('Bob');
+    await renameOpenRow('bob');
 
-    expect(screen.getByText(/Two players cannot share a name: Bob\./)).toBeInTheDocument();
+    expect(screen.getByText('Another player is already named bob')).toBeInTheDocument();
+    expect(playerRow(0)).toHaveTextContent('Alice');
+    expect(screen.getByText('No unsaved changes')).toBeInTheDocument();
+  });
+
+  // The whole of the bug: a typo and its correction, one field at a time, which is the only
+  // way to swap two names now the batch editor is gone. The payload after the typo must be
+  // indistinguishable from the payload of a run that never made it.
+  it('leaves pairings, overrides and trophies untouched by a rename collision and its correction', async () => {
+    const record = () =>
+      createRecord({
+        matches: pairedRound(),
+        trophy: ['Alice'],
+        overrides: { Alice: { wins: 3, losses: 0, draws: 0 }, Bob: { wins: 1, losses: 2, draws: 0 } },
+      });
+
+    const clean = renderPage({ record: record() });
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(clean.csrfFetch)).toHaveLength(1));
+    const baseline = savedPayload(clean.csrfFetch);
+    clean.unmount();
+
+    const typo = renderPage({ record: record() });
+
+    // The typo...
+    await renameOpenRow('Bob');
+    // ...and the correction a second later, which is what used to make the damage
+    // unreportable: after it there is no duplicate for validationErrors to catch.
+    await renameOpenRow('Alice');
+
+    expect(playerRows()).toHaveLength(2);
+    expect(playerRow(0)).toHaveTextContent('Alice');
+    expect(playerRow(1)).toHaveTextContent('Bob');
+    expect(screen.queryByText(/Two players cannot share a name/)).not.toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(typo.csrfFetch)).toHaveLength(1));
+    const payload = savedPayload(typo.csrfFetch);
+
+    // Spelled out as well as compared, so the failure names what was destroyed rather than
+    // only that two payloads differ.
+    expect(payload.players).toEqual([{ name: 'Alice' }, { name: 'Bob' }]);
+    expect(payload.matches[0].matches[0]).toMatchObject({ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] });
+    expect(payload.overrides).toEqual({
+      Alice: { wins: 3, losses: 0, draws: 0 },
+      Bob: { wins: 1, losses: 2, draws: 0 },
+    });
+    expect(payload.trophy).toEqual(['Alice']);
+    expect(payload).toEqual(baseline);
+  });
+
+  // The other way a name can be taken twice. It is not destructive on its own, but it hands
+  // both seats every name-keyed thing in the record and makes the rename that corrects it
+  // rewrite both, so it is refused the same way.
+  it('refuses an add under a name the list already holds', async () => {
+    const { csrfFetch } = renderPage();
+
+    fireEvent.change(screen.getByPlaceholderText(ADD_PLAYER_INPUT), { target: { value: 'bob' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add Player' }));
+    await act(async () => {});
+
+    expect(playerRows()).toHaveLength(2);
+    expect(screen.getByText('Another player is already named bob')).toBeInTheDocument();
+    // The entry stays put so it can be corrected rather than retyped.
+    expect(screen.getByPlaceholderText(ADD_PLAYER_INPUT)).toHaveValue('bob');
+    expect(screen.getByText('No unsaved changes')).toBeInTheDocument();
+
+    // Corrected, it lands, and the refusal stops being reported.
+    fireEvent.change(screen.getByPlaceholderText(ADD_PLAYER_INPUT), { target: { value: 'Carol' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add Player' }));
+
+    await waitFor(() => expect(playerRows()).toHaveLength(3));
+    expect(screen.queryByText('Another player is already named bob')).not.toBeInTheDocument();
+    expect(screen.getByPlaceholderText(ADD_PLAYER_INPUT)).toHaveValue('');
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+    expect(savedPayload(csrfFetch).players).toEqual([{ name: 'Alice' }, { name: 'Bob' }, { name: 'Carol' }]);
+  });
+
+  // Refusing both ways in only closes the ways this page can create a collision. A record
+  // that arrived already holding one still has to say so and still has to block Save, since
+  // the endpoint rejects it.
+  it('reports a seeded duplicate on the row and page-wide, and blocks Save', () => {
+    renderPage({ record: createRecord({ players: [{ name: 'Alice' }, { name: 'alice' }] }) });
+
+    expect(screen.getByText(/Two players cannot share a name: alice\./)).toBeInTheDocument();
+    // The open row names it too, rather than leaving the page-level error to be hunted for.
+    expect(screen.getByText('Another player is already named Alice')).toBeInTheDocument();
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+
+    expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+    expect(saveButton()).toBeDisabled();
   });
 
   it('toggles a trophy from the row body', async () => {
@@ -768,6 +868,20 @@ describe('RecordTranscribePage', () => {
 
   const aliceOverride = () => ({ Alice: { wins: 3, losses: 0, draws: 0 } });
 
+  // The selected mode is otherwise distinguished by its border and background alone, and it
+  // governs whether half the page renders.
+  it('reports which results mode is selected to assistive tech', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+
+    expect(screen.getByRole('button', { name: 'Pairings' })).toHaveAttribute('aria-pressed', 'true');
+    expect(screen.getByRole('button', { name: 'Final records only' })).toHaveAttribute('aria-pressed', 'false');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
+
+    expect(screen.getByRole('button', { name: 'Pairings' })).toHaveAttribute('aria-pressed', 'false');
+    expect(screen.getByRole('button', { name: 'Final records only' })).toHaveAttribute('aria-pressed', 'true');
+  });
+
   it('renders the rounds section in pairings mode', () => {
     renderPage({ record: createRecord({ matches: pairedRound() }) });
 
@@ -874,6 +988,27 @@ describe('RecordTranscribePage', () => {
     expect(recordCell(1, 'Wins')).toHaveValue(0);
     expect(recordCell(1, 'Losses')).toHaveValue(0);
     expect(recordCell(1, 'Draws')).toHaveValue(0);
+  });
+
+  // Three bare number boxes per row, times sixteen players, with no column heading. The
+  // cells stay unlabelled to keep the row on one line, so the list says once what they are
+  // and each cell names itself on hover.
+  it('says what the record cells are, once above the list and on each cell', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+
+    // Nothing is showing cells yet in pairings mode, so there is nothing to explain.
+    expect(screen.queryByText(/Each record reads W \/ L \/ D/)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: "Edit Bob's record" }));
+    expect(screen.getByText(/Each record reads W \/ L \/ D/)).toBeInTheDocument();
+    expect(recordCell(1, 'Wins')).toHaveAttribute('title', 'Wins');
+    expect(recordCell(1, 'Losses')).toHaveAttribute('title', 'Losses');
+    expect(recordCell(1, 'Draws')).toHaveAttribute('title', 'Draws');
+
+    // Every row carries cells in final records mode, so the legend is there from the start.
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
+    expect(screen.getByText(/Each record reads W \/ L \/ D/)).toBeInTheDocument();
+    expect(recordCell(0, 'Wins')).toHaveAttribute('title', 'Wins');
   });
 
   it('shows a read-only derived record in pairings mode', () => {

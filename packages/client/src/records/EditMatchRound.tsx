@@ -58,6 +58,10 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
             setValue={(value) => updateMatch(index, { p2: value })}
             options={playerOptions}
           />
+          {/* The three result cells are narrowed so a seven-control match row — two player
+              selects, three counts and Remove — fits on one line rather than each count
+              claiming the full width of the row. wrapperClassName replaces the default
+              `block w-full` rather than adding to it. */}
           <Input
             id={`${idPrefix}-match-${index}-p1-wins`}
             label={`${match.p1} Wins`}
@@ -65,6 +69,7 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
             value={`${match.results[0]}`}
             onChange={(e) => updateResult(index, 0, e.target.value)}
             otherInputProps={{ min: 0, max: 100 }}
+            wrapperClassName="w-20"
           />
           <Input
             id={`${idPrefix}-match-${index}-p2-wins`}
@@ -73,6 +78,7 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
             value={`${match.results[1]}`}
             onChange={(e) => updateResult(index, 1, e.target.value)}
             otherInputProps={{ min: 0, max: 100 }}
+            wrapperClassName="w-20"
           />
           <Input
             id={`${idPrefix}-match-${index}-draws`}
@@ -81,6 +87,7 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
             value={`${match.results[2]}`}
             onChange={(e) => updateResult(index, 2, e.target.value)}
             otherInputProps={{ min: 0, max: 100 }}
+            wrapperClassName="w-20"
           />
           <Button
             onClick={() => {

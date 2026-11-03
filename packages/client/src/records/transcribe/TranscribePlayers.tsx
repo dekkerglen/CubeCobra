@@ -108,6 +108,23 @@ const summarize = (deck: TranscribeDeck | undefined): string => {
 // before the field stops offering to re-send it.
 const displayName = (player: Player): string => (player.userId ? `@${player.name}` : player.name);
 
+// The name a typed entry is asking for, without the @ that only says where to look it up.
+const bareName = (raw: string): string => raw.trim().replace(/^@/, '').trim();
+
+// What a rename or an add answers with when the name it resolved to already belongs to
+// another player. It is refused rather than applied: applyPlayerEdit rewrites everything
+// keyed by player name — pairings, trophies and overrides — so a list holding the same name
+// twice folds two players' results onto one key, and correcting the typo afterwards cannot
+// bring back what the collision overwrote. Nothing is thrown away by refusing: the field
+// keeps the typed text and says why it did not land.
+const COLLISION = 'duplicate' as const;
+
+// Whether `name` is already taken by a player other than the one at `exclude` (-1 when the
+// name is being added rather than moved onto a seat). Case-insensitive, matching the
+// page-level duplicate check in validationErrors.
+const nameTaken = (players: PlayerList, name: string, exclude: number): boolean =>
+  players.some((player, seat) => seat !== exclude && player.name.toLowerCase() === name.toLowerCase());
+
 const CardNameList: React.FC<{ title: string; cards: CardDetails[] }> = ({ title, cards }) => {
   if (cards.length === 0) {
     return null;
@@ -136,8 +153,9 @@ interface PlayerNameFieldProps {
   // other way — a seeded record, the player renamed out from under this one — reads the same.
   duplicate: boolean;
   // Resolves the typed value and applies it, answering with the player as it landed, or null
-  // when the entry was empty, or undefined when a save in flight refused the edit.
-  onRename: (raw: string) => Promise<Player | null | undefined>;
+  // when the entry was empty, or 'duplicate' when it would have taken another player's name,
+  // or undefined when a save in flight refused the edit.
+  onRename: (raw: string) => Promise<Player | null | undefined | typeof COLLISION>;
 }
 
 // Commits on blur and on Enter: with the player's whole body on screen there is nothing for
@@ -145,12 +163,24 @@ interface PlayerNameFieldProps {
 const PlayerNameField: React.FC<PlayerNameFieldProps> = ({ id, player, duplicate, onRename }) => {
   const [value, setValue] = useState<string>(() => displayName(player));
   const [empty, setEmpty] = useState<boolean>(false);
+  // The name a refused commit tried to take. Held here rather than derived from state
+  // because the rename never landed: the record still holds this player under their old
+  // name, and the only trace of the attempt is the text still in this field.
+  const [collision, setCollision] = useState<string>('');
 
   const commit = async () => {
     if (value.trim() === displayName(player).trim()) {
       return;
     }
     const landed = await onRename(value);
+    if (landed === COLLISION) {
+      // Refused: the field keeps what was typed so it can be corrected in place, and says
+      // why rather than silently reverting.
+      setCollision(bareName(value));
+      setEmpty(false);
+      return;
+    }
+    setCollision('');
     if (landed) {
       // The account's own spelling, which is what the row now shows.
       setValue(displayName(landed));
@@ -158,7 +188,15 @@ const PlayerNameField: React.FC<PlayerNameFieldProps> = ({ id, player, duplicate
     setEmpty(landed === null);
   };
 
-  const error = empty ? 'Enter a name' : duplicate ? `Another player is already named ${player.name}` : '';
+  // A refused collision is reported from the attempt; `duplicate` still covers one that
+  // arrived some other way — a seeded record, or a list that already held two of a name.
+  const error = empty
+    ? 'Enter a name'
+    : collision
+      ? `Another player is already named ${collision}`
+      : duplicate
+        ? `Another player is already named ${player.name}`
+        : '';
 
   return (
     <Flexbox direction="col" gap="1">
@@ -169,6 +207,7 @@ const PlayerNameField: React.FC<PlayerNameFieldProps> = ({ id, player, duplicate
         onChange={(event) => {
           setValue(event.target.value);
           setEmpty(false);
+          setCollision('');
         }}
         onEnter={commit}
         otherInputProps={{ onBlur: commit }}
@@ -250,8 +289,10 @@ const PlayerRecord: React.FC<PlayerRecordProps> = ({
           value={`${seed[key]}`}
           onChange={(event) => setOverride({ ...seed, [key]: toCount(event.target.value) })}
           // Named rather than labelled: a visible label on all three would break the one-line
-          // `[W] [L] [D]` reading the row is for, and sixteen rows of them is unreadable.
-          otherInputProps={{ min: 0, 'aria-label': `${label} for ${player.name}` }}
+          // `[W] [L] [D]` reading the row is for, and sixteen rows of them is unreadable. The
+          // title is the per-cell cue that names the box without taking a line, alongside the
+          // legend above the list.
+          otherInputProps={{ min: 0, title: label, 'aria-label': `${label} for ${player.name}` }}
           wrapperClassName="w-20"
         />
       ))}
@@ -304,6 +345,9 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
     return firstDeckless === -1 ? 0 : firstDeckless;
   });
   const [newPlayer, setNewPlayer] = useState<string>('');
+  // Why the last add did not land, when it was refused for taking a name already in the
+  // list. The entry stays in the field so it can be corrected rather than retyped.
+  const [addError, setAddError] = useState<string>('');
   // Which rows have been asked to show their record cells in pairings mode. Presentation
   // only — it never reaches TranscribeState, because revealing the cells is not an edit.
   // Keyed by name rather than by seat so a shuffle does not hand one player's open cells to
@@ -317,6 +361,14 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
   // playerRecord prefers any present override, so reading what a player's pairings alone say
   // means asking it against a record carrying none.
   const withoutOverrides = useMemo(() => ({ ...record, overrides: {} }), [record]);
+
+  // Whether any row is showing its record cells, which is what the legend above the list is
+  // for. Matches the per-row cellsShown test below.
+  const anyRecordCells = useMemo(
+    () =>
+      players.some((player) => resultsMode === 'records' || !!overrides[player.name] || revealed.includes(player.name)),
+    [players, resultsMode, overrides, revealed],
+  );
 
   // The add and rename commits await an @handle lookup before they apply, so by the time they
   // do, the list their render closed over may be several edits out of date — the player being
@@ -343,10 +395,19 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
     }
     // Against the list as it stands now, not as it stood when the lookup was started.
     const current = playersRef.current;
+    // The other way a name can be taken twice. A duplicate added here is not destructive on
+    // its own, but it makes both seats share every name-keyed thing in the record, and the
+    // rename that corrects it would then rewrite both. Refused the same way, with the typed
+    // entry left in the field.
+    if (nameTaken(current, resolved.name, -1)) {
+      setAddError(`Another player is already named ${resolved.name}`);
+      return;
+    }
     if (!onApplyPlayers([...current, resolved], [...current.map((_, seat) => seat), -1])) {
       // Refused — a save opened during the lookup. Leave what was typed where it is.
       return;
     }
+    setAddError('');
     setNewPlayer('');
   }, [editsDisabled, seatsEditable, resolvePlayer, newPlayer, onApplyPlayers]);
 
@@ -413,7 +474,7 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
   );
 
   const renamePlayer = useCallback(
-    async (index: number, raw: string): Promise<Player | null | undefined> => {
+    async (index: number, raw: string): Promise<Player | null | undefined | typeof COLLISION> => {
       if (editsDisabled) {
         return undefined;
       }
@@ -434,8 +495,14 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
       if (seat === -1) {
         return undefined;
       }
-      // A collision is applied rather than refused, so the typing is not thrown away.
-      // validationErrors reports it page-wide and holds Save back, so it cannot be saved.
+      // Refused rather than applied. applyPlayerEdit rewrites every key derived from a
+      // player's name, so landing a collision rewrites the other player's pairings,
+      // trophy and override onto the shared name — and correcting the typo afterwards
+      // renames the merged result back, leaving no duplicate to report and nothing to
+      // restore. The field keeps the typed text, so nothing the user wrote is lost.
+      if (nameTaken(current, resolved.name, seat)) {
+        return COLLISION;
+      }
       const applied = onApplyPlayers(
         current.map((player, other) => (other === seat ? resolved : player)),
         current.map((_, other) => other),
@@ -479,20 +546,31 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
         </Text>
         {seatsEditable && (
           <fieldset disabled={editsDisabled} className="min-w-0 border-0 p-0 m-0">
-            <Flexbox direction="row" gap="2" alignItems="center" wrap="wrap">
-              <Input
-                value={newPlayer}
-                onChange={(event) => setNewPlayer(event.target.value)}
-                onEnter={addPlayer}
-                placeholder="Add a player (@ to link an account)"
-                wrapperClassName="w-64"
-              />
-              <Button color="primary" onClick={addPlayer}>
-                <span className="text-nowrap">Add Player</span>
-              </Button>
-              <Button color="accent" onClick={shufflePlayers}>
-                <span className="text-nowrap">Shuffle Players</span>
-              </Button>
+            <Flexbox direction="col" gap="1">
+              <Flexbox direction="row" gap="2" alignItems="center" wrap="wrap">
+                <Input
+                  value={newPlayer}
+                  onChange={(event) => {
+                    setNewPlayer(event.target.value);
+                    setAddError('');
+                  }}
+                  onEnter={addPlayer}
+                  placeholder="Add a player (@ to link an account)"
+                  wrapperClassName="w-64"
+                  valid={addError ? false : undefined}
+                />
+                <Button color="primary" onClick={addPlayer}>
+                  <span className="text-nowrap">Add Player</span>
+                </Button>
+                <Button color="accent" onClick={shufflePlayers}>
+                  <span className="text-nowrap">Shuffle Players</span>
+                </Button>
+              </Flexbox>
+              {addError && (
+                <Text sm className="text-danger">
+                  {addError}
+                </Text>
+              )}
             </Flexbox>
           </fieldset>
         )}
@@ -502,6 +580,14 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
         <Text sm className="text-text-secondary">
           This record is attached to a played draft, so its players line up with the draft&apos;s seats and cannot be
           added, removed or reordered here. Renaming one is still fine.
+        </Text>
+      )}
+
+      {anyRecordCells && (
+        // The three record cells on each row carry no visible label, so the list says once
+        // what they are. Without it a pod of sixteen is forty-eight unnamed boxes.
+        <Text sm className="text-text-secondary">
+          Each record reads W / L / D — wins, losses and draws.
         </Text>
       )}
 

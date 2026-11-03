@@ -294,6 +294,9 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                       key={option.value}
                       type="button"
                       onClick={() => setResultsMode(option.value)}
+                      // The selected mode is otherwise conveyed by colour alone, and this
+                      // toggle governs whether half the page renders.
+                      aria-pressed={resultsMode === option.value}
                       className={classNames(
                         'rounded-full border px-3 py-1 text-sm font-medium transition-colors',
                         resultsMode === option.value ? 'border-link bg-bg-active' : 'border-border hover:bg-bg-active',

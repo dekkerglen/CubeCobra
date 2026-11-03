@@ -126,6 +126,21 @@ describe('EditMatchRound', () => {
     expect(screen.getByLabelText('Frank Wins')).toHaveValue(2);
   });
 
+  // Seven controls share one row — two player selects, three result counts and Remove — so
+  // the counts are narrowed rather than each claiming the full width of the row. The Input
+  // escape hatch *replaces* the default `block w-full`, so `w-full` has to be gone from the
+  // wrapper rather than merely overridden by a later class.
+  it('narrows the three result inputs to the width of a count', () => {
+    render(<Harness initialRound={{ matches: [match('Alice', 'Bob', [2, 1, 0])] }} />);
+
+    for (const label of ['Alice Wins', 'Bob Wins', 'Draws']) {
+      // wrapper > div.relative > input
+      const wrapper = screen.getByLabelText(label).parentElement!.parentElement!;
+      expect(wrapper).toHaveClass('w-20');
+      expect(wrapper).not.toHaveClass('w-full');
+    }
+  });
+
   it('binds each editor to its own controls when two rounds are on the page', () => {
     render(
       <>
