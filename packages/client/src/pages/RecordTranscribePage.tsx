@@ -2,8 +2,9 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
-import Record, { PlayerList, WinLossDraw } from '@utils/datatypes/Record';
+import Record, { PlayerList, Round, WinLossDraw } from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
+import classNames from 'classnames';
 
 import Alert, { UncontrolledAlertProps } from 'components/base/Alert';
 import Button from 'components/base/Button';
@@ -20,7 +21,7 @@ import MainLayout from 'layouts/MainLayout';
 import EditDescription from '../records/EditDescription';
 import TranscribeDecks from '../records/transcribe/TranscribeDecks';
 import TranscribePlayerRail from '../records/transcribe/TranscribePlayerRail';
-import TranscribeResults from '../records/transcribe/TranscribeResults';
+import TranscribeRounds, { ResultsMode } from '../records/transcribe/TranscribeRounds';
 import {
   applyPlayerEdit,
   areSeatsEditable,
@@ -51,6 +52,11 @@ interface Workspace {
   seeded: TranscribeState;
 }
 
+// A round with no matches in it is a round that has been added but not filled in, which is
+// not yet a transcribed pairing. The results mode is seeded off this, and so is the note
+// telling the user what final-records mode is hiding.
+const anyPairings = (matches: Round[]): boolean => matches.some((round) => round.matches.length > 0);
+
 const clearedDecks = (
   decks: { [playerIndex: number]: TranscribeDeck },
   wasSubmitted: (playerIndex: number, deck: TranscribeDeck) => boolean,
@@ -78,6 +84,14 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
   const [saveError, setSaveError] = useState<string>('');
   const [saving, setSaving] = useState<boolean>(false);
   const [savedMessage, setSavedMessage] = useState<string>('');
+  // Which kind of record is being written down: every pairing, or each player's final record.
+  // It governs the whole page rather than one section, and it is presentation only — both
+  // sides stay in TranscribeState and both are submitted whichever one is on screen. It opens
+  // on whichever side the record already carries, so a standings-only record does not land on
+  // an empty pairings list.
+  const [resultsMode, setResultsMode] = useState<ResultsMode>(() =>
+    Object.values(record.overrides ?? {}).some(Boolean) && !anyPairings(record.matches ?? []) ? 'records' : 'pairings',
+  );
 
   const { state, seeded } = workspace;
 
@@ -134,6 +148,9 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
     [],
   );
 
+  // Unused until the record cells land on the player row: the final-records editor that used
+  // to call this went out with the rounds-only reduction, and the row that replaces it is the
+  // next task. Kept here because the override lives in this page's state either way.
   const setOverride = useCallback(
     (playerName: string, value: WinLossDraw | undefined) =>
       updateState((previous) => ({ ...previous, overrides: { ...previous.overrides, [playerName]: value } })),
@@ -244,6 +261,38 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
 
               <Flexbox direction="col" gap="2">
                 <Text lg semibold>
+                  Results
+                </Text>
+                <Text sm className="text-text-secondary">
+                  Are you transcribing every pairing, or only each player&apos;s final record?
+                </Text>
+                <Flexbox direction="row" gap="2" alignItems="center">
+                  {[
+                    { value: 'pairings' as const, label: 'Pairings' },
+                    { value: 'records' as const, label: 'Final records only' },
+                  ].map((option) => (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => setResultsMode(option.value)}
+                      className={classNames(
+                        'rounded-full border px-3 py-1 text-sm font-medium transition-colors',
+                        resultsMode === option.value ? 'border-link bg-bg-active' : 'border-border hover:bg-bg-active',
+                      )}
+                    >
+                      {option.label}
+                    </button>
+                  ))}
+                </Flexbox>
+                {resultsMode === 'records' && anyPairings(state.matches) && (
+                  <Text sm className="text-text-secondary">
+                    Rounds of pairings are hidden in this mode. They are still recorded, and Save keeps them.
+                  </Text>
+                )}
+              </Flexbox>
+
+              <Flexbox direction="col" gap="2">
+                <Text lg semibold>
                   Players
                 </Text>
                 <TranscribePlayerRail
@@ -274,18 +323,18 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                 />
               </Flexbox>
 
-              <Flexbox direction="col" gap="2">
-                <Text lg semibold>
-                  Results
-                </Text>
-                <TranscribeResults
-                  players={state.players}
-                  matches={state.matches}
-                  setMatches={(matches) => updateState((previous) => ({ ...previous, matches }))}
-                  overrides={state.overrides}
-                  setOverride={setOverride}
-                />
-              </Flexbox>
+              {resultsMode === 'pairings' && (
+                <Flexbox direction="col" gap="2">
+                  <Text lg semibold>
+                    Rounds
+                  </Text>
+                  <TranscribeRounds
+                    players={state.players}
+                    matches={state.matches}
+                    setMatches={(matches) => updateState((previous) => ({ ...previous, matches }))}
+                  />
+                </Flexbox>
+              )}
 
               {alerts.map(({ color, message }, index) => (
                 <Alert key={index} color={color}>

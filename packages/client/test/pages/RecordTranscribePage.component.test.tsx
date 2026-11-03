@@ -324,50 +324,105 @@ describe('RecordTranscribePage', () => {
     });
   });
 
-  it('switches the results section between Pairings and Final records only', () => {
-    renderPage();
+  // The results mode names the kind of record being written down, so its toggle sits above
+  // the whole page rather than inside the rounds editor it used to switch.
+  const roundsShown = () => !!screen.queryByRole('button', { name: 'Add Round' });
 
+  const pairedRound = () => [{ matches: [{ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] as [number, number, number] }] }];
+
+  const aliceOverride = () => ({ Alice: { wins: 3, losses: 0, draws: 0 } });
+
+  it('renders the rounds section in pairings mode', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
+
+    expect(screen.getByText('Rounds')).toBeInTheDocument();
+    expect(screen.getByText('Round 1')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add Round' })).toBeInTheDocument();
-    expect(screen.queryAllByLabelText('Wins')).toHaveLength(0);
+  });
+
+  it('does not render the rounds section in final records mode', () => {
+    renderPage({ record: createRecord({ matches: pairedRound() }) });
 
     fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
 
+    expect(screen.queryByText('Rounds')).not.toBeInTheDocument();
+    expect(screen.queryByText('Round 1')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Add Round' })).not.toBeInTheDocument();
-    expect(screen.getAllByLabelText('Wins')).toHaveLength(2);
+  });
 
+  // Someone working from a standings sheet has final records and nothing else, so the page
+  // must not open them on an empty pairings list.
+  it('opens in final records mode for a record with overrides and no pairings', () => {
+    renderPage({ record: createRecord({ overrides: aliceOverride() }) });
+
+    expect(roundsShown()).toBe(false);
+
+    // The mode is what is hiding them, not a page that cannot show rounds at all.
     fireEvent.click(screen.getByRole('button', { name: 'Pairings' }));
-
-    expect(screen.getByRole('button', { name: 'Add Round' })).toBeInTheDocument();
-    expect(screen.queryAllByLabelText('Wins')).toHaveLength(0);
+    expect(roundsShown()).toBe(true);
   });
 
-  // The endpoint's Joi schema rejects a negative win count with a raw 400, and a number input
-  // reports whatever was typed regardless of its min attribute.
-  it('clamps a negative override to zero', async () => {
-    const { csrfFetch } = renderPage();
+  // Pairings win the seeding rule even alongside overrides: the record carries both, and the
+  // pairings are the side that has an editor to come back to.
+  it('opens in pairings mode for a record with pairings', () => {
+    renderPage({ record: createRecord({ matches: pairedRound(), overrides: aliceOverride() }) });
 
+    expect(roundsShown()).toBe(true);
+  });
+
+  it('opens in pairings mode for an empty record', () => {
+    renderPage({ record: createRecord({ players: [], matches: [] }) });
+
+    expect(roundsShown()).toBe(true);
+  });
+
+  // Final records mode hides the rounds editor, not the rounds. Without saying so, a record
+  // transcribed pairing by pairing looks like it lost them.
+  it('notes that pairings are recorded but hidden when final records mode hides rounds', () => {
+    const { unmount } = renderPage({ record: createRecord({ matches: pairedRound() }) });
+
+    expect(screen.queryByText(/pairings are hidden in this mode/)).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
-    fireEvent.change(screen.getAllByLabelText('Wins')[0], { target: { value: '-1' } });
-
-    expect(screen.getAllByLabelText('Wins')[0]).toHaveValue(0);
-
-    fireEvent.change(screen.getAllByLabelText('Losses')[0], { target: { value: '2' } });
-    fireEvent.click(saveButton());
-
-    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
-    expect(savedPayload(csrfFetch).overrides).toEqual({ Alice: { wins: 0, losses: 2, draws: 0 } });
-  });
-
-  it('warns that an override takes precedence when both an override and pairings exist', () => {
-    const matches = [{ matches: [{ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] as [number, number, number] }] }];
-
-    const { unmount } = renderPage({ record: createRecord({ matches }) });
-    expect(screen.queryByText(/takes precedence/)).not.toBeInTheDocument();
+    expect(screen.getByText(/pairings are hidden in this mode/)).toBeInTheDocument();
     unmount();
 
-    renderPage({ record: createRecord({ matches, overrides: { Alice: { wins: 3, losses: 0, draws: 0 } } }) });
+    // Nothing to be hidden, nothing to say.
+    renderPage({ record: createRecord({ matches: [] }) });
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
 
-    expect(screen.getByText(/takes precedence/)).toBeInTheDocument();
+    expect(screen.queryByText(/pairings are hidden in this mode/)).not.toBeInTheDocument();
+  });
+
+  // The mode governs which editor is on screen and nothing else. Both sides of the record
+  // stay in state and both are submitted, so a round trip through the other mode has to be
+  // invisible in the payload.
+  it('submits an unchanged payload after switching to final records and back', async () => {
+    const record = () => createRecord({ matches: pairedRound(), overrides: aliceOverride() });
+
+    const direct = renderPage({ record: record() });
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(direct.csrfFetch)).toHaveLength(1));
+    const baseline = savedPayload(direct.csrfFetch);
+    direct.unmount();
+
+    // The baseline has to carry data on both sides, or a mode switch that dropped one of
+    // them would round-trip an empty payload to an empty payload and pass.
+    expect(baseline.matches[0].matches[0]).toMatchObject({ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] });
+    expect(baseline.overrides).toEqual(aliceOverride());
+
+    const roundTripped = renderPage({ record: record() });
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
+    expect(roundsShown()).toBe(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Pairings' }));
+    expect(roundsShown()).toBe(true);
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(roundTripped.csrfFetch)).toHaveLength(1));
+
+    expect(savedPayload(roundTripped.csrfFetch)).toEqual(baseline);
   });
 
   it('POSTs the payload to /cube/records/enter/:id once on Save', async () => {
