@@ -17,6 +17,12 @@ export const normalizeQuotes = (value: string): string => value.replace(/[‘’
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
   className?: string;
+  /**
+   * Classes for the outer wrapper, replacing its default `block w-full`. The only
+   * way to render an Input narrower than its container, since `className` lands on
+   * the inner `<input>` and so cannot shrink the full-width wrapper around it.
+   */
+  wrapperClassName?: string;
   label?: string;
   link?: {
     href: string;
@@ -44,6 +50,7 @@ export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> 
 
 const Input: React.FC<InputProps> = ({
   className,
+  wrapperClassName = 'block w-full',
   label,
   link,
   valid,
@@ -67,7 +74,7 @@ const Input: React.FC<InputProps> = ({
   const showClear = !!onClear && !disabled && (value ?? '').length > 0;
 
   return (
-    <div className="block w-full">
+    <div className={wrapperClassName}>
       <Flexbox justify="between" direction="row">
         {label && (
           <label className="block text-sm font-medium text-text" htmlFor={id}>
