@@ -19,6 +19,8 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - The new ML Playground, under Cards in the Explore menu, puts the card recommender to work on any list you paste: Smart Search against your list, the bot's pick from a pack, the deck a bot would build from a pool, the archetype a deck reads as, or a seed list grown into a full cube.
 - CSV exports now list what each voucher holds in a new Voucher Cards column, and CSV uploads read it, so a cube of vouchers can be set up or copied in one upload.
 - The public data exports now record when each draft happened, and every pick names the draft it came from.
+- A new Cleanup menu in the cube list's edit panel clears out a board in one click: drop its duplicate entries, or drop everything already sitting on another board. The removals land in your change list to review before you save.
+- Filtering a cube by quantity, count, copies, or singleton now counts copies of the same card together even when they're different printings under different names, and stops counting cards you've already staged for removal.
 
 ## Bug Fixes
 
