@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
@@ -42,8 +42,10 @@ interface TranscribePlayersProps {
   // just moved.
   editsDisabled: boolean;
   // The edited list, plus the seat each entry came from in the list as it stands (-1 for a
-  // player being added). The page re-keys everything from that mapping.
-  onApplyPlayers: (players: PlayerList, originSeats: number[]) => void;
+  // player being added). The page re-keys everything from that mapping. Answers false when
+  // the edit was refused — the page turns every player edit away for the length of a save —
+  // so a caller that awaited a lookup does not report an edit that never landed.
+  onApplyPlayers: (players: PlayerList, originSeats: number[]) => boolean;
   // A half-finished paste per player. It is held by the page rather than by the deck editor
   // because that editor is unmounted the moment another player's row is opened, and rather
   // than by this component because it has to follow its player through a reorder.
@@ -199,11 +201,21 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
   });
   const [newPlayer, setNewPlayer] = useState<string>('');
 
+  // The add and rename commits await an @handle lookup before they apply, so by the time they
+  // do, the list their render closed over may be several edits out of date — the player being
+  // renamed may have been removed in the meantime. They resolve against this instead, so an
+  // edit that landed during the lookup is respected rather than overwritten by a snapshot.
+  const playersRef = useRef<PlayerList>(players);
+  useEffect(() => {
+    playersRef.current = players;
+  }, [players]);
+
   const identitySeats = useCallback(() => players.map((_, index) => index), [players]);
 
-  // The fieldsets below make these unreachable in a browser, but the invariant the page's
-  // seatOrder re-base depends on is too load-bearing to rest on rendering alone: every path
-  // that can reach onApplyPlayers refuses for itself while a save is open.
+  // The fieldsets below make these unreachable in a browser, and the page refuses a mid-save
+  // apply at the chokepoint besides, but the invariant the page's seatOrder re-base depends on
+  // is too load-bearing to rest on either alone: every path that can reach onApplyPlayers
+  // refuses for itself while a save is open.
   const addPlayer = useCallback(async () => {
     if (editsDisabled || !seatsEditable) {
       return;
@@ -212,9 +224,14 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
     if (!resolved) {
       return;
     }
-    onApplyPlayers([...players, resolved], [...identitySeats(), -1]);
+    // Against the list as it stands now, not as it stood when the lookup was started.
+    const current = playersRef.current;
+    if (!onApplyPlayers([...current, resolved], [...current.map((_, seat) => seat), -1])) {
+      // Refused — a save opened during the lookup. Leave what was typed where it is.
+      return;
+    }
     setNewPlayer('');
-  }, [editsDisabled, seatsEditable, resolvePlayer, newPlayer, onApplyPlayers, players, identitySeats]);
+  }, [editsDisabled, seatsEditable, resolvePlayer, newPlayer, onApplyPlayers]);
 
   const removePlayer = useCallback(
     (index: number) => {
@@ -251,19 +268,34 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
       if (editsDisabled) {
         return undefined;
       }
+      // Who this commit is about, pinned by identity before the lookup, because the seat it
+      // was typed in is not stable across one.
+      const target = playersRef.current[index];
+      if (!target) {
+        return undefined;
+      }
       const resolved = await resolvePlayer(raw);
       if (!resolved) {
         return null;
       }
+      const current = playersRef.current;
+      // The player was removed, or renamed some other way, while the lookup was outstanding.
+      // Applying the snapshot this commit started from would resurrect them.
+      const seat = current.indexOf(target);
+      if (seat === -1) {
+        return undefined;
+      }
       // A collision is applied rather than refused, so the typing is not thrown away.
       // validationErrors reports it page-wide and holds Save back, so it cannot be saved.
-      onApplyPlayers(
-        players.map((player, seat) => (seat === index ? resolved : player)),
-        identitySeats(),
+      const applied = onApplyPlayers(
+        current.map((player, other) => (other === seat ? resolved : player)),
+        current.map((_, other) => other),
       );
-      return resolved;
+      // Refused by the page because a save opened during the lookup. Reporting the resolved
+      // player would have the field rewrite itself to a name the record does not hold.
+      return applied ? resolved : undefined;
     },
-    [editsDisabled, resolvePlayer, onApplyPlayers, players, identitySeats],
+    [editsDisabled, resolvePlayer, onApplyPlayers],
   );
 
   const toggleTrophy = useCallback(

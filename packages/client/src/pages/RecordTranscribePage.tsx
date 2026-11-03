@@ -1,4 +1,4 @@
-import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
@@ -82,6 +82,10 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
   const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
   const [saveError, setSaveError] = useState<string>('');
   const [saving, setSaving] = useState<boolean>(false);
+  // The same flag as a ref, because applyPlayers below is reached from handlers that await a
+  // network lookup before applying: their closures captured `saving` as it was when the edit
+  // was started, which is false even if a save opened while the lookup was outstanding.
+  const savingRef = useRef<boolean>(false);
   const [savedMessage, setSavedMessage] = useState<string>('');
   // Which kind of record is being written down: every pairing, or each player's final record.
   // It governs the whole page rather than one section, and it is presentation only — both
@@ -127,10 +131,24 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
   );
 
   const applyPlayers = useCallback(
-    (edited: PlayerList, originSeats: number[]) => {
+    (edited: PlayerList, originSeats: number[]): boolean => {
+      // The one chokepoint every player edit passes through, guarded here rather than only in
+      // the handlers so that an edit cannot land mid-save by any route, including one a future
+      // handler invents. When the save lands the seatOrder is re-based to identity against the
+      // player list the server was sent; a permutation created against the seats it has
+      // already moved would misattribute every deck on the next save. An add is worse still:
+      // it would leave a longer player list than the seatOrder the re-base writes.
+      //
+      // Read from a ref rather than the `saving` state, because an edit that awaited an
+      // @handle lookup applies with the closure it was started in — which captured `saving`
+      // from before the request opened.
+      if (savingRef.current) {
+        return false;
+      }
       updateState((previous) => applyPlayerEdit(previous, edited, originSeats, seatsEditable));
       // A pending paste follows its player, exactly as applyPlayerEdit moves their deck.
       setPastes((previous) => movePastes(previous, originSeats));
+      return true;
     },
     [updateState, seatsEditable],
   );
@@ -175,6 +193,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
   const save = useCallback(async () => {
     const submitted = state;
     setSaving(true);
+    savingRef.current = true;
     setSaveError('');
     setSavedMessage('');
 
@@ -219,6 +238,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
     } catch {
       setSaveError('Could not save this record. Please try again.');
     } finally {
+      savingRef.current = false;
       setSaving(false);
     }
   }, [csrfFetch, record.id, state]);

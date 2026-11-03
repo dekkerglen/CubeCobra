@@ -120,6 +120,38 @@ const makeDeferredCsrfFetch = (saveResponse: any = { success: 'true' }) => {
   return { csrfFetch, release: () => act(async () => release()) };
 };
 
+// Holds the save POST and the @handle lookup open independently, so an edit that is waiting
+// on a lookup can be made to land after something else has already happened — a save opening
+// underneath it, or the player it renames being removed. Both are refused at entry when they
+// are started during a save, so the only way to reach the post-await path is to start the
+// lookup first and move the world while it is outstanding.
+const makeInterleavableCsrfFetch = (saveResponse: any = { success: 'true' }) => {
+  const base = makeCsrfFetch(saveResponse);
+
+  const gate = () => {
+    let open: () => void = () => {};
+    const held = new Promise<void>((resolve) => {
+      open = resolve;
+    });
+    return { held, release: () => act(async () => open()) };
+  };
+
+  const save = gate();
+  const lookup = gate();
+
+  const csrfFetch = jest.fn(async (url: RequestInfo, init?: RequestInit) => {
+    if (url === SAVE_URL) {
+      await save.held;
+    }
+    if (typeof url === 'string' && url.startsWith('/api/user/getByUsername/')) {
+      await lookup.held;
+    }
+    return base(url, init);
+  });
+
+  return { csrfFetch, releaseSave: save.release, releaseLookup: lookup.release };
+};
+
 const renderPage = ({
   record = createRecord(),
   draft,
@@ -831,6 +863,110 @@ describe('RecordTranscribePage', () => {
 
     // ...and the same shuffle goes through once the save has landed.
     reversePlayerList();
+  });
+
+  // The three below reach the one place the entry-level guards cannot: an edit started before
+  // a save, applied after it. Its closure captured editsDisabled as false and the player list
+  // as it stood, so the refusal has to come from the page's chokepoint reading live state.
+  //
+  // An add is the worst of them. applyPlayerEdit answers with a seatOrder as long as the list
+  // it was handed, so a third player landing mid-save would leave three players against the
+  // two-entry identity seatOrder the save-landed re-base writes — and the next save would
+  // submit exactly the mismatch the re-base is predicated on being impossible.
+  it('refuses an add whose @handle lookup resolves after a save has started', async () => {
+    const { csrfFetch, releaseSave, releaseLookup } = makeInterleavableCsrfFetch();
+    renderPage({ csrfFetch });
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+    fireEvent.change(screen.getByPlaceholderText(ADD_PLAYER_INPUT), { target: { value: '@carol' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Add Player' }));
+    await waitFor(() =>
+      expect(csrfFetch.mock.calls.some(([url]) => `${url}`.startsWith('/api/user/getByUsername/'))).toBe(true),
+    );
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    await releaseLookup();
+
+    expect(playerRows()).toHaveLength(2);
+    expect(screen.queryByText('Carol')).not.toBeInTheDocument();
+    // Refused rather than swallowed: what was typed is still there to add again.
+    expect(screen.getByPlaceholderText(ADD_PLAYER_INPUT)).toHaveValue('@carol');
+
+    await releaseSave();
+    await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Twice' } });
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(2));
+
+    // The list and the seats still describe each other.
+    const next = JSON.parse(`${saveCalls(csrfFetch)[1][1].body}`);
+    expect(next.players).toEqual([{ name: 'Alice' }, { name: 'Bob' }]);
+    expect(next.seatOrder).toEqual([0, 1]);
+    expect(next.seatOrder).toHaveLength(next.players.length);
+  });
+
+  it('refuses a rename whose @handle lookup resolves after a save has started', async () => {
+    const { csrfFetch, releaseSave, releaseLookup } = makeInterleavableCsrfFetch();
+    renderPage({ csrfFetch });
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+    fireEvent.change(nameField(), { target: { value: '@carol' } });
+    fireEvent.blur(nameField());
+    await waitFor(() =>
+      expect(csrfFetch.mock.calls.some(([url]) => `${url}`.startsWith('/api/user/getByUsername/'))).toBe(true),
+    );
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    await releaseLookup();
+
+    expect(playerRow(0)).toHaveTextContent('Alice');
+    expect(screen.queryByText('Carol')).not.toBeInTheDocument();
+
+    await releaseSave();
+    await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Twice' } });
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(2));
+
+    expect(JSON.parse(`${saveCalls(csrfFetch)[1][1].body}`)).toMatchObject({
+      players: [{ name: 'Alice' }, { name: 'Bob' }],
+      seatOrder: [0, 1],
+    });
+  });
+
+  // No save anywhere near this one: the two edits are simply racing each other. The rename
+  // closed over a two-player list, so applying it wholesale would put the removed player
+  // back. It has to resolve against the list as it stands when the lookup lands.
+  it('does not resurrect a removed player when their rename lookup resolves afterwards', async () => {
+    const { csrfFetch, releaseLookup } = makeInterleavableCsrfFetch();
+    renderPage({ csrfFetch });
+
+    fireEvent.change(nameField(), { target: { value: '@carol' } });
+    fireEvent.blur(nameField());
+    await waitFor(() =>
+      expect(csrfFetch.mock.calls.some(([url]) => `${url}`.startsWith('/api/user/getByUsername/'))).toBe(true),
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Remove Alice' }));
+    expect(playerRows()).toHaveLength(1);
+
+    await releaseLookup();
+
+    expect(playerRows()).toHaveLength(1);
+    expect(playerRow(0)).toHaveTextContent('Bob');
+    expect(screen.queryByText('Alice')).not.toBeInTheDocument();
+    expect(screen.queryByText('Carol')).not.toBeInTheDocument();
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    expect(savedPayload(csrfFetch)).toMatchObject({ players: [{ name: 'Bob' }], seatOrder: [1] });
   });
 
   // The server's Joi schema caps a record at 50 rounds, so the page refuses the 51st at the
