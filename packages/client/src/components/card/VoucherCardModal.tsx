@@ -24,7 +24,6 @@ import { getLabels } from '@utils/sorting/Sort';
 import { getTagColorClass, getTagColorStyle } from '@utils/Util';
 
 import ImageFallback from 'components/ImageFallback';
-import withAutocard from 'components/WithAutocard';
 
 import { CSRFContext } from '../../contexts/CSRFContext';
 import CubeContext from '../../contexts/CubeContext';
@@ -49,10 +48,6 @@ import TagInput from '../TagInput';
 import AutocardListItem from './AutocardListItem';
 import CardOrientationFrame from './CardOrientationFrame';
 import VersionSelect from './VersionSelect';
-
-// Constrained to this column, a landscape card renders smaller than a normal one; the
-// hover raises the ordinary autocard preview at full size.
-const HoverPreviewFrame = withAutocard(CardOrientationFrame);
 
 export interface VoucherCardModalProps {
   isOpen: boolean;
@@ -395,7 +390,7 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
               {/* Selected card preview */}
               <div className="mt-2">
                 {displayedOrientation === 'landscape' ? (
-                  <HoverPreviewFrame orientation="landscape" card={previewCard ?? undefined}>
+                  <CardOrientationFrame orientation="landscape">
                     <ImageFallback
                       card={selection === 'voucher' ? card : selectedSubCard?.details}
                       src={getSelectedImage()}
@@ -403,7 +398,7 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
                       alt={selection === 'voucher' ? cardName(card) : selectedSubCard?.details?.name || 'Card'}
                       className="w-full rounded"
                     />
-                  </HoverPreviewFrame>
+                  </CardOrientationFrame>
                 ) : (
                   <ImageFallback
                     card={selection === 'voucher' ? card : selectedSubCard?.details}

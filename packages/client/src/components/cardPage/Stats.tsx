@@ -12,14 +12,10 @@ import CardIdBadge from '../card/CardIdBadge';
 import CardOrientationFrame from '../card/CardOrientationFrame';
 import ImageFallback from '../ImageFallback';
 import AddToCubeModal from '../modals/AddToCubeModal';
-import withAutocard from '../WithAutocard';
 import withModal from '../WithModal';
 import CardMetrics from './CardMetrics';
 
 const AddModal = withModal(Button, AddToCubeModal);
-// Constrained to this column, a landscape card renders smaller than a normal one; the
-// hover raises the ordinary autocard preview at full size.
-const HoverPreviewFrame = withAutocard(CardOrientationFrame);
 
 interface CardPageProps {
   card: CardDetails;
@@ -51,9 +47,7 @@ const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
   return (
     <Flexbox direction="col" className="my-2 mx-2" gap="2">
       {displayedOrientation === 'landscape' ? (
-        <HoverPreviewFrame orientation="landscape" card={detailsToCard(card)}>
-          {image}
-        </HoverPreviewFrame>
+        <CardOrientationFrame orientation="landscape">{image}</CardOrientationFrame>
       ) : (
         image
       )}

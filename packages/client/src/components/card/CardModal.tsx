@@ -38,7 +38,6 @@ import PurchaseTable from 'components/purchase/PurchaseTable';
 
 import CardIdBadge from './CardIdBadge';
 import CardOrientationFrame from './CardOrientationFrame';
-import withAutocard from 'components/WithAutocard';
 import withModal from 'components/WithModal';
 
 import { cardImageBackUrl, cardImageUrl } from '../../../../utils/src/cardutil';
@@ -68,11 +67,6 @@ import VersionSelect from './VersionSelect';
 
 type FoilCardImageProps = FoilOverlayProps & ImageFallbackProps;
 const FoilCardImage: React.FC<FoilCardImageProps> = FoilOverlay(ImageFallback);
-// A landscape card is constrained to this column's width, so it renders smaller than a
-// normal card and its rules text is a squint. Hovering raises the ordinary autocard
-// preview at full size — the modal panel is overflow-hidden, so expanding in place
-// would simply be clipped.
-const HoverPreviewFrame = withAutocard(CardOrientationFrame);
 const AddToCubeButton = withModal(Button, AddToCubeModal);
 
 export interface CardModalProps {
@@ -265,7 +259,7 @@ const CardModal: React.FC<CardModalProps> = ({
             <Col xs={12} sm={6}>
               <Flexbox direction="col" gap="2">
                 {displayedOrientation === 'landscape' ? (
-                  <HoverPreviewFrame orientation="landscape" card={card}>
+                  <CardOrientationFrame orientation="landscape">
                     <FoilCardImage
                       card={card}
                       className="w-full"
@@ -273,7 +267,7 @@ const CardModal: React.FC<CardModalProps> = ({
                       fallbackSrc={cdnUrl('/content/loadingcard.png')}
                       alt={cardName(card)}
                     />
-                  </HoverPreviewFrame>
+                  </CardOrientationFrame>
                 ) : (
                   <FoilCardImage
                     card={card}

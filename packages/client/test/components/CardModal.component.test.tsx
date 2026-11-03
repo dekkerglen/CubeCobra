@@ -141,9 +141,10 @@ describe('landscape card images', () => {
     expect(landscapeFrameAround(screen.getByAltText('Delver of Secrets'))).toBeNull();
   });
 
-  it('raises the autocard preview when a landscape image is hovered', () => {
-    // The modal panel is overflow-hidden, so an in-place expansion would be clipped.
-    // The autocard popup is already fixed-position and viewport-clamped.
+  it('does not raise a preview when a landscape image is hovered', () => {
+    // Hover-to-expand was dropped: the autocard popup is pinned at a 15rem-equivalent
+    // 334px, while this column renders the card at 300-480px depending on viewport, so
+    // hovering shrank the card at every width where the preview is enabled at all.
     render(
       <AutocardContextProvider>
         <CardModal {...props} card={cardWith({ layout: 'planar' })} />
@@ -151,12 +152,10 @@ describe('landscape card images', () => {
     );
 
     const frame = landscapeFrameAround(screen.getByAltText('Delver of Secrets')) as HTMLElement;
-    // The provider positions from the recorded pointer, so without a move it has
-    // nowhere to place the preview and leaves it hidden.
     fireEvent.mouseMove(document, { clientX: 100, clientY: 100 });
     fireEvent.mouseEnter(frame);
 
-    expect((document.getElementById('autocardPopup') as HTMLDivElement).style.visibility).toBe('visible');
+    expect((document.getElementById('autocardPopup') as HTMLDivElement).style.visibility).toBe('hidden');
   });
 
   it('does not raise a preview from a portrait image', () => {
