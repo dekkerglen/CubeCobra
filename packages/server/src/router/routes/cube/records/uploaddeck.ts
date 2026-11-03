@@ -114,21 +114,12 @@ const resolveCardByOracle = (oracle: string, cubePool: CardType[]) => {
   return selectedId ? { cardID: selectedId, details: cardFromId(selectedId) } : null;
 };
 
-export const associateNewDraft = async (
-  cube: CubeType,
-  record: RecordEntity,
-  userIndex: number,
-  mainboardOracles: string[],
-  sideboardOracles: string[] = [],
-) => {
-  const cubeCards = await cubeDao.getCards(cube.id);
-  const cubePool = buildCubeCardPool(cube, cubeCards);
-
-  const deck: number[][][] = createPool();
-  const sideboard: number[][][] = setupPicks(1, 8);
-  const cards: CardType[] = [];
-
-  const processCard = (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
+// Resolve an oracle id against the cube and drop it into a seat pool: creatures on row 0
+// and everything else on row 1, column by mana value clamped to 0-7. A sideboard is a
+// single row, so everything there goes on row 0. `cards` is the draft's shared card list;
+// what lands in the pool is the card's index into it, so the two must stay in step.
+const createCardPlacer =
+  (cubePool: CardType[], cards: CardType[]) => (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
     const selected = resolveCardByOracle(oracle, cubePool);
 
     if (selected) {
@@ -144,6 +135,22 @@ export const associateNewDraft = async (
       }
     }
   };
+
+export const associateNewDraft = async (
+  cube: CubeType,
+  record: RecordEntity,
+  userIndex: number,
+  mainboardOracles: string[],
+  sideboardOracles: string[] = [],
+) => {
+  const cubeCards = await cubeDao.getCards(cube.id);
+  const cubePool = buildCubeCardPool(cube, cubeCards);
+
+  const deck: number[][][] = createPool();
+  const sideboard: number[][][] = setupPicks(1, 8);
+  const cards: CardType[] = [];
+
+  const processCard = createCardPlacer(cubePool, cards);
 
   for (const oracle of mainboardOracles) {
     processCard(oracle, deck, false);
@@ -215,22 +222,7 @@ export const associateWithExistingDraft = async (
   const sideboard: number[][][] = setupPicks(1, 8);
   const cards: CardType[] = draft.cards;
 
-  const processCard = (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
-    const selected = resolveCardByOracle(oracle, cubePool);
-
-    if (selected) {
-      const isCreature = selected.details.type.toLowerCase().includes('creature');
-      const cmc = selected.details.cmc;
-
-      const row = isSideboard ? 0 : isCreature ? 0 : 1;
-      const col = Math.max(0, Math.min(7, Math.floor(cmc)));
-
-      if (targetPool[row] && targetPool[row][col]) {
-        targetPool[row][col].push(cards.length);
-        cards.push(selected);
-      }
-    }
-  };
+  const processCard = createCardPlacer(cubePool, cards);
 
   for (const oracle of mainboardOracles) {
     processCard(oracle, deck, false);
@@ -250,6 +242,51 @@ export const associateWithExistingDraft = async (
   await draftDao.update(draft);
 };
 
+// Write several seats of an existing draft in one pass. Calling associateWithExistingDraft
+// per seat would re-read the cube pool and read-modify-write the whole draft once per deck;
+// the transcription workspace submits up to sixteen at a time. Seats missing from
+// decksByIndex are left alone, because re-writing an unchanged seat appends a freshly
+// resolved copy of each card to draft.cards and orphans the indices it replaced.
+export const associateDecksWithExistingDraft = async (
+  cube: CubeType,
+  draft: Draft,
+  decksByIndex: { [userIndex: number]: { mainboard: string[]; sideboard?: string[] } },
+  // Pass the cube's cards when attaching decks to many records, to load them once.
+  preloadedCubeCards?: CubeCards,
+) => {
+  const cubeCards = preloadedCubeCards ?? (await cubeDao.getCards(cube.id));
+  const cubePool = buildCubeCardPool(cube, cubeCards);
+  const cards: CardType[] = draft.cards;
+
+  const processCard = createCardPlacer(cubePool, cards);
+
+  for (const [rawIndex, deck] of Object.entries(decksByIndex)) {
+    // 1-based, matching associateDecksWithNewDraft.
+    const seat = draft.seats[Number(rawIndex) - 1];
+    if (!seat) {
+      continue;
+    }
+
+    // Built fresh rather than cleared in place, so an empty mainboard resets the seat
+    // instead of leaving the previous deck behind.
+    const seatMainboard: number[][][] = createPool();
+    const seatSideboard: number[][][] = setupPicks(1, 8);
+
+    for (const oracle of deck.mainboard) {
+      processCard(oracle, seatMainboard, false);
+    }
+
+    for (const oracle of deck.sideboard ?? []) {
+      processCard(oracle, seatSideboard, true);
+    }
+
+    seat.mainboard = seatMainboard;
+    seat.sideboard = seatSideboard;
+  }
+
+  await draftDao.update(draft);
+};
+
 // Build a single draft with EVERY player's deck placed at once, then create it in
 // one draftDao.createDraft call. This mirrors the regular draft workflow: that one
 // createDraft pass names every seat from its mainboard archetype (assessColors),
@@ -265,20 +302,7 @@ export const associateDecksWithNewDraft = async (
   const cubePool = buildCubeCardPool(cube, cubeCards);
   const cards: CardType[] = [];
 
-  const processCard = (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
-    const selected = resolveCardByOracle(oracle, cubePool);
-
-    if (selected) {
-      const isCreature = selected.details.type.toLowerCase().includes('creature');
-      const cmc = selected.details.cmc;
-      const row = isSideboard ? 0 : isCreature ? 0 : 1;
-      const col = Math.max(0, Math.min(7, Math.floor(cmc)));
-      if (targetPool[row] && targetPool[row][col]) {
-        targetPool[row][col].push(cards.length);
-        cards.push(selected);
-      }
-    }
-  };
+  const processCard = createCardPlacer(cubePool, cards);
 
   const seats = record.players.map((player, idx) => {
     const deck = decksByIndex[idx + 1];
