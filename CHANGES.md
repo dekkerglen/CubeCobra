@@ -4,7 +4,6 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 
 /////////////////
 
-
 ## New Features
 
 - In the phone draft, pinch the pack or your pool to make its cards bigger or smaller. Each keeps its own size, and a zoomed-in pack scrolls.
