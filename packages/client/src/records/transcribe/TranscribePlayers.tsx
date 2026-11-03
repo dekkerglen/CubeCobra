@@ -1,5 +1,7 @@
 import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 
+import { arrayMove } from '@dnd-kit/sortable';
+import { GrabberIcon } from '@primer/octicons-react';
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
@@ -14,6 +16,7 @@ import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
+import { SortableItem, SortableList } from 'components/DND';
 import { CSRFContext } from 'contexts/CSRFContext';
 
 import UploadDeck from '../UploadDeck';
@@ -42,8 +45,8 @@ interface TranscribePlayersProps {
   overrides: { [playerName: string]: WinLossDraw | undefined };
   setOverride: (playerName: string, value: WinLossDraw | undefined) => void;
   // False when the record is backed by a played draft: the draft's seats are positionally
-  // tied to the player list, so adding, removing and shuffling are not offered at all.
-  // Renaming still is — it is the one player edit such a record accepts.
+  // tied to the player list, so adding, removing, shuffling and dragging to reorder are not
+  // offered at all. Renaming still is — it is the one player edit such a record accepts.
   seatsEditable: boolean;
   // True while a save is in flight. Every player edit is held shut for the length of the
   // request: the page re-bases seatOrder to identity when the save lands, which is only
@@ -377,6 +380,38 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
     setExpanded(-1);
   }, [editsDisabled, seatsEditable, onApplyPlayers, players, identitySeats]);
 
+  // Positional, because that is what a seat is: two players can carry the same name while a
+  // duplicate is being corrected, and a drag id has to be unique.
+  const seatIds = useMemo(() => players.map((_, index) => `seat-${index}`), [players]);
+
+  const reorderPlayers = useCallback(
+    ({ active, over }: { active: { id: string }; over: { id: string } | null }) => {
+      if (editsDisabled || !seatsEditable || !over || active.id === over.id) {
+        return;
+      }
+      const from = seatIds.indexOf(active.id);
+      const to = seatIds.indexOf(over.id);
+      if (from === -1 || to === -1) {
+        return;
+      }
+      const order = arrayMove(identitySeats(), from, to);
+      if (
+        !onApplyPlayers(
+          order.map((seat) => players[seat]),
+          order,
+        )
+      ) {
+        return;
+      }
+      // Unlike a shuffle, a drag moves one row the user is looking at, so the open body
+      // follows its player rather than being thrown away. order[position] is the seat that
+      // landed there, so looking the open seat up in it gives where that player now sits —
+      // and a closed list, -1, is not in it and stays closed.
+      setExpanded(order.indexOf(expanded));
+    },
+    [editsDisabled, seatsEditable, seatIds, identitySeats, onApplyPlayers, players, expanded],
+  );
+
   const renamePlayer = useCallback(
     async (index: number, raw: string): Promise<Player | null | undefined> => {
       if (editsDisabled) {
@@ -470,152 +505,182 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
         </Text>
       )}
 
-      {players.map((player, index) => {
-        const deck = decks[index];
-        const open = expanded === index;
-        const linked = linkedUsers.find((user) => user.id === player.userId);
-        const held = (record.trophy ?? []).includes(player.name);
-        const duplicate = players.some(
-          (other, seat) => seat !== index && other.name.toLowerCase() === player.name.toLowerCase(),
-        );
-        const override = overrides[player.name];
-        // An override is what the record displays, so its cells are never hidden behind an
-        // edit control: offering a derived reading the record does not use would be a lie.
-        const cellsShown = resultsMode === 'records' || !!override || revealed.includes(player.name);
+      {/* The rows stay sortable on a played draft too: what is withheld there is the handle,
+          and with no handle rendered there is nothing to start a drag from. That keeps one
+          piece of row markup rather than an editable and a read-only copy of it. */}
+      <SortableList items={seatIds} onDragEnd={reorderPlayers}>
+        {players.map((player, index) => {
+          const deck = decks[index];
+          const open = expanded === index;
+          const linked = linkedUsers.find((user) => user.id === player.userId);
+          const held = (record.trophy ?? []).includes(player.name);
+          const duplicate = players.some(
+            (other, seat) => seat !== index && other.name.toLowerCase() === player.name.toLowerCase(),
+          );
+          const override = overrides[player.name];
+          // An override is what the record displays, so its cells are never hidden behind an
+          // edit control: offering a derived reading the record does not use would be a lie.
+          const cellsShown = resultsMode === 'records' || !!override || revealed.includes(player.name);
 
-        return (
-          <div key={index} data-testid="transcribe-player-row">
-            <Card>
-              <CardHeader>
-                <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
-                  {/* Only the identity half toggles the row — the record cells sit beside it
-                      rather than inside it, so typing a number does not collapse the row. */}
-                  <button
-                    type="button"
-                    className="min-w-0 grow text-left"
-                    onClick={() => setExpanded(open ? -1 : index)}
-                    aria-expanded={open}
-                  >
-                    <Flexbox direction="row" alignItems="center" gap="2" className="min-w-0">
-                      {linked?.image?.uri ? (
-                        <img src={linked.image.uri} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
-                      ) : (
-                        <span className="w-6 h-6 rounded-full bg-bg-active border border-border shrink-0" />
-                      )}
-                      {held && (
-                        <span role="img" aria-label="Trophy" className="shrink-0">
-                          🏆
-                        </span>
-                      )}
-                      <Text semibold className="truncate">
-                        {player.name}
-                      </Text>
-                    </Flexbox>
-                  </button>
-                  <Flexbox direction="row" alignItems="center" gap="2" wrap="wrap">
-                    <PlayerRecord
-                      player={player}
-                      derived={playerRecord(withoutOverrides, player.name)}
-                      override={override}
-                      hasPairings={hasPairings}
-                      cellsShown={cellsShown}
-                      onReveal={() => setRevealed((previous) => [...previous, player.name])}
-                      setOverride={(value) => setOverride(player.name, value)}
-                    />
-                    <Text sm className="text-text-secondary shrink-0">
-                      {`${summarize(deck)}${deck?.dirty ? ' • unsaved' : ''}`}
-                    </Text>
-                  </Flexbox>
-                </Flexbox>
-              </CardHeader>
-              {open && (
-                <CardBody>
-                  <Flexbox direction="col" gap="3">
-                    {/* A save rewrites the draft's seats into the submitted player order, and
-                        the page re-bases seatOrder to identity once it lands. Holding every
-                        player edit shut for the length of the request is what makes that
-                        re-base unambiguous: a rename, add, remove or shuffle applied
-                        mid-flight would be expressed against seats the server has already
-                        moved, and the next save would misattribute every deck. */}
-                    <fieldset disabled={editsDisabled} className="min-w-0 border-0 p-0 m-0">
-                      <Flexbox direction="col" gap="2">
-                        <PlayerNameField
-                          id={`transcribe-player-name-${index}`}
-                          player={player}
-                          duplicate={duplicate}
-                          onRename={(raw) => renamePlayer(index, raw)}
-                        />
-                        <Flexbox direction="row" gap="3" alignItems="center" wrap="wrap">
-                          <Checkbox
-                            label="Trophy"
-                            checked={held}
-                            setChecked={(checked) => toggleTrophy(player.name, checked)}
+          return (
+            // The caller-supplied role is what keeps dnd-kit's own button attributes off this
+            // wrapper, so the drag lives on the handle's listeners and the row neither becomes
+            // a tab stop nor announces the whole of itself as draggable.
+            <SortableItem key={index} id={seatIds[index]} role="presentation">
+              {({ handleProps }) => (
+                <div data-testid="transcribe-player-row">
+                  <Card>
+                    <CardHeader>
+                      <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
+                        {seatsEditable && (
+                          // The one drag surface, and it is on the collapsed row: the body below
+                          // holds the name field and the paste box, and a drag begun in either of
+                          // those would start a sort in the middle of typing.
+                          <span
+                            {...handleProps}
+                            role="img"
+                            aria-label={`Drag ${player.name} to reorder`}
+                            className="cursor-grab text-text-secondary shrink-0"
+                          >
+                            <GrabberIcon size={16} />
+                          </span>
+                        )}
+                        {/* Only the identity half toggles the row — the record cells sit beside
+                            it rather than inside it, so typing a number does not collapse the
+                            row. */}
+                        <button
+                          type="button"
+                          className="min-w-0 grow text-left"
+                          onClick={() => setExpanded(open ? -1 : index)}
+                          aria-expanded={open}
+                        >
+                          <Flexbox direction="row" alignItems="center" gap="2" className="min-w-0">
+                            {linked?.image?.uri ? (
+                              <img
+                                src={linked.image.uri}
+                                alt=""
+                                className="w-6 h-6 rounded-full object-cover shrink-0"
+                              />
+                            ) : (
+                              <span className="w-6 h-6 rounded-full bg-bg-active border border-border shrink-0" />
+                            )}
+                            {held && (
+                              <span role="img" aria-label="Trophy" className="shrink-0">
+                                🏆
+                              </span>
+                            )}
+                            <Text semibold className="truncate">
+                              {player.name}
+                            </Text>
+                          </Flexbox>
+                        </button>
+                        <Flexbox direction="row" alignItems="center" gap="2" wrap="wrap">
+                          <PlayerRecord
+                            player={player}
+                            derived={playerRecord(withoutOverrides, player.name)}
+                            override={override}
+                            hasPairings={hasPairings}
+                            cellsShown={cellsShown}
+                            onReveal={() => setRevealed((previous) => [...previous, player.name])}
+                            setOverride={(value) => setOverride(player.name, value)}
                           />
-                          {seatsEditable && (
-                            <Button
-                              color="danger"
-                              aria-label={`Remove ${player.name}`}
-                              onClick={() => removePlayer(index)}
-                            >
-                              <span className="text-nowrap">Remove player</span>
-                            </Button>
-                          )}
+                          <Text sm className="text-text-secondary shrink-0">
+                            {`${summarize(deck)}${deck?.dirty ? ' • unsaved' : ''}`}
+                          </Text>
                         </Flexbox>
                       </Flexbox>
-                    </fieldset>
+                    </CardHeader>
+                    {open && (
+                      <CardBody>
+                        <Flexbox direction="col" gap="3">
+                          {/* A save rewrites the draft's seats into the submitted player order,
+                              and the page re-bases seatOrder to identity once it lands. Holding
+                              every player edit shut for the length of the request is what makes
+                              that re-base unambiguous: a rename, add, remove, shuffle or drop
+                              applied mid-flight would be expressed against seats the server has
+                              already moved, and the next save would misattribute every deck. */}
+                          <fieldset disabled={editsDisabled} className="min-w-0 border-0 p-0 m-0">
+                            <Flexbox direction="col" gap="2">
+                              <PlayerNameField
+                                id={`transcribe-player-name-${index}`}
+                                player={player}
+                                duplicate={duplicate}
+                                onRename={(raw) => renamePlayer(index, raw)}
+                              />
+                              <Flexbox direction="row" gap="3" alignItems="center" wrap="wrap">
+                                <Checkbox
+                                  label="Trophy"
+                                  checked={held}
+                                  setChecked={(checked) => toggleTrophy(player.name, checked)}
+                                />
+                                {seatsEditable && (
+                                  <Button
+                                    color="danger"
+                                    aria-label={`Remove ${player.name}`}
+                                    onClick={() => removePlayer(index)}
+                                  >
+                                    <span className="text-nowrap">Remove player</span>
+                                  </Button>
+                                )}
+                              </Flexbox>
+                            </Flexbox>
+                          </fieldset>
 
-                    {!deck || deck.editable ? (
-                      <Flexbox direction="col" gap="2">
-                        <UploadDeckFromPhoto
-                          cube={cube}
-                          setMainboardCards={setters[index].setMainboard}
-                          setSideboardCards={setters[index].setSideboard}
-                          setAlerts={setAlerts}
-                        />
-                        <UploadDeck
-                          // This row is already bound to one player, so UploadDeck's picker
-                          // has nothing to choose: it is handed a one-player record and a
-                          // setter that does nothing, which leaves it showing whose deck is
-                          // being entered.
-                          selectedUser={1}
-                          setSelectedUser={() => {}}
-                          record={{ ...record, players: [player] }}
-                          mainboardCards={deck?.mainboard ?? []}
-                          setMainboardCards={setters[index].setMainboard}
-                          sideboardCards={deck?.sideboard ?? []}
-                          setSideboardCards={setters[index].setSideboard}
-                          setAlerts={setAlerts}
-                          cubeId={cube.id}
-                          // Held outside the editor, so collapsing this row to look at
-                          // another player does not discard a paste mid-correction.
-                          decklistText={pastes[index]?.text ?? ''}
-                          setDecklistText={setters[index].setDecklistText}
-                          parseErrors={pastes[index]?.errors ?? []}
-                          setParseErrors={setters[index].setParseErrors}
-                        />
-                      </Flexbox>
-                    ) : (
-                      <Flexbox direction="col" gap="2">
-                        <Text sm className="text-text-secondary">
-                          This record is attached to a played draft, so this deck is tied to the seat that drafted it
-                          and cannot be re-entered here.
-                        </Text>
-                        {draft && (
-                          <Link href={`/draft/deckbuilder/${draft.id}?seat=${index}`}>
-                            Edit this deck in the deckbuilder
-                          </Link>
-                        )}
-                        <CardNameList title="Mainboard" cards={deck.mainboard} />
-                        <CardNameList title="Sideboard" cards={deck.sideboard} />
-                      </Flexbox>
+                          {!deck || deck.editable ? (
+                            <Flexbox direction="col" gap="2">
+                              <UploadDeckFromPhoto
+                                cube={cube}
+                                setMainboardCards={setters[index].setMainboard}
+                                setSideboardCards={setters[index].setSideboard}
+                                setAlerts={setAlerts}
+                              />
+                              <UploadDeck
+                                // This row is already bound to one player, so UploadDeck's picker
+                                // has nothing to choose: it is handed a one-player record and a
+                                // setter that does nothing, which leaves it showing whose deck is
+                                // being entered.
+                                selectedUser={1}
+                                setSelectedUser={() => {}}
+                                record={{ ...record, players: [player] }}
+                                mainboardCards={deck?.mainboard ?? []}
+                                setMainboardCards={setters[index].setMainboard}
+                                sideboardCards={deck?.sideboard ?? []}
+                                setSideboardCards={setters[index].setSideboard}
+                                setAlerts={setAlerts}
+                                cubeId={cube.id}
+                                // Held outside the editor, so collapsing this row to look at
+                                // another player does not discard a paste mid-correction.
+                                decklistText={pastes[index]?.text ?? ''}
+                                setDecklistText={setters[index].setDecklistText}
+                                parseErrors={pastes[index]?.errors ?? []}
+                                setParseErrors={setters[index].setParseErrors}
+                              />
+                            </Flexbox>
+                          ) : (
+                            <Flexbox direction="col" gap="2">
+                              <Text sm className="text-text-secondary">
+                                This record is attached to a played draft, so this deck is tied to the seat that drafted
+                                it and cannot be re-entered here.
+                              </Text>
+                              {draft && (
+                                <Link href={`/draft/deckbuilder/${draft.id}?seat=${index}`}>
+                                  Edit this deck in the deckbuilder
+                                </Link>
+                              )}
+                              <CardNameList title="Mainboard" cards={deck.mainboard} />
+                              <CardNameList title="Sideboard" cards={deck.sideboard} />
+                            </Flexbox>
+                          )}
+                        </Flexbox>
+                      </CardBody>
                     )}
-                  </Flexbox>
-                </CardBody>
+                  </Card>
+                </div>
               )}
-            </Card>
-          </div>
-        );
-      })}
+            </SortableItem>
+          );
+        })}
+      </SortableList>
     </Flexbox>
   );
 };

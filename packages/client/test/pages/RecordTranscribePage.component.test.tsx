@@ -8,10 +8,35 @@ import Cube from '@utils/datatypes/Cube';
 import Draft, { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import Record from '@utils/datatypes/Record';
 
+import { SortableList } from 'components/DND';
 import { CSRFContext } from 'contexts/CSRFContext';
 
 import { createCardDetails } from '../../../server/test/test-utils/data';
 import RecordTranscribePage from '../../src/pages/RecordTranscribePage';
+
+// Keeps the real sortable components — the rows are wrapped in the same dnd-kit context they
+// are in a browser — while making two otherwise invisible things assertable:
+//
+// SortableList is spied on so the drop can be driven through the handler and the ids it was
+// actually given. dnd-kit's own sensors need pointer geometry jsdom does not produce (an 8px
+// MouseSensor distance, a 200ms TouchSensor delay), so a drag cannot be simulated here.
+//
+// SortableItem's handleProps carry a marker. The listeners inside them are React props and
+// leave no trace in the DOM; the marker is spread from the same object, so the element that
+// carries it is exactly the element dnd-kit's drag listeners landed on, and nothing else is.
+jest.mock('components/DND', () => {
+  const actual = jest.requireActual('components/DND');
+  return {
+    __esModule: true,
+    ...actual,
+    SortableList: jest.fn(actual.SortableList),
+    SortableItem: ({ children, ...props }: any) => (
+      <actual.SortableItem {...props}>
+        {({ handleProps }: any) => children({ handleProps: { ...handleProps, 'data-drag-listeners': 'true' } })}
+      </actual.SortableItem>
+    ),
+  };
+});
 
 jest.mock('components/RenderToRoot', () => ({ __esModule: true, default: (Component: any) => Component }));
 jest.mock('layouts/MainLayout', () => ({
@@ -231,7 +256,24 @@ const reversePlayerList = () => {
   expect(playerRow(1)).toHaveTextContent('Alice');
 };
 
+// Drops the player at `from` onto the row at `to`, through the handler and the ids dnd-kit
+// itself would call with on a real drop. Reading the ids back off the props rather than
+// spelling them out keeps the drop addressed by position, whatever the rows are keyed by.
+const dragPlayer = (from: number, to: number) => {
+  const { items, onDragEnd } = (SortableList as unknown as jest.Mock).mock.calls.at(-1)![0];
+  act(() => {
+    onDragEnd({ active: { id: items[from] }, over: { id: items[to] } });
+  });
+};
+
+// The element the drag listeners were spread onto, within one row.
+const dragSurfaces = (index: number) => playerRow(index).querySelectorAll('[data-drag-listeners]');
+
 describe('RecordTranscribePage', () => {
+  beforeEach(() => {
+    (SortableList as unknown as jest.Mock).mockClear();
+  });
+
   it('renders one row per player and no separate decks section', () => {
     renderPage();
 
@@ -354,6 +396,120 @@ describe('RecordTranscribePage', () => {
       players: [{ name: 'Bob' }, { name: 'Alice' }],
       seatOrder: [1, 0],
     });
+  });
+
+  // Shuffle randomizes; it cannot put one person in the seat they actually sat in. The handle
+  // is on the collapsed row only, so a drag can never begin inside the open body's text fields.
+  it('renders a drag handle on each collapsed row', () => {
+    renderPage();
+
+    expect(within(playerRow(0)).getByLabelText('Drag Alice to reorder')).toBeInTheDocument();
+    expect(within(playerRow(1)).getByLabelText('Drag Bob to reorder')).toBeInTheDocument();
+  });
+
+  it('reorders players on drag end, carrying each deck with its player', async () => {
+    renderPage();
+
+    fireEvent.change(pasteBox(0), { target: { value: '2x Lightning Bolt\nSideboard\nPyroblast' } });
+    fireEvent.click(screen.getByRole('button', { name: /Parse and Add to Mainboard/ }));
+    await waitFor(() => expect(playerRow(0)).toHaveTextContent('2 cards + 1 sideboard'));
+
+    dragPlayer(0, 1);
+
+    expect(playerRow(0)).toHaveTextContent('Bob');
+    expect(playerRow(0)).toHaveTextContent('No deck yet');
+    // The deck is keyed by position, so it only stays with Alice if the move re-keys it.
+    expect(playerRow(1)).toHaveTextContent('Alice');
+    expect(playerRow(1)).toHaveTextContent('2 cards + 1 sideboard');
+  });
+
+  it('submits a seatOrder matching the new order after a reorder', async () => {
+    const { csrfFetch } = renderPage();
+
+    dragPlayer(1, 0);
+
+    expect(playerRow(0)).toHaveTextContent('Bob');
+
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    // Each player still points at the draft seat they came from, which is what carries their
+    // deck across on the server.
+    expect(savedPayload(csrfFetch)).toMatchObject({
+      players: [{ name: 'Bob' }, { name: 'Alice' }],
+      seatOrder: [1, 0],
+    });
+  });
+
+  // The endpoint refuses a reorder on a played draft for the same reason it refuses an add or
+  // a remove, so the handle must not be offered there at all.
+  it('renders no drag handle when seats are not editable', () => {
+    const { unmount } = renderPage();
+    expect(screen.getAllByLabelText(/ to reorder$/)).toHaveLength(2);
+    unmount();
+
+    renderPage({ draft: playedDraft() });
+
+    expect(screen.queryAllByLabelText(/ to reorder$/)).toHaveLength(0);
+    expect(screen.queryAllByTestId('transcribe-player-row')).toHaveLength(2);
+  });
+
+  // The page re-bases seatOrder to identity when a save lands, which is only sound if no new
+  // permutation can be created while the request is open. A drop is one more way to make one.
+  it('ignores a drag end while a save is in flight', async () => {
+    const { csrfFetch, release } = makeDeferredCsrfFetch();
+    renderPage({ csrfFetch });
+
+    fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    dragPlayer(0, 1);
+
+    expect(playerRow(0)).toHaveTextContent('Alice');
+    expect(playerRow(1)).toHaveTextContent('Bob');
+
+    await release();
+    await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
+
+    // ...and the same drop goes through once the save has landed.
+    dragPlayer(0, 1);
+
+    expect(playerRow(0)).toHaveTextContent('Bob');
+    expect(playerRow(1)).toHaveTextContent('Alice');
+  });
+
+  // The expansion is a position, and a reorder moves players under it. Leaving it where it
+  // was would hand one player's half-typed name and paste to whoever landed in their place.
+  it('keeps the expansion on the same player after a reorder', () => {
+    renderPage();
+
+    // Alice's row opens on load as the first player still missing a deck.
+    expect(within(playerRow(0)).getByLabelText('Player name')).toHaveValue('Alice');
+    fireEvent.change(pasteBox(0), { target: { value: "Alice's deck" } });
+
+    dragPlayer(0, 1);
+
+    expect(screen.getAllByLabelText('Player name')).toHaveLength(1);
+    expect(within(playerRow(1)).getByLabelText('Player name')).toHaveValue('Alice');
+    expect(pasteBox(1)).toHaveValue("Alice's deck");
+  });
+
+  // The row body holds the name input and the paste box. Were the row itself the drag target,
+  // a drag begun in either would start a sort instead of selecting text.
+  it('does not put drag listeners on the name input', () => {
+    renderPage();
+
+    const row = playerRow(0);
+    expect(dragSurfaces(0)).toHaveLength(1);
+
+    const handle = dragSurfaces(0)[0];
+    expect(handle).toBe(within(row).getByLabelText('Drag Alice to reorder'));
+    expect(handle.contains(within(row).getByLabelText('Player name'))).toBe(false);
+    expect(handle.contains(pasteBox(0))).toBe(false);
+    // Neither the row nor the wrapper dnd-kit positions is a drag surface in its own right.
+    expect(row).not.toHaveAttribute('data-drag-listeners');
+    expect(row.parentElement).not.toHaveAttribute('data-drag-listeners');
   });
 
   it('renames a player from their row body, committing on blur', async () => {
