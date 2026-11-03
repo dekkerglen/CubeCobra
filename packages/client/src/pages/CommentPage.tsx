@@ -79,7 +79,7 @@ const CommentPage: React.FC<CommentPageProps> = ({ comment }) => {
           </Link>
         </CardHeader>
         <Comment comment={content} index={0} noReplies editComment={editComment} />
-        <CommentsSection parentType="comment" parent={content.id} collapse={false} />
+        <CommentsSection parentType="comment" parent={content.id} />
       </Card>
     </MainLayout>
   );

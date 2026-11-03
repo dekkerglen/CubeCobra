@@ -1,7 +1,6 @@
 import { useCallback, useContext, useEffect, useState } from 'react';
 
 import Comment from '@utils/datatypes/Comment';
-import { wait } from '@utils/Util';
 
 import { findUserLinks } from 'markdown/parser';
 
@@ -34,6 +33,7 @@ const parseJsonSafe = async <T>(response: Response): Promise<T | null> => {
 const useComments = (
   parent: string,
   type: string,
+  options?: { enabled?: boolean },
 ): [
   Comment[],
   (comment: string) => Promise<void>,
@@ -42,6 +42,7 @@ const useComments = (
   string | null,
   () => Promise<void>,
 ] => {
+  const enabled = options?.enabled ?? true;
   const { csrfFetch } = useContext(CSRFContext);
   const [comments, setComments] = useState<Comment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -73,10 +74,12 @@ const useComments = (
 
       const val = await parseJsonSafe<{ comment: Comment }>(response);
       if (val?.comment) {
-        setComments([val.comment, ...comments]);
+        // Functional update: a reply can be posted before the thread's own fetch has run, so
+        // the captured `comments` may be an empty list that is about to be filled.
+        setComments((prev) => [val.comment, ...prev]);
       }
     },
-    [comments, parent, type, csrfFetch],
+    [parent, type, csrfFetch],
   );
 
   const editComment = useCallback(
@@ -124,6 +127,10 @@ const useComments = (
   );
 
   useEffect(() => {
+    if (!enabled) {
+      return;
+    }
+
     const getData = async () => {
       const response = await csrfFetch(`/comment/getcomments`, {
         method: 'POST',
@@ -136,19 +143,24 @@ const useComments = (
       });
       const result = await parseJsonSafe<CommentResponse>(response);
       if (result) {
-        setComments(result.comments);
+        // Merge rather than replace. Replying to a collapsed thread posts the reply and
+        // enables this fetch at the same time, and the replies index is eventually
+        // consistent, so this response may not contain the reply just written. Overwriting
+        // would discard it; the id check keeps it from appearing twice when it is present.
+        setComments((prev) => {
+          const incoming = new Set(result.comments.map((item) => item.id));
+          return [...prev.filter((item) => !incoming.has(item.id)), ...result.comments];
+        });
         setLastKey(result.lastKey);
       }
       setLoading(false);
     };
 
     getData();
-  }, [parent, csrfFetch]);
+  }, [parent, csrfFetch, enabled]);
 
   const getMore = useCallback(async () => {
     setLoading(true);
-    // intentionally wait to avoid too many DB queries
-    await wait(2000);
 
     const response = await csrfFetch(`/comment/getcomments`, {
       method: 'POST',

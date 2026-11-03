@@ -63,7 +63,7 @@ const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players })
           />
           {user && (
             <div className="border-t border-border">
-              <CommentsSection parentType="record" parent={record.id} collapse={false} />
+              <CommentsSection parentType="record" parent={record.id} />
             </div>
           )}
         </Card>

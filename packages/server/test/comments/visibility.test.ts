@@ -22,7 +22,12 @@ jest.mock('serverutils/util', () => ({
 }));
 
 jest.mock('../../src/dynamo/daos', () => ({
-  commentDao: { getById: jest.fn(), queryByParent: jest.fn(), createComment: jest.fn() },
+  commentDao: {
+    getById: jest.fn(),
+    queryByParent: jest.fn(),
+    createComment: jest.fn(),
+    countRepliesByParent: jest.fn(),
+  },
   cubeDao: { getById: jest.fn() },
   blogDao: { getById: jest.fn() },
   draftDao: { getById: jest.fn() },
@@ -42,6 +47,7 @@ const publicCube = createCube({ id: 'public-cube', owner, visibility: CUBE_VISIB
 
 beforeEach(() => {
   jest.clearAllMocks();
+  (commentDao.countRepliesByParent as jest.Mock).mockResolvedValue(0);
   (cubeDao.getById as jest.Mock).mockImplementation(async (id: string) =>
     [privateCube, publicCube].find((cube) => cube.id === id),
   );

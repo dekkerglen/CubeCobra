@@ -44,7 +44,7 @@ const Video: React.FC<VideoProps> = ({ video }) => {
         <Markdown markdown={video.body} />
       </CardBody>
       <div className="border-t">
-        <CommentsSection parentType="video" parent={video.id} collapse={false} />
+        <CommentsSection parentType="video" parent={video.id} />
       </div>
     </>
   );

@@ -16,7 +16,19 @@ type Comment = Omit<UnhydratedComment, 'id' | 'owner'> & {
   id: string;
   owner?: User;
   image?: CubeImage;
+  /**
+   * Number of direct replies, capped at REPLY_COUNT_CAP. Supplied by the comments endpoint for
+   * display; it is not stored on the record, so anything that writes a comment omits it.
+   */
+  replyCount?: number;
 };
+
+/**
+ * Upper bound on the reply count returned with a comment. The UI only distinguishes none, an
+ * exact number up to ten, and "more than ten" — so the count query stops here rather than
+ * scanning a whole reply partition to produce a number nothing displays.
+ */
+export const REPLY_COUNT_CAP = 11;
 
 const allCommentTypes = [
   'comment',

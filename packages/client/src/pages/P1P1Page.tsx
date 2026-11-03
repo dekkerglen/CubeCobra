@@ -133,7 +133,7 @@ const P1P1Page: React.FC<P1P1PageProps> = ({ packId, cube }) => {
             {currentVotes?.userVote !== undefined && <P1P1Results pack={pack} votes={currentVotes} />}
 
             <div className="border-t border-border">
-              <CommentsSection parentType="p1p1" parent={pack.id} collapse={false} />
+              <CommentsSection parentType="p1p1" parent={pack.id} />
             </div>
           </Card>
         </Flexbox>

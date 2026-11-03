@@ -312,7 +312,7 @@ const DeckCard: React.FC<DeckCardProps> = ({ seat, draft, view = 'draft', seatIn
       </CardBody>
       {!hideComments && (
         <div className="border-top">
-          <CommentsSection parentType="deck" parent={draft.id} collapse={false} />
+          <CommentsSection parentType="deck" parent={draft.id} />
         </div>
       )}
     </Card>

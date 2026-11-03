@@ -67,7 +67,7 @@ const PodcastEpisodePage: React.FC<PodcastEpisodePageProps> = ({ episode }) => {
           </Col>
         </Row>
         <div className="border-top">
-          <CommentsSection parentType="episode" parent={episode.id} collapse={false} />
+          <CommentsSection parentType="episode" parent={episode.id} />
         </div>
       </Card>
     </MainLayout>

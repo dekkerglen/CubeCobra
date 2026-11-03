@@ -207,6 +207,22 @@ export const reportHandler = async (req: Request, res: Response) => {
     return handleRouteError(req, res, err as Error, '/404');
   }
 };
+/**
+ * Attaches each comment's reply count, so the client can render "View Replies (N)" without
+ * fetching every comment's replies up front just to count them. The counts are bounded and
+ * independent, so they go out together.
+ *
+ * A failed count yields no count for that comment rather than failing the request. Counting
+ * N comments in one `Promise.all` would otherwise let a single throttled query take down a
+ * thread that loaded perfectly well before this endpoint counted anything.
+ */
+const withReplyCounts = async (comments: Comment[]): Promise<Comment[]> => {
+  const counts = await Promise.all(
+    comments.map((comment) => commentDao.countRepliesByParent(comment.id).catch(() => undefined)),
+  );
+
+  return comments.map((comment, index) => ({ ...comment, replyCount: counts[index] }));
+};
 
 export const getCommentsHandler = async (req: Request, res: Response) => {
   try {
@@ -223,7 +239,7 @@ export const getCommentsHandler = async (req: Request, res: Response) => {
 
     return res.status(200).send({
       success: 'true',
-      comments: comments.items.filter((comment) => allowed.get(comment.type)),
+      comments: await withReplyCounts(comments.items.filter((comment) => allowed.get(comment.type))),
       lastKey: comments.lastKey,
     });
   } catch (err) {
