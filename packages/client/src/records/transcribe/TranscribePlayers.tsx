@@ -187,9 +187,11 @@ const RECORD_FIELDS: { label: string; key: keyof WinLossDraw }[] = [
   { label: 'Draws', key: 'draws' },
 ];
 
-// Clamped here as well as with min=0: a number input still reports a typed "-1", which the
-// endpoint answers with a raw 400.
-const toCount = (raw: string): number => Math.max(0, Number(raw) || 0);
+// A non-negative integer, which is the whole of what the endpoint accepts
+// (`Joi.number().integer().min(0)`). The input's min=0 is advisory: a number input still
+// reports a typed or pasted "-1" or "1.5" through onChange, and either answers with a raw
+// 400 that rejects the entire transcription, not just the offending cell.
+const toCount = (raw: string): number => Math.max(0, Math.floor(Number(raw) || 0));
 
 interface PlayerRecordProps {
   player: Player;

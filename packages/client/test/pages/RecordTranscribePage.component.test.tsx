@@ -854,6 +854,25 @@ describe('RecordTranscribePage', () => {
     expect(savedPayload(csrfFetch).overrides).toEqual({ Alice: { wins: 0, losses: 2, draws: 0 } });
   });
 
+  // The same schema is `integer()` as well as `min(0)`, and the input's step does not hold
+  // back React's onChange either, so a typed or pasted "1.5" would cost the same raw 400 —
+  // the whole transcribed event, not the one cell. 1.5 rather than, say, 2.5 so that a floor
+  // is told apart from a round.
+  it('floors a decimal entry', async () => {
+    const { csrfFetch } = renderPage();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
+    fireEvent.change(recordCell(0, 'Wins'), { target: { value: '1.5' } });
+
+    expect(recordCell(0, 'Wins')).toHaveValue(1);
+
+    fireEvent.change(recordCell(0, 'Draws'), { target: { value: '0.5' } });
+    fireEvent.click(saveButton());
+
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+    expect(savedPayload(csrfFetch).overrides).toEqual({ Alice: { wins: 1, losses: 0, draws: 0 } });
+  });
+
   // Someone copying a standings sheet works straight down the list, so the cells have to be
   // reachable one row after another rather than behind sixteen expansions.
   it("tabs from one player's wins cell to the next without expanding a row", () => {
