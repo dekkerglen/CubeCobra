@@ -48,7 +48,7 @@ const UploadBulkButton = withModal(Button, UploadBulkModal);
 const UploadBulkReplaceButton = withModal(Button, UploadBulkReplaceModal);
 const AddPackageButton = withModal(Button, AddPackageModal);
 
-const CLEANUP_ITEM_CLASSES =
+const DROPDOWN_ITEM_CLASSES =
   '!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium disabled:opacity-50 disabled:cursor-not-allowed';
 
 interface BoardOption {
@@ -89,7 +89,7 @@ const CleanupDropdown: React.FC<CleanupDropdownProps> = ({
       <Flexbox direction="col" gap="2" className="p-3">
         <button
           type="button"
-          className={CLEANUP_ITEM_CLASSES}
+          className={DROPDOWN_ITEM_CLASSES}
           disabled={duplicateRemovals.length === 0}
           onClick={() => onCleanup(duplicateRemovals, 'cube_cleanup_duplicates')}
         >
@@ -107,7 +107,7 @@ const CleanupDropdown: React.FC<CleanupDropdownProps> = ({
                 <button
                   key={board.value}
                   type="button"
-                  className={CLEANUP_ITEM_CLASSES}
+                  className={DROPDOWN_ITEM_CLASSES}
                   disabled={removals.length === 0}
                   onClick={() => onCleanup(removals, 'cube_cleanup_overlap', board.value)}
                 >
@@ -348,35 +348,24 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
               align="right"
             >
               <Flexbox direction="col" gap="2" className="p-3">
-                <PasteBulkButton
-                  modalprops={{ cubeID: cube.id, boardOptions }}
-                  className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
-                >
+                <PasteBulkButton modalprops={{ cubeID: cube.id, boardOptions }} className={DROPDOWN_ITEM_CLASSES}>
                   Paste Text
                 </PasteBulkButton>
-                <UploadBulkButton
-                  modalprops={{ cubeID: cube.id, boardOptions }}
-                  className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
-                >
+                <UploadBulkButton modalprops={{ cubeID: cube.id, boardOptions }} className={DROPDOWN_ITEM_CLASSES}>
                   Upload File
                 </UploadBulkButton>
-                <UploadBulkReplaceButton
-                  modalprops={{ cubeID: cube.id }}
-                  className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
-                >
+                <UploadBulkReplaceButton modalprops={{ cubeID: cube.id }} className={DROPDOWN_ITEM_CLASSES}>
                   Replace with CSV Upload
                 </UploadBulkReplaceButton>
               </Flexbox>
             </Dropdown>
-            {boardOptions.length > 0 && (
-              <CleanupDropdown
-                boardOptions={boardOptions}
-                boardToEdit={boardToEdit}
-                duplicateRemovals={duplicateRemovals}
-                overlapRemovals={overlapRemovals}
-                onCleanup={handleCleanup}
-              />
-            )}
+            <CleanupDropdown
+              boardOptions={boardOptions}
+              boardToEdit={boardToEdit}
+              duplicateRemovals={duplicateRemovals}
+              overlapRemovals={overlapRemovals}
+              onCleanup={handleCleanup}
+            />
             <AddPackageButton color="secondary" block modalprops={{ boardToEdit }}>
               Add Package
             </AddPackageButton>
@@ -644,35 +633,24 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
                 align="right"
               >
                 <Flexbox direction="col" gap="2" className="p-3">
-                  <PasteBulkButton
-                    modalprops={{ cubeID: cube.id, boardOptions }}
-                    className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
-                  >
+                  <PasteBulkButton modalprops={{ cubeID: cube.id, boardOptions }} className={DROPDOWN_ITEM_CLASSES}>
                     Paste Text
                   </PasteBulkButton>
-                  <UploadBulkButton
-                    modalprops={{ cubeID: cube.id, boardOptions }}
-                    className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
-                  >
+                  <UploadBulkButton modalprops={{ cubeID: cube.id, boardOptions }} className={DROPDOWN_ITEM_CLASSES}>
                     Upload File
                   </UploadBulkButton>
-                  <UploadBulkReplaceButton
-                    modalprops={{ cubeID: cube.id }}
-                    className="!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium"
-                  >
+                  <UploadBulkReplaceButton modalprops={{ cubeID: cube.id }} className={DROPDOWN_ITEM_CLASSES}>
                     Replace with CSV Upload
                   </UploadBulkReplaceButton>
                 </Flexbox>
               </Dropdown>
-              {boardOptions.length > 0 && (
-                <CleanupDropdown
-                  boardOptions={boardOptions}
-                  boardToEdit={boardToEdit}
-                  duplicateRemovals={duplicateRemovals}
-                  overlapRemovals={overlapRemovals}
-                  onCleanup={handleCleanup}
-                />
-              )}
+              <CleanupDropdown
+                boardOptions={boardOptions}
+                boardToEdit={boardToEdit}
+                duplicateRemovals={duplicateRemovals}
+                overlapRemovals={overlapRemovals}
+                onCleanup={handleCleanup}
+              />
               <AddPackageButton color="secondary" block modalprops={{ boardToEdit }}>
                 Add Package
               </AddPackageButton>
