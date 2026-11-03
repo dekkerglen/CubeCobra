@@ -32,16 +32,18 @@ const makeCard = (index: number, board: string, oracleId: string): Card =>
 const renderSidebar = ({
   isHorizontal = false,
   changedCards,
+  unfilteredChangedCards = changedCards,
   bulkRemoveCard = jest.fn(),
 }: {
   isHorizontal?: boolean;
   changedCards: Record<string, Card[]>;
+  unfilteredChangedCards?: Record<string, Card[]>;
   bulkRemoveCard?: jest.Mock;
 }) => {
   const cubeValue = {
     cube: {
       id: CUBE_ID,
-      cards: changedCards,
+      cards: unfilteredChangedCards,
       defaultPrinting: 'recent',
       defaultStatus: 'Not Owned',
       boards: [
@@ -51,7 +53,7 @@ const renderSidebar = ({
     },
     changes: { version: 0 },
     changedCards,
-    unfilteredChangedCards: changedCards,
+    unfilteredChangedCards,
     addCard: jest.fn(),
     removeCard: jest.fn(),
     swapCard: jest.fn(),
@@ -82,17 +84,33 @@ describe('CubeListEditSidebar cleanup dropdown', () => {
     jest.clearAllMocks();
   });
 
+  // What the active filter leaves on screen: two copies of "dup", plus one card that also
+  // sits on the maybeboard.
   const changedCards = {
-    // Two copies of "dup", plus one card that also sits on the maybeboard.
     mainboard: [makeCard(0, 'mainboard', 'dup'), makeCard(1, 'mainboard', 'dup'), makeCard(2, 'mainboard', 'shared')],
     maybeboard: [makeCard(0, 'maybeboard', 'shared')],
+  };
+
+  /*
+   * A strict superset of the above: the filter hides a third "dup" and a second "shared" on the
+   * mainboard, and a "dup" on the maybeboard. Cleanup must see none of them — on the target board
+   * or the reference board — so every count below changes if a memo reads this list instead.
+   */
+  const unfilteredChangedCards = {
+    mainboard: [
+      ...changedCards.mainboard,
+      makeCard(3, 'mainboard', 'dup'),
+      makeCard(4, 'mainboard', 'shared'),
+      makeCard(5, 'mainboard', 'hidden-only'),
+    ],
+    maybeboard: [...changedCards.maybeboard, makeCard(1, 'maybeboard', 'dup')],
   };
 
   it.each([
     ['vertical', false],
     ['horizontal', true],
   ])('renders the cleanup dropdown in the %s layout', (_name, isHorizontal) => {
-    renderSidebar({ isHorizontal, changedCards });
+    renderSidebar({ isHorizontal, changedCards, unfilteredChangedCards });
 
     fireEvent.click(screen.getByText('Cleanup'));
 
@@ -101,8 +119,30 @@ describe('CubeListEditSidebar cleanup dropdown', () => {
     expect(screen.getByText('Maybeboard (1)')).toBeInTheDocument();
   });
 
+  /*
+   * Cleanup is filter-scoped on both the target and the reference board: it must read
+   * changedCards, never unfilteredChangedCards. Pointing any of the three cleanup memos at the
+   * unfiltered list changes a count here — duplicates would read 2, the maybeboard item 3 if the
+   * reference board went unfiltered, or 2 if the target board did.
+   */
+  it('counts and stages only cards the active filter leaves visible, on both boards', () => {
+    const bulkRemoveCard = jest.fn();
+    renderSidebar({ changedCards, unfilteredChangedCards, bulkRemoveCard });
+
+    fireEvent.click(screen.getByText('Cleanup'));
+
+    expect(screen.getByText('Remove Duplicates (1)')).toBeInTheDocument();
+    expect(screen.getByText('Maybeboard (1)')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('Remove Duplicates (1)'));
+    expect(bulkRemoveCard.mock.calls[0][0]).toEqual([{ index: 1, board: 'mainboard' }]);
+
+    fireEvent.click(screen.getByText('Maybeboard (1)'));
+    expect(bulkRemoveCard.mock.calls[1][0]).toEqual([{ index: 2, board: 'mainboard' }]);
+  });
+
   it('omits the board being edited from the "also in" list', () => {
-    renderSidebar({ changedCards });
+    renderSidebar({ changedCards, unfilteredChangedCards });
 
     fireEvent.click(screen.getByText('Cleanup'));
 
@@ -111,7 +151,7 @@ describe('CubeListEditSidebar cleanup dropdown', () => {
 
   it('stages exactly the removals the duplicates count advertises', () => {
     const bulkRemoveCard = jest.fn();
-    renderSidebar({ changedCards, bulkRemoveCard });
+    renderSidebar({ changedCards, unfilteredChangedCards, bulkRemoveCard });
 
     fireEvent.click(screen.getByText('Cleanup'));
     fireEvent.click(screen.getByText('Remove Duplicates (1)'));
@@ -123,7 +163,7 @@ describe('CubeListEditSidebar cleanup dropdown', () => {
 
   it('stages exactly the removals the overlap count advertises', () => {
     const bulkRemoveCard = jest.fn();
-    renderSidebar({ changedCards, bulkRemoveCard });
+    renderSidebar({ changedCards, unfilteredChangedCards, bulkRemoveCard });
 
     fireEvent.click(screen.getByText('Cleanup'));
     fireEvent.click(screen.getByText('Maybeboard (1)'));
@@ -137,7 +177,7 @@ describe('CubeListEditSidebar cleanup dropdown', () => {
     });
   });
 
-  it('disables items with nothing to remove and never tracks an event for them', () => {
+  it('disables items with nothing to remove, and opening the menu alone stages nothing', () => {
     const bulkRemoveCard = jest.fn();
     renderSidebar({
       changedCards: { mainboard: [makeCard(0, 'mainboard', 'solo')], maybeboard: [] },
@@ -150,9 +190,6 @@ describe('CubeListEditSidebar cleanup dropdown', () => {
     const overlap = screen.getByText('Maybeboard (0)');
     expect(duplicates).toBeDisabled();
     expect(overlap).toBeDisabled();
-
-    fireEvent.click(duplicates);
-    fireEvent.click(overlap);
     expect(bulkRemoveCard).not.toHaveBeenCalled();
     expect(mockTrackEvent).not.toHaveBeenCalled();
   });
