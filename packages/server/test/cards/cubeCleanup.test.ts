@@ -1,4 +1,10 @@
-import { cleanupOracleKey, findDuplicateRemovals, findOverlapRemovals, makeSwapPredicate } from '@utils/cubeCleanup';
+import {
+  cleanupOracleKey,
+  findDuplicateRemovals,
+  findOverlapRemovals,
+  makeSwapPredicate,
+  stampQuantities,
+} from '@utils/cubeCleanup';
 import Card, { Changes, CubeCardSwap } from '@utils/datatypes/Card';
 
 import { createCard, createCardDetails, createCardWithoutDetails } from '../test-utils/data';
@@ -465,5 +471,163 @@ describe('makeSwapPredicate', () => {
     const isSwapped = makeSwapPredicate({ mainboard: { swaps: [swapOf(1, 'abc')] } });
 
     expect(findDuplicateRemovals(cards, isSwapped)).toEqual([]);
+  });
+});
+
+describe('stampQuantities', () => {
+  it('stamps 1 for every card on a board with no duplicates', () => {
+    const cards = [
+      createCard({ index: 0, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+      createCard({ index: 1, board: 'mainboard', details: createCardDetails({ oracle_id: 'def' }) }),
+    ];
+
+    stampQuantities(cards);
+
+    expect(cards.map((card) => card.quantity)).toEqual([1, 1]);
+  });
+
+  it('stamps 2 on both of two differently-named printings sharing an oracle id', () => {
+    const cards = [
+      createCard({
+        index: 0,
+        board: 'mainboard',
+        details: createCardDetails({ oracle_id: 'abc', name: 'Lightning Bolt' }),
+      }),
+      createCard({
+        index: 1,
+        board: 'mainboard',
+        details: createCardDetails({ oracle_id: 'abc', name: 'Fulgurazo' }),
+      }),
+    ];
+
+    stampQuantities(cards);
+
+    expect(cards.map((card) => card.quantity)).toEqual([2, 2]);
+  });
+
+  it('stamps 1 on two same-named cards with different oracle ids', () => {
+    const cards = [
+      createCard({
+        index: 0,
+        board: 'mainboard',
+        details: createCardDetails({ oracle_id: 'abc', name: 'Rampant Growth' }),
+      }),
+      createCard({
+        index: 1,
+        board: 'mainboard',
+        details: createCardDetails({ oracle_id: 'def', name: 'Rampant Growth' }),
+      }),
+    ];
+
+    stampQuantities(cards);
+
+    expect(cards.map((card) => card.quantity)).toEqual([1, 1]);
+  });
+
+  it('counts custom cards by name, stamping 2 on two custom cards sharing a custom_name', () => {
+    const cards = [
+      createCard({
+        index: 0,
+        board: 'mainboard',
+        cardID: 'custom-card',
+        custom_name: 'Seeded Custom Cobra',
+        details: createCardDetails({ oracle_id: 'abc' }),
+      }),
+      createCard({
+        index: 1,
+        board: 'mainboard',
+        cardID: 'custom-card',
+        custom_name: 'Seeded Custom Cobra',
+        details: createCardDetails({ oracle_id: 'def' }),
+      }),
+    ];
+
+    stampQuantities(cards);
+
+    expect(cards.map((card) => card.quantity)).toEqual([2, 2]);
+    // The deliberate divergence: quantity reports the pair, cleanup abstains on it.
+    expect(findDuplicateRemovals(cards)).toEqual([]);
+  });
+
+  it('stamps 1 on two custom cards with different custom_names despite the shared cardID', () => {
+    const cards = [
+      createCard({
+        index: 0,
+        board: 'mainboard',
+        cardID: 'custom-card',
+        custom_name: 'Seeded Custom Cobra',
+        details: createCardDetails({ oracle_id: 'abc' }),
+      }),
+      createCard({
+        index: 1,
+        board: 'mainboard',
+        cardID: 'custom-card',
+        custom_name: 'Seeded Typeless Custom',
+        details: createCardDetails({ oracle_id: 'abc' }),
+      }),
+    ];
+
+    stampQuantities(cards);
+
+    expect(cards.map((card) => card.quantity)).toEqual([1, 1]);
+  });
+
+  it('never collides a name key with a card whose oracle id is that name', () => {
+    const cards = [
+      createCard({
+        index: 0,
+        board: 'mainboard',
+        cardID: 'voucher',
+        custom_name: 'Seeded Voucher',
+        details: createCardDetails({ oracle_id: 'abc' }),
+      }),
+      createCard({
+        index: 1,
+        board: 'mainboard',
+        details: createCardDetails({ oracle_id: 'Seeded Voucher', name: 'Seeded Voucher' }),
+      }),
+    ];
+
+    stampQuantities(cards);
+
+    expect(cards.map((card) => card.quantity)).toEqual([1, 1]);
+  });
+
+  it('excludes cards marked for delete from the count, stamping 1 on the survivor of a removed pair', () => {
+    const cards = [
+      createCard({ index: 0, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+      createCard({
+        index: 1,
+        board: 'mainboard',
+        markedForDelete: true,
+        details: createCardDetails({ oracle_id: 'abc' }),
+      }),
+    ];
+
+    stampQuantities(cards);
+
+    expect(cards.map((card) => card.quantity)).toEqual([1, 1]);
+  });
+
+  it('stamps 1 on a card that is itself marked for delete', () => {
+    const cards = [
+      createCard({
+        index: 0,
+        board: 'mainboard',
+        markedForDelete: true,
+        details: createCardDetails({ oracle_id: 'abc' }),
+      }),
+      createCard({
+        index: 1,
+        board: 'mainboard',
+        markedForDelete: true,
+        details: createCardDetails({ oracle_id: 'abc' }),
+      }),
+      createCard({ index: 2, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+    ];
+
+    stampQuantities(cards);
+
+    expect(cards.map((card) => card.quantity)).toEqual([1, 1, 1]);
   });
 });
