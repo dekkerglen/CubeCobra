@@ -165,9 +165,9 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
     [],
   );
 
-  // Unused until the record cells land on the player row: the final-records editor that used
-  // to call this went out with the rounds-only reduction, and the row that replaces it is the
-  // next task. Kept here because the override lives in this page's state either way.
+  // The override lives in this page's state, so the player rows are handed the setter rather
+  // than owning it: a rename re-keys it through applyPlayerEdit, and Save submits it whether
+  // or not the mode that edits it is the one on screen.
   const setOverride = useCallback(
     (playerName: string, value: WinLossDraw | undefined) =>
       updateState((previous) => ({ ...previous, overrides: { ...previous.overrides, [playerName]: value } })),
@@ -322,6 +322,9 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                   decks={state.decks}
                   setDeckBoard={setDeckBoard}
                   setTrophy={(trophy) => updateState((previous) => ({ ...previous, trophy }))}
+                  resultsMode={resultsMode}
+                  overrides={state.overrides}
+                  setOverride={setOverride}
                   seatsEditable={seatsEditable}
                   editsDisabled={saving}
                   onApplyPlayers={applyPlayers}

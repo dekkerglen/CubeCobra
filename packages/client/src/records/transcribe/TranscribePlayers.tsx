@@ -3,7 +3,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { CardDetails } from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
-import Record, { formatRecord, PlayerList, playerRecord } from '@utils/datatypes/Record';
+import Record, { formatRecord, PlayerList, playerRecord, WinLossDraw } from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
 
 import { UncontrolledAlertProps } from 'components/base/Alert';
@@ -19,6 +19,7 @@ import { CSRFContext } from 'contexts/CSRFContext';
 import UploadDeck from '../UploadDeck';
 import UploadDeckFromPhoto from '../UploadDeckFromPhoto';
 import { DeckBoard, TranscribeDeck, TranscribePaste } from './transcribeState';
+import { ResultsMode } from './TranscribeRounds';
 
 type Player = PlayerList[number];
 
@@ -32,6 +33,14 @@ interface TranscribePlayersProps {
   decks: { [playerIndex: number]: TranscribeDeck };
   setDeckBoard: (playerIndex: number, board: DeckBoard, update: React.SetStateAction<CardDetails[]>) => void;
   setTrophy: (trophy: string[]) => void;
+  // Which kind of record is being written down. In records mode every row's record is three
+  // editable cells; in pairings mode a row reads its derived record until the cells are
+  // asked for. Both modes write to the same overrides map.
+  resultsMode: ResultsMode;
+  // The manual per-player record, keyed by player name. A name maps to undefined once its
+  // override has been cleared, which is why this is read from here rather than off `record`.
+  overrides: { [playerName: string]: WinLossDraw | undefined };
+  setOverride: (playerName: string, value: WinLossDraw | undefined) => void;
   // False when the record is backed by a played draft: the draft's seats are positionally
   // tied to the player list, so adding, removing and shuffling are not offered at all.
   // Renaming still is — it is the one player edit such a record accepts.
@@ -172,6 +181,93 @@ const PlayerNameField: React.FC<PlayerNameFieldProps> = ({ id, player, duplicate
   );
 };
 
+const RECORD_FIELDS: { label: string; key: keyof WinLossDraw }[] = [
+  { label: 'Wins', key: 'wins' },
+  { label: 'Losses', key: 'losses' },
+  { label: 'Draws', key: 'draws' },
+];
+
+// Clamped here as well as with min=0: a number input still reports a typed "-1", which the
+// endpoint answers with a raw 400.
+const toCount = (raw: string): number => Math.max(0, Number(raw) || 0);
+
+interface PlayerRecordProps {
+  player: Player;
+  // What this player's pairings add up to, ignoring any override — the reading the override
+  // is displacing, and what the cells are seeded with.
+  derived: WinLossDraw;
+  override: WinLossDraw | undefined;
+  // Whether the record carries any pairings at all. With none there is no second reading to
+  // disclose, so a row carrying an override has nothing to show alongside it.
+  hasPairings: boolean;
+  // Cells in records mode, which is nothing but cells; in pairings mode only once this row's
+  // edit control has been used, or when an override is already what gets displayed.
+  cellsShown: boolean;
+  onReveal: () => void;
+  setOverride: (value: WinLossDraw | undefined) => void;
+}
+
+// A player's record as it sits on their collapsed row. The override is written when a cell
+// changes and not before: playerRecord prefers any present override, so a 0-0-0 created by
+// merely showing the cells would silently replace what the pairings say.
+const PlayerRecord: React.FC<PlayerRecordProps> = ({
+  player,
+  derived,
+  override,
+  hasPairings,
+  cellsShown,
+  onReveal,
+  setOverride,
+}) => {
+  if (!cellsShown) {
+    return (
+      <Flexbox direction="row" alignItems="center" gap="2">
+        <Text sm className="text-text-secondary">
+          {formatRecord(derived)}
+        </Text>
+        <Button color="secondary" aria-label={`Edit ${player.name}'s record`} onClick={onReveal}>
+          <span className="text-nowrap">Edit</span>
+        </Button>
+      </Flexbox>
+    );
+  }
+
+  // Revealed cells start from the reading they are replacing, so typing one number does not
+  // throw the other two away.
+  const seed = override ?? derived;
+
+  return (
+    <Flexbox direction="row" alignItems="center" gap="1" wrap="wrap">
+      {RECORD_FIELDS.map(({ label, key }) => (
+        <Input
+          key={key}
+          type="number"
+          value={`${seed[key]}`}
+          onChange={(event) => setOverride({ ...seed, [key]: toCount(event.target.value) })}
+          // Named rather than labelled: a visible label on all three would break the one-line
+          // `[W] [L] [D]` reading the row is for, and sixteen rows of them is unreadable.
+          otherInputProps={{ min: 0, 'aria-label': `${label} for ${player.name}` }}
+          wrapperClassName="w-20"
+        />
+      ))}
+      {override && (
+        <>
+          <Button color="secondary" aria-label={`Clear ${player.name}'s record`} onClick={() => setOverride(undefined)}>
+            <span className="text-nowrap">Clear</span>
+          </Button>
+          {hasPairings && (
+            // The precedence disclosure: this player's pairings say one thing and the record
+            // displays another, so both are on screen together.
+            <Text sm className="text-text-secondary text-nowrap">
+              {`From pairings: ${formatRecord(derived)}`}
+            </Text>
+          )}
+        </>
+      )}
+    </Flexbox>
+  );
+};
+
 // One collapsible row per player: the summary line is who they are, the body is everything
 // about them. Only one body is mounted at a time — the deck editor loads the cube's basics
 // on mount, and a pod of eight would do that eight times over.
@@ -183,6 +279,9 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
   decks,
   setDeckBoard,
   setTrophy,
+  resultsMode,
+  overrides,
+  setOverride,
   seatsEditable,
   editsDisabled,
   onApplyPlayers,
@@ -200,6 +299,19 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
     return firstDeckless === -1 ? 0 : firstDeckless;
   });
   const [newPlayer, setNewPlayer] = useState<string>('');
+  // Which rows have been asked to show their record cells in pairings mode. Presentation
+  // only — it never reaches TranscribeState, because revealing the cells is not an edit.
+  // Keyed by name rather than by seat so a shuffle does not hand one player's open cells to
+  // whoever lands in their seat.
+  const [revealed, setRevealed] = useState<string[]>([]);
+
+  // A record can hold both pairings and overrides at once, and the override wins. The row
+  // only has a second reading worth disclosing when there are pairings behind it.
+  const hasPairings = useMemo(() => (record.matches ?? []).some((round) => round.matches.length > 0), [record.matches]);
+
+  // playerRecord prefers any present override, so reading what a player's pairings alone say
+  // means asking it against a record carrying none.
+  const withoutOverrides = useMemo(() => ({ ...record, overrides: {} }), [record]);
 
   // The add and rename commits await an @handle lookup before they apply, so by the time they
   // do, the list their render closed over may be several edits out of date — the player being
@@ -364,18 +476,24 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
         const duplicate = players.some(
           (other, seat) => seat !== index && other.name.toLowerCase() === player.name.toLowerCase(),
         );
+        const override = overrides[player.name];
+        // An override is what the record displays, so its cells are never hidden behind an
+        // edit control: offering a derived reading the record does not use would be a lie.
+        const cellsShown = resultsMode === 'records' || !!override || revealed.includes(player.name);
 
         return (
           <div key={index} data-testid="transcribe-player-row">
             <Card>
               <CardHeader>
-                <button
-                  type="button"
-                  className="w-full text-left"
-                  onClick={() => setExpanded(open ? -1 : index)}
-                  aria-expanded={open}
-                >
-                  <Flexbox direction="row" justify="between" alignItems="center" gap="2">
+                <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
+                  {/* Only the identity half toggles the row — the record cells sit beside it
+                      rather than inside it, so typing a number does not collapse the row. */}
+                  <button
+                    type="button"
+                    className="min-w-0 grow text-left"
+                    onClick={() => setExpanded(open ? -1 : index)}
+                    aria-expanded={open}
+                  >
                     <Flexbox direction="row" alignItems="center" gap="2" className="min-w-0">
                       {linked?.image?.uri ? (
                         <img src={linked.image.uri} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
@@ -391,13 +509,22 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
                         {player.name}
                       </Text>
                     </Flexbox>
+                  </button>
+                  <Flexbox direction="row" alignItems="center" gap="2" wrap="wrap">
+                    <PlayerRecord
+                      player={player}
+                      derived={playerRecord(withoutOverrides, player.name)}
+                      override={override}
+                      hasPairings={hasPairings}
+                      cellsShown={cellsShown}
+                      onReveal={() => setRevealed((previous) => [...previous, player.name])}
+                      setOverride={(value) => setOverride(player.name, value)}
+                    />
                     <Text sm className="text-text-secondary shrink-0">
-                      {`${formatRecord(playerRecord(record, player.name))} • ${summarize(deck)}${
-                        deck?.dirty ? ' • unsaved' : ''
-                      }`}
+                      {`${summarize(deck)}${deck?.dirty ? ' • unsaved' : ''}`}
                     </Text>
                   </Flexbox>
-                </button>
+                </Flexbox>
               </CardHeader>
               {open && (
                 <CardBody>
