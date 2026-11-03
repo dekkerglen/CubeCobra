@@ -378,12 +378,15 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
               either way, as are a pasted list and a scanned photo — so on a line of shared
               controls it read as governing all three. */}
           <Checkbox
-            label="Use Cards Outside of Cube"
+            label="Show Cards not in Cube"
             checked={allowCardsOutsideOfCube}
             setChecked={(value) => setAllowCardsOutsideOfCube(value)}
           />
+          {/* Adding basics and scanning a photo are not steps after typing a card name;
+              they are two more ways to fill the same deck. */}
           {basicDetails.length > 0 && (
             <>
+              <hr className="text-border my-1" />
               <Button color="accent" onClick={() => setBasicsOpen(true)}>
                 <span className="text-nowrap">Add Basic Lands</span>
               </Button>
@@ -399,7 +402,12 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
               />
             </>
           )}
-          {photoScanner}
+          {photoScanner && (
+            <>
+              <hr className="text-border my-1" />
+              {photoScanner}
+            </>
+          )}
         </Flexbox>
 
         <Flexbox direction="col" gap="2" className="md:w-1/2 min-w-0">
@@ -407,8 +415,7 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
             Paste a decklist
           </Text>
           <Text sm className="text-text-secondary">
-            One card per line, with an optional quantity like "2x Island". A "Sideboard" line sends everything below it
-            to the sideboard.
+            {`One card per line, with an optional quantity like "2x Island". Lines go to the ${targetBoard} unless the list has its own "Mainboard" or "Sideboard" line, which sends everything below it to that board instead.`}
           </Text>
           <TextArea
             value={decklistText}
@@ -430,7 +437,9 @@ Sideboard
             onClick={() => handleParseDecklist(decklistText)}
             block
           >
-            {isParsing ? 'Parsing...' : `Parse and Add to ${addToSideboard ? 'Sideboard' : 'Mainboard'}`}
+            {/* Not "Add to Mainboard": a list carrying its own section markers is split
+                across both boards, which is the Draftmancer export this exists for. */}
+            {isParsing ? 'Parsing...' : 'Parse and Add'}
           </Button>
           {parseErrors.length > 0 && (
             <Alert color="warning">

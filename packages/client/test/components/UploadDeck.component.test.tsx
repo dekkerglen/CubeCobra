@@ -85,7 +85,7 @@ const addedNames = (setCards: jest.Mock): string[] =>
 
 const paste = (text: string) => {
   fireEvent.change(screen.getByPlaceholderText(/Paste your decklist here/), { target: { value: text } });
-  fireEvent.click(screen.getByRole('button', { name: /Parse and Add to/ }));
+  fireEvent.click(screen.getByRole('button', { name: /Parse and Add/ }));
 };
 
 const textarea = () => screen.getByPlaceholderText(/Paste your decklist here/) as HTMLTextAreaElement;
@@ -100,6 +100,22 @@ describe('UploadDeck paste', () => {
     // It used to live behind a Collapse, which hides with a CSS class rather than unmounting.
     expect(textarea().closest('.max-h-0')).toBeNull();
     expect(screen.queryByRole('button', { name: /Paste Decklist/ })).not.toBeInTheDocument();
+  });
+
+  // "Parse and Add to Mainboard" was a promise the parser does not keep: a list carrying its
+  // own "Sideboard" line is split across both boards whatever the dropdown says, which is the
+  // export format the sideboard handling exists for.
+  it('does not claim the paste lands on the selected board', async () => {
+    const { setMainboardCards, setSideboardCards } = renderUploadDeck();
+
+    expect(screen.getByRole('button', { name: 'Parse and Add' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /Parse and Add to/ })).not.toBeInTheDocument();
+
+    // Selected board is the mainboard, and the marker still sends its section elsewhere.
+    paste('Lightning Bolt\nSideboard\nPyroblast');
+    await waitFor(() => expect(setSideboardCards).toHaveBeenCalled());
+    expect(addedNames(setMainboardCards)).toEqual(['Lightning Bolt']);
+    expect(addedNames(setSideboardCards)).toEqual(['Pyroblast']);
   });
 
   it('picks the board from a dropdown rather than a sideboard toggle', () => {

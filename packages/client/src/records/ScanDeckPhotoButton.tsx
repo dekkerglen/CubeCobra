@@ -49,8 +49,12 @@ const ScanDeckPhotoButton: React.FC<ScanDeckPhotoButtonProps> = ({
 
   return (
     <>
-      <Button color="accent" onClick={() => setOpen(true)}>
-        <Flexbox direction="row" alignItems="center" gap="1">
+      {/* Outlined rather than filled: it opens a separate surface instead of acting on the
+          deck in place, which is not what the two controls above it do. */}
+      <Button color="accent" outline onClick={() => setOpen(true)}>
+        {/* The button stretches to the column, and a flex child does not inherit the text
+            centring a plain string child would get from the button element. */}
+        <Flexbox direction="row" justify="center" alignItems="center" gap="1">
           <DeviceCameraIcon size={16} />
           <span className="text-nowrap">Scan deck from photo</span>
         </Flexbox>

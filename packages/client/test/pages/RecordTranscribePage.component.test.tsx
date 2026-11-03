@@ -316,7 +316,7 @@ describe('RecordTranscribePage', () => {
     expect(playerRow(1)).not.toHaveTextContent('unsaved');
 
     fireEvent.change(pasteBox(0), { target: { value: '2x Lightning Bolt\nSideboard\nPyroblast' } });
-    fireEvent.click(screen.getByRole('button', { name: /Parse and Add to Mainboard/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Parse and Add/ }));
 
     await waitFor(() => expect(deckCell(0)).toHaveTextContent('2 / 1'));
     // The marker is the deck's, so it does not spread to a player whose deck is untouched.
@@ -447,7 +447,7 @@ describe('RecordTranscribePage', () => {
     renderPage({ openRow: 0 });
 
     fireEvent.change(pasteBox(0), { target: { value: '2x Lightning Bolt\nSideboard\nPyroblast' } });
-    fireEvent.click(screen.getByRole('button', { name: /Parse and Add to Mainboard/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Parse and Add/ }));
     await waitFor(() => expect(deckCell(0)).toHaveTextContent('2 / 1'));
 
     dragPlayer(0, 1);
@@ -867,7 +867,7 @@ describe('RecordTranscribePage', () => {
     renderPage({ csrfFetch: makeCsrfFetch({ success: 'true' }, ['Notacard']), openRow: 0 });
 
     fireEvent.change(pasteBox(0), { target: { value: 'Lightning Bolt\nNotacard' } });
-    fireEvent.click(screen.getByRole('button', { name: /Parse and Add to Mainboard/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Parse and Add/ }));
 
     await waitFor(() => expect(screen.getByText('Could not find card: "Notacard"')).toBeInTheDocument());
     expect(pasteBox(0)).toHaveValue('Notacard');
@@ -902,7 +902,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.change(screen.getByPlaceholderText(/Paste your decklist here/), {
       target: { value: '2x Lightning Bolt\nSideboard\nPyroblast' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Parse and Add to Mainboard/ }));
+    fireEvent.click(screen.getByRole('button', { name: /Parse and Add/ }));
 
     await waitFor(() => expect(screen.getByText('Unsaved changes')).toBeInTheDocument());
 
@@ -1169,13 +1169,13 @@ describe('RecordTranscribePage', () => {
     // photo scanner resolve against the whole catalogue either way — so sitting on a line
     // of controls above both columns said it governed all three.
     const row = playerRow(0);
-    const toggle = within(row).getByLabelText('Use Cards Outside of Cube');
+    const toggle = within(row).getByLabelText('Show Cards not in Cube');
     const addCard = within(row).getByPlaceholderText(/Card to Add to/);
     expect(addCard.compareDocumentPosition(toggle) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
     expect(toggle.compareDocumentPosition(pasteBox(0)) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
 
     const shared = within(row).getByTestId('deck-shared-controls');
-    expect(within(shared).queryByLabelText('Use Cards Outside of Cube')).not.toBeInTheDocument();
+    expect(within(shared).queryByLabelText('Show Cards not in Cube')).not.toBeInTheDocument();
     expect(within(shared).getByLabelText('Add to')).toBeInTheDocument();
   });
 
