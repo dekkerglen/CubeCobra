@@ -2,6 +2,7 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 
 import { QuestionIcon } from '@primer/octicons-react';
 import { cardName, normalizeName } from '@utils/cardutil';
+import { CleanupCardRef, findDuplicateRemovals, findOverlapRemovals, makeSwapPredicate } from '@utils/cubeCleanup';
 import { BoardType } from '@utils/datatypes/Card';
 import { boardNameToKey, getBoardDefinitions, findViewBySlug } from '@utils/datatypes/Cube';
 
@@ -47,6 +48,80 @@ const UploadBulkButton = withModal(Button, UploadBulkModal);
 const UploadBulkReplaceButton = withModal(Button, UploadBulkReplaceModal);
 const AddPackageButton = withModal(Button, AddPackageModal);
 
+const CLEANUP_ITEM_CLASSES =
+  '!text-text hover:!text-link-active text-left bg-transparent border-0 p-0 cursor-pointer font-medium disabled:opacity-50 disabled:cursor-not-allowed';
+
+interface BoardOption {
+  value: string;
+  label: string;
+}
+
+interface CleanupDropdownProps {
+  boardOptions: BoardOption[];
+  boardToEdit: BoardType;
+  duplicateRemovals: CleanupCardRef[];
+  overlapRemovals: Record<string, CleanupCardRef[]>;
+  onCleanup: (removals: CleanupCardRef[], event: string, otherBoard?: string) => void;
+}
+
+/*
+ * Rendered in both the vertical and horizontal sidebar layouts. Every item shows the length
+ * of the exact array its click stages, so the preview and the action can never disagree.
+ */
+const CleanupDropdown: React.FC<CleanupDropdownProps> = ({
+  boardOptions,
+  boardToEdit,
+  duplicateRemovals,
+  overlapRemovals,
+  onCleanup,
+}) => {
+  const otherBoards = boardOptions.filter((board) => board.value !== boardToEdit);
+
+  return (
+    <Dropdown
+      trigger={
+        <Button color="secondary" block>
+          Cleanup
+        </Button>
+      }
+      align="right"
+    >
+      <Flexbox direction="col" gap="2" className="p-3">
+        <button
+          type="button"
+          className={CLEANUP_ITEM_CLASSES}
+          disabled={duplicateRemovals.length === 0}
+          onClick={() => onCleanup(duplicateRemovals, 'cube_cleanup_duplicates')}
+        >
+          {`Remove Duplicates (${duplicateRemovals.length})`}
+        </button>
+        {otherBoards.length > 0 && (
+          <>
+            <div className="border-t border-border" />
+            <Text sm semibold className="text-text-secondary">
+              Remove cards also in…
+            </Text>
+            {otherBoards.map((board) => {
+              const removals = overlapRemovals[board.value] ?? [];
+              return (
+                <button
+                  key={board.value}
+                  type="button"
+                  className={CLEANUP_ITEM_CLASSES}
+                  disabled={removals.length === 0}
+                  onClick={() => onCleanup(removals, 'cube_cleanup_overlap', board.value)}
+                >
+                  {`${board.label} (${removals.length})`}
+                </button>
+              );
+            })}
+          </>
+        )}
+      </Flexbox>
+    </Dropdown>
+  );
+};
+
 interface CubeListEditSidebarProps {
   isHorizontal?: boolean;
 }
@@ -65,6 +140,7 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
     addCard,
     removeCard,
     swapCard,
+    bulkRemoveCard,
     changedCards,
     unfilteredChangedCards,
     clearChanges,
@@ -93,6 +169,44 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
       label: board.name,
     }));
   }, [cube, changedCards]);
+
+  // Precomputes the swapped positions once, rather than on every card of every render.
+  const isSwapped = useMemo(() => makeSwapPredicate(changes), [changes]);
+
+  const duplicateRemovals = useMemo(
+    () => findDuplicateRemovals(changedCards[boardToEdit] ?? [], isSwapped),
+    [changedCards, boardToEdit, isSwapped],
+  );
+
+  const overlapRemovals = useMemo(() => {
+    const removalsByBoard: Record<string, CleanupCardRef[]> = {};
+
+    for (const board of boardOptions) {
+      if (board.value === boardToEdit) {
+        continue;
+      }
+
+      removalsByBoard[board.value] = findOverlapRemovals(
+        changedCards[boardToEdit] ?? [],
+        changedCards[board.value] ?? [],
+        isSwapped,
+      );
+    }
+
+    return removalsByBoard;
+  }, [boardOptions, changedCards, boardToEdit, isSwapped]);
+
+  const handleCleanup = useCallback(
+    (removals: CleanupCardRef[], event: string, otherBoard?: string) => {
+      if (removals.length === 0) {
+        return;
+      }
+
+      bulkRemoveCard(removals);
+      trackEvent(event, { count: removals.length, board: boardToEdit, ...(otherBoard ? { otherBoard } : {}) });
+    },
+    [bulkRemoveCard, boardToEdit],
+  );
 
   // Default the edit board to the first board in the active view. Tracks the
   // previously-seen view name with a ref so we only force a switch when the
@@ -253,6 +367,15 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
                 </UploadBulkReplaceButton>
               </Flexbox>
             </Dropdown>
+            {boardOptions.length > 0 && (
+              <CleanupDropdown
+                boardOptions={boardOptions}
+                boardToEdit={boardToEdit}
+                duplicateRemovals={duplicateRemovals}
+                overlapRemovals={overlapRemovals}
+                onCleanup={handleCleanup}
+              />
+            )}
             <AddPackageButton color="secondary" block modalprops={{ boardToEdit }}>
               Add Package
             </AddPackageButton>
@@ -540,6 +663,15 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
                   </UploadBulkReplaceButton>
                 </Flexbox>
               </Dropdown>
+              {boardOptions.length > 0 && (
+                <CleanupDropdown
+                  boardOptions={boardOptions}
+                  boardToEdit={boardToEdit}
+                  duplicateRemovals={duplicateRemovals}
+                  overlapRemovals={overlapRemovals}
+                  onCleanup={handleCleanup}
+                />
+              )}
               <AddPackageButton color="secondary" block modalprops={{ boardToEdit }}>
                 Add Package
               </AddPackageButton>
