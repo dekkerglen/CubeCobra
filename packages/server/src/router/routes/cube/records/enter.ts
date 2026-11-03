@@ -126,14 +126,36 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
 
     const draft = record.draft ? await draftDao.getById(record.draft) : undefined;
     const hasDeckEdits = Object.keys(submission.decks).length > 0;
-
     // A record made by "Create from Draft" points at a real played draft, carrying pick and
-    // trash orders and the pack history. Replacing its seat pools would orphan all of that.
-    if (hasDeckEdits && draft && draft.type !== DRAFT_TYPES.UPLOAD) {
-      return res.status(400).json({
-        success: 'false',
-        message: 'This record is attached to a played draft, so its decks cannot be edited here.',
-      });
+    // trash orders and the pack history, and an InitialState positionally tied to its seats.
+    // Such a draft is never written by this handler: not its pools, and not its seats.
+    const isPlayedDraft = !!draft && draft.type !== DRAFT_TYPES.UPLOAD;
+
+    if (isPlayedDraft && draft) {
+      if (hasDeckEdits) {
+        // Replacing a played draft's seat pools would orphan all of the above.
+        return res.status(400).json({
+          success: 'false',
+          message: 'This record is attached to a played draft, so its decks cannot be edited here.',
+        });
+      }
+
+      // Leaving the draft untouched only stays safe while record.players[i] still describes
+      // draft.seats[i]. Adding, removing or reordering players would break that pairing and
+      // silently attribute played decks to the wrong people, so it is refused outright rather
+      // than realigned — realigning would overwrite each seat's real drafter and title, and
+      // desynchronize the pack history that is tied to the seats by position.
+      const seatsUnchanged =
+        submission.seatOrder.length === draft.seats.length &&
+        submission.seatOrder.every((origin, index) => origin === index);
+
+      if (!seatsUnchanged) {
+        return res.status(400).json({
+          success: 'false',
+          message:
+            'This record is attached to a played draft, so its players cannot be added, removed or reordered here. Renaming a player is still allowed.',
+        });
+      }
     }
 
     record.name = submission.name;
@@ -151,7 +173,7 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
     record.trophy = submission.trophy.filter((name) => submittedNames.has(name));
     record.dateLastUpdated = Date.now();
 
-    if (draft) {
+    if (draft && !isPlayedDraft) {
       draft.seats = realignDraftSeats(draft.seats, submission.seatOrder, submission.players);
 
       // One draft write either way: associateDecksWithExistingDraft issues its own, so calling
@@ -163,7 +185,7 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
       }
 
       await recordDao.update(record);
-    } else if (hasDeckEdits) {
+    } else if (!draft && hasDeckEdits) {
       // associateDecksWithNewDraft creates the draft, increments cube.numDecks, sets
       // record.draft and writes the record itself. The record is fully applied by this point,
       // so that write persists this whole save — and must not be followed by a second one, or

@@ -340,6 +340,72 @@ describe('transcribeRecordHandler', () => {
     expect(res.status).toBe(200);
     expect(recordDao.update).toHaveBeenCalledTimes(1);
     expect(savedRecord().name).toBe('Tuesday Cube Night');
+    // A played draft is never written here. Realigning it would overwrite every seat's real
+    // drafter and generated title with the record's player list.
+    expect(draftDao.update).not.toHaveBeenCalled();
+  });
+
+  it('renames a player on a record whose draft is not an upload, leaving the draft untouched', async () => {
+    const draft = uploadDraft({ type: DRAFT_TYPES.DRAFT });
+    (recordDao.getById as jest.Mock).mockResolvedValue(existingRecord({ draft: draft.id }));
+    (draftDao.getById as jest.Mock).mockResolvedValue(draft);
+
+    // Same seats, same order: only the display name in the record changes.
+    const res = await save(payload({ players: [{ name: 'Alicia' }, { name: 'Bob' }], seatOrder: [0, 1] }));
+
+    expect(res.status).toBe(200);
+    expect(recordDao.update).toHaveBeenCalledTimes(1);
+    expect(savedRecord().players).toEqual([{ name: 'Alicia' }, { name: 'Bob' }]);
+    expect(draftDao.update).not.toHaveBeenCalled();
+    // The seat still belongs to whoever actually drafted it.
+    expect(draft.seats.map((seat: any) => seat.title)).toEqual(['Alice', 'Bob']);
+  });
+
+  it('rejects reordering players on a record whose draft is not an upload', async () => {
+    const draft = uploadDraft({ type: DRAFT_TYPES.DRAFT });
+    (recordDao.getById as jest.Mock).mockResolvedValue(existingRecord({ draft: draft.id }));
+    (draftDao.getById as jest.Mock).mockResolvedValue(draft);
+
+    const res = await save(payload({ players: [{ name: 'Bob' }, { name: 'Alice' }], seatOrder: [1, 0] }));
+
+    expect(res.status).toBe(400);
+    // A reorder without carrying the seats would attribute each played deck to the wrong
+    // person; carrying them would desynchronize the pack history tied to seats by position.
+    expect(res.body.message).toMatch(/played draft/);
+    expect(res.body.message).toMatch(/reordered/);
+    expect(draftDao.update).not.toHaveBeenCalled();
+    expect(recordDao.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects adding a player to a record whose draft is not an upload', async () => {
+    const draft = uploadDraft({ type: DRAFT_TYPES.DRAFT });
+    (recordDao.getById as jest.Mock).mockResolvedValue(existingRecord({ draft: draft.id }));
+    (draftDao.getById as jest.Mock).mockResolvedValue(draft);
+
+    const res = await save(
+      payload({ players: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Carol' }], seatOrder: [0, 1, -1] }),
+    );
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/played draft/);
+    expect(res.body.message).toMatch(/added/);
+    expect(draftDao.update).not.toHaveBeenCalled();
+    expect(recordDao.update).not.toHaveBeenCalled();
+  });
+
+  it('rejects dropping a player from a record whose draft is not an upload', async () => {
+    const draft = uploadDraft({ type: DRAFT_TYPES.DRAFT });
+    (recordDao.getById as jest.Mock).mockResolvedValue(existingRecord({ draft: draft.id }));
+    (draftDao.getById as jest.Mock).mockResolvedValue(draft);
+
+    // Bob is dropped: seat 1 would be discarded along with its pickorder and trashorder.
+    const res = await save(payload({ players: [{ name: 'Alice' }], seatOrder: [0] }));
+
+    expect(res.status).toBe(400);
+    expect(res.body.message).toMatch(/played draft/);
+    expect(res.body.message).toMatch(/removed/);
+    expect(draftDao.update).not.toHaveBeenCalled();
+    expect(recordDao.update).not.toHaveBeenCalled();
   });
 
   it('does not increment cube.numDecks when updating an existing draft', async () => {
