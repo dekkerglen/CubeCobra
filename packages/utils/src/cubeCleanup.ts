@@ -1,5 +1,5 @@
 import { cardOracleId, isCustomOrVoucher } from './cardutil';
-import Card, { BoardType } from './datatypes/Card';
+import Card, { BoardType, Changes, isBoardChanges } from './datatypes/Card';
 
 export interface CleanupCardRef {
   index: number;
@@ -105,4 +105,61 @@ export const findDuplicateRemovals = (cards: Card[], isSwapped?: (card: Card) =>
   }
 
   return removals.sort((a, b) => a.index - b.index);
+};
+
+/**
+ * Finds the entries of one board that are already represented in another: every eligible
+ * target card whose oracle id appears on the reference board. No survivor is kept, because
+ * each removed card remains available on the reference board. The same exclusions apply to
+ * both sides. Returned in ascending index order.
+ */
+export const findOverlapRemovals = (
+  targetCards: Card[],
+  referenceCards: Card[],
+  isSwapped?: (card: Card) => boolean,
+): CleanupCardRef[] => {
+  const referenceKeys = new Set<string>();
+  for (const card of referenceCards) {
+    const key = cleanupGroupKey(card, isSwapped);
+    if (key !== null) {
+      referenceKeys.add(key);
+    }
+  }
+
+  const removals: CleanupCardRef[] = [];
+  for (const card of targetCards) {
+    const key = cleanupGroupKey(card, isSwapped);
+    if (key !== null && referenceKeys.has(key)) {
+      removals.push({ index: card.index!, board: card.board! });
+    }
+  }
+
+  return removals.sort((a, b) => a.index - b.index);
+};
+
+const swapPositionKey = (board: BoardType, index: number): string => `${board}:${index}`;
+
+/**
+ * Builds a predicate reporting whether a card sits at a board position with a staged swap.
+ * The swapped positions are collected once, since the predicate runs for every card of the
+ * cube on every render.
+ */
+export const makeSwapPredicate = (changes: Changes): ((card: Card) => boolean) => {
+  const swappedPositions = new Set<string>();
+
+  // Changes carries a numeric `version` alongside the boards, so narrow each value.
+  for (const [board, boardChanges] of Object.entries(changes)) {
+    if (!isBoardChanges(boardChanges)) {
+      continue;
+    }
+
+    for (const swap of boardChanges.swaps ?? []) {
+      swappedPositions.add(swapPositionKey(board, swap.index));
+    }
+  }
+
+  return (card: Card): boolean =>
+    card.index !== undefined &&
+    card.board !== undefined &&
+    swappedPositions.has(swapPositionKey(card.board, card.index));
 };
