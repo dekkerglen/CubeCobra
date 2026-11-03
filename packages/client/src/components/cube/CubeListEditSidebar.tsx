@@ -76,6 +76,9 @@ const CleanupDropdown: React.FC<CleanupDropdownProps> = ({
   onCleanup,
 }) => {
   const otherBoards = boardOptions.filter((board) => board.value !== boardToEdit);
+  // The displayed board and the Board select can disagree — a view spanning several boards
+  // defaults this to the first one — so the menu names what it is about to act on.
+  const targetLabel = boardOptions.find((board) => board.value === boardToEdit)?.label ?? boardToEdit;
 
   return (
     <Dropdown
@@ -87,6 +90,10 @@ const CleanupDropdown: React.FC<CleanupDropdownProps> = ({
       align="right"
     >
       <Flexbox direction="col" gap="2" className="p-3">
+        <Text sm className="text-text-secondary">
+          Cleaning <span className="font-semibold text-text">{targetLabel}</span>
+        </Text>
+        <div className="border-t border-border" />
         <button
           type="button"
           className={DROPDOWN_ITEM_CLASSES}
