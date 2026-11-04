@@ -7,7 +7,6 @@ import Record, { formatRecord, playerRecord } from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
 import classNames from 'classnames';
 
-import Button from 'components/base/Button';
 import { CardBody } from 'components/base/Card';
 import Dropdown from 'components/base/Dropdown';
 import { Flexbox } from 'components/base/Layout';
@@ -16,8 +15,6 @@ import PostButton from 'components/base/PostButton';
 import Text from 'components/base/Text';
 import DeckCard from 'components/DeckCard';
 import DraftExportMenu from 'components/draft/DraftExportMenu';
-import EditPlayerListModal from 'components/modals/EditPlayerListModal';
-import RecordOverrideModal from 'components/modals/RecordOverrideModal';
 import RemoveDeckModal from 'components/modals/RemoveDeckModal';
 import SampleHandModal from 'components/modals/SampleHandModal';
 import withModal from 'components/WithModal';
@@ -35,8 +32,6 @@ interface RecordDecksProps {
 
 const SampleHandLink = withModal(Link, SampleHandModal);
 const RemoveDeckLink = withModal(Link, RemoveDeckModal);
-const RecordOverrideLink = withModal(Button, RecordOverrideModal);
-const EditPlayerListLink = withModal(Link, EditPlayerListModal);
 
 const menuLinkClass = '!text-text hover:!text-link-active hover:cursor-pointer font-medium';
 
@@ -74,27 +69,18 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
       <CardBody>
         <Flexbox direction="col" gap="2" alignItems="start">
           <Text sm>No players have been added to this record yet.</Text>
-          {isOwner && (
-            <Flexbox direction="row" gap="4" wrap="wrap" alignItems="center">
-              <EditPlayerListLink modalprops={{ record }}>Add players</EditPlayerListLink>
-              <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload a deck</Link>
-            </Flexbox>
-          )}
+          {isOwner && <Link href={`/cube/records/uploaddeck/${record.id}`}>Upload a deck</Link>}
         </Flexbox>
       </CardBody>
     );
   }
 
-  // A player's current record (override or match-derived). Owners can click to set it.
-  const recordControl =
-    selectedPlayer &&
-    (isOwner ? (
-      <RecordOverrideLink color="secondary" modalprops={{ record, playerName: selectedPlayer.name }}>
-        {`Record: ${formatRecord(playerRecord(record, selectedPlayer.name))}`}
-      </RecordOverrideLink>
-    ) : (
-      <Text sm>{`Record: ${formatRecord(playerRecord(record, selectedPlayer.name))}`}</Text>
-    ));
+  // A player's current record (override or match-derived). The override control that used to
+  // sit here moved into the transcription workspace, which can edit it alongside everything
+  // else — this is read-only now regardless of ownership.
+  const recordControl = selectedPlayer && (
+    <Text sm>{`Record: ${formatRecord(playerRecord(record, selectedPlayer.name))}`}</Text>
+  );
 
   const deckControls = draft && selectedHasDeck && (
     <Flexbox direction="row" gap="4" wrap="wrap" alignItems="center">
@@ -200,7 +186,6 @@ const RecordDecksContent: React.FC<RecordDecksProps> = ({ record, draft, players
           <Flexbox direction="col" gap="2" className="md:w-60 md:shrink-0">
             <Flexbox direction="row" justify="between" alignItems="center">
               <Text semibold>Players</Text>
-              {isOwner && <EditPlayerListLink modalprops={{ record }}>Edit</EditPlayerListLink>}
             </Flexbox>
             <Flexbox direction="col" gap="1">
               {record.players.map((player, index) => {

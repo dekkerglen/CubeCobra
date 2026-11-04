@@ -8,12 +8,10 @@ import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import { SafeMarkdown } from 'components/Markdown';
-import EditRecordOverviewModal from 'components/modals/EditRecordOverviewModal';
 import ShareRecordModal from 'components/modals/ShareRecordModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 
-const EditRecordOverviewLink = withModal(Link, EditRecordOverviewModal);
 const ShareRecordLink = withModal(Link, ShareRecordModal);
 
 interface RecordOverviewProps {
@@ -42,12 +40,7 @@ const RecordOverview: React.FC<RecordOverviewProps> = ({ record }) => {
           </div>
         )}
         <Flexbox direction="row" gap="4" wrap="wrap" className="mt-1">
-          {isOwner && (
-            <>
-              <EditRecordOverviewLink modalprops={{ record }}>Edit overview</EditRecordOverviewLink>
-              <ShareRecordLink modalprops={{ record }}>Share link to collect decks</ShareRecordLink>
-            </>
-          )}
+          {isOwner && <ShareRecordLink modalprops={{ record }}>Share link to collect decks</ShareRecordLink>}
           <Link href={`/cube/records/export/${record.cube}?record=${encodeURIComponent(record.id)}`} download>
             Export
           </Link>
