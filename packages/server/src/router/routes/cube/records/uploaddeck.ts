@@ -13,6 +13,7 @@ import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from 'se
 import { addBasics, basicsBoardFor, createPool, getBasicCardsFromCube } from 'serverutils/cube';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { reconcilePlayerIds, stampSeatPlayerIds } from 'serverutils/playerIdentity';
+import { isPlayedDraft } from 'serverutils/recordSeats';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../../types/express';
@@ -175,9 +176,10 @@ export const associateNewDraft = async (
     date: record.date,
     type: DRAFT_TYPES.UPLOAD,
     cards: cardsWithIndex,
-    // Every seat is built fresh from record.players here, so this is the one place a brand
-    // new upload draft's seats get their playerId at all — skipping it would leave them
-    // permanently unstamped even though the players they belong to already carry ids.
+    // Every seat is built fresh from record.players here, so — like
+    // associateDecksWithNewDraft below — a brand new upload draft's seats get their
+    // playerId stamped immediately; type: DRAFT_TYPES.UPLOAD guarantees this can
+    // never be a played draft, so no isPlayedDraft guard is needed.
     seats: stampSeatPlayerIds(
       record.players.map((player) => ({
         owner: player.userId,
@@ -348,7 +350,10 @@ export const associateDecksWithNewDraft = async (
     date: record.date,
     type: DRAFT_TYPES.UPLOAD,
     cards: cardsWithIndex,
-    seats,
+    // Built fresh from record.players, exactly like associateNewDraft — so, like
+    // that one, stamped immediately. type: DRAFT_TYPES.UPLOAD above means this can
+    // never be a played draft, so no isPlayedDraft guard is needed.
+    seats: stampSeatPlayerIds(seats, record.players),
     complete: true,
     basics: [] as number[], // populated by addBasics
   };
@@ -428,7 +433,11 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
             mainboard: createPool() as number[][][],
             sideboard: setupPicks(1, 8) as number[][][],
           });
-          existingDraft.seats = stampSeatPlayerIds(existingDraft.seats, record.players);
+          // A played draft's seats are historical and must never be stamped with a
+          // record player's id — only an upload draft's seats exist to be reconciled.
+          if (!isPlayedDraft(existingDraft)) {
+            existingDraft.seats = stampSeatPlayerIds(existingDraft.seats, record.players);
+          }
           await draftDao.update(existingDraft);
         }
       }

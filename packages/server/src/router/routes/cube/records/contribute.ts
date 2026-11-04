@@ -7,6 +7,7 @@ import { createPool } from 'serverutils/cube';
 import { abbreviate } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { reconcilePlayerIds, stampSeatPlayerIds } from 'serverutils/playerIdentity';
+import { isPlayedDraft } from 'serverutils/recordSeats';
 import { verifyRecordToken } from 'serverutils/recordShareToken';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
@@ -117,7 +118,11 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
             mainboard: createPool() as number[][][],
             sideboard: setupPicks(1, 8) as number[][][],
           });
-          existingDraft.seats = stampSeatPlayerIds(existingDraft.seats, record.players);
+          // A played draft's seats are historical and must never be stamped with a
+          // record player's id — only an upload draft's seats exist to be reconciled.
+          if (!isPlayedDraft(existingDraft)) {
+            existingDraft.seats = stampSeatPlayerIds(existingDraft.seats, record.players);
+          }
           await draftDao.update(existingDraft);
         }
       }
@@ -162,7 +167,10 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
               seat.title = renamed.name;
             }
             seat.owner = renamed.userId;
-            existingDraft.seats = stampSeatPlayerIds(existingDraft.seats, record.players);
+            // Same guard as above: a played draft's seats are not ours to stamp.
+            if (!isPlayedDraft(existingDraft)) {
+              existingDraft.seats = stampSeatPlayerIds(existingDraft.seats, record.players);
+            }
             await draftDao.update(existingDraft);
           }
         }
