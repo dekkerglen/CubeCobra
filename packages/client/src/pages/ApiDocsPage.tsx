@@ -277,6 +277,11 @@ const ApiDocsPage: React.FC = () => (
                   Changelog ID. Returns the cube as it was immediately after that changelog. Takes precedence over{' '}
                   <InlineCode>date</InlineCode>. Returns 404 if the changelog does not belong to this cube.
                 </Param>
+                <Param name="metadataOnly" type="query">
+                  When <InlineCode>true</InlineCode>, returns only the cube metadata (name, owner, primer tabs, etc.)
+                  with the <InlineCode>cards</InlineCode> field omitted, avoiding the potentially large card payload.{' '}
+                  <InlineCode>date</InlineCode> and <InlineCode>changelog</InlineCode> are ignored.
+                </Param>
               </>
             }
             responseExample={`{
