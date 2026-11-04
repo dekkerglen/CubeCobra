@@ -1,6 +1,7 @@
 export type PlayerList = {
   name: string;
   userId?: string; // User ID is optional for users without an account
+  id?: string; // Editing-time identity, stable across renames/reorders; absent on older records
 }[];
 
 export interface Match {
