@@ -1310,7 +1310,11 @@ describe('RecordTranscribePage', () => {
 
     const sections = savedSections(csrfFetch);
     expect(sections['overrides:0']).toEqual({ wins: 0, losses: 0, draws: 0 });
-    expect(sections['overrides:1']).toEqual({ wins: 0, losses: 0, draws: 0 });
+    // Bob never had a stored override and the page opened in records mode already — nothing
+    // about his entry changed, so it must not be sent even though records mode would
+    // synthesize a 0-0-0 for him if asked. A record untouched since it opened must not report
+    // every override-less player as edited.
+    expect(sections['overrides:1']).toBeUndefined();
   });
 
   // The page has to say plainly when an override is what will be displayed. That disclosure

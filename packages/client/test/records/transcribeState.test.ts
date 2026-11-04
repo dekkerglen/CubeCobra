@@ -363,6 +363,20 @@ describe('dirtySections', () => {
 
     expect(dirtySections(state, seeded, false)).toEqual(['players']);
   });
+
+  // The reviewer's repro for the critical finding: a record with one player's override set
+  // and the other's unset, and no pairings — the exact fixture the page opens in records mode
+  // for. Before the fix, the baseline for Bob's override was read raw (`null`), while the
+  // effective value synthesized a 0-0-0 for him under records mode, reporting a diff for a
+  // player nobody has touched the moment the page mounts. Both sides of the comparison must
+  // run through the same mode, so passing the (matching) seeded mode here must report nothing.
+  it('reports nothing dirty on mount for a record that opens in records mode with an unset override', () => {
+    const record = createRecord({ overrides: { Alice: { wins: 3, losses: 0, draws: 0 } }, matches: [] });
+    const state = seedTranscribeState(record);
+    const seeded = seedTranscribeState(record);
+
+    expect(dirtySections(state, seeded, true, true)).toEqual([]);
+  });
 });
 
 describe('isDirty', () => {
@@ -443,6 +457,16 @@ describe('isDirty', () => {
     state.overrides = { Alice: undefined };
 
     expect(isDirty(state, seeded)).toEqual(false);
+  });
+
+  // Same mount-time repro as the dirtySections test above, but through isDirty, since that is
+  // what actually gates the page's Save button and "Unsaved changes" banner.
+  it('is false on mount for a record that opens in records mode with an unset override', () => {
+    const { state, seeded } = seedBoth(
+      createRecord({ overrides: { Alice: { wins: 3, losses: 0, draws: 0 } }, matches: [] }),
+    );
+
+    expect(isDirty(state, seeded, true, true)).toEqual(false);
   });
 });
 

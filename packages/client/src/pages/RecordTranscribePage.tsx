@@ -95,6 +95,14 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
   const initialResultsMode: ResultsMode =
     Object.values(record.overrides ?? {}).some(Boolean) && !anyPairings(record.matches ?? []) ? 'records' : 'pairings';
   const [resultsMode, setResultsMode] = useState<ResultsMode>(initialResultsMode);
+  // The mode the record was loaded in, or the mode the last save landed under. isDirty and
+  // toTranscribePayload both compare an override's current value against the mode this
+  // tracks, not the mode on screen right now — a record that opens in records mode with some
+  // players lacking a stored override must not read as dirty before anything is touched, which
+  // it would if the baseline were synthesized under whatever mode is live instead of the one
+  // it was actually seeded under. It moves to the submitted mode on a successful save, exactly
+  // like `seeded` itself.
+  const [seededResultsMode, setSeededResultsMode] = useState<ResultsMode>(initialResultsMode);
 
   const { state, seeded } = workspace;
 
@@ -177,9 +185,15 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
   const errors = useMemo(() => validationErrors(state), [state]);
 
   // The mode decides what Save writes — records mode gives every player an explicit record
-  // so nothing falls back to the matches — so isDirty takes it into account rather than this
-  // page tracking a second, separate "has the mode moved" flag.
-  const dirty = useMemo(() => isDirty(state, seeded, resultsMode === 'records'), [state, seeded, resultsMode]);
+  // so nothing falls back to the matches. isDirty is given both the live mode, governing what
+  // each override currently reads as, and the seeded mode, governing what its baseline reads
+  // as — the same mode switch still dirties every override (both sides disagree the moment
+  // the mode itself differs), but a record that has always been in records mode no longer
+  // reads as dirty purely because some player has no stored override.
+  const dirty = useMemo(
+    () => isDirty(state, seeded, resultsMode === 'records', seededResultsMode === 'records'),
+    [state, seeded, resultsMode, seededResultsMode],
+  );
 
   useEffect(() => {
     if (!dirty) {
@@ -205,7 +219,9 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
       const response = await csrfFetch(`/cube/records/enter/${record.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(toTranscribePayload(submitted, seeded, submittedMode === 'records')),
+        body: JSON.stringify(
+          toTranscribePayload(submitted, seeded, submittedMode === 'records', seededResultsMode === 'records'),
+        ),
       });
       const json = await response.json();
 
@@ -216,6 +232,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
         return;
       }
 
+      setSeededResultsMode(submittedMode);
       setWorkspace((previous) => {
         const wasSubmitted = (index: number, deck: TranscribeDeck) => submitted.decks[index] === deck;
         // The server rewrote the draft's seats into the submitted player order, so every
@@ -245,7 +262,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
       savingRef.current = false;
       setSaving(false);
     }
-  }, [csrfFetch, record.id, state, seeded, resultsMode]);
+  }, [csrfFetch, record.id, state, seeded, resultsMode, seededResultsMode]);
 
   return (
     <MainLayout useContainer={false}>

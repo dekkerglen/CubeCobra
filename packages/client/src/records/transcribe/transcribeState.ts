@@ -328,6 +328,9 @@ const EMPTY_DECK_SECTION = { mainboard: [], sideboard: [] };
 // decks and overrides are keyed per player rather than id to survive a rename, but a record
 // seeded before Player.id existed has no ids at all — the only identity left for it is the
 // seat a player sits in, so the server resolves a key that parses as an integer as a position.
+// This applies to both section kinds alike: a `decks:<N>` or `overrides:<N>` key is never a
+// player id (ids are never bare integers), so the server must resolve an integer-parsing
+// suffix as a seat position for either one, not just decks.
 const playerSectionKey = (player: PlayerList[number] | undefined, index: number): string => player?.id ?? String(index);
 
 // One section's value alongside the baseline it is compared against, for whichever of
@@ -339,7 +342,17 @@ interface SectionDiff {
   baseline: TranscribeSectionValue;
 }
 
-const diffSections = (state: TranscribeState, seeded: TranscribeState, finalRecordsOnly: boolean): SectionDiff[] => {
+const diffSections = (
+  state: TranscribeState,
+  seeded: TranscribeState,
+  finalRecordsOnly: boolean,
+  // The mode the record was loaded in (or last saved under), as opposed to `finalRecordsOnly`
+  // above, which is whatever mode is on screen right now. Both sides of an override diff must
+  // run through the same effectiveOverride synthesis — applying it only to `state` and reading
+  // `seeded` raw reports a diff for every player with no stored override the moment a record
+  // merely opens in records mode, with nothing the user touched.
+  seededFinalRecordsOnly: boolean = false,
+): SectionDiff[] => {
   const diffs: SectionDiff[] = [];
 
   if (state.name !== seeded.name || state.date !== seeded.date || state.description !== seeded.description) {
@@ -373,7 +386,9 @@ const diffSections = (state: TranscribeState, seeded: TranscribeState, finalReco
     const effective = effectiveOverride(state.overrides, player.name, finalRecordsOnly);
     const origin = state.seatOrder[index] ?? -1;
     const seededPlayer = origin >= 0 ? seeded.players[origin] : undefined;
-    const baseline = seededPlayer ? (seeded.overrides[seededPlayer.name] ?? null) : null;
+    const baseline = seededPlayer
+      ? effectiveOverride(seeded.overrides, seededPlayer.name, seededFinalRecordsOnly)
+      : null;
     if (!sameOverride(effective, baseline)) {
       diffs.push({ key: `overrides:${playerSectionKey(player, index)}`, value: effective, baseline });
     }
@@ -403,7 +418,8 @@ export const dirtySections = (
   state: TranscribeState,
   seeded: TranscribeState,
   finalRecordsOnly: boolean,
-): SectionKey[] => diffSections(state, seeded, finalRecordsOnly).map((diff) => diff.key);
+  seededFinalRecordsOnly = false,
+): SectionKey[] => diffSections(state, seeded, finalRecordsOnly, seededFinalRecordsOnly).map((diff) => diff.key);
 
 const OVERRIDE_PREFIX = 'overrides:';
 const DECK_PREFIX = 'decks:';
@@ -444,11 +460,12 @@ export const toTranscribePayload = (
   state: TranscribeState,
   seeded: TranscribeState,
   finalRecordsOnly = false,
+  seededFinalRecordsOnly = false,
 ): TranscribeSectionsPayload => {
   const sections: TranscribeSectionsPayload['sections'] = {};
   const baselines: SectionBaselines = {};
 
-  for (const diff of diffSections(state, seeded, finalRecordsOnly)) {
+  for (const diff of diffSections(state, seeded, finalRecordsOnly, seededFinalRecordsOnly)) {
     sections[diff.key] = diff.value;
     addBaseline(baselines, diff.key, diff.baseline);
   }
@@ -459,5 +476,9 @@ export const toTranscribePayload = (
 // Whether the editor holds anything worth saving. A second definition of "changed" would
 // drift from dirtySections the moment one of them gained a case the other had not — there is
 // exactly one definition, and this is just its length.
-export const isDirty = (state: TranscribeState, seeded: TranscribeState, finalRecordsOnly = false): boolean =>
-  dirtySections(state, seeded, finalRecordsOnly).length > 0;
+export const isDirty = (
+  state: TranscribeState,
+  seeded: TranscribeState,
+  finalRecordsOnly = false,
+  seededFinalRecordsOnly = false,
+): boolean => dirtySections(state, seeded, finalRecordsOnly, seededFinalRecordsOnly).length > 0;
