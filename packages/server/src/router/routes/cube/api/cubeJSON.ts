@@ -38,6 +38,12 @@ export const cubeJSONHandler = async (req: Request, res: Response) => {
       return res.status(404).send('Cube not found.');
     }
 
+    // Skip loading and sorting cards entirely: date/changelog only affect the card list.
+    if (req.query.metadataOnly === 'true') {
+      res.contentType('application/json');
+      return res.status(200).send(JSON.stringify(cube));
+    }
+
     const changelogId = req.query.changelog as string | undefined;
     const dateMs = changelogId ? undefined : parseDateParam(req.query.date as string | undefined);
     if (dateMs !== undefined && isNaN(dateMs)) {

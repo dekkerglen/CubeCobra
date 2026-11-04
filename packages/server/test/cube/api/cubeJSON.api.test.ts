@@ -70,6 +70,18 @@ describe('GET /cube/api/cubeJSON/:id', () => {
     expect(body).not.toHaveProperty('description');
   });
 
+  it('omits cards and skips card loading when metadataOnly=true', async () => {
+    (cubeDao.getById as jest.Mock).mockResolvedValue(createCube({ id: cube.id, name: 'My Vintage Cube' }));
+
+    const res = await call(cubeJSONHandler).withParams({ id: cube.id }).withQuery({ metadataOnly: 'true' }).send();
+
+    expect(res.status).toEqual(200);
+    const body = JSON.parse(res.body);
+    expect(body.name).toEqual('My Vintage Cube');
+    expect(body).not.toHaveProperty('cards');
+    expect(cubeDao.getCards).not.toHaveBeenCalled();
+  });
+
   it('exposes bannerTheme on the public cube JSON', async () => {
     (cubeDao.getById as jest.Mock).mockResolvedValue(createCube({ id: cube.id, bannerTheme: 'blue' }));
 
