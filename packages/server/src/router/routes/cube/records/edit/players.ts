@@ -4,6 +4,7 @@ import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { bodyValidation } from 'router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { reconcilePlayerIds, stampSeatPlayerIds } from 'serverutils/playerIdentity';
 import { isPlayedDraft, realignDraftSeats, seatAlignmentUnchanged } from 'serverutils/recordSeats';
 import { redirect } from 'serverutils/render';
 
@@ -14,6 +15,7 @@ const recordSchema = Joi.array()
     Joi.object({
       userId: Joi.string().optional(), // Optional userId
       name: Joi.string().min(1).max(255).required(), // Player name is required
+      id: Joi.string().max(64).optional(), // Editing-time identity, carried back by a client that already has one
     }),
   )
   .max(16)
@@ -45,7 +47,9 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
       return redirect(req, res, '/404');
     }
 
-    const players = JSON.parse(req.body.players);
+    // Reconcile against the stored list immediately: an older client that doesn't echo ids
+    // back must not cause this record's players to mint fresh ones and orphan their seats.
+    const players = reconcilePlayerIds(JSON.parse(req.body.players), record.players);
 
     // seatOrder[i] is the original seat index that the new player at position i
     // came from, or -1 for a newly added player. Defaults to identity so an
@@ -123,7 +127,7 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
           // Every player kept their seat, so the renames above describe the same seats as
           // before and the draft needs no write at all.
         } else {
-          draft.seats = realignDraftSeats(draft.seats, seatOrder, players);
+          draft.seats = stampSeatPlayerIds(realignDraftSeats(draft.seats, seatOrder, players), players);
           await draftDao.update(draft);
         }
       }

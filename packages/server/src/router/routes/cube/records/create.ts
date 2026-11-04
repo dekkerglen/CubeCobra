@@ -115,6 +115,7 @@ const recordSchema = Joi.object({
       Joi.object({
         userId: Joi.string().optional(), // Optional userId
         name: Joi.string().min(1).max(255).required(), // Player name is required
+        id: Joi.string().max(64).optional(), // Accepted shape consistency only — this route creates a record, so there's nothing to inherit from.
       }),
     )
     .min(0)

@@ -12,6 +12,7 @@ import { csrfProtection, ensureAuth } from 'router/middleware';
 import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from 'serverutils/carddb';
 import { addBasics, basicsBoardFor, createPool, getBasicCardsFromCube } from 'serverutils/cube';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { reconcilePlayerIds, stampSeatPlayerIds } from 'serverutils/playerIdentity';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../../types/express';
@@ -174,12 +175,18 @@ export const associateNewDraft = async (
     date: record.date,
     type: DRAFT_TYPES.UPLOAD,
     cards: cardsWithIndex,
-    seats: record.players.map((player) => ({
-      owner: player.userId,
-      title: `${player.name}`,
-      mainboard: createPool() as number[][][],
-      sideboard: setupPicks(1, 8) as number[][][],
-    })),
+    // Every seat is built fresh from record.players here, so this is the one place a brand
+    // new upload draft's seats get their playerId at all — skipping it would leave them
+    // permanently unstamped even though the players they belong to already carry ids.
+    seats: stampSeatPlayerIds(
+      record.players.map((player) => ({
+        owner: player.userId,
+        title: `${player.name}`,
+        mainboard: createPool() as number[][][],
+        sideboard: setupPicks(1, 8) as number[][][],
+      })),
+      record.players,
+    ),
     complete: true,
     basics: [] as number[], // Will be populated by addBasics
   };
@@ -406,7 +413,9 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
         name = linked?.username || handle || rawNewPlayer;
         linkedUserId = linked?.id;
       }
-      record.players = [...(record.players || []), linkedUserId ? { name, userId: linkedUserId } : { name }];
+      const storedPlayers = record.players || [];
+      const added = linkedUserId ? { name, userId: linkedUserId } : { name };
+      record.players = reconcilePlayerIds([...storedPlayers, added], storedPlayers);
       userIndex = record.players.length; // the new player's 1-based index
       await recordDao.update(record);
       // If a draft already exists, give the new player a seat to match.
@@ -419,6 +428,7 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
             mainboard: createPool() as number[][][],
             sideboard: setupPicks(1, 8) as number[][][],
           });
+          existingDraft.seats = stampSeatPlayerIds(existingDraft.seats, record.players);
           await draftDao.update(existingDraft);
         }
       }

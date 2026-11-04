@@ -6,6 +6,7 @@ import { csrfProtection } from 'router/middleware';
 import { createPool } from 'serverutils/cube';
 import { abbreviate } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
+import { reconcilePlayerIds, stampSeatPlayerIds } from 'serverutils/playerIdentity';
 import { verifyRecordToken } from 'serverutils/recordShareToken';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
@@ -99,10 +100,13 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
     }
 
     let userIndex = parseInt(req.body.userIndex, 10);
+    // Captured before either branch below can mutate record.players, so both reconcile
+    // against what was actually stored rather than against each other's intermediate state.
+    const storedPlayers = record.players || [];
     const rawNewPlayer = `${req.body.newPlayer ?? ''}`.trim();
     if (rawNewPlayer) {
       const added = await resolvePlayer(rawNewPlayer);
-      record.players = [...(record.players || []), added];
+      record.players = reconcilePlayerIds([...storedPlayers, added], storedPlayers);
       userIndex = record.players.length;
       if (record.draft) {
         const existingDraft = await draftDao.getById(record.draft);
@@ -113,6 +117,7 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
             mainboard: createPool() as number[][][],
             sideboard: setupPicks(1, 8) as number[][][],
           });
+          existingDraft.seats = stampSeatPlayerIds(existingDraft.seats, record.players);
           await draftDao.update(existingDraft);
         }
       }
@@ -142,7 +147,12 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
           );
         }
         applyPlayerRenames(record, new Map([[target.name, renamed.name]]));
-        record.players[userIndex - 1] = renamed;
+        // renamed carries no id of its own: resolve it against the pre-request stored list,
+        // the same way a brand-new player's id would be resolved, rather than reassigning the
+        // slot directly and losing the id reconcilePlayerIds would otherwise have inherited.
+        const renamedPlayers = [...record.players];
+        renamedPlayers[userIndex - 1] = renamed;
+        record.players = reconcilePlayerIds(renamedPlayers, storedPlayers);
         if (record.draft) {
           const existingDraft = await draftDao.getById(record.draft);
           const seat = existingDraft?.seats[userIndex - 1];
@@ -152,6 +162,7 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
               seat.title = renamed.name;
             }
             seat.owner = renamed.userId;
+            existingDraft.seats = stampSeatPlayerIds(existingDraft.seats, record.players);
             await draftDao.update(existingDraft);
           }
         }

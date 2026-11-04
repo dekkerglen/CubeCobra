@@ -35,6 +35,7 @@ const transcribeSchema = Joi.object({
       Joi.object({
         name: Joi.string().min(1).max(255).required(),
         userId: Joi.string().max(64).optional(),
+        id: Joi.string().max(64).optional(),
       }),
     )
     .unique('name')

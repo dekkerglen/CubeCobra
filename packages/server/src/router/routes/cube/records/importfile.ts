@@ -59,7 +59,13 @@ const recordSchema = Joi.object({
   date: Joi.number().required(),
   description: Joi.string().max(5000).optional().allow(''),
   players: Joi.array()
-    .items(Joi.object({ name: Joi.string().min(1).max(255).required(), userId: Joi.string().max(64).optional() }))
+    .items(
+      Joi.object({
+        name: Joi.string().min(1).max(255).required(),
+        userId: Joi.string().max(64).optional(),
+        id: Joi.string().max(64).optional(), // Accepted shape consistency only — this route creates a record, so there's nothing to inherit from.
+      }),
+    )
     .unique('name')
     .max(50)
     .required(),

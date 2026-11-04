@@ -66,6 +66,7 @@ const hedronRecordSchema = Joi.object({
       Joi.object({
         userId: Joi.string().optional(),
         name: Joi.string().min(1).max(255).required(),
+        id: Joi.string().max(64).optional(), // Accepted shape consistency only — this route creates a record, so there's nothing to inherit from.
       }),
     )
     .min(0)
