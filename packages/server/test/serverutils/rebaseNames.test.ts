@@ -91,6 +91,9 @@ describe('rebaseNameKeyedSections', () => {
     const submitted = { matches: [match('Alicia', 'Unknown Opponent')] };
     const result = rebaseNameKeyedSections(submitted, submittedPlayers, storedPlayers);
 
-    expect(result).toEqual(submitted);
+    // Assert identity (same reference), not just value equality, to confirm the early return
+    // at rebaseNames.ts:44 is triggered and the input object is returned unchanged.
+    expect(result).toBe(submitted);
+    expect(result.matches).toEqual([match('Alicia', 'Unknown Opponent')]);
   });
 });
