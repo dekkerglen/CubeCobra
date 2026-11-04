@@ -92,6 +92,14 @@ type TranscribeSectionValue =
 export interface TranscribeSectionsPayload {
   sections: { [K in SectionKey]?: TranscribeSectionValue };
   baselines: SectionBaselines;
+  // The player list as this workspace loaded it (`seeded.players`), sent on every save
+  // regardless of whether `players` itself is dirty. `matches`, `trophy` and `overrides`
+  // stay keyed by player name in storage, so rebasing a submission's name-keyed content onto
+  // the stored name — needed whenever a player was renamed by another writer since this
+  // workspace loaded, most commonly a contributor correcting their own name via the share
+  // link — requires this identity reference even on a save that never touches `players`.
+  // See rebaseNameKeyedSections.
+  identity: { players: PlayerList };
 }
 
 const copyMatches = (matches: Round[]): Round[] =>
@@ -475,7 +483,7 @@ export const toTranscribePayload = (
     addBaseline(baselines, diff.key, diff.baseline);
   }
 
-  return { sections, baselines };
+  return { sections, baselines, identity: { players: seeded.players } };
 };
 
 // Whether the editor holds anything worth saving. A second definition of "changed" would

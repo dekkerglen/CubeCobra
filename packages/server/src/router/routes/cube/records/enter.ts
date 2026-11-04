@@ -118,9 +118,20 @@ const baselinesSchema = Joi.object({
   decks: Joi.object().pattern(Joi.string(), deckSchema),
 }).required();
 
+// The player list as the client's workspace loaded it (`seeded.players`), sent on every save
+// regardless of whether `players` itself is dirty — it is the identity reference
+// `rebaseNameKeyedSections` needs to re-express a rounds/trophy/overrides submission in
+// whatever name the stored list holds now. Optional rather than required: a client still
+// running pre-fix JS at the moment of deploy sends no `identity`, and must keep working under
+// the pre-fix behaviour (rebasing only when `players` itself is dirty) rather than 400.
+const identitySchema = Joi.object({
+  players: Joi.array().items(playerSchema).unique('name').max(MAX_PLAYERS).required(),
+}).optional();
+
 const transcribeSectionsSchema = Joi.object({
   sections: sectionsSchema,
   baselines: baselinesSchema,
+  identity: identitySchema,
 }).required();
 
 // What `sections` holds for the four whole-record keys; `overrides:<key>` and `decks:<key>`
@@ -169,6 +180,7 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
     }
     const sections = (value as { sections: TranscribeSections }).sections;
     const baselines = (value as { baselines: SectionBaselines }).baselines;
+    const identity = (value as { identity?: { players: PlayerList } }).identity;
 
     const record = req.params.id ? await recordDao.getById(req.params.id) : undefined;
     if (!record) {
@@ -269,11 +281,15 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
     // `matches` and `trophy` stay keyed by player name in storage, so a player renamed by a
     // different writer since this workspace loaded would make an unrelated rounds or trophy
     // edit look contested unless it is re-expressed in the stored name first — resolving each
-    // submitted name to a player id via this submission's own players baseline, then to the
-    // name that id currently holds in storage. Only possible when this save carries that
-    // baseline (its own `players` section); otherwise there is no id-to-old-name mapping to
-    // rebase through, and the content passes through unchanged.
-    const rebaseIdentity = playersSection ? baselines.players?.players : undefined;
+    // submitted name to a player id via the player list this submission was built against,
+    // then to the name that id currently holds in storage. `identity` carries that list on
+    // every save, whether or not `players` itself is dirty — a contributor renaming
+    // themselves via the share link dirties only `rounds`/`trophy`/`overrides` on the client,
+    // never `players`, so keying this off `playersSection` would miss that direction
+    // entirely (the spec's own motivating scenario). Falls back to the submission's own
+    // `players` baseline for a client still running pre-`identity` JS at deploy time, which
+    // only ever had the rebase when its own `players` section was present.
+    const rebaseIdentity = identity?.players ?? (playersSection ? baselines.players?.players : undefined);
     const rebase = (content: NameKeyedSections): NameKeyedSections =>
       rebaseIdentity ? rebaseNameKeyedSections(content, rebaseIdentity, previousPlayers) : content;
 

@@ -264,7 +264,17 @@ describe('transcribeRecordHandler', () => {
 
   it('realigns seats before writing decks when the player order changed', async () => {
     const { draft, alicePool, bobPool } = uploadDraft();
-    const stored = existingRecord({ draft: draft.id });
+    const stored = existingRecord({
+      draft: draft.id,
+      // Explicit ids so the stamped seats below assert against a known value rather than a
+      // freshly minted uuid — the other three stamping sites (edit/players, contribute,
+      // uploaddeck) all have a direct `seat.playerId` assertion; this is enter.ts's realign
+      // path, the deck-misattribution surface the spec calls "the dangerous part".
+      players: [
+        { id: 'alice-id', name: 'Alice' },
+        { id: 'bob-id', name: 'Bob' },
+      ],
+    });
     (recordDao.getById as jest.Mock).mockResolvedValue(stored);
     (draftDao.getById as jest.Mock).mockResolvedValue(draft);
 
@@ -290,6 +300,9 @@ describe('transcribeRecordHandler', () => {
     expect(res.status).toBe(200);
     // Seat 1 must already be Bob's old seat, or his submitted deck lands on Alice.
     expect(seatsWhenDecksWereWritten.map((seat) => seat.title)).toEqual(['Bob', 'Alice']);
+    // And stamped with the player id that now sits there, not the one the seat used to hold —
+    // a stale or absent id here is exactly how a deck gets misattributed on an unrelated save.
+    expect(seatsWhenDecksWereWritten.map((seat) => seat.playerId)).toEqual(['bob-id', 'alice-id']);
     expect(seatsWhenDecksWereWritten.map((seat) => seat.mainboard)).toEqual([bobPool, alicePool]);
   });
 

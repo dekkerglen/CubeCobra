@@ -55,6 +55,11 @@ export function reconcilePlayerIds(submitted: PlayerList, stored: PlayerList): P
     if (player.id && !assigned.has(player.id)) {
       claimById(player.id);
       assigned.add(player.id);
+      // Trusted even if claimById found nothing to claim — a submitted id matching no stored
+      // player is accepted as-is, not rejected or re-minted. Safe today only because every
+      // caller builds this id server-side (resolvePlayer in contribute.ts/uploaddeck.ts) or
+      // behind permission-gated edit paths; a future path that forwards a client-supplied id
+      // verbatim would need to confront that trust assumption first.
       return player;
     }
     const id = claimByName(player.name) ?? claimByPosition(index) ?? uuidv4();

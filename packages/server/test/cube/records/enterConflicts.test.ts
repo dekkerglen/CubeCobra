@@ -258,6 +258,78 @@ describe('transcribeRecordHandler — conflict detection', () => {
     expect(savedRecord().matches).toEqual([{ matches: [{ p1: 'Al', p2: 'Bob', results: [2, 1, 1] }] }]);
   });
 
+  it('rebases a rounds-only save against a rename it never saw, via `identity`', async () => {
+    // Spec §3's own motivating scenario: a contributor renamed Alice to "Al" via the share
+    // link since the owner's workspace loaded, which also rewrote the stored matches to the
+    // new name. The owner only edited round one — `players` is untouched and absent from
+    // `sections` entirely, exactly what a real client sends for this save, so the only way
+    // the server can learn the old name was "Alice" is `identity`, sent on every save.
+    (recordDao.getById as jest.Mock).mockResolvedValue(
+      existingRecord({
+        players: [
+          { id: 'p1', name: 'Al' },
+          { id: 'p2', name: 'Bob' },
+        ],
+        matches: [{ matches: [{ p1: 'Al', p2: 'Bob', results: [2, 1, 0] }] }],
+      }),
+    );
+
+    const res = await save({
+      sections: {
+        rounds: { matches: [{ matches: [{ p1: 'Alice', p2: 'Bob', results: [2, 1, 1] }] }] },
+      },
+      baselines: {
+        rounds: { matches: [{ matches: [{ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] }] }] },
+      },
+      // The player list as the owner's workspace loaded it — still "Alice", because this save
+      // never touched players and so never re-seeded it.
+      identity: {
+        players: [
+          { id: 'p1', name: 'Alice' },
+          { id: 'p2', name: 'Bob' },
+        ],
+      },
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.conflicts).toEqual([]);
+    expect(res.body.applied).toEqual(['rounds']);
+    // Written under the name the player actually holds in storage, not the owner's stale one.
+    expect(savedRecord().matches).toEqual([{ matches: [{ p1: 'Al', p2: 'Bob', results: [2, 1, 1] }] }]);
+  });
+
+  it('rebases a trophy-only save against a rename it never saw, via `identity`', async () => {
+    (recordDao.getById as jest.Mock).mockResolvedValue(
+      existingRecord({
+        players: [
+          { id: 'p1', name: 'Al' },
+          { id: 'p2', name: 'Bob' },
+        ],
+        trophy: ['Al'],
+      }),
+    );
+
+    const res = await save({
+      sections: {
+        trophy: { trophy: ['Alice', 'Bob'] },
+      },
+      baselines: {
+        trophy: { trophy: ['Alice'] },
+      },
+      identity: {
+        players: [
+          { id: 'p1', name: 'Alice' },
+          { id: 'p2', name: 'Bob' },
+        ],
+      },
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.conflicts).toEqual([]);
+    expect(res.body.applied).toEqual(['trophy']);
+    expect(savedRecord().trophy).toEqual(['Al', 'Bob']);
+  });
+
   it('echoes minted player ids back in the response', async () => {
     (recordDao.getById as jest.Mock).mockResolvedValue(
       existingRecord({ players: [{ name: 'Alice' }, { name: 'Bob' }] }),
