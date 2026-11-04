@@ -692,6 +692,22 @@ export const reconcileAfterSave = (
   // the seats this workspace must keep addressing by the same scheme as `seeded`.
   if (playersApplied && record.players) {
     nextState = { ...nextState, seatOrder: [...record.players.seatOrder] };
+
+    // `seeded.decks` is index-keyed, unlike `overrides` (keyed by name), so a reorder that
+    // just applied leaves it pointing at the wrong player for anyone whose deck wasn't itself
+    // part of this save — the very next deck edit on that player would diff/submit against a
+    // different player's stored deck, self-inflicting a future conflict. Re-key every player
+    // from the old position (`state.seatOrder`, read before the overwrite above) to the new
+    // one, the same old->new carry `movePastes` already does for a pending paste.
+    const rekeyedDecks: TranscribeState['decks'] = {};
+    state.players.forEach((_, index) => {
+      const origin = state.seatOrder[index] ?? -1;
+      const deck = origin >= 0 ? seeded.decks[origin] : undefined;
+      if (deck) {
+        rekeyedDecks[index] = deck;
+      }
+    });
+    nextSeeded = { ...nextSeeded, decks: rekeyedDecks };
   }
 
   for (const key of applied) {

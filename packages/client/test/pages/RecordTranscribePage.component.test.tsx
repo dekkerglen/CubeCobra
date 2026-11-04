@@ -1894,5 +1894,89 @@ describe('RecordTranscribePage', () => {
       expect(screen.queryByTestId('conflicts-alert')).not.toBeInTheDocument();
       expect(screen.getByText('No unsaved changes')).toBeInTheDocument();
     });
+
+    // A failed resubmission must not read as the earlier conflict having resolved itself —
+    // the section stays dirty and will be resubmitted, so its marker has to stay visible too.
+    it('keeps the conflict marker visible when a resubmission fails', async () => {
+      const responses = [
+        { success: 'true', applied: [], conflicts: [overviewConflict('Server Name')], record: {} },
+        { success: 'false', message: 'Could not save this record.' },
+      ];
+      const csrfFetch: jest.Mock = jest.fn(async (url: RequestInfo) => {
+        if (url === SAVE_URL) {
+          const callIndex = saveCalls(csrfFetch).length - 1;
+          return { ok: true, json: async () => responses[callIndex] } as Response;
+        }
+        return { ok: false, status: 404, json: async () => ({ success: 'false' }) } as Response;
+      });
+      renderPage({ csrfFetch });
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'My typed name' } });
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+      expect(await screen.findByTestId('section-conflict-overview')).toBeInTheDocument();
+
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(2));
+      await waitFor(() => expect(screen.queryByText('Saving...')).not.toBeInTheDocument());
+
+      expect(await screen.findByText('Could not save this record.')).toBeInTheDocument();
+      // The resubmission's own failure must not have discarded the still-outstanding conflict
+      // from the first save.
+      expect(screen.getByTestId('section-conflict-overview')).toBeInTheDocument();
+    });
+
+    // Resolving the very last conflict can immediately reach the "clean save" footer condition
+    // (no conflicts, nothing dirty) — the message from the save that reported them must not
+    // linger into that success alert and read as if a section is still contested.
+    it('clears the stale conflict message once the last conflict is resolved', async () => {
+      const csrfFetch = makeCsrfFetch({
+        success: 'true',
+        applied: [],
+        conflicts: [overviewConflict('Server Name')],
+        record: {},
+      });
+      renderPage({ csrfFetch });
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'My typed name' } });
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+      expect(
+        await screen.findByText('Some sections could not be saved — someone else changed them. Resolve them below.'),
+      ).toBeInTheDocument();
+
+      const marker = within(await screen.findByTestId('section-conflict-overview'));
+      fireEvent.click(marker.getByText('Keep theirs'));
+
+      await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
+      expect(
+        screen.queryByText('Some sections could not be saved — someone else changed them. Resolve them below.'),
+      ).not.toBeInTheDocument();
+    });
+
+    // The Rounds card, and the only resolution control for a `rounds` conflict, does not exist
+    // in the DOM in "Final records only" mode — the marker itself must not depend on it.
+    it('keeps the rounds conflict marker reachable from final records only mode', async () => {
+      const csrfFetch = makeCsrfFetch({
+        success: 'true',
+        applied: [],
+        conflicts: [{ section: 'rounds', stored: { matches: [] } }],
+        record: {},
+      });
+      renderPage({ record: createRecord({ matches: pairedRound() }), csrfFetch });
+
+      // Dirty `rounds` while still in pairings mode, where its editor lives, then save.
+      fireEvent.click(screen.getByRole('button', { name: 'Add Round' }));
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+      expect(await screen.findByTestId('section-conflict-rounds')).toBeInTheDocument();
+
+      // Switching modes unmounts the Rounds card and its editor — the marker must not go with
+      // it, or the user is told about a conflict they now have no way to act on.
+      fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
+
+      expect(roundsShown()).toBe(false);
+      expect(screen.getByTestId('section-conflict-rounds')).toBeInTheDocument();
+    });
   });
 });

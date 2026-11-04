@@ -213,7 +213,6 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
     savingRef.current = true;
     setSaveError('');
     setSavedMessage('');
-    setConflicts([]);
 
     try {
       const response = await csrfFetch(`/cube/records/enter/${record.id}`, {
@@ -263,25 +262,44 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
     }
   }, [csrfFetch, record.id, state, seeded, resultsMode, seededResultsMode]);
 
+  // Resolving a conflict this way can immediately satisfy the "clean save" footer condition
+  // (no conflicts left, nothing else dirty) — the message from the save that reported them
+  // must not linger into that success alert and read as if a section is still contested.
+  const clearConflict = useCallback((section: SectionKey) => {
+    setConflicts((previous) => {
+      const next = previous.filter((item) => item.section !== section);
+      if (next.length === 0) {
+        setSavedMessage('');
+      }
+      return next;
+    });
+  }, []);
+
   // "Keep theirs": the conflicted section's local edit is discarded outright, both sides
   // taking the server's current value, so it reads clean immediately.
-  const keepTheirs = useCallback((conflict: SaveConflict) => {
-    setWorkspace((previous) => {
-      const { state: nextState, seeded: nextSeeded } = keepStoredSection(previous.state, previous.seeded, conflict);
-      return { state: nextState, seeded: nextSeeded };
-    });
-    setConflicts((previous) => previous.filter((item) => item.section !== conflict.section));
-  }, []);
+  const keepTheirs = useCallback(
+    (conflict: SaveConflict) => {
+      setWorkspace((previous) => {
+        const { state: nextState, seeded: nextSeeded } = keepStoredSection(previous.state, previous.seeded, conflict);
+        return { state: nextState, seeded: nextSeeded };
+      });
+      clearConflict(conflict.section);
+    },
+    [clearConflict],
+  );
 
   // "Keep mine": only the baseline moves — the local edit survives and stays dirty, so the
   // next Save resubmits it against a baseline that now matches storage, overwriting it.
-  const keepMine = useCallback((conflict: SaveConflict) => {
-    setWorkspace((previous) => ({
-      ...previous,
-      seeded: keepLocalSection(previous.state, previous.seeded, conflict),
-    }));
-    setConflicts((previous) => previous.filter((item) => item.section !== conflict.section));
-  }, []);
+  const keepMine = useCallback(
+    (conflict: SaveConflict) => {
+      setWorkspace((previous) => ({
+        ...previous,
+        seeded: keepLocalSection(previous.state, previous.seeded, conflict),
+      }));
+      clearConflict(conflict.section);
+    },
+    [clearConflict],
+  );
 
   const conflictFor = useCallback(
     (key: SectionKey) => conflicts.find((conflict) => conflict.section === key),
@@ -373,6 +391,11 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                 </CardHeader>
                 <CardBody>
                   <Flexbox direction="col" gap="2">
+                    {/* The Rounds card below only exists in "Pairings" mode, but a `rounds`
+                        conflict can still be outstanding while viewing "Final records only" —
+                        this is the only resolution control for it, so it must stay reachable
+                        in both modes rather than living inside that conditional card. */}
+                    {conflictMarker(conflictFor('rounds'))}
                     <Text sm className="text-text-secondary">
                       Are you transcribing every pairing, or only each player&apos;s final record?
                     </Text>
@@ -458,7 +481,6 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                   </CardHeader>
                   <CardBody>
                     <Flexbox direction="col" gap="2">
-                      {conflictMarker(conflictFor('rounds'))}
                       <TranscribeRounds
                         players={state.players}
                         matches={state.matches}

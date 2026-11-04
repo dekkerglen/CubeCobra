@@ -915,6 +915,53 @@ describe('reconcileAfterSave', () => {
     expect(result.state.seatOrder).toEqual([0, 1]);
   });
 
+  it("re-keys seeded.decks from old positions to new ones when a pure seat reorder applies, so a player whose deck wasn't submitted keeps addressing their own stored deck", () => {
+    const aliceDeckCard = createCardDetails({ name: 'Alice Card', oracle_id: 'oracle-alice' });
+    const bobDeckCard = createCardDetails({ name: 'Bob Card', oracle_id: 'oracle-bob' });
+    const seeded: TranscribeState = {
+      ...seedTranscribeState(createRecord({ players: [{ name: 'Alice' }, { name: 'Bob' }], overrides: {} })),
+      decks: {
+        0: { mainboard: [aliceDeckCard], sideboard: [], dirty: false, editable: true },
+        1: { mainboard: [bobDeckCard], sideboard: [], dirty: false, editable: true },
+      },
+    };
+    // The user reordered locally (Bob first) without touching either deck this save.
+    const edited: TranscribeState = {
+      ...seeded,
+      players: [{ name: 'Bob' }, { name: 'Alice' }],
+      seatOrder: [1, 0],
+    };
+    const record: SectionBaselines = {
+      players: {
+        players: [
+          { id: 'srv-bob', name: 'Bob' },
+          { id: 'srv-alice', name: 'Alice' },
+        ],
+        seatOrder: [0, 1],
+      },
+    };
+
+    const result = reconcileAfterSave(edited, seeded, ['players'], record);
+
+    // Bob is now at position 0 and must keep addressing his own stored deck there — not
+    // Alice's, which the unfixed code left behind at index 0.
+    expect(result.seeded.decks[0]?.mainboard).toEqual([bobDeckCard]);
+    expect(result.seeded.decks[1]?.mainboard).toEqual([aliceDeckCard]);
+
+    // The anti-goal this guards: editing Bob's deck afterward (still not submitted) must
+    // diff and submit against his own stored deck, not Alice's — a spurious conflict on a
+    // section nobody but this user touched.
+    const afterDeckEdit: TranscribeState = {
+      ...result.state,
+      decks: {
+        ...result.state.decks,
+        0: { ...result.state.decks[0], mainboard: [bobDeckCard, aliceDeckCard], dirty: true },
+      },
+    };
+    const payload = toTranscribePayload(afterDeckEdit, result.seeded);
+    expect(payload.baselines.decks?.['0']).toEqual({ mainboard: ['oracle-bob'], sideboard: [] });
+  });
+
   it("reuses the deck's own CardDetails when its section applies, rather than rebuilding degraded stand-ins from the response's oracle-id echo", () => {
     const seeded = seedTranscribeState(createRecord());
     const bolt = createCardDetails({ name: 'Lightning Bolt', oracle_id: 'oracle-bolt' });
