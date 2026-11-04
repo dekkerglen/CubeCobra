@@ -1,7 +1,9 @@
 import { CardDetails } from '@utils/datatypes/Card';
 import Draft, { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import Record, { applyPlayerRenames, PlayerList, Round, WinLossDraw } from '@utils/datatypes/Record';
-import { flattenSeatPool, SectionBaselines, SectionKey, toOracleIds } from '@utils/records/recordSections';
+import { flattenSeatPool, SectionBaselines, SectionKey, SectionName, toOracleIds } from '@utils/records/recordSections';
+
+import { getPlaceholderCardDetails } from 'utils/placeholderCardDetails';
 
 // The limits POST /cube/records/enter/:id enforces, in one place: the page validates against
 // them, the results editor refuses to add past them, and the server's Joi schema mirrors them.
@@ -424,9 +426,12 @@ export const dirtySections = (
 const OVERRIDE_PREFIX = 'overrides:';
 const DECK_PREFIX = 'decks:';
 
-// Spreads one section's baseline into SectionBaselines, nesting a per-player override or deck
-// under its player key rather than writing it at the top level.
-const addBaseline = (baselines: SectionBaselines, key: SectionKey, value: TranscribeSectionValue): void => {
+// Spreads one section's value into a SectionBaselines-shaped object, nesting a per-player
+// override or deck under its player key rather than writing it at the top level. Used to
+// build what toTranscribePayload submits, and reused (with the submitted *value* rather than
+// a baseline) as the fallback record for a response that doesn't echo one — see
+// fallbackRecord below.
+export const addBaseline = (baselines: SectionBaselines, key: SectionKey, value: TranscribeSectionValue): void => {
   if (key.startsWith(OVERRIDE_PREFIX)) {
     const playerKey = key.slice(OVERRIDE_PREFIX.length);
     baselines.overrides = { ...baselines.overrides, [playerKey]: value as WinLossDraw | null };
@@ -482,3 +487,249 @@ export const isDirty = (
   finalRecordsOnly = false,
   seededFinalRecordsOnly = false,
 ): boolean => dirtySections(state, seeded, finalRecordsOnly, seededFinalRecordsOnly).length > 0;
+
+// --- Conflict reporting and resolution --------------------------------------------------
+//
+// POST /cube/records/enter/:id answers with { applied, conflicts, record }: which sections
+// landed, which were refused because someone else changed them first, and the post-write
+// value of every applied one. Everything below turns that into workspace updates — re-seeding
+// what landed, and letting the user resolve what didn't without losing anything they typed.
+
+// Exactly what the endpoint reports for a section it refused: the key, and whatever it
+// currently holds for it. `stored` is already unwrapped to that one section's own shape —
+// never nested under SectionBaselines the way `record` is, since a conflict is about one
+// section at a time.
+export interface SaveConflict {
+  section: SectionKey;
+  stored: unknown;
+}
+
+// Mirrors the server's resolvePlayerIndex: a digit-only suffix is a seat position, never a
+// player id (ids are never bare integers), so a key playerSectionKey built resolves back to
+// the same player on whichever side reads it.
+export const resolvePlayerIndex = (rawKey: string, players: PlayerList): number =>
+  /^\d+$/.test(rawKey) ? Number(rawKey) : players.findIndex((player) => player.id === rawKey);
+
+// Where this key's player sits in `seeded`'s own arrays. A digit suffix is a seat position in
+// *live* `state`, so it is translated through `state.seatOrder` to the seeded-side position
+// that player came from; only a stable id can be looked up directly in `seeded.players`,
+// unaffected by a reorder still sitting unsaved in `state`.
+const seededIndexFor = (state: TranscribeState, seeded: TranscribeState, rawKey: string): number =>
+  /^\d+$/.test(rawKey)
+    ? (state.seatOrder[Number(rawKey)] ?? -1)
+    : seeded.players.findIndex((player) => player.id === rawKey);
+
+const withOverride = (workspace: TranscribeState, index: number, value: WinLossDraw | null): TranscribeState => {
+  const player = workspace.players[index];
+  if (!player) {
+    return workspace;
+  }
+  const overrides = { ...workspace.overrides };
+  if (value === null) {
+    delete overrides[player.name];
+  } else {
+    overrides[player.name] = value;
+  }
+  return { ...workspace, overrides };
+};
+
+const withDeck = (workspace: TranscribeState, index: number, deck: TranscribeDeck): TranscribeState =>
+  index >= 0 && workspace.decks[index] ? { ...workspace, decks: { ...workspace.decks, [index]: deck } } : workspace;
+
+// A deck section's stored value is oracle ids, not CardDetails — all this workspace or the
+// server ever compares a deck by. The placeholder the rest of the app already shows while a
+// real card's details are still loading keeps the round trip type-safe without inventing card
+// data nobody asked for; nothing reads its blank name except a conflict a user chose to keep
+// the stored side of.
+const deckFromOracleIds = (
+  previous: TranscribeDeck,
+  value: { mainboard: string[]; sideboard: string[] },
+): TranscribeDeck => ({
+  ...previous,
+  mainboard: value.mainboard.map((oracleId) => ({ ...getPlaceholderCardDetails(oracleId), oracle_id: oracleId })),
+  sideboard: value.sideboard.map((oracleId) => ({ ...getPlaceholderCardDetails(oracleId), oracle_id: oracleId })),
+  dirty: false,
+});
+
+const applyWholeSection = (workspace: TranscribeState, key: SectionName, value: unknown): TranscribeState => {
+  switch (key) {
+    case 'overview': {
+      const typed = value as NonNullable<SectionBaselines['overview']>;
+      return { ...workspace, name: typed.name, date: typed.date, description: typed.description };
+    }
+    case 'players': {
+      const typed = value as NonNullable<SectionBaselines['players']>;
+      return { ...workspace, players: typed.players.map((player) => ({ ...player })), seatOrder: [...typed.seatOrder] };
+    }
+    case 'rounds': {
+      const typed = value as NonNullable<SectionBaselines['rounds']>;
+      return { ...workspace, matches: copyMatches(typed.matches) };
+    }
+    case 'trophy': {
+      const typed = value as NonNullable<SectionBaselines['trophy']>;
+      return { ...workspace, trophy: [...typed.trophy] };
+    }
+  }
+};
+
+// Applies one section's resolved value — a conflict's `stored`, in a resolution, or the
+// response's echo in reconcileAfterSave — to one side of the workspace, at the position
+// *that side's own* arrays hold it at. Shared by both conflict resolutions and the post-save
+// reconciliation so an overrides or decks key means the same position lookup everywhere it
+// is read.
+const applyResolvedSection = (
+  workspace: TranscribeState,
+  key: SectionKey,
+  index: number,
+  value: unknown,
+): TranscribeState => {
+  if (key.startsWith(OVERRIDE_PREFIX)) {
+    return index === -1 ? workspace : withOverride(workspace, index, value as WinLossDraw | null);
+  }
+  if (key.startsWith(DECK_PREFIX)) {
+    if (index === -1 || !workspace.decks[index]) {
+      return workspace;
+    }
+    return withDeck(
+      workspace,
+      index,
+      deckFromOracleIds(workspace.decks[index], value as { mainboard: string[]; sideboard: string[] }),
+    );
+  }
+  return applyWholeSection(workspace, key as SectionName, value);
+};
+
+const rawPlayerKey = (key: SectionKey): string | undefined => {
+  if (key.startsWith(OVERRIDE_PREFIX)) {
+    return key.slice(OVERRIDE_PREFIX.length);
+  }
+  if (key.startsWith(DECK_PREFIX)) {
+    return key.slice(DECK_PREFIX.length);
+  }
+  return undefined;
+};
+
+// "Keep theirs": this section's local edit is discarded outright — both sides take the
+// server's current value, so the section reads clean immediately and nothing it held
+// survives the resolution.
+export const keepStoredSection = (
+  state: TranscribeState,
+  seeded: TranscribeState,
+  conflict: SaveConflict,
+): { state: TranscribeState; seeded: TranscribeState } => {
+  const raw = rawPlayerKey(conflict.section);
+  const stateIndex = raw === undefined ? -1 : resolvePlayerIndex(raw, state.players);
+  const seededIndex = raw === undefined ? -1 : seededIndexFor(state, seeded, raw);
+  return {
+    state: applyResolvedSection(state, conflict.section, stateIndex, conflict.stored),
+    seeded: applyResolvedSection(seeded, conflict.section, seededIndex, conflict.stored),
+  };
+};
+
+// "Keep mine": only `seeded` moves to the stored value — a deliberate second action. The
+// local edit survives untouched and stays dirty, so the next Save resubmits it against a
+// baseline that now matches storage, overwriting it instead of being refused again.
+export const keepLocalSection = (
+  state: TranscribeState,
+  seeded: TranscribeState,
+  conflict: SaveConflict,
+): TranscribeState => {
+  const raw = rawPlayerKey(conflict.section);
+  const seededIndex = raw === undefined ? -1 : seededIndexFor(state, seeded, raw);
+  return applyResolvedSection(seeded, conflict.section, seededIndex, conflict.stored);
+};
+
+// The record to reconcile against when a response doesn't echo one — an endpoint this page
+// doesn't recognize as conflict-aware. Treating "what was submitted" as "what landed" is
+// exactly the assumption the page made before conflicts existed, and is sound here for the
+// same reason `appliedKeys` falls back to every submitted key: a response with none of the
+// new fields is read as the old atomic contract, not as "nothing happened".
+export const fallbackRecord = (sections: TranscribeSectionsPayload['sections']): SectionBaselines => {
+  const record: SectionBaselines = {};
+  for (const [key, value] of Object.entries(sections)) {
+    if (value === undefined) {
+      continue;
+    }
+    if (key === 'players') {
+      // The real endpoint always echoes `players` with an identity seatOrder — it has just
+      // realigned the draft's seats into the submitted order, so that is the only sound
+      // value here too, not whatever permutation this save happened to submit.
+      const typed = value as NonNullable<SectionBaselines['players']>;
+      addBaseline(record, key, { players: typed.players, seatOrder: typed.players.map((_, index) => index) });
+      continue;
+    }
+    addBaseline(record, key as SectionKey, value);
+  }
+  return record;
+};
+
+// After a save lands, reconciles `seeded` (and the few corners of `state` that must move in
+// lockstep — seatOrder, a deck's dirty flag) against what the server actually did. Every
+// applied section's baseline comes from `record`, the server's post-write echo — never from
+// what was submitted, since the server may have minted a player id, rebased a renamed
+// player's matches or trophy, or resolved a brand new player's override. A section not in
+// `applied` is a conflict and is left exactly as the user had it.
+export const reconcileAfterSave = (
+  state: TranscribeState,
+  seeded: TranscribeState,
+  applied: SectionKey[],
+  record: SectionBaselines,
+): { state: TranscribeState; seeded: TranscribeState } => {
+  let nextState = state;
+  let nextSeeded = seeded;
+  const playersApplied = applied.includes('players');
+
+  for (const key of ['overview', 'players', 'rounds', 'trophy'] as const) {
+    const value = record[key];
+    if (applied.includes(key) && value !== undefined) {
+      nextSeeded = applyWholeSection(nextSeeded, key, value);
+    }
+  }
+
+  // Sound only because `players` itself just applied: the server has realigned the draft's
+  // seats (and this echo's seatOrder) into the submitted order, so identity is the only
+  // seatOrder that addresses them correctly from here on — for `state` too, since it holds
+  // the seats this workspace must keep addressing by the same scheme as `seeded`.
+  if (playersApplied && record.players) {
+    nextState = { ...nextState, seatOrder: [...record.players.seatOrder] };
+  }
+
+  for (const key of applied) {
+    const raw = rawPlayerKey(key);
+    if (raw === undefined) {
+      continue;
+    }
+    const index = resolvePlayerIndex(raw, state.players);
+    if (index === -1) {
+      continue;
+    }
+    // Identity once `players` itself applied this same save (the server preserves submission
+    // order when assigning ids, so position i there is position i here); otherwise wherever
+    // this player's seat already pointed — a section untouched this save keeps addressing
+    // seeded exactly as it always did.
+    const origin = playersApplied ? index : (state.seatOrder[index] ?? -1);
+    if (origin === -1) {
+      continue;
+    }
+
+    if (key.startsWith(DECK_PREFIX)) {
+      if (!state.decks[index]) {
+        continue;
+      }
+      // The stored content is exactly what was submitted — nothing server-side renames or
+      // reorders a deck's cards — so the CardDetails this workspace already has are reused
+      // rather than rebuilt, lossily, from the response's oracle-id echo.
+      const settled = { ...state.decks[index], dirty: false };
+      nextState = { ...nextState, decks: { ...nextState.decks, [index]: settled } };
+      nextSeeded = withDeck(nextSeeded, origin, settled);
+      continue;
+    }
+
+    const value = record.overrides?.[raw];
+    if (value !== undefined) {
+      nextSeeded = withOverride(nextSeeded, origin, value);
+    }
+  }
+
+  return { state: nextState, seeded: nextSeeded };
+};

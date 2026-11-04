@@ -1,19 +1,26 @@
 import Card from '@utils/datatypes/Card';
 import Draft, { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import RecordType from '@utils/datatypes/Record';
+import { SectionBaselines } from '@utils/records/recordSections';
 
 import { createCard, createCardDetails, createCardWithoutDetails } from '../../../server/test/test-utils/data';
 import {
   applyPlayerEdit,
   areSeatsEditable,
   dirtySections,
+  fallbackRecord,
   isDirty,
+  keepLocalSection,
+  keepStoredSection,
   MAX_DECK_CARDS,
   MAX_DESCRIPTION_LENGTH,
   MAX_NAME_LENGTH,
   MAX_PLAYERS,
   MAX_ROUNDS,
   movePastes,
+  reconcileAfterSave,
+  resolvePlayerIndex,
+  SaveConflict,
   seedTranscribeState,
   setDeckCards,
   toTranscribePayload,
@@ -845,5 +852,197 @@ describe('movePastes', () => {
 
   it('leaves an untouched list exactly as it was', () => {
     expect(movePastes(pastes, [0, 1])).toEqual(pastes);
+  });
+});
+
+describe('resolvePlayerIndex', () => {
+  it('resolves a digit suffix as a seat position', () => {
+    expect(resolvePlayerIndex('2', [{ name: 'A' }, { name: 'B' }, { name: 'C', id: '99' }])).toBe(2);
+  });
+
+  it('resolves a non-digit suffix as a player id', () => {
+    expect(resolvePlayerIndex('abc', [{ name: 'A', id: 'abc' }, { name: 'B' }])).toBe(0);
+  });
+
+  it('reports -1 for an id this list no longer has', () => {
+    expect(resolvePlayerIndex('gone', [{ name: 'A', id: 'abc' }])).toBe(-1);
+  });
+});
+
+// The post-save reconciliation this workspace uses once the endpoint names which sections it
+// actually wrote: seeded is re-based section by section from `record` — the server's echo —
+// never from what this workspace submitted, since the server may have minted a player id,
+// rebased a renamed player's matches or trophy, or resolved a brand new player's override.
+describe('reconcileAfterSave', () => {
+  it('re-baselines overview from the response, not from state', () => {
+    const seeded = seedTranscribeState(createRecord({ name: 'Original' }));
+    const edited: TranscribeState = { ...seeded, name: 'Typed by me' };
+    const record: SectionBaselines = {
+      overview: { name: 'Normalized by the server', date: seeded.date, description: seeded.description },
+    };
+
+    const result = reconcileAfterSave(edited, seeded, ['overview'], record);
+
+    expect(result.seeded.name).toBe('Normalized by the server');
+    // Applying a section never touches `state` beyond what the section itself requires
+    // (seatOrder for players, a deck's dirty flag) — the user's own typing stays exactly as
+    // they left it.
+    expect(result.state.name).toBe('Typed by me');
+  });
+
+  it('re-baselines players, and forces identity seatOrder on both sides, from the response rather than the submitted permutation', () => {
+    const seeded = seedTranscribeState(createRecord({ players: [{ name: 'Alice' }, { name: 'Bob' }] }));
+    // The user reordered locally — [1, 0] is what was actually submitted.
+    const edited: TranscribeState = {
+      ...seeded,
+      players: [{ name: 'Bob' }, { name: 'Alice' }],
+      seatOrder: [1, 0],
+    };
+    const record: SectionBaselines = {
+      players: {
+        players: [
+          { id: 'srv-bob', name: 'Bob' },
+          { id: 'srv-alice', name: 'Alice' },
+        ],
+        seatOrder: [0, 1],
+      },
+    };
+
+    const result = reconcileAfterSave(edited, seeded, ['players'], record);
+
+    expect(result.seeded.players).toEqual(record.players!.players);
+    expect(result.seeded.seatOrder).toEqual([0, 1]);
+    expect(result.state.seatOrder).toEqual([0, 1]);
+  });
+
+  it("reuses the deck's own CardDetails when its section applies, rather than rebuilding degraded stand-ins from the response's oracle-id echo", () => {
+    const seeded = seedTranscribeState(createRecord());
+    const bolt = createCardDetails({ name: 'Lightning Bolt', oracle_id: 'oracle-bolt' });
+    const edited: TranscribeState = {
+      ...seeded,
+      decks: { ...seeded.decks, 0: { mainboard: [bolt], sideboard: [], dirty: true, editable: true } },
+    };
+    const record: SectionBaselines = { decks: { '0': { mainboard: ['oracle-bolt'], sideboard: [] } } };
+
+    const result = reconcileAfterSave(edited, seeded, ['decks:0'], record);
+
+    expect(result.state.decks[0]).toEqual({ mainboard: [bolt], sideboard: [], dirty: false, editable: true });
+    expect(result.seeded.decks[0]).toEqual({ mainboard: [bolt], sideboard: [], dirty: false, editable: true });
+  });
+
+  it('leaves a section out of `applied` exactly as the user had it', () => {
+    const seeded = seedTranscribeState(createRecord({ trophy: ['Alice'] }));
+    const edited: TranscribeState = { ...seeded, trophy: ['Alice', 'Bob'] };
+
+    const result = reconcileAfterSave(edited, seeded, [], {});
+
+    expect(result.state.trophy).toEqual(['Alice', 'Bob']);
+    expect(result.seeded.trophy).toEqual(['Alice']);
+  });
+
+  it('resolves a digit-keyed override through the seat it points at, not the position it shares with state, when players itself did not apply', () => {
+    const seeded = seedTranscribeState(createRecord({ players: [{ name: 'Alice' }, { name: 'Bob' }], overrides: {} }));
+    // Reordered locally but not (yet) saved: state's position 0 is Bob, who came from
+    // seeded's position 1 (seatOrder[0] === 1). A position-for-position copy would
+    // mis-attribute this to seeded's own Alice instead.
+    const edited: TranscribeState = {
+      ...seeded,
+      players: [{ name: 'Bob' }, { name: 'Alice' }],
+      seatOrder: [1, 0],
+      overrides: { Bob: { wins: 2, losses: 0, draws: 0 } },
+    };
+    const record: SectionBaselines = { overrides: { '0': { wins: 2, losses: 0, draws: 0 } } };
+
+    const result = reconcileAfterSave(edited, seeded, ['overrides:0'], record);
+
+    expect(result.seeded.overrides).toEqual({ Bob: { wins: 2, losses: 0, draws: 0 } });
+  });
+});
+
+describe('fallbackRecord', () => {
+  it('treats a response with no record as having echoed back exactly what was submitted, forcing identity seatOrder for players', () => {
+    const seeded = seedTranscribeState(createRecord({ players: [{ name: 'Alice' }, { name: 'Bob' }] }));
+    const edited: TranscribeState = {
+      ...seeded,
+      name: 'Renamed Night',
+      players: [{ name: 'Bob' }, { name: 'Alice' }],
+      seatOrder: [1, 0],
+    };
+
+    const payload = toTranscribePayload(edited, seeded);
+    const record = fallbackRecord(payload.sections);
+
+    expect(record.overview).toEqual({ name: 'Renamed Night', date: seeded.date, description: seeded.description });
+    expect(record.players).toEqual({ players: [{ name: 'Bob' }, { name: 'Alice' }], seatOrder: [0, 1] });
+  });
+});
+
+describe('keepStoredSection', () => {
+  it("discards the local edit outright — both sides take the server's current value", () => {
+    const seeded = seedTranscribeState(createRecord({ name: 'Original' }));
+    const state: TranscribeState = { ...seeded, name: 'My edit' };
+    const conflict: SaveConflict = {
+      section: 'overview',
+      stored: { name: "Someone else's edit", date: seeded.date, description: seeded.description },
+    };
+
+    const result = keepStoredSection(state, seeded, conflict);
+
+    expect(result.state.name).toBe("Someone else's edit");
+    expect(result.seeded.name).toBe("Someone else's edit");
+  });
+
+  it('rebuilds a conflicted deck from the stored oracle ids as a placeholder, clearing dirty', () => {
+    const seeded = seedTranscribeState(createRecord());
+    const bolt = createCardDetails({ name: 'Lightning Bolt', oracle_id: 'oracle-bolt' });
+    const state: TranscribeState = {
+      ...seeded,
+      decks: { ...seeded.decks, 0: { mainboard: [bolt], sideboard: [], dirty: true, editable: true } },
+    };
+    const conflict: SaveConflict = { section: 'decks:0', stored: { mainboard: ['oracle-other'], sideboard: [] } };
+
+    const result = keepStoredSection(state, seeded, conflict);
+
+    expect(result.state.decks[0]!.dirty).toBe(false);
+    expect(result.state.decks[0]!.mainboard.map((card) => card.oracle_id)).toEqual(['oracle-other']);
+    expect(result.seeded.decks[0]!.mainboard.map((card) => card.oracle_id)).toEqual(['oracle-other']);
+  });
+
+  it('resolves an id-keyed override conflict against each side independently', () => {
+    const seeded = seedTranscribeState(
+      createRecord({
+        players: [
+          { name: 'Alice', id: 'alice-id' },
+          { name: 'Bob', id: 'bob-id' },
+        ],
+        overrides: {},
+      }),
+    );
+    const state: TranscribeState = { ...seeded, overrides: { Alice: { wins: 9, losses: 0, draws: 0 } } };
+    const conflict: SaveConflict = { section: 'overrides:alice-id', stored: { wins: 1, losses: 1, draws: 1 } };
+
+    const result = keepStoredSection(state, seeded, conflict);
+
+    expect(result.state.overrides).toEqual({ Alice: { wins: 1, losses: 1, draws: 1 } });
+    expect(result.seeded.overrides).toEqual({ Alice: { wins: 1, losses: 1, draws: 1 } });
+  });
+});
+
+describe('keepLocalSection', () => {
+  it('moves only the baseline — the local edit survives untouched and stays dirty', () => {
+    const seeded = seedTranscribeState(createRecord({ name: 'Original' }));
+    const state: TranscribeState = { ...seeded, name: 'My edit' };
+    const conflict: SaveConflict = {
+      section: 'overview',
+      stored: { name: "Someone else's edit", date: seeded.date, description: seeded.description },
+    };
+
+    const nextSeeded = keepLocalSection(state, seeded, conflict);
+
+    expect(nextSeeded.name).toBe("Someone else's edit");
+    // The next diff would compare this against `state`, which the caller leaves untouched —
+    // "My edit" against this new baseline reads dirty again, which is what lets the next
+    // Save resubmit and overwrite rather than silently reapplying what was just rejected.
+    expect(dirtySections(state, nextSeeded, false)).toContain('overview');
   });
 });

@@ -13,6 +13,7 @@ import { CSRFContext } from 'contexts/CSRFContext';
 
 import { createCardDetails } from '../../../server/test/test-utils/data';
 import RecordTranscribePage from '../../src/pages/RecordTranscribePage';
+import { SaveConflict } from '../../src/records/transcribe/transcribeState';
 
 // Keeps the real sortable components — the rows are wrapped in the same dnd-kit context they
 // are in a browser — while making two otherwise invisible things assertable:
@@ -1709,5 +1710,189 @@ describe('RecordTranscribePage', () => {
     expect(screen.getByText(/at most 16 players/)).toBeInTheDocument();
     expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
     expect(saveButton()).toBeDisabled();
+  });
+
+  // Task 6 taught the endpoint to apply the sections nobody else touched and refuse the ones
+  // that moved, answering with { applied, conflicts, record }. These cover what the page does
+  // with that: nothing the user typed is lost, every refused section is named and marked in
+  // place, and the two resolutions behave as the design requires.
+  describe('conflict reporting and resolution', () => {
+    const overviewConflict = (storedName: string): SaveConflict => ({
+      section: 'overview',
+      stored: { name: storedName, date: 1700000000000, description: 'Eight players, three rounds' },
+    });
+
+    it('keeps every edit on the page when a section conflicts', async () => {
+      const csrfFetch = makeCsrfFetch({
+        success: 'true',
+        applied: [],
+        conflicts: [overviewConflict('Someone else renamed this')],
+        record: {},
+      });
+      renderPage({ csrfFetch });
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'My typed name' } });
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+      await waitFor(() => expect(screen.getByTestId('section-conflict-overview')).toBeInTheDocument());
+
+      // A conflict is reported — not applied — so nothing the user typed is thrown away, and
+      // the record still reads as having unsaved work.
+      expect(screen.getByPlaceholderText(NAME_INPUT)).toHaveValue('My typed name');
+      expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+    });
+
+    it('names each refused section in an alert', async () => {
+      const csrfFetch = makeCsrfFetch({
+        success: 'true',
+        applied: [],
+        conflicts: [overviewConflict('Other'), { section: 'trophy', stored: { trophy: [] } }],
+        record: {},
+      });
+      renderPage({ csrfFetch });
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed' } });
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+      const alert = within(await screen.findByTestId('conflicts-alert'));
+      expect(alert.getByText('Event details')).toBeInTheDocument();
+      expect(alert.getByText('Trophy')).toBeInTheDocument();
+    });
+
+    it("marks the conflicted section's card and leaves the others unmarked", async () => {
+      const csrfFetch = makeCsrfFetch({
+        success: 'true',
+        applied: [],
+        conflicts: [overviewConflict('Other')],
+        record: {},
+      });
+      renderPage({ csrfFetch });
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed' } });
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+      expect(await screen.findByTestId('section-conflict-overview')).toBeInTheDocument();
+      expect(screen.queryByTestId('section-conflict-players')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('section-conflict-rounds')).not.toBeInTheDocument();
+      expect(screen.queryByTestId('section-conflict-trophy')).not.toBeInTheDocument();
+    });
+
+    // `trophy` applying with a response value that disagrees with what was submitted proves
+    // the re-baseline read from the response — a bug that re-baselined from the submission
+    // instead would leave `seeded` matching `state`, and this save would read clean.
+    it('re-baselines applied sections from the response, not the submission', async () => {
+      const csrfFetch = makeCsrfFetch({
+        success: 'true',
+        applied: ['trophy'],
+        conflicts: [],
+        record: { trophy: { trophy: ['Alice', 'Bob'] } },
+      });
+      renderPage({ csrfFetch });
+
+      fireEvent.click(trophyToggle(0));
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+      expect(savedSections(csrfFetch).trophy).toEqual({ trophy: ['Alice'] });
+
+      // Waits for the save to fully settle (rather than for either outcome text directly —
+      // "Unsaved changes" is also what the page shows *before* the save lands, so asserting
+      // on it through `waitFor` without first waiting for settlement would pass on that
+      // transient state alone, proving nothing about what happened after the response arrived).
+      await waitFor(() => expect(screen.queryByText('Saving...')).not.toBeInTheDocument());
+
+      // The server's echo (['Alice', 'Bob']) differs from what was submitted (['Alice']) — a
+      // bug that re-baselined from the submission instead would read this save as fully clean
+      // and show "Record saved."; reading from the response correctly leaves it dirty, since
+      // the workspace does not yet show Bob trophied.
+      expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+      expect(screen.queryByText('Record saved.')).not.toBeInTheDocument();
+    });
+
+    it('discards the local edit and takes the stored value on "keep theirs"', async () => {
+      const csrfFetch = makeCsrfFetch({
+        success: 'true',
+        applied: [],
+        conflicts: [overviewConflict('Server Name')],
+        record: {},
+      });
+      renderPage({ csrfFetch });
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'My typed name' } });
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+      const marker = within(await screen.findByTestId('section-conflict-overview'));
+      fireEvent.click(marker.getByText('Keep theirs'));
+
+      expect(screen.getByPlaceholderText(NAME_INPUT)).toHaveValue('Server Name');
+      expect(screen.getByText('No unsaved changes')).toBeInTheDocument();
+      expect(screen.queryByTestId('section-conflict-overview')).not.toBeInTheDocument();
+    });
+
+    it('re-baselines without discarding on "keep mine", so the next save overwrites', async () => {
+      const responses = [
+        { success: 'true', applied: [], conflicts: [overviewConflict('Server Name')], record: {} },
+        {
+          success: 'true',
+          applied: ['overview'],
+          conflicts: [],
+          record: {
+            overview: { name: 'My typed name', date: 1700000000000, description: 'Eight players, three rounds' },
+          },
+        },
+      ];
+      const csrfFetch: jest.Mock = jest.fn(async (url: RequestInfo) => {
+        if (url === SAVE_URL) {
+          const callIndex = saveCalls(csrfFetch).length - 1;
+          return { ok: true, json: async () => responses[callIndex] } as Response;
+        }
+        return { ok: false, status: 404, json: async () => ({ success: 'false' }) } as Response;
+      });
+      renderPage({ csrfFetch });
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'My typed name' } });
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+      const marker = within(await screen.findByTestId('section-conflict-overview'));
+      fireEvent.click(marker.getByText('Keep mine'));
+
+      // Keep mine never discards the typed value, and the section stays dirty — a deliberate
+      // second action is required before anything is resubmitted.
+      expect(screen.getByPlaceholderText(NAME_INPUT)).toHaveValue('My typed name');
+      expect(screen.getByText('Unsaved changes')).toBeInTheDocument();
+      expect(screen.queryByTestId('section-conflict-overview')).not.toBeInTheDocument();
+
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(2));
+      expect(savedSections(csrfFetch, 1).overview).toEqual({
+        name: 'My typed name',
+        date: 1700000000000,
+        description: 'Eight players, three rounds',
+      });
+      await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
+    });
+
+    it('reports the save as successful when nothing conflicted', async () => {
+      const csrfFetch = makeCsrfFetch({
+        success: 'true',
+        applied: ['overview'],
+        conflicts: [],
+        record: {
+          overview: { name: 'Renamed Night', date: 1700000000000, description: 'Eight players, three rounds' },
+        },
+      });
+      renderPage({ csrfFetch });
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+      expect(await screen.findByText('Record saved.')).toBeInTheDocument();
+      expect(screen.queryByTestId('conflicts-alert')).not.toBeInTheDocument();
+      expect(screen.getByText('No unsaved changes')).toBeInTheDocument();
+    });
   });
 });

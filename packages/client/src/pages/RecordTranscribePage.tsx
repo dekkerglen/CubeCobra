@@ -4,6 +4,7 @@ import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
 import Record, { PlayerList, Round, WinLossDraw } from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
+import { SectionBaselines, SectionKey } from '@utils/records/recordSections';
 import classNames from 'classnames';
 
 import Alert, { UncontrolledAlertProps } from 'components/base/Alert';
@@ -19,6 +20,7 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
 import EditDescription from '../records/EditDescription';
+import { ConflictsAlert, SectionConflictMarker } from '../records/transcribe/SectionConflictNotice';
 import TranscribePlayers from '../records/transcribe/TranscribePlayers';
 import TranscribeRounds, { AddRoundButton, ResultsMode } from '../records/transcribe/TranscribeRounds';
 import {
@@ -26,12 +28,16 @@ import {
   areSeatsEditable,
   CardsUpdate,
   DeckBoard,
+  fallbackRecord,
   isDirty,
+  keepLocalSection,
+  keepStoredSection,
   movePastes,
+  reconcileAfterSave,
+  SaveConflict,
   seedTranscribeState,
   setDeckCards,
   toTranscribePayload,
-  TranscribeDeck,
   TranscribePaste,
   TranscribeState,
   validationErrors,
@@ -56,18 +62,6 @@ interface Workspace {
 // telling the user what final-records mode is hiding.
 const anyPairings = (matches: Round[]): boolean => matches.some((round) => round.matches.length > 0);
 
-const clearedDecks = (
-  decks: { [playerIndex: number]: TranscribeDeck },
-  wasSubmitted: (playerIndex: number, deck: TranscribeDeck) => boolean,
-): { [playerIndex: number]: TranscribeDeck } => {
-  const next: { [playerIndex: number]: TranscribeDeck } = {};
-  for (const [key, deck] of Object.entries(decks)) {
-    const index = Number(key);
-    next[index] = deck.dirty && wasSubmitted(index, deck) ? { ...deck, dirty: false } : deck;
-  }
-  return next;
-};
-
 const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, record, draft, players }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const [workspace, setWorkspace] = useState<Workspace>(() => {
@@ -87,6 +81,11 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
   // was started, which is false even if a save opened while the lookup was outstanding.
   const savingRef = useRef<boolean>(false);
   const [savedMessage, setSavedMessage] = useState<string>('');
+  // The sections the last save was refused on, with whatever the server currently holds for
+  // each. Empty whenever nothing is contested — most of the time, and always before a first
+  // save. Resolving one (see keepTheirs/keepMine below) removes it from here, which is also
+  // what makes its marker disappear.
+  const [conflicts, setConflicts] = useState<SaveConflict[]>([]);
   // Which kind of record is being written down: every pairing, or each player's final record.
   // It governs the whole page rather than one section, and it is presentation only — both
   // sides stay in TranscribeState and both are submitted whichever one is on screen. It opens
@@ -208,20 +207,19 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
   }, [dirty]);
 
   const save = useCallback(async () => {
-    const submitted = state;
     const submittedMode = resultsMode;
+    const payload = toTranscribePayload(state, seeded, submittedMode === 'records', seededResultsMode === 'records');
     setSaving(true);
     savingRef.current = true;
     setSaveError('');
     setSavedMessage('');
+    setConflicts([]);
 
     try {
       const response = await csrfFetch(`/cube/records/enter/${record.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(
-          toTranscribePayload(submitted, seeded, submittedMode === 'records', seededResultsMode === 'records'),
-        ),
+        body: JSON.stringify(payload),
       });
       const json = await response.json();
 
@@ -232,30 +230,31 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
         return;
       }
 
+      // A response naming which sections landed is read exactly as it says; one that
+      // doesn't (an older or stubbed endpoint) is read the way a whole-record save always
+      // behaved — everything submitted applied, nothing conflicted.
+      const appliedKeys: SectionKey[] = Array.isArray(json.applied)
+        ? json.applied
+        : (Object.keys(payload.sections) as SectionKey[]);
+      const conflictList: SaveConflict[] = Array.isArray(json.conflicts) ? json.conflicts : [];
+      const responseRecord: SectionBaselines = json.record ?? fallbackRecord(payload.sections);
+
       setSeededResultsMode(submittedMode);
+      setConflicts(conflictList);
       setWorkspace((previous) => {
-        const wasSubmitted = (index: number, deck: TranscribeDeck) => submitted.decks[index] === deck;
-        // The server rewrote the draft's seats into the submitted player order, so every
-        // player now sits where they are listed and identity is the only correct seatOrder
-        // for the next save. The players section holds every player edit shut for the length
-        // of the request, so no other permutation can have been created in the meantime —
-        // which is what lets this re-base be unconditional.
-        const identity = submitted.players.map((_, index) => index);
-        const settled = {
-          ...submitted,
-          seatOrder: identity,
-          decks: clearedDecks(submitted.decks, wasSubmitted),
-        };
-        return {
-          state: {
-            ...previous.state,
-            seatOrder: identity,
-            decks: clearedDecks(previous.state.decks, wasSubmitted),
-          },
-          seeded: settled,
-        };
+        const { state: nextState, seeded: nextSeeded } = reconcileAfterSave(
+          previous.state,
+          previous.seeded,
+          appliedKeys,
+          responseRecord,
+        );
+        return { state: nextState, seeded: nextSeeded };
       });
-      setSavedMessage('Record saved.');
+      setSavedMessage(
+        conflictList.length > 0
+          ? 'Some sections could not be saved — someone else changed them. Resolve them below.'
+          : 'Record saved.',
+      );
     } catch {
       setSaveError('Could not save this record. Please try again.');
     } finally {
@@ -263,6 +262,57 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
       setSaving(false);
     }
   }, [csrfFetch, record.id, state, seeded, resultsMode, seededResultsMode]);
+
+  // "Keep theirs": the conflicted section's local edit is discarded outright, both sides
+  // taking the server's current value, so it reads clean immediately.
+  const keepTheirs = useCallback((conflict: SaveConflict) => {
+    setWorkspace((previous) => {
+      const { state: nextState, seeded: nextSeeded } = keepStoredSection(previous.state, previous.seeded, conflict);
+      return { state: nextState, seeded: nextSeeded };
+    });
+    setConflicts((previous) => previous.filter((item) => item.section !== conflict.section));
+  }, []);
+
+  // "Keep mine": only the baseline moves — the local edit survives and stays dirty, so the
+  // next Save resubmits it against a baseline that now matches storage, overwriting it.
+  const keepMine = useCallback((conflict: SaveConflict) => {
+    setWorkspace((previous) => ({
+      ...previous,
+      seeded: keepLocalSection(previous.state, previous.seeded, conflict),
+    }));
+    setConflicts((previous) => previous.filter((item) => item.section !== conflict.section));
+  }, []);
+
+  const conflictFor = useCallback(
+    (key: SectionKey) => conflicts.find((conflict) => conflict.section === key),
+    [conflicts],
+  );
+
+  const conflictMarker = (conflict: SaveConflict | undefined) =>
+    conflict && (
+      <SectionConflictMarker
+        conflict={conflict}
+        players={state.players}
+        onKeepTheirs={() => keepTheirs(conflict)}
+        onKeepMine={() => keepMine(conflict)}
+        disabled={saving}
+      />
+    );
+
+  // Everyone the Players card is responsible for: the list itself, the trophy (per-player
+  // data, but one section with no row of its own to sit on), and every per-player override or
+  // deck — each gets its own marker so resolving one never touches the others.
+  const playerSectionConflicts = useMemo(
+    () =>
+      conflicts.filter(
+        (conflict) =>
+          conflict.section === 'players' ||
+          conflict.section === 'trophy' ||
+          conflict.section.startsWith('overrides:') ||
+          conflict.section.startsWith('decks:'),
+      ),
+    [conflicts],
+  );
 
   return (
     <MainLayout useContainer={false}>
@@ -284,6 +334,8 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                 all with one Save.
               </Text>
 
+              <ConflictsAlert conflicts={conflicts} players={state.players} />
+
               {/* One card per section. The headings alone said where a section began but
                   never where it ended, so Players ran into Rounds with nothing between. */}
               <Card>
@@ -293,20 +345,23 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                   </Text>
                 </CardHeader>
                 <CardBody>
-                  <EditDescription
-                    value={{ name: state.name, date: state.date, description: state.description }}
-                    setValue={(value) =>
-                      updateState((previous) => ({
-                        ...previous,
-                        name: value.name ?? '',
-                        // A cleared date field reports undefined. Keeping it as NaN rather than
-                        // falling back to a number leaves it visibly unset and fails validation,
-                        // instead of silently dating the record to the epoch.
-                        date: value.date ?? NaN,
-                        description: value.description ?? '',
-                      }))
-                    }
-                  />
+                  <Flexbox direction="col" gap="2">
+                    {conflictMarker(conflictFor('overview'))}
+                    <EditDescription
+                      value={{ name: state.name, date: state.date, description: state.description }}
+                      setValue={(value) =>
+                        updateState((previous) => ({
+                          ...previous,
+                          name: value.name ?? '',
+                          // A cleared date field reports undefined. Keeping it as NaN rather than
+                          // falling back to a number leaves it visibly unset and fails validation,
+                          // instead of silently dating the record to the epoch.
+                          date: value.date ?? NaN,
+                          description: value.description ?? '',
+                        }))
+                      }
+                    />
+                  </Flexbox>
                 </CardBody>
               </Card>
 
@@ -361,25 +416,30 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                   </Text>
                 </CardHeader>
                 <CardBody>
-                  <TranscribePlayers
-                    cube={cube}
-                    record={liveRecord}
-                    draft={draft}
-                    linkedUsers={players}
-                    decks={state.decks}
-                    setDeckBoard={setDeckBoard}
-                    setTrophy={(trophy) => updateState((previous) => ({ ...previous, trophy }))}
-                    resultsMode={resultsMode}
-                    overrides={state.overrides}
-                    setOverride={setOverride}
-                    seatsEditable={seatsEditable}
-                    editsDisabled={saving}
-                    onApplyPlayers={applyPlayers}
-                    pastes={pastes}
-                    setPasteText={setPasteText}
-                    setPasteErrors={setPasteErrors}
-                    setAlerts={setAlerts}
-                  />
+                  <Flexbox direction="col" gap="2">
+                    {playerSectionConflicts.map((conflict) => (
+                      <React.Fragment key={conflict.section}>{conflictMarker(conflict)}</React.Fragment>
+                    ))}
+                    <TranscribePlayers
+                      cube={cube}
+                      record={liveRecord}
+                      draft={draft}
+                      linkedUsers={players}
+                      decks={state.decks}
+                      setDeckBoard={setDeckBoard}
+                      setTrophy={(trophy) => updateState((previous) => ({ ...previous, trophy }))}
+                      resultsMode={resultsMode}
+                      overrides={state.overrides}
+                      setOverride={setOverride}
+                      seatsEditable={seatsEditable}
+                      editsDisabled={saving}
+                      onApplyPlayers={applyPlayers}
+                      pastes={pastes}
+                      setPasteText={setPasteText}
+                      setPasteErrors={setPasteErrors}
+                      setAlerts={setAlerts}
+                    />
+                  </Flexbox>
                 </CardBody>
               </Card>
 
@@ -397,11 +457,14 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                     </Flexbox>
                   </CardHeader>
                   <CardBody>
-                    <TranscribeRounds
-                      players={state.players}
-                      matches={state.matches}
-                      setMatches={(matches) => updateState((previous) => ({ ...previous, matches }))}
-                    />
+                    <Flexbox direction="col" gap="2">
+                      {conflictMarker(conflictFor('rounds'))}
+                      <TranscribeRounds
+                        players={state.players}
+                        matches={state.matches}
+                        setMatches={(matches) => updateState((previous) => ({ ...previous, matches }))}
+                      />
+                    </Flexbox>
                   </CardBody>
                 </Card>
               )}
@@ -433,7 +496,15 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                 <Text sm>{saveError}</Text>
               </Alert>
             )}
-            {savedMessage && !dirty && (
+            {/* Distinguishes a clean save from one that landed only partly — the latter
+                stays visible regardless of `dirty`, since the sections it refused are, by
+                definition, still dirty until resolved above. */}
+            {!saveError && savedMessage && conflicts.length > 0 && (
+              <Alert color="warning">
+                <Text sm>{savedMessage}</Text>
+              </Alert>
+            )}
+            {!saveError && savedMessage && conflicts.length === 0 && !dirty && (
               <Alert color="success">
                 <Text sm>{savedMessage}</Text>
               </Alert>
