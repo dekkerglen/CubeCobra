@@ -48,6 +48,24 @@ describe('reconcilePlayerIds', () => {
     const result = reconcilePlayerIds([{ name: 'Alice' }, { name: 'Bob' }], []);
     expect(result.every((p) => !!p.id)).toBe(true);
   });
+
+  it('falls through to the mint chain when a submitted id collides with an earlier submission', () => {
+    const result = reconcilePlayerIds(
+      [
+        { name: 'Alice', id: 'dup' },
+        { name: 'Bob', id: 'dup' },
+      ],
+      [],
+    );
+    expect(result[0]!.id).toBe('dup');
+    expect(result[1]!.id).not.toBe('dup');
+    expect(result[0]!.id).not.toBe(result[1]!.id);
+  });
+
+  it('trusts a submitted id that matches no stored player but is unique within the call', () => {
+    const result = reconcilePlayerIds([{ name: 'Alice', id: 'client-generated' }], []);
+    expect(result[0]!.id).toBe('client-generated');
+  });
 });
 
 describe('stampSeatPlayerIds', () => {

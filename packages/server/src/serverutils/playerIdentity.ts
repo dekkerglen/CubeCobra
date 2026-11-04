@@ -15,9 +15,17 @@ import { v4 as uuidv4 } from 'uuid';
  * identity). Each stored player can satisfy at most one submitted player —
  * once claimed, later submissions fall through to the next rule rather than
  * reusing an id that's already spoken for.
+ *
+ * The same discipline applies to ids the submission itself provides: once an
+ * id has been assigned to an earlier submitted player in this call — trusted
+ * verbatim or inherited — a later submission carrying that same id can't
+ * reuse it either. It's treated as if it carried no id at all and falls
+ * through to the name/position/mint chain, rather than letting two players
+ * end up stamped with the identical `playerId`.
  */
 export function reconcilePlayerIds(submitted: PlayerList, stored: PlayerList): PlayerList {
   const claimed = new Array(stored.length).fill(false);
+  const assigned = new Set<string>();
 
   const claimById = (id: string): void => {
     const index = stored.findIndex((player, i) => !claimed[i] && player.id === id);
@@ -44,11 +52,13 @@ export function reconcilePlayerIds(submitted: PlayerList, stored: PlayerList): P
   };
 
   return submitted.map((player, index) => {
-    if (player.id) {
+    if (player.id && !assigned.has(player.id)) {
       claimById(player.id);
+      assigned.add(player.id);
       return player;
     }
     const id = claimByName(player.name) ?? claimByPosition(index) ?? uuidv4();
+    assigned.add(id);
     return { ...player, id };
   });
 }
