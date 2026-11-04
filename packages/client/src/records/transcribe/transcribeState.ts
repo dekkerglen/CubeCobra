@@ -1,7 +1,8 @@
 import { cardOracleId, detailsToCard } from '@utils/cardutil';
-import Card, { CardDetails } from '@utils/datatypes/Card';
+import { CardDetails } from '@utils/datatypes/Card';
 import Draft, { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import Record, { applyPlayerRenames, PlayerList, Round, WinLossDraw } from '@utils/datatypes/Record';
+import { flattenSeatPool } from '@utils/records/recordSections';
 
 // The limits POST /cube/records/enter/:id enforces, in one place: the page validates against
 // them, the results editor refuses to add past them, and the server's Joi schema mirrors them.
@@ -84,12 +85,6 @@ export interface TranscribePayload {
   trophy: string[];
   decks: { [userIndex: number]: { mainboard: string[]; sideboard: string[] } };
 }
-
-const flattenSeatPool = (pool: number[][][] | undefined, cards: Card[]): CardDetails[] =>
-  (pool ?? [])
-    .flat(3)
-    .map((cardIndex) => cards[cardIndex]?.details)
-    .filter((details): details is CardDetails => !!details);
 
 const copyMatches = (matches: Round[]): Round[] =>
   matches.map((round) => ({
