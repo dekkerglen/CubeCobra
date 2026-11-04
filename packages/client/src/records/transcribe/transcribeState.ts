@@ -1,8 +1,7 @@
-import { cardOracleId, detailsToCard } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
 import Draft, { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import Record, { applyPlayerRenames, PlayerList, Round, WinLossDraw } from '@utils/datatypes/Record';
-import { flattenSeatPool } from '@utils/records/recordSections';
+import { flattenSeatPool, SectionBaselines, SectionKey, toOracleIds } from '@utils/records/recordSections';
 
 // The limits POST /cube/records/enter/:id enforces, in one place: the page validates against
 // them, the results editor refuses to add past them, and the server's Joi schema mirrors them.
@@ -69,21 +68,28 @@ export interface TranscribeState {
   // clears an override in place rather than deleting the key.
   overrides: { [playerName: string]: WinLossDraw | undefined };
   matches: Round[];
-  // 0-based and parallel to players. The payload re-keys these 1-based for the server.
+  // 0-based and parallel to players. A dirty deck's section key is the player's id, or this
+  // index itself for a player with none.
   decks: { [playerIndex: number]: TranscribeDeck };
 }
 
-// Exactly the body POST /cube/records/enter/:id validates.
-export interface TranscribePayload {
-  name: string;
-  date: number;
-  description: string;
-  players: PlayerList;
-  seatOrder: number[];
-  matches: Round[];
-  overrides: { [playerName: string]: WinLossDraw };
-  trophy: string[];
-  decks: { [userIndex: number]: { mainboard: string[]; sideboard: string[] } };
+// What a single dirty section carries in the new payload: either one of the whole-record
+// shapes from SectionBaselines, a per-player override (null clears it), or a per-player deck.
+type TranscribeSectionValue =
+  | NonNullable<SectionBaselines['overview']>
+  | NonNullable<SectionBaselines['players']>
+  | NonNullable<SectionBaselines['rounds']>
+  | NonNullable<SectionBaselines['trophy']>
+  | WinLossDraw
+  | null
+  | { mainboard: string[]; sideboard: string[] };
+
+// Exactly the body POST /cube/records/enter/:id now accepts: only the sections that changed,
+// each carrying the baseline this workspace loaded so the server can tell "I changed this"
+// from "someone else did while I had the record open".
+export interface TranscribeSectionsPayload {
+  sections: { [K in SectionKey]?: TranscribeSectionValue };
+  baselines: SectionBaselines;
 }
 
 const copyMatches = (matches: Round[]): Round[] =>
@@ -124,8 +130,6 @@ export const seedTranscribeState = (record: Record, draft?: Draft): TranscribeSt
     decks,
   };
 };
-
-const toOracleIds = (details: CardDetails[]): string[] => details.map(detailsToCard).map(cardOracleId);
 
 // Deck edits are refused for a seat this record does not own. One stray dirty flag on a
 // played draft's seat makes the server reject the entire save — overview and pairings
@@ -270,52 +274,6 @@ export const validationErrors = (state: TranscribeState): string[] => {
   return errors;
 };
 
-// `finalRecordsOnly` is the page's results mode. In that mode the matches are not what a
-// player's record comes from, so every player is given an explicit one — playerRecord prefers
-// an override and otherwise falls back to the pairings, and a player left untouched would
-// silently be scored off the matches the mode exists to ignore.
-export const toTranscribePayload = (state: TranscribeState, finalRecordsOnly = false): TranscribePayload => {
-  const decks: TranscribePayload['decks'] = {};
-  for (const [playerIndex, deck] of Object.entries(state.decks)) {
-    if (!deck.dirty) {
-      continue;
-    }
-    // A dirty deck with an empty mainboard is still submitted: that is the user deleting
-    // every card, and the server resets the seat.
-    decks[Number(playerIndex) + 1] = {
-      mainboard: toOracleIds(deck.mainboard),
-      sideboard: toOracleIds(deck.sideboard),
-    };
-  }
-
-  const overrides: { [playerName: string]: WinLossDraw } = {};
-  if (finalRecordsOnly) {
-    for (const player of state.players) {
-      overrides[player.name] = state.overrides[player.name] ?? { wins: 0, losses: 0, draws: 0 };
-    }
-  } else {
-    for (const [name, value] of Object.entries(state.overrides)) {
-      // Outside that mode a `0-0-0` posted for an untouched player would mask every
-      // pairing-derived standing, for the same reason.
-      if (value) {
-        overrides[name] = value;
-      }
-    }
-  }
-
-  return {
-    name: state.name,
-    date: state.date,
-    description: state.description,
-    players: state.players,
-    seatOrder: state.seatOrder,
-    matches: state.matches,
-    overrides,
-    trophy: state.trophy,
-    decks,
-  };
-};
-
 const sameList = <T>(a: readonly T[], b: readonly T[]): boolean =>
   a.length === b.length && a.every((value, index) => value === b[index]);
 
@@ -338,34 +296,168 @@ const sameMatches = (a: Round[], b: Round[]): boolean =>
     );
   });
 
-const sameOverrides = (
-  a: { [playerName: string]: WinLossDraw | undefined },
-  b: { [playerName: string]: WinLossDraw | undefined },
-): boolean =>
-  [...new Set([...Object.keys(a), ...Object.keys(b)])].every((name) => {
-    const mine = a[name];
-    const theirs = b[name];
-    if (!mine || !theirs) {
-      return !mine && !theirs;
-    }
-    return mine.wins === theirs.wins && mine.losses === theirs.losses && mine.draws === theirs.draws;
-  });
+// One player's override, the same equality `sameOverrides` used to apply across a whole map:
+// falsy either side is "no override", and two falsy values are equal regardless of which kind
+// of falsy they are. Overrides are now diffed per player rather than as one block, since each
+// one is its own section, so this compares a single pair rather than a whole map.
+const sameOverride = (a: WinLossDraw | null | undefined, b: WinLossDraw | null | undefined): boolean => {
+  if (!a || !b) {
+    return !a === !b;
+  }
+  return a.wins === b.wins && a.losses === b.losses && a.draws === b.draws;
+};
 
-// Whether the editor holds anything worth saving. Deck edits are answered by the seats'
-// own dirty flags rather than by comparing card lists.
-export const isDirty = (state: TranscribeState, seeded: TranscribeState): boolean => {
-  if (Object.values(state.decks).some((deck) => deck.dirty)) {
-    return true;
+// What a player's override section would hold under the given mode: records mode writes an
+// explicit value for every player (falling back to 0-0-0) because the matches are not what a
+// player's record comes from there; pairings mode only writes a value the user actually set,
+// since a `0-0-0` posted for an untouched player would mask every pairing-derived standing.
+const effectiveOverride = (
+  overrides: TranscribeState['overrides'],
+  name: string,
+  finalRecordsOnly: boolean,
+): WinLossDraw | null =>
+  (finalRecordsOnly ? (overrides[name] ?? { wins: 0, losses: 0, draws: 0 }) : overrides[name]) ?? null;
+
+const toDeckSection = (deck: Pick<TranscribeDeck, 'mainboard' | 'sideboard'>) => ({
+  mainboard: toOracleIds(deck.mainboard),
+  sideboard: toOracleIds(deck.sideboard),
+});
+
+const EMPTY_DECK_SECTION = { mainboard: [], sideboard: [] };
+
+// decks and overrides are keyed per player rather than id to survive a rename, but a record
+// seeded before Player.id existed has no ids at all — the only identity left for it is the
+// seat a player sits in, so the server resolves a key that parses as an integer as a position.
+const playerSectionKey = (player: PlayerList[number] | undefined, index: number): string => player?.id ?? String(index);
+
+// One section's value alongside the baseline it is compared against, for whichever of
+// toTranscribePayload or dirtySections is asking. Computed once so both stay in lockstep
+// instead of drifting into two slightly different definitions of "changed".
+interface SectionDiff {
+  key: SectionKey;
+  value: TranscribeSectionValue;
+  baseline: TranscribeSectionValue;
+}
+
+const diffSections = (state: TranscribeState, seeded: TranscribeState, finalRecordsOnly: boolean): SectionDiff[] => {
+  const diffs: SectionDiff[] = [];
+
+  if (state.name !== seeded.name || state.date !== seeded.date || state.description !== seeded.description) {
+    diffs.push({
+      key: 'overview',
+      value: { name: state.name, date: state.date, description: state.description },
+      baseline: { name: seeded.name, date: seeded.date, description: seeded.description },
+    });
   }
 
-  return !(
-    state.name === seeded.name &&
-    state.date === seeded.date &&
-    state.description === seeded.description &&
-    samePlayers(state.players, seeded.players) &&
-    sameList(state.seatOrder, seeded.seatOrder) &&
-    sameList(state.trophy, seeded.trophy) &&
-    sameOverrides(state.overrides, seeded.overrides) &&
-    sameMatches(state.matches, seeded.matches)
-  );
+  if (!samePlayers(state.players, seeded.players) || !sameList(state.seatOrder, seeded.seatOrder)) {
+    diffs.push({
+      key: 'players',
+      value: { players: state.players, seatOrder: state.seatOrder },
+      baseline: { players: seeded.players, seatOrder: seeded.seatOrder },
+    });
+  }
+
+  if (!sameMatches(state.matches, seeded.matches)) {
+    diffs.push({ key: 'rounds', value: { matches: state.matches }, baseline: { matches: seeded.matches } });
+  }
+
+  if (!sameList(state.trophy, seeded.trophy)) {
+    diffs.push({ key: 'trophy', value: { trophy: state.trophy }, baseline: { trophy: seeded.trophy } });
+  }
+
+  // Each player's baseline is found through seatOrder rather than by matching the current
+  // name or id: seatOrder already carries "which original player is this", through a rename
+  // or a reorder, since applyPlayerEdit keeps it pointing at the seat each entry came from.
+  state.players.forEach((player, index) => {
+    const effective = effectiveOverride(state.overrides, player.name, finalRecordsOnly);
+    const origin = state.seatOrder[index] ?? -1;
+    const seededPlayer = origin >= 0 ? seeded.players[origin] : undefined;
+    const baseline = seededPlayer ? (seeded.overrides[seededPlayer.name] ?? null) : null;
+    if (!sameOverride(effective, baseline)) {
+      diffs.push({ key: `overrides:${playerSectionKey(player, index)}`, value: effective, baseline });
+    }
+  });
+
+  for (const [indexKey, deck] of Object.entries(state.decks)) {
+    if (!deck.dirty || !deck.editable) {
+      continue;
+    }
+    const index = Number(indexKey);
+    const origin = state.seatOrder[index] ?? -1;
+    const seededDeck = origin >= 0 ? seeded.decks[origin] : undefined;
+    diffs.push({
+      key: `decks:${playerSectionKey(state.players[index], index)}`,
+      value: toDeckSection(deck),
+      baseline: seededDeck ? toDeckSection(seededDeck) : EMPTY_DECK_SECTION,
+    });
+  }
+
+  return diffs;
 };
+
+// Which sections of the record differ from what this workspace loaded. The page's dirty flag,
+// and toTranscribePayload's choice of what to submit, are both this and nothing else — a
+// section that is not in this list is not sent and does not block navigation.
+export const dirtySections = (
+  state: TranscribeState,
+  seeded: TranscribeState,
+  finalRecordsOnly: boolean,
+): SectionKey[] => diffSections(state, seeded, finalRecordsOnly).map((diff) => diff.key);
+
+const OVERRIDE_PREFIX = 'overrides:';
+const DECK_PREFIX = 'decks:';
+
+// Spreads one section's baseline into SectionBaselines, nesting a per-player override or deck
+// under its player key rather than writing it at the top level.
+const addBaseline = (baselines: SectionBaselines, key: SectionKey, value: TranscribeSectionValue): void => {
+  if (key.startsWith(OVERRIDE_PREFIX)) {
+    const playerKey = key.slice(OVERRIDE_PREFIX.length);
+    baselines.overrides = { ...baselines.overrides, [playerKey]: value as WinLossDraw | null };
+    return;
+  }
+  if (key.startsWith(DECK_PREFIX)) {
+    const playerKey = key.slice(DECK_PREFIX.length);
+    baselines.decks = { ...baselines.decks, [playerKey]: value as { mainboard: string[]; sideboard: string[] } };
+    return;
+  }
+  switch (key) {
+    case 'overview':
+      baselines.overview = value as NonNullable<SectionBaselines['overview']>;
+      break;
+    case 'players':
+      baselines.players = value as NonNullable<SectionBaselines['players']>;
+      break;
+    case 'rounds':
+      baselines.rounds = value as NonNullable<SectionBaselines['rounds']>;
+      break;
+    case 'trophy':
+      baselines.trophy = value as NonNullable<SectionBaselines['trophy']>;
+      break;
+  }
+};
+
+// Builds the body POST /cube/records/enter/:id now accepts: only the sections where `state`
+// differs from `seeded`, each paired with the value this workspace loaded for it, so the
+// server can apply what is clean and report what someone else changed underneath this save.
+export const toTranscribePayload = (
+  state: TranscribeState,
+  seeded: TranscribeState,
+  finalRecordsOnly = false,
+): TranscribeSectionsPayload => {
+  const sections: TranscribeSectionsPayload['sections'] = {};
+  const baselines: SectionBaselines = {};
+
+  for (const diff of diffSections(state, seeded, finalRecordsOnly)) {
+    sections[diff.key] = diff.value;
+    addBaseline(baselines, diff.key, diff.baseline);
+  }
+
+  return { sections, baselines };
+};
+
+// Whether the editor holds anything worth saving. A second definition of "changed" would
+// drift from dirtySections the moment one of them gained a case the other had not — there is
+// exactly one definition, and this is just its length.
+export const isDirty = (state: TranscribeState, seeded: TranscribeState, finalRecordsOnly = false): boolean =>
+  dirtySections(state, seeded, finalRecordsOnly).length > 0;

@@ -6,6 +6,7 @@ import { createCard, createCardDetails, createCardWithoutDetails } from '../../.
 import {
   applyPlayerEdit,
   areSeatsEditable,
+  dirtySections,
   isDirty,
   MAX_DECK_CARDS,
   MAX_DESCRIPTION_LENGTH,
@@ -182,96 +183,185 @@ describe('toTranscribePayload', () => {
       }),
     );
 
-  it('includes only dirty decks', () => {
-    const state = threePlayerState();
-    state.decks[1]!.mainboard = [createCardDetails()];
-    state.decks[1]!.dirty = true;
+  const idPlayerState = () =>
+    seedTranscribeState(
+      createRecord({
+        players: [
+          { name: 'Alice', id: 'alice-id' },
+          { name: 'Bob', id: 'bob-id' },
+        ],
+        overrides: {},
+        trophy: [],
+      }),
+    );
 
-    const payload = toTranscribePayload(state);
-
-    expect(Object.keys(payload.decks)).toEqual(['2']);
+  const seedBoth = (record: RecordType) => ({
+    state: seedTranscribeState(record),
+    seeded: seedTranscribeState(record),
   });
 
-  it('keys decks 1-based', () => {
-    const state = threePlayerState();
-    const first = createCardDetails();
-    const third = createCardDetails();
-    state.decks[0] = { mainboard: [first], sideboard: [], dirty: true, editable: true };
-    state.decks[2] = { mainboard: [third], sideboard: [], dirty: true, editable: true };
+  it('omits every section when nothing changed', () => {
+    const { state, seeded } = seedBoth(createRecord());
 
-    const payload = toTranscribePayload(state);
+    const payload = toTranscribePayload(state, seeded);
 
-    expect(Object.keys(payload.decks)).toEqual(['1', '3']);
-    expect(payload.decks[1]!.mainboard).toEqual([first.oracle_id]);
-    expect(payload.decks[3]!.mainboard).toEqual([third.oracle_id]);
+    expect(payload.sections).toEqual({});
   });
 
-  it('maps card details to oracle ids', () => {
-    const state = threePlayerState();
-    const main = [createCardDetails(), createCardDetails()];
-    const side = [createCardDetails()];
-    state.decks[0] = { mainboard: main, sideboard: side, dirty: true, editable: true };
+  it('sends only overview when only the name changed', () => {
+    const { state, seeded } = seedBoth(createRecord());
+    state.name = 'Wednesday Night Cube';
 
-    const payload = toTranscribePayload(state);
+    const payload = toTranscribePayload(state, seeded);
 
-    expect(payload.decks[1]).toEqual({
-      mainboard: [main[0]!.oracle_id, main[1]!.oracle_id],
-      sideboard: [side[0]!.oracle_id],
+    expect(Object.keys(payload.sections)).toEqual(['overview']);
+    expect(payload.sections.overview).toEqual({
+      name: 'Wednesday Night Cube',
+      date: 1700000000000,
+      description: 'Eight players, three rounds.',
     });
   });
 
-  it('includes a dirty deck whose mainboard is empty', () => {
-    const state = threePlayerState();
-    state.decks[2]!.dirty = true;
-
-    const payload = toTranscribePayload(state);
-
-    expect(payload.decks[3]).toEqual({ mainboard: [], sideboard: [] });
-  });
-
-  it('omits overrides whose value is undefined', () => {
-    const state = threePlayerState();
+  it('sends a per-player override key, not the whole overrides block', () => {
+    const record = createRecord({
+      players: [
+        { name: 'Alice', id: 'alice-id' },
+        { name: 'Bob', id: 'bob-id' },
+        { name: 'Carol', id: 'carol-id' },
+      ],
+      overrides: {},
+      trophy: [],
+    });
+    const { state, seeded } = seedBoth(record);
+    // Bob is explicitly set back to undefined — the same as never having touched it — and
+    // must not appear as a changed section alongside Alice and Carol's real edits.
     state.overrides = {
       Alice: { wins: 2, losses: 0, draws: 1 },
       Bob: undefined,
       Carol: { wins: 0, losses: 2, draws: 0 },
     };
 
-    const payload = toTranscribePayload(state);
+    const payload = toTranscribePayload(state, seeded);
 
-    expect(Object.keys(payload.overrides)).toEqual(['Alice', 'Carol']);
-    expect(payload.overrides).toEqual({
-      Alice: { wins: 2, losses: 0, draws: 1 },
-      Carol: { wins: 0, losses: 2, draws: 0 },
+    expect(Object.keys(payload.sections)).toEqual(['overrides:alice-id', 'overrides:carol-id']);
+    expect(payload.sections['overrides:alice-id']).toEqual({ wins: 2, losses: 0, draws: 1 });
+    expect(payload.sections['overrides:carol-id']).toEqual({ wins: 0, losses: 2, draws: 0 });
+  });
+
+  it('marks every player override dirty when the results mode changed', () => {
+    const record = createRecord({
+      players: [
+        { name: 'Alice', id: 'alice-id' },
+        { name: 'Bob', id: 'bob-id' },
+      ],
+      overrides: {},
     });
+    const { state, seeded } = seedBoth(record);
+    // Nothing about the data itself changes — only the mode toggles to records, which gives
+    // every player an explicit 0-0-0 where none was stored.
+    const payload = toTranscribePayload(state, seeded, true);
+
+    expect(Object.keys(payload.sections).sort()).toEqual(['overrides:alice-id', 'overrides:bob-id']);
+    expect(payload.sections['overrides:alice-id']).toEqual({ wins: 0, losses: 0, draws: 0 });
+    expect(payload.sections['overrides:bob-id']).toEqual({ wins: 0, losses: 0, draws: 0 });
   });
 
-  it('carries seatOrder through unchanged', () => {
+  it('keys a dirty deck by seat index when the player has no id', () => {
     const state = threePlayerState();
-    state.seatOrder = [2, -1, 0];
+    state.decks[1]!.mainboard = [createCardDetails()];
+    state.decks[1]!.dirty = true;
 
-    const payload = toTranscribePayload(state);
+    const payload = toTranscribePayload(state, threePlayerState());
 
-    expect(payload.seatOrder).toEqual([2, -1, 0]);
-    expect(payload.seatOrder.length).toEqual(payload.players.length);
+    expect(Object.keys(payload.sections)).toEqual(['decks:1']);
   });
 
-  it('carries the overview, players, matches and trophies through unchanged', () => {
-    const state = seedTranscribeState(createRecord());
+  it('sends only dirty decks, keyed by player id', () => {
+    const state = idPlayerState();
+    const seeded = idPlayerState();
+    const bolt = createCardDetails();
+    state.decks[1] = { mainboard: [bolt], sideboard: [], dirty: true, editable: true };
 
-    const payload = toTranscribePayload(state);
+    const payload = toTranscribePayload(state, seeded);
 
-    expect(payload).toEqual({
+    expect(Object.keys(payload.sections)).toEqual(['decks:bob-id']);
+    expect(payload.sections['decks:bob-id']).toEqual({ mainboard: [bolt.oracle_id], sideboard: [] });
+  });
+
+  it('includes a dirty deck whose mainboard is empty', () => {
+    const state = threePlayerState();
+    state.decks[2]!.dirty = true;
+
+    const payload = toTranscribePayload(state, threePlayerState());
+
+    expect(payload.sections['decks:2']).toEqual({ mainboard: [], sideboard: [] });
+  });
+
+  it('carries the loaded value as the baseline for each sent section', () => {
+    const record = createRecord({
+      players: [
+        { name: 'Alice', id: 'alice-id' },
+        { name: 'Bob', id: 'bob-id' },
+      ],
+    });
+    const { state, seeded } = seedBoth(record);
+    state.name = 'Wednesday Night Cube';
+    state.overrides = { ...state.overrides, Alice: { wins: 3, losses: 0, draws: 0 } };
+    const bolt = createCardDetails();
+    state.decks[0] = { mainboard: [bolt], sideboard: [], dirty: true, editable: true };
+
+    const payload = toTranscribePayload(state, seeded);
+
+    expect(payload.baselines.overview).toEqual({
       name: 'Tuesday Night Cube',
       date: 1700000000000,
       description: 'Eight players, three rounds.',
-      players: [{ name: 'Alice', userId: 'alice-id' }, { name: 'Bob' }],
-      seatOrder: [0, 1],
-      matches: [{ matches: [{ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] }] }],
-      overrides: { Bob: { wins: 1, losses: 2, draws: 0 } },
-      trophy: ['Alice'],
-      decks: {},
     });
+    expect(payload.baselines.overrides).toEqual({ 'alice-id': null });
+    expect(payload.baselines.decks).toEqual({ 'alice-id': { mainboard: [], sideboard: [] } });
+  });
+
+  it('sends no deck sections for a record whose seats are not editable', () => {
+    const playedDraft = createDraft(
+      [createCard(), createCard()],
+      [
+        { mainboard: seatPool(0), sideboard: [] },
+        { mainboard: seatPool(1), sideboard: [] },
+      ] as Draft['seats'],
+      { type: DRAFT_TYPES.DRAFT },
+    );
+    const record = createRecord();
+    const seeded = seedTranscribeState(record, playedDraft);
+    const state = seedTranscribeState(record, playedDraft);
+    // A seat this record does not own should never carry a dirty flag — setDeckCards already
+    // refuses to set one — but the payload builder guards it too, in case one got in anyway.
+    state.decks[0] = { ...state.decks[0]!, dirty: true };
+
+    const payload = toTranscribePayload(state, seeded);
+
+    expect(Object.keys(payload.sections).some((key) => key.startsWith('decks:'))).toEqual(false);
+  });
+});
+
+describe('dirtySections', () => {
+  it('returns no keys when nothing changed', () => {
+    const record = createRecord();
+    const state = seedTranscribeState(record);
+    const seeded = seedTranscribeState(record);
+
+    expect(dirtySections(state, seeded, false)).toEqual([]);
+  });
+
+  it('returns only the players key when two players swap seats', () => {
+    const record = createRecord();
+    const state = seedTranscribeState(record);
+    const seeded = seedTranscribeState(record);
+    // A real reorder moves seatOrder and players together — each player keeps the override
+    // and deck seatOrder already carried forward for them, so only the order itself is new.
+    state.players = [seeded.players[1]!, seeded.players[0]!];
+    state.seatOrder = [1, 0];
+
+    expect(dirtySections(state, seeded, false)).toEqual(['players']);
   });
 });
 
@@ -426,7 +516,7 @@ describe('setDeckCards', () => {
 
     expect(next).toBe(state);
     expect(next.decks[0]!.dirty).toEqual(false);
-    expect(toTranscribePayload(next).decks).toEqual({});
+    expect(toTranscribePayload(next, next).sections).toEqual({});
   });
 
   it('refuses an updater for a seat the record does not own without ever calling it', () => {

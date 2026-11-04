@@ -202,7 +202,12 @@ const renderPage = ({
 
 const saveCalls = (csrfFetch: jest.Mock) => csrfFetch.mock.calls.filter(([url]) => url === SAVE_URL);
 
-const savedPayload = (csrfFetch: jest.Mock) => JSON.parse(`${saveCalls(csrfFetch)[0][1].body}`);
+const savedPayload = (csrfFetch: jest.Mock, call = 0) => JSON.parse(`${saveCalls(csrfFetch)[call][1].body}`);
+
+// The page now submits only the sections that changed, nested under `sections`, each keyed
+// by SectionName or `overrides:<id>` / `decks:<id>` — never the whole flat record the old
+// payload used to carry.
+const savedSections = (csrfFetch: jest.Mock, call = 0) => savedPayload(csrfFetch, call).sections;
 
 const saveButton = () => screen.getByRole('button', { name: 'Save' });
 
@@ -374,7 +379,7 @@ describe('RecordTranscribePage', () => {
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
     // -1 is how the server is told this seat is new rather than moved.
-    expect(savedPayload(csrfFetch)).toMatchObject({
+    expect(savedSections(csrfFetch).players).toEqual({
       players: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Carol' }],
       seatOrder: [0, 1, -1],
     });
@@ -394,7 +399,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    expect(savedPayload(csrfFetch).players[2]).toEqual({ name: 'Carol', userId: 'user-carol' });
+    expect(savedSections(csrfFetch).players.players[2]).toEqual({ name: 'Carol', userId: 'user-carol' });
   });
 
   it('removes a player from their row body', async () => {
@@ -410,7 +415,7 @@ describe('RecordTranscribePage', () => {
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
     // Bob keeps pointing at the draft seat he actually sat in.
-    expect(savedPayload(csrfFetch)).toMatchObject({ players: [{ name: 'Bob' }], seatOrder: [1] });
+    expect(savedSections(csrfFetch).players).toEqual({ players: [{ name: 'Bob' }], seatOrder: [1] });
   });
 
   it('closes the expansion when the expanded player is removed', () => {
@@ -435,7 +440,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    expect(savedPayload(csrfFetch)).toMatchObject({
+    expect(savedSections(csrfFetch).players).toEqual({
       players: [{ name: 'Bob' }, { name: 'Alice' }],
       seatOrder: [1, 0],
     });
@@ -478,7 +483,7 @@ describe('RecordTranscribePage', () => {
 
     // Each player still points at the draft seat they came from, which is what carries their
     // deck across on the server.
-    expect(savedPayload(csrfFetch)).toMatchObject({
+    expect(savedSections(csrfFetch).players).toEqual({
       players: [{ name: 'Bob' }, { name: 'Alice' }],
       seatOrder: [1, 0],
     });
@@ -554,7 +559,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.blur(nameField(0));
     fireEvent.click(saveButton());
     return waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1)).then(() => {
-      expect(savedPayload(csrfFetch).players).toEqual([{ name: 'Bob' }, { name: 'Alice' }]);
+      expect(savedSections(csrfFetch).players.players).toEqual([{ name: 'Bob' }, { name: 'Alice' }]);
     });
   });
 
@@ -585,7 +590,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    expect(savedPayload(csrfFetch).players).toEqual([{ name: 'Alicia' }, { name: 'Bob' }]);
+    expect(savedSections(csrfFetch).players.players).toEqual([{ name: 'Alicia' }, { name: 'Bob' }]);
   });
 
   it('renames a player committing on Enter', async () => {
@@ -598,7 +603,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    expect(savedPayload(csrfFetch).players).toEqual([{ name: 'Alicia' }, { name: 'Bob' }]);
+    expect(savedSections(csrfFetch).players.players).toEqual([{ name: 'Alicia' }, { name: 'Bob' }]);
   });
 
   // A rename onto another player's name is refused at the field rather than applied.
@@ -634,8 +639,10 @@ describe('RecordTranscribePage', () => {
   });
 
   // The whole of the bug: a typo and its correction, one field at a time, which is the only
-  // way to swap two names now the batch editor is gone. The payload after the typo must be
-  // indistinguishable from the payload of a run that never made it.
+  // way to swap two names now the batch editor is gone. Since the typo is refused as a
+  // collision and the correction then writes a player back to the name it already had, both
+  // are no-ops — the payload after them must be indistinguishable from one that never
+  // touched the player list, i.e. nothing beyond the overview we actually edited.
   it('leaves pairings, overrides and trophies untouched by a rename collision and its correction', async () => {
     const record = () =>
       createRecord({
@@ -649,6 +656,8 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(clean.csrfFetch)).toHaveLength(1));
     const baseline = savedPayload(clean.csrfFetch);
+    // Only the name changed, so nothing else should even be in the payload.
+    expect(Object.keys(baseline.sections)).toEqual(['overview']);
     clean.unmount();
 
     const typo = renderPage({ record: record() });
@@ -671,13 +680,6 @@ describe('RecordTranscribePage', () => {
 
     // Spelled out as well as compared, so the failure names what was destroyed rather than
     // only that two payloads differ.
-    expect(payload.players).toEqual([{ name: 'Alice' }, { name: 'Bob' }]);
-    expect(payload.matches[0].matches[0]).toMatchObject({ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] });
-    expect(payload.overrides).toEqual({
-      Alice: { wins: 3, losses: 0, draws: 0 },
-      Bob: { wins: 1, losses: 2, draws: 0 },
-    });
-    expect(payload.trophy).toEqual(['Alice']);
     expect(payload).toEqual(baseline);
   });
 
@@ -707,7 +709,7 @@ describe('RecordTranscribePage', () => {
 
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
-    expect(savedPayload(csrfFetch).players).toEqual([{ name: 'Alice' }, { name: 'Bob' }, { name: 'Carol' }]);
+    expect(savedSections(csrfFetch).players.players).toEqual([{ name: 'Alice' }, { name: 'Bob' }, { name: 'Carol' }]);
   });
 
   // Refusing both ways in only closes the ways this page can create a collision. A record
@@ -745,7 +747,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(trophyToggle(0));
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
-    expect(savedPayload(csrfFetch).trophy).toEqual(['Alice']);
+    expect(savedSections(csrfFetch).trophy).toEqual({ trophy: ['Alice'] });
   });
 
   // The endpoint refuses a save that adds, removes or reorders players on a played draft, so
@@ -778,11 +780,9 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    expect(savedPayload(csrfFetch)).toMatchObject({
-      players: [{ name: 'Alicia' }, { name: 'Bob' }],
-      seatOrder: [0, 1],
-      decks: {},
-    });
+    const sections = savedSections(csrfFetch);
+    expect(sections.players).toEqual({ players: [{ name: 'Alicia' }, { name: 'Bob' }], seatOrder: [0, 1] });
+    expect(Object.keys(sections).some((key) => key.startsWith('decks:'))).toEqual(false);
   });
 
   // Whether this page owns the seats is a fact about the draft, not about the seeded decks:
@@ -821,12 +821,16 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
 
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
-    expect(savedPayload(csrfFetch)).toMatchObject({ name: 'Renamed Night', seatOrder: [0, 1], decks: {} });
+    // Only the name changed — the played draft's seats never had a chance to be dirtied.
+    expect(savedSections(csrfFetch)).toEqual({
+      overview: { name: 'Renamed Night', date: 1700000000000, description: 'Eight players, three rounds' },
+    });
   });
 
-  // The endpoint drops every key that is not a submitted player name, so a rename that stopped
-  // at the player list would silently throw away that player's pairings, trophy and standing.
-  it('re-keys pairings, trophies and overrides when a player is renamed', async () => {
+  // A rename re-keys every name-keyed section it touches, and the player's own override
+  // section stays keyed by seat position (this record has no player ids) — so a rename alone
+  // does not resend it: the win/loss/draw value itself has not moved.
+  it('re-keys pairings and trophies when a player is renamed, without resending an unchanged override', async () => {
     const record = createRecord({
       matches: [{ matches: [{ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] as [number, number, number] }] }],
       trophy: ['Alice'],
@@ -841,13 +845,12 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    const payload = savedPayload(csrfFetch);
-    expect(payload.players).toEqual([{ name: 'Alicia' }, { name: 'Bob' }]);
-    expect(payload.matches[0].matches[0].p1).toBe('Alicia');
-    expect(payload.trophy).toEqual(['Alicia']);
-    expect(payload.overrides).toEqual({ Alicia: { wins: 3, losses: 0, draws: 0 } });
+    const sections = savedSections(csrfFetch);
     // The seat still holds whoever sat there, so the draft is not reshuffled by a rename.
-    expect(payload.seatOrder).toEqual([0, 1]);
+    expect(sections.players).toEqual({ players: [{ name: 'Alicia' }, { name: 'Bob' }], seatOrder: [0, 1] });
+    expect(sections.rounds.matches[0].matches[0].p1).toBe('Alicia');
+    expect(sections.trophy).toEqual({ trophy: ['Alicia'] });
+    expect(sections['overrides:0']).toBeUndefined();
   });
 
   // Only one deck editor is mounted at a time, so the paste box is unmounted whenever another
@@ -916,10 +919,11 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    // Keyed 1-based: seat 1 is Alice, whose row the paste went into. Bob's untouched seat is
-    // left out entirely rather than re-written as an empty deck.
-    expect(savedPayload(csrfFetch).decks).toEqual({
-      '1': {
+    // Keyed by seat index (this record has no player ids): seat 0 is Alice, whose row the
+    // paste went into. Bob's untouched seat is left out entirely rather than re-written as
+    // an empty deck.
+    expect(savedSections(csrfFetch)).toEqual({
+      'decks:0': {
         mainboard: ['oracle-Lightning Bolt', 'oracle-Lightning Bolt'],
         sideboard: ['oracle-Pyroblast'],
       },
@@ -1009,9 +1013,9 @@ describe('RecordTranscribePage', () => {
     expect(screen.queryByText(/pairings are hidden in this mode/)).not.toBeInTheDocument();
   });
 
-  // The mode governs which editor is on screen and nothing else. Both sides of the record
-  // stay in state and both are submitted, so a round trip through the other mode has to be
-  // invisible in the payload.
+  // The mode governs which editor is on screen and nothing else, so round-tripping through
+  // records mode and back without any other edit must leave no trace of its own — no stray
+  // overrides or rounds section beyond the one real change, the name.
   it('submits an unchanged payload after switching to final records and back', async () => {
     const record = () => createRecord({ matches: pairedRound(), overrides: aliceOverride() });
 
@@ -1022,10 +1026,8 @@ describe('RecordTranscribePage', () => {
     const baseline = savedPayload(direct.csrfFetch);
     direct.unmount();
 
-    // The baseline has to carry data on both sides, or a mode switch that dropped one of
-    // them would round-trip an empty payload to an empty payload and pass.
-    expect(baseline.matches[0].matches[0]).toMatchObject({ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] });
-    expect(baseline.overrides).toEqual(aliceOverride());
+    // Only the name changed from what was stored, mode untouched.
+    expect(Object.keys(baseline.sections)).toEqual(['overview']);
 
     const roundTripped = renderPage({ record: record() });
     fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
@@ -1112,10 +1114,9 @@ describe('RecordTranscribePage', () => {
 
     // Started from nothing rather than from Alice's 1-0, because this mode does not read the
     // matches — and Bob, untouched, is given an explicit empty record for the same reason.
-    expect(savedPayload(csrfFetch).overrides).toEqual({
-      Alice: { wins: 0, losses: 0, draws: 2 },
-      Bob: { wins: 0, losses: 0, draws: 0 },
-    });
+    const sections = savedSections(csrfFetch);
+    expect(sections['overrides:0']).toEqual({ wins: 0, losses: 0, draws: 2 });
+    expect(sections['overrides:1']).toEqual({ wins: 0, losses: 0, draws: 0 });
   });
 
   it('turns a pairings-mode override on from the row, seeded from the pairings', async () => {
@@ -1138,9 +1139,11 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    expect(savedPayload(csrfFetch).overrides).toEqual({ Alice: { wins: 1, losses: 0, draws: 2 } });
-    // The matches are still the source for everybody else.
-    expect(savedPayload(csrfFetch).matches).toEqual(pairedRound());
+    const sections = savedSections(csrfFetch);
+    expect(sections['overrides:0']).toEqual({ wins: 1, losses: 0, draws: 2 });
+    // The matches are untouched, so Bob's pairings-derived record is not resubmitted either.
+    expect(sections['overrides:1']).toBeUndefined();
+    expect(sections.rounds).toBeUndefined();
   });
 
   it('hands a player back to their pairings when the override is turned off', async () => {
@@ -1166,7 +1169,9 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    expect(savedPayload(csrfFetch).overrides).toEqual({});
+    // Clearing a stored override back off is itself a change — null tells the server to
+    // remove it, distinct from the key being absent (unchanged).
+    expect(savedSections(csrfFetch)['overrides:0']).toBeNull();
   });
 
   // The row carries the player's name, record and trophy, so everything left in the body is
@@ -1228,12 +1233,11 @@ describe('RecordTranscribePage', () => {
 
     // Every player is given an explicit record, including the ones left alone, so nothing
     // falls back to the pairings.
-    expect(savedPayload(csrfFetch).overrides).toEqual({
-      Alice: { wins: 3, losses: 0, draws: 0 },
-      Bob: { wins: 0, losses: 0, draws: 0 },
-    });
-    // ...and the pairings are kept, so switching back restores them.
-    expect(savedPayload(csrfFetch).matches).toEqual(pairedRound());
+    const sections = savedSections(csrfFetch);
+    expect(sections['overrides:0']).toEqual({ wins: 3, losses: 0, draws: 0 });
+    expect(sections['overrides:1']).toEqual({ wins: 0, losses: 0, draws: 0 });
+    // ...and the matches are untouched, so switching back restores them from what is stored.
+    expect(sections.rounds).toBeUndefined();
   });
 
   // Switching mode changes what Save writes, so it is a change like any other.
@@ -1304,10 +1308,9 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    expect(savedPayload(csrfFetch).overrides).toEqual({
-      Alice: { wins: 0, losses: 0, draws: 0 },
-      Bob: { wins: 0, losses: 0, draws: 0 },
-    });
+    const sections = savedSections(csrfFetch);
+    expect(sections['overrides:0']).toEqual({ wins: 0, losses: 0, draws: 0 });
+    expect(sections['overrides:1']).toEqual({ wins: 0, losses: 0, draws: 0 });
   });
 
   // The page has to say plainly when an override is what will be displayed. That disclosure
@@ -1341,7 +1344,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
 
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
-    expect(savedPayload(csrfFetch).overrides).toMatchObject({ Alice: { wins: 0, losses: 2, draws: 0 } });
+    expect(savedSections(csrfFetch)['overrides:0']).toEqual({ wins: 0, losses: 2, draws: 0 });
   });
 
   // The same schema is `integer()` as well as `min(0)`, and the input's step does not hold
@@ -1360,7 +1363,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
 
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
-    expect(savedPayload(csrfFetch).overrides).toMatchObject({ Alice: { wins: 1, losses: 0, draws: 0 } });
+    expect(savedSections(csrfFetch)['overrides:0']).toEqual({ wins: 1, losses: 0, draws: 0 });
   });
 
   // Someone copying a standings sheet works straight down the list, so the cells have to be
@@ -1400,12 +1403,10 @@ describe('RecordTranscribePage', () => {
 
     const [, init] = saveCalls(csrfFetch)[0];
     expect(init.method).toBe('POST');
-    expect(savedPayload(csrfFetch)).toMatchObject({
-      name: 'Renamed Night',
-      players: [{ name: 'Alice' }, { name: 'Bob' }],
-      seatOrder: [0, 1],
-      // Nothing was typed into a deck, so no seat is rewritten.
-      decks: {},
+    // Only the name changed — the player list, seat order and decks are all still what was
+    // loaded, so nothing else belongs in the payload.
+    expect(savedSections(csrfFetch)).toEqual({
+      overview: { name: 'Renamed Night', date: 1700000000000, description: 'Eight players, three rounds' },
     });
 
     await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
@@ -1456,7 +1457,7 @@ describe('RecordTranscribePage', () => {
     await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
 
     // The first save carried the permutation the user actually made.
-    expect(JSON.parse(`${saveCalls(csrfFetch)[0][1].body}`)).toMatchObject({
+    expect(savedSections(csrfFetch, 0).players).toEqual({
       players: [{ name: 'Bob' }, { name: 'Alice' }],
       seatOrder: [1, 0],
     });
@@ -1465,10 +1466,10 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(2));
 
-    // ...and the second addresses the seats as the server left them.
-    expect(JSON.parse(`${saveCalls(csrfFetch)[1][1].body}`)).toMatchObject({
-      players: [{ name: 'Bob' }, { name: 'Alice' }],
-      seatOrder: [0, 1],
+    // ...and the second addresses the seats as the server left them — identity already
+    // matches what is now the baseline, so the players section is not resubmitted at all.
+    expect(savedSections(csrfFetch, 1)).toEqual({
+      overview: { name: 'Renamed Night', date: 1700000000000, description: 'Eight players, three rounds' },
     });
   });
 
@@ -1555,10 +1556,11 @@ describe('RecordTranscribePage', () => {
     random.mockRestore();
     await act(async () => {});
 
-    // Nothing applied: the rows still read in the order that was submitted.
+    // Nothing applied: the rows still read in the order that was submitted, and the save in
+    // flight carried only the name — the blocked edits never touched the players section.
     expect(playerRows()).toHaveLength(2);
     expect(nameField(0)).toHaveValue('Alice');
-    expect(JSON.parse(`${saveCalls(csrfFetch)[0][1].body}`).seatOrder).toEqual([0, 1]);
+    expect(savedSections(csrfFetch, 0).players).toBeUndefined();
 
     await release();
     await waitFor(() => expect(screen.getByText('No unsaved changes')).toBeInTheDocument());
@@ -1603,11 +1605,15 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(2));
 
-    // The list and the seats still describe each other.
-    const next = JSON.parse(`${saveCalls(csrfFetch)[1][1].body}`);
-    expect(next.players).toEqual([{ name: 'Alice' }, { name: 'Bob' }]);
-    expect(next.seatOrder).toEqual([0, 1]);
-    expect(next.seatOrder).toHaveLength(next.players.length);
+    // The list and the seats still describe each other — the add never applied, so the
+    // second save carries nothing about players at all, only the second rename.
+    const next = savedSections(csrfFetch, 1);
+    expect(next.players).toBeUndefined();
+    expect(next.overview).toEqual({
+      name: 'Renamed Twice',
+      date: 1700000000000,
+      description: 'Eight players, three rounds',
+    });
   });
 
   it('refuses a rename whose @handle lookup resolves after a save has started', async () => {
@@ -1639,9 +1645,9 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(2));
 
-    expect(JSON.parse(`${saveCalls(csrfFetch)[1][1].body}`)).toMatchObject({
-      players: [{ name: 'Alice' }, { name: 'Bob' }],
-      seatOrder: [0, 1],
+    // The rename never applied, so the second save carries nothing about players at all.
+    expect(savedSections(csrfFetch, 1)).toEqual({
+      overview: { name: 'Renamed Twice', date: 1700000000000, description: 'Eight players, three rounds' },
     });
   });
 
@@ -1671,7 +1677,7 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(saveButton());
     await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
-    expect(savedPayload(csrfFetch)).toMatchObject({ players: [{ name: 'Bob' }], seatOrder: [1] });
+    expect(savedSections(csrfFetch).players).toEqual({ players: [{ name: 'Bob' }], seatOrder: [1] });
   });
 
   // The server's Joi schema caps a record at 50 rounds, so the page refuses the 51st at the

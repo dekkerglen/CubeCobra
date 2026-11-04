@@ -95,10 +95,6 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
   const initialResultsMode: ResultsMode =
     Object.values(record.overrides ?? {}).some(Boolean) && !anyPairings(record.matches ?? []) ? 'records' : 'pairings';
   const [resultsMode, setResultsMode] = useState<ResultsMode>(initialResultsMode);
-  // The mode the last save was made in, which is what `dirty` compares against. It moves with
-  // each save for the same reason the state baseline does: the record on the server now says
-  // this, so going back to it is no longer an unsaved change.
-  const [seededResultsMode, setSeededResultsMode] = useState<ResultsMode>(initialResultsMode);
 
   const { state, seeded } = workspace;
 
@@ -181,11 +177,9 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
   const errors = useMemo(() => validationErrors(state), [state]);
 
   // The mode decides what Save writes — records mode gives every player an explicit record
-  // so nothing falls back to the matches — so changing it is a change like any other.
-  const dirty = useMemo(
-    () => isDirty(state, seeded) || resultsMode !== seededResultsMode,
-    [state, seeded, resultsMode, seededResultsMode],
-  );
+  // so nothing falls back to the matches — so isDirty takes it into account rather than this
+  // page tracking a second, separate "has the mode moved" flag.
+  const dirty = useMemo(() => isDirty(state, seeded, resultsMode === 'records'), [state, seeded, resultsMode]);
 
   useEffect(() => {
     if (!dirty) {
@@ -211,7 +205,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
       const response = await csrfFetch(`/cube/records/enter/${record.id}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(toTranscribePayload(submitted, submittedMode === 'records')),
+        body: JSON.stringify(toTranscribePayload(submitted, seeded, submittedMode === 'records')),
       });
       const json = await response.json();
 
@@ -222,7 +216,6 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
         return;
       }
 
-      setSeededResultsMode(submittedMode);
       setWorkspace((previous) => {
         const wasSubmitted = (index: number, deck: TranscribeDeck) => submitted.decks[index] === deck;
         // The server rewrote the draft's seats into the submitted player order, so every
@@ -252,7 +245,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
       savingRef.current = false;
       setSaving(false);
     }
-  }, [csrfFetch, record.id, state, resultsMode]);
+  }, [csrfFetch, record.id, state, seeded, resultsMode]);
 
   return (
     <MainLayout useContainer={false}>

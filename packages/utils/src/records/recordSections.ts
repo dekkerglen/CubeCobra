@@ -37,7 +37,9 @@ export const flattenSeatPool = (pool: number[][][] | undefined, cards: Card[]): 
     .map((cardIndex) => cards[cardIndex]?.details)
     .filter((details): details is CardDetails => !!details);
 
-const toOracleIds = (details: CardDetails[]): string[] => details.map(detailsToCard).map(cardOracleId);
+// Shared with the client's payload builder so a card details list resolves to the same
+// ordered oracle ids on both sides — two copies of this one-liner could silently drift.
+export const toOracleIds = (details: CardDetails[]): string[] => details.map(detailsToCard).map(cardOracleId);
 
 // The ordered oracle-id projection of one seat's boards — what both the client and the server
 // compare a deck section's baseline against. An absent seat (a player with no draft seat yet)
