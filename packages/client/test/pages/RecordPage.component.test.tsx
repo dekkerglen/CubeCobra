@@ -167,15 +167,15 @@ describe('RecordPage', () => {
   it('offers the transcription workspace from every tab', () => {
     renderPage(true);
 
-    const transcribeLink = () => screen.queryByRole('link', { name: 'Enter event data' });
+    const editRecordLink = () => screen.queryByRole('link', { name: 'Edit Record' });
 
-    expect(transcribeLink()).toHaveAttribute('href', '/cube/records/enter/rec-1');
+    expect(editRecordLink()).toHaveAttribute('href', '/cube/records/enter/rec-1');
 
     fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
-    expect(transcribeLink()).toHaveAttribute('href', '/cube/records/enter/rec-1');
+    expect(editRecordLink()).toHaveAttribute('href', '/cube/records/enter/rec-1');
 
     fireEvent.click(screen.getByRole('button', { name: 'Standings' }));
-    expect(transcribeLink()).toHaveAttribute('href', '/cube/records/enter/rec-1');
+    expect(editRecordLink()).toHaveAttribute('href', '/cube/records/enter/rec-1');
   });
 
   it('offers no overview, player-list or override editing to an owner', () => {
@@ -225,8 +225,48 @@ describe('RecordPage', () => {
   it('still offers the share link and Enter event data', () => {
     renderPage(true);
 
-    expect(screen.getByText('Share link to collect decks')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Enter event data' })).toHaveAttribute('href', '/cube/records/enter/rec-1');
+    expect(screen.getByText('Collect Decks')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Edit Record' })).toHaveAttribute('href', '/cube/records/enter/rec-1');
+  });
+
+  it('names the share action Collect Decks', () => {
+    renderPage(true);
+
+    expect(screen.getByText('Collect Decks')).toBeInTheDocument();
+  });
+
+  it('offers Edit Record in the menu rather than Enter event data above the tabs', () => {
+    renderPage(true);
+
+    expect(screen.getByRole('link', { name: 'Edit Record' })).toHaveAttribute('href', '/cube/records/enter/rec-1');
+    expect(screen.queryByRole('link', { name: 'Enter event data' })).not.toBeInTheDocument();
+  });
+
+  it('aligns Collect Decks, Export and Edit Record to the right', () => {
+    renderPage(true);
+
+    const collectDecksLink = screen.getByText('Collect Decks');
+    const exportLink = screen.getByRole('link', { name: 'Export' });
+    const editRecordLink = screen.getByRole('link', { name: 'Edit Record' });
+
+    expect(collectDecksLink).toBeInTheDocument();
+    expect(exportLink).toBeInTheDocument();
+    expect(editRecordLink).toBeInTheDocument();
+
+    const collectDecksParent = collectDecksLink.closest('[class*="flex"]') || collectDecksLink.parentElement;
+    const exportParent = exportLink.closest('[class*="flex"]') || exportLink.parentElement;
+    const editRecordParent = editRecordLink.closest('[class*="flex"]') || editRecordLink.parentElement;
+
+    expect(collectDecksParent).toBe(exportParent);
+    expect(exportParent).toBe(editRecordParent);
+  });
+
+  it('offers a non-owner Export but neither Collect Decks nor Edit Record', () => {
+    renderPage(false);
+
+    expect(screen.queryByText('Collect Decks')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Edit Record' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Export' })).toBeInTheDocument();
   });
 
   it('offers none of them to a non-owner', () => {
@@ -235,8 +275,8 @@ describe('RecordPage', () => {
     expect(screen.queryByText('Edit overview')).not.toBeInTheDocument();
     expect(screen.queryByText('Edit')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /^Record: /i })).not.toBeInTheDocument();
-    expect(screen.queryByText('Share link to collect decks')).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Enter event data' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Collect Decks')).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Edit Record' })).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Upload a deck for Alice' })).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Add Players' })).not.toBeInTheDocument();
 

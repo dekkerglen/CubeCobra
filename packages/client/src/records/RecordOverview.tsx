@@ -39,11 +39,16 @@ const RecordOverview: React.FC<RecordOverviewProps> = ({ record }) => {
             <SafeMarkdown markdown={record.description} />
           </div>
         )}
-        <Flexbox direction="row" gap="4" wrap="wrap" className="mt-1">
-          {isOwner && <ShareRecordLink modalprops={{ record }}>Share link to collect decks</ShareRecordLink>}
+        <Flexbox direction="row" gap="4" wrap="wrap" className="mt-1" justify="end">
+          {isOwner && <ShareRecordLink modalprops={{ record }}>Collect Decks</ShareRecordLink>}
           <Link href={`/cube/records/export/${record.cube}?record=${encodeURIComponent(record.id)}`} download>
             Export
           </Link>
+          {isOwner && (
+            <Link href={`/cube/records/enter/${record.id}`}>
+              Edit Record
+            </Link>
+          )}
         </Flexbox>
       </Flexbox>
     </CardBody>
