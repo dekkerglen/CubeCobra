@@ -191,6 +191,17 @@ const bothDecksDraft: Draft = {
   ],
 };
 
+// Neither seat carries a deck — a record whose players have all been added but none of whose
+// decks have been collected yet, which is where a live event sits for most of its length.
+const emptyDraft: Draft = {
+  ...draft,
+  id: 'draft-3',
+  seats: [
+    { mainboard: [[[]]], sideboard: [[[]]] },
+    { mainboard: [[[]]], sideboard: [[[]]] },
+  ],
+} as unknown as Draft;
+
 // Answers any of the matches console's three endpoints with a generic success and no round,
 // for tests that render the Matches tab without caring what it posts. Tests that do care
 // (the commit tests below) pass their own mock in instead.
@@ -409,10 +420,12 @@ describe('RecordPage', () => {
 
     // Alice appears twice: once in the roster pill, once as the selected player's heading.
     expect(screen.getAllByText('Alice').length).toBeGreaterThan(0);
-    expect(screen.getByText('Bob')).toBeInTheDocument();
-    // Alice 1-0, Bob 0-1, from the single match in baseRecord.
-    expect(screen.getByText('1-0')).toBeInTheDocument();
-    expect(screen.getByText('0-1')).toBeInTheDocument();
+    expect(screen.getAllByText('Bob').length).toBeGreaterThan(0);
+    // Alice 1-0, Bob 0-1, from the single match in baseRecord. Both records also appear on the
+    // Decks tab (mounted but hidden), which gives every player a heading now, so these count
+    // matches rather than asserting a single occurrence.
+    expect(screen.getAllByText('1-0').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('0-1').length).toBeGreaterThan(0);
     // Alice has a deck and is the default selection, so her deck renders inline.
     expect(screen.getByTestId('deck-card')).toBeInTheDocument();
   });
@@ -422,12 +435,63 @@ describe('RecordPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Decks' }));
 
     // The Players tab stays mounted (just hidden) when switching tabs, so Alice's name from
-    // there is still in the document; "View deck" and "No deck yet: Bob" are unique to the
-    // Full Draft view, so their presence is what actually proves this tab, not the other one,
-    // is what's showing.
+    // there is still in the document; "View deck" and the deckless player's "No deck yet" are
+    // unique to the Full Draft view, so their presence is what actually proves this tab, not
+    // the other one, is what's showing.
     expect(screen.getAllByText('Alice').length).toBeGreaterThan(0);
     expect(screen.getByText('View deck')).toBeInTheDocument();
-    expect(screen.getByText('No deck yet: Bob')).toBeInTheDocument();
+    expect(screen.getByText('No deck yet')).toBeInTheDocument();
+  });
+
+  /**
+   * A player with no deck used to be a comma-joined afterthought ("No deck yet: Bob") under the
+   * decks. These three cover the replacement: the same heading a deck gets, and a prefilled way
+   * to upload one. The card is located through the upload link rather than by text, because the
+   * same name and record also render on the (mounted, hidden) Players tab — `closest` is what
+   * pins an assertion to this tab's card rather than that one's.
+   */
+  it('gives a player with no deck the same name and record heading a deck gets', () => {
+    renderPage(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Decks' }));
+
+    const card = screen.getByRole('link', { name: 'Upload a deck for Bob' }).closest('div.border')!;
+    expect(card.textContent).toContain('Bob');
+    expect(card.textContent).toContain('0-1');
+    expect(card.textContent).toContain('No deck yet');
+  });
+
+  it('prefills the upload form with the player whose card it came from', () => {
+    renderPage(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Decks' }));
+
+    // `?player=` is 1-based (0 means "no player selected"), so Bob — players[1] — is 2.
+    expect(screen.getByRole('link', { name: 'Upload a deck for Bob' })).toHaveAttribute(
+      'href',
+      '/cube/records/uploaddeck/rec-1?player=2',
+    );
+  });
+
+  it('offers no deck upload to someone who cannot edit the cube', () => {
+    renderPage(false);
+    fireEvent.click(screen.getByRole('button', { name: 'Decks' }));
+
+    expect(screen.queryByRole('link', { name: 'Upload a deck for Bob' })).not.toBeInTheDocument();
+    // The heading itself is not an edit control, so it still renders.
+    expect(screen.getByText('No deck yet')).toBeInTheDocument();
+  });
+
+  it('lists every player on the Decks tab when nobody has uploaded a deck yet', () => {
+    renderPage(true, baseRecord, emptyDraft);
+    fireEvent.click(screen.getByRole('button', { name: 'Decks' }));
+
+    // Rather than one flat "no decks have been uploaded" message, which gives the owner nothing
+    // to act on per player. Scoped through the cards because the Players tab offers an upload
+    // link for its own selected player under the same label.
+    const cards = screen.getAllByText('No deck yet').map((text) => text.closest('div.border') as HTMLElement);
+    expect(cards).toHaveLength(2);
+    expect(within(cards[0]).getByRole('link', { name: 'Upload a deck for Alice' })).toBeInTheDocument();
+    expect(within(cards[1]).getByRole('link', { name: 'Upload a deck for Bob' })).toBeInTheDocument();
+    expect(screen.queryByText('No decks have been uploaded to this record yet.')).not.toBeInTheDocument();
   });
 
   it('says the Decks tab has nothing to show when the record has no draft', () => {
