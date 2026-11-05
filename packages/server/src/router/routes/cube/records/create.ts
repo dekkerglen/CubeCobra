@@ -11,7 +11,9 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
 
-export const createRecordPageHandler = async (req: Request, res: Response) => {
+// Both creation paths render the same wizard; `finished` only decides where the form posts,
+// and so which page the organiser lands on once the record exists.
+const renderCreatePage = (finished: boolean) => async (req: Request, res: Response) => {
   try {
     if (!req.params.id) {
       req.flash('danger', 'Cube ID is required');
@@ -41,9 +43,10 @@ export const createRecordPageHandler = async (req: Request, res: Response) => {
       'CreateNewRecordPage',
       {
         cube,
+        finished,
       },
       {
-        title: `${abbreviate(cube.name)} - Create Record`,
+        title: `${abbreviate(cube.name)} - ${finished ? 'Input Finished Event' : 'Start an Event'}`,
         metadata: generateMeta(
           cube.brief,
           cube.image.uri,
@@ -55,6 +58,13 @@ export const createRecordPageHandler = async (req: Request, res: Response) => {
     return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
 };
+
+export const createRecordPageHandler = renderCreatePage(false);
+
+// "Input Finished Event" used to POST the moment it was pressed, which created a record
+// before the organiser had typed anything — abandoning the page left an empty one behind,
+// and the list had no way to show it was empty. It now opens this same wizard.
+export const createFinishedEventPageHandler = renderCreatePage(true);
 
 export const createRecordPageFromDraftHandler = async (req: Request, res: Response) => {
   try {
@@ -314,6 +324,11 @@ export const routes = [
     method: 'get',
     path: '/:id',
     handler: [csrfProtection, ensureAuth, createRecordPageHandler],
+  },
+  {
+    method: 'get',
+    path: '/finished/:id',
+    handler: [csrfProtection, ensureAuth, createFinishedEventPageHandler],
   },
   {
     method: 'get',

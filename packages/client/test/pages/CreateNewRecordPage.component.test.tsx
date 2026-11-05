@@ -72,4 +72,52 @@ describe('CreateNewRecordPage', () => {
 
     expect(screen.getByRole('button', { name: /create/i })).toBeDisabled();
   });
+
+  /**
+   * The same wizard serves both entry points. Input Finished Event used to POST the moment it
+   * was pressed, so a record existed before the organiser had typed anything — abandoning the
+   * page it opened left an empty one behind, which the list had no way to show was empty.
+   */
+  describe('the finished-event path', () => {
+    const nameField = () => screen.getByPlaceholderText('Enter a name for the record') as HTMLInputElement;
+    const dateField = () => screen.getByPlaceholderText('Select a date for the record') as HTMLInputElement;
+
+    it('posts to the route that lands in the workspace', () => {
+      const { container } = render(<CreateNewRecordPage cube={cube} finished />);
+
+      expect(screen.getByText('Input Finished Event')).toBeInTheDocument();
+      expect(container.querySelector('form')).toHaveAttribute('action', '/cube/records/create/finished/cube-1');
+    });
+
+    // It replaced a single button that generated exactly these two values, so asking for them
+    // again would have made the quicker path the slower one.
+    it('arrives prefilled with a name and today', () => {
+      render(<CreateNewRecordPage cube={cube} finished />);
+
+      expect(nameField().value).toMatch(/^Draft on \d{1,2} \w+, \d{4}$/);
+      expect(screen.getByRole('button', { name: /continue to event data/i })).not.toBeDisabled();
+    });
+
+    /**
+     * The date input round-trips through UTC midnight, so a prefilled date has to be stored
+     * that way or it reads back a day early. The name is built from the same local day, which
+     * is what keeps the list's Name and Date columns agreeing.
+     */
+    it('prefills a date that reads back as the day it names', () => {
+      render(<CreateNewRecordPage cube={cube} finished />);
+
+      const now = new Date();
+      const pad = (n: number) => `${n}`.padStart(2, '0');
+      expect(dateField().value).toBe(`${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`);
+      expect(nameField().value).toContain(`${now.getDate()} `);
+    });
+
+    it('still starts an event empty, on the wizard route', () => {
+      const { container } = render(<CreateNewRecordPage cube={cube} />);
+
+      expect(screen.getByText('Start an Event')).toBeInTheDocument();
+      expect(nameField().value).toBe('');
+      expect(container.querySelector('form')).toHaveAttribute('action', '/cube/records/create/cube-1');
+    });
+  });
 });

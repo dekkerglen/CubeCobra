@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -35,16 +35,28 @@ describe('RecordsNavbar entry points', () => {
     // been replaced entirely, not merely relabeled.
     expect(screen.queryByText('Create New Record')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: /start an event/i })).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: /input finished event/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /input finished event/i })).toBeInTheDocument();
   });
 
-  it('links Start an Event to the wizard rather than posting a blank record', () => {
-    renderNavbar();
+  /**
+   * Neither entry point creates anything when pressed. Input Finished Event used to POST on
+   * click, so a record existed the moment it was pressed — abandoning the page it opened left
+   * an empty one behind, and the list had no way to show it was empty. Both now open the same
+   * wizard, whose own form is what creates the record.
+   */
+  it('creates nothing on click: both entry points are links, and the navbar posts no form', () => {
+    const { container } = renderNavbar();
 
-    // A link, not a form submission: the record is only created once the wizard's own form is
-    // submitted, so navigating here and abandoning the wizard leaves nothing behind.
-    const startLink = screen.getByRole('link', { name: /start an event/i });
-    expect(startLink).toHaveAttribute('href', '/cube/records/create/cube-1');
+    expect(screen.getByRole('link', { name: /start an event/i })).toHaveAttribute(
+      'href',
+      '/cube/records/create/cube-1',
+    );
+    expect(screen.getByRole('link', { name: /input finished event/i })).toHaveAttribute(
+      'href',
+      '/cube/records/create/finished/cube-1',
+    );
+    expect(container.querySelector('form')).toBeNull();
+    expect(container.querySelector('input[name="record"]')).toBeNull();
   });
 
   it('leaves From Draft, Hedron, Import and Export untouched', () => {
@@ -67,68 +79,21 @@ describe('RecordsNavbar entry points', () => {
     );
   });
 
-  it('leaves the record field empty until Input Finished Event is pressed', () => {
-    const { container } = renderNavbar();
+  // Six identical links in one row said nothing about which of them a reader wanted.
+  it('groups the ways to add a record by what they start from', () => {
+    renderNavbar();
 
-    const recordInput = container.querySelector('input[name="record"]') as HTMLInputElement;
-    expect(recordInput).toBeInTheDocument();
-    expect(recordInput.value).toBe('');
-  });
+    // The label renders inside a ResponsiveDiv, so the group itself is one level up.
+    const newEvent = screen.getByText('New event').closest('div')!.parentElement!;
+    expect(newEvent).toHaveTextContent('Start an Event');
+    expect(newEvent).toHaveTextContent('Input Finished Event');
 
-  it('builds the record payload at click time, not at render time', () => {
-    const submit = jest.fn();
-    // jsdom does not implement form submission.
-    Object.defineProperty(HTMLFormElement.prototype, 'submit', {
-      configurable: true,
-      writable: true,
-      value: submit,
-    });
-
-    const clickTime = new Date('2024-06-15T12:00:00Z');
-    jest.useFakeTimers().setSystemTime(clickTime);
-
-    const { container } = renderNavbar();
-    const recordInput = container.querySelector('input[name="record"]') as HTMLInputElement;
-
-    fireEvent.click(screen.getByRole('button', { name: /input finished event/i }));
-
-    expect(submit).toHaveBeenCalledTimes(1);
-    const payload = JSON.parse(recordInput.value);
-    expect(payload.date).toBe(clickTime.valueOf());
-    expect(typeof payload.name).toBe('string');
-    expect(payload.name.length).toBeGreaterThan(0);
-
-    jest.useRealTimers();
-  });
-
-  it('uses the time of the click even when the page was rendered much earlier', () => {
-    const submit = jest.fn();
-    Object.defineProperty(HTMLFormElement.prototype, 'submit', {
-      configurable: true,
-      writable: true,
-      value: submit,
-    });
-
-    // Render "yesterday" and click "today": the payload must carry the click time. The previous
-    // implementation baked the render-time date into the hidden input, so a page left open
-    // overnight created a record dated the day before.
-    jest.useFakeTimers().setSystemTime(new Date('2024-06-14T23:00:00Z'));
-    const { container } = renderNavbar();
-    const recordInput = container.querySelector('input[name="record"]') as HTMLInputElement;
-
-    const clickTime = new Date('2024-06-15T09:00:00Z');
-    jest.setSystemTime(clickTime);
-    fireEvent.click(screen.getByRole('button', { name: /input finished event/i }));
-
-    expect(JSON.parse(recordInput.value).date).toBe(clickTime.valueOf());
-
-    jest.useRealTimers();
-  });
-
-  it('posts Input Finished Event to the finished-entry route, not the wizard route', () => {
-    const { container } = renderNavbar();
-
-    const form = container.querySelector('form') as HTMLFormElement;
-    expect(form).toHaveAttribute('action', '/cube/records/create/finished/cube-1');
+    const fromExisting = screen.getByText('From existing').closest('div')!.parentElement!;
+    expect(fromExisting).toHaveTextContent('Create from Draft');
+    expect(fromExisting).toHaveTextContent('Import from Hedron Network');
+    expect(fromExisting).toHaveTextContent('Import from File');
+    // Exporting is not a way to add a record, so it is in neither group.
+    expect(fromExisting).not.toHaveTextContent('Export All Records');
+    expect(newEvent).not.toHaveTextContent('Export All Records');
   });
 });

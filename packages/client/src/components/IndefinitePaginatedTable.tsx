@@ -25,6 +25,8 @@ interface IndefinitePaginatedTableProps<T> {
   itemsKey?: string;
   header: string;
   headers: string[];
+  // Headers whose column is dropped below md, passed through to Table.
+  hideOnMobile?: string[];
   inCard?: boolean;
 }
 
@@ -40,6 +42,7 @@ const IndefinitePaginatedTable = <T,>({
   noneMessage = 'No items found.',
   itemsKey = 'items',
   headers,
+  hideOnMobile,
   inCard = false,
 }: IndefinitePaginatedTableProps<T>) => {
   const { callApi } = useContext(CSRFContext);
@@ -89,7 +92,11 @@ const IndefinitePaginatedTable = <T,>({
   const body =
     safeItems.length > 0 ? (
       <Flexbox direction="col" gap="2">
-        <Table headers={headers} rows={safeItems.slice(page * pageSize, (page + 1) * pageSize).map(renderItem)} />
+        <Table
+          headers={headers}
+          hideOnMobile={hideOnMobile}
+          rows={safeItems.slice(page * pageSize, (page + 1) * pageSize).map(renderItem)}
+        />
         <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
           {pager}
         </Flexbox>

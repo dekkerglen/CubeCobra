@@ -5,7 +5,6 @@ import Record from '@utils/datatypes/Record';
 
 import Button from 'components/base/Button';
 import FormatttedDate from 'components/base/FormatttedDate';
-import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import IndefinitePaginatedTable from 'components/IndefinitePaginatedTable';
@@ -28,32 +27,18 @@ const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
 
   const isOwner = canEdit;
 
+  // What distinguishes one record from another is how much is in it. The list used to carry a
+  // raw comma-joined player list instead, which was blank for a record nobody had been added
+  // to yet and a wall of names for a sixteen-player event — and said nothing about whether a
+  // round had ever been played. Names live on the record page, where there is room for them.
   const renderItem = (record: Record) => ({
     Name: <Link href={`/cube/record/${record.id}`}>{record.name}</Link>,
     Date: <FormatttedDate date={record.date} />,
-    Players: (
-      <Flexbox direction="row" gap="1">
-        {record.players.map((player, index) => {
-          if (player.userId) {
-            return (
-              <React.Fragment key={player.userId}>
-                <Link href={`/user/view/${player.userId}`}>
-                  <Text sm>{player.name}</Text>
-                </Link>
-                {index < record.players.length - 1 && <Text sm>, </Text>}
-              </React.Fragment>
-            );
-          }
-
-          return (
-            <Text key={player.name} sm>
-              {player.name}
-              {index < record.players.length - 1 && <Text sm>, </Text>}
-            </Text>
-          );
-        })}
-      </Flexbox>
-    ),
+    Players: <Text sm>{record.players?.length ?? 0}</Text>,
+    Rounds: <Text sm>{record.matches?.length ?? 0}</Text>,
+    // An em dash rather than a blank: a record with no winner yet and a column that failed to
+    // render look identical when both are empty.
+    Winner: <Text sm>{record.trophy?.length ? record.trophy.join(', ') : '—'}</Text>,
     '': isOwner && (
       <RecordDeleteModalButton modalprops={{ recordId: record.id }} color="secondary">
         <XIcon size={16} className="mx-1" />
@@ -73,7 +58,9 @@ const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
       fetchMoreRoute={`/cube/records/list/${cube.id}`}
       renderItem={renderItem}
       noneMessage="No draft reports to show, create a new report to get started!"
-      headers={['Name', 'Date', 'Players', '']}
+      headers={['Name', 'Date', 'Players', 'Rounds', 'Winner', '']}
+      // Name, date and a player count are what finds the record; the other two are detail.
+      hideOnMobile={['Rounds', 'Winner']}
       inCard
     />
   );
