@@ -126,20 +126,50 @@ describe('EditMatchRound', () => {
     expect(screen.getByLabelText('Frank Wins')).toHaveValue(2);
   });
 
-  // Seven controls share one row — two player selects, three result counts and Remove — so
-  // the counts are narrowed rather than each claiming the full width of the row. The Input
-  // escape hatch *replaces* the default `block w-full`, so `w-full` has to be gone from the
-  // wrapper rather than merely overridden by a later class. `shrink-0` is the other half:
-  // without it the two selects beside them squeeze a w-20 cell down to a third of that.
-  it('narrows the three result inputs to the width of a count', () => {
+  /**
+   * The five fields sit in the site's Row/Col grid (the pattern EditPlayerList and the rest of
+   * the app use) rather than one flex line. They were a flex row with the three counts held at
+   * `w-20 shrink-0`, which kept their width by squeezing the two selects beside them — to 26px
+   * on a 390px screen, where a select shows a chevron and no name at all.
+   *
+   * jsdom applies no media queries, so the reflow itself is verified by measurement in a
+   * browser. What is assertable here is the contract that drives it: three columns at the base
+   * size and nine from md up, with a pairing spanning the full width below md.
+   */
+  it('lays the match fields out on the responsive grid', () => {
     render(<Harness initialRound={{ matches: [match('Alice', 'Bob', [2, 1, 0])] }} />);
 
+    const colOf = (label: string) => screen.getByLabelText(label).closest('[class*="col-span"]')!;
+
+    for (const label of ['Player 1', 'Player 2']) {
+      // Full width of a 3-column grid below md, a third of a 9-column one above it.
+      expect(colOf(label).className).toContain('col-span-3');
+      expect(colOf(label).className).toContain('md:col-span-3');
+    }
+
     for (const label of ['Alice Wins', 'Bob Wins', 'Draws']) {
-      // wrapper > div.relative > input
-      const wrapper = screen.getByLabelText(label).parentElement!.parentElement!;
-      expect(wrapper).toHaveClass('w-20');
-      expect(wrapper).toHaveClass('shrink-0');
-      expect(wrapper).not.toHaveClass('w-full');
+      expect(colOf(label).className).toContain('col-span-1');
+      expect(colOf(label).className).toContain('md:col-span-1');
+      // No longer holding their own width against the selects.
+      expect(colOf(label).className).not.toContain('shrink-0');
+    }
+
+    const grid = colOf('Player 1').parentElement!;
+    expect(grid.className).toContain('grid-cols-3');
+    expect(grid.className).toContain('md:grid-cols-9');
+  });
+
+  // Above md the headings name the columns once for the whole list; below md there are no
+  // columns to head, so each field carries its own label instead.
+  it('labels every field for the stacked layout, hidden where the headings do that job', () => {
+    render(<Harness initialRound={{ matches: [match('Alice', 'Bob', [2, 1, 0])] }} />);
+
+    for (const label of ['Player 1', 'Player 2', 'P1 Wins', 'P2 Wins', 'Draws']) {
+      const inRow = screen
+        .getAllByText(label)
+        .map((node) => node.closest('div.block.md\\:hidden'))
+        .filter(Boolean);
+      expect(inRow.length).toBeGreaterThan(0);
     }
   });
 

@@ -4,7 +4,8 @@ import { PlusIcon, XIcon } from '@primer/octicons-react';
 import { Match, PlayerList, Round } from '@utils/datatypes/Record';
 
 import Input from 'components/base/Input';
-import { Flexbox } from 'components/base/Layout';
+import { Col, Flexbox, Row } from 'components/base/Layout';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 
@@ -16,35 +17,89 @@ export const emptyMatch = (): Match => ({
   results: [0, 0, 0],
 });
 
-// The columns a match row is cut into, shared with anything that lays out a row the same
-// way (the matches console's per-match row) so the headings above a list and the cells
-// below it are always the same widths, in whichever component renders them.
-export const NUMBER_COLUMN = 'w-20 shrink-0';
+/**
+ * The grid a match's five fields are cut into, shared with anything laying out a row the
+ * same way (the matches console's per-match row) so the headings above a list and the cells
+ * below it always line up, in whichever component renders them.
+ *
+ * Three columns on a phone and nine from md up: a pairing takes a whole line below md and a
+ * third of one above it, while the three counts sit side by side at either size. The fields
+ * were previously a single flex row with the counts fixed at `w-20 shrink-0`, which held
+ * their width by squeezing the two selects — down to 26px on a 390px screen, where a select
+ * shows a chevron and no name at all.
+ */
+export const MATCH_PLAYER_COL = { xs: 3 as const, md: 3 as const };
+export const MATCH_RESULT_COL = { xs: 1 as const, md: 1 as const };
 
-// Said once, above a list of match rows. Each cell's own name — "Alice Wins" — stays as its
-// accessible name and its title, because a column heading cannot say whose. Exported so the
-// matches console's row (a separate component, not this one) heads its list identically.
+export const MatchFieldGrid: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <Row xs={3} md={9}>
+    {children}
+  </Row>
+);
+
+// The number and remove controls bracket the grid rather than sitting in it: both are a
+// fixed icon's width at every size, so they are gutters, not columns. `items-start` keeps
+// them against the top of a stacked block below md, where the fields are four lines tall.
+export const MatchRowFrame: React.FC<{ lead: React.ReactNode; trail: React.ReactNode; children: React.ReactNode }> = ({
+  lead,
+  trail,
+  children,
+}) => (
+  <Flexbox direction="row" gap="2" alignItems="start" className="md:items-center">
+    {lead}
+    <div className="grow min-w-0">{children}</div>
+    {trail}
+  </Flexbox>
+);
+
+// Below md each field carries its own label, because a stacked block has no columns for a
+// heading row to head. Above md the headings do that job once, for the whole list.
+export const MatchFieldLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
+  <ResponsiveDiv baseVisible md>
+    <Text xs semibold className="text-text-secondary">
+      {children}
+    </Text>
+  </ResponsiveDiv>
+);
+
+export const MATCH_RESULT_HEADINGS = ['P1 Wins', 'P2 Wins', 'Draws'];
+
+// Said once, above a list of match rows, and only at the size where the fields are actually
+// in columns. Each cell's own name — "Alice Wins" — stays as its accessible name and its
+// title, because a column heading cannot say whose. Exported so the matches console's row (a
+// separate component, not this one) heads its list identically.
 export const MatchRowHeadings: React.FC = () => (
-  <div data-testid="match-column-headings">
-    <Flexbox direction="row" gap="2" alignItems="center">
-      <span aria-hidden="true" className="w-6 shrink-0" />
-      <Text sm semibold className="grow min-w-0 text-text-secondary">
-        Player 1
-      </Text>
-      <Text sm semibold className="grow min-w-0 text-text-secondary">
-        Player 2
-      </Text>
-      {/* Abbreviated because the column is the width of the count it heads; it reads
-          against the "Player 1" and "Player 2" headings immediately to its left, and
-          each cell still carries the player's own name as its title. */}
-      {['P1 Wins', 'P2 Wins', 'Draws'].map((heading, position) => (
-        <Text key={position} sm semibold className={`${NUMBER_COLUMN} text-text-secondary`}>
-          {heading}
-        </Text>
-      ))}
-      <span aria-hidden="true" className="w-6 shrink-0" />
-    </Flexbox>
-  </div>
+  <ResponsiveDiv md>
+    <div data-testid="match-column-headings">
+      <MatchRowFrame
+        lead={<span aria-hidden="true" className="w-6 shrink-0" />}
+        trail={<span aria-hidden="true" className="w-6 shrink-0" />}
+      >
+        <MatchFieldGrid>
+          <Col {...MATCH_PLAYER_COL}>
+            <Text sm semibold className="text-text-secondary">
+              Player 1
+            </Text>
+          </Col>
+          <Col {...MATCH_PLAYER_COL}>
+            <Text sm semibold className="text-text-secondary">
+              Player 2
+            </Text>
+          </Col>
+          {/* Abbreviated because the column is the width of the count it heads; it reads
+              against the "Player 1" and "Player 2" headings immediately to its left, and
+              each cell still carries the player's own name as its title. */}
+          {MATCH_RESULT_HEADINGS.map((heading) => (
+            <Col key={heading} {...MATCH_RESULT_COL}>
+              <Text sm semibold className="text-text-secondary">
+                {heading}
+              </Text>
+            </Col>
+          ))}
+        </MatchFieldGrid>
+      </MatchRowFrame>
+    </div>
+  </ResponsiveDiv>
 );
 
 interface EditMatchRoundProps {
@@ -85,59 +140,65 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
     <Flexbox direction="col" gap="2">
       {round.matches.length > 0 && <MatchRowHeadings />}
       {round.matches.map((match, index) => (
-        <Flexbox key={index} direction="row" gap="2" alignItems="center">
-          <Text sm className="w-6 shrink-0 text-text-secondary">{`${index + 1}`}</Text>
-          <div className="grow min-w-0">
-            <Select
-              id={`${idPrefix}-match-${index}-p1`}
-              aria-label="Player 1"
-              value={match.p1}
-              setValue={(value) => updateMatch(index, { p1: value })}
-              options={playerOptions}
-            />
-          </div>
-          <div className="grow min-w-0">
-            <Select
-              id={`${idPrefix}-match-${index}-p2`}
-              aria-label="Player 2"
-              value={match.p2}
-              setValue={(value) => updateMatch(index, { p2: value })}
-              options={playerOptions}
-            />
-          </div>
-          {/* `shrink-0` as well as the width: these sit beside two growing selects, which
-              squeeze a plain w-20 cell to a third of it. wrapperClassName replaces the
-              default `block w-full` rather than adding to it. */}
-          {[
-            { position: 0 as const, name: `${match.p1} Wins` },
-            { position: 1 as const, name: `${match.p2} Wins` },
-            { position: 2 as const, name: 'Draws' },
-          ].map(({ position, name }) => (
-            <Input
-              key={position}
-              id={`${idPrefix}-match-${index}-${position}`}
-              type="number"
-              value={`${match.results[position]}`}
-              onChange={(e) => updateResult(index, position, e.target.value)}
-              otherInputProps={{ min: 0, max: 100, title: name, 'aria-label': name }}
-              wrapperClassName={NUMBER_COLUMN}
-            />
-          ))}
-          {/* Removing one match of a round is routine bookkeeping, not the destructive act a
-              filled danger button announces. */}
-          <button
-            type="button"
-            aria-label={`Remove match ${index + 1}`}
-            className="w-6 shrink-0 text-text-secondary hover:text-red-600"
-            onClick={() => {
-              const newMatches = [...round.matches];
-              newMatches.splice(index, 1);
-              setRound({ ...round, matches: newMatches });
-            }}
-          >
-            <XIcon size={16} />
-          </button>
-        </Flexbox>
+        <MatchRowFrame
+          key={index}
+          lead={<Text sm className="w-6 shrink-0 text-text-secondary md:pt-2">{`${index + 1}`}</Text>}
+          trail={
+            /* Removing one match of a round is routine bookkeeping, not the destructive act a
+               filled danger button announces. */
+            <button
+              type="button"
+              aria-label={`Remove match ${index + 1}`}
+              className="w-6 shrink-0 text-text-secondary hover:text-red-600 md:pt-2"
+              onClick={() => {
+                const newMatches = [...round.matches];
+                newMatches.splice(index, 1);
+                setRound({ ...round, matches: newMatches });
+              }}
+            >
+              <XIcon size={16} />
+            </button>
+          }
+        >
+          <MatchFieldGrid>
+            <Col {...MATCH_PLAYER_COL}>
+              <MatchFieldLabel>Player 1</MatchFieldLabel>
+              <Select
+                id={`${idPrefix}-match-${index}-p1`}
+                aria-label="Player 1"
+                value={match.p1}
+                setValue={(value) => updateMatch(index, { p1: value })}
+                options={playerOptions}
+              />
+            </Col>
+            <Col {...MATCH_PLAYER_COL}>
+              <MatchFieldLabel>Player 2</MatchFieldLabel>
+              <Select
+                id={`${idPrefix}-match-${index}-p2`}
+                aria-label="Player 2"
+                value={match.p2}
+                setValue={(value) => updateMatch(index, { p2: value })}
+                options={playerOptions}
+              />
+            </Col>
+            {[
+              { position: 0 as const, name: `${match.p1} Wins` },
+              { position: 1 as const, name: `${match.p2} Wins` },
+              { position: 2 as const, name: 'Draws' },
+            ].map(({ position, name }) => (
+              <Col key={position} {...MATCH_RESULT_COL}>
+                <MatchFieldLabel>{MATCH_RESULT_HEADINGS[position]}</MatchFieldLabel>
+                <Input
+                  id={`${idPrefix}-match-${index}-${position}`}
+                  type="number"
+                  value={`${match.results[position]}`}
+                  onChange={(e) => updateResult(index, position, e.target.value)}
+                  otherInputProps={{ min: 0, max: 100, title: name, 'aria-label': name }}
+                />
+              </Col>
+            ))}
+          </MatchFieldGrid>
+        </MatchRowFrame>
       ))}
       {/* Adding a row to a round is routine, and a filled primary button gave it the same
           weight as Save at the bottom of the page. */}

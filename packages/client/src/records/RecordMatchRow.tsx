@@ -4,11 +4,18 @@ import { AlertIcon, XIcon } from '@primer/octicons-react';
 import { Match, PlayerList } from '@utils/datatypes/Record';
 
 import Input from 'components/base/Input';
-import { Flexbox } from 'components/base/Layout';
+import { Col, Flexbox } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 
-import { NUMBER_COLUMN } from './EditMatchRound';
+import {
+  MATCH_PLAYER_COL,
+  MATCH_RESULT_COL,
+  MATCH_RESULT_HEADINGS,
+  MatchFieldGrid,
+  MatchFieldLabel,
+  MatchRowFrame,
+} from './EditMatchRound';
 
 interface RecordMatchRowProps {
   index: number;
@@ -64,74 +71,90 @@ const RecordMatchRow: React.FC<RecordMatchRowProps> = ({
     // The public view of a finished event: every control gone, but the pairing and the
     // score still read the same way, cell for cell, as the editable row above it.
     return (
-      <Flexbox direction="row" gap="2" alignItems="center">
-        <Text sm className="w-6 shrink-0 text-text-secondary">{`${index + 1}`}</Text>
-        <Text sm className="grow min-w-0">
-          {match.p1}
-        </Text>
-        <Text sm className="grow min-w-0">
-          {match.p2}
-        </Text>
-        {/* Text has no title prop, so the hint (and the name getByTitle looks up in tests)
-            lives on a plain wrapping span instead. */}
-        {resultCells.map(({ position, name }) => (
-          <span key={position} title={name} className={NUMBER_COLUMN}>
-            <Text sm>{match.results[position]}</Text>
-          </span>
-        ))}
-        <span aria-hidden="true" className="w-6 shrink-0" />
-      </Flexbox>
+      <MatchRowFrame
+        lead={<Text sm className="w-6 shrink-0 text-text-secondary">{`${index + 1}`}</Text>}
+        trail={<span aria-hidden="true" className="w-6 shrink-0" />}
+      >
+        <MatchFieldGrid>
+          <Col {...MATCH_PLAYER_COL}>
+            <MatchFieldLabel>Player 1</MatchFieldLabel>
+            <Text sm>{match.p1}</Text>
+          </Col>
+          <Col {...MATCH_PLAYER_COL}>
+            <MatchFieldLabel>Player 2</MatchFieldLabel>
+            <Text sm>{match.p2}</Text>
+          </Col>
+          {/* Text has no title prop, so the hint (and the name getByTitle looks up in tests)
+              lives on a plain wrapping span instead. */}
+          {resultCells.map(({ position, name }) => (
+            <Col key={position} {...MATCH_RESULT_COL}>
+              <MatchFieldLabel>{MATCH_RESULT_HEADINGS[position]}</MatchFieldLabel>
+              <span title={name}>
+                <Text sm>{match.results[position]}</Text>
+              </span>
+            </Col>
+          ))}
+        </MatchFieldGrid>
+      </MatchRowFrame>
     );
   }
 
   return (
     <Flexbox direction="col" gap="1">
-      <Flexbox direction="row" gap="2" alignItems="center">
-        <Text sm className="w-6 shrink-0 text-text-secondary">{`${index + 1}`}</Text>
-        <div className="grow min-w-0">
-          <Select
-            id={`${idPrefix}-match-${index}-p1`}
-            aria-label="Player 1"
-            value={match.p1}
-            setValue={(value) => onChange({ ...match, p1: value })}
-            options={playerOptions}
-          />
-        </div>
-        <div className="grow min-w-0">
-          <Select
-            id={`${idPrefix}-match-${index}-p2`}
-            aria-label="Player 2"
-            value={match.p2}
-            setValue={(value) => onChange({ ...match, p2: value })}
-            options={playerOptions}
-          />
-        </div>
-        {resultCells.map(({ position, name }) => (
-          <Input
-            key={position}
-            id={`${idPrefix}-match-${index}-${position}`}
-            type="number"
-            value={`${match.results[position]}`}
-            onChange={(e) => {
-              const results = [...match.results] as [number, number, number];
-              results[position] = Number(e.target.value);
-              onChange({ ...match, results });
-            }}
-            otherInputProps={{ min: 0, max: 100, title: name, 'aria-label': name }}
-            wrapperClassName={NUMBER_COLUMN}
-          />
-        ))}
-        {/* Removing one match of a round is routine bookkeeping (a late drop, a bye) not the
-            destructive act a filled danger button announces. */}
-        <button
-          type="button"
-          aria-label={`Remove match ${index + 1}`}
-          className="w-6 shrink-0 text-text-secondary hover:text-red-600"
-          onClick={onRemove}
-        >
-          <XIcon size={16} />
-        </button>
-      </Flexbox>
+      <MatchRowFrame
+        lead={<Text sm className="w-6 shrink-0 text-text-secondary md:pt-2">{`${index + 1}`}</Text>}
+        trail={
+          /* Removing one match of a round is routine bookkeeping (a late drop, a bye) not the
+             destructive act a filled danger button announces. */
+          <button
+            type="button"
+            aria-label={`Remove match ${index + 1}`}
+            className="w-6 shrink-0 text-text-secondary hover:text-red-600 md:pt-2"
+            onClick={onRemove}
+          >
+            <XIcon size={16} />
+          </button>
+        }
+      >
+        <MatchFieldGrid>
+          <Col {...MATCH_PLAYER_COL}>
+            <MatchFieldLabel>Player 1</MatchFieldLabel>
+            <Select
+              id={`${idPrefix}-match-${index}-p1`}
+              aria-label="Player 1"
+              value={match.p1}
+              setValue={(value) => onChange({ ...match, p1: value })}
+              options={playerOptions}
+            />
+          </Col>
+          <Col {...MATCH_PLAYER_COL}>
+            <MatchFieldLabel>Player 2</MatchFieldLabel>
+            <Select
+              id={`${idPrefix}-match-${index}-p2`}
+              aria-label="Player 2"
+              value={match.p2}
+              setValue={(value) => onChange({ ...match, p2: value })}
+              options={playerOptions}
+            />
+          </Col>
+          {resultCells.map(({ position, name }) => (
+            <Col key={position} {...MATCH_RESULT_COL}>
+              <MatchFieldLabel>{MATCH_RESULT_HEADINGS[position]}</MatchFieldLabel>
+              <Input
+                id={`${idPrefix}-match-${index}-${position}`}
+                type="number"
+                value={`${match.results[position]}`}
+                onChange={(e) => {
+                  const results = [...match.results] as [number, number, number];
+                  results[position] = Number(e.target.value);
+                  onChange({ ...match, results });
+                }}
+                otherInputProps={{ min: 0, max: 100, title: name, 'aria-label': name }}
+              />
+            </Col>
+          ))}
+        </MatchFieldGrid>
+      </MatchRowFrame>
       {/* The organiser's typed value stays on screen either way — this is only the retry hint,
           never a rollback. Cleared the moment a later commit for this same match succeeds. */}
       {saveFailed && (
