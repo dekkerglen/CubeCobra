@@ -44,11 +44,7 @@ const RecordOverview: React.FC<RecordOverviewProps> = ({ record }) => {
           <Link href={`/cube/records/export/${record.cube}?record=${encodeURIComponent(record.id)}`} download>
             Export
           </Link>
-          {isOwner && (
-            <Link href={`/cube/records/enter/${record.id}`}>
-              Edit Record
-            </Link>
-          )}
+          {isOwner && <Link href={`/cube/records/enter/${record.id}`}>Edit Record</Link>}
         </Flexbox>
       </Flexbox>
     </CardBody>
