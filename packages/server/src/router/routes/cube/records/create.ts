@@ -133,7 +133,12 @@ const recordSchema = Joi.object({
   trophy: Joi.array().items(Joi.string()).optional(), // Trophy is optional
 }).unknown(true); // allow additional properties like dateCreated, dateLastUpdated
 
-export const createRecordHandler = async (req: Request, res: Response) => {
+// Shared by both creation doors: the wizard's own POST (name/description/date already
+// collected) and "Input Finished Event" (an empty record built client-side). They differ only
+// in where the newly created record sends the user — the wizard to the record page it was
+// built for, "Input Finished Event" straight to the transcription workspace — so the landing
+// page is the one thing the caller supplies.
+const createRecordAndRedirect = async (req: Request, res: Response, redirectTo: (recordId: string) => string) => {
   try {
     if (!req.params.id) {
       req.flash('danger', 'Cube ID is required');
@@ -187,11 +192,20 @@ export const createRecordHandler = async (req: Request, res: Response) => {
     }
 
     req.flash('success', 'Record created successfully');
-    return redirect(req, res, `/cube/record/${createdRecordId}`);
+    return redirect(req, res, redirectTo(createdRecordId));
   } catch (err) {
     return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
 };
+
+export const createRecordHandler = async (req: Request, res: Response) =>
+  createRecordAndRedirect(req, res, (recordId) => `/cube/record/${recordId}`);
+
+// "Input Finished Event": the record is otherwise identical, but since it still needs its
+// players and results filled in, it lands in the transcription workspace rather than the
+// read-built record page.
+export const createFinishedEventHandler = async (req: Request, res: Response) =>
+  createRecordAndRedirect(req, res, (recordId) => `/cube/records/enter/${recordId}`);
 
 export const createRecordFromDraftHandler = async (req: Request, res: Response) => {
   try {
@@ -324,6 +338,16 @@ export const routes = [
       ensureAuth,
       bodyValidation(recordSchema, (req) => `/cube/records/create/fromDraft/${req.params.id}`, 'record'),
       createRecordFromDraftHandler,
+    ],
+  },
+  {
+    method: 'post',
+    path: '/finished/:id',
+    handler: [
+      csrfProtection,
+      ensureAuth,
+      bodyValidation(recordSchema, (req) => `/cube/records/create/finished/${req.params.id}`, 'record'),
+      createFinishedEventHandler,
     ],
   },
 ];

@@ -1,6 +1,6 @@
 import React, { useContext, useRef } from 'react';
 
-import { DownloadIcon, PlusIcon, UploadIcon } from '@primer/octicons-react';
+import { ChecklistIcon, DownloadIcon, PlayIcon, PlusIcon, UploadIcon } from '@primer/octicons-react';
 import { getCubeId } from '@utils/Util';
 
 import { Flexbox } from 'components/base/Layout';
@@ -18,9 +18,23 @@ const navItemClass =
 
 const FromDraftLink = withModal(Link, CreateRecordFromDraftModal);
 
-// One click: POST a record with today's date + a default name, server redirects
-// straight to the new record.
-const CreateNewRecordButton: React.FC<{ cubeId: string }> = ({ cubeId }) => {
+// Links straight to the wizard (GET /cube/records/create/:id) rather than posting anything.
+// The wizard's own form creates the record on submit, so navigating here and abandoning it
+// midway leaves no orphaned record behind — unlike a click-time POST, which would have created
+// one the moment the button was pressed.
+const StartEventLink: React.FC<{ cubeId: string }> = ({ cubeId }) => (
+  <Link href={`/cube/records/create/${cubeId}`} className={navItemClass}>
+    <PlayIcon size={16} />
+    <ResponsiveDiv baseVisible md>
+      Start Event
+    </ResponsiveDiv>
+    <ResponsiveDiv md>Start an Event</ResponsiveDiv>
+  </Link>
+);
+
+// One click: POST a record with today's date + a default name, server redirects straight to
+// the transcription workspace so the organiser can fill in players and results immediately.
+const InputFinishedEventButton: React.FC<{ cubeId: string }> = ({ cubeId }) => {
   const formRef = useRef<HTMLFormElement>(null);
 
   // Build the record when the button is pressed rather than during render. `new Date()` in
@@ -44,14 +58,19 @@ const CreateNewRecordButton: React.FC<{ cubeId: string }> = ({ cubeId }) => {
   return (
     <>
       <button type="button" className={navItemClass} onClick={handleClick}>
-        <PlusIcon size={16} />
+        <ChecklistIcon size={16} />
         <ResponsiveDiv baseVisible md>
-          New Record
+          Input Event
         </ResponsiveDiv>
-        <ResponsiveDiv md>Create New Record</ResponsiveDiv>
+        <ResponsiveDiv md>Input Finished Event</ResponsiveDiv>
       </button>
       <div className="hidden">
-        <CSRFForm method="POST" action={`/cube/records/create/${cubeId}`} formData={{ record: '' }} ref={formRef} />
+        <CSRFForm
+          method="POST"
+          action={`/cube/records/create/finished/${cubeId}`}
+          formData={{ record: '' }}
+          ref={formRef}
+        />
       </div>
     </>
   );
@@ -85,7 +104,8 @@ const RecordsNavbar: React.FC = () => {
 
   return (
     <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2" wrap="wrap">
-      <CreateNewRecordButton cubeId={getCubeId(cube)} />
+      <StartEventLink cubeId={getCubeId(cube)} />
+      <InputFinishedEventButton cubeId={getCubeId(cube)} />
       <FromDraftLink className={navItemClass} modalprops={{ cube }}>
         <PlusIcon size={16} />
         <ResponsiveDiv baseVisible md>
