@@ -178,4 +178,52 @@ describe('RecordPage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Standings' }));
     expect(screen.queryByText('Assign Trophies')).not.toBeInTheDocument();
   });
+
+  // The tabs moved from `?tab=<index>` to `?tab=<slug>` so a later reorder can't silently
+  // repoint every hardcoded server redirect. These markers are each unique to one tab's
+  // content so a wrong-tab-shown bug can't hide behind a false positive: "deck-card" only
+  // comes from RecordDecks, "Round 1" only from RecordMatches, and "Losses" is a standings
+  // table header no other tab's table uses.
+  describe('tab addressing by name', () => {
+    it('opens the tab named in the query', () => {
+      window.history.replaceState({}, '', '/cube/record/rec-1?tab=matches');
+      renderPage(true);
+
+      expect(screen.getByText('Round 1')).toBeInTheDocument();
+      expect(screen.queryByTestId('deck-card')).not.toBeInTheDocument();
+    });
+
+    it('falls back to the first tab for an unrecognised name', () => {
+      window.history.replaceState({}, '', '/cube/record/rec-1?tab=nonsense');
+      renderPage(true);
+
+      expect(screen.getByTestId('deck-card')).toBeInTheDocument();
+    });
+
+    it('falls back to the first tab for an old numeric bookmark', () => {
+      // Review Focus 1: under the old index-based addressing, `tab=2` landed on Matches
+      // (today's index 2). A slug is required now, so this unrecognised value must fall
+      // back to the first tab rather than keep resolving to Matches by coincidence.
+      window.history.replaceState({}, '', '/cube/record/rec-1?tab=2');
+      renderPage(true);
+
+      expect(screen.getByTestId('deck-card')).toBeInTheDocument();
+      expect(screen.queryByText('Round 1')).not.toBeInTheDocument();
+    });
+
+    it('falls back to the first tab when tab is absent', () => {
+      renderPage(true);
+
+      expect(screen.getByTestId('deck-card')).toBeInTheDocument();
+    });
+
+    it('writes the slug, not an index, when a tab is clicked', () => {
+      renderPage(true);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Standings' }));
+
+      expect(screen.getByText('Losses')).toBeInTheDocument();
+      expect(window.location.search).toBe('?tab=standings');
+    });
+  });
 });

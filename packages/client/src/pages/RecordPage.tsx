@@ -52,23 +52,36 @@ const TranscribeAction: React.FC<{ record: Record }> = ({ record }) => {
 };
 
 const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players }) => {
-  const [activeTab, setActiveTab] = useQueryParam('tab', '0');
+  // Tabs are addressed by a slug in the URL (not a position) so a later reorder can't
+  // silently repoint every server redirect that still hardcodes an index.
+  const [activeTabSlug, setActiveTabSlug] = useQueryParam('tab', '');
   const user = useContext(UserContext);
 
   const tabs = [
     {
       name: 'Decks',
+      slug: 'decks',
       component: () => <RecordDecks record={record} draft={draft} players={players} />,
     },
     {
       name: 'Standings',
+      slug: 'standings',
       component: () => <RecordStandings record={record} />,
     },
     {
       name: 'Matches',
+      slug: 'matches',
       component: () => <RecordMatches record={record} />,
     },
   ];
+
+  // An absent or unrecognised slug — including an old `?tab=<index>` bookmark from before
+  // tabs were addressed by name — falls back to the first tab rather than landing on a
+  // blank page or, worse, whatever tab used to sit at that index.
+  const activeTabIndex = Math.max(
+    tabs.findIndex((tab) => tab.slug === activeTabSlug),
+    0,
+  );
 
   return (
     <MainLayout useContainer={false}>
@@ -79,10 +92,10 @@ const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players })
           <RecordOverview record={record} />
           <TranscribeAction record={record} />
           <TabbedView
-            activeTab={parseInt(activeTab || '0', 10)}
-            tabs={tabs.map((tab, index) => ({
+            activeTab={activeTabIndex}
+            tabs={tabs.map((tab) => ({
               label: tab.name,
-              onClick: () => setActiveTab(`${index}`),
+              onClick: () => setActiveTabSlug(tab.slug),
               content: tab.component(),
             }))}
           />
