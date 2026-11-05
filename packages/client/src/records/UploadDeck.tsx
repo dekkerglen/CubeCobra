@@ -287,45 +287,51 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
 
   return (
     <>
+      {/* Choosing who the deck belongs to is a separate step from entering it, so it gets its
+          own block with a rule under it rather than running straight into the card fields.
+          Absent entirely in the transcription workspace, where the row already names the
+          player — which is why the spacing lives here and not on the section around it. */}
       {showPlayerPicker && (
-        <Select
-          value={`${selectedUser}`}
-          setValue={(value) => {
-            const userId = parseInt(value, 10);
-            setSelectedUser(userId);
-            const player = record.players[userId - 1];
-            setRenamePlayer?.(player ? (player.userId ? `@${player.name}` : player.name) : '');
-          }}
-          id="upload-deck-player"
-          label="Upload deck for player"
-          options={[
-            { value: '0', label: 'Select a player' },
-            ...record.players.map((player, index) => ({
-              value: `${index + 1}`,
-              label: player.name,
-            })),
-            ...(setNewPlayerName ? [{ value: `${NEW_PLAYER}`, label: '+ Add new player' }] : []),
-          ]}
-        />
-      )}
-      {showPlayerPicker && selectedUser === NEW_PLAYER && setNewPlayerName && (
-        <Input
-          type="text"
-          value={newPlayerName ?? ''}
-          onChange={(e) => setNewPlayerName(e.target.value)}
-          placeholder="New player name"
-          autoComplete="off"
-        />
-      )}
-      {showPlayerPicker && selectedUser > 0 && setRenamePlayer && (
-        <Input
-          type="text"
-          label="Name on this record (fix a misspelling, or use @username to link your account)"
-          value={renamePlayer ?? ''}
-          onChange={(e) => setRenamePlayer(e.target.value)}
-          placeholder="Player name"
-          autoComplete="off"
-        />
+        <Flexbox direction="col" gap="2" className="pb-4 mb-2 border-b border-border">
+          <Select
+            value={`${selectedUser}`}
+            setValue={(value) => {
+              const userId = parseInt(value, 10);
+              setSelectedUser(userId);
+              const player = record.players[userId - 1];
+              setRenamePlayer?.(player ? (player.userId ? `@${player.name}` : player.name) : '');
+            }}
+            id="upload-deck-player"
+            label="Select Player"
+            options={[
+              { value: '0', label: 'Select a player' },
+              ...record.players.map((player, index) => ({
+                value: `${index + 1}`,
+                label: player.name,
+              })),
+              ...(setNewPlayerName ? [{ value: `${NEW_PLAYER}`, label: '+ Add new player' }] : []),
+            ]}
+          />
+          {selectedUser === NEW_PLAYER && setNewPlayerName && (
+            <Input
+              type="text"
+              value={newPlayerName ?? ''}
+              onChange={(e) => setNewPlayerName(e.target.value)}
+              placeholder="New player name"
+              autoComplete="off"
+            />
+          )}
+          {selectedUser > 0 && setRenamePlayer && (
+            <Input
+              type="text"
+              label="Name on this record (fix a misspelling, or use @username to link your account)"
+              value={renamePlayer ?? ''}
+              onChange={(e) => setRenamePlayer(e.target.value)}
+              placeholder="Player name"
+              autoComplete="off"
+            />
+          )}
+        </Flexbox>
       )}
       {(heading || controlsExtra) && (
         <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">

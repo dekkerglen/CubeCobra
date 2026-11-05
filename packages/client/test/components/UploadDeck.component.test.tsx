@@ -132,14 +132,14 @@ describe('UploadDeck paste', () => {
   it('hides the player picker when the caller says the player is implicit', () => {
     renderUploadDeck({ showPlayerPicker: false });
 
-    expect(screen.queryByLabelText('Upload deck for player')).not.toBeInTheDocument();
+    expect(screen.queryByLabelText('Select Player')).not.toBeInTheDocument();
     expect(textarea()).toBeInTheDocument();
   });
 
   it('keeps the player picker by default', () => {
     renderUploadDeck();
 
-    expect(screen.getByLabelText('Upload deck for player')).toBeInTheDocument();
+    expect(screen.getByLabelText('Select Player')).toBeInTheDocument();
   });
 
   it('sends one request for a multi-line list, not one per line', async () => {

@@ -99,11 +99,6 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
                   {message}
                 </Alert>
               ))}
-              {disabledExplanation && (
-                <Alert color="warning" className="mt-2">
-                  {disabledExplanation}
-                </Alert>
-              )}
               <CSRFForm
                 method="POST"
                 action={`/cube/records/uploaddeck/${record.id}`}
@@ -124,6 +119,16 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
                   Upload
                 </LoadingButton>
               </CSRFForm>
+              {/* Why Upload is disabled, as quiet text under the button rather than a warning
+                  banner. It describes live form state, not an event to acknowledge: on arrival
+                  "no cards added yet" is simply what the page looks like before you have done
+                  anything, and a dismissable banner could be shut once and then never report
+                  the reason that actually mattered. */}
+              {disabledExplanation && (
+                <Text sm className="text-text-secondary text-center">
+                  {disabledExplanation}
+                </Text>
+              )}
             </Flexbox>
           </CardBody>
         </Card>
