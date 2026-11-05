@@ -124,8 +124,18 @@ const baselinesSchema = Joi.object({
 // whatever name the stored list holds now. Optional rather than required: a client still
 // running pre-fix JS at the moment of deploy sends no `identity`, and must keep working under
 // the pre-fix behaviour (rebasing only when `players` itself is dirty) rather than 400.
+// Deliberately without `.unique('name')` or `.max(MAX_PLAYERS)`, unlike playersSectionSchema's
+// identical-looking list below. Those constraints exist to keep *stored* data well-formed, but
+// identity only describes what the client's workspace already loaded — it is never written.
+// contribute.ts and uploaddeck.ts both append a new player via
+// `reconcilePlayerIds([...storedPlayers, added], storedPlayers)` with no uniqueness or count
+// check, so a stored record can already hold a duplicate name or exceed MAX_PLAYERS. Imposing
+// either constraint here would 400 every later save on such a record, including the
+// players-section edit meant to repair it — identity is sent unconditionally and carries the
+// stale as-loaded list regardless of what `sections.players` corrects to. Re-adding either
+// constraint "to match" the section below would restore that lockout.
 const identitySchema = Joi.object({
-  players: Joi.array().items(playerSchema).unique('name').max(MAX_PLAYERS).required(),
+  players: Joi.array().items(playerSchema).required(),
 }).optional();
 
 const transcribeSectionsSchema = Joi.object({

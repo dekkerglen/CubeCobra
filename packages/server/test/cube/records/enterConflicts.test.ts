@@ -330,6 +330,43 @@ describe('transcribeRecordHandler — conflict detection', () => {
     expect(savedRecord().trophy).toEqual(['Al', 'Bob']);
   });
 
+  it('accepts a rounds-only save when the stored players already hold a duplicate name', async () => {
+    // contribute.ts and uploaddeck.ts both append a new player without checking for an
+    // existing name match, so a record can drift into holding two players named "Alice". The
+    // identity schema only has to describe that already-stored state, not police it — only
+    // sections.players, which actually gets written, enforces uniqueness.
+    (recordDao.getById as jest.Mock).mockResolvedValue(
+      existingRecord({
+        players: [
+          { id: 'p1', name: 'Alice' },
+          { id: 'p2', name: 'Bob' },
+          { id: 'p3', name: 'Alice' },
+        ],
+        matches: [{ matches: [{ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] }] }],
+      }),
+    );
+
+    const res = await save({
+      sections: {
+        rounds: { matches: [{ matches: [{ p1: 'Alice', p2: 'Bob', results: [2, 1, 1] }] }] },
+      },
+      baselines: {
+        rounds: { matches: [{ matches: [{ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] }] }] },
+      },
+      identity: {
+        players: [
+          { id: 'p1', name: 'Alice' },
+          { id: 'p2', name: 'Bob' },
+          { id: 'p3', name: 'Alice' },
+        ],
+      },
+    });
+
+    expect(res.status).toBe(200);
+    expect(res.body.conflicts).toEqual([]);
+    expect(res.body.applied).toEqual(['rounds']);
+  });
+
   it('echoes minted player ids back in the response', async () => {
     (recordDao.getById as jest.Mock).mockResolvedValue(
       existingRecord({ players: [{ name: 'Alice' }, { name: 'Bob' }] }),
