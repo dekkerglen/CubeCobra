@@ -382,6 +382,17 @@ describe('RecordPage', () => {
     expect(exportParent).toBe(editRecordParent);
   });
 
+  it('puts the action links on the title row rather than a row of their own', () => {
+    renderPage(true);
+
+    // On their own row beneath the title, date and description, the three actions read as a
+    // separate band of page chrome instead of as controls belonging to this record.
+    const titleRow = screen.getByText('Tuesday Night').closest('div.flex-row')!;
+    expect(titleRow).toContainElement(screen.getByRole('link', { name: 'Export' }));
+    expect(titleRow).toContainElement(screen.getByRole('link', { name: 'Edit Record' }));
+    expect(titleRow).toContainElement(screen.getByText('Collect Decks'));
+  });
+
   it('offers a non-owner Export but neither Collect Decks nor Edit Record', () => {
     renderPage(false);
 
