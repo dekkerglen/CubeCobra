@@ -695,6 +695,103 @@ describe('RecordPage', () => {
       });
     });
 
+    // A failed commit must never be indistinguishable from a successful one: a rejected
+    // request, a non-ok response, and a success:'false' body all have to surface the same
+    // per-row "didn't save" signal, and none of them may roll the typed value back off screen
+    // or escape as an unhandled rejection (the suite would fail loudly on that by itself).
+    it('surfaces a not-saved indication and does not throw when csrfFetch rejects', async () => {
+      const csrfFetch = jest.fn(async () => {
+        throw new Error('network down');
+      });
+      renderPage(true, baseRecord, draft, csrfFetch);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      await act(async () => {
+        fireEvent.change(screen.getByLabelText('Alice Wins'), { target: { value: '2' } });
+      });
+
+      expect(screen.getByRole('alert')).toHaveTextContent('Not saved');
+    });
+
+    it('surfaces the same not-saved indication for a non-ok or success:false response', async () => {
+      const csrfFetch = jest.fn(
+        async () => ({ ok: false, json: async () => ({ success: 'false' }) }) as unknown as Response,
+      );
+      renderPage(true, baseRecord, draft, csrfFetch);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      await act(async () => {
+        fireEvent.change(screen.getByLabelText('Alice Wins'), { target: { value: '2' } });
+      });
+
+      expect(screen.getByRole('alert')).toHaveTextContent('Not saved');
+    });
+
+    it('keeps the typed value on screen after a failed commit', async () => {
+      const csrfFetch = jest.fn(async () => {
+        throw new Error('network down');
+      });
+      renderPage(true, baseRecord, draft, csrfFetch);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      await act(async () => {
+        fireEvent.change(screen.getByLabelText('Alice Wins'), { target: { value: '2' } });
+      });
+
+      // The controlled Input still shows what the organiser typed — nothing rolled it back
+      // to the last value the server actually has.
+      expect(screen.getByLabelText('Alice Wins')).toHaveValue(2);
+    });
+
+    it('lands both edits when the same match is edited twice before the first request resolves', async () => {
+      const csrfFetch = jest.fn(
+        async (_url?: RequestInfo, _init?: RequestInit) =>
+          ({ ok: true, json: async () => ({ success: 'true' }) }) as unknown as Response,
+      );
+      renderPage(true, baseRecord, draft, csrfFetch);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      // Two fields of the same match change back-to-back, before either request's response
+      // has a chance to land — a pairing correction right after entering a score.
+      await act(async () => {
+        fireEvent.change(screen.getByLabelText('Alice Wins'), { target: { value: '2' } });
+        fireEvent.change(screen.getByLabelText('Player 2'), { target: { value: 'Unknown Opponent' } });
+      });
+
+      expect(csrfFetch).toHaveBeenCalledTimes(2);
+      // The second payload is built from the already-applied first edit, not the stale prop
+      // from before either change — so it carries both, rather than reverting the first.
+      const [, secondInit] = csrfFetch.mock.calls[1];
+      expect(JSON.parse(secondInit!.body as string)).toEqual({
+        roundIndex: 0,
+        matchIndex: 0,
+        match: { p1: 'Alice', p2: 'Unknown Opponent', results: [2, 0, 0] },
+      });
+    });
+
+    it('clears the not-saved indication once a later commit for the same match succeeds', async () => {
+      const csrfFetch = jest
+        .fn()
+        .mockImplementationOnce(async () => {
+          throw new Error('network down');
+        })
+        .mockImplementationOnce(
+          async () => ({ ok: true, json: async () => ({ success: 'true' }) }) as unknown as Response,
+        );
+      renderPage(true, baseRecord, draft, csrfFetch);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      await act(async () => {
+        fireEvent.change(screen.getByLabelText('Alice Wins'), { target: { value: '2' } });
+      });
+      expect(screen.getByRole('alert')).toBeInTheDocument();
+
+      await act(async () => {
+        fireEvent.change(screen.getByLabelText('Alice Wins'), { target: { value: '3' } });
+      });
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
     it('shows a non-owner the rounds with no controls at all', () => {
       renderPage(false, baseRecord);
       fireEvent.click(screen.getByRole('button', { name: 'Matches' }));

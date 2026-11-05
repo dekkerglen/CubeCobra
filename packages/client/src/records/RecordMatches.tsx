@@ -40,6 +40,13 @@ const RecordMatches: React.FC<RecordMatchesProps> = ({ record }) => {
     () => new Set(matches.length > 0 ? [matches.length - 1] : []),
   );
 
+  // Matches whose most recent commit did not land — a rejected request, a non-ok response, or
+  // a body without `success: 'true'`. Keyed by "roundIndex:matchIndex" so the indication stays
+  // attached to one row rather than the whole round, and survives across re-renders until a
+  // later commit for that same match succeeds.
+  const [failedMatches, setFailedMatches] = useState<Set<string>>(new Set());
+  const matchKey = (roundIndex: number, matchIndex: number) => `${roundIndex}:${matchIndex}`;
+
   const toggleRound = (index: number) =>
     setExpandedRounds((previous) => {
       const next = new Set(previous);
@@ -54,25 +61,80 @@ const RecordMatches: React.FC<RecordMatchesProps> = ({ record }) => {
   const applyRound = (roundIndex: number, round: Round) =>
     setMatches((previous) => previous.map((existing, position) => (position === roundIndex ? round : existing)));
 
-  const postMatchEdit = async (action: 'set' | 'add' | 'remove', body: object, roundIndex: number) => {
-    const response = await csrfFetch(`/cube/records/edit/match/${action}/${record.id}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(body),
-    });
-    const json = await response.json();
-    if (json.success === 'true' && json.round) {
-      applyRound(roundIndex, json.round);
+  // Applies one match's next value to local state immediately, ahead of the network call that
+  // persists it. This is what closes the race in Finding 2: a second edit to the same match,
+  // fired before the first request's response lands, reads this already-applied value as its
+  // `match` prop rather than the stale one the first edit started from, so its payload carries
+  // both changes instead of reverting the first.
+  const applyMatchLocally = (roundIndex: number, matchIndex: number, match: Match) =>
+    setMatches((previous) =>
+      previous.map((round, position) =>
+        position === roundIndex
+          ? { ...round, matches: round.matches.map((existing, index) => (index === matchIndex ? match : existing)) }
+          : round,
+      ),
+    );
+
+  // Never throws: a rejected csrfFetch, a non-ok response, or a thrown `.json()` all resolve to
+  // `{ success: false }` here rather than propagating, so a caller that doesn't await this
+  // still can't produce an unhandled rejection. `round` is independent of `success` — the real
+  // endpoints only ever send one with the other, but a caller reconciles from whichever it got
+  // rather than assuming a shape that happens to hold in production.
+  const postMatchEdit = async (
+    action: 'set' | 'add' | 'remove',
+    body: object,
+  ): Promise<{ success: boolean; round?: Round }> => {
+    try {
+      const response = await csrfFetch(`/cube/records/edit/match/${action}/${record.id}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      if (!response.ok) {
+        return { success: false };
+      }
+      const json = await response.json();
+      return { success: json?.success === 'true', round: json?.round };
+    } catch {
+      return { success: false };
     }
   };
 
-  const commitMatch = (roundIndex: number, matchIndex: number, match: Match) =>
-    postMatchEdit('set', { roundIndex, matchIndex, match }, roundIndex);
+  const commitMatch = async (roundIndex: number, matchIndex: number, match: Match) => {
+    // Apply-then-post: the organiser's edit is reflected immediately (both on screen and as the
+    // base the next edit builds on), and the network call that follows can fail without ever
+    // taking that value back off the screen.
+    applyMatchLocally(roundIndex, matchIndex, match);
+    const key = matchKey(roundIndex, matchIndex);
+    const { success, round } = await postMatchEdit('set', { roundIndex, matchIndex, match });
+    // The server's round is authoritative when present and may differ from what was sent
+    // (e.g. a concurrent edit from elsewhere) — reconcile from it rather than trusting the
+    // optimistic value forever.
+    if (round) applyRound(roundIndex, round);
+    setFailedMatches((previous) => {
+      const hadFailure = previous.has(key);
+      if (success) {
+        if (!hadFailure) return previous;
+        const next = new Set(previous);
+        next.delete(key);
+        return next;
+      }
+      // Do NOT roll back the optimistically-applied value above: only a per-row indication is
+      // added, so the organiser can see which match to retry, without losing what they typed.
+      if (hadFailure) return previous;
+      return new Set(previous).add(key);
+    });
+  };
 
-  const addMatch = (roundIndex: number) => postMatchEdit('add', { roundIndex }, roundIndex);
+  const addMatch = async (roundIndex: number) => {
+    const { round } = await postMatchEdit('add', { roundIndex });
+    if (round) applyRound(roundIndex, round);
+  };
 
-  const removeMatch = (roundIndex: number, matchIndex: number) =>
-    postMatchEdit('remove', { roundIndex, matchIndex }, roundIndex);
+  const removeMatch = async (roundIndex: number, matchIndex: number) => {
+    const { round } = await postMatchEdit('remove', { roundIndex, matchIndex });
+    if (round) applyRound(roundIndex, round);
+  };
 
   return (
     <CardBody>
@@ -127,6 +189,7 @@ const RecordMatches: React.FC<RecordMatchesProps> = ({ record }) => {
                         match={match}
                         players={record.players}
                         canEdit={canEdit}
+                        saveFailed={failedMatches.has(matchKey(roundIndex, matchIndex))}
                         onChange={(next) => commitMatch(roundIndex, matchIndex, next)}
                         onRemove={() => removeMatch(roundIndex, matchIndex)}
                       />

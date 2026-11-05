@@ -53,6 +53,9 @@ interface EditMatchRoundProps {
   setRound: (round: Round) => void;
 }
 
+// NOTE: RecordMatchRow (the matches console's per-match row) deliberately duplicates this
+// component's per-row markup rather than sharing it (see that file for why). Changing this
+// row's layout likely means changing that one too.
 const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRound }) => {
   // Namespaces the control ids so the labels stay bound to their own inputs when more than one
   // round is on the page at once, rather than all pointing at the first round's `match-0-p1`.

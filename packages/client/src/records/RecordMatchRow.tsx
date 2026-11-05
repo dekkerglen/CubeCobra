@@ -1,6 +1,6 @@
 import React, { useId } from 'react';
 
-import { XIcon } from '@primer/octicons-react';
+import { AlertIcon, XIcon } from '@primer/octicons-react';
 import { Match, PlayerList } from '@utils/datatypes/Record';
 
 import Input from 'components/base/Input';
@@ -15,6 +15,10 @@ interface RecordMatchRowProps {
   match: Match;
   players: PlayerList;
   canEdit: boolean;
+  // True when this match's most recent commit did not land (rejected request, non-ok
+  // response, or a body without success: 'true'). The row still shows whatever the organiser
+  // last typed — RecordMatches never rolls that back — this is only the retry hint.
+  saveFailed: boolean;
   // Commits the whole next match in one call — there is no local round array to diff, so
   // every field (a pairing or a result) hands back the complete match it belongs to.
   onChange: (match: Match) => void;
@@ -26,7 +30,17 @@ interface RecordMatchRowProps {
 // but not a console where every field is its own network call against a single match. It
 // shares EditMatchRound's layout primitives (NUMBER_COLUMN, the same control order) so the
 // two look identical, without bending the shared component's contract to fit this one.
-const RecordMatchRow: React.FC<RecordMatchRowProps> = ({ index, match, players, canEdit, onChange, onRemove }) => {
+// NOTE: this row's JSX is otherwise a deliberate duplicate of EditMatchRound's per-row markup
+// (see that file for why). Changing this row's layout likely means changing that one too.
+const RecordMatchRow: React.FC<RecordMatchRowProps> = ({
+  index,
+  match,
+  players,
+  canEdit,
+  saveFailed,
+  onChange,
+  onRemove,
+}) => {
   const idPrefix = useId();
 
   // A match can reference a player no longer in record.players (removed elsewhere, or a
@@ -71,51 +85,65 @@ const RecordMatchRow: React.FC<RecordMatchRowProps> = ({ index, match, players, 
   }
 
   return (
-    <Flexbox direction="row" gap="2" alignItems="center">
-      <Text sm className="w-6 shrink-0 text-text-secondary">{`${index + 1}`}</Text>
-      <div className="grow min-w-0">
-        <Select
-          id={`${idPrefix}-match-${index}-p1`}
-          aria-label="Player 1"
-          value={match.p1}
-          setValue={(value) => onChange({ ...match, p1: value })}
-          options={playerOptions}
-        />
-      </div>
-      <div className="grow min-w-0">
-        <Select
-          id={`${idPrefix}-match-${index}-p2`}
-          aria-label="Player 2"
-          value={match.p2}
-          setValue={(value) => onChange({ ...match, p2: value })}
-          options={playerOptions}
-        />
-      </div>
-      {resultCells.map(({ position, name }) => (
-        <Input
-          key={position}
-          id={`${idPrefix}-match-${index}-${position}`}
-          type="number"
-          value={`${match.results[position]}`}
-          onChange={(e) => {
-            const results = [...match.results] as [number, number, number];
-            results[position] = Number(e.target.value);
-            onChange({ ...match, results });
-          }}
-          otherInputProps={{ min: 0, max: 100, title: name, 'aria-label': name }}
-          wrapperClassName={NUMBER_COLUMN}
-        />
-      ))}
-      {/* Removing one match of a round is routine bookkeeping (a late drop, a bye) not the
-          destructive act a filled danger button announces. */}
-      <button
-        type="button"
-        aria-label={`Remove match ${index + 1}`}
-        className="w-6 shrink-0 text-text-secondary hover:text-red-600"
-        onClick={onRemove}
-      >
-        <XIcon size={16} />
-      </button>
+    <Flexbox direction="col" gap="1">
+      <Flexbox direction="row" gap="2" alignItems="center">
+        <Text sm className="w-6 shrink-0 text-text-secondary">{`${index + 1}`}</Text>
+        <div className="grow min-w-0">
+          <Select
+            id={`${idPrefix}-match-${index}-p1`}
+            aria-label="Player 1"
+            value={match.p1}
+            setValue={(value) => onChange({ ...match, p1: value })}
+            options={playerOptions}
+          />
+        </div>
+        <div className="grow min-w-0">
+          <Select
+            id={`${idPrefix}-match-${index}-p2`}
+            aria-label="Player 2"
+            value={match.p2}
+            setValue={(value) => onChange({ ...match, p2: value })}
+            options={playerOptions}
+          />
+        </div>
+        {resultCells.map(({ position, name }) => (
+          <Input
+            key={position}
+            id={`${idPrefix}-match-${index}-${position}`}
+            type="number"
+            value={`${match.results[position]}`}
+            onChange={(e) => {
+              const results = [...match.results] as [number, number, number];
+              results[position] = Number(e.target.value);
+              onChange({ ...match, results });
+            }}
+            otherInputProps={{ min: 0, max: 100, title: name, 'aria-label': name }}
+            wrapperClassName={NUMBER_COLUMN}
+          />
+        ))}
+        {/* Removing one match of a round is routine bookkeeping (a late drop, a bye) not the
+            destructive act a filled danger button announces. */}
+        <button
+          type="button"
+          aria-label={`Remove match ${index + 1}`}
+          className="w-6 shrink-0 text-text-secondary hover:text-red-600"
+          onClick={onRemove}
+        >
+          <XIcon size={16} />
+        </button>
+      </Flexbox>
+      {/* The organiser's typed value stays on screen either way — this is only the retry hint,
+          never a rollback. Cleared the moment a later commit for this same match succeeds. */}
+      {saveFailed && (
+        <Flexbox direction="row" gap="1" alignItems="center" className="pl-8">
+          <AlertIcon size={14} className="text-red-600" />
+          <span role="alert">
+            <Text sm className="text-red-600">
+              {'Not saved — try again'}
+            </Text>
+          </span>
+        </Flexbox>
+      )}
     </Flexbox>
   );
 };
