@@ -10,6 +10,7 @@ import Record from '@utils/datatypes/Record';
 
 import { SortableList } from 'components/DND';
 import { CSRFContext } from 'contexts/CSRFContext';
+import { navigateTo } from 'utils/navigate';
 
 import { createCardDetails } from '../../../server/test/test-utils/data';
 import RecordTranscribePage from '../../src/pages/RecordTranscribePage';
@@ -48,6 +49,7 @@ jest.mock('layouts/CubeLayout', () => ({
   __esModule: true,
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
+jest.mock('utils/navigate', () => ({ __esModule: true, navigateTo: jest.fn() }));
 jest.mock('components/DynamicFlash', () => ({ __esModule: true, default: () => null }));
 jest.mock('components/TextEntry', () => ({ __esModule: true, default: () => <div data-testid="text-entry" /> }));
 
@@ -211,7 +213,15 @@ const savedPayload = (csrfFetch: jest.Mock, call = 0) => JSON.parse(`${saveCalls
 // payload used to carry.
 const savedSections = (csrfFetch: jest.Mock, call = 0) => savedPayload(csrfFetch, call).sections;
 
+// jsdom's `location` is neither configurable nor writable, so where "Save & Finish" sends the
+// user is observed through the navigation helper the page calls.
+const assign = navigateTo as jest.Mock;
+
+beforeEach(() => assign.mockClear());
+
 const saveButton = () => screen.getByRole('button', { name: 'Save' });
+
+const finishButton = () => screen.getByRole('button', { name: 'Save & Finish' });
 
 // One collapsible row per player. The expand toggle is the row's first button, which stays
 // addressable when two rows read the same name — exactly the case the duplicate tests make.
@@ -2002,9 +2012,9 @@ describe('RecordTranscribePage', () => {
 
       expect(screen.getByText('Give this record a name.')).toBeInTheDocument();
       expect(saveButton()).toBeDisabled();
-      // Save is the only control the bar should carry. A dismiss button here would be able to
-      // hide the one thing explaining why the button beside it does nothing.
-      expect(within(saveBar()).getAllByRole('button')).toEqual([saveButton()]);
+      // Saving is the only thing the bar should offer. A dismiss button here would be able to
+      // hide the one thing explaining why the buttons beside it do nothing.
+      expect(within(saveBar()).getAllByRole('button')).toEqual([saveButton(), finishButton()]);
     });
 
     it('bounds the message area so the bar cannot grow without limit', () => {
@@ -2025,7 +2035,7 @@ describe('RecordTranscribePage', () => {
       await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
 
       expect(await screen.findByText('Could not save this record.')).toBeInTheDocument();
-      expect(within(saveBar()).getAllByRole('button')).toEqual([saveButton()]);
+      expect(within(saveBar()).getAllByRole('button')).toEqual([saveButton(), finishButton()]);
     });
   });
 
@@ -2099,6 +2109,80 @@ describe('RecordTranscribePage', () => {
       fireEvent.change(screen.getByPlaceholderText(DATE_INPUT), { target: { value: '' } });
 
       expect(saveBar().textContent).toContain('2 problems above to fix before saving.');
+    });
+  });
+
+  /**
+   * The workspace used to offer one button that stayed where it was. Typing an event in is a
+   * task with an end, so a button that committed and left you looking at the same form read
+   * as an autosave — and the only way out, the link at the top of the page, sits hundreds of
+   * pixels above a bar that is pinned to the viewport. Measured on a real event: the Save
+   * button on screen, "Back to the record" 586px above it.
+   */
+  describe('finishing', () => {
+    const saveBar = () => document.querySelector('[data-testid="transcribe-save-bar"]') as HTMLElement;
+
+    it('offers the way out beside the message that says the work is done', async () => {
+      const csrfFetch = makeCsrfFetch();
+      renderPage({ csrfFetch });
+
+      expect(within(saveBar()).queryByRole('link', { name: 'View record' })).not.toBeInTheDocument();
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+      expect(await within(saveBar()).findByText('Record saved.')).toBeInTheDocument();
+      expect(within(saveBar()).getByRole('link', { name: 'View record' })).toHaveAttribute(
+        'href',
+        '/cube/record/rec-1',
+      );
+    });
+
+    it('leaves for the record once a Save & Finish has landed', async () => {
+      const csrfFetch = makeCsrfFetch();
+      renderPage({ csrfFetch });
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+      fireEvent.click(finishButton());
+
+      await waitFor(() => expect(assign).toHaveBeenCalledWith('/cube/record/rec-1'));
+      expect(saveCalls(csrfFetch)).toHaveLength(1);
+    });
+
+    it('stays put for a plain Save', async () => {
+      const csrfFetch = makeCsrfFetch();
+      renderPage({ csrfFetch });
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+      expect(assign).not.toHaveBeenCalled();
+    });
+
+    // The sections it refused are still unresolved on the page, so leaving would strand them.
+    it('stays put when the save landed only partly', async () => {
+      const csrfFetch = makeCsrfFetch({
+        success: 'true',
+        applied: [],
+        conflicts: [{ section: 'overview', stored: { name: 'Theirs', date: 1700000000000, description: '' } }],
+        record: {},
+      });
+      renderPage({ csrfFetch });
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+      fireEvent.click(finishButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+      expect(assign).not.toHaveBeenCalled();
+    });
+
+    it('offers no finish while there is nothing to save', () => {
+      renderPage();
+
+      expect(finishButton()).toBeDisabled();
+      expect(saveButton()).toBeDisabled();
     });
   });
 });

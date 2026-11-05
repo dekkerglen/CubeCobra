@@ -18,6 +18,7 @@ import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
+import { navigateTo } from 'utils/navigate';
 
 import EditDescription from '../records/EditDescription';
 import { ConflictsAlert, SectionConflictMarker } from '../records/transcribe/SectionConflictNotice';
@@ -87,6 +88,9 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
   const [pastes, setPastes] = useState<{ [playerIndex: number]: TranscribePaste }>({});
   const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
   const [saveError, setSaveError] = useState<string>('');
+  // Set by "Save & Finish" once its save lands cleanly; the effect below waits for the page to
+  // settle before leaving, so the beforeunload guard is already off.
+  const [finishWhenClean, setFinishWhenClean] = useState(false);
   const [saving, setSaving] = useState<boolean>(false);
   // The same flag as a ref, because applyPlayers below is reached from handlers that await a
   // network lookup before applying: their closures captured `saving` as it was when the edit
@@ -218,72 +222,94 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, [dirty]);
 
-  const save = useCallback(async () => {
-    const submittedMode = resultsMode;
-    const payload = toTranscribePayload(state, seeded, submittedMode === 'records', seededResultsMode === 'records');
-    setSaving(true);
-    savingRef.current = true;
-    setSaveError('');
-    setSavedMessage('');
+  const save = useCallback(
+    async ({ finish = false }: { finish?: boolean } = {}) => {
+      const submittedMode = resultsMode;
+      const payload = toTranscribePayload(state, seeded, submittedMode === 'records', seededResultsMode === 'records');
+      setSaving(true);
+      savingRef.current = true;
+      setSaveError('');
+      setSavedMessage('');
 
-    try {
-      // The create-and-save door until the record exists, the ordinary one after.
-      const saveUrl = recordId ? `/cube/records/enter/${recordId}` : `/cube/records/enter/new/${cube.id}`;
-      const response = await csrfFetch(saveUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-      const json = await response.json();
+      try {
+        // The create-and-save door until the record exists, the ordinary one after.
+        const saveUrl = recordId ? `/cube/records/enter/${recordId}` : `/cube/records/enter/new/${cube.id}`;
+        const response = await csrfFetch(saveUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const json = await response.json();
 
-      if (json.success !== 'true') {
-        // The page stays exactly as it is — the whole point of saving over JSON rather than
-        // a redirecting form post is that a rejection costs the user none of their typing.
-        setSaveError(json.message || 'Could not save this record.');
-        return;
-      }
+        if (json.success !== 'true') {
+          // The page stays exactly as it is — the whole point of saving over JSON rather than
+          // a redirecting form post is that a rejection costs the user none of their typing.
+          setSaveError(json.message || 'Could not save this record.');
+          return;
+        }
 
-      // The first save of a new record creates it, and the response says under which id. From
-      // here on this is an ordinary workspace: later saves go to that record, and the address
-      // bar is corrected so a refresh reloads what was just created rather than a second blank
-      // one.
-      if (!recordId && typeof json.recordId === 'string' && json.recordId) {
-        setRecordId(json.recordId);
-        window.history.replaceState(null, '', `/cube/records/enter/${json.recordId}`);
-      }
+        // The first save of a new record creates it, and the response says under which id. From
+        // here on this is an ordinary workspace: later saves go to that record, and the address
+        // bar is corrected so a refresh reloads what was just created rather than a second blank
+        // one.
+        if (!recordId && typeof json.recordId === 'string' && json.recordId) {
+          setRecordId(json.recordId);
+          window.history.replaceState(null, '', `/cube/records/enter/${json.recordId}`);
+        }
 
-      // A response naming which sections landed is read exactly as it says; one that
-      // doesn't (an older or stubbed endpoint) is read the way a whole-record save always
-      // behaved — everything submitted applied, nothing conflicted.
-      const appliedKeys: SectionKey[] = Array.isArray(json.applied)
-        ? json.applied
-        : (Object.keys(payload.sections) as SectionKey[]);
-      const conflictList: SaveConflict[] = Array.isArray(json.conflicts) ? json.conflicts : [];
-      const responseRecord: SectionBaselines = json.record ?? fallbackRecord(payload.sections);
+        // A response naming which sections landed is read exactly as it says; one that
+        // doesn't (an older or stubbed endpoint) is read the way a whole-record save always
+        // behaved — everything submitted applied, nothing conflicted.
+        const appliedKeys: SectionKey[] = Array.isArray(json.applied)
+          ? json.applied
+          : (Object.keys(payload.sections) as SectionKey[]);
+        const conflictList: SaveConflict[] = Array.isArray(json.conflicts) ? json.conflicts : [];
+        const responseRecord: SectionBaselines = json.record ?? fallbackRecord(payload.sections);
 
-      setSeededResultsMode(submittedMode);
-      setConflicts(conflictList);
-      setWorkspace((previous) => {
-        const { state: nextState, seeded: nextSeeded } = reconcileAfterSave(
-          previous.state,
-          previous.seeded,
-          appliedKeys,
-          responseRecord,
+        setSeededResultsMode(submittedMode);
+        setConflicts(conflictList);
+        setWorkspace((previous) => {
+          const { state: nextState, seeded: nextSeeded } = reconcileAfterSave(
+            previous.state,
+            previous.seeded,
+            appliedKeys,
+            responseRecord,
+          );
+          return { state: nextState, seeded: nextSeeded };
+        });
+        setSavedMessage(
+          conflictList.length > 0
+            ? 'Some sections could not be saved — someone else changed them. Resolve them below.'
+            : 'Record saved.',
         );
-        return { state: nextState, seeded: nextSeeded };
-      });
-      setSavedMessage(
-        conflictList.length > 0
-          ? 'Some sections could not be saved — someone else changed them. Resolve them below.'
-          : 'Record saved.',
-      );
-    } catch {
-      setSaveError('Could not save this record. Please try again.');
-    } finally {
-      savingRef.current = false;
-      setSaving(false);
+        // Leaving is deferred to an effect rather than done here: `dirty` is derived from state
+        // this save has only just queued, and the unsaved-changes guard reads it. Navigating in
+        // this tick would prompt the user to confirm leaving a page with nothing outstanding.
+        // Never after a partial save — the sections it refused are still unresolved above.
+        if (finish && conflictList.length === 0) {
+          setFinishWhenClean(true);
+        }
+      } catch {
+        setSaveError('Could not save this record. Please try again.');
+      } finally {
+        savingRef.current = false;
+        setSaving(false);
+      }
+    },
+    [csrfFetch, recordId, cube.id, state, seeded, resultsMode, seededResultsMode],
+  );
+
+  // Both buttons commit the same thing, so they are live and dead together.
+  const saveDisabled = !dirty || saving || errors.length > 0;
+
+  // "Save & Finish" leaves for the record once the save it triggered has settled: nothing
+  // dirty, nothing in flight, and an id to go to. Waiting for `dirty` to clear rather than
+  // navigating from the save itself is what keeps the unsaved-changes guard quiet.
+  useEffect(() => {
+    if (finishWhenClean && !dirty && !saving && recordId) {
+      navigateTo(`/cube/record/${recordId}`);
     }
-  }, [csrfFetch, recordId, cube.id, state, seeded, resultsMode, seededResultsMode]);
+  }, [finishWhenClean, dirty, saving, recordId]);
 
   // Resolving a conflict this way can immediately satisfy the "clean save" footer condition
   // (no conflicts left, nothing else dirty) — the message from the save that reported them
@@ -389,8 +415,8 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
           <CardBody>
             <Flexbox direction="col" gap="4">
               <Text sm className="text-text-secondary">
-                Enter a whole event here — the overview, who played, their decks and how the rounds went — and commit it
-                all with one Save.
+                Enter a whole event here — the overview, who played, their decks and how the rounds went. Save as often
+                as you like; Save &amp; Finish commits and takes you to the record.
               </Text>
 
               <ConflictsAlert conflicts={conflicts} players={state.players} />
@@ -593,20 +619,44 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                     </Text>
                   )}
                   {!saveError && savedMessage && conflicts.length === 0 && !dirty && (
-                    <Text sm className="text-green-600">
-                      {savedMessage}
-                    </Text>
+                    <Flexbox direction="row" gap="2" alignItems="center" wrap="wrap">
+                      <Text sm className="text-green-600">
+                        {savedMessage}
+                      </Text>
+                      {/* The way out, beside the message that makes it relevant. The link at
+                          the top of the page is the only other one, and on a long event it is
+                          hundreds of pixels above a bar that is pinned to the viewport — so
+                          the control that finishes the task was always on screen and the exit
+                          from it never was. */}
+                      {recordId && <Link href={`/cube/record/${recordId}`}>View record</Link>}
+                    </Flexbox>
                   )}
                 </Flexbox>
               </div>
             )}
-            <Flexbox direction="row" justify="between" alignItems="center" gap="2">
+            <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
               <Text sm className="text-text-secondary">
                 {dirty ? 'Unsaved changes' : 'No unsaved changes'}
               </Text>
-              <Button color="primary" onClick={save} disabled={!dirty || saving || errors.length > 0}>
-                {saving ? 'Saving...' : 'Save'}
-              </Button>
+              {/* Two intents, said out loud rather than inferred. Typing an event in is a task
+                  with an end, and one button that stayed put read as an autosave; editing a
+                  record already entered is not, and being thrown to the record page after
+                  every correction would be worse. Which one leads follows how the workspace
+                  was opened — "Input Finished Event" is the one-shot path — but both are
+                  always offered, so a transcriber can still save partway through without
+                  being sent anywhere. */}
+              <Flexbox direction="row" gap="2" alignItems="center">
+                <Button color={isNew ? 'secondary' : 'primary'} onClick={() => save()} disabled={saveDisabled}>
+                  {saving && !finishWhenClean ? 'Saving...' : 'Save'}
+                </Button>
+                <Button
+                  color={isNew ? 'primary' : 'secondary'}
+                  onClick={() => save({ finish: true })}
+                  disabled={saveDisabled}
+                >
+                  {saving && finishWhenClean ? 'Saving...' : 'Save & Finish'}
+                </Button>
+              </Flexbox>
             </Flexbox>
           </Flexbox>
         </div>
