@@ -1,8 +1,10 @@
+import Joi from 'joi';
+
 import { applyPlayerRenames } from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
 import { setupPicks } from '@utils/draftutil';
 import { cubeDao, draftDao, recordDao, userDao } from 'dynamo/daos';
-import { csrfProtection } from 'router/middleware';
+import { bodyValidation, csrfProtection } from 'router/middleware';
 import { createPool } from 'serverutils/cube';
 import { abbreviate } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
@@ -13,6 +15,46 @@ import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../../types/express';
 import { associateNewDraft, associateWithExistingDraft } from './uploaddeck';
+
+/**
+ * Contribute is the only write in this tree reachable without an account — the share link is
+ * the whole of the authorisation — and was the only one with no validation at all. The board
+ * limits match uploaddeck's, which is the same operation performed by the cube's owner; the
+ * name limit matches the record's own, so a contributor cannot submit a player the owner
+ * could not have typed.
+ */
+export const contributeMainboardSchema = Joi.array().items(Joi.string()).min(1).max(200).required();
+export const contributeSideboardSchema = Joi.array().items(Joi.string()).max(200).default([]);
+
+// A count the page submits as text. `Joi.number().integer()` accepts the string form and
+// rejects "1.5", "-1" and "abc", all of which Math.floor(Number(..)) would have quietly
+// turned into a number.
+const countField = Joi.number().integer().min(0).max(1000).required();
+
+export const contributeBodySchema = Joi.object({
+  token: Joi.string().min(1).required(),
+  // -1 is the page's "add a new player" sentinel, so negatives are not bounded away here;
+  // the handler resolves the index against the stored list either way.
+  userIndex: Joi.number().integer().required(),
+  newPlayer: Joi.string().max(255).allow('').default(''),
+  renamePlayer: Joi.string().max(255).allow('').default(''),
+  wins: countField,
+  losses: countField,
+  draws: countField,
+  // Validated separately, each against its own schema, so a bad board names itself.
+  mainboard: Joi.any(),
+  sideboard: Joi.any(),
+  // CSRFForm posts these alongside every form's own fields: the CSRF token and the honeypot
+  // the bot-security middleware reads. Named rather than allowed through `unknown`, so the
+  // schema still rejects anything this form does not send.
+  _csrf: Joi.string().allow('').optional(),
+  nickname: Joi.string().allow('').optional(),
+}).unknown(false);
+
+// Back to the form they came from, the same place the handler's own failures land. An
+// invalid token simply 404s there, which is what it should do.
+const contributeRedirect = (req: Request): string =>
+  `/cube/records/contribute/${req.params.id}?token=${encodeURIComponent(`${req.body?.token ?? ''}`)}`;
 
 const num = (v: unknown): number => Math.max(0, Math.floor(Number(v) || 0));
 
@@ -216,6 +258,12 @@ export const routes = [
   {
     method: 'post',
     path: '/:id',
-    handler: [csrfProtection, contributeSubmitHandler],
+    handler: [
+      csrfProtection,
+      bodyValidation(contributeBodySchema, (req) => contributeRedirect(req)),
+      bodyValidation(contributeMainboardSchema, (req) => contributeRedirect(req), 'mainboard'),
+      bodyValidation(contributeSideboardSchema, (req) => contributeRedirect(req), 'sideboard'),
+      contributeSubmitHandler,
+    ],
   },
 ];

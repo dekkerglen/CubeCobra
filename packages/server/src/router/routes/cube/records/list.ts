@@ -1,5 +1,5 @@
 import { cubeDao, recordDao } from 'dynamo/daos';
-import { csrfProtection, ensureAuth } from 'router/middleware';
+import { csrfProtection } from 'router/middleware';
 import { isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../types/express';
@@ -37,8 +37,12 @@ export const getRecordsHandler = async (req: Request, res: Response) => {
 
 export const routes = [
   {
+    // No sign-in requirement: the first page of this list is server-rendered for anyone who
+    // can see the cube, so demanding a session for the second page answered an anonymous
+    // reader with a login redirect where their fetch expected JSON. `isCubeViewable` above
+    // is the real gate, and it already accounts for an anonymous `req.user`.
     method: 'post',
     path: '/:id',
-    handler: [csrfProtection, ensureAuth, getRecordsHandler],
+    handler: [csrfProtection, getRecordsHandler],
   },
 ];
