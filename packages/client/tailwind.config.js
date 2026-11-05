@@ -36,6 +36,9 @@ module.exports = {
         text: 'rgb(var(--text) / <alpha-value>)',
         link: 'rgb(var(--link) / <alpha-value>)',
         'link-active': 'rgb(var(--link-active) / <alpha-value>)',
+        // Error text. Theme-dependent rather than a fixed Tailwind red, because a red dark
+        // enough to read on the light background is too dark to read on the dark one.
+        danger: 'rgb(var(--danger) / <alpha-value>)',
         'button-text': 'rgb(var(--button-text) / <alpha-value>)',
         'button-text-active': 'rgb(var(--button-text-active) / <alpha-value>)',
         'button-primary': 'rgb(var(--button-primary) / <alpha-value>)',

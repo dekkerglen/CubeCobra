@@ -136,9 +136,9 @@ const RecordMatchRow: React.FC<RecordMatchRowProps> = ({
           never a rollback. Cleared the moment a later commit for this same match succeeds. */}
       {saveFailed && (
         <Flexbox direction="row" gap="1" alignItems="center" className="pl-8">
-          <AlertIcon size={14} className="text-red-600" />
+          <AlertIcon size={14} className="text-danger" />
           <span role="alert">
-            <Text sm className="text-red-600">
+            <Text sm className="text-danger">
               {'Not saved — try again'}
             </Text>
           </span>

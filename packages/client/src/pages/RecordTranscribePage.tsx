@@ -329,7 +329,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
     return messages.length > 0 ? (
       <div data-testid={testId} className="flex flex-col gap-1" role="alert">
         {messages.map((message) => (
-          <Text sm key={message} className="text-red-600">
+          <Text sm key={message} className="text-danger">
             {message}
           </Text>
         ))}
@@ -558,7 +558,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                   )}
                   {saveError && (
                     <div role="alert">
-                      <Text sm className="text-red-600">
+                      <Text sm className="text-danger">
                         {saveError}
                       </Text>
                     </div>

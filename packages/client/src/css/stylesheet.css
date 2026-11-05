@@ -71,6 +71,7 @@
     --border-secondary: 187 187 187;
     --text: 33 37 41;
     --link: 0 123 255;
+    --danger: 188 21 37;
     --link-active: 0 86 179;
     --button-text: 255 255 255;
     --button-text-secondary: 33 37 41;
@@ -117,6 +118,7 @@
     --border-secondary: 187 187 187;
     --text: 33 37 41;
     --link: 0 123 255;
+    --danger: 188 21 37;
     --link-active: 0 86 179;
     --button-text: 255 255 255;
     --button-text-secondary: 33 37 41;
@@ -162,6 +164,7 @@
     --border-secondary: 109 120 130;
     --text: 240 240 240;
     --link: 50 166 255;
+    --danger: 252 165 165;
     --link-active: 120 200 255;
     --button-text: 255 255 255;
     --button-text-secondary: 33 37 41;
@@ -209,6 +212,7 @@
       --border-secondary: 109 120 130;
       --text: 240 240 240;
       --link: 50 166 255;
+      --danger: 252 165 165;
       --link-active: 120 200 255;
       --button-text: 255 255 255;
       --button-text-secondary: 33 37 41;

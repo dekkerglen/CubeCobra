@@ -32,7 +32,7 @@ const FieldError: React.FC<{ message?: string }> = ({ message }) =>
   message ? (
     // role on a wrapper: Text does not forward arbitrary DOM attributes.
     <div role="alert">
-      <Text sm className="text-red-600">
+      <Text sm className="text-danger">
         {message}
       </Text>
     </div>
