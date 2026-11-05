@@ -500,36 +500,42 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
           </CardBody>
         </Card>
 
-        <div className="sticky bottom-0 z-10 border-t border-border bg-bg p-3">
+        <div data-testid="transcribe-save-bar" className="sticky bottom-0 z-10 border-t border-border bg-bg p-3">
           <Flexbox direction="col" gap="2">
-            {errors.length > 0 && (
-              <Alert color="warning">
-                <ul className="mb-0">
+            {/* Status, not notifications: these describe what the bar's own Save button will
+                do, so none of them is dismissable. An Alert here could be shut once — it keeps
+                `visible` per instance and is not keyed by its message — and would then
+                suppress every later message, leaving Save disabled with nothing saying why.
+                Capped and scrollable because the bar is sticky: a long validation list would
+                otherwise push the record being typed in off the screen. */}
+            {(errors.length > 0 || saveError || savedMessage) && (
+              <div data-testid="transcribe-save-messages" className="max-h-24 overflow-y-auto">
+                <Flexbox direction="col" gap="1">
                   {errors.map((error) => (
-                    <li key={error}>
-                      <Text sm>{error}</Text>
-                    </li>
+                    <Text sm key={error} className="text-red-600">
+                      {error}
+                    </Text>
                   ))}
-                </ul>
-              </Alert>
-            )}
-            {saveError && (
-              <Alert color="danger">
-                <Text sm>{saveError}</Text>
-              </Alert>
-            )}
-            {/* Distinguishes a clean save from one that landed only partly — the latter
-                stays visible regardless of `dirty`, since the sections it refused are, by
-                definition, still dirty until resolved above. */}
-            {!saveError && savedMessage && conflicts.length > 0 && (
-              <Alert color="warning">
-                <Text sm>{savedMessage}</Text>
-              </Alert>
-            )}
-            {!saveError && savedMessage && conflicts.length === 0 && !dirty && (
-              <Alert color="success">
-                <Text sm>{savedMessage}</Text>
-              </Alert>
+                  {saveError && (
+                    <Text sm className="text-red-600">
+                      {saveError}
+                    </Text>
+                  )}
+                  {/* Distinguishes a clean save from one that landed only partly — the latter
+                      stays visible regardless of `dirty`, since the sections it refused are, by
+                      definition, still dirty until resolved above. */}
+                  {!saveError && savedMessage && conflicts.length > 0 && (
+                    <Text sm className="text-yellow-600">
+                      {savedMessage}
+                    </Text>
+                  )}
+                  {!saveError && savedMessage && conflicts.length === 0 && !dirty && (
+                    <Text sm className="text-green-600">
+                      {savedMessage}
+                    </Text>
+                  )}
+                </Flexbox>
+              </div>
             )}
             <Flexbox direction="row" justify="between" alignItems="center" gap="2">
               <Text sm className="text-text-secondary">

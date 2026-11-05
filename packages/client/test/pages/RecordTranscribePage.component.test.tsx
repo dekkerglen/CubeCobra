@@ -1979,4 +1979,51 @@ describe('RecordTranscribePage', () => {
       expect(screen.getByTestId('section-conflict-rounds')).toBeInTheDocument();
     });
   });
+
+  /**
+   * The save bar is `sticky bottom-0`: every pixel it takes is one the record being typed in
+   * does not get, and anything it hides cannot be scrolled back to. Its messages used to be
+   * `Alert`s, which brought two problems with them — each one owns a dismiss button and its own
+   * `visible` state, and none were keyed by their message, so a single dismissal suppressed
+   * every later message for the life of the page. Dismissing the validation list left Save
+   * permanently disabled with nothing on screen saying why.
+   */
+  describe('save bar messages', () => {
+    const saveBar = () => document.querySelector('[data-testid="transcribe-save-bar"]') as HTMLElement;
+
+    it('offers no way to dismiss the reason Save is blocked', () => {
+      renderPage();
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: '' } });
+
+      expect(screen.getByText('Give this record a name.')).toBeInTheDocument();
+      expect(saveButton()).toBeDisabled();
+      // Save is the only control the bar should carry. A dismiss button here would be able to
+      // hide the one thing explaining why the button beside it does nothing.
+      expect(within(saveBar()).getAllByRole('button')).toEqual([saveButton()]);
+    });
+
+    it('bounds the message area so the bar cannot grow without limit', () => {
+      // Two errors at once — a name and a date are both cleared. The list is what grows per
+      // error, so it is the part that has to be capped rather than the bar as a whole.
+      renderPage();
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: '' } });
+
+      const messages = saveBar().querySelector('[data-testid="transcribe-save-messages"]')!;
+      expect(messages.className).toContain('overflow-y-auto');
+      expect(messages.className).toMatch(/max-h-/);
+    });
+
+    it('keeps a save failure on screen with no way to hide it', async () => {
+      const csrfFetch = makeCsrfFetch({ success: 'false', message: 'Could not save this record.' });
+      renderPage({ csrfFetch });
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Renamed Night' } });
+      fireEvent.click(saveButton());
+      await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+      expect(await screen.findByText('Could not save this record.')).toBeInTheDocument();
+      expect(within(saveBar()).getAllByRole('button')).toEqual([saveButton()]);
+    });
+  });
 });
