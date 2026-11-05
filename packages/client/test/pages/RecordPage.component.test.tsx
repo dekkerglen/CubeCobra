@@ -77,7 +77,7 @@ const recordWithRemovedPlayerMatch: Record = {
   matches: [...baseRecord.matches, { matches: [{ p1: 'Alice', p2: 'Carol', results: [1, 0, 0] }] }],
 };
 
-// No rounds at all — the control above the (empty) list reads "Start the event" rather than
+// No rounds at all — the control above the (empty) list reads "Record Matches" rather than
 // "Add Round", since there is no status field behind it: the label is purely a function of
 // matches.length.
 const noRoundsRecord: Record = {
@@ -418,7 +418,7 @@ describe('RecordPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
     expect(screen.queryByRole('button', { name: 'Add Round' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: 'Start the event' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Record Matches' })).not.toBeInTheDocument();
     expect(screen.queryByText('Remove Round')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Standings' }));
@@ -700,12 +700,12 @@ describe('RecordPage', () => {
     // another, rather than merely present somewhere on the page.
     const matchRowFor = (label: string) => screen.getByLabelText(label).closest('.flex-col') as HTMLElement;
 
-    it('offers Start the event when the record has no rounds', () => {
+    it('offers Record Matches when the record has no rounds', () => {
       renderPage(true, noRoundsRecord);
       fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
 
       // The label is a function of matches.length, not a stored status — there is none.
-      expect(screen.getByRole('button', { name: 'Start the event' })).toBeInTheDocument();
+      expect(screen.getByRole('button', { name: 'Record Matches' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Add Round' })).not.toBeInTheDocument();
     });
 
@@ -714,7 +714,7 @@ describe('RecordPage', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
 
       expect(screen.getByRole('button', { name: 'Add Round' })).toBeInTheDocument();
-      expect(screen.queryByRole('button', { name: 'Start the event' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Record Matches' })).not.toBeInTheDocument();
     });
 
     it('expands the latest round and collapses the earlier ones', () => {

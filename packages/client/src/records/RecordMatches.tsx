@@ -174,9 +174,9 @@ const RecordMatches: React.FC<RecordMatchesProps> = ({ record }) => {
         {canEdit && (
           <AddRoundLink color="primary" modalprops={{ record }}>
             {/* No status field backs this label — it is purely a function of matches.length,
-                so a record that has never opened a round offers to start the event, and one
-                that has offers to add to it. */}
-            {matches.length === 0 ? 'Start the event' : 'Add Round'}
+                so a record that has never opened a round offers to record its matches, and
+                one that has offers to add another round. */}
+            {matches.length === 0 ? 'Record Matches' : 'Add Round'}
           </AddRoundLink>
         )}
         {matches.map((round, roundIndex) => {
