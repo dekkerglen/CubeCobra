@@ -222,30 +222,57 @@ export const applyPlayerEdit = (
   };
 };
 
+/**
+ * Which part of the form an error belongs to, so it can be shown against that field rather
+ * than collected into a list the reader has to match back to the form themselves. Deck errors
+ * carry their seat because a record holds one deck per seat and the message has to say whose.
+ */
+export type ValidationField = 'name' | 'date' | 'description' | 'players' | 'rounds' | `deck:${number}`;
+
+export interface ValidationError {
+  field: ValidationField;
+  message: string;
+}
+
+// Every message for one field, in the order they were raised.
+export const errorsFor = (errors: ValidationError[], field: ValidationField): string[] =>
+  errors.filter((error) => error.field === field).map((error) => error.message);
+
+// Every message for a group of fields — the sections collect several at once.
+export const errorsForAny = (errors: ValidationError[], match: (field: ValidationField) => boolean): string[] =>
+  errors.filter((error) => match(error.field)).map((error) => error.message);
+
 // Everything the endpoint's Joi schema would reject, phrased for the person typing. Save is
 // held back until this is empty, so a whole transcribed event is never traded for a 400.
-export const validationErrors = (state: TranscribeState): string[] => {
-  const errors: string[] = [];
+export const validationErrors = (state: TranscribeState): ValidationError[] => {
+  const errors: ValidationError[] = [];
 
   if (!state.name.trim()) {
-    errors.push('Give this record a name.');
+    errors.push({ field: 'name', message: 'Give this record a name.' });
   }
   if (state.name.length > MAX_NAME_LENGTH) {
-    errors.push(`A record name is at most ${MAX_NAME_LENGTH} characters, and this one has ${state.name.length}.`);
+    errors.push({
+      field: 'name',
+      message: `A record name is at most ${MAX_NAME_LENGTH} characters, and this one has ${state.name.length}.`,
+    });
   }
   if (!Number.isFinite(state.date)) {
-    errors.push('Give this record a date.');
+    errors.push({ field: 'date', message: 'Give this record a date.' });
   }
   // The file importer accepts descriptions up to 5000 characters, so a record can arrive
   // already past this endpoint's cap — which would otherwise only surface as a raw Joi
   // message after the whole event had been typed out.
   if (state.description.length > MAX_DESCRIPTION_LENGTH) {
-    errors.push(
-      `A record description is at most ${MAX_DESCRIPTION_LENGTH} characters, and this one has ${state.description.length}.`,
-    );
+    errors.push({
+      field: 'description',
+      message: `A record description is at most ${MAX_DESCRIPTION_LENGTH} characters, and this one has ${state.description.length}.`,
+    });
   }
   if (state.players.length > MAX_PLAYERS) {
-    errors.push(`A record holds at most ${MAX_PLAYERS} players, and this one has ${state.players.length}.`);
+    errors.push({
+      field: 'players',
+      message: `A record holds at most ${MAX_PLAYERS} players, and this one has ${state.players.length}.`,
+    });
   }
 
   // Checked case-insensitively, a superset of Joi's exact .unique('name'): two players whose
@@ -260,11 +287,14 @@ export const validationErrors = (state: TranscribeState): string[] => {
     seen.add(key);
   }
   if (duplicates.size > 0) {
-    errors.push(`Two players cannot share a name: ${[...duplicates].join(', ')}.`);
+    errors.push({ field: 'players', message: `Two players cannot share a name: ${[...duplicates].join(', ')}.` });
   }
 
   if (state.matches.length > MAX_ROUNDS) {
-    errors.push(`A record holds at most ${MAX_ROUNDS} rounds, and this one has ${state.matches.length}.`);
+    errors.push({
+      field: 'rounds',
+      message: `A record holds at most ${MAX_ROUNDS} rounds, and this one has ${state.matches.length}.`,
+    });
   }
 
   // Only an edited deck is submitted, so only an edited deck can be rejected for its size.
@@ -272,12 +302,19 @@ export const validationErrors = (state: TranscribeState): string[] => {
     if (!deck.dirty) {
       continue;
     }
-    const name = state.players[Number(key)]?.name ?? `Seat ${Number(key) + 1}`;
+    const seat = Number(key);
+    const name = state.players[seat]?.name ?? `Seat ${seat + 1}`;
     if (deck.mainboard.length > MAX_DECK_CARDS) {
-      errors.push(`${name}'s mainboard has ${deck.mainboard.length} cards, over the ${MAX_DECK_CARDS} limit.`);
+      errors.push({
+        field: `deck:${seat}`,
+        message: `${name}'s mainboard has ${deck.mainboard.length} cards, over the ${MAX_DECK_CARDS} limit.`,
+      });
     }
     if (deck.sideboard.length > MAX_DECK_CARDS) {
-      errors.push(`${name}'s sideboard has ${deck.sideboard.length} cards, over the ${MAX_DECK_CARDS} limit.`);
+      errors.push({
+        field: `deck:${seat}`,
+        message: `${name}'s sideboard has ${deck.sideboard.length} cards, over the ${MAX_DECK_CARDS} limit.`,
+      });
     }
   }
 

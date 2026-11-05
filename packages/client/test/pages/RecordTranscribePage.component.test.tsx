@@ -53,6 +53,7 @@ jest.mock('components/TextEntry', () => ({ __esModule: true, default: () => <div
 
 const SAVE_URL = '/cube/records/enter/rec-1';
 const NAME_INPUT = 'Enter a name for the record';
+const DATE_INPUT = 'Select a date for the record';
 const ADD_PLAYER_INPUT = /Add a player/;
 
 const cube = { id: 'cube-1', name: 'My Cube' } as unknown as Cube;
@@ -2004,8 +2005,6 @@ describe('RecordTranscribePage', () => {
     });
 
     it('bounds the message area so the bar cannot grow without limit', () => {
-      // Two errors at once — a name and a date are both cleared. The list is what grows per
-      // error, so it is the part that has to be capped rather than the bar as a whole.
       renderPage();
       fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: '' } });
 
@@ -2024,6 +2023,79 @@ describe('RecordTranscribePage', () => {
 
       expect(await screen.findByText('Could not save this record.')).toBeInTheDocument();
       expect(within(saveBar()).getAllByRole('button')).toEqual([saveButton()]);
+    });
+  });
+
+  /**
+   * Validation problems belong to the field or section that caused them, not to a list in the
+   * footer. A copy of every message in the sticky bar was an unreadable wall of red that still
+   * left the reader matching each message back to the input it was about — in a bar that, by
+   * design, is nowhere near the input.
+   */
+  describe('field-level validation', () => {
+    const saveBar = () => document.querySelector('[data-testid="transcribe-save-bar"]') as HTMLElement;
+
+    // The message rendered immediately after a field's wrapper, which is where FieldError puts
+    // it. Reached from the input so the assertion cannot accidentally match a copy elsewhere.
+    const messageUnder = (input: HTMLElement) =>
+      input.closest('div.block')?.parentElement?.querySelector('[role="alert"]')?.textContent;
+
+    it('shows a missing name under the name field', () => {
+      renderPage();
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: '' } });
+
+      expect(messageUnder(screen.getByPlaceholderText(NAME_INPUT))).toBe('Give this record a name.');
+    });
+
+    it('marks the field itself invalid, not just the text beside it', () => {
+      renderPage();
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: '' } });
+
+      // Input's own `valid={false}` styling — the red border that makes the field findable at
+      // a glance when the message is scrolled out of view.
+      expect(screen.getByPlaceholderText(NAME_INPUT).className).toContain('border-red-500');
+    });
+
+    it('clears the field message once the field is valid', () => {
+      renderPage();
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: '' } });
+      expect(screen.getByText('Give this record a name.')).toBeInTheDocument();
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: 'Tuesday' } });
+
+      expect(screen.queryByText('Give this record a name.')).not.toBeInTheDocument();
+    });
+
+    it('shows a missing date under the date field', () => {
+      renderPage();
+
+      fireEvent.change(screen.getByPlaceholderText(DATE_INPUT), { target: { value: '' } });
+
+      expect(messageUnder(screen.getByPlaceholderText(DATE_INPUT))).toBe('Give this record a date.');
+    });
+
+    it('puts a roster problem on the Players section rather than the footer', () => {
+      renderPage({ record: createRecord({ players: [{ name: 'Alice' }, { name: 'alice' }] }) });
+
+      const section = screen.getByTestId('transcribe-players-errors');
+      expect(section.textContent).toContain('Two players cannot share a name: alice.');
+      expect(saveBar().textContent).not.toContain('Two players cannot share a name');
+    });
+
+    it('counts the problems in the footer instead of repeating them', () => {
+      renderPage();
+
+      fireEvent.change(screen.getByPlaceholderText(NAME_INPUT), { target: { value: '' } });
+
+      expect(saveBar().textContent).toContain('One problem above to fix before saving.');
+      expect(saveBar().textContent).not.toContain('Give this record a name.');
+
+      fireEvent.change(screen.getByPlaceholderText(DATE_INPUT), { target: { value: '' } });
+
+      expect(saveBar().textContent).toContain('2 problems above to fix before saving.');
     });
   });
 });

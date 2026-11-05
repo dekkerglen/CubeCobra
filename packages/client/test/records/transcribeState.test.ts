@@ -721,7 +721,7 @@ describe('validationErrors', () => {
     const state = seedTranscribeState(createRecord());
     state.name = '   ';
 
-    expect(validationErrors(state)).toEqual(['Give this record a name.']);
+    expect(validationErrors(state)).toEqual([{ field: 'name', message: 'Give this record a name.' }]);
   });
 
   // EditDescription reports a cleared date field as undefined, which the page keeps as NaN
@@ -730,7 +730,7 @@ describe('validationErrors', () => {
     const state = seedTranscribeState(createRecord());
     state.date = NaN;
 
-    expect(validationErrors(state)).toEqual(['Give this record a date.']);
+    expect(validationErrors(state)).toEqual([{ field: 'date', message: 'Give this record a date.' }]);
   });
 
   it.each([
@@ -741,7 +741,14 @@ describe('validationErrors', () => {
     const state = seedTranscribeState(createRecord({ name: 'n'.repeat(length) }));
 
     expect(validationErrors(state)).toEqual(
-      expected ? [`A record name is at most ${MAX_NAME_LENGTH} characters, and this one has ${length}.`] : [],
+      expected
+        ? [
+            {
+              field: 'name',
+              message: `A record name is at most ${MAX_NAME_LENGTH} characters, and this one has ${length}.`,
+            },
+          ]
+        : [],
     );
   });
 
@@ -757,7 +764,12 @@ describe('validationErrors', () => {
 
     expect(validationErrors(state)).toEqual(
       expected
-        ? [`A record description is at most ${MAX_DESCRIPTION_LENGTH} characters, and this one has ${length}.`]
+        ? [
+            {
+              field: 'description',
+              message: `A record description is at most ${MAX_DESCRIPTION_LENGTH} characters, and this one has ${length}.`,
+            },
+          ]
         : [],
     );
   });
@@ -769,7 +781,7 @@ describe('validationErrors', () => {
   ])('reports %i players as over the cap: %s', (count, expected) => {
     const errors = validationErrors(withPlayers(count));
 
-    expect(errors.some((error) => error.includes(`at most ${MAX_PLAYERS} players`))).toEqual(expected);
+    expect(errors.some((error) => error.message.includes(`at most ${MAX_PLAYERS} players`))).toEqual(expected);
   });
 
   it.each([
@@ -779,7 +791,7 @@ describe('validationErrors', () => {
   ])('reports %i rounds as over the cap: %s', (count, expected) => {
     const errors = validationErrors(withRounds(count));
 
-    expect(errors.some((error) => error.includes(`at most ${MAX_ROUNDS} rounds`))).toEqual(expected);
+    expect(errors.some((error) => error.message.includes(`at most ${MAX_ROUNDS} rounds`))).toEqual(expected);
   });
 
   // The endpoint keys matches, trophies and overrides by name, so two players sharing one is
@@ -795,10 +807,14 @@ describe('validationErrors', () => {
   ])('reports %j as the duplicates %j', (names, duplicates) => {
     const state = seedTranscribeState(createRecord({ players: names.map((name) => ({ name })), matches: [] }));
 
-    const reported = validationErrors(state).filter((error) => error.startsWith('Two players cannot share a name'));
+    const reported = validationErrors(state).filter((error) =>
+      error.message.startsWith('Two players cannot share a name'),
+    );
 
     expect(reported).toEqual(
-      duplicates.length === 0 ? [] : [`Two players cannot share a name: ${duplicates.join(', ')}.`],
+      duplicates.length === 0
+        ? []
+        : [{ field: 'players', message: `Two players cannot share a name: ${duplicates.join(', ')}.` }],
     );
   });
 
@@ -810,7 +826,11 @@ describe('validationErrors', () => {
   ])('reports a dirty %s of %i cards as over the cap: %s', (board, size, expected) => {
     const errors = validationErrors(withDeck(board, size, true));
 
-    expect(errors).toEqual(expected ? [`Alice's ${board} has ${size} cards, over the ${MAX_DECK_CARDS} limit.`] : []);
+    expect(errors).toEqual(
+      expected
+        ? [{ field: 'deck:0', message: `Alice's ${board} has ${size} cards, over the ${MAX_DECK_CARDS} limit.` }]
+        : [],
+    );
   });
 
   // Only a dirty deck is submitted, so only a dirty deck can be rejected for its size — an
@@ -824,7 +844,10 @@ describe('validationErrors', () => {
     state.players = [];
 
     expect(validationErrors(state)).toEqual([
-      `Seat 1's mainboard has ${MAX_DECK_CARDS + 1} cards, over the ${MAX_DECK_CARDS} limit.`,
+      {
+        field: 'deck:0',
+        message: `Seat 1's mainboard has ${MAX_DECK_CARDS + 1} cards, over the ${MAX_DECK_CARDS} limit.`,
+      },
     ]);
   });
 });

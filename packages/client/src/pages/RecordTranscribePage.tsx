@@ -28,6 +28,8 @@ import {
   areSeatsEditable,
   CardsUpdate,
   DeckBoard,
+  errorsFor,
+  errorsForAny,
   fallbackRecord,
   isDirty,
   keepLocalSection,
@@ -40,6 +42,7 @@ import {
   toTranscribePayload,
   TranscribePaste,
   TranscribeState,
+  ValidationField,
   validationErrors,
 } from '../records/transcribe/transcribeState';
 
@@ -317,6 +320,23 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
       />
     );
 
+  // Validation messages for a whole section, shown at the top of the card that owns them.
+  // Used for the problems that belong to a collection rather than to one input — the roster,
+  // the rounds, a seat's deck — where the message itself names the player or seat.
+  const sectionErrors = (match: (field: ValidationField) => boolean, testId: string) => {
+    const messages = errorsForAny(errors, match);
+    // A plain div rather than Flexbox, which does not forward data-testid.
+    return messages.length > 0 ? (
+      <div data-testid={testId} className="flex flex-col gap-1" role="alert">
+        {messages.map((message) => (
+          <Text sm key={message} className="text-red-600">
+            {message}
+          </Text>
+        ))}
+      </div>
+    ) : null;
+  };
+
   // Everyone the Players card is responsible for: the list itself, the trophy (per-player
   // data, but one section with no row of its own to sit on), and every per-player override or
   // deck — each gets its own marker so resolving one never touches the others.
@@ -367,6 +387,11 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                     {conflictMarker(conflictFor('overview'))}
                     <EditDescription
                       value={{ name: state.name, date: state.date, description: state.description }}
+                      errors={{
+                        name: errorsFor(errors, 'name')[0],
+                        date: errorsFor(errors, 'date')[0],
+                        description: errorsFor(errors, 'description')[0],
+                      }}
                       setValue={(value) =>
                         updateState((previous) => ({
                           ...previous,
@@ -443,6 +468,13 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                     {playerSectionConflicts.map((conflict) => (
                       <React.Fragment key={conflict.section}>{conflictMarker(conflict)}</React.Fragment>
                     ))}
+                    {/* Player-roster and deck-size problems, at the top of the section that
+                        owns them. Each message already names the player or seat it is about,
+                        which a footer list could not do without the reader hunting for it. */}
+                    {sectionErrors(
+                      (field) => field === 'players' || field.startsWith('deck:'),
+                      'transcribe-players-errors',
+                    )}
                     <TranscribePlayers
                       cube={cube}
                       record={liveRecord}
@@ -481,6 +513,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                   </CardHeader>
                   <CardBody>
                     <Flexbox direction="col" gap="2">
+                      {sectionErrors((field) => field === 'rounds', 'transcribe-rounds-errors')}
                       <TranscribeRounds
                         players={state.players}
                         matches={state.matches}
@@ -506,20 +539,29 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
                 do, so none of them is dismissable. An Alert here could be shut once — it keeps
                 `visible` per instance and is not keyed by its message — and would then
                 suppress every later message, leaving Save disabled with nothing saying why.
-                Capped and scrollable because the bar is sticky: a long validation list would
+                Capped and scrollable because the bar is sticky: a long message would
                 otherwise push the record being typed in off the screen. */}
             {(errors.length > 0 || saveError || savedMessage) && (
               <div data-testid="transcribe-save-messages" className="max-h-24 overflow-y-auto">
                 <Flexbox direction="col" gap="1">
-                  {errors.map((error) => (
-                    <Text sm key={error} className="text-red-600">
-                      {error}
+                  {/* The problems themselves are shown against the fields and sections they
+                      belong to, where they need no words saying which input they are about.
+                      All the bar owes the reader is why its button is dead, and where to
+                      look — a copy of every message here was an unreadable red wall in a
+                      fixed footer, and still left them matching messages back to fields. */}
+                  {errors.length > 0 && (
+                    <Text sm className="text-text-secondary">
+                      {errors.length === 1
+                        ? 'One problem above to fix before saving.'
+                        : `${errors.length} problems above to fix before saving.`}
                     </Text>
-                  ))}
+                  )}
                   {saveError && (
-                    <Text sm className="text-red-600">
-                      {saveError}
-                    </Text>
+                    <div role="alert">
+                      <Text sm className="text-red-600">
+                        {saveError}
+                      </Text>
+                    </div>
                   )}
                   {/* Distinguishes a clean save from one that landed only partly — the latter
                       stays visible regardless of `dirty`, since the sections it refused are, by
