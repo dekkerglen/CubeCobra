@@ -149,6 +149,16 @@ export const contributeSubmitHandler = async (req: Request, res: Response) => {
     const rawNewPlayer = `${req.body.newPlayer ?? ''}`.trim();
     if (rawNewPlayer) {
       const added = await resolvePlayer(rawNewPlayer);
+      // The same check the rename path below makes, and the one the transcription workspace
+      // makes: matches, trophies and overrides are all keyed by player name, so two players
+      // sharing one makes their results indistinguishable. Compared case-insensitively for
+      // the same reason, and before anything is mutated so a refusal writes nothing — not
+      // the record, and not the seat pushed onto the draft a few lines down.
+      const nameTaken = storedPlayers.some((player) => player.name.toLowerCase() === added.name.toLowerCase());
+      if (nameTaken) {
+        req.flash('danger', `Another player in this record is already named ${added.name}`);
+        return redirect(req, res, `/cube/records/contribute/${record.id}?token=${encodeURIComponent(req.body.token)}`);
+      }
       record.players = reconcilePlayerIds([...storedPlayers, added], storedPlayers);
       userIndex = record.players.length;
       if (record.draft) {
