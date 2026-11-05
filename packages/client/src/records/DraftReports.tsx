@@ -1,6 +1,6 @@
 import React, { useContext, useState } from 'react';
 
-import { XIcon } from '@primer/octicons-react';
+import { DownloadIcon, XIcon } from '@primer/octicons-react';
 import Record from '@utils/datatypes/Record';
 
 import Button from 'components/base/Button';
@@ -26,6 +26,19 @@ const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
   const { cube, canEdit } = useContext(CubeContext);
 
   const isOwner = canEdit;
+
+  // Exporting acts on this list, so it sits in this list's header rather than in the row of
+  // ways to add to it. Open to anyone who can see the cube, unlike everything in that row.
+  const exportAll = (
+    <a
+      href={`/cube/records/export/${cube.id}`}
+      download
+      className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer text-nowrap"
+    >
+      <DownloadIcon size={16} />
+      <Text sm>Export All</Text>
+    </a>
+  );
 
   // What distinguishes one record from another is how much is in it. The list used to carry a
   // raw comma-joined player list instead, which was blank for a record nobody had been added
@@ -55,6 +68,7 @@ const DraftReports: React.FC<DraftReportsProps> = ({ records, lastKey }) => {
       setLastKey={setLastKeyState}
       pageSize={PAGE_SIZE}
       header="Draft Reports"
+      headerActions={exportAll}
       fetchMoreRoute={`/cube/records/list/${cube.id}`}
       renderItem={renderItem}
       noneMessage="No draft reports to show, create a new report to get started!"

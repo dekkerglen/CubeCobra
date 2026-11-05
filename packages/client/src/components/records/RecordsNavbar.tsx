@@ -1,12 +1,12 @@
 import React, { useContext } from 'react';
 
-import { ChecklistIcon, DownloadIcon, FileIcon, PlayIcon, PlusIcon, UploadIcon } from '@primer/octicons-react';
+import { ChecklistIcon, ChevronDownIcon, FileIcon, PlayIcon, PlusIcon, UploadIcon } from '@primer/octicons-react';
 import { getCubeId } from '@utils/Util';
 
+import Dropdown from 'components/base/Dropdown';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
-import Text from 'components/base/Text';
 import CreateRecordFromDraftModal from 'components/modals/CreateRecordFromDraftModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
@@ -14,16 +14,10 @@ import CubeContext from 'contexts/CubeContext';
 const navItemClass =
   'flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2';
 
-// The two ways to start a record from nothing read as the page's own actions; the three ways
-// to build one from something you already have are secondary, and exporting is not a way to
-// add a record at all. One flat row of six said none of that.
-const GroupLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <ResponsiveDiv md>
-    <Text xs className="text-text-secondary uppercase tracking-wide">
-      {children}
-    </Text>
-  </ResponsiveDiv>
-);
+// Everything inside the menu builds a record from something that already exists. They are
+// each rarer than the two ways to start one from nothing, and three of them in the same row
+// made six undifferentiated links out of what is really two choices and a menu.
+const menuItemClass = 'flex items-center gap-2 !text-link hover:!text-link-active font-medium cursor-pointer';
 
 const FromDraftLink = withModal(Link, CreateRecordFromDraftModal);
 
@@ -57,70 +51,48 @@ const RecordsNavbar: React.FC = () => {
     return null;
   }
 
-  // Exporting is open to anyone who can see the cube; everything else needs edit rights.
-  const exportLink = (
-    <a
-      href={`/cube/records/export/${getCubeId(cube)}`}
-      download
-      className={`${navItemClass} shrink-0 text-nowrap ml-auto`}
-    >
-      <DownloadIcon size={16} />
-      <ResponsiveDiv baseVisible md>
-        Export
-      </ResponsiveDiv>
-      <ResponsiveDiv md>Export All Records</ResponsiveDiv>
-    </a>
-  );
-
+  // Exporting moved into the Draft Reports card's own header: it acts on the list, not on
+  // this row of ways to add to it. Nothing else here is open to a reader, so for one there is
+  // no row to show.
   if (!canEdit) {
-    return (
-      <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2" wrap="wrap">
-        {exportLink}
-      </Flexbox>
-    );
+    return null;
   }
 
   return (
-    <Flexbox direction="row" gap="4" alignItems="start" justify="between" className="px-2" wrap="wrap">
-      <Flexbox direction="row" gap="4" alignItems="center" wrap="wrap">
-        <Flexbox direction="row" gap="2" alignItems="center" wrap="wrap">
-          <GroupLabel>New event</GroupLabel>
-          <StartEventLink cubeId={getCubeId(cube)} />
-          <InputFinishedEventLink cubeId={getCubeId(cube)} />
-        </Flexbox>
-        {/* A rule rather than a gap alone: the three on the right all build a record from
-            something that already exists, and a gap on a wrapped row stops reading as a
-            boundary the moment the row breaks. */}
-        <span aria-hidden="true" className="hidden md:block h-5 w-px bg-border" />
-        <Flexbox direction="row" gap="2" alignItems="center" wrap="wrap">
-          <GroupLabel>From existing</GroupLabel>
-          <FromDraftLink className={navItemClass} modalprops={{ cube }}>
+    <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2" wrap="wrap">
+      <StartEventLink cubeId={getCubeId(cube)} />
+      <InputFinishedEventLink cubeId={getCubeId(cube)} />
+      <Dropdown
+        align="left"
+        minWidth="16rem"
+        trigger={
+          <Link className={navItemClass}>
             <PlusIcon size={16} />
             <ResponsiveDiv baseVisible md>
-              From Draft
+              Existing
             </ResponsiveDiv>
-            <ResponsiveDiv md>Create from Draft</ResponsiveDiv>
-          </FromDraftLink>
-          <Link href={`/cube/records/hedron/${getCubeId(cube)}`} className={navItemClass}>
-            <UploadIcon size={16} />
-            <ResponsiveDiv baseVisible md>
-              Hedron
-            </ResponsiveDiv>
-            <ResponsiveDiv md>Import from Hedron Network</ResponsiveDiv>
+            <ResponsiveDiv md>From an existing event</ResponsiveDiv>
+            <ChevronDownIcon size={16} />
           </Link>
-          <Link href={`/cube/records/importfile/${getCubeId(cube)}`} className={navItemClass}>
+        }
+      >
+        <Flexbox direction="col" gap="3" className="p-3">
+          <FromDraftLink className={menuItemClass} modalprops={{ cube }}>
+            <PlayIcon size={16} />
+            Create from Draft
+          </FromDraftLink>
+          <Link href={`/cube/records/hedron/${getCubeId(cube)}`} className={menuItemClass}>
+            <UploadIcon size={16} />
+            Import from Hedron Network
+          </Link>
+          <Link href={`/cube/records/importfile/${getCubeId(cube)}`} className={menuItemClass}>
             {/* Its own icon: sharing UploadIcon with Hedron made the two indistinguishable at
                 the glance an icon exists for. */}
             <FileIcon size={16} />
-            <ResponsiveDiv baseVisible md>
-              Import
-            </ResponsiveDiv>
-            <ResponsiveDiv md>Import from File</ResponsiveDiv>
+            Import from File
           </Link>
         </Flexbox>
-      </Flexbox>
-      {/* Not a way to add a record, so not in the row of them. */}
-      {exportLink}
+      </Dropdown>
     </Flexbox>
   );
 };

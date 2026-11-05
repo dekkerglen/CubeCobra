@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -59,41 +59,47 @@ describe('RecordsNavbar entry points', () => {
     expect(container.querySelector('input[name="record"]')).toBeNull();
   });
 
-  it('leaves From Draft, Hedron, Import and Export untouched', () => {
+  /**
+   * Three ways to build a record from something you already have, each rarer than the two ways
+   * to start one from nothing. In the row they made six undifferentiated links out of what is
+   * really two choices and a menu.
+   */
+  it('puts the ways to build from an existing event behind one menu', () => {
     renderNavbar();
 
-    // The "from draft" trigger is an onClick-only anchor (no href — it opens a modal rather than
-    // navigating), so it carries no accessible "link" role; match on its visible text instead.
+    expect(screen.queryByText('Create from Draft')).not.toBeInTheDocument();
+    expect(screen.queryByText('Import from Hedron Network')).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByText('From an existing event'));
+
     expect(screen.getByText('Create from Draft')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: /import from hedron network/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Import from Hedron Network' })).toHaveAttribute(
       'href',
       '/cube/records/hedron/cube-1',
     );
-    expect(screen.getByRole('link', { name: /import from file/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Import from File' })).toHaveAttribute(
       'href',
       '/cube/records/importfile/cube-1',
     );
-    expect(screen.getByRole('link', { name: /export all records/i })).toHaveAttribute(
-      'href',
-      '/cube/records/export/cube-1',
-    );
   });
 
-  // Six identical links in one row said nothing about which of them a reader wanted.
-  it('groups the ways to add a record by what they start from', () => {
+  // Exporting acts on the list, not on this row of ways to add to it, so it moved into the
+  // list's own header.
+  it('offers no export, which belongs to the list', () => {
     renderNavbar();
 
-    // The label renders inside a ResponsiveDiv, so the group itself is one level up.
-    const newEvent = screen.getByText('New event').closest('div')!.parentElement!;
-    expect(newEvent).toHaveTextContent('Start an Event');
-    expect(newEvent).toHaveTextContent('Input Finished Event');
+    expect(screen.queryByText(/export/i)).not.toBeInTheDocument();
+  });
 
-    const fromExisting = screen.getByText('From existing').closest('div')!.parentElement!;
-    expect(fromExisting).toHaveTextContent('Create from Draft');
-    expect(fromExisting).toHaveTextContent('Import from Hedron Network');
-    expect(fromExisting).toHaveTextContent('Import from File');
-    // Exporting is not a way to add a record, so it is in neither group.
-    expect(fromExisting).not.toHaveTextContent('Export All Records');
-    expect(newEvent).not.toHaveTextContent('Export All Records');
+  // Every control here needs edit rights, so a reader gets no row at all rather than an empty
+  // one where six links used to be.
+  it('renders nothing for someone who cannot edit the cube', () => {
+    const { container } = render(
+      <CubeContext.Provider value={{ cube, canEdit: false } as any}>
+        <RecordsNavbar />
+      </CubeContext.Provider>,
+    );
+
+    expect(container).toBeEmptyDOMElement();
   });
 });

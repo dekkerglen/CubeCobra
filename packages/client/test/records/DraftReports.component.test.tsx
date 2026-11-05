@@ -104,4 +104,25 @@ describe('DraftReports', () => {
 
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
+
+  // Exporting acts on this list, so it sits in the list's own header rather than in the row of
+  // ways to add to it — and unlike everything in that row, it is open to a reader.
+  it('offers Export All from the header, to anyone who can see the cube', () => {
+    const { rerender } = renderList([record()]);
+
+    const exportLink = screen.getByRole('link', { name: /export all/i });
+    expect(exportLink).toHaveAttribute('href', '/cube/records/export/cube-1');
+    expect(exportLink.closest('table')).toBeNull();
+    expect(exportLink.parentElement?.parentElement?.textContent).toContain('Draft Reports');
+
+    rerender(
+      <CSRFContext.Provider value={{ csrfToken: 't', csrfFetch: jest.fn(), callApi: jest.fn() } as any}>
+        <CubeContext.Provider value={{ cube, canEdit: false } as any}>
+          <DraftReports records={[record()]} lastKey={null} />
+        </CubeContext.Provider>
+      </CSRFContext.Provider>,
+    );
+
+    expect(screen.getByRole('link', { name: /export all/i })).toBeInTheDocument();
+  });
 });
