@@ -14,6 +14,8 @@ import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import MobileFieldLabel from 'components/base/MobileFieldLabel';
+import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Text from 'components/base/Text';
 import Tooltip from 'components/base/Tooltip';
 import { SortableItem, SortableList } from 'components/DND';
@@ -264,13 +266,16 @@ const DeckCounts: React.FC<{ deck: TranscribeDeck | undefined }> = ({ deck }) =>
   return (
     // A title rather than a hover card, matching the record cells beside it: two bare numbers
     // and an asterisk need naming, and the column heading only has room to name them once.
-    <span
-      data-testid="deck-counts"
-      title={`${main} Mainboard / ${side} Sideboard${unsaved}`}
-      className={`${DECK_COLUMN} shrink-0 text-center text-sm ${deck?.dirty ? 'text-text' : 'text-text-secondary'}`}
-    >
-      {`${main} / ${side}${deck?.dirty ? ' *' : ''}`}
-    </span>
+    <div className={`${DECK_COLUMN} shrink-0`}>
+      <MobileFieldLabel>Main / Side</MobileFieldLabel>
+      <span
+        data-testid="deck-counts"
+        title={`${main} Mainboard / ${side} Sideboard${unsaved}`}
+        className={`block text-center text-sm ${deck?.dirty ? 'text-text' : 'text-text-secondary'}`}
+      >
+        {`${main} / ${side}${deck?.dirty ? ' *' : ''}`}
+      </span>
+    </div>
   );
 };
 
@@ -289,21 +294,22 @@ interface PlayerRecordProps {
 // three of them land at the same x on every row and the headings above the list stay true.
 const PlayerRecord: React.FC<PlayerRecordProps> = ({ player, seed, editable, setOverride }) => {
   return (
-    <Flexbox direction="row" alignItems="center" gap="1">
+    <Flexbox direction="row" alignItems="end" gap="1">
       {RECORD_FIELDS.map(({ label, key }) => (
-        <Input
-          key={key}
-          type="number"
-          value={`${seed[key]}`}
-          disabled={!editable}
-          onChange={(event) => setOverride({ ...seed, [key]: toCount(event.target.value) })}
-          // Named rather than labelled: a visible label on all three would break the one-line
-          // `[W] [L] [D]` reading the row is for, and sixteen rows of them is unreadable. The
-          // title is the per-cell cue that names the box without taking a line, alongside the
-          // column headings above the list.
-          otherInputProps={{ min: 0, title: label, 'aria-label': `${label} for ${player.name}` }}
-          wrapperClassName={RECORD_COLUMN}
-        />
+        <div key={key} className={RECORD_COLUMN}>
+          {/* Below md the row wraps and the column headings are gone, so each cell names
+              itself. Above md they stay unlabelled: a visible label on all three would break
+              the one-line `[W] [L] [D]` reading the row is for, and sixteen rows of them is
+              unreadable. The title is the per-cell cue either way. */}
+          <MobileFieldLabel>{label}</MobileFieldLabel>
+          <Input
+            type="number"
+            value={`${seed[key]}`}
+            disabled={!editable}
+            onChange={(event) => setOverride({ ...seed, [key]: toCount(event.target.value) })}
+            otherInputProps={{ min: 0, title: label, 'aria-label': `${label} for ${player.name}` }}
+          />
+        </div>
       ))}
     </Flexbox>
   );
@@ -564,31 +570,36 @@ const TranscribePlayers: React.FC<TranscribePlayersProps> = ({
         // label, and a caption that is not the width of the column it describes does not point
         // at anything. Each heading is `w-20` like the cell beneath it, right-aligned to the
         // same card padding, so the three columns read top to bottom.
-        <div data-testid="record-column-headings" className="px-4">
-          {/* Mirrors a row's own layout element for element — the handle and avatar it leads
+        // Only from md up: below that the row wraps onto several lines, which left these
+        // headings over nothing and pushed "Draws" off the side of the screen. Each cell
+        // names itself there instead.
+        <ResponsiveDiv md>
+          <div data-testid="record-column-headings" className="px-4">
+            {/* Mirrors a row's own layout element for element — the handle and avatar it leads
               with, then the name, then every fixed column, then the two icons it ends with —
               because a heading that is not over its column is a caption, not a heading. */}
-          <Flexbox direction="row" gap="2" alignItems="center">
-            {seatsEditable && <span aria-hidden="true" className="w-4 shrink-0" />}
-            <span aria-hidden="true" className="w-6 shrink-0" />
-            <Text sm semibold className="grow min-w-0 text-text-secondary">
-              Name
-            </Text>
-            <Text sm semibold className={`${DECK_COLUMN} shrink-0 text-center text-text-secondary`}>
-              Main / Side
-            </Text>
-            <span aria-hidden="true" className="w-4 shrink-0" />
-            <Flexbox direction="row" gap="1" alignItems="center">
-              {RECORD_FIELDS.map(({ label, key }) => (
-                <Text key={key} sm semibold className={`${RECORD_COLUMN} text-text-secondary`}>
-                  {label}
-                </Text>
-              ))}
+            <Flexbox direction="row" gap="2" alignItems="center">
+              {seatsEditable && <span aria-hidden="true" className="w-4 shrink-0" />}
+              <span aria-hidden="true" className="w-6 shrink-0" />
+              <Text sm semibold className="grow min-w-0 text-text-secondary">
+                Name
+              </Text>
+              <Text sm semibold className={`${DECK_COLUMN} shrink-0 text-center text-text-secondary`}>
+                Main / Side
+              </Text>
+              <span aria-hidden="true" className="w-4 shrink-0" />
+              <Flexbox direction="row" gap="1" alignItems="center">
+                {RECORD_FIELDS.map(({ label, key }) => (
+                  <Text key={key} sm semibold className={`${RECORD_COLUMN} text-text-secondary`}>
+                    {label}
+                  </Text>
+                ))}
+              </Flexbox>
+              <span aria-hidden="true" className="w-4 shrink-0" />
+              <span aria-hidden="true" className="w-4 shrink-0" />
             </Flexbox>
-            <span aria-hidden="true" className="w-4 shrink-0" />
-            <span aria-hidden="true" className="w-4 shrink-0" />
-          </Flexbox>
-        </div>
+          </div>
+        </ResponsiveDiv>
       )}
 
       {/* The rows stay sortable on a played draft too: what is withheld there is the handle,

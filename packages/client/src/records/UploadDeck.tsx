@@ -10,7 +10,7 @@ import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import Checkbox from 'components/base/Checkbox';
 import Input from 'components/base/Input';
-import { Flexbox } from 'components/base/Layout';
+import { Col, Flexbox, Row } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import TextArea from 'components/base/TextArea';
@@ -339,107 +339,118 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
           {controlsExtra}
         </Flexbox>
       )}
-      {/* Two ways in, side by side rather than stacked: typing cards one at a time and pasting
-          a list are alternatives, and stacking them buried the paste box below a fold while
-          leaving both at a width neither needs. */}
-      <Flexbox direction="row" gap="4" className="items-stretch flex-col md:flex-row">
-        <Flexbox direction="col" gap="2" className="md:w-1/2 min-w-0">
-          <Text sm semibold>
-            Add Card
-          </Text>
-          <Flexbox direction="row" justify="start" gap="2">
-            <AutocompleteInput
-              cubeId={cubeId}
-              getMatches={
-                allowCardsOutsideOfCube ? cardNameMatches(false, true) : cubeCardNameMatches(cubeId, 'mainboard')
-              }
-              type="text"
-              innerRef={removeRef}
-              name="remove"
-              value={cardNameValue}
-              setValue={setCardNameValue}
-              onSubmit={(e, val) => handleAdd(e, val!)}
-              placeholder={addToSideboard ? 'Card to Add to Sideboard' : 'Card to Add to Mainboard'}
-              autoComplete="off"
-              data-lpignore
-              className="square-right"
-            />
-            <Button color="primary" disabled={cardNameValue.length === 0} onClick={(e) => handleAdd(e, cardNameValue)}>
-              <span className="text-nowrap">Add</span>
-            </Button>
-          </Flexbox>
-          {/* Directly under the field it filters. It changes what this autocomplete offers
+      {/* Two ways in, side by side from md up rather than stacked: typing cards one at a time
+          and pasting a list are alternatives, and stacking them buried the paste box below a
+          fold while leaving both at a width neither needs. One above the other below md,
+          where neither is wide enough to use side by side.
+          A Row rather than a Flexbox with a `flex-col` className: Flexbox emits `flex-row`
+          from its direction prop, which wins in the cascade, so that override never applied
+          and this stayed two squeezed columns at every width. */}
+      <Row xs={1} md={2} className="items-stretch">
+        <Col xs={1} md={1} className="min-w-0">
+          <Flexbox direction="col" gap="2">
+            <Text sm semibold>
+              Add Card
+            </Text>
+            <Flexbox direction="row" justify="start" gap="2">
+              <AutocompleteInput
+                cubeId={cubeId}
+                getMatches={
+                  allowCardsOutsideOfCube ? cardNameMatches(false, true) : cubeCardNameMatches(cubeId, 'mainboard')
+                }
+                type="text"
+                innerRef={removeRef}
+                name="remove"
+                value={cardNameValue}
+                setValue={setCardNameValue}
+                onSubmit={(e, val) => handleAdd(e, val!)}
+                placeholder={addToSideboard ? 'Card to Add to Sideboard' : 'Card to Add to Mainboard'}
+                autoComplete="off"
+                data-lpignore
+                className="square-right"
+              />
+              <Button
+                color="primary"
+                disabled={cardNameValue.length === 0}
+                onClick={(e) => handleAdd(e, cardNameValue)}
+              >
+                <span className="text-nowrap">Add</span>
+              </Button>
+            </Flexbox>
+            {/* Directly under the field it filters. It changes what this autocomplete offers
               and nothing else — a name typed in full is resolved against the whole catalogue
               either way, as are a pasted list and a scanned photo — so on a line of shared
               controls it read as governing all three. */}
-          {/* Under the field it serves, not on a line of its own above both columns, where
+            {/* Under the field it serves, not on a line of its own above both columns, where
               it looked like it governed the paste box and the scanner too. It does not: the
               scanner routes per card from its own checkboxes, and a paste is routed by its
               own section markers. It sets the board for a typed card and for the basics
               below. Fixed width, because a control that resizes to its value moves
               everything beside it. */}
-          <Flexbox direction="row" justify="start" gap="3" alignItems="end" wrap="wrap">
-            <div className="w-40 shrink-0">
-              <Select
-                id="upload-deck-board"
-                label="Board"
-                value={targetBoard}
-                setValue={(value) => setTargetBoard(value as DecklistBoard)}
-                options={[
-                  { value: 'mainboard', label: 'Mainboard' },
-                  { value: 'sideboard', label: 'Sideboard' },
-                ]}
-              />
-            </div>
-            {/* The Select carries a label above its box and the checkbox does not, so
+            <Flexbox direction="row" justify="start" gap="3" alignItems="end" wrap="wrap">
+              <div className="w-40 shrink-0">
+                <Select
+                  id="upload-deck-board"
+                  label="Board"
+                  value={targetBoard}
+                  setValue={(value) => setTargetBoard(value as DecklistBoard)}
+                  options={[
+                    { value: 'mainboard', label: 'Mainboard' },
+                    { value: 'sideboard', label: 'Sideboard' },
+                  ]}
+                />
+              </div>
+              {/* The Select carries a label above its box and the checkbox does not, so
                 bottom-aligning the two leaves the checkbox sitting ~7px below the Select's
                 centre line. This lifts it back onto it. */}
-            <div className="pb-1.5">
-              <Checkbox
-                label="Show Cards not in Cube"
-                checked={allowCardsOutsideOfCube}
-                setChecked={(value) => setAllowCardsOutsideOfCube(value)}
-              />
-            </div>
-          </Flexbox>
-          {/* Adding basics and scanning a photo are not steps after typing a card name;
+              <div className="pb-1.5">
+                <Checkbox
+                  label="Show Cards not in Cube"
+                  checked={allowCardsOutsideOfCube}
+                  setChecked={(value) => setAllowCardsOutsideOfCube(value)}
+                />
+              </div>
+            </Flexbox>
+            {/* Adding basics and scanning a photo are not steps after typing a card name;
               they are two more ways to fill the same deck. */}
-          {basicDetails.length > 0 && (
-            <>
-              <Button className="mt-4" color="accent" onClick={() => setBasicsOpen(true)}>
-                <span className="text-nowrap">Add Basic Lands</span>
-              </Button>
-              {/* Rendered only once the basics have loaded: the modal seeds its per-land
+            {basicDetails.length > 0 && (
+              <>
+                <Button className="mt-4" color="accent" onClick={() => setBasicsOpen(true)}>
+                  <span className="text-nowrap">Add Basic Lands</span>
+                </Button>
+                {/* Rendered only once the basics have loaded: the modal seeds its per-land
                   counts from this list on mount. */}
-              <BasicsModal
-                isOpen={basicsOpen}
-                setOpen={setBasicsOpen}
-                addBasics={handleAddBasics}
-                deck={basicsModalDeck}
-                basics={basicsModalBasics}
-                cards={basicsModalCards}
-              />
-            </>
-          )}
-          {/* Space rather than a rule: these are three ways to fill the same deck, and a
+                <BasicsModal
+                  isOpen={basicsOpen}
+                  setOpen={setBasicsOpen}
+                  addBasics={handleAddBasics}
+                  deck={basicsModalDeck}
+                  basics={basicsModalBasics}
+                  cards={basicsModalCards}
+                />
+              </>
+            )}
+            {/* Space rather than a rule: these are three ways to fill the same deck, and a
               line across the column shouted a separation that a gap states quietly. */}
-          {/* A flex column, so the scanner's button fills the column the way the one above
+            {/* A flex column, so the scanner's button fills the column the way the one above
               it does rather than shrinking to its label. */}
-          {photoScanner && <div className="mt-4 flex flex-col">{photoScanner}</div>}
-        </Flexbox>
+            {photoScanner && <div className="mt-4 flex flex-col">{photoScanner}</div>}
+          </Flexbox>
+        </Col>
 
-        <Flexbox direction="col" gap="2" className="md:w-1/2 min-w-0">
-          <Text sm semibold>
-            Paste a decklist
-          </Text>
-          <Text sm className="text-text-secondary">
-            One card per line, with an optional quantity like &quot;2x Island&quot;. Lines go to the mainboard until a
-            &quot;Sideboard&quot; line, which sends everything below it to the sideboard.
-          </Text>
-          <TextArea
-            value={decklistText}
-            onChange={(e) => setDecklistText(e.target.value)}
-            placeholder={`Paste your decklist here...
+        <Col xs={1} md={1} className="min-w-0">
+          <Flexbox direction="col" gap="2">
+            <Text sm semibold>
+              Paste a decklist
+            </Text>
+            <Text sm className="text-text-secondary">
+              One card per line, with an optional quantity like &quot;2x Island&quot;. Lines go to the mainboard until a
+              &quot;Sideboard&quot; line, which sends everything below it to the sideboard.
+            </Text>
+            <TextArea
+              value={decklistText}
+              onChange={(e) => setDecklistText(e.target.value)}
+              placeholder={`Paste your decklist here...
 
 e.g.:
 2x Lightning Bolt
@@ -448,32 +459,33 @@ Counterspell
 
 Sideboard
 2 Pyroblast`}
-            rows={8}
-          />
-          <Button
-            color="primary"
-            disabled={!decklistText.trim() || isParsing}
-            onClick={() => handleParseDecklist(decklistText)}
-            block
-          >
-            {/* Not "Add to Mainboard": a list carrying its own section markers is split
+              rows={8}
+            />
+            <Button
+              color="primary"
+              disabled={!decklistText.trim() || isParsing}
+              onClick={() => handleParseDecklist(decklistText)}
+              block
+            >
+              {/* Not "Add to Mainboard": a list carrying its own section markers is split
                 across both boards, which is the Draftmancer export this exists for. */}
-            {isParsing ? 'Parsing...' : 'Parse and Add'}
-          </Button>
-          {parseErrors.length > 0 && (
-            <Alert color="warning">
-              <Text semibold>Could not parse the following lines:</Text>
-              <ul className="mb-0">
-                {parseErrors.map((error, index) => (
-                  <li key={index}>
-                    <Text sm>{error}</Text>
-                  </li>
-                ))}
-              </ul>
-            </Alert>
-          )}
-        </Flexbox>
-      </Flexbox>
+              {isParsing ? 'Parsing...' : 'Parse and Add'}
+            </Button>
+            {parseErrors.length > 0 && (
+              <Alert color="warning">
+                <Text semibold>Could not parse the following lines:</Text>
+                <ul className="mb-0">
+                  {parseErrors.map((error, index) => (
+                    <li key={index}>
+                      <Text sm>{error}</Text>
+                    </li>
+                  ))}
+                </ul>
+              </Alert>
+            )}
+          </Flexbox>
+        </Col>
+      </Row>
       {mainboardCards.length > 0 && (
         <>
           <Text sm semibold>

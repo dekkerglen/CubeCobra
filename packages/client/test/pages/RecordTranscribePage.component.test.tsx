@@ -1086,11 +1086,15 @@ describe('RecordTranscribePage', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Final records only' }));
 
     // A heading that is not the same width as its column is not a heading, it is a caption.
+    // (Only from md up — below that the row wraps, the headings are hidden and each cell
+    // carries its own label. jsdom applies no media queries, so both are in this DOM.)
     const headings = screen.getByTestId('record-column-headings');
     for (const label of ['Wins', 'Losses', 'Draws']) {
       expect(within(headings).getByText(label)).toHaveClass('w-20');
     }
-    expect(recordCell(0, 'Wins').parentElement?.parentElement).toHaveClass('w-20');
+    // input > div.relative > Input's own wrapper > the column, which now also holds the
+    // below-md label above the input.
+    expect(recordCell(0, 'Wins').closest('div.w-20')).toBeInTheDocument();
   });
 
   it('keeps the record cells rightmost, with the deck summary to their left', () => {

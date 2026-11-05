@@ -4,6 +4,7 @@ import { AlertIcon, XIcon } from '@primer/octicons-react';
 import { Match, PlayerList } from '@utils/datatypes/Record';
 
 import Input from 'components/base/Input';
+import MobileFieldLabel from 'components/base/MobileFieldLabel';
 import { Col, Flexbox } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
@@ -13,7 +14,6 @@ import {
   MATCH_RESULT_COL,
   MATCH_RESULT_HEADINGS,
   MatchFieldGrid,
-  MatchFieldLabel,
   MatchRowFrame,
 } from './EditMatchRound';
 
@@ -77,18 +77,18 @@ const RecordMatchRow: React.FC<RecordMatchRowProps> = ({
       >
         <MatchFieldGrid>
           <Col {...MATCH_PLAYER_COL}>
-            <MatchFieldLabel>Player 1</MatchFieldLabel>
+            <MobileFieldLabel>Player 1</MobileFieldLabel>
             <Text sm>{match.p1}</Text>
           </Col>
           <Col {...MATCH_PLAYER_COL}>
-            <MatchFieldLabel>Player 2</MatchFieldLabel>
+            <MobileFieldLabel>Player 2</MobileFieldLabel>
             <Text sm>{match.p2}</Text>
           </Col>
           {/* Text has no title prop, so the hint (and the name getByTitle looks up in tests)
               lives on a plain wrapping span instead. */}
           {resultCells.map(({ position, name }) => (
             <Col key={position} {...MATCH_RESULT_COL}>
-              <MatchFieldLabel>{MATCH_RESULT_HEADINGS[position]}</MatchFieldLabel>
+              <MobileFieldLabel>{MATCH_RESULT_HEADINGS[position]}</MobileFieldLabel>
               <span title={name}>
                 <Text sm>{match.results[position]}</Text>
               </span>
@@ -118,7 +118,7 @@ const RecordMatchRow: React.FC<RecordMatchRowProps> = ({
       >
         <MatchFieldGrid>
           <Col {...MATCH_PLAYER_COL}>
-            <MatchFieldLabel>Player 1</MatchFieldLabel>
+            <MobileFieldLabel>Player 1</MobileFieldLabel>
             <Select
               id={`${idPrefix}-match-${index}-p1`}
               aria-label="Player 1"
@@ -128,7 +128,7 @@ const RecordMatchRow: React.FC<RecordMatchRowProps> = ({
             />
           </Col>
           <Col {...MATCH_PLAYER_COL}>
-            <MatchFieldLabel>Player 2</MatchFieldLabel>
+            <MobileFieldLabel>Player 2</MobileFieldLabel>
             <Select
               id={`${idPrefix}-match-${index}-p2`}
               aria-label="Player 2"
@@ -139,7 +139,7 @@ const RecordMatchRow: React.FC<RecordMatchRowProps> = ({
           </Col>
           {resultCells.map(({ position, name }) => (
             <Col key={position} {...MATCH_RESULT_COL}>
-              <MatchFieldLabel>{MATCH_RESULT_HEADINGS[position]}</MatchFieldLabel>
+              <MobileFieldLabel>{MATCH_RESULT_HEADINGS[position]}</MobileFieldLabel>
               <Input
                 id={`${idPrefix}-match-${index}-${position}`}
                 type="number"

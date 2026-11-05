@@ -4,6 +4,7 @@ import { PlusIcon, XIcon } from '@primer/octicons-react';
 import { Match, PlayerList, Round } from '@utils/datatypes/Record';
 
 import Input from 'components/base/Input';
+import MobileFieldLabel from 'components/base/MobileFieldLabel';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
 import Select from 'components/base/Select';
@@ -50,16 +51,6 @@ export const MatchRowFrame: React.FC<{ lead: React.ReactNode; trail: React.React
     <div className="grow min-w-0">{children}</div>
     {trail}
   </Flexbox>
-);
-
-// Below md each field carries its own label, because a stacked block has no columns for a
-// heading row to head. Above md the headings do that job once, for the whole list.
-export const MatchFieldLabel: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <ResponsiveDiv baseVisible md>
-    <Text xs semibold className="text-text-secondary">
-      {children}
-    </Text>
-  </ResponsiveDiv>
 );
 
 export const MATCH_RESULT_HEADINGS = ['P1 Wins', 'P2 Wins', 'Draws'];
@@ -162,7 +153,7 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
         >
           <MatchFieldGrid>
             <Col {...MATCH_PLAYER_COL}>
-              <MatchFieldLabel>Player 1</MatchFieldLabel>
+              <MobileFieldLabel>Player 1</MobileFieldLabel>
               <Select
                 id={`${idPrefix}-match-${index}-p1`}
                 aria-label="Player 1"
@@ -172,7 +163,7 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
               />
             </Col>
             <Col {...MATCH_PLAYER_COL}>
-              <MatchFieldLabel>Player 2</MatchFieldLabel>
+              <MobileFieldLabel>Player 2</MobileFieldLabel>
               <Select
                 id={`${idPrefix}-match-${index}-p2`}
                 aria-label="Player 2"
@@ -187,7 +178,7 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
               { position: 2 as const, name: 'Draws' },
             ].map(({ position, name }) => (
               <Col key={position} {...MATCH_RESULT_COL}>
-                <MatchFieldLabel>{MATCH_RESULT_HEADINGS[position]}</MatchFieldLabel>
+                <MobileFieldLabel>{MATCH_RESULT_HEADINGS[position]}</MobileFieldLabel>
                 <Input
                   id={`${idPrefix}-match-${index}-${position}`}
                   type="number"

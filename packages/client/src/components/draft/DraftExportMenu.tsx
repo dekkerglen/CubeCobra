@@ -1,11 +1,12 @@
 import React, { useCallback } from 'react';
 
+import { ChevronDownIcon } from '@primer/octicons-react';
 import { cardName } from '@utils/cardutil';
 import Draft from '@utils/datatypes/Draft';
 
+import Dropdown from 'components/base/Dropdown';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
-import NavMenu from 'components/base/NavMenu';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
 
 interface DraftExportMenuProps {
@@ -40,7 +41,21 @@ const DraftExportMenu: React.FC<DraftExportMenuProps> = ({ draft, seatIndex }) =
   }, [addAlert, dismissAlerts, draft, seatIndex]);
 
   return (
-    <NavMenu label="Export">
+    /* Dropdown, not NavMenu: NavMenu pins its panel with `style={{ right: 0 }}`, which is
+       right for a trigger sitting at the right edge of the navbar (its only other two
+       callers) and wrong everywhere else. In page content near the left edge the panel ran
+       off the side of the screen -- at 390px it opened at left:-66 with its labels clipped.
+       Dropdown lets the caller say which edge to anchor to. */
+    <Dropdown
+      align="left"
+      minWidth="16rem"
+      trigger={
+        <Link className="flex items-center gap-1 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer">
+          Export
+          <ChevronDownIcon size={16} />
+        </Link>
+      }
+    >
       <Flexbox direction="col" gap="2" className="p-3">
         <Link href={`/cube/deck/download/txt/${draft.id}/${seatIndex}`} className="dropdown-item">
           Card Names (.txt)
@@ -71,7 +86,7 @@ const DraftExportMenu: React.FC<DraftExportMenuProps> = ({ draft, seatIndex }) =
         </Link>
         <Alerts alerts={alerts} />
       </Flexbox>
-    </NavMenu>
+    </Dropdown>
   );
 };
 

@@ -72,7 +72,7 @@ export const DraftSimulatorOverviewSection: React.FC<{
       </button>
     </div>
     <Collapse isOpen={overviewOpen}>
-      <Flexbox direction="row" gap="4" className="flex-col md:flex-row md:flex-wrap items-stretch">
+      <Flexbox direction="col" gap="4" className="md:flex-row md:flex-wrap items-stretch">
         <div
           className={mobileLayout ? 'flex w-full flex-col gap-4' : 'flex flex-col gap-4 flex-shrink-0'}
           style={mobileLayout ? undefined : { width: 200 }}

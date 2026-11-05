@@ -73,7 +73,7 @@ const HelpLayout: React.FC<HelpLayoutProps> = ({ activeHref, noTaper = false, no
         <div className="relative z-10">
           <Container lg className="pt-28 pb-6 md:pt-36 md:pb-8">
             <div className="px-2">
-              <Flexbox direction="row" gap="6" className="md:flex-row flex-col">
+              <Flexbox direction="col" gap="6" className="md:flex-row">
                 <div className="md:w-60 md:flex-shrink-0">
                   <div className="md:sticky md:top-24">
                     <Flexbox direction="col" gap="3">
