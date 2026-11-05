@@ -317,11 +317,14 @@ describe('RecordPage', () => {
   it('still offers add/remove round, assign trophies, remove deck and upload deck', () => {
     renderPage(true);
 
-    // Upload a deck (sidebar, always offered to an owner, naming the selected player).
-    expect(screen.getByRole('link', { name: 'Upload a deck for Alice' })).toHaveAttribute(
+    // Upload a deck, from the selected player's no-deck placeholder. Alice (the default
+    // selection) has one, so this is Bob's.
+    fireEvent.click(screen.getByText('Bob'));
+    expect(screen.getAllByRole('link', { name: 'Upload a deck for Bob' })[0]).toHaveAttribute(
       'href',
-      '/cube/records/uploaddeck/rec-1?player=1',
+      '/cube/records/uploaddeck/rec-1?player=2',
     );
+    fireEvent.click(screen.getAllByText('Alice')[0]);
 
     // Remove Deck lives behind the per-deck "More" menu.
     openDeckMenu();
@@ -542,14 +545,27 @@ describe('RecordPage', () => {
     expect(screen.queryByRole('link', { name: /upload a deck/i })).not.toBeInTheDocument();
   });
 
-  it('gives the deck upload links one name naming the player', () => {
+  it('gives a deckless player exactly one upload link on the Players tab', () => {
     renderPage(true);
-    // Bob has no deck, so both the sidebar link and the empty-state link show at once.
+    // Bob has no deck, so the empty-state link shows. It used to show alongside an identical
+    // link beside the roster — same words, same target, inches apart.
     fireEvent.click(screen.getByText('Bob'));
 
-    const links = screen.getAllByRole('link', { name: 'Upload a deck for Bob' });
-    expect(links).toHaveLength(2);
-    links.forEach((link) => expect(link).toHaveAttribute('href', '/cube/records/uploaddeck/rec-1?player=2'));
+    // The Decks tab is mounted too and offers Bob his own link, so this counts the Players
+    // tab's own panel rather than the whole document.
+    const panel = screen.getByText('No deck has been uploaded for this player yet.').closest('div.p-4')!;
+    const links = within(panel as HTMLElement).getAllByRole('link', { name: 'Upload a deck for Bob' });
+    expect(links).toHaveLength(1);
+    expect(links[0]).toHaveAttribute('href', '/cube/records/uploaddeck/rec-1?player=2');
+  });
+
+  it('offers no upload link for a player who already has a deck', () => {
+    renderPage(true);
+
+    // Alice is the default selection and has a deck. The endpoint refuses a second one, so
+    // offering the link here was a dead end.
+    const panel = screen.getByTestId('deck-card').closest('div.p-4')!;
+    expect(within(panel as HTMLElement).queryByRole('link', { name: /Upload a deck for/ })).not.toBeInTheDocument();
   });
 
   it('offers no rename, reorder or remove on the Players tab', () => {

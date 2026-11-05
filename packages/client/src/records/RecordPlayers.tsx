@@ -110,8 +110,10 @@ const RecordPlayersContent: React.FC<RecordPlayersProps> = ({
   const { showCustomImages, toggleShowCustomImages } = useContext(DisplayContext);
   const isOwner = canEdit;
   const selectedUserIndex = selectedPlayer;
-  // The deck upload page, pre-selecting whichever player is showing. Built once: the sidebar
-  // link and the no-deck placeholder both link to the same place, and share a label.
+  // The deck upload page, pre-selecting whichever player is showing. Offered only from the
+  // no-deck placeholder: a player who already has a deck has nothing to upload, and the
+  // endpoint refuses a second one — so an always-visible link beside the roster was a dead
+  // end for exactly the players it was most prominent for.
   const uploadDeckHref = `/cube/records/uploaddeck/${record.id}?player=${selectedUserIndex + 1}`;
   const selectedPlayerEntry = record.players[selectedUserIndex];
   const selectedHasDeck = seatHasDeck(draft, selectedUserIndex);
@@ -234,11 +236,6 @@ const RecordPlayersContent: React.FC<RecordPlayersProps> = ({
               );
             })}
           </Flexbox>
-          {isOwner && (
-            <Link href={uploadDeckHref}>
-              <Text sm>{uploadDeckLabel}</Text>
-            </Link>
-          )}
         </Flexbox>
 
         {/* Selected player's deck (or an empty state). */}
