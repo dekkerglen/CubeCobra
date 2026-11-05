@@ -382,15 +382,19 @@ describe('RecordPage', () => {
     expect(exportParent).toBe(editRecordParent);
   });
 
-  it('puts the action links on the title row rather than a row of their own', () => {
-    renderPage(true);
+  it('orders the header title, date, actions, then description', () => {
+    // jsdom applies no media queries, so the responsive split (actions beside the title from
+    // md up, under the date below it) is verified by measurement in a browser. What is
+    // assertable here is the document order the narrow layout follows directly.
+    renderPage(true, { ...baseRecord, description: 'Eight players, three rounds' });
 
-    // On their own row beneath the title, date and description, the three actions read as a
-    // separate band of page chrome instead of as controls belonging to this record.
-    const titleRow = screen.getByText('Tuesday Night').closest('div.flex-row')!;
-    expect(titleRow).toContainElement(screen.getByRole('link', { name: 'Export' }));
-    expect(titleRow).toContainElement(screen.getByRole('link', { name: 'Edit Record' }));
-    expect(titleRow).toContainElement(screen.getByText('Collect Decks'));
+    const header = screen.getByText('Tuesday Night').closest('div.p-4')!;
+    const order = ['Tuesday Night', 'Collect Decks', 'Export', 'Edit Record', 'Eight players, three rounds'].map(
+      (text) => header.textContent!.indexOf(text),
+    );
+
+    expect(order.every((index) => index >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
 
   it('offers a non-owner Export but neither Collect Decks nor Edit Record', () => {
