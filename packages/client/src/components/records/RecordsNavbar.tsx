@@ -34,8 +34,11 @@ const StartEventLink: React.FC<{ cubeId: string }> = ({ cubeId }) => (
   </Link>
 );
 
+// Straight to the transcription workspace, which collects a record's name, date and
+// description in its own Event details card — the three things a wizard in front of it would
+// have asked for. Nothing is created until that page's first Save.
 const InputFinishedEventLink: React.FC<{ cubeId: string }> = ({ cubeId }) => (
-  <Link href={`/cube/records/create/finished/${cubeId}`} className={navItemClass}>
+  <Link href={`/cube/records/enter/new/${cubeId}`} className={navItemClass}>
     <ChecklistIcon size={16} />
     <ResponsiveDiv baseVisible md>
       Input Event

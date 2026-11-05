@@ -1,4 +1,4 @@
-import { createFinishedEventHandler, createRecordHandler } from '../../../src/router/routes/cube/records/create';
+import { createRecordHandler } from '../../../src/router/routes/cube/records/create';
 import { createCube } from '../../test-utils/data';
 import { call } from '../../test-utils/transport';
 
@@ -17,9 +17,10 @@ jest.mock('../../../src/dynamo/daos', () => ({
 import { cubeDao, recordDao } from '../../../src/dynamo/daos';
 import { redirect } from '../../../src/serverutils/render';
 
-// The wizard's own POST (name/description/date already collected) and "Input Finished Event"
-// (an empty record built client-side) both create exactly one record via the same shape of
-// request; only the handler — and so the redirect target — tells the two doors apart.
+// "Start an Event" collects a name, description and date and then creates the record. The
+// other door, "Input Finished Event", no longer passes through here at all: it opens the
+// transcription workspace, which collects the same three things itself, and whose first Save
+// is what creates the record (see enterNew.test.ts).
 describe('create-record entry-point redirects', () => {
   const cube = createCube({ id: 'my-cube' });
   const flash = jest.fn();
@@ -39,20 +40,9 @@ describe('create-record entry-point redirects', () => {
     expect(redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/record/rec-1');
   });
 
-  it('redirects a finished-event create to the workspace', async () => {
-    await post(createFinishedEventHandler, { record: JSON.stringify({ name: 'New Record' }) });
-
-    expect(redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/records/enter/rec-1');
-  });
-
-  it('creates exactly one record either way', async () => {
+  it('creates exactly one record', async () => {
     await post(createRecordHandler, { record: JSON.stringify({ name: 'Friday Draft' }) });
-    expect(recordDao.createRecord).toHaveBeenCalledTimes(1);
 
-    jest.clearAllMocks();
-    (recordDao.createRecord as jest.Mock).mockResolvedValue('rec-2');
-
-    await post(createFinishedEventHandler, { record: JSON.stringify({ name: 'New Record' }) });
     expect(recordDao.createRecord).toHaveBeenCalledTimes(1);
   });
 });

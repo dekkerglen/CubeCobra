@@ -1103,7 +1103,6 @@ describe('RecordTranscribePage', () => {
 
     // The cells sit at the same x on every row only if everything that varies in width —
     // the deck summary, a Clear control, a from-pairings reading — is left of them.
-    const row = playerRow(0);
     const summary = deckCell(0);
     const wins = recordCell(0, 'Wins');
     expect(summary.compareDocumentPosition(wins) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();

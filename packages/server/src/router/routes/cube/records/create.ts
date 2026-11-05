@@ -11,9 +11,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
 
-// Both creation paths render the same wizard; `finished` only decides where the form posts,
-// and so which page the organiser lands on once the record exists.
-const renderCreatePage = (finished: boolean) => async (req: Request, res: Response) => {
+export const createRecordPageHandler = async (req: Request, res: Response) => {
   try {
     if (!req.params.id) {
       req.flash('danger', 'Cube ID is required');
@@ -43,10 +41,9 @@ const renderCreatePage = (finished: boolean) => async (req: Request, res: Respon
       'CreateNewRecordPage',
       {
         cube,
-        finished,
       },
       {
-        title: `${abbreviate(cube.name)} - ${finished ? 'Input Finished Event' : 'Start an Event'}`,
+        title: `${abbreviate(cube.name)} - Start an Event`,
         metadata: generateMeta(
           cube.brief,
           cube.image.uri,
@@ -58,13 +55,6 @@ const renderCreatePage = (finished: boolean) => async (req: Request, res: Respon
     return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
 };
-
-export const createRecordPageHandler = renderCreatePage(false);
-
-// "Input Finished Event" used to POST the moment it was pressed, which created a record
-// before the organiser had typed anything — abandoning the page left an empty one behind,
-// and the list had no way to show it was empty. It now opens this same wizard.
-export const createFinishedEventPageHandler = renderCreatePage(true);
 
 export const createRecordPageFromDraftHandler = async (req: Request, res: Response) => {
   try {
@@ -143,11 +133,8 @@ const recordSchema = Joi.object({
   trophy: Joi.array().items(Joi.string()).optional(), // Trophy is optional
 }).unknown(true); // allow additional properties like dateCreated, dateLastUpdated
 
-// Shared by both creation doors: the wizard's own POST (name/description/date already
-// collected) and "Input Finished Event" (an empty record built client-side). They differ only
-// in where the newly created record sends the user — the wizard to the record page it was
-// built for, "Input Finished Event" straight to the transcription workspace — so the landing
-// page is the one thing the caller supplies.
+// The landing page is a parameter because createRecordFromDraftHandler below also creates a
+// record and sends the user somewhere of its own.
 const createRecordAndRedirect = async (req: Request, res: Response, redirectTo: (recordId: string) => string) => {
   try {
     if (!req.params.id) {
@@ -210,12 +197,6 @@ const createRecordAndRedirect = async (req: Request, res: Response, redirectTo: 
 
 export const createRecordHandler = async (req: Request, res: Response) =>
   createRecordAndRedirect(req, res, (recordId) => `/cube/record/${recordId}`);
-
-// "Input Finished Event": the record is otherwise identical, but since it still needs its
-// players and results filled in, it lands in the transcription workspace rather than the
-// read-built record page.
-export const createFinishedEventHandler = async (req: Request, res: Response) =>
-  createRecordAndRedirect(req, res, (recordId) => `/cube/records/enter/${recordId}`);
 
 export const createRecordFromDraftHandler = async (req: Request, res: Response) => {
   try {
@@ -327,11 +308,6 @@ export const routes = [
   },
   {
     method: 'get',
-    path: '/finished/:id',
-    handler: [csrfProtection, ensureAuth, createFinishedEventPageHandler],
-  },
-  {
-    method: 'get',
     path: '/fromDraft/:id',
     handler: [csrfProtection, ensureAuth, createRecordPageFromDraftHandler],
   },
@@ -353,16 +329,6 @@ export const routes = [
       ensureAuth,
       bodyValidation(recordSchema, (req) => `/cube/records/create/fromDraft/${req.params.id}`, 'record'),
       createRecordFromDraftHandler,
-    ],
-  },
-  {
-    method: 'post',
-    path: '/finished/:id',
-    handler: [
-      csrfProtection,
-      ensureAuth,
-      bodyValidation(recordSchema, (req) => `/cube/records/${req.params.id}`, 'record'),
-      createFinishedEventHandler,
     ],
   },
 ];

@@ -1,4 +1,4 @@
-import { defaultRecordDate, defaultRecordName } from '../../src/records/recordName';
+import { defaultRecordDate, defaultRecordName } from '@utils/records/recordName';
 
 /**
  * A record's `date` is a day, not an instant. `EditDescription`'s date input round-trips it

@@ -51,6 +51,10 @@ interface RecordTranscribePageProps {
   record: Record;
   draft?: Draft;
   players: User[];
+  // True when the record does not exist yet and the first Save is what creates it. The page
+  // is otherwise identical — the Event details card already collects everything a record
+  // needs to be created with.
+  isNew?: boolean;
 }
 
 interface Workspace {
@@ -65,8 +69,13 @@ interface Workspace {
 // telling the user what final-records mode is hiding.
 const anyPairings = (matches: Round[]): boolean => matches.some((round) => round.matches.length > 0);
 
-const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, record, draft, players }) => {
+const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, record, draft, players, isNew }) => {
   const { csrfFetch } = useContext(CSRFContext);
+  // A record that does not exist yet: the first successful save creates it, and from then on
+  // this page behaves like any other workspace. Held in state rather than read from the prop
+  // so the page does not have to reload to stop being new. An empty id is what every branch
+  // below tests, so `isNew` decides it once here rather than being consulted in each of them.
+  const [recordId, setRecordId] = useState<string>(isNew ? '' : record.id);
   const [workspace, setWorkspace] = useState<Workspace>(() => {
     const seeded = seedTranscribeState(record, draft);
     return { state: seeded, seeded };
@@ -218,7 +227,9 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
     setSavedMessage('');
 
     try {
-      const response = await csrfFetch(`/cube/records/enter/${record.id}`, {
+      // The create-and-save door until the record exists, the ordinary one after.
+      const saveUrl = recordId ? `/cube/records/enter/${recordId}` : `/cube/records/enter/new/${cube.id}`;
+      const response = await csrfFetch(saveUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -230,6 +241,15 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
         // a redirecting form post is that a rejection costs the user none of their typing.
         setSaveError(json.message || 'Could not save this record.');
         return;
+      }
+
+      // The first save of a new record creates it, and the response says under which id. From
+      // here on this is an ordinary workspace: later saves go to that record, and the address
+      // bar is corrected so a refresh reloads what was just created rather than a second blank
+      // one.
+      if (!recordId && typeof json.recordId === 'string' && json.recordId) {
+        setRecordId(json.recordId);
+        window.history.replaceState(null, '', `/cube/records/enter/${json.recordId}`);
       }
 
       // A response naming which sections landed is read exactly as it says; one that
@@ -263,7 +283,7 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
       savingRef.current = false;
       setSaving(false);
     }
-  }, [csrfFetch, record.id, state, seeded, resultsMode, seededResultsMode]);
+  }, [csrfFetch, recordId, cube.id, state, seeded, resultsMode, seededResultsMode]);
 
   // Resolving a conflict this way can immediately satisfy the "clean save" footer condition
   // (no conflicts left, nothing else dirty) — the message from the save that reported them
@@ -362,7 +382,8 @@ const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, recor
               <Text lg semibold>
                 {`Enter event data: ${record.name}`}
               </Text>
-              <Link href={`/cube/record/${record.id}`}>Back to the record</Link>
+              {/* Nothing to go back to until the first save has made one. */}
+              {recordId && <Link href={`/cube/record/${recordId}`}>Back to the record</Link>}
             </Flexbox>
           </CardHeader>
           <CardBody>

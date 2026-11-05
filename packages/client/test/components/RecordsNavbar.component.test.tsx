@@ -53,7 +53,7 @@ describe('RecordsNavbar entry points', () => {
     );
     expect(screen.getByRole('link', { name: /input finished event/i })).toHaveAttribute(
       'href',
-      '/cube/records/create/finished/cube-1',
+      '/cube/records/enter/new/cube-1',
     );
     expect(container.querySelector('form')).toBeNull();
     expect(container.querySelector('input[name="record"]')).toBeNull();

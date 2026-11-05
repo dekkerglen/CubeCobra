@@ -3,6 +3,7 @@ import { PlayerList, WinLossDraw } from '@utils/datatypes/Record';
 import UserType from '@utils/datatypes/User';
 import { deckProjection, SectionBaselines, SectionKey, sectionsEqual } from '@utils/records/recordSections';
 import { NameKeyedSections, rebaseNameKeyedSections } from '@utils/records/rebaseNames';
+import { defaultRecordName } from '@utils/records/recordName';
 import { cubeDao, draftDao, recordDao, userDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
@@ -10,6 +11,8 @@ import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { reconcilePlayerIds, stampSeatPlayerIds } from 'serverutils/playerIdentity';
 import { isPlayedDraft, realignDraftSeats, seatAlignmentUnchanged } from 'serverutils/recordSeats';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+
+import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
 import { associateDecksWithExistingDraft, associateDecksWithNewDraft } from './uploaddeck';
@@ -451,6 +454,139 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
 
 // The workspace the above handler is the Save button for. Unlike the record page it is an
 // editing surface, so it is gated on edit permission rather than visibility.
+// What a record the organiser has not named yet is called and dated: the page renders this,
+// and the first save recreates it for any section the organiser left alone. Midnight UTC of
+// their day, the way every record's date is stored, so the name and the list's Date column
+// agree.
+const newRecordOverview = () => {
+  const now = new Date();
+  return {
+    name: defaultRecordName(now),
+    date: Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()),
+    description: '',
+  };
+};
+
+/**
+ * The workspace for a record that does not exist yet.
+ *
+ * "Input Finished Event" used to pass through a wizard purely to have an id before this page
+ * could load — the wizard collected name, date and description, all three of which this page
+ * already asks for in its own Event details card. The record is created by the first Save
+ * instead, so opening this page and leaving creates nothing.
+ */
+export const transcribeNewRecordPageHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.params.id) {
+      req.flash('danger', 'Cube ID is required');
+      return redirect(req, res, '/404');
+    }
+
+    const cube = await cubeDao.getById(req.params.id);
+
+    if (!cube || !isCubeViewable(cube, req.user)) {
+      req.flash('danger', 'Cube not found');
+      return redirect(req, res, '/404');
+    }
+
+    if (!isCubeEditable(cube, req.user)) {
+      req.flash('danger', 'You do not have permission to create a record for this cube');
+      return redirect(req, res, `/cube/records/${cube.id}`);
+    }
+
+    const record = {
+      id: '',
+      cube: cube.id,
+      ...newRecordOverview(),
+      players: [],
+      matches: [],
+      trophy: [],
+    };
+
+    return render(
+      req,
+      res,
+      'RecordTranscribePage',
+      { cube, record, players: [], isNew: true },
+      { title: `${abbreviate(cube.name)} - Input Finished Event` },
+    );
+  } catch (err) {
+    return handleRouteError(req, res, err as Error, `/cube/records/${req.params.id}`);
+  }
+};
+
+/**
+ * First Save of a record that does not exist yet: create it, then hand the request to the
+ * ordinary save so there is exactly one implementation of what a save means.
+ *
+ * The body is validated *before* anything is created — a rejected payload must not leave an
+ * empty record behind, which is the whole reason this path exists. A brand-new record has no
+ * stored state, so no section can conflict and every one of them applies.
+ */
+export const transcribeNewRecordHandler = async (req: Request, res: Response) => {
+  try {
+    const { error, value } = transcribeSectionsSchema.validate(req.body);
+    if (error) {
+      return res.status(400).json({ success: 'false', message: error.details[0]?.message || 'Invalid submission' });
+    }
+
+    if (!req.params.id) {
+      return res.status(404).json({ success: 'false', message: 'Cube not found' });
+    }
+
+    const cube = await cubeDao.getById(req.params.id);
+    if (!cube || !isCubeViewable(cube, req.user)) {
+      return res.status(404).json({ success: 'false', message: 'Cube not found' });
+    }
+
+    if (!isCubeEditable(cube, req.user)) {
+      return res
+        .status(403)
+        .json({ success: 'false', message: 'You do not have permission to create a record for this cube' });
+    }
+
+    /**
+     * Created in the state the client believes is already stored, not in the state it is
+     * submitting. The delegated save compares what it finds against the baselines the client
+     * sent, and reports a mismatch as someone else having edited the record underneath —
+     * creating it from the submitted values would make the first save conflict with itself.
+     *
+     * `baselines.overview` is the page's prefilled name and date when the organiser changed
+     * them; when they did not, the overview is not dirty and appears in neither, so the same
+     * default the page was rendered with is used instead.
+     */
+    const baseline = (value as { baselines: SectionBaselines }).baselines.overview;
+    const created = baseline ?? newRecordOverview();
+
+    const createdRecordId = await recordDao.createRecord({
+      cube: cube.id,
+      name: created.name,
+      date: created.date,
+      description: created.description,
+      players: [],
+      matches: [],
+      trophy: [],
+      id: uuidv4(),
+    });
+
+    if (!createdRecordId) {
+      return res.status(500).json({ success: 'false', message: 'Error creating record' });
+    }
+
+    // Delegating rather than reimplementing: everything a save does — players, rounds,
+    // trophies, overrides, decks and the draft they hang off — is one long handler, and a
+    // second copy of it for this path would be the version that falls behind. The id it reads
+    // is the one just created, and the response gains it so the client can stop being new.
+    req.params.id = createdRecordId;
+    const sendJson = res.json.bind(res);
+    res.json = (body: any) => sendJson({ ...body, recordId: createdRecordId });
+
+    return transcribeRecordHandler(req, res);
+  } catch (err) {
+    return res.status(500).json({ success: 'false', message: (err as Error).message });
+  }
+};
+
 export const transcribeRecordPageHandler = async (req: Request, res: Response) => {
   try {
     if (!req.params.id) {
@@ -506,6 +642,16 @@ export const routes = [
     method: 'get',
     path: '/:id',
     handler: [csrfProtection, ensureAuth, transcribeRecordPageHandler],
+  },
+  {
+    method: 'get',
+    path: '/new/:id',
+    handler: [csrfProtection, ensureAuth, transcribeNewRecordPageHandler],
+  },
+  {
+    method: 'post',
+    path: '/new/:id',
+    handler: [csrfProtection, ensureAuth, transcribeNewRecordHandler],
   },
   {
     method: 'post',
