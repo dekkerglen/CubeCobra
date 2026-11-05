@@ -346,7 +346,7 @@ export const routes = [
     handler: [
       csrfProtection,
       ensureAuth,
-      bodyValidation(recordSchema, (req) => `/cube/records/create/finished/${req.params.id}`, 'record'),
+      bodyValidation(recordSchema, (req) => `/cube/records/${req.params.id}`, 'record'),
       createFinishedEventHandler,
     ],
   },

@@ -46,8 +46,13 @@ describe('create-record entry-point redirects', () => {
   });
 
   it('creates exactly one record either way', async () => {
-    await post(createFinishedEventHandler, { record: JSON.stringify({ name: 'New Record' }) });
+    await post(createRecordHandler, { record: JSON.stringify({ name: 'Friday Draft' }) });
+    expect(recordDao.createRecord).toHaveBeenCalledTimes(1);
 
+    jest.clearAllMocks();
+    (recordDao.createRecord as jest.Mock).mockResolvedValue('rec-2');
+
+    await post(createFinishedEventHandler, { record: JSON.stringify({ name: 'New Record' }) });
     expect(recordDao.createRecord).toHaveBeenCalledTimes(1);
   });
 });
