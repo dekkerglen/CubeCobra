@@ -16,6 +16,37 @@ export const emptyMatch = (): Match => ({
   results: [0, 0, 0],
 });
 
+// The columns a match row is cut into, shared with anything that lays out a row the same
+// way (the matches console's per-match row) so the headings above a list and the cells
+// below it are always the same widths, in whichever component renders them.
+export const NUMBER_COLUMN = 'w-20 shrink-0';
+
+// Said once, above a list of match rows. Each cell's own name — "Alice Wins" — stays as its
+// accessible name and its title, because a column heading cannot say whose. Exported so the
+// matches console's row (a separate component, not this one) heads its list identically.
+export const MatchRowHeadings: React.FC = () => (
+  <div data-testid="match-column-headings">
+    <Flexbox direction="row" gap="2" alignItems="center">
+      <span aria-hidden="true" className="w-6 shrink-0" />
+      <Text sm semibold className="grow min-w-0 text-text-secondary">
+        Player 1
+      </Text>
+      <Text sm semibold className="grow min-w-0 text-text-secondary">
+        Player 2
+      </Text>
+      {/* Abbreviated because the column is the width of the count it heads; it reads
+          against the "Player 1" and "Player 2" headings immediately to its left, and
+          each cell still carries the player's own name as its title. */}
+      {['P1 Wins', 'P2 Wins', 'Draws'].map((heading, position) => (
+        <Text key={position} sm semibold className={`${NUMBER_COLUMN} text-text-secondary`}>
+          {heading}
+        </Text>
+      ))}
+      <span aria-hidden="true" className="w-6 shrink-0" />
+    </Flexbox>
+  </div>
+);
+
 interface EditMatchRoundProps {
   players: PlayerList;
   round: Round;
@@ -47,36 +78,9 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
     updateMatch(index, { results });
   };
 
-  // The columns a match row is cut into, so the headings above the list and the cells below
-  // it are the same widths.
-  const NUMBER_COLUMN = 'w-20 shrink-0';
-
   return (
     <Flexbox direction="col" gap="2">
-      {round.matches.length > 0 && (
-        // Said once, above the list. Each cell's own name — "Alice Wins" — stays as its
-        // accessible name and its title, because a column heading cannot say whose.
-        <div data-testid="match-column-headings">
-          <Flexbox direction="row" gap="2" alignItems="center">
-            <span aria-hidden="true" className="w-6 shrink-0" />
-            <Text sm semibold className="grow min-w-0 text-text-secondary">
-              Player 1
-            </Text>
-            <Text sm semibold className="grow min-w-0 text-text-secondary">
-              Player 2
-            </Text>
-            {/* Abbreviated because the column is the width of the count it heads; it reads
-                against the "Player 1" and "Player 2" headings immediately to its left, and
-                each cell still carries the player's own name as its title. */}
-            {['P1 Wins', 'P2 Wins', 'Draws'].map((heading, position) => (
-              <Text key={position} sm semibold className={`${NUMBER_COLUMN} text-text-secondary`}>
-                {heading}
-              </Text>
-            ))}
-            <span aria-hidden="true" className="w-6 shrink-0" />
-          </Flexbox>
-        </div>
-      )}
+      {round.matches.length > 0 && <MatchRowHeadings />}
       {round.matches.map((match, index) => (
         <Flexbox key={index} direction="row" gap="2" alignItems="center">
           <Text sm className="w-6 shrink-0 text-text-secondary">{`${index + 1}`}</Text>

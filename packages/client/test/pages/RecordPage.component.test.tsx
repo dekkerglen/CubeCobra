@@ -8,6 +8,7 @@ import Cube from '@utils/datatypes/Cube';
 import Draft, { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import Record from '@utils/datatypes/Record';
 
+import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
 
 import { createCardDetails } from '../../../server/test/test-utils/data';
@@ -76,6 +77,49 @@ const recordWithRemovedPlayerMatch: Record = {
   matches: [...baseRecord.matches, { matches: [{ p1: 'Alice', p2: 'Carol', results: [1, 0, 0] }] }],
 };
 
+// No rounds at all — the control above the (empty) list reads "Start the event" rather than
+// "Add Round", since there is no status field behind it: the label is purely a function of
+// matches.length.
+const noRoundsRecord: Record = {
+  ...baseRecord,
+  matches: [],
+};
+
+// Two rounds between two different pairs, so the latest round's row and the earlier round's
+// (collapsed) summary can never be confused for each other by shared player names.
+const twoRoundRecord: Record = {
+  ...baseRecord,
+  players: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Carol' }, { name: 'Dave' }],
+  matches: [
+    { matches: [{ p1: 'Alice', p2: 'Bob', results: [1, 0, 0] }] },
+    { matches: [{ p1: 'Carol', p2: 'Dave', results: [0, 1, 0] }] },
+  ],
+};
+
+// One round, two matches between two different pairs — reporting the second must not touch
+// the first, so the endpoint payload (and the row left behind) can be checked for carrying
+// exactly one match, named unambiguously.
+const twoMatchRoundRecord: Record = {
+  ...baseRecord,
+  players: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Carol' }, { name: 'Dave' }],
+  matches: [
+    {
+      matches: [
+        { p1: 'Alice', p2: 'Bob', results: [1, 0, 0] },
+        { p1: 'Carol', p2: 'Dave', results: [0, 1, 0] },
+      ],
+    },
+  ],
+};
+
+// A round opened on a record with no players yet: every seat in it must still offer a
+// fillable option ("Unknown Opponent") rather than an empty, unusable select.
+const noPlayersWithRoundRecord: Record = {
+  ...baseRecord,
+  players: [],
+  matches: [{ matches: [{ p1: 'Unknown Opponent', p2: 'Unknown Opponent', results: [0, 0, 0] }] }],
+};
+
 // Alice's seat carries a deck, Bob's does not — exercises both the "has a deck" controls
 // (remove/edit/export) and the "no deck yet" upload prompt from the same fixture.
 const draft: Draft = {
@@ -99,14 +143,27 @@ const bothDecksDraft: Draft = {
   ],
 };
 
+// Answers any of the matches console's three endpoints with a generic success and no round,
+// for tests that render the Matches tab without caring what it posts. Tests that do care
+// (the commit tests below) pass their own mock in instead.
+const defaultCsrfFetch = () =>
+  jest.fn(async () => ({ ok: true, json: async () => ({ success: 'true' }) }) as unknown as Response);
+
 // A third argument of `undefined` is indistinguishable from omitting it under JS default
 // parameters, so "explicitly no draft" uses `null` instead — otherwise a call meaning "no
 // draft" would silently fall back to the default draft fixture.
-const renderPage = (canEdit: boolean, record: Record = baseRecord, withDraft: Draft | null | undefined = draft) =>
+const renderPage = (
+  canEdit: boolean,
+  record: Record = baseRecord,
+  withDraft: Draft | null | undefined = draft,
+  csrfFetch: jest.Mock = defaultCsrfFetch(),
+) =>
   render(
-    <CubeContext.Provider value={{ cube, canEdit } as any}>
-      <RecordPage cube={cube} record={record} draft={withDraft ?? undefined} players={[]} />
-    </CubeContext.Provider>,
+    <CSRFContext.Provider value={{ csrfToken: 'token', csrfFetch, callApi: jest.fn() } as any}>
+      <CubeContext.Provider value={{ cube, canEdit } as any}>
+        <RecordPage cube={cube} record={record} draft={withDraft ?? undefined} players={[]} />
+      </CubeContext.Provider>
+    </CSRFContext.Provider>,
   );
 
 const openDeckMenu = () => fireEvent.click(screen.getByText('More'));
@@ -198,7 +255,7 @@ describe('RecordPage', () => {
     expect(screen.getByText(/^Record: /i)).toBeInTheDocument();
   });
 
-  it('still offers add/edit/remove round, assign trophies, remove deck and upload deck', () => {
+  it('still offers add/remove round, assign trophies, remove deck and upload deck', () => {
     renderPage(true);
 
     // Upload a deck (sidebar, always offered to an owner, naming the selected player).
@@ -211,11 +268,13 @@ describe('RecordPage', () => {
     openDeckMenu();
     expect(screen.getByText('Remove Deck')).toBeInTheDocument();
 
-    // Matches tab: add a round is always offered; edit/remove round are offered per round.
+    // Matches tab: adding a round (here labelled "Add Round", since one already exists) and
+    // removing one are still offered. There is no whole-round "Edit Round" any more — editing
+    // is per match, inline, below.
     fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
-    expect(screen.getByText('Add a new round of matches to this record')).toBeInTheDocument();
-    expect(screen.getByText('Edit Round')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Add Round' })).toBeInTheDocument();
     expect(screen.getByText('Remove Round')).toBeInTheDocument();
+    expect(screen.queryByText('Edit Round')).not.toBeInTheDocument();
 
     // Standings tab: assign trophies.
     fireEvent.click(screen.getByRole('button', { name: 'Standings' }));
@@ -281,7 +340,9 @@ describe('RecordPage', () => {
     expect(screen.queryByRole('button', { name: 'Add Players' })).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
-    expect(screen.queryByText('Add a new round of matches to this record')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Add Round' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Start the event' })).not.toBeInTheDocument();
+    expect(screen.queryByText('Remove Round')).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: 'Standings' }));
     expect(screen.queryByText('Assign Trophies')).not.toBeInTheDocument();
@@ -432,7 +493,10 @@ describe('RecordPage', () => {
     renderPage(true, recordWithRemovedPlayerMatch);
     fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
 
-    expect(screen.getByText('Carol')).toBeInTheDocument();
+    // Carol is still selectable (both player selects of the round that references her offer
+    // her as an option, even though only one of them has her picked), so there is more than
+    // one place her name now renders — the point is that it renders at all, not a crash.
+    expect(screen.getAllByText('Carol').length).toBeGreaterThan(0);
   });
 
   // The tabs moved from `?tab=<index>` to `?tab=<slug>` so a later reorder can't silently
@@ -481,6 +545,175 @@ describe('RecordPage', () => {
 
       expect(screen.getByText('Losses')).toBeInTheDocument();
       expect(window.location.search).toBe('?tab=standings');
+    });
+  });
+
+  // The matches console: an inline replacement for the three Add/Edit/Remove Round modal
+  // links, so reporting one result costs the organiser one field change rather than a modal
+  // open, a form submit and a page reload.
+  describe('matches console', () => {
+    it('offers Start the event when the record has no rounds', () => {
+      renderPage(true, noRoundsRecord);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      // The label is a function of matches.length, not a stored status — there is none.
+      expect(screen.getByRole('button', { name: 'Start the event' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Add Round' })).not.toBeInTheDocument();
+    });
+
+    it('offers Add Round once a round exists', () => {
+      renderPage(true, baseRecord);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      expect(screen.getByRole('button', { name: 'Add Round' })).toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Start the event' })).not.toBeInTheDocument();
+    });
+
+    it('expands the latest round and collapses the earlier ones', () => {
+      renderPage(true, twoRoundRecord);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      // Round 2 (latest) starts expanded: its row controls are already on the page.
+      expect(screen.getByLabelText('Carol Wins')).toBeInTheDocument();
+      expect(screen.getByLabelText('Dave Wins')).toBeInTheDocument();
+
+      // Round 1 starts collapsed: a summary, no row controls for its match.
+      expect(screen.queryByLabelText('Alice Wins')).not.toBeInTheDocument();
+      expect(screen.getByText('1 match')).toBeInTheDocument();
+
+      // Expanding it reveals the same row controls the latest round already shows.
+      fireEvent.click(screen.getByRole('button', { name: 'Expand Round 1' }));
+      expect(screen.getByLabelText('Alice Wins')).toBeInTheDocument();
+    });
+
+    it('commits a reported result without a modal or a reload', async () => {
+      const csrfFetch = jest.fn(
+        async (_url?: RequestInfo, _init?: RequestInit) =>
+          ({ ok: true, json: async () => ({ success: 'true' }) }) as unknown as Response,
+      );
+      renderPage(true, baseRecord, draft, csrfFetch);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      await act(async () => {
+        fireEvent.change(screen.getByLabelText('Alice Wins'), { target: { value: '2' } });
+      });
+
+      expect(csrfFetch).toHaveBeenCalledWith(
+        '/cube/records/edit/match/set/rec-1',
+        expect.objectContaining({ method: 'POST' }),
+      );
+      const [, init] = csrfFetch.mock.calls[0];
+      expect(JSON.parse(init!.body as string)).toEqual({
+        roundIndex: 0,
+        matchIndex: 0,
+        match: { p1: 'Alice', p2: 'Bob', results: [2, 0, 0] },
+      });
+      // No modal opened, and no form submission was attempted to reload the page.
+      expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    });
+
+    it('commits a pairing change the same way', async () => {
+      const csrfFetch = jest.fn(
+        async (_url?: RequestInfo, _init?: RequestInit) =>
+          ({ ok: true, json: async () => ({ success: 'true' }) }) as unknown as Response,
+      );
+      renderPage(true, baseRecord, draft, csrfFetch);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      await act(async () => {
+        fireEvent.change(screen.getByLabelText('Player 2'), { target: { value: 'Unknown Opponent' } });
+      });
+
+      const [, init] = csrfFetch.mock.calls[0];
+      expect(JSON.parse(init!.body as string)).toEqual({
+        roundIndex: 0,
+        matchIndex: 0,
+        match: { p1: 'Alice', p2: 'Unknown Opponent', results: [1, 0, 0] },
+      });
+    });
+
+    it('adds and removes a match within an open round', async () => {
+      const csrfFetch = jest.fn(async (url: RequestInfo, _init?: RequestInit) => {
+        if (typeof url === 'string' && url.includes('/add/')) {
+          return {
+            ok: true,
+            json: async () => ({
+              success: 'true',
+              round: {
+                matches: [
+                  { p1: 'Alice', p2: 'Bob', results: [1, 0, 0] },
+                  { p1: 'Unknown Opponent', p2: 'Unknown Opponent', results: [0, 0, 0] },
+                ],
+              },
+            }),
+          } as unknown as Response;
+        }
+        return {
+          ok: true,
+          json: async () => ({ success: 'true', round: { matches: [{ p1: 'Alice', p2: 'Bob', results: [1, 0, 0] }] } }),
+        } as unknown as Response;
+      });
+      renderPage(true, baseRecord, draft, csrfFetch);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Add Match' }));
+      });
+
+      expect(csrfFetch).toHaveBeenCalledWith('/cube/records/edit/match/add/rec-1', expect.anything());
+      const addCall = csrfFetch.mock.calls.find(([url]) => typeof url === 'string' && url.includes('/add/'))!;
+      expect(JSON.parse(addCall[1]!.body as string)).toEqual({ roundIndex: 0 });
+
+      // The added match's row is now on the page, and removing it posts matchIndex 1.
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Remove match 2' }));
+      });
+
+      const removeCall = csrfFetch.mock.calls.find(([url]) => typeof url === 'string' && url.includes('/remove/'))!;
+      expect(JSON.parse(removeCall[1]!.body as string)).toEqual({ roundIndex: 0, matchIndex: 1 });
+    });
+
+    it('leaves other matches alone when one is reported', async () => {
+      const csrfFetch = jest.fn(
+        async (_url?: RequestInfo, _init?: RequestInit) =>
+          ({ ok: true, json: async () => ({ success: 'true' }) }) as unknown as Response,
+      );
+      renderPage(true, twoMatchRoundRecord, draft, csrfFetch);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      await act(async () => {
+        fireEvent.change(screen.getByLabelText('Carol Wins'), { target: { value: '3' } });
+      });
+
+      // Exactly the second match is carried, naming its own index — not the whole round
+      // and not the first match, which never moved.
+      const [, init] = csrfFetch.mock.calls[0];
+      expect(JSON.parse(init!.body as string)).toEqual({
+        roundIndex: 0,
+        matchIndex: 1,
+        match: { p1: 'Carol', p2: 'Dave', results: [3, 1, 0] },
+      });
+    });
+
+    it('shows a non-owner the rounds with no controls at all', () => {
+      renderPage(false, baseRecord);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      expect(screen.getByTitle('Alice Wins')).toHaveTextContent('1');
+      expect(screen.getByTitle('Bob Wins')).toHaveTextContent('0');
+      expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+      expect(screen.queryByRole('spinbutton')).not.toBeInTheDocument();
+      expect(screen.queryByText('Remove Round')).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: 'Add Match' })).not.toBeInTheDocument();
+      expect(screen.queryByRole('button', { name: /^Remove match/ })).not.toBeInTheDocument();
+    });
+
+    it('opens a round on a record with no players without unusable rows', () => {
+      renderPage(true, noPlayersWithRoundRecord);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      expect(screen.getAllByLabelText('Player 1')[0]).toHaveValue('Unknown Opponent');
+      expect(screen.getAllByLabelText('Player 2')[0]).toHaveValue('Unknown Opponent');
     });
   });
 });
