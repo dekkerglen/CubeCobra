@@ -127,6 +127,8 @@ const RecordMatches: React.FC<RecordMatchesProps> = ({ record }) => {
   };
 
   const addMatch = async (roundIndex: number) => {
+    // The server appends to the end of the round (see addMatchHandler), so no existing
+    // match's index moves — failedMatches needs no reindexing here, unlike remove below.
     const { round } = await postMatchEdit('add', { roundIndex });
     if (round) applyRound(roundIndex, round);
   };
@@ -134,6 +136,35 @@ const RecordMatches: React.FC<RecordMatchesProps> = ({ record }) => {
   const removeMatch = async (roundIndex: number, matchIndex: number) => {
     const { round } = await postMatchEdit('remove', { roundIndex, matchIndex });
     if (round) applyRound(roundIndex, round);
+    // The removed match's own key is positional, not identity-based (Match has no stable
+    // id), so it must be dropped, and every later match in the same round shifted down one
+    // key to follow the row it actually belongs to — otherwise a stale "not saved" indicator
+    // detaches from the match that failed and reattaches to whatever slides into its old
+    // index. Only applied once the server confirms the round actually shifted.
+    if (round) {
+      setFailedMatches((previous) => {
+        let changed = false;
+        const next = new Set<string>();
+        previous.forEach((key) => {
+          const [keyRoundIndex, keyMatchIndex] = key.split(':').map(Number);
+          if (keyRoundIndex !== roundIndex) {
+            next.add(key);
+            return;
+          }
+          if (keyMatchIndex === matchIndex) {
+            changed = true;
+            return;
+          }
+          if (keyMatchIndex > matchIndex) {
+            next.add(matchKey(keyRoundIndex, keyMatchIndex - 1));
+            changed = true;
+            return;
+          }
+          next.add(key);
+        });
+        return changed ? next : previous;
+      });
+    }
   };
 
   return (

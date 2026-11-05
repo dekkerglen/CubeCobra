@@ -112,6 +112,54 @@ const twoMatchRoundRecord: Record = {
   ],
 };
 
+// One round, three matches between three different pairs — wide enough to put a failed
+// match between two others, so removing one of the others can be checked for whether the
+// failure indicator follows the match that actually failed or drifts to whichever row the
+// removal happens to shift into its old index.
+const threeMatchRoundRecord: Record = {
+  ...baseRecord,
+  players: [
+    { name: 'Alice' },
+    { name: 'Bob' },
+    { name: 'Carol' },
+    { name: 'Dave' },
+    { name: 'Eve' },
+    { name: 'Frank' },
+  ],
+  matches: [
+    {
+      matches: [
+        { p1: 'Alice', p2: 'Bob', results: [1, 0, 0] },
+        { p1: 'Carol', p2: 'Dave', results: [0, 1, 0] },
+        { p1: 'Eve', p2: 'Frank', results: [0, 0, 0] },
+      ],
+    },
+  ],
+};
+
+// Two rounds, the second with two matches — for checking that a removal in one round never
+// touches a pending failure indicator that belongs to a different round.
+const twoRoundMultiMatchRecord: Record = {
+  ...baseRecord,
+  players: [
+    { name: 'Alice' },
+    { name: 'Bob' },
+    { name: 'Carol' },
+    { name: 'Dave' },
+    { name: 'Eve' },
+    { name: 'Frank' },
+  ],
+  matches: [
+    { matches: [{ p1: 'Alice', p2: 'Bob', results: [1, 0, 0] }] },
+    {
+      matches: [
+        { p1: 'Carol', p2: 'Dave', results: [0, 1, 0] },
+        { p1: 'Eve', p2: 'Frank', results: [0, 0, 0] },
+      ],
+    },
+  ],
+};
+
 // A round opened on a record with no players yet: every seat in it must still offer a
 // fillable option ("Unknown Opponent") rather than an empty, unusable select.
 const noPlayersWithRoundRecord: Record = {
@@ -552,6 +600,11 @@ describe('RecordPage', () => {
   // links, so reporting one result costs the organiser one field change rather than a modal
   // open, a form submit and a page reload.
   describe('matches console', () => {
+    // Scopes a query to the row containing the given labelled control (e.g. 'Eve Wins'), so
+    // the per-row "not saved" indicator can be checked to be attached to one row and not
+    // another, rather than merely present somewhere on the page.
+    const matchRowFor = (label: string) => screen.getByLabelText(label).closest('.flex-col') as HTMLElement;
+
     it('offers Start the event when the record has no rounds', () => {
       renderPage(true, noRoundsRecord);
       fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
@@ -790,6 +843,125 @@ describe('RecordPage', () => {
         fireEvent.change(screen.getByLabelText('Alice Wins'), { target: { value: '3' } });
       });
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    // failedMatches is keyed "roundIndex:matchIndex" — purely positional, since Match carries
+    // no stable id. Removing an earlier match in the same round reindexes every later match
+    // down one slot server-side, so the indicator must follow the match that actually failed
+    // rather than staying pinned to the index it used to occupy.
+    it('keeps the not-saved indicator on the match that failed when an earlier match is removed', async () => {
+      const csrfFetch = jest.fn(async (url: RequestInfo, _init?: RequestInit) => {
+        if (typeof url === 'string' && url.includes('/set/')) {
+          return { ok: false, json: async () => ({ success: 'false' }) } as unknown as Response;
+        }
+        // The remove reindexes the round server-side: Alice/Bob (index 0) is gone, so
+        // Carol/Dave and Eve/Frank each shift down one index.
+        return {
+          ok: true,
+          json: async () => ({
+            success: 'true',
+            round: {
+              matches: [
+                { p1: 'Carol', p2: 'Dave', results: [0, 1, 0] },
+                { p1: 'Eve', p2: 'Frank', results: [0, 0, 0] },
+              ],
+            },
+          }),
+        } as unknown as Response;
+      });
+      renderPage(true, threeMatchRoundRecord, draft, csrfFetch);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      // Fail a commit on the later match (Eve/Frank, index 2) first.
+      await act(async () => {
+        fireEvent.change(screen.getByLabelText('Eve Wins'), { target: { value: '2' } });
+      });
+      expect(within(matchRowFor('Eve Wins')).getByRole('alert')).toBeInTheDocument();
+
+      // Then remove an earlier, unrelated, already-saved match (Alice/Bob, index 0).
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Remove match 1' }));
+      });
+
+      // The indicator must still be on Eve/Frank's row — now at index 1 — not on Carol/Dave,
+      // which shifted into Eve/Frank's old index but never failed.
+      expect(within(matchRowFor('Eve Wins')).getByRole('alert')).toBeInTheDocument();
+      expect(within(matchRowFor('Carol Wins')).queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    it('drops the not-saved indicator when the failed match itself is removed', async () => {
+      const csrfFetch = jest.fn(async (url: RequestInfo, _init?: RequestInit) => {
+        if (typeof url === 'string' && url.includes('/set/')) {
+          return { ok: false, json: async () => ({ success: 'false' }) } as unknown as Response;
+        }
+        // Carol/Dave (the failed match, index 1) is removed server-side; Eve/Frank shifts
+        // down into index 1.
+        return {
+          ok: true,
+          json: async () => ({
+            success: 'true',
+            round: {
+              matches: [
+                { p1: 'Alice', p2: 'Bob', results: [1, 0, 0] },
+                { p1: 'Eve', p2: 'Frank', results: [0, 0, 0] },
+              ],
+            },
+          }),
+        } as unknown as Response;
+      });
+      renderPage(true, threeMatchRoundRecord, draft, csrfFetch);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      // Fail a commit on Carol/Dave (index 1).
+      await act(async () => {
+        fireEvent.change(screen.getByLabelText('Carol Wins'), { target: { value: '2' } });
+      });
+      expect(within(matchRowFor('Carol Wins')).getByRole('alert')).toBeInTheDocument();
+
+      // Remove that same match.
+      await act(async () => {
+        fireEvent.click(screen.getByRole('button', { name: 'Remove match 2' }));
+      });
+
+      // Eve/Frank now occupies the removed match's old index, but never failed, and must not
+      // inherit its indicator. Nor should Alice/Bob, which never moved.
+      expect(within(matchRowFor('Eve Wins')).queryByRole('alert')).not.toBeInTheDocument();
+      expect(within(matchRowFor('Alice Wins')).queryByRole('alert')).not.toBeInTheDocument();
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    });
+
+    it('leaves a failure in one round alone when a match is removed from a different round', async () => {
+      const csrfFetch = jest.fn(async (url: RequestInfo, _init?: RequestInit) => {
+        if (typeof url === 'string' && url.includes('/set/')) {
+          return { ok: false, json: async () => ({ success: 'false' }) } as unknown as Response;
+        }
+        // Round 2's Carol/Dave (index 0) is removed; Eve/Frank shifts down into index 0.
+        return {
+          ok: true,
+          json: async () => ({
+            success: 'true',
+            round: { matches: [{ p1: 'Eve', p2: 'Frank', results: [0, 0, 0] }] },
+          }),
+        } as unknown as Response;
+      });
+      renderPage(true, twoRoundMultiMatchRecord, draft, csrfFetch);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+      // Round 2 (the latest) opens expanded by default; Round 1 needs expanding too.
+      fireEvent.click(screen.getByRole('button', { name: 'Expand Round 1' }));
+
+      // Fail a commit in round 1 (Alice/Bob, roundIndex 0, matchIndex 0).
+      await act(async () => {
+        fireEvent.change(screen.getByLabelText('Alice Wins'), { target: { value: '2' } });
+      });
+      expect(within(matchRowFor('Alice Wins')).getByRole('alert')).toBeInTheDocument();
+
+      // Remove a match from round 2 (roundIndex 1) — an entirely different round.
+      await act(async () => {
+        fireEvent.click(screen.getAllByRole('button', { name: 'Remove match 1' })[1]);
+      });
+
+      // Round 1's pending failure must be untouched by a removal that happened in round 2.
+      expect(within(matchRowFor('Alice Wins')).getByRole('alert')).toBeInTheDocument();
     });
 
     it('shows a non-owner the rounds with no controls at all', () => {
