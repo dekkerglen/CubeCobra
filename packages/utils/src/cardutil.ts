@@ -663,6 +663,47 @@ export const cardEdhrecSalt = (card: Card): number => card.details?.edhrecSalt ?
 
 export const cardLayout = (card: Card): string => card.details?.layout ?? '';
 
+export type CardOrientation = 'portrait' | 'landscape';
+
+export interface CardFaceOrientations {
+  front: CardOrientation;
+  back: CardOrientation;
+}
+
+const LANDSCAPE_LAYOUTS = ['planar', 'scheme'];
+
+const PORTRAIT_FACES: CardFaceOrientations = { front: 'portrait', back: 'portrait' };
+
+/**
+ * How each face of a card is printed, so surfaces that show a card on its own can turn
+ * a sideways one the right way up. Derived rather than stored: every input is already
+ * on `CardDetails` for every printing, so it applies retroactively with no re-ingest.
+ *
+ * `split` alone over-matches — Aftermath cards share that layout but print portrait, and
+ * Scryfall tags them with the keyword. Battles are matched on type rather than layout,
+ * because a Battle is a `transform` card (matching on layout would rotate every
+ * transform card) and a handful are single-faced `normal`.
+ *
+ * The back is always portrait: no printing has a landscape back, and `details.type`
+ * holds the front face's type line only (`convertType` in the card ingest job reads the
+ * front face), so there is no per-face input to apply the predicate to. The pair is
+ * still returned so callers are written against one.
+ */
+export const cardFaceOrientations = (card?: Card | CardDetailsType | null): CardFaceOrientations => {
+  if (!card) {
+    return PORTRAIT_FACES;
+  }
+
+  const details = ((card as Card).details ?? card) as Partial<CardDetailsType>;
+  const layout = details.layout ?? '';
+  const isLandscapeFront =
+    LANDSCAPE_LAYOUTS.includes(layout) ||
+    (layout === 'split' && !(details.keywords ?? []).includes('Aftermath')) ||
+    (details.type ?? '').includes('Battle');
+
+  return isLandscapeFront ? { front: 'landscape', back: 'portrait' } : PORTRAIT_FACES;
+};
+
 /**
  * Wording for the control that swaps a card's displayed face. Four layouts carry a
  * second image, but only `transform` turns into its other side during play, so the
@@ -1143,6 +1184,7 @@ export default {
   cardArtTags,
   cardFirstPrintYear,
   cardLayout,
+  cardFaceOrientations,
   cardIsSpecialZoneType,
   cardElo,
   cardPopularity,
