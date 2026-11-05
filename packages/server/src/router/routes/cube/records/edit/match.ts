@@ -2,7 +2,7 @@ import { Match } from '@utils/datatypes/Record';
 import { RecordEntity } from 'dynamo/dao/RecordDynamoDao';
 import { cubeDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi';
-import { bodyValidation, csrfProtection, ensureAuth } from 'router/middleware';
+import { bodyValidation, csrfProtection, ensureAuthJson } from 'router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 
 import { Request, Response } from '../../../../../types/express';
@@ -149,16 +149,16 @@ export const routes = [
   {
     method: 'post',
     path: '/set/:id',
-    handler: [csrfProtection, ensureAuth, bodyValidation(setMatchSchema), setMatchHandler],
+    handler: [csrfProtection, ensureAuthJson, bodyValidation(setMatchSchema), setMatchHandler],
   },
   {
     method: 'post',
     path: '/add/:id',
-    handler: [csrfProtection, ensureAuth, bodyValidation(addMatchSchema), addMatchHandler],
+    handler: [csrfProtection, ensureAuthJson, bodyValidation(addMatchSchema), addMatchHandler],
   },
   {
     method: 'post',
     path: '/remove/:id',
-    handler: [csrfProtection, ensureAuth, bodyValidation(removeMatchSchema), removeMatchHandler],
+    handler: [csrfProtection, ensureAuthJson, bodyValidation(removeMatchSchema), removeMatchHandler],
   },
 ];

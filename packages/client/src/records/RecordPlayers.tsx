@@ -9,13 +9,13 @@ import classNames from 'classnames';
 
 import Button from 'components/base/Button';
 import { CardBody } from 'components/base/Card';
-import CSRFForm from 'components/CSRFForm';
 import Dropdown from 'components/base/Dropdown';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from 'components/base/Modal';
 import PostButton from 'components/base/PostButton';
 import Text from 'components/base/Text';
+import CSRFForm from 'components/CSRFForm';
 import DeckCard from 'components/DeckCard';
 import DraftExportMenu from 'components/draft/DraftExportMenu';
 import LoadingButton from 'components/LoadingButton';

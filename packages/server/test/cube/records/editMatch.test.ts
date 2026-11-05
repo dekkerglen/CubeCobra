@@ -1,8 +1,9 @@
-import { bodyValidation } from 'router/middleware';
+import { bodyValidation, ensureAuthJson } from 'router/middleware';
 
 import {
   addMatchHandler,
   removeMatchHandler,
+  routes,
   setMatchHandler,
   setMatchSchema,
 } from '../../../src/router/routes/cube/records/edit/match';
@@ -114,6 +115,15 @@ describe('cube/records/edit/match', () => {
     expect(recordDao.update).not.toHaveBeenCalled();
   });
 
+  // These are JSON endpoints hit by fetch from the live match console, not HTML forms, so an
+  // unauthenticated request must get a clean 403 JSON body rather than ensureAuth's 302 redirect
+  // to /user/login, which a fetch caller can't usefully follow.
+  it('guards the set-match route with the JSON auth guard, not the HTML redirect guard', () => {
+    const route = routes.find((r) => r.path === '/set/:id');
+
+    expect(route?.handler).toContain(ensureAuthJson);
+  });
+
   it('rejects a user who cannot edit the cube', async () => {
     const res = await setMatch(0, 0, { p1: 'Alice', p2: 'Bob', results: [1, 0, 0] }, createUser());
 
@@ -132,12 +142,12 @@ describe('cube/records/edit/match', () => {
     expect((await validate([1, 0, 0])).nextCalled).toBe(true);
   });
 
-  // Not editRoundHandler with a JSON response: editRoundHandler replaces the whole round
-  // with whatever full array the client happened to be holding, so a device that loaded the
-  // page before another device's result landed would silently revert it on submit. This
-  // endpoint only ever carries the one match being reported, and re-reads the record fresh
-  // on each request, so two results reported from separate requests both land even when the
-  // second request's read happens only once the first request's write has landed.
+  // Unlike the old whole-round-replacement flow, which overwrote the full round array with
+  // whatever the client happened to be holding (silently reverting another device's result
+  // that landed first), this endpoint only ever carries the one match being reported, and
+  // re-reads the record fresh on each request, so two results reported from separate requests
+  // both land even when the second request's read happens only once the first request's write
+  // has landed.
   it('lands two results reported into the same round from separate requests', async () => {
     await setMatch(0, 0, { p1: 'Alice', p2: 'Bob', results: [2, 0, 0] });
     await setMatch(0, 1, { p1: 'Carol', p2: 'Dave', results: [0, 2, 0] });
