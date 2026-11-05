@@ -9,6 +9,8 @@ jest.mock('serverutils/render', () => ({
   redirect: jest.fn(),
 }));
 
+import { redirect } from 'serverutils/render';
+
 jest.mock('../../../src/dynamo/daos', () => ({
   cubeDao: { getById: jest.fn() },
   draftDao: { getById: jest.fn(), update: jest.fn() },
@@ -196,6 +198,44 @@ describe('editRecordPlayersHandler', () => {
       const saved = (draftDao.update as jest.Mock).mock.calls[0][0];
       expect(saved.seats[1].title).toBe('Robert');
     });
+
+    it('leaves every existing seat deck where it was when appending new players', async () => {
+      // The Players tab's "Add Players" always submits identity-for-existing, -1-for-new — this
+      // asserts the server honors that rather than, say, treating the longer list as a reorder.
+      await editPlayers(
+        [
+          { name: 'Alice', userId: 'user-alice' },
+          { name: 'Bob', userId: 'user-bob' },
+          { name: 'Carol' },
+          { name: 'Dave' },
+        ],
+        [0, 1, -1, -1],
+      );
+
+      expect(draftDao.update).toHaveBeenCalledTimes(1);
+      const saved = (draftDao.update as jest.Mock).mock.calls[0][0];
+      expect(saved.seats).toHaveLength(4);
+      // Seats 0 and 1 keep the exact deck data they had — appending must not reshuffle or
+      // blank anyone already seated.
+      expect(saved.seats[0]).toMatchObject({
+        title: 'Alice',
+        owner: 'user-alice',
+        mainboard: [[[1]]],
+        pickorder: [1, 2, 3],
+      });
+      expect(saved.seats[1]).toMatchObject({
+        title: 'Bob',
+        owner: 'user-bob',
+        mainboard: [[[1]]],
+        pickorder: [1, 2, 3],
+      });
+      // The two appended players get fresh, empty seats rather than inheriting anyone's deck.
+      expect(saved.seats[2]).not.toHaveProperty('pickorder');
+      expect(saved.seats[3]).not.toHaveProperty('pickorder');
+      expect(saved.seats[2].title).toBe('Carol');
+      expect(saved.seats[3].title).toBe('Dave');
+      expect(recordDao.update).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe('with no draft', () => {
@@ -208,6 +248,14 @@ describe('editRecordPlayersHandler', () => {
 
       expect(draftDao.getById).not.toHaveBeenCalled();
       expect(recordDao.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('redirects to the Players tab after a successful save', async () => {
+      await editPlayers([{ name: 'Alice', userId: 'user-alice' }, { name: 'Robert' }], [0, 1]);
+
+      // Players was the combined tab's "By Player" view before the split, and this is the
+      // player an owner most likely just acted on — not the Full Draft grid.
+      expect(redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/record/rec-1?tab=players');
     });
   });
 });

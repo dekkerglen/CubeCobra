@@ -21,6 +21,7 @@ import MainLayout from 'layouts/MainLayout';
 import RecordDecks from '../records/RecordDecks';
 import RecordMatches from '../records/RecordMatches';
 import RecordOverview from '../records/RecordOverview';
+import RecordPlayers, { firstPlayerIndexWithDeck } from '../records/RecordPlayers';
 import RecordStandings from '../records/RecordStandings';
 
 interface RecordPageProps {
@@ -57,21 +58,52 @@ const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players })
   const [activeTabSlug, setActiveTabSlug] = useQueryParam('tab', '');
   const user = useContext(UserContext);
 
+  // Lifted out of the Players tab so the Decks tab's "View deck" can hand a selection across
+  // tabs instead of switching a sub-view within one. Defaults to the first player who has an
+  // uploaded deck, falling back to the first player.
+  const [selectedPlayer, setSelectedPlayer] = React.useState<number>(() => {
+    const firstWithDeck = firstPlayerIndexWithDeck(record, draft);
+    return firstWithDeck >= 0 ? firstWithDeck : 0;
+  });
+
   const tabs = [
     {
-      name: 'Decks',
-      slug: 'decks',
-      component: () => <RecordDecks record={record} draft={draft} players={players} />,
-    },
-    {
-      name: 'Standings',
-      slug: 'standings',
-      component: () => <RecordStandings record={record} />,
+      name: 'Players',
+      slug: 'players',
+      component: () => (
+        <RecordPlayers
+          record={record}
+          draft={draft}
+          players={players}
+          selectedPlayer={selectedPlayer}
+          setSelectedPlayer={setSelectedPlayer}
+        />
+      ),
     },
     {
       name: 'Matches',
       slug: 'matches',
       component: () => <RecordMatches record={record} />,
+    },
+    {
+      name: 'Decks',
+      slug: 'decks',
+      component: () => (
+        <RecordDecks
+          record={record}
+          draft={draft}
+          players={players}
+          onSelectPlayer={(index) => {
+            setSelectedPlayer(index);
+            setActiveTabSlug('players');
+          }}
+        />
+      ),
+    },
+    {
+      name: 'Standings',
+      slug: 'standings',
+      component: () => <RecordStandings record={record} />,
     },
   ];
 

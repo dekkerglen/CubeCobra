@@ -13,7 +13,8 @@ interface RecordAllDecksProps {
   record: Record;
   draft: Draft;
   players: User[];
-  // Jump back to the single-deck view focused on one player.
+  // Jump to the Players tab, focused on this player's single-deck view. Crosses tabs rather
+  // than switching a local sub-view, since Players and Decks are separate tabs now.
   onSelectPlayer: (playerIndex: number) => void;
   canEdit: boolean;
 }

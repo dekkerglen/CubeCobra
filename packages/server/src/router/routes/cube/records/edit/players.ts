@@ -68,7 +68,7 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
     const names = players.map((player: { name: string }) => player.name.toLowerCase());
     if (new Set(names).size !== names.length) {
       req.flash('danger', 'Each player in a record needs a unique name');
-      return redirect(req, res, `/cube/record/${req.params.id}`);
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=players`);
     }
 
     // A player that kept their seat but changed name was renamed: carry the new
@@ -122,7 +122,7 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
               'danger',
               'This record is attached to a played draft, so its players cannot be added, removed or reordered. Renaming a player is still allowed.',
             );
-            return redirect(req, res, `/cube/record/${req.params.id}`);
+            return redirect(req, res, `/cube/record/${req.params.id}?tab=players`);
           }
           // Every player kept their seat, so the renames above describe the same seats as
           // before and the draft needs no write at all.
@@ -137,10 +137,10 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
     await recordDao.update(record);
 
     req.flash('success', 'Record updated successfully');
-    return redirect(req, res, `/cube/record/${req.params.id}`);
+    return redirect(req, res, `/cube/record/${req.params.id}?tab=players`);
   } catch {
     req.flash('danger', 'Error updating record');
-    return redirect(req, res, `/cube/record/${req.params.id}`);
+    return redirect(req, res, `/cube/record/${req.params.id}?tab=players`);
   }
 };
 
@@ -151,7 +151,7 @@ export const routes = [
     handler: [
       csrfProtection,
       ensureAuth,
-      bodyValidation(recordSchema, (req) => `/cube/record/${req.params.id}`, 'players'),
+      bodyValidation(recordSchema, (req) => `/cube/record/${req.params.id}?tab=players`, 'players'),
       editRecordPlayersHandler,
     ],
   },
