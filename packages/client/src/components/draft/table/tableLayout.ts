@@ -11,7 +11,8 @@
  * sideboard column; it grows as tall as its stacks and the page scrolls.
  *
  * Phones show the pack in the top two thirds, as a grid of cards as big as fit,
- * and the pool below, as one row of stacks that scrolls sideways.
+ * and the pool below, as one row of stacks that scrolls sideways. A tab on the
+ * pool pulls it up to take the bottom two thirds instead.
  */
 
 // Height / width of a card image.
@@ -65,6 +66,7 @@ const GRID_MAX_COLUMNS = 6;
 const MIN_GRID_CARD_WIDTH = 40;
 const FOCUS_WIDTH = 0.72; // a tapped card grows to this fraction of the stage width, or as tall as fits
 const FOCUS_LABEL_ROOM = 28; // px kept clear under a grown card for its label
+const PEEK_FINGER_ROOM = 20; // px kept clear between a held pool card and the grown one above it, for the fingertip
 // How far a pinch sizes the pack's cards from their best fit, and the pool's from their usual size.
 export const PACK_SCROLLBAR_WIDTH = 14; // px kept on the right for the pack's scrollbar, when it scrolls
 export const MIN_PACK_ZOOM = 0.6;
@@ -73,6 +75,9 @@ export const MIN_POOL_ZOOM = 0.5;
 export const MAX_POOL_ZOOM = 2.5;
 // Phones, with the pool on the table below the pack.
 const SPLIT_PACK_SHARE = 2 / 3; // of the stage height, for the pack
+const SPLIT_PACK_SHARE_EXPANDED = 1 / 3; // ...with the pool pulled up
+export const SPLIT_HANDLE_HEIGHT = 20; // px for the pool's pull tab, between the pack and the pool
+export const SPLIT_HANDLE_WIDTH = 52;
 export const SPLIT_TABS_HEIGHT = 34; // px for the pool's tabs
 export const SPLIT_LABEL_HEIGHT = 18; // px for the column labels
 const SPLIT_PAD = 6;
@@ -411,8 +416,13 @@ export const computeGridGeometry = (width: number, height: number, count: number
   };
 };
 
-/** Phones with the pool on the table: the height of the pack's part, at the top. */
-export const splitPackHeight = (height: number) => Math.round(height * SPLIT_PACK_SHARE);
+/** Phones with the pool on the table: where the pool's part starts, pulled up (`expanded`) or not. */
+export const splitPoolTop = (height: number, expanded: boolean) =>
+  Math.round(height * (expanded ? SPLIT_PACK_SHARE_EXPANDED : SPLIT_PACK_SHARE));
+
+/** ...and the height of the pack's part above it, clear of the pool's pull tab. */
+export const splitPackHeight = (height: number, expanded: boolean) =>
+  splitPoolTop(height, expanded) - SPLIT_HANDLE_HEIGHT;
 
 // Phones with the pool on the table: the pool's part of the stage, below the pack.
 export interface SplitPool {
@@ -439,9 +449,10 @@ export const computeSplitPool = (
   height: number,
   columns: number,
   tallest: number,
+  expanded: boolean,
   zoom = 1,
 ): SplitPool => {
-  const top = splitPackHeight(height);
+  const top = splitPoolTop(height, expanded);
   const labelTop = top + SPLIT_TABS_HEIGHT;
   const stackTop = labelTop + SPLIT_LABEL_HEIGHT;
   const room = height - SPLIT_SCROLLBAR_HEIGHT - stackTop;
@@ -463,6 +474,23 @@ export const splitSlot = (pool: SplitPool, column: number, index: number): Pose 
   y: pool.stackTop + index * pool.bar,
   rotate: 0,
 });
+
+/**
+ * A pool card held on a phone, grown to be read: as big as a tapped pack card,
+ * above where it sits so the finger doesn't cover it (smaller when there isn't
+ * room for that), and kept inside the stage. `base` is in the row's
+ * coordinates, scrolled sideways `scrollX`; so is the result.
+ */
+export const peekPose = (pool: SplitPool, width: number, base: Pose, scrollX: number): Pose => {
+  const room = base.y - PEEK_FINGER_ROOM - GRID_PAD;
+  const w = Math.max(pool.cardW, Math.min(width * FOCUS_WIDTH, room / CARD_ASPECT));
+  const h = w * CARD_ASPECT;
+  const drawnX = base.x - scrollX;
+  const left = Math.max(GRID_PAD, Math.min(width - GRID_PAD - w, drawnX + (pool.cardW - w) / 2));
+  const top = Math.max(GRID_PAD, base.y - PEEK_FINGER_ROOM - h);
+  // Cards grow about their bottom middle, so put the card where that lands the grown one there.
+  return { x: left + (w - pool.cardW) / 2 + scrollX, y: top + h - pool.cardH, rotate: 0, scale: w / pool.cardW };
+};
 
 /** The split pool's column under a card centered at `centerX` (the row's coordinates), or null between or outside them. */
 export const splitColumnAt = (pool: SplitPool, centerX: number): number | null => {

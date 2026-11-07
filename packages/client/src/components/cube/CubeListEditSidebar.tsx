@@ -207,7 +207,8 @@ const CubeListEditSidebar: React.FC<CubeListEditSidebarProps> = ({ isHorizontal 
   );
 
   const submit = useCallback(async () => {
-    await commitChanges(postTitle, postContent);
+    // Keep the blog post if the save failed, so it can be submitted again.
+    if (!(await commitChanges(postTitle, postContent))) return;
     setPostTitle(DEFAULT_BLOG_TITLE);
     setPostContent('');
   }, [commitChanges, postContent, postTitle, setPostContent, setPostTitle]);
