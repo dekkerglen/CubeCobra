@@ -7,9 +7,11 @@ interface CheckboxProps {
   checked: boolean;
   setChecked: (checked: boolean) => void;
   disabled?: boolean;
+  // Lets a long label wrap on narrow screens; by default labels stay on one line.
+  wrap?: boolean;
 }
 
-const Checkbox: React.FC<CheckboxProps> = ({ label, checked, setChecked, disabled = false }) => {
+const Checkbox: React.FC<CheckboxProps> = ({ label, checked, setChecked, disabled = false, wrap = false }) => {
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setChecked(event.target.checked);
   };
@@ -27,7 +29,7 @@ const Checkbox: React.FC<CheckboxProps> = ({ label, checked, setChecked, disable
         disabled={disabled}
         onChange={handleChange}
       />
-      <span className="text-text whitespace-nowrap">{label}</span>
+      <span className={classNames('text-text', { 'whitespace-nowrap': !wrap })}>{label}</span>
     </label>
   );
 };

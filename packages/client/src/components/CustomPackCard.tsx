@@ -73,6 +73,7 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
         <div className="px-2 pt-2">
           <Checkbox
             label="Randomize card order (hide which slot each card came from)"
+            wrap
             checked={pack.randomizeOrder ?? false}
             setChecked={(checked) => setPack({ ...pack, randomizeOrder: checked })}
           />

@@ -16,9 +16,12 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 
 ## Bug Fixes
 
+- Smart Search now finds conspiracies, planes, schemes, contraptions, and other cards that start the game outside your deck. Searching for them used to return no results.
 - With Disable Animations turned on, cards you drag in a draft or the deckbuilder no longer tilt back and forth as you move them.
 - In a draft, a card you draft on a phone, or click over to your sideboard or back, now lands in full view at the bottom of its stack, instead of getting tucked into the middle of it.
 - Scrolling during a draft on an iPhone no longer makes the page jump wildly up and down, and the cards no longer rearrange themselves as the browser's toolbars slide in and out.
+- Turning Cogwork Librarian or Leovold's Operative back off partway through a pick no longer freezes the draft. Drafts already stuck this way pick back up after a page reload.
+- Customizing a Lore Seeker's pack on a phone no longer stretches the card window past both edges of the screen.
 - Saving a large batch of changes, such as replacing a cube from a CSV, no longer fails with "Operation timed out".
 - When saving cube changes fails, the error now says what went wrong instead of always reporting a timeout, and the blog post you wrote is kept so you can try again.
 - If saving a CSV replace fails, the bulk upload page stays open with your changes instead of jumping back to the cube list.

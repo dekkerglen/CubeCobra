@@ -382,14 +382,20 @@ const useDraftEngine = ({ draft, onGain, onLose, onFinished }: Options) => {
         return;
       }
       setArming((current) => {
-        const toggle = (list: number[]) => (list.includes(card) ? list.filter((c) => c !== card) : [...list, card]);
+        // A Librarian or Operative stays on once the cards already picked need it; switched
+        // off, the pick would have more cards than it allows and the engine would refuse it.
+        const canDisarm = picked < current.librarians.length + current.operatives.length;
+        const toggle = (list: number[]) => {
+          if (!list.includes(card)) return [...list, card];
+          return canDisarm ? list.filter((c) => c !== card) : list;
+        };
         if (effect === 'librarian') return { ...current, librarians: toggle(current.librarians) };
         if (effect === 'operative') return { ...current, operatives: toggle(current.operatives) };
         if (effect === 'grinder' || effect === 'animus') return { ...current, remove: !current.remove };
         return current;
       });
     },
-    [ctx, answer],
+    [ctx, answer, picked],
   );
 
   const watchWithInformant = useCallback(
