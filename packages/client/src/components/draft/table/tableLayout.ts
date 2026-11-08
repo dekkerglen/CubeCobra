@@ -10,9 +10,9 @@
  * bands of CMC columns (0..6, 7+), creatures over everything else, beside one
  * sideboard column; it grows as tall as its stacks and the page scrolls.
  *
- * Phones show the pack in the top two thirds, as a grid of cards as big as fit,
- * and the pool below, as one row of stacks that scrolls sideways. A tab on the
- * pool pulls it up to take the bottom two thirds instead.
+ * Phones show the pack in the top two thirds, as a grid of cards as big as fit
+ * (up to a limit), and the pool below, as one row of stacks that scrolls
+ * sideways. A tab on the pool pulls it up to take the bottom two thirds instead.
  */
 
 // Height / width of a card image.
@@ -63,16 +63,16 @@ const GRID_PAD = 6; // px around the grid
 const GRID_GAP = 6; // px between cards, at least
 const GRID_MAX_GAP = 0.5; // fraction of a card width between cards or rows, at most, so a small pack doesn't fly apart
 const GRID_MAX_COLUMNS = 6;
+const GRID_MAX_CARD_WIDTH = 0.4; // fraction of the stage width a card fits to, at most, so the last few cards of a pack aren't huge
 const MIN_GRID_CARD_WIDTH = 40;
 const FOCUS_WIDTH = 0.72; // a tapped card grows to this fraction of the stage width, or as tall as fits
 const FOCUS_LABEL_ROOM = 28; // px kept clear under a grown card for its label
 const PEEK_FINGER_ROOM = 20; // px kept clear between a held pool card and the grown one above it, for the fingertip
-// How far a pinch sizes the pack's cards from their best fit, and the pool's from their usual size.
 export const PACK_SCROLLBAR_WIDTH = 14; // px kept on the right for the pack's scrollbar, when it scrolls
+// How far a pinch sizes the pack's cards from their best fit, and the pool's from theirs.
 export const MIN_PACK_ZOOM = 0.6;
 export const MAX_PACK_ZOOM = 2.5;
-export const MIN_POOL_ZOOM = 0.5;
-export const MAX_POOL_ZOOM = 2.5;
+const MAX_POOL_ZOOM = 2.5;
 // Phones, with the pool on the table below the pack.
 const SPLIT_PACK_SHARE = 2 / 3; // of the stage height, for the pack
 const SPLIT_PACK_SHARE_EXPANDED = 1 / 3; // ...with the pool pulled up
@@ -341,9 +341,10 @@ export const computeGeometry = (
 /**
  * The phone layout: just the pack, as a grid with as many columns as make the
  * cards biggest, so they grow as the pack shrinks. Laid out for a pack of
- * `count` cards, however big it started; the rows spread from top to bottom
- * and a short row sits in the middle. A tapped card grows to FOCUS_WIDTH of
- * the stage so it can be read.
+ * `count` cards, however big it started, though no card fits to more than
+ * GRID_MAX_CARD_WIDTH of the stage; the rows spread from top to bottom and a
+ * short row sits in the middle. A tapped card grows to FOCUS_WIDTH of the
+ * stage so it can be read.
  */
 export const computeGridGeometry = (width: number, height: number, count: number, zoom = 1): TableGeometry => {
   const cards = Math.max(1, count);
@@ -362,6 +363,7 @@ export const computeGridGeometry = (width: number, height: number, count: number
       bestColumns = c;
     }
   }
+  best = Math.min(best, width * GRID_MAX_CARD_WIDTH);
   // A pinch sizes the cards from their best fit: zoomed in, fewer fit across and
   // the rows run past the bottom (the pack scrolls); zoomed out, more fit across.
   const cardW = Math.max(MIN_GRID_CARD_WIDTH, Math.floor(Math.min(roomW, best * zoom)));
@@ -436,13 +438,18 @@ export interface SplitPool {
   // In the row's own coordinates, which scroll sideways.
   columnX: number[];
   contentWidth: number;
+  // How far a pinch has sized the cards from their fit, and how far one can: further
+  // either way changes nothing, so a pinch starts from here and stops at the ends.
+  zoom: number;
+  zoomRange: [number, number];
 }
 
 /**
  * The pool under the pack on a phone: `columns` stacks in one row, as wide as
  * SPLIT_CARD_WIDTH of the stage, scrolling sideways when they don't fit across.
  * Cards get smaller when the tallest stack (of `tallest` cards) would run off the
- * bottom, so every name stays in view.
+ * bottom, so every name stays in view. A pinch sizes them from there: bigger,
+ * short of a stack running off the bottom; smaller, until the whole row fits across.
  */
 export const computeSplitPool = (
   width: number,
@@ -457,15 +464,18 @@ export const computeSplitPool = (
   const stackTop = labelTop + SPLIT_LABEL_HEIGHT;
   const room = height - SPLIT_SCROLLBAR_HEIGHT - stackTop;
   const fromHeight = room / (1 + (Math.max(1, tallest) - 1) * BAR) / CARD_ASPECT;
-  // A pinch sizes the cards, short of a stack running off the bottom.
-  const cardW = Math.max(
-    MIN_SPLIT_CARD_WIDTH,
-    Math.floor(Math.min(width * SPLIT_CARD_WIDTH * zoom, width * 0.9, fromHeight)),
-  );
+  const fit = Math.max(MIN_SPLIT_CARD_WIDTH, Math.min(width * SPLIT_CARD_WIDTH, fromHeight));
+  const across = Math.max(1, columns);
+  const fromWidth = (width - 2 * SPLIT_PAD - (across - 1) * SPLIT_GAP) / across;
+  const largest = Math.max(fit, Math.min(fit * MAX_POOL_ZOOM, width * 0.9, fromHeight));
+  const smallest = Math.min(fit, Math.max(MIN_SPLIT_CARD_WIDTH, fromWidth));
+  const zoomRange: [number, number] = [smallest / fit, largest / fit];
+  const shown = Math.max(zoomRange[0], Math.min(zoomRange[1], zoom));
+  const cardW = Math.floor(fit * shown);
   const cardH = Math.round(cardW * CARD_ASPECT);
   const columnX = Array.from({ length: columns }, (_, c) => SPLIT_PAD + c * (cardW + SPLIT_GAP));
   const contentWidth = 2 * SPLIT_PAD + columns * cardW + Math.max(0, columns - 1) * SPLIT_GAP;
-  return { top, labelTop, stackTop, cardW, cardH, bar: cardH * BAR, columnX, contentWidth };
+  return { top, labelTop, stackTop, cardW, cardH, bar: cardH * BAR, columnX, contentWidth, zoom: shown, zoomRange };
 };
 
 /** Where a card sits in a stack of the split pool, in the row's coordinates. */

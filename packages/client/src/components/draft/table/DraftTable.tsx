@@ -27,6 +27,7 @@ import Text from '../../base/Text';
 import BoosterPack from './BoosterPack';
 import CardSprite, { EnterFrom, ExitPlan, PASS_OUT_SECONDS, SpriteId } from './CardSprite';
 import { isCompactWidth } from './deckLayout';
+import HiddenCards from './HiddenCards';
 import Scrollbar from './Scrollbar';
 import { PhoneMenuButton, PhoneMenuPanel } from './PhoneMenu';
 import {
@@ -37,9 +38,7 @@ import {
   computeSplitPool,
   focusPose,
   MAX_PACK_ZOOM,
-  MAX_POOL_ZOOM,
   MIN_PACK_ZOOM,
-  MIN_POOL_ZOOM,
   PACK_SCROLLBAR_WIDTH,
   gatherPose,
   MAIN_COLUMNS,
@@ -713,6 +712,12 @@ const DraftTable: React.FC<DraftTableProps> = ({
     peeked,
   ]);
 
+  // Phones: the tops of the pack's cards in its scrolled content, to count those scrolled out of view.
+  const packTops = useMemo(
+    () => [...placements.values()].filter((placement) => placement.zone === 'pack').map(({ pose }) => pose.y),
+    [placements],
+  );
+
   // ---- Pack turnover: where new cards come from, where leaving cards go ----
   // Pack 1 is passed left, so its packs arrive from the right and leftovers
   // leave to the left; pack 2 is the reverse, and so on.
@@ -868,6 +873,8 @@ const DraftTable: React.FC<DraftTableProps> = ({
     region: 'pack' | 'pool';
     spread: number;
     zoom: number;
+    // How far a pinch there can size the cards.
+    range: [number, number];
     cardW: number;
     // The point between the fingers in that part's content, and where the fingers are now, on screen.
     x: number;
@@ -877,7 +884,6 @@ const DraftTable: React.FC<DraftTableProps> = ({
   } | null>(null);
   const pinchState = useRef({
     packZoom,
-    poolZoom,
     geometry,
     splitPool,
     cancel: dragger.cancel,
@@ -885,7 +891,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
     setPoolZoom,
   });
   useLayoutEffect(() => {
-    pinchState.current = { packZoom, poolZoom, geometry, splitPool, cancel: dragger.cancel, setPackZoom, setPoolZoom };
+    pinchState.current = { packZoom, geometry, splitPool, cancel: dragger.cancel, setPackZoom, setPoolZoom };
   });
   useEffect(() => {
     const stage = stageRef.current;
@@ -903,11 +909,14 @@ const DraftTable: React.FC<DraftTableProps> = ({
       const rect = stage.getBoundingClientRect();
       const mid = middle(event.touches);
       const region = mid.y - rect.top < pool.top ? 'pack' : 'pool';
-      const zoom = region === 'pack' ? pinchState.current.packZoom : pinchState.current.poolZoom;
+      // The pool's pinch starts from the size its cards are drawn at, which may be short of the size
+      // last pinched to (taller stacks, or the pool put down), so the cards respond at once.
+      const zoom = region === 'pack' ? pinchState.current.packZoom : pool.zoom;
       pinch.current = {
         region,
         spread: spread(event.touches),
         zoom,
+        range: region === 'pack' ? [MIN_PACK_ZOOM, MAX_PACK_ZOOM] : pool.zoomRange,
         cardW: region === 'pack' ? g.cardW : pool.cardW,
         x: mid.x - rect.left + (region === 'pool' ? poolScrollX.get() : 0),
         y: mid.y - rect.top + (region === 'pack' ? packScroll.get() : 0),
@@ -923,7 +932,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
       const mid = middle(event.touches);
       p.midX = mid.x;
       p.midY = mid.y;
-      const [low, high] = p.region === 'pack' ? [MIN_PACK_ZOOM, MAX_PACK_ZOOM] : [MIN_POOL_ZOOM, MAX_POOL_ZOOM];
+      const [low, high] = p.range;
       setPinching({
         region: p.region,
         zoom: Math.max(low, Math.min(high, (p.zoom * spread(event.touches)) / p.spread)),
@@ -1287,8 +1296,11 @@ const DraftTable: React.FC<DraftTableProps> = ({
         scroll={inPackZone && compact ? packScroll : null}
         scrollX={inSplitPool ? poolScrollX : null}
         instant={pinching !== null}
-        // On a phone, pack cards scrolled out of the pack's part are cut off at its edges.
-        clip={inPackZone && compact ? { top: 0, bottom: geometry!.height } : null}
+        // Desktop: a card lifted by a hover goes back behind its neighbors as soon as it's let go.
+        snapStacking={!compact}
+        // On a phone, pack cards scrolled out of the pack's part are cut off at its edges: at the
+        // bottom, the pool's top edge, so they pass under its pull tab.
+        clip={inPackZone && compact ? { top: 0, bottom: splitPool ? splitPool.top : geometry!.height } : null}
         landing={
           placement.zone === 'pool' ? { top: splitPool ? splitPool.top : geometry!.poolTop, bottom: Infinity } : null
         }
@@ -1600,10 +1612,15 @@ const DraftTable: React.FC<DraftTableProps> = ({
                   aria-expanded={poolExpanded}
                   aria-label={poolExpanded ? 'Collapse pool' : 'Expand pool'}
                   title={poolExpanded ? 'Collapse pool' : 'Expand pool'}
-                  className="absolute bottom-full left-1/2 -translate-x-1/2 flex items-center justify-center rounded-t-md border border-b-0 border-border bg-bg/60 text-text-secondary hover:text-text"
+                  className="absolute bottom-full left-1/2 -translate-x-1/2 flex items-center justify-center overflow-hidden rounded-t-md border border-b-0 border-border bg-bg text-text-secondary hover:text-text"
                   style={{ width: SPLIT_HANDLE_WIDTH, height: SPLIT_HANDLE_HEIGHT }}
                 >
-                  {poolExpanded ? <ChevronDownIcon size={16} /> : <ChevronUpIcon size={16} />}
+                  {/* Solid, so pack cards scroll under it, in the panel's color: the table's tint and the panel's over the page. */}
+                  <span className="absolute inset-0 bg-bg-accent/80" />
+                  <span className="absolute inset-0 bg-bg/60" />
+                  <span className="relative flex">
+                    {poolExpanded ? <ChevronDownIcon size={16} /> : <ChevronUpIcon size={16} />}
+                  </span>
                 </button>
                 <div role="tablist" className="flex" style={{ height: SPLIT_TABS_HEIGHT }}>
                   {poolTabs.map((key) => {
@@ -1672,6 +1689,19 @@ const DraftTable: React.FC<DraftTableProps> = ({
                   content={geometry.contentHeight}
                   className="absolute right-0 top-0 flex justify-center py-2"
                   style={{ width: PACK_SCROLLBAR_WIDTH, height: geometry.height, zIndex: 700 }}
+                />
+              )}
+              {/* The cards scrolled out of view, counted at the edge they're past; under a card grown to be read. */}
+              {packMax > 0 && geometry && (
+                <HiddenCards
+                  scroll={packScroll}
+                  max={packMax}
+                  view={geometry.height}
+                  tops={packTops}
+                  cardHeight={geometry.cardH}
+                  topInset={packTag ? 24 : 0}
+                  className="absolute inset-x-0 top-0 pointer-events-none"
+                  style={{ height: geometry.height, zIndex: 550 }}
                 />
               )}
               {/* A swipe on the row picks up a card, so it scrolls from here. */}

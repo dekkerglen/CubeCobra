@@ -95,6 +95,8 @@ interface CardSpriteProps {
   touchAction?: 'none' | 'pan-y';
   // Go straight to the pose without easing (following a pinch).
   instant?: boolean;
+  // Take a lower stacking order at once, instead of staying over its neighbors until back in place.
+  snapStacking?: boolean;
   highlight: 'selected' | 'top' | 'armed' | null;
   // An ability ready to use: the card rocks gently in place.
   rocking?: boolean;
@@ -158,6 +160,7 @@ const CardSprite: React.FC<CardSpriteProps> = ({
   held = false,
   touchAction = 'none',
   instant = false,
+  snapStacking = false,
   highlight,
   rocking = false,
   faceDown = false,
@@ -244,10 +247,10 @@ const CardSprite: React.FC<CardSpriteProps> = ({
 
   // A card whose stacking drops while it's at rest (a grown or lifted card let
   // go) stays over its neighbors until it's back in place, so none of them flash
-  // in front of it on the way.
+  // in front of it on the way; unless it snaps.
   const [stacking, setStacking] = useState({ z, dragged, floor: z });
   if (z !== stacking.z || dragged !== stacking.dragged) {
-    const dropped = z < stacking.z && !stacking.dragged && !dragged;
+    const dropped = !snapStacking && z < stacking.z && !stacking.dragged && !dragged;
     setStacking({ z, dragged, floor: dropped ? Math.max(stacking.floor, stacking.z) : z });
   }
   const restingZ = Math.max(z, stacking.floor);
