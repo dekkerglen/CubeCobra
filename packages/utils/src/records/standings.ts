@@ -1,9 +1,10 @@
 import Record, { playerRecord, WinLossDraw } from '@utils/datatypes/Record';
 import { BYE, UNKNOWN_OPPONENT } from '@utils/records/pairings';
 
-// A percentage tiebreaker never counts below a third, so losing to a player who had a bad day
-// doesn't sink a strong record. The usual Swiss rule.
-const PERCENTAGE_FLOOR = 1 / 3;
+// A match-win or game-win percentage never counts below 0.33, so losing to a player who had a
+// bad day doesn't sink a strong record (MTR Appendix C). Exactly 0.33, not a third: a player on
+// exactly a third (say 1-2) still ranks their opponents above one who went 0-3.
+const PERCENTAGE_FLOOR = 0.33;
 
 const MATCH_WIN_POINTS = 3;
 const MATCH_DRAW_POINTS = 1;

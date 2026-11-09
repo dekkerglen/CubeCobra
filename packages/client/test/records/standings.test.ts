@@ -41,9 +41,9 @@ describe('computeStandings', () => {
     expect(b!.gameWin).toBeCloseTo(0.5);
     expect(c!.gameWin).toBeCloseTo(0.4);
     expect(a!.gameWin).toBeCloseTo(0.8);
-    // D lost every match but counts as a third for its opponents, not zero.
     expect(a!.opponentMatchWin).toBeCloseTo(0.5);
-    expect(d!.gameWin).toBeCloseTo(1 / 3);
+    // D won two of its six games: exactly a third, above the 0.33 floor.
+    expect(d!.gameWin).toBeCloseTo(1 / 3, 6);
   });
 
   it('counts a bye toward the player but leaves it out of opponent percentages', () => {
@@ -53,7 +53,7 @@ describe('computeStandings', () => {
 
     expect(c).toMatchObject({ name: 'C', wins: 1, points: 3, gameWin: 1 });
     expect(c!.opponentMatchWin).toBeUndefined();
-    expect(a!.opponentMatchWin).toBeCloseTo(1 / 3);
+    expect(a!.opponentMatchWin).toBeCloseTo(0.33, 4);
     expect(b).toMatchObject({ name: 'B', losses: 1, points: 0 });
   });
 
@@ -84,5 +84,27 @@ describe('computeStandings', () => {
     expect(formatPercentage(2 / 3)).toBe('66.7%');
     expect(formatPercentage(1)).toBe('100.0%');
     expect(formatPercentage(undefined)).toBe('—');
+  });
+
+  it('floors at 0.33, not a third, so an opponent on exactly a third still counts for more', () => {
+    const win = (p1: string, p2: string) => played(p1, p2, [2, 0, 0]);
+    const standings = computeStandings(
+      // Bob is seated first, so only the tiebreaker can put Alice above him.
+      makeRecord(
+        ['Bob', 'Alice', 'X', 'Y', 'Z1', 'Z2', 'Z3', 'Z4'],
+        [
+          [win('Alice', 'X'), win('Bob', 'Y')],
+          // X goes 1-2 (exactly a third); Y goes 0-3 (nothing, floored to 0.33).
+          [win('X', 'Z1'), win('Z3', 'Y')],
+          [win('Z2', 'X'), win('Z4', 'Y')],
+        ],
+      ),
+    );
+    const alice = standings.find((standing) => standing.name === 'Alice')!;
+    const bob = standings.find((standing) => standing.name === 'Bob')!;
+
+    expect(alice.opponentMatchWin).toBeCloseTo(1 / 3, 6);
+    expect(bob.opponentMatchWin).toBeCloseTo(0.33, 6);
+    expect(alice.rank).toBeLessThan(bob.rank);
   });
 });
