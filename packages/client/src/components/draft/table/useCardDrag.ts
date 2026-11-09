@@ -34,7 +34,8 @@ export interface DragSession {
   pointerId: number;
   // press: mouse down, becomes a drag once it moves. hold: touch down, becomes a
   // drag if held in place or a pan if it moves first. pan: scrolling the table.
-  mode: 'press' | 'hold' | 'pan' | 'drag';
+  // peek: a touch held in place on a card shown bigger, until it lifts.
+  mode: 'press' | 'hold' | 'pan' | 'drag' | 'peek';
   startX: number;
   startY: number;
   // Pointer offset from the card's top-left, so the card doesn't jump to the cursor.
@@ -88,6 +89,10 @@ export interface CardDragOptions<T> {
   // A touch on a card picks it up as soon as it moves, as a mouse does, rather
   // than after being held in place (when a swipe scrolls the table instead).
   touchPicksUp?: boolean;
+  // With touchPicksUp, a touch held in place on a card shows it bigger until the
+  // finger lifts (returns whether it did); lifting then isn't a tap.
+  peek?: (id: SpriteId) => boolean;
+  endPeek?: () => void;
   // The held card leans into the direction it moves; off when the player turned animations off.
   lean?: boolean;
 }
@@ -97,6 +102,8 @@ const TILT_SPRING = { type: 'spring', stiffness: 380, damping: 38 } as const;
 const DRAG_THRESHOLD = 6;
 // On touch, holding a card this long picks it up; moving sooner scrolls instead.
 const HOLD_DELAY = 220;
+// Where a touch picks a card up as soon as it moves, holding it in place this long shows it bigger.
+const PEEK_DELAY = 400;
 // Holding a card within this many px of a scrolling region's edge scrolls it,
 // faster the closer to the edge, up to this many px per millisecond...
 const EDGE_ZONE = 60;
@@ -135,6 +142,8 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
     if (handle) handles.current.set(id, handle);
     else handles.current.delete(id);
   }, []);
+  // A sprite's motion values, to read where it's drawn right now.
+  const handle = useCallback((id: SpriteId): SpriteHandle | undefined => handles.current.get(id), []);
 
   const session = useRef<DragSession | null>(null);
   const tiltTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -320,7 +329,10 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
 
     // A swipe across scrolls what's under the finger sideways, and nothing else; a
     // swipe down scrolls the region under the finger, and once that can't go
-    // further, whatever holds the table.
+    // further, the verticalScroller if there is one. Never the page otherwise: on
+    // iOS, scrolling the page under a touch shifts the touch's next coordinates by
+    // the scroll until the screen catches up, so each step reads as a bigger swipe
+    // and the page runs away.
     const panBy = (s: DragSession, dx: number, dy: number) => {
       const horizontal = s.panX;
       if (s.panAxis === 'x') {
@@ -336,7 +348,7 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
         region.scroll.set(next);
         leftover = wanted - next;
       }
-      if (leftover !== 0) (latest.current.verticalScroller?.() ?? window).scrollBy(0, leftover);
+      if (leftover !== 0) latest.current.verticalScroller?.()?.scrollBy(0, leftover);
     };
 
     // Let a swipe carry on a little after the finger lifts.
@@ -366,6 +378,7 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
     };
 
     const end = () => {
+      if (session.current?.mode === 'peek') latest.current.endPeek?.();
       if (edgeFrame.current !== null) cancelAnimationFrame(edgeFrame.current);
       edgeFrame.current = null;
       edgeHoldY.current = null;
@@ -386,9 +399,12 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
       s.pointerX = event.clientX;
       s.pointerY = event.clientY;
 
+      // A card shown bigger stays put until the finger lifts.
+      if (s.mode === 'peek') return;
       if (s.mode === 'press' || s.mode === 'hold') {
         if (Math.hypot(event.clientX - s.startX, event.clientY - s.startY) < DRAG_THRESHOLD) return;
         if (s.mode === 'press') {
+          if (holdTimer.current) clearTimeout(holdTimer.current);
           beginDrag(s);
         } else {
           if (holdTimer.current) clearTimeout(holdTimer.current);
@@ -437,6 +453,7 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
         coast(s);
         return;
       }
+      if (s.mode === 'peek') return;
       if (s.mode !== 'drag') {
         if (s.id !== null) latest.current.click(s.id, event.pointerType);
         return;
@@ -520,6 +537,12 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
           navigator.vibrate?.(10);
           beginDrag(s);
         }, HOLD_DELAY);
+      } else if (s && event.pointerType === 'touch' && latest.current.peek) {
+        holdTimer.current = setTimeout(() => {
+          if (session.current !== s || s.mode !== 'press' || !latest.current.peek?.(id)) return;
+          navigator.vibrate?.(10);
+          s.mode = 'peek';
+        }, PEEK_DELAY);
       }
     };
 
@@ -547,6 +570,7 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
   return {
     drag,
     register,
+    handle,
     pointerDown: api.pointerDown,
     backgroundPointerDown: api.backgroundPointerDown,
     scrolled: api.scrolled,

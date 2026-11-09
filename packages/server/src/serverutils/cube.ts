@@ -1,5 +1,5 @@
 import * as cardutil from '@utils/cardutil';
-import Card, { BoardChanges, Changes } from '@utils/datatypes/Card';
+import Card, { BoardChanges, Changes, VoucherCard } from '@utils/datatypes/Card';
 import { boardNameToKey, CubeCards } from '@utils/datatypes/Cube';
 import { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import { FeedTypes } from '@utils/datatypes/Feed';
@@ -16,7 +16,7 @@ import { handleRouteError, redirect, render } from './render';
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
 const CSV_HEADER =
-  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,board,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom,Voucher,Artist';
+  'name,CMC,Type,Color,Set,Collector Number,Rarity,Color Category,status,Finish,board,maybeboard,image URL,image Back URL,tags,Notes,MTGO ID,Custom,Voucher,Artist,Voucher Cards';
 
 interface Cube {
   id: string;
@@ -244,6 +244,15 @@ async function bulkUpload(req: Request, res: Response, list: string, cube: Cube)
   });
 }
 
+// One entry of the "Voucher Cards" column, in the plain text import shape: "Name [set] 123".
+function voucherCardEntry(voucherCard: VoucherCard): string {
+  const card = { ...voucherCard, details: voucherCard.details ?? cardFromId(voucherCard.cardID) } as Card;
+  // A name that starts with a number ("1996 World Champion") would otherwise be read back as a count.
+  const name = cardutil.cardName(card).replace(/^(?=\d{1,4}[xX]?\s)/, '1 ');
+  const set = cardutil.cardSet(card);
+  return set ? `${name} [${set}] ${cardutil.cardCollectorNumber(card)}`.trim() : name;
+}
+
 function writeCard(res: Response, card: Card, boardName: string) {
   if (!card.type_line) {
     card.type_line = cardFromId(card.cardID).type;
@@ -279,6 +288,7 @@ function writeCard(res: Response, card: Card, boardName: string) {
       cardutil.isCustomCard(card) ? 'true' : 'false',
       cardutil.isVoucher(card) ? 'true' : 'false',
       cardutil.cardArtist(card),
+      cardutil.isVoucher(card) ? (card.voucher_cards ?? []).map(voucherCardEntry).join('; ') : '',
     ]),
   );
   res.write('\r\n');

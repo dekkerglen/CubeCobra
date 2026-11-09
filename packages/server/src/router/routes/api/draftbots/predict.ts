@@ -15,8 +15,9 @@ const CustomCard = Joi.string().valid('custom-card');
 const VoucherCard = Joi.string().valid('voucher');
 
 // Generous for real drafts (vouchers expand into their sub-cards, and custom formats can have big
-// packs and pools) while bounding what one anonymous request can make the recommender do.
-const MAX_PACK_CARDS = 200;
+// packs and pools) while bounding what one anonymous request can make the recommender do. A pack
+// of 20 vouchers of 20-30 cards each runs to several hundred cards.
+const MAX_PACK_CARDS = 1000;
 const MAX_PICKS = 500;
 
 const PredictBodySchema = Joi.object({

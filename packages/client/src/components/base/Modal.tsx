@@ -53,8 +53,11 @@ export const Modal: React.FC<ModalProps> = ({
           <div
             className={classNames('flex min-h-full justify-center text-center items-start max-h-screen overflow-auto')}
           >
+            {/* min-w-0: as a flex item this would otherwise refuse to shrink below its content's
+             * min-content width, so one long unbreakable string (e.g. a truncated card name) pushes
+             * the panel past the viewport, centered so the left edge can't be scrolled to. */}
             <div
-              className={classNames(`grow`, {
+              className={classNames(`grow min-w-0`, {
                 'max-w-screen-xs': xs,
                 'max-w-screen-sm': sm,
                 'max-w-screen-md': md,

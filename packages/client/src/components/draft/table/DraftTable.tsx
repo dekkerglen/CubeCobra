@@ -1,6 +1,14 @@
 import React, { useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 
-import { AppsIcon, CpuIcon, ScreenFullIcon, StackIcon, VersionsIcon } from '@primer/octicons-react';
+import {
+  AppsIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+  CpuIcon,
+  ScreenFullIcon,
+  StackIcon,
+  VersionsIcon,
+} from '@primer/octicons-react';
 import { cardName, makeSubtitle } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
 import { getCardDefaultRowColumn } from '@utils/draftutil';
@@ -17,8 +25,9 @@ import Link from '../../base/Link';
 import Spinner from '../../base/Spinner';
 import Text from '../../base/Text';
 import BoosterPack from './BoosterPack';
-import CardSprite, { EnterFrom, ExitPlan, PASS_OUT_SECONDS, SpriteId } from './CardSprite';
+import CardSprite, { EnterFrom, ExitPlan, PASS_OUT_SECONDS, SpriteId, VOUCHER_CHARGE_SECONDS } from './CardSprite';
 import { isCompactWidth } from './deckLayout';
+import HiddenCards from './HiddenCards';
 import Scrollbar from './Scrollbar';
 import { PhoneMenuButton, PhoneMenuPanel } from './PhoneMenu';
 import {
@@ -29,21 +38,22 @@ import {
   computeSplitPool,
   focusPose,
   MAX_PACK_ZOOM,
-  MAX_POOL_ZOOM,
   MIN_PACK_ZOOM,
-  MIN_POOL_ZOOM,
   PACK_SCROLLBAR_WIDTH,
   gatherPose,
   MAIN_COLUMNS,
   nearestPackSlot,
   PackLayout,
   packSlots,
+  peekPose,
   poolBandAt,
   poolBandTops,
   poolBottom,
   poolStackHeight,
   Pose,
   SIDEBOARD_COLUMN,
+  SPLIT_HANDLE_HEIGHT,
+  SPLIT_HANDLE_WIDTH,
   SPLIT_LABEL_HEIGHT,
   SPLIT_SCROLLBAR_HEIGHT,
   SPLIT_TABS_HEIGHT,
@@ -155,7 +165,8 @@ interface Placement {
 }
 
 // passed: slides in from the neighbor; burst: pops out of a pack being opened;
-// opened: deals out from the middle (a pack already in progress on load); pool: fades in place.
+// opened: deals out from the middle (a pack already in progress on load); pool: fades in place,
+// or flies out of the voucher it was in.
 type EnterKind = 'passed' | 'burst' | 'opened' | 'pool';
 
 interface Turnover {
@@ -166,6 +177,8 @@ interface Turnover {
   passPending: boolean;
   // How each newly seen card should enter the table.
   kinds: Map<number, EnterKind>;
+  // The cards inside a voucher just drafted, flying out of it as it bursts.
+  flung: Map<number, EnterFrom>;
   // Packs opened so far, used to key the opening animation.
   openings: number;
 }
@@ -190,7 +203,59 @@ const EMPTY_TURNOVER: Turnover = {
   seen: new Set(),
   passPending: false,
   kinds: new Map(),
+  flung: new Map(),
   openings: 0,
+};
+
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
+// The cards inside a drafted voucher, bursting out of it: from its middle out to a spiral
+// around it (kept on the stage), then one by one into their spots in the pool. `from` is the
+// voucher as drawn, in stage pixels, and `packCardW` the width of a pack card not grown to be
+// read; `card` is the size the pool draws its cards, and `shiftX` how far the pool is scrolled
+// sideways.
+const flingOut = (
+  from: { x: number; y: number; width: number; height: number; rotate: number },
+  packCardW: number,
+  ids: number[],
+  card: { width: number; height: number },
+  stage: { width: number; height: number },
+  shiftX: number,
+): Map<number, EnterFrom> => {
+  const entrances = new Map<number, EnterFrom>();
+  const centerX = from.x + from.width / 2;
+  const centerY = from.y + from.height / 2;
+  // They start at the voucher's size (sprites scale about their bottom middle), and fly at
+  // most the size of a pack card.
+  const startScale = from.width / card.width;
+  const flungScale = Math.max(1, (packCardW / card.width) * 0.8);
+  const flungW = card.width * flungScale;
+  const flungH = card.height * flungScale;
+  const reach = packCardW * (0.8 + 0.2 * Math.sqrt(ids.length));
+  const stagger = Math.min(0.5, 0.025 * ids.length);
+  ids.forEach((id, index) => {
+    const along = Math.sqrt((index + 0.5) / ids.length);
+    const angle = index * GOLDEN_ANGLE;
+    const x = Math.max(flungW / 2, Math.min(stage.width - flungW / 2, centerX + Math.cos(angle) * reach * along * 1.5));
+    const y = Math.max(flungH / 2, Math.min(stage.height - flungH / 2, centerY + Math.sin(angle) * reach * along));
+    entrances.set(id, {
+      x: centerX - card.width / 2 + shiftX,
+      y: centerY - card.height + (card.height * startScale) / 2,
+      rotate: from.rotate,
+      scale: startScale,
+      opacity: 0,
+      delay: VOUCHER_CHARGE_SECONDS,
+      fling: true,
+      via: {
+        x: x - card.width / 2 + shiftX,
+        y: y - card.height + flungH / 2,
+        rotate: ((id * 37) % 31) - 15,
+        scale: flungScale,
+      },
+      hold: 0.15 + (ids.length > 1 ? (index / (ids.length - 1)) * stagger : 0),
+    });
+  });
+  return entrances;
 };
 
 const sameTarget = (a: DropTarget, b: DropTarget): boolean => {
@@ -225,7 +290,9 @@ const buildColumns = (mainboard: number[][][], sideboard: number[][][]): Segment
  * raise it and tap again to draft it.
  *
  * On phones the pack is a grid in the top two thirds of the table, and the pool
- * a row of stacks below it, one board at a time, that scrolls sideways.
+ * a row of stacks below it, one board at a time, that scrolls sideways. The
+ * pool's tab pulls it up to the bottom two thirds, and holding a pool card
+ * shows it bigger.
  *
  * Draft rules stay in CubeDraftPage; the table only decides where cards are
  * drawn and translates drops into the page's existing pick/move handlers.
@@ -307,6 +374,10 @@ const DraftTable: React.FC<DraftTableProps> = ({
   const [pinching, setPinching] = useState<{ region: 'pack' | 'pool'; zoom: number } | null>(null);
   const livePackZoom = pinching?.region === 'pack' ? pinching.zoom : packZoom;
   const livePoolZoom = pinching?.region === 'pool' ? pinching.zoom : poolZoom;
+  // Phones: the pool pulled up to take the bottom two thirds (kept for next time), and
+  // the pool card held to be read.
+  const [poolExpanded, setPoolExpanded] = useLocalStorage<boolean>('draftPoolExpanded', false);
+  const [peeked, setPeeked] = useState<number | null>(null);
 
   const [customOrder, setCustomOrder] = useState<number[]>([]);
   const [selected, setSelected] = useState<number | null>(null);
@@ -332,9 +403,13 @@ const DraftTable: React.FC<DraftTableProps> = ({
       setSelected(null);
     },
     // Desktop: holding a card at the top or bottom of the window scrolls the page.
+    // Phones: nothing here scrolls the page; a swipe on the stage does, natively (see its touch-action).
     verticalScroller: () => (compact ? null : window),
     // Phones: a touch picks a card up as soon as it moves, as a mouse does; a tap enlarges it.
     touchPicksUp: compact,
+    // ...and holding a pool card in place shows it bigger.
+    peek: (id) => peek(Number(id)),
+    endPeek: () => setPeeked(null),
     lean: !animationsOff,
     // Phones with the pool on the table: its row of stacks scrolls sideways.
     horizontalAt: (_x, y) => (splitPool && y >= splitPool.top ? { scroll: poolScrollX, max: maxPoolScrollX } : null),
@@ -383,10 +458,25 @@ const DraftTable: React.FC<DraftTableProps> = ({
     if (stageSize.width <= 0) return null;
     if (compact) {
       if (stageSize.height <= 0) return null;
-      return computeGridGeometry(stageSize.width, splitPackHeight(stageSize.height), packCount, livePackZoom);
+      return computeGridGeometry(
+        stageSize.width,
+        splitPackHeight(stageSize.height, poolExpanded),
+        packCount,
+        livePackZoom,
+      );
     }
     return viewRoom > 0 ? computeGeometry(stageSize.width, viewRoom, capacity, packLayout) : null;
-  }, [stageSize.width, stageSize.height, compact, packCount, livePackZoom, viewRoom, capacity, packLayout]);
+  }, [
+    stageSize.width,
+    stageSize.height,
+    compact,
+    packCount,
+    livePackZoom,
+    poolExpanded,
+    viewRoom,
+    capacity,
+    packLayout,
+  ]);
 
   // Phones: the pack's part scrolls when its cards run past the bottom, back to the top for each pick.
   const packMax = geometry && compact ? Math.max(0, Math.ceil(geometry.contentHeight - geometry.height)) : 0;
@@ -427,8 +517,11 @@ const DraftTable: React.FC<DraftTableProps> = ({
   // holding the latest of them goes last, so that card is the one in full view.
   const placed = useRef({ next: 1, order: new Map<number, number>() });
   const markPlaced = (id: number) => {
-    placed.current.order.set(id, placed.current.next);
-    placed.current.next += 1;
+    // A voucher is placed as the cards inside it.
+    for (const placedId of [id, ...(cards[id]?.voucher_card_indices ?? [])]) {
+      placed.current.order.set(placedId, placed.current.next);
+      placed.current.next += 1;
+    }
   };
   const latestLast = (segments: Segment[]) => {
     const latest = (segment: Segment) => Math.max(0, ...segment.ids.map((id) => placed.current.order.get(id) ?? 0));
@@ -489,9 +582,16 @@ const DraftTable: React.FC<DraftTableProps> = ({
   const splitPool: SplitPool | null = useMemo(
     () =>
       compact && stageSize.width > 0 && stageSize.height > 0
-        ? computeSplitPool(stageSize.width, stageSize.height, splitStacks.length, splitTallest, livePoolZoom)
+        ? computeSplitPool(
+            stageSize.width,
+            stageSize.height,
+            splitStacks.length,
+            splitTallest,
+            poolExpanded,
+            livePoolZoom,
+          )
         : null,
-    [compact, stageSize.width, stageSize.height, splitStacks.length, splitTallest, livePoolZoom],
+    [compact, stageSize.width, stageSize.height, splitStacks.length, splitTallest, poolExpanded, livePoolZoom],
   );
   const maxPoolScrollX = splitPool ? Math.max(0, Math.ceil(splitPool.contentWidth - stageSize.width)) : 0;
   useClampScroll(poolScrollX, maxPoolScrollX);
@@ -597,7 +697,14 @@ const DraftTable: React.FC<DraftTableProps> = ({
           .filter((id) => id !== draggedId)
           .forEach((id) => {
             if (index === gap) index += 1;
-            result.set(id, { pose: splitSlot(splitPool, column, index), z: 10 + index, zone: 'pool' });
+            const slot = splitSlot(splitPool, column, index);
+            // A card held to be read grows over everything, the pool's tabs included.
+            result.set(
+              id,
+              id === peeked
+                ? { pose: peekPose(splitPool, geometry.width, slot, poolScrollX.get()), z: 800, zone: 'pool' }
+                : { pose: slot, z: 10 + index, zone: 'pool' },
+            );
             index += 1;
           });
       });
@@ -660,7 +767,20 @@ const DraftTable: React.FC<DraftTableProps> = ({
     drag,
     activeSelected,
     hovered,
+    peeked,
   ]);
+
+  // Where each card was drawn as of the last render, for one that has just left (a voucher, bursting).
+  const drawnBefore = useRef(placements);
+  useLayoutEffect(() => {
+    drawnBefore.current = placements;
+  });
+
+  // Phones: the tops of the pack's cards in its scrolled content, to count those scrolled out of view.
+  const packTops = useMemo(
+    () => [...placements.values()].filter((placement) => placement.zone === 'pack').map(({ pose }) => pose.y),
+    [placements],
+  );
 
   // ---- Pack turnover: where new cards come from, where leaving cards go ----
   // Pack 1 is passed left, so its packs arrive from the right and leftovers
@@ -674,6 +794,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
     trashed: new Set(),
     toward: new Map(),
     passInstantly: false,
+    burst: new Set(),
   });
   useLayoutEffect(() => {
     // Leaving cards read this from their (passive) exit effects, which run after layout effects.
@@ -697,7 +818,13 @@ const DraftTable: React.FC<DraftTableProps> = ({
   const endOpening = useCallback(() => setOpening(null), []);
   const drawnSignature = geometry ? [...packIds, ...poolIds].join(',') : '';
   if (geometry && drawnSignature !== turnover.signature) {
-    const packLeft = turnover.pack.some((id) => !packIdSet.has(id) && !poolIds.has(id));
+    // A voucher drafted from the pack gives way to the cards inside it, which show up in the pool.
+    const opened = turnover.pack.filter(
+      (id) =>
+        !packIdSet.has(id) &&
+        (cards[id]?.voucher_card_indices ?? []).some((inside) => poolIds.has(inside) && !turnover.seen.has(inside)),
+    );
+    const packLeft = turnover.pack.some((id) => !packIdSet.has(id) && !poolIds.has(id) && !opened.includes(id));
     const leftBefore = packLeft || turnover.passPending;
     const entered = packIds.some((id) => !turnover.seen.has(id));
     const firstDraw = turnover.signature === '';
@@ -713,6 +840,36 @@ const DraftTable: React.FC<DraftTableProps> = ({
     poolIds.forEach((id) => {
       if (!turnover.seen.has(id)) kinds.set(id, 'pool');
     });
+    // It bursts where it's drawn, and the cards inside it that the pool shows fly out of it.
+    const flung = new Map<number, EnterFrom>();
+    if (!animationsOff) {
+      opened.forEach((voucher) => {
+        const handle = dragger.handle(voucher);
+        const inside = (cards[voucher]?.voucher_card_indices ?? []).filter(
+          (id) => !turnover.seen.has(id) && placements.get(id)?.zone === 'pool',
+        );
+        if (!handle || inside.length === 0) return;
+        // A card grown to be read grows about its bottom middle.
+        const grown = drawnBefore.current.get(voucher)?.pose.scale ?? 1;
+        const width = geometry.cardW * grown;
+        const height = geometry.cardH * grown;
+        const from = {
+          x: handle.x.get() + (geometry.cardW - width) / 2,
+          y: handle.y.get() - (compact ? packScroll.get() : 0) + geometry.cardH - height,
+          width,
+          height,
+          rotate: handle.rotate.get(),
+        };
+        const poolCard = splitPool
+          ? { width: splitPool.cardW, height: splitPool.cardH }
+          : { width: geometry.cardW, height: geometry.cardH };
+        flingOut(from, geometry.cardW, inside, poolCard, stageSize, splitPool ? poolScrollX.get() : 0).forEach(
+          (entrance, id) => flung.set(id, entrance),
+        );
+        // Read by the voucher's exit, which starts in this render.
+        exitPlan.current.burst.add(voucher);
+      });
+    }
     const openings = turnover.openings + (unwrapped ? 1 : 0);
     if (unwrapped && !animationsOff)
       setOpening({ id: openings, label: packLabel, cardCount: packIds.length, burst: false });
@@ -722,6 +879,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
       seen: new Set([...packIds, ...poolIds]),
       passPending: leftBefore && !entered,
       kinds,
+      flung,
       openings,
     });
   }
@@ -729,7 +887,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
   const enterFor = (id: number, placement: Placement): EnterFrom | null => {
     const kind = turnover.kinds.get(id);
     if (!geometry || !kind || animationsOff) return null;
-    if (kind === 'pool') return { ...placement.pose, opacity: 0, delay: 0 };
+    if (kind === 'pool') return turnover.flung.get(id) ?? { ...placement.pose, opacity: 0, delay: 0 };
     const slot = packOrder.indexOf(id);
     // A slight per-card tilt so a gathered pack reads as a pile.
     const pileTilt = ((id * 37) % 9) - 4;
@@ -817,6 +975,8 @@ const DraftTable: React.FC<DraftTableProps> = ({
     region: 'pack' | 'pool';
     spread: number;
     zoom: number;
+    // How far a pinch there can size the cards.
+    range: [number, number];
     cardW: number;
     // The point between the fingers in that part's content, and where the fingers are now, on screen.
     x: number;
@@ -826,7 +986,6 @@ const DraftTable: React.FC<DraftTableProps> = ({
   } | null>(null);
   const pinchState = useRef({
     packZoom,
-    poolZoom,
     geometry,
     splitPool,
     cancel: dragger.cancel,
@@ -834,7 +993,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
     setPoolZoom,
   });
   useLayoutEffect(() => {
-    pinchState.current = { packZoom, poolZoom, geometry, splitPool, cancel: dragger.cancel, setPackZoom, setPoolZoom };
+    pinchState.current = { packZoom, geometry, splitPool, cancel: dragger.cancel, setPackZoom, setPoolZoom };
   });
   useEffect(() => {
     const stage = stageRef.current;
@@ -852,11 +1011,14 @@ const DraftTable: React.FC<DraftTableProps> = ({
       const rect = stage.getBoundingClientRect();
       const mid = middle(event.touches);
       const region = mid.y - rect.top < pool.top ? 'pack' : 'pool';
-      const zoom = region === 'pack' ? pinchState.current.packZoom : pinchState.current.poolZoom;
+      // The pool's pinch starts from the size its cards are drawn at, which may be short of the size
+      // last pinched to (taller stacks, or the pool put down), so the cards respond at once.
+      const zoom = region === 'pack' ? pinchState.current.packZoom : pool.zoom;
       pinch.current = {
         region,
         spread: spread(event.touches),
         zoom,
+        range: region === 'pack' ? [MIN_PACK_ZOOM, MAX_PACK_ZOOM] : pool.zoomRange,
         cardW: region === 'pack' ? g.cardW : pool.cardW,
         x: mid.x - rect.left + (region === 'pool' ? poolScrollX.get() : 0),
         y: mid.y - rect.top + (region === 'pack' ? packScroll.get() : 0),
@@ -872,7 +1034,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
       const mid = middle(event.touches);
       p.midX = mid.x;
       p.midY = mid.y;
-      const [low, high] = p.region === 'pack' ? [MIN_PACK_ZOOM, MAX_PACK_ZOOM] : [MIN_POOL_ZOOM, MAX_POOL_ZOOM];
+      const [low, high] = p.range;
       setPinching({
         region: p.region,
         zoom: Math.max(low, Math.min(high, (p.zoom * spread(event.touches)) / p.spread)),
@@ -1167,6 +1329,14 @@ const DraftTable: React.FC<DraftTableProps> = ({
     }
   };
 
+  // Phones: a pool card held in place grows until the finger lifts.
+  const peek = (id: number) => {
+    if (!splitPool || !poolIds.has(id) || packIdSet.has(id)) return false;
+    hideCard();
+    setPeeked(id);
+    return true;
+  };
+
   // ---- Pool taps ----
   // A tap sends a card to the other board, in its natural spot.
   const togglePoolCard = (source: DraftLocation) => {
@@ -1228,8 +1398,11 @@ const DraftTable: React.FC<DraftTableProps> = ({
         scroll={inPackZone && compact ? packScroll : null}
         scrollX={inSplitPool ? poolScrollX : null}
         instant={pinching !== null}
-        // On a phone, pack cards scrolled out of the pack's part are cut off at its edges.
-        clip={inPackZone && compact ? { top: 0, bottom: geometry!.height } : null}
+        // Desktop: a card lifted by a hover goes back behind its neighbors as soon as it's let go.
+        snapStacking={!compact}
+        // On a phone, pack cards scrolled out of the pack's part are cut off at its edges: at the
+        // bottom, the pool's top edge, so they pass under its pull tab.
+        clip={inPackZone && compact ? { top: 0, bottom: splitPool ? splitPool.top : geometry!.height } : null}
         landing={
           placement.zone === 'pool' ? { top: splitPool ? splitPool.top : geometry!.poolTop, bottom: Infinity } : null
         }
@@ -1361,7 +1534,9 @@ const DraftTable: React.FC<DraftTableProps> = ({
     // At least one viewport tall (less the phone's bottom nav) regardless of the
     // header above it: scroll past the header and the table fills the screen. On
     // desktop it grows past that with the pool. In the phone layout it's exactly
-    // the screen, edge to edge, over the page's side padding.
+    // the screen, edge to edge, over the page's side padding: the screen with the
+    // browser's bars showing (svh), so it doesn't resize and reshuffle the cards
+    // as they slide away and back while the page scrolls.
     <div ref={roomRef}>
       <div
         ref={tableRef}
@@ -1370,7 +1545,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
         }`}
         style={
           compact
-            ? { height: 'calc(100dvh - var(--bottom-nav-height, 0px))', minHeight: 480 }
+            ? { height: 'calc(100svh - var(--bottom-nav-height, 0px))', minHeight: 480 }
             : { minHeight: 'calc(100dvh - var(--bottom-nav-height, 0px))' }
         }
       >
@@ -1450,11 +1625,13 @@ const DraftTable: React.FC<DraftTableProps> = ({
           </div>
         )}
 
-        {/* isolate: the cards' z-indexes stay inside the stage, under the menu and the pool drawer. */}
+        {/* isolate: the cards' z-indexes stay inside the stage, under the menu and the pool drawer.
+            A swipe down its empty spots scrolls the page natively (the cards keep their own touches),
+            unless a pinch has made the phone's pack scroll, when it scrolls that instead. */}
         <div
           ref={stageRef}
           className="relative flex-1 overflow-hidden select-none isolate"
-          style={{ touchAction: 'none', minHeight: compact ? undefined : poolContentBottom }}
+          style={{ touchAction: packMax > 0 ? 'none' : 'pan-y', minHeight: compact ? undefined : poolContentBottom }}
           onPointerDown={(event) => {
             setMenuOpen(false);
             if (event.target === event.currentTarget) setSelected(null);
@@ -1513,43 +1690,70 @@ const DraftTable: React.FC<DraftTableProps> = ({
           {splitPool && (
             // Phones with the pool on the table: its tabs, then a row of stacks that scrolls sideways.
             <>
+              {/* The pool's top edge stops either side of its pull tab, so the tab joins the panel. */}
               <div
-                className="absolute inset-x-0 bottom-0 border-t border-border bg-bg/60 pointer-events-none"
+                className="absolute inset-x-0 bottom-0 bg-bg/60 pointer-events-none transition-[top] duration-300 ease-out"
                 style={{ top: splitPool.top }}
-              />
-              <div
-                role="tablist"
-                className="absolute inset-x-0 flex"
-                style={{ top: splitPool.top, height: SPLIT_TABS_HEIGHT, zIndex: 700 }}
               >
-                {poolTabs.map((key) => {
-                  const [label, total] =
-                    key === 'mainboard'
-                      ? ['Mainboard', mainCount]
-                      : key === 'sideboard'
-                        ? ['Sideboard', sideCount]
-                        : ['Removed', removed.length];
-                  // A card held over the tab drops into that board.
-                  const target =
-                    drag?.target?.kind === 'board' && drag.target.board === (key === 'mainboard' ? 'deck' : key);
-                  return (
-                    <button
-                      key={key}
-                      type="button"
-                      role="tab"
-                      aria-selected={poolTab === key}
-                      onClick={() => showBoard(key)}
-                      className={`flex-1 text-sm font-semibold border-b-2 transition-colors ${
-                        poolTab === key ? 'border-link text-text' : 'border-transparent text-text-secondary'
-                      } ${target ? 'bg-button-primary/20 text-text' : ''}`}
-                    >
-                      {label} · {total}
-                    </button>
-                  );
-                })}
+                <div
+                  className="absolute top-0 left-0 h-px bg-border"
+                  style={{ right: `calc(50% + ${SPLIT_HANDLE_WIDTH / 2 - 1}px)` }}
+                />
+                <div
+                  className="absolute top-0 right-0 h-px bg-border"
+                  style={{ left: `calc(50% + ${SPLIT_HANDLE_WIDTH / 2 - 1}px)` }}
+                />
+              </div>
+              <div
+                className="absolute inset-x-0 transition-[top] duration-300 ease-out"
+                style={{ top: splitPool.top, zIndex: 700 }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setPoolExpanded((expanded) => !expanded)}
+                  aria-expanded={poolExpanded}
+                  aria-label={poolExpanded ? 'Collapse pool' : 'Expand pool'}
+                  title={poolExpanded ? 'Collapse pool' : 'Expand pool'}
+                  className="absolute bottom-full left-1/2 -translate-x-1/2 flex items-center justify-center overflow-hidden rounded-t-md border border-b-0 border-border bg-bg text-text-secondary hover:text-text"
+                  style={{ width: SPLIT_HANDLE_WIDTH, height: SPLIT_HANDLE_HEIGHT }}
+                >
+                  {/* Solid, so pack cards scroll under it, in the panel's color: the table's tint and the panel's over the page. */}
+                  <span className="absolute inset-0 bg-bg-accent/80" />
+                  <span className="absolute inset-0 bg-bg/60" />
+                  <span className="relative flex">
+                    {poolExpanded ? <ChevronDownIcon size={16} /> : <ChevronUpIcon size={16} />}
+                  </span>
+                </button>
+                <div role="tablist" className="flex" style={{ height: SPLIT_TABS_HEIGHT }}>
+                  {poolTabs.map((key) => {
+                    const [label, total] =
+                      key === 'mainboard'
+                        ? ['Mainboard', mainCount]
+                        : key === 'sideboard'
+                          ? ['Sideboard', sideCount]
+                          : ['Removed', removed.length];
+                    // A card held over the tab drops into that board.
+                    const target =
+                      drag?.target?.kind === 'board' && drag.target.board === (key === 'mainboard' ? 'deck' : key);
+                    return (
+                      <button
+                        key={key}
+                        type="button"
+                        role="tab"
+                        aria-selected={poolTab === key}
+                        onClick={() => showBoard(key)}
+                        className={`flex-1 text-sm font-semibold border-b-2 transition-colors ${
+                          poolTab === key ? 'border-link text-text' : 'border-transparent text-text-secondary'
+                        } ${target ? 'bg-button-primary/20 text-text' : ''}`}
+                      >
+                        {label} · {total}
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
               <motion.div
-                className="absolute left-0 pointer-events-none"
+                className="absolute left-0 pointer-events-none transition-[top] duration-300 ease-out"
                 style={{ x: poolShift, top: splitPool.labelTop, bottom: 0, width: splitPool.contentWidth }}
               >
                 {splitStacks.map((stack, column) => (
@@ -1587,6 +1791,19 @@ const DraftTable: React.FC<DraftTableProps> = ({
                   content={geometry.contentHeight}
                   className="absolute right-0 top-0 flex justify-center py-2"
                   style={{ width: PACK_SCROLLBAR_WIDTH, height: geometry.height, zIndex: 700 }}
+                />
+              )}
+              {/* The cards scrolled out of view, counted at the edge they're past; under a card grown to be read. */}
+              {packMax > 0 && geometry && (
+                <HiddenCards
+                  scroll={packScroll}
+                  max={packMax}
+                  view={geometry.height}
+                  tops={packTops}
+                  cardHeight={geometry.cardH}
+                  topInset={packTag ? 24 : 0}
+                  className="absolute inset-x-0 top-0 pointer-events-none"
+                  style={{ height: geometry.height, zIndex: 550 }}
                 />
               )}
               {/* A swipe on the row picks up a card, so it scrolls from here. */}

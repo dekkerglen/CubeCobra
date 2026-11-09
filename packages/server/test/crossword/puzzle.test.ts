@@ -213,6 +213,21 @@ describe('buildDailyGrid', () => {
   });
 
   /**
+   * Every draw is seeded off the date, so a retry that asked the same way would
+   * fail the same way. A later round picks up the numbering where the ladder left
+   * off, so none of its draws repeats one an earlier round already made.
+   */
+  it('redraws every theme and seed on a later round', async () => {
+    (generateCrossword as jest.Mock).mockReturnValue({ grid: fullGrid() });
+
+    await buildDailyGrid(MONDAY, 2);
+
+    const firstAttempt = DAILY_RUNGS.length + 1;
+    expect((generateCrossword as jest.Mock).mock.calls[0]![0].seed).toEqual(`${MONDAY}#${firstAttempt}`);
+    expect((chooseTheme as jest.Mock).mock.calls[0]![1]).toEqual(firstAttempt);
+  });
+
+  /**
    * A failed rotation is a day with no puzzle, which is worse than a day with an
    * unthemed one. Theming is the goal and never the requirement.
    */

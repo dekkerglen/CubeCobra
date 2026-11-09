@@ -14,6 +14,8 @@ export const RotateCrosswordSchema = Joi.object({
   date: Joi.string()
     .pattern(/^\d{4}-\d{2}-\d{2}$/)
     .optional(),
+  // Which retry this is; each round redraws every theme and seed. See buildDailyGrid.
+  round: Joi.number().integer().min(1).max(100).optional(),
 });
 
 /**
@@ -61,9 +63,13 @@ export const rotateCrosswordHandler = async (req: Request, res: Response) => {
     }
 
     await whenCardDbReady();
-    const grid = await buildDailyGrid(date);
+    const grid = await buildDailyGrid(date, req.body.round ?? 1);
     if (isBuildFailure(grid)) {
-      return res.status(500).json({ error: `Could not generate a crossword for ${date}: ${grid.reason}` });
+      // Retryable, unlike every other failure here: the next round draws a
+      // different set of themes and seeds, and big grids often fill on one.
+      return res
+        .status(500)
+        .json({ error: `Could not generate a crossword for ${date}: ${grid.reason}`, retryable: true });
     }
 
     const puzzle = await crosswordPuzzleDao.setActivePuzzle({ date, grid, isActive: true });

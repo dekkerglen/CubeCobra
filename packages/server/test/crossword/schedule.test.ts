@@ -81,7 +81,7 @@ describe('WEEKLY_SCHEDULE', () => {
   it('keeps every size inside the range measured to build reliably', () => {
     for (const plan of WEEKLY_SCHEDULE) {
       expect(plan.size).toBeGreaterThanOrEqual(9);
-      expect(plan.size).toBeLessThanOrEqual(16);
+      expect(plan.size).toBeLessThanOrEqual(15);
     }
   });
 

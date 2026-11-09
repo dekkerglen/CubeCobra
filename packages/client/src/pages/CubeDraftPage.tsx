@@ -152,6 +152,18 @@ const CubeDraftPage: React.FC<CubeDraftPageProps> = ({ cube, draft }) => {
   const seat = engine.seats[HUMAN]!;
   const ctx = draftEngine.ctx;
 
+  // A card on the board that's still in a pack was never drafted (a pick cut short by a
+  // reload, or one the engine refused), and would stay hidden in the pack: put it back.
+  useEffect(() => {
+    const onBoard = new Set([...mainboard, ...sideboard].flat(2));
+    const stale = Object.values(engine.packs)
+      .flatMap((enginePack) => enginePack.cards)
+      .filter((card) => [card, ...(draft.cards[card]?.voucher_card_indices ?? [])].some((id) => onBoard.has(id)));
+    if (stale.length > 0) takeOffBoard(stale);
+    // On load only.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const getLocationReferences = useCallback(
     (type: location): { board: any[][][]; setter: React.Dispatch<React.SetStateAction<any[][][]>> } =>
       type === locations.deck ? { board: mainboard, setter: setMainboard } : { board: sideboard, setter: setSideboard },

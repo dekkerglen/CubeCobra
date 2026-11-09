@@ -93,7 +93,8 @@ const BulkUploadPageRaw: React.FC<BulkUploadPageRawProps> = ({ missing, addedByB
   });
 
   const submit = useCallback(async () => {
-    await commitChanges(postTitle, postContent);
+    // On failure, stay on the page so the error and the pending changes stay visible.
+    if (!(await commitChanges(postTitle, postContent))) return;
     setPostTitle(DEFAULT_BLOG_TITLE);
     setPostContent('');
     window.location.href = `/cube/list/${cube.id}`;

@@ -79,7 +79,8 @@ export interface CubeContextValue {
   revertEdit: (index: number, board: BoardType) => void;
   versionDict: Record<string, CardVersion[]>;
   fetchVersionsForCard: (cardId: string) => Promise<boolean>;
-  commitChanges: (title: string, blog: string) => Promise<void>;
+  /** Resolves true once the changes are saved. */
+  commitChanges: (title: string, blog: string) => Promise<boolean>;
   setModalSelection: Dispatch<
     SetStateAction<
       | { index: number; board: BoardType }
@@ -1142,49 +1143,90 @@ export function CubeContextProvider({
   }, [changedCards, unfilteredChangedCards, filterInput]);
 
   const commitChanges = useCallback(
-    async (title: string, blog: string) => {
+    async (title: string, blog: string): Promise<boolean> => {
       setLoading(true);
 
       try {
-        // Strip `details` from changes before sending to avoid bloating the request body.
-        // Card details are large objects that the server doesn't need — it strips them before persisting.
-        const strippedChanges: Changes = { version: changes.version };
-        for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
-          const boardChanges = changes[board] as BoardChanges | undefined;
-          if (!boardChanges) continue;
-          strippedChanges[board] = {
-            adds: boardChanges.adds?.map(
-              ({ details: _details, index: _index, board: _board, ...rest }) => rest as Card,
-            ),
-            removes: boardChanges.removes,
-            swaps: boardChanges.swaps?.map((swap) => {
-              const { details: _details, index: _idx, board: _board, ...cardRest } = swap.card;
-              return { ...swap, card: { ...cardRest, index: swap.index } as Card };
+        let json: { success?: string; message?: string; updateApplied?: boolean; version?: number };
+        try {
+          // Strip `details` from changes before sending to avoid bloating the request body.
+          // Card details are large objects that the server doesn't need — it strips them before persisting.
+          // That includes each oldCard: a bulk replace sends hundreds of removes, and their details
+          // alone can push the body past the proxy's body size limit.
+          const withoutDetails = ({ details: _details, ...rest }: Card): Card => rest as Card;
+          const strippedChanges: Changes = { version: changes.version };
+          for (const board of Object.keys(changes).filter((key) => key !== 'version')) {
+            const boardChanges = changes[board] as BoardChanges | undefined;
+            if (!boardChanges) continue;
+            strippedChanges[board] = {
+              adds: boardChanges.adds?.map(
+                ({ details: _details, index: _index, board: _board, ...rest }) => rest as Card,
+              ),
+              removes: boardChanges.removes?.map((remove) => ({ ...remove, oldCard: withoutDetails(remove.oldCard) })),
+              swaps: boardChanges.swaps?.map((swap) => {
+                const { details: _details, index: _idx, board: _board, ...cardRest } = swap.card;
+                return {
+                  ...swap,
+                  card: { ...cardRest, index: swap.index } as Card,
+                  oldCard: withoutDetails(swap.oldCard),
+                };
+              }),
+              edits: boardChanges.edits?.map((edit) => ({
+                ...edit,
+                oldCard: withoutDetails(edit.oldCard),
+                newCard: withoutDetails(edit.newCard),
+              })),
+            };
+          }
+
+          const result = await csrfFetch(`/cube/api/commit`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              title,
+              blog,
+              changes: strippedChanges,
+              id: cube.id,
+              useBlog,
+              expectedVersion: changes.version,
             }),
-            edits: boardChanges.edits,
-          };
+          });
+
+          // The proxy turns away oversized bodies with an HTML page before they reach the server.
+          if (result.status === 413) {
+            setAlerts([{ color: 'danger', message: 'Too many changes to save at once.' }]);
+            return false;
+          }
+
+          json = await result.json();
+        } catch (err) {
+          // csrfFetch aborts once its timeout passes. Anything else is a network failure or a
+          // response that isn't the server's JSON, like a gateway error page.
+          const timedOut = err instanceof DOMException && err.name === 'AbortError';
+          setAlerts([
+            {
+              color: 'danger',
+              message: timedOut ? 'Operation timed out' : 'Failed to save changes. Please try again.',
+            },
+          ]);
+          return false;
         }
 
-        const result = await csrfFetch(`/cube/api/commit`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            title,
-            blog,
-            changes: strippedChanges,
-            id: cube.id,
-            useBlog,
-            expectedVersion: changes.version,
-          }),
-        });
+        if (json.success !== 'true' && !json.updateApplied) {
+          setAlerts([{ color: 'danger', message: json.message || 'Failed to save changes. Please try again.' }]);
+          return false;
+        }
+        // The changes were saved but a later step (the blog post) failed.
+        if (json.success !== 'true' && json.message) {
+          setAlerts([{ color: 'warning', message: json.message }]);
+        }
 
-        const json = await result.json();
-
-        if (json.success !== 'true') {
-          setAlerts([{ color: 'danger', message: json.message }]);
-        } else {
+        // The changes are saved. If rebuilding the local card list from them fails, the save still
+        // stands: the changes are cleared regardless and the page reloads to show the saved cube.
+        let committedCards: typeof unfilteredChangedCards | null = null;
+        try {
           const newCards = deepCopy(unfilteredChangedCards);
 
           // Collect all card IDs that need details fetched, then batch-fetch them
@@ -1262,26 +1304,32 @@ export function CubeContextProvider({
             }
           }
 
-          setModalSelection([]);
-          // Update version BEFORE clearing changes so new changes get the correct version
-          const newVersion = json.version || version + 1;
-          setVersion(newVersion);
-          clearChanges();
-          setCube({
-            ...cube,
-            cards: newCards,
-            version: newVersion, // Update cube version too
-          });
-          const newTags = getAllTags(newCards as any);
-          //Make sure to use tagColors instead of cube.tagColors so any previous edits apply
-          setTagColors(computeTagColors(tagColors, newTags));
+          committedCards = newCards;
+        } catch {
+          // Leave committedCards unset; the reload below shows the saved cube instead.
         }
-      } catch {
-        setAlerts([{ color: 'danger', message: 'Operation timed out' }]);
-      }
 
-      setModalSelection([]);
-      setLoading(false);
+        // Update version BEFORE clearing changes so new changes get the correct version
+        const newVersion = json.version || version + 1;
+        setVersion(newVersion);
+        clearChanges();
+        if (!committedCards) {
+          window.location.reload();
+          return true;
+        }
+        setCube({
+          ...cube,
+          cards: committedCards,
+          version: newVersion, // Update cube version too
+        });
+        const newTags = getAllTags(committedCards as any);
+        //Make sure to use tagColors instead of cube.tagColors so any previous edits apply
+        setTagColors(computeTagColors(tagColors, newTags));
+        return true;
+      } finally {
+        setModalSelection([]);
+        setLoading(false);
+      }
     },
     [csrfFetch, changes, cube, useBlog, unfilteredChangedCards, clearChanges, setVersion, version, tagColors],
   );

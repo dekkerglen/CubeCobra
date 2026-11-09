@@ -4,6 +4,7 @@ import { ArrowSwitchIcon, PlusIcon, TrashIcon, XIcon } from '@primer/octicons-re
 import {
   cardColorCategory,
   cardColorIdentity,
+  cardFaceOrientations,
   cardFaceToggleLabel,
   cardFinish,
   cardImageBackUrl,
@@ -45,6 +46,7 @@ import BoardMoveControl from '../BoardMoveControl';
 import { ColorChecksAddon } from '../ColorCheck';
 import TagInput from '../TagInput';
 import AutocardListItem from './AutocardListItem';
+import CardOrientationFrame from './CardOrientationFrame';
 import VersionSelect from './VersionSelect';
 
 export interface VoucherCardModalProps {
@@ -270,6 +272,13 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
     return '/content/vouchercard.png';
   }, [selection, imageUsed, selectedSubCard]);
 
+  // A voucher's sub-cards are ordinary cards, so one of them can be printed sideways.
+  // The voucher itself only ever shows its front unless it has a back image.
+  const previewCard = selection === 'voucher' ? card : selectedSubCard;
+  const previewOrientations = cardFaceOrientations(previewCard);
+  const displayedOrientation =
+    selection === 'voucher' && !isFrontImage ? previewOrientations.back : previewOrientations.front;
+
   return (
     <Modal lg isOpen={isOpen} setOpen={setOpen}>
       <ModalHeader setOpen={setOpen}>
@@ -380,13 +389,25 @@ const VoucherCardModal: React.FC<VoucherCardModalProps> = ({
 
               {/* Selected card preview */}
               <div className="mt-2">
-                <ImageFallback
-                  card={selection === 'voucher' ? card : selectedSubCard?.details}
-                  src={getSelectedImage()}
-                  fallbackSrc="/content/vouchercard.png"
-                  alt={selection === 'voucher' ? cardName(card) : selectedSubCard?.details?.name || 'Card'}
-                  className="w-full rounded"
-                />
+                {displayedOrientation === 'landscape' ? (
+                  <CardOrientationFrame orientation="landscape">
+                    <ImageFallback
+                      card={selection === 'voucher' ? card : selectedSubCard?.details}
+                      src={getSelectedImage()}
+                      fallbackSrc="/content/vouchercard.png"
+                      alt={selection === 'voucher' ? cardName(card) : selectedSubCard?.details?.name || 'Card'}
+                      className="w-full rounded"
+                    />
+                  </CardOrientationFrame>
+                ) : (
+                  <ImageFallback
+                    card={selection === 'voucher' ? card : selectedSubCard?.details}
+                    src={getSelectedImage()}
+                    fallbackSrc="/content/vouchercard.png"
+                    alt={selection === 'voucher' ? cardName(card) : selectedSubCard?.details?.name || 'Card'}
+                    className="w-full rounded"
+                  />
+                )}
               </div>
 
               <Text xs className="text-text-secondary">

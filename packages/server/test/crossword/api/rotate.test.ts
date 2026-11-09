@@ -115,7 +115,7 @@ describe('Rotate crossword API', () => {
 
     expect(res.status).toEqual(200);
     expect(res.body.success).toBe(true);
-    expect(buildDailyGrid).toHaveBeenCalledWith(DATE);
+    expect(buildDailyGrid).toHaveBeenCalledWith(DATE, 1);
     expect(crosswordPuzzleDao.setActivePuzzle).toHaveBeenCalledWith({ date: DATE, grid, isActive: true });
   });
 
@@ -142,7 +142,17 @@ describe('Rotate crossword API', () => {
     const res = await call(rotateCrosswordHandler).withBody({ apiKey: 'test-key' }).send();
 
     expect(res.status).toEqual(200);
-    expect(buildDailyGrid).toHaveBeenCalledWith(expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/));
+    expect(buildDailyGrid).toHaveBeenCalledWith(expect.stringMatching(/^\d{4}-\d{2}-\d{2}$/), 1);
+  });
+
+  it('passes the retry round through to the generator', async () => {
+    (crosswordPuzzleDao.getByDate as jest.Mock).mockResolvedValue(undefined);
+    (buildDailyGrid as jest.Mock).mockReturnValue(createGrid());
+    (crosswordPuzzleDao.setActivePuzzle as jest.Mock).mockResolvedValue(createPuzzle());
+
+    await call(rotateCrosswordHandler).withBody({ apiKey: 'test-key', date: DATE, round: 3 }).send();
+
+    expect(buildDailyGrid).toHaveBeenCalledWith(DATE, 3);
   });
 
   it('returns 500 when no grid could be generated', async () => {
@@ -153,6 +163,8 @@ describe('Rotate crossword API', () => {
 
     expect(res.status).toEqual(500);
     expect(res.body.error).toContain('ran out of budget');
+    // The lambda asks again with the next round only when told it's worth it.
+    expect(res.body.retryable).toBe(true);
     expect(crosswordPuzzleDao.setActivePuzzle).not.toHaveBeenCalled();
   });
 
@@ -165,5 +177,6 @@ describe('Rotate crossword API', () => {
     const res = await call(rotateCrosswordHandler).withBody({ apiKey: 'test-key', date: DATE }).send();
 
     expect(res.status).toEqual(500);
+    expect(res.body.retryable).toBeUndefined();
   });
 });

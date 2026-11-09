@@ -13,12 +13,14 @@ import { Request, Response } from '../../../types/express';
  * (scryfall_id). Custom/voucher cards all share the same sentinel cardID,
  * so we additionally key on the user-provided name — otherwise every custom
  * card in a CSV gets treated as a duplicate of the first one and ends up
- * copying its characteristics.
+ * copying its characteristics. Vouchers also key on their contents, so a
+ * CSV that only changes what a voucher holds still replaces it.
  */
 function cardDeltaKey(card: Card): string {
   if (isCustomOrVoucher(card)) {
     const name = ((card as any).custom_name || (card as any).name || '').toLowerCase();
-    return `${card.cardID}::${name}`;
+    const contents = (card.voucher_cards ?? []).map((vc) => vc.cardID).join(',');
+    return `${card.cardID}::${name}::${contents}`;
   }
   return card.cardID;
 }

@@ -421,22 +421,15 @@
 }
 
 #autocardPopup img {
-  width: 15rem;
+  width: 100%;
 }
 
 /* Reserve the card's height before the image loads, so the popup can be measured and
-   clamped to the viewport on the very first frame. */
+   clamped to the viewport on the very first frame. A landscape face gets its box from
+   CardOrientationFrame instead. */
 #autocardImageFront,
 #autocardImageBack {
   aspect-ratio: 488 / 680;
-}
-
-#autocardPopup {
-  width: 15rem;
-}
-
-#autocardPopup.double-width {
-  width: 30rem;
 }
 
 .autocard-background {

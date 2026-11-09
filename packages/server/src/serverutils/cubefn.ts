@@ -1,16 +1,16 @@
 import { cardNameLower, cardOracleId, convertFromLegacyCardColorCategory, isCustomOrVoucher } from '@utils/cardutil';
 import type { CardDetails } from '@utils/datatypes/Card';
-import Card, { BoardChanges, Changes } from '@utils/datatypes/Card';
+import Card, { BoardChanges, Changes, VoucherCard } from '@utils/datatypes/Card';
 import { CUBE_VISIBILITY, type CubeCards, type TagColor } from '@utils/datatypes/Cube';
 import type { DraftFormat } from '@utils/datatypes/Draft';
 import { createDraft, getDraftFormat } from '@utils/drafting/createdraft';
-import { IMPORT_TOO_LARGE_MESSAGE, MAX_IMPORT_CARDS } from '@utils/importParsing';
+import { IMPORT_TOO_LARGE_MESSAGE, MAX_IMPORT_CARDS, parseNonCSVLine } from '@utils/importParsing';
 import { safeHttpUrl } from '@utils/safeUrl';
 import _ from 'lodash';
 import Papa from 'papaparse';
 import sanitizeHtml from 'sanitize-html';
 
-import { cardFromId, getAllVersionIds, reasonableId } from './carddb';
+import { cardFromId, getAllVersionIds, getIdsFromName, reasonableId } from './carddb';
 import { fromCsvCell } from './csv';
 import { batchDraft } from './ml';
 import * as util from './util';
@@ -276,6 +276,44 @@ const importedImageUrl = (value: unknown): string | null => {
   return url && url.length <= MAX_IMAGE_URL_LENGTH ? url : null;
 };
 
+// Picks the printing that best matches a set and collector number: an exact set and number match,
+// then any printing in the set, then a non-promo printing, then the first.
+const pickPrintingId = (potentialIds: string[], set: string, collectorNumber?: string): string | undefined => {
+  const upperSet = set.toUpperCase();
+  const upperNumber = collectorNumber?.toUpperCase();
+  const matchingSetAndNumber = potentialIds.find((id) => {
+    const dbCard = cardFromId(id);
+    return upperSet === dbCard.set.toUpperCase() && upperNumber === dbCard.collector_number.toUpperCase();
+  });
+  const matchingSet = potentialIds.find((id) => cardFromId(id).set.toUpperCase() === upperSet);
+  const nonPromo = potentialIds.find(reasonableId);
+  return matchingSetAndNumber || matchingSet || nonPromo || potentialIds[0];
+};
+
+// Reads a voucher's contents from its "Voucher Cards" cell: entries separated by ';', each in the
+// plain text import shape ("Name [SET] 123", "2 Name (SET)" or just "Name"). Entries that match no
+// card are reported in `missing`. Throws once the contents would pass `limit` cards.
+const parseVoucherCards = (cell: string, voucherName: string, missing: string[], limit: number): VoucherCard[] => {
+  const contents: VoucherCard[] = [];
+  for (const entry of cell.split(';')) {
+    const parsed = parseNonCSVLine(entry);
+    if (!parsed) continue;
+
+    const cardID = pickPrintingId(getIdsFromName(parsed.name), parsed.set || '', parsed.collectorNumber);
+    if (!cardID) {
+      missing.push(`${entry.trim()} (${voucherName})`);
+      continue;
+    }
+    if (contents.length + parsed.count > limit) {
+      throw new Error(IMPORT_TOO_LARGE_MESSAGE);
+    }
+    for (let i = 0; i < parsed.count; i++) {
+      contents.push({ cardID });
+    }
+  }
+  return contents;
+};
+
 function CSVtoCards(csvString: string): CSVResult {
   const { data } = Papa.parse(csvString.trim(), { header: true });
   if (data.length > MAX_IMPORT_CARDS) {
@@ -286,6 +324,7 @@ function CSVtoCards(csvString: string): CSVResult {
   const newCards: CubeCard[] = [];
   const newMaybe: CubeCard[] = [];
   const cardsByBoard: Record<string, CubeCard[]> = {};
+  let voucherContentsCount = 0;
 
   // Check if the CSV has a "board" column by inspecting the first row
   const hasBoardColumn = camelizedRows.length > 0 && Object.prototype.hasOwnProperty.call(camelizedRows[0], 'board');
@@ -309,10 +348,9 @@ function CSVtoCards(csvString: string): CSVResult {
     rarity,
     custom,
     voucher,
+    voucherCards,
   } of camelizedRows) {
     if (name) {
-      const upperSet = (set || '').toUpperCase();
-
       const validatedColorCategory = convertFromLegacyCardColorCategory(colorCategory);
 
       const card: any = {
@@ -341,22 +379,19 @@ function CSVtoCards(csvString: string): CSVResult {
         potentialIds = ['voucher'];
         card.custom_name = name;
         card.name = 'voucher';
+        if (typeof voucherCards === 'string' && voucherCards.trim()) {
+          const contents = parseVoucherCards(voucherCards, name, missing, MAX_IMPORT_CARDS - voucherContentsCount);
+          voucherContentsCount += contents.length;
+          if (contents.length > 0) {
+            card.voucher_cards = contents;
+          }
+        }
       } else {
         potentialIds = getAllVersionIds(card);
       }
 
       if (potentialIds && potentialIds.length > 0) {
-        // First, try to find the correct set.
-        const matchingSetAndNumber = potentialIds.find((id) => {
-          const dbCard = cardFromId(id);
-          return (
-            upperSet === dbCard.set.toUpperCase() && card.collector_number === dbCard.collector_number.toUpperCase()
-          );
-        });
-        const matchingSet = potentialIds.find((id) => cardFromId(id).set.toUpperCase() === upperSet);
-        const nonPromo = potentialIds.find(reasonableId);
-        const first = potentialIds[0];
-        card.cardID = matchingSetAndNumber || matchingSet || nonPromo || first;
+        card.cardID = pickPrintingId(potentialIds, set || '', card.collector_number);
 
         // Determine which board this card belongs to
         let boardName = 'mainboard';

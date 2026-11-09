@@ -22,7 +22,9 @@ export interface CardGridProps {
   hrefFn?: (card: Card) => string;
   onClick?: (card: Card, index: number) => void;
   className?: string;
-  ratings?: number[];
+  ratings?: (number | undefined)[];
+  // Rings the highest-rated card. On by default; off where the ratings aren't a pick.
+  highlightTop?: boolean;
   // Shows a "×N" badge on cards whose quantity is greater than 1.
   quantities?: number[];
   selectedIndex?: number;
@@ -45,11 +47,12 @@ const CardGrid: React.FC<CardGridProps> = ({
   onClick,
   className,
   ratings,
+  highlightTop = true,
   quantities,
   selectedIndex,
   cubeTrayDraggable,
 }) => {
-  const maxRating = ratings ? Math.max(...ratings.filter((r) => r !== undefined)) : null;
+  const maxRating = ratings && highlightTop ? Math.max(...ratings.filter((r): r is number => r !== undefined)) : null;
   const user = useContext(UserContext);
   const drag = useCubeTrayDrag(!!cubeTrayDraggable);
 

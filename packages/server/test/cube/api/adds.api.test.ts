@@ -197,3 +197,47 @@ describe('POST /cube/api/adds totals', () => {
     expect(res.body).toMatchObject({ cardIDs: [], hasMoreAdds: false, totalAdds: 0 });
   });
 });
+
+describe('POST /cube/api/adds eligibility', () => {
+  const cube = createCube({ id: 'cube-1' });
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+    (cubeDao.getCards as jest.Mock).mockResolvedValue({ mainboard: [{ cardID: 'main-card' }] });
+    (cardFromId as jest.Mock).mockImplementation((id: string) => ({ oracle_id: `${id}-oracle` }));
+    (recommendOrThrow as jest.Mock).mockResolvedValue({ adds: [], totalAdds: 0 });
+  });
+
+  const eligibleOraclesSent = () => (recommendOrThrow as jest.Mock).mock.calls[0][1].eligibleOracles;
+
+  it('keeps conspiracies and other special-zone cards the filter matches', async () => {
+    (getAllMostReasonable as jest.Mock).mockReturnValue([
+      { oracle_id: 'conspiracy-oracle', scryfall_id: 'conspiracy', type: 'Conspiracy' },
+      { oracle_id: 'plane-oracle', scryfall_id: 'plane', type: 'Plane — Dominaria' },
+      { oracle_id: 'contraption-oracle', scryfall_id: 'contraption', type: 'Artifact — Contraption' },
+    ]);
+
+    const res = await call(addsHandler)
+      .as(createUser())
+      .withBody({ cubeID: cube.id, filterText: 'type:conspiracy' })
+      .send();
+
+    expect(res.status).toBe(200);
+    expect(eligibleOraclesSent()).toEqual(['conspiracy-oracle', 'plane-oracle', 'contraption-oracle']);
+  });
+
+  it('drops basic lands and Mystery Booster playtest cards', async () => {
+    (getAllMostReasonable as jest.Mock).mockReturnValue([
+      { oracle_id: 'basic-oracle', scryfall_id: 'basic', type: 'Basic Land — Island' },
+      { oracle_id: 'playtest-oracle', scryfall_id: 'playtest', type: 'Creature', set: 'CMB1' },
+      { oracle_id: 'creature-oracle', scryfall_id: 'creature', type: 'Creature' },
+    ]);
+
+    const res = await call(addsHandler).as(createUser()).withBody({ cubeID: cube.id, filterText: 'cmc<5' }).send();
+
+    expect(res.status).toBe(200);
+    expect(eligibleOraclesSent()).toEqual(['creature-oracle']);
+  });
+});

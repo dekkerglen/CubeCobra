@@ -20,6 +20,9 @@ import { Pose } from './tableLayout';
 // The next pack waits this long before it slides in.
 export const PASS_OUT_SECONDS = 0.6;
 
+// How long a drafted voucher swells before it bursts and the cards inside it fly out.
+export const VOUCHER_CHARGE_SECONDS = 0.22;
+
 // Sprites are keyed by card index where those are unique (the draft), and by
 // card index plus occurrence where they aren't (basic lands in a deck).
 export type SpriteId = number | string;
@@ -54,6 +57,8 @@ export interface ExitPlan {
   toward: Map<SpriteId, { x: number; y: number }>;
   // A passed pack just goes, without gathering and sliding off (the player turned animations off).
   passInstantly: boolean;
+  // A drafted voucher bursts where it is, giving way to the cards inside it.
+  burst: Set<SpriteId>;
 }
 
 export interface EnterFrom extends Pose {
@@ -64,6 +69,8 @@ export interface EnterFrom extends Pose {
   // Travel to this pose first (with the rest of the pack), wait `hold` seconds, then fan out.
   via?: Pose;
   hold?: number;
+  // Flung out of a bursting voucher: out to `via` fast, and over every resting card until it lands.
+  fling?: boolean;
 }
 
 interface CardSpriteProps {
@@ -95,6 +102,8 @@ interface CardSpriteProps {
   touchAction?: 'none' | 'pan-y';
   // Go straight to the pose without easing (following a pinch).
   instant?: boolean;
+  // Take a lower stacking order at once, instead of staying over its neighbors until back in place.
+  snapStacking?: boolean;
   highlight: 'selected' | 'top' | 'armed' | null;
   // An ability ready to use: the card rocks gently in place.
   rocking?: boolean;
@@ -110,6 +119,9 @@ interface CardSpriteProps {
 const SPRING = { type: 'spring', stiffness: 260, damping: 26 } as const;
 const BURST_SPRING = { type: 'spring', stiffness: 300, damping: 19 } as const;
 const PASS_EASE: Easing[] = ['easeOut', 'easeIn'];
+const FLING_EASE: Easing = [0.16, 1, 0.3, 1];
+// After the charge, how long a voucher's flash takes to fade.
+const VOUCHER_BURST_SECONDS = 0.3;
 
 // A small stable number per sprite, for per-card variety like a pile's tilt.
 export const spriteSeed = (id: SpriteId): number => {
@@ -158,6 +170,7 @@ const CardSprite: React.FC<CardSpriteProps> = ({
   held = false,
   touchAction = 'none',
   instant = false,
+  snapStacking = false,
   highlight,
   rocking = false,
   faceDown = false,
@@ -181,13 +194,20 @@ const CardSprite: React.FC<CardSpriteProps> = ({
   const drawnWidth = useMotionValue(width);
   const drawnHeight = useMotionValue(height);
   const clipPath = useMotionValue('none');
+  // A bursting voucher's white-hot glow.
+  const flash = useMotionValue(0);
   const [isPresent, safeToRemove] = usePresence();
-  // A trashed card dropping away, or a card shrinking into a board's tab, stays
-  // over every resting card on its way out (held, since its tab is read only once).
+  // A trashed card dropping away, a card shrinking into a board's tab, or a bursting voucher
+  // stays over every resting card on its way out (held, since the plan is read only once).
   const [leavingAlone, setLeavingAlone] = useState(false);
-  if (!isPresent && !leavingAlone && (exitPlan?.current.trashed.has(id) || exitPlan?.current.toward.has(id))) {
-    setLeavingAlone(true);
+  const [bursting, setBursting] = useState(false);
+  if (!isPresent && !leavingAlone) {
+    const plan = exitPlan?.current;
+    if (plan?.trashed.has(id) || plan?.toward.has(id) || plan?.burst.has(id)) setLeavingAlone(true);
+    if (plan?.burst.has(id) && !plan.toward.has(id)) setBursting(true);
   }
+  // A card flung out of a voucher flies over everything until it lands.
+  const [flying, setFlying] = useState(Boolean(enterFrom?.fling));
 
   // Still travelling after a drop or a move between zones; it isn't clipped to
   // its zone's view until it lands.
@@ -244,10 +264,10 @@ const CardSprite: React.FC<CardSpriteProps> = ({
 
   // A card whose stacking drops while it's at rest (a grown or lifted card let
   // go) stays over its neighbors until it's back in place, so none of them flash
-  // in front of it on the way.
+  // in front of it on the way; unless it snaps.
   const [stacking, setStacking] = useState({ z, dragged, floor: z });
   if (z !== stacking.z || dragged !== stacking.dragged) {
-    const dropped = z < stacking.z && !stacking.dragged && !dragged;
+    const dropped = !snapStacking && z < stacking.z && !stacking.dragged && !dragged;
     setStacking({ z, dragged, floor: dropped ? Math.max(stacking.floor, stacking.z) : z });
   }
   const restingZ = Math.max(z, stacking.floor);
@@ -351,6 +371,7 @@ const CardSprite: React.FC<CardSpriteProps> = ({
       ];
       Promise.all(controls.map((control) => control.finished)).then(() => {
         if (run.current !== token) return;
+        setFlying(false);
         setStacking((current) => (current.floor === current.z ? current : { ...current, floor: current.z }));
         if (settlingRef.current) {
           settlingRef.current = false;
@@ -361,13 +382,16 @@ const CardSprite: React.FC<CardSpriteProps> = ({
     };
 
     if (enter?.via) {
-      // Arrive with the rest of the pack, pause, then fan out.
+      // Arrive with the rest of the pack (or burst out of a voucher), pause, then go to its spot.
       const via = enter.via;
-      const travel = { duration: 0.32, ease: 'easeOut' as const, delay };
+      const travel = enter.fling
+        ? { duration: 0.45, ease: FLING_EASE, delay }
+        : { duration: 0.32, ease: 'easeOut' as const, delay };
       controls = [
         animate(x, via.x, travel),
         animate(y, via.y, travel),
         animate(rotate, via.rotate, travel),
+        animate(scale, via.scale ?? scale.get(), travel),
         animate(opacity, 1, { duration: 0.05, delay }),
       ];
       Promise.all(controls.map((control) => control.finished)).then(() => {
@@ -404,7 +428,8 @@ const CardSprite: React.FC<CardSpriteProps> = ({
 
   // Leaving the table: a passed pack gathers into a pile in the middle, then
   // slides off toward the next drafter; a trashed card drops away; a card sent to
-  // a board that isn't showing shrinks into its tab; anything else fades.
+  // a board that isn't showing shrinks into its tab; a drafted voucher swells,
+  // shudders, and bursts in a flash; anything else fades.
   useEffect(() => {
     if (isPresent) return;
     const plan = exitPlan?.current;
@@ -427,6 +452,18 @@ const CardSprite: React.FC<CardSpriteProps> = ({
         animate(y, y.get() + height * 0.8, { duration: 0.4, ease: 'easeIn' }),
         animate(rotate, rotate.get() + 16, { duration: 0.4, ease: 'easeIn' }),
         animate(opacity, 0, { duration: 0.4, ease: 'easeIn' }),
+      ];
+    } else if (plan?.burst.has(id)) {
+      plan.burst.delete(id);
+      const total = VOUCHER_CHARGE_SECONDS + VOUCHER_BURST_SECONDS;
+      const timing = { duration: total, times: [0, VOUCHER_CHARGE_SECONDS / total, 1] };
+      const size = scale.get();
+      const tilt = rotate.get();
+      controls = [
+        animate(scale, [size, size * 1.12, size * 1.5], { ...timing, ease: ['easeIn', 'easeOut'] }),
+        animate(rotate, [tilt, tilt - 3, tilt + 3.5, tilt - 2, tilt], { duration: VOUCHER_CHARGE_SECONDS }),
+        animate(flash, [0, 0.55, 1], timing),
+        animate(opacity, [1, 1, 0], { ...timing, ease: ['linear', 'easeIn'] }),
       ];
     } else if (plan && passOnExit && plan.passInstantly) {
       // Gone at once, though it stays mounted until every other leaving card (a
@@ -463,7 +500,7 @@ const CardSprite: React.FC<CardSpriteProps> = ({
         clipPath,
         width: drawnWidth,
         height: drawnHeight,
-        zIndex: dragged ? 3000 : leavingAlone ? 2900 : elevated ? 2500 : restingZ,
+        zIndex: dragged ? 3000 : leavingAlone ? 2900 : elevated ? 2500 : flying ? 2000 + restingZ : restingZ,
         transformOrigin: '50% 100%',
         touchAction,
         // A long press picks the card up; don't let the browser show its own menu.
@@ -496,7 +533,24 @@ const CardSprite: React.FC<CardSpriteProps> = ({
         }
       >
         {faceDown ? <CardBack /> : <FoilCardImage card={card} height="100%" />}
+        {bursting && <motion.div className="absolute inset-0 bg-white" style={{ opacity: flash }} />}
       </motion.div>
+      {bursting && (
+        <motion.div
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            left: width / 2 - width,
+            top: height / 2 - width,
+            width: width * 2,
+            height: width * 2,
+            background:
+              'radial-gradient(circle, rgba(255,255,255,0.95) 0%, rgba(255,236,170,0.55) 35%, transparent 70%)',
+          }}
+          initial={{ scale: 0.3, opacity: 0 }}
+          animate={{ scale: 2.2, opacity: [0, 1, 0] }}
+          transition={{ duration: 0.45, delay: VOUCHER_CHARGE_SECONDS, ease: 'easeOut' }}
+        />
+      )}
       {/* Badges and labels belong to the card's spot; they don't leave with it. */}
       {isPresent && children}
     </motion.div>

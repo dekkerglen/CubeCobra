@@ -5,7 +5,12 @@
  * Classifies a deck by encoding its oracle IDs via the ML service, then finding
  * the closest cluster center via cosine similarity.
  */
-import { archetypeForEmbedding, type ClusterCenter } from '@utils/drafting/archetype';
+import {
+  archetypeForEmbedding,
+  type ArchetypeMatch,
+  type ClusterCenter,
+  rankArchetypes,
+} from '@utils/drafting/archetype';
 import fs from 'fs';
 import path from 'path';
 
@@ -61,4 +66,10 @@ export async function classifyDeck(oracleIds: string[]): Promise<string | null> 
   } catch {
     return null;
   }
+}
+
+/** Every archetype label ranked by its closest cluster center to `embedding` (cosine). */
+export function rankArchetypesForEmbedding(embedding: number[]): ArchetypeMatch[] {
+  loadData();
+  return rankArchetypes(embedding, clusterCenters, annotations);
 }

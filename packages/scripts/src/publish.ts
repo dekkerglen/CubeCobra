@@ -87,7 +87,8 @@ const ignore: string[] = [
   'nodemon.json',
   '.esprintrc',
   '.yarnrc.yml',
-  '.platform/**',
+  // .platform is NOT ignored: Elastic Beanstalk reads its nginx config from the bundle root,
+  // and without it nginx falls back to a 1MB request body limit.
   'scripts/**', // Exclude build scripts
 ];
 

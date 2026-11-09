@@ -16,7 +16,7 @@ import { chooseTheme, planFor, themePools } from './schedule';
  * Everything about the daily puzzle that doesn't vary by day.
  *
  * Size and theme do vary — see `WEEKLY_SCHEDULE` in schedule.ts, which ramps the
- * grid from Monday's 9 to Sunday's 16 and gives each weekday a different kind of
+ * grid from Monday's 9 to Sunday's 15 and gives each weekday a different kind of
  * restriction. Symmetry, minimum word length and the acronym budget are the same
  * every day: they are what a Magic crossword *is*, not what makes one day harder
  * than another. Acronyms stay available but unpreferred, as in the lab — there
@@ -153,8 +153,15 @@ export const isBuildFailure = (result: CrosswordPuzzleGrid | BuildFailure): resu
   (result as BuildFailure).reason !== undefined;
 
 /**
- * The grid for one puzzle date: deterministic in the date, clued, and trimmed to
- * what is worth storing. Requires the card catalog to be loaded.
+ * The grid for one puzzle date: deterministic in the date and round, clued, and
+ * trimmed to what is worth storing. Requires the card catalog to be loaded.
+ *
+ * `round` is which pass over the ladder this is. A date's draws are seeded off the
+ * date, so asking again for the same round re-asks the same thirteen questions and
+ * fails the same way; each later round continues the attempt numbering past the
+ * last rung, which redraws every theme and seed. Round 1 is the numbering every
+ * puzzle before rounds existed was built with, so those still rebuild from their
+ * date alone. The daily jobs lambda passes its retry count here.
  *
  * Async because `generateCrossword` is, and `generateCrossword` is because the
  * lab needs to yield between progress snapshots to get them out of the socket.
@@ -162,22 +169,24 @@ export const isBuildFailure = (result: CrosswordPuzzleGrid | BuildFailure): resu
  * so the collapse never yields and this is the same blocking loop it always was,
  * one microtask longer.
  */
-export const buildDailyGrid = async (date: string): Promise<CrosswordPuzzleGrid | BuildFailure> => {
+export const buildDailyGrid = async (date: string, round = 1): Promise<CrosswordPuzzleGrid | BuildFailure> => {
   const plan = planFor(date);
   const pools = themePools(date);
+  const firstAttempt = (round - 1) * DAILY_RUNGS.length;
   let lastReason = 'no attempt ran';
 
   for (const rung of DAILY_RUNGS) {
-    const seed = seedFor(date, rung.attempt);
+    const attempt = firstAttempt + rung.attempt;
+    const seed = seedFor(date, attempt);
     // Drawing the theme is a pass over the catalog per candidate, so it happens
     // out here rather than inside the generation budget it would otherwise eat.
-    const theme = rung.themed ? chooseTheme(date, rung.attempt, plan, pools) : null;
+    const theme = rung.themed ? chooseTheme(date, attempt, plan, pools) : null;
     if (rung.themed && !theme) {
       // Not an error and not silent. A pool that can't supply a theme deep enough
       // to frame this size is a fact about the schedule, and it is the thing to
       // look at first if a weekday starts coming out unthemed.
       console.info(
-        `Crossword ${date}: rung ${rung.attempt} found no ${plan.kind} theme with enough ${plan.size}-letter card names; falling through.`,
+        `Crossword ${date}: rung ${attempt} found no ${plan.kind} theme with enough ${plan.size}-letter card names; falling through.`,
       );
       continue;
     }
@@ -200,12 +209,12 @@ export const buildDailyGrid = async (date: string): Promise<CrosswordPuzzleGrid 
     if (isGenerateFailure(result)) {
       lastReason = result.reason;
       console.info(
-        `Crossword ${date}: rung ${rung.attempt} failed after ${Date.now() - started}ms — ${describe} — ${result.reason}`,
+        `Crossword ${date}: rung ${attempt} failed after ${Date.now() - started}ms — ${describe} — ${result.reason}`,
       );
       continue;
     }
 
-    console.info(`Crossword ${date}: built on rung ${rung.attempt} in ${Date.now() - started}ms — ${describe}.`);
+    console.info(`Crossword ${date}: built on rung ${attempt} in ${Date.now() - started}ms — ${describe}.`);
     return storableGrid(withClues(result.grid, seed));
   }
 

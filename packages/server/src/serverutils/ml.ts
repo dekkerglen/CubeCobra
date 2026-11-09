@@ -77,6 +77,12 @@ export const encode = async (oracles: string[]): Promise<number[]> => {
   }
 };
 
+// Throwing variant of a batched encode — see buildOrThrow. One 128-dim embedding per input list.
+export const batchEncodeOrThrow = async (inputs: string[][]): Promise<number[][]> => {
+  const response = await mlServiceRequest<{ success: boolean; results: number[][] }>('batchencode', { inputs });
+  return response.results;
+};
+
 export interface RecommendOptions {
   // Oracle ids of cards eligible to be recommended as `adds`. Smart Search
   // applies the user's filter against the catalog server-side and passes the

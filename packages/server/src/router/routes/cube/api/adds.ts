@@ -1,4 +1,3 @@
-import { typeIsSpecialZoneType } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
 import { isReservedBoardKey, MAX_BOARDS } from '@utils/datatypes/Cube';
 import { makeFilter, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
@@ -7,27 +6,10 @@ import { cardFromId, getAllMostReasonable } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { jsonLimiter } from 'serverutils/rateLimiters';
 import { recommendOrThrow } from 'serverutils/ml';
+import { isExcludedFromSmartSearch } from 'serverutils/smartSearch';
 import { applyUniversesBeyondSetting } from 'serverutils/universesBeyond';
 
 import { Request, Response } from '../../../../types/express';
-
-// Set codes for the Mystery Booster playtest cards (Gavin Verhey's "mystery
-// event" / convention playtest cards). These aren't real, tournament-playable
-// cards and shouldn't be suggested as cube additions.
-const MYSTERY_PLAYTEST_SETS = new Set(['cmb1', 'cmb2']);
-
-// Smart Search suggests cards to ADD to a cube, so it should never surface
-// cards that can't sit in a normal cube list. Tokens are already dropped
-// upstream (printedCardList excludes them); here we also drop basic lands,
-// special-zone cards (planes, schemes, phenomena, vanguards, conspiracies,
-// contraptions), and Mystery Booster playtest cards.
-const isExcludedFromSmartSearch = (card: CardDetails): boolean => {
-  const type = card.type ?? '';
-  if (type.includes('Basic') && type.includes('Land')) return true;
-  if (typeIsSpecialZoneType(type)) return true;
-  if (card.set && MYSTERY_PLAYTEST_SETS.has(card.set.toLowerCase())) return true;
-  return false;
-};
 
 export const addsHandler = async (req: Request, res: Response) => {
   try {
@@ -97,9 +79,9 @@ export const addsHandler = async (req: Request, res: Response) => {
 
     // Apply the user's filter to the whole catalog here on the server — it has
     // the card catalog and filter module. getAllMostReasonable already drops
-    // tokens; isExcludedFromSmartSearch drops basics, special-zone cards, and
-    // Mystery Booster playtest cards. Each eligible oracle maps to one
-    // displayable (printing-preferred) card.
+    // tokens; isExcludedFromSmartSearch drops basics and Mystery Booster
+    // playtest cards. Each eligible oracle maps to one displayable
+    // (printing-preferred) card.
     const eligible = getAllMostReasonable(
       applyUniversesBeyondSetting(filter, req.user, filterText)!,
       printingPreference,

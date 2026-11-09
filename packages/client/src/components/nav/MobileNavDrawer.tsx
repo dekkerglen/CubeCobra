@@ -3,6 +3,7 @@ import React, { useContext, useEffect, useState } from 'react';
 import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import type { Icon as OcticonIcon } from '@primer/octicons-react';
 import {
+  BeakerIcon,
   BellFillIcon,
   BookIcon,
   BroadcastIcon,
@@ -51,6 +52,7 @@ const browseRows: Row[] = [
   { label: 'Cards', href: '/tool/searchcards', icon: GraphIcon },
   { label: 'Sets', href: '/tool/sets', icon: StackIcon },
   { label: 'Packages', href: '/packages', icon: VersionsIcon },
+  { label: 'ML Playground', href: '/tool/mlplayground', icon: BeakerIcon },
 ];
 
 const dailyRows: Row[] = [

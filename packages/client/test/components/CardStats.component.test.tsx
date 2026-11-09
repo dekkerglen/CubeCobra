@@ -147,3 +147,30 @@ describe('card page stats column', () => {
     expect(screen.queryByRole('link', { name: 'Packages' })).not.toBeInTheDocument();
   });
 });
+
+describe('landscape card images', () => {
+  const landscapeFrameAround = (image: HTMLElement) => image.closest('[style*="680 / 488"]');
+
+  it('wraps a planar card image in a landscape frame', () => {
+    render(<CardBreakdownStats card={{ ...card, layout: 'planar' }} history={noHistory} />);
+
+    expect(landscapeFrameAround(screen.getByAltText('Soltari Foot Soldier'))).not.toBeNull();
+  });
+
+  it('leaves an ordinary card unwrapped', () => {
+    render(<CardBreakdownStats card={card} history={noHistory} />);
+
+    expect(landscapeFrameAround(screen.getByAltText('Soltari Foot Soldier'))).toBeNull();
+  });
+
+  it('reflows to portrait when a battle is turned over', () => {
+    const battle: CardDetails = { ...twoFaced('transform'), type: 'Battle — Siege' };
+    render(<CardBreakdownStats card={battle} history={noHistory} />);
+
+    expect(landscapeFrameAround(screen.getByAltText('Soltari Foot Soldier'))).not.toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Transform' }));
+
+    expect(landscapeFrameAround(screen.getByAltText('Soltari Foot Soldier'))).toBeNull();
+  });
+});

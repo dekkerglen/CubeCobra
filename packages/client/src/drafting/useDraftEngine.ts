@@ -164,9 +164,10 @@ const useDraftEngine = ({ draft, onGain, onLose, onFinished }: Options) => {
     setPredictionsLoading(true);
     setPredictError(false);
     try {
+      // The model only sees which cards are present, so repeats (a voucher's basics) are dropped.
       const inputs = state.seats.map((seat, index) => ({
-        pack: (frontPack(state, index)?.cards ?? []).flatMap(oracleIds),
-        picks: seat.pool.flatMap(oracleIds),
+        pack: [...new Set((frontPack(state, index)?.cards ?? []).flatMap(oracleIds))],
+        picks: [...new Set(seat.pool.flatMap(oracleIds))],
       }));
       const data = await fetchBatchPredict(inputs);
       setPredictions({ key, data });
@@ -382,14 +383,20 @@ const useDraftEngine = ({ draft, onGain, onLose, onFinished }: Options) => {
         return;
       }
       setArming((current) => {
-        const toggle = (list: number[]) => (list.includes(card) ? list.filter((c) => c !== card) : [...list, card]);
+        // A Librarian or Operative stays on once the cards already picked need it; switched
+        // off, the pick would have more cards than it allows and the engine would refuse it.
+        const canDisarm = picked < current.librarians.length + current.operatives.length;
+        const toggle = (list: number[]) => {
+          if (!list.includes(card)) return [...list, card];
+          return canDisarm ? list.filter((c) => c !== card) : list;
+        };
         if (effect === 'librarian') return { ...current, librarians: toggle(current.librarians) };
         if (effect === 'operative') return { ...current, operatives: toggle(current.operatives) };
         if (effect === 'grinder' || effect === 'animus') return { ...current, remove: !current.remove };
         return current;
       });
     },
-    [ctx, answer],
+    [ctx, answer, picked],
   );
 
   const watchWithInformant = useCallback(
