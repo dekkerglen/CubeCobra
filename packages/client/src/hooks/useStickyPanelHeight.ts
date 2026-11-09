@@ -14,7 +14,7 @@ const useStickyPanelHeight = <T extends HTMLElement>() => {
     const update = () => {
       const { top, bottom } = column.getBoundingClientRect();
       const height = Math.min(window.innerHeight, bottom) - Math.max(0, top);
-      panel.style.height = `${Math.max(0, height)}px`;
+      panel.style.setProperty('height', `${Math.max(0, height)}px`);
     };
 
     update();

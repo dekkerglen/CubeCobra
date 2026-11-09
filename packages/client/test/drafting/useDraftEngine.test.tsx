@@ -1,6 +1,4 @@
-import React from 'react';
-
-import { act, render, waitFor } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 
 import Card from '@utils/datatypes/Card';
 import Draft from '@utils/datatypes/Draft';
@@ -33,12 +31,9 @@ const buildDraft = (): Draft => {
   };
 };
 
-let hook: ReturnType<typeof useDraftEngine>;
-
-const Harness: React.FC<{ draft: Draft }> = ({ draft }) => {
-  hook = useDraftEngine({ draft, onGain: jest.fn(), onLose: jest.fn(), onFinished: jest.fn(async () => {}) });
-  return null;
-};
+const renderEngine = (draft: Draft) =>
+  renderHook(() => useDraftEngine({ draft, onGain: jest.fn(), onLose: jest.fn(), onFinished: jest.fn(async () => {}) }))
+    .result;
 
 describe('useDraftEngine', () => {
   beforeEach(() => {
@@ -57,20 +52,20 @@ describe('useDraftEngine', () => {
     ).state;
     window.localStorage.setItem(`draftengine-${draft.id}`, JSON.stringify(start));
 
-    render(<Harness draft={draft} />);
-    await waitFor(() => expect(hook.ready).toContain(0));
-    expect(hook.pack).toEqual([4, 5]);
+    const hook = renderEngine(draft);
+    await waitFor(() => expect(hook.current.ready).toContain(0));
+    expect(hook.current.pack).toEqual([4, 5]);
 
-    act(() => hook.toggleArm(0));
-    expect(hook.picksLeft).toBe(2);
-    act(() => hook.pick(4));
+    act(() => hook.current.toggleArm(0));
+    expect(hook.current.picksLeft).toBe(2);
+    act(() => hook.current.pick(4));
     // Switching it off now would leave two cards picked with one allowed.
-    act(() => hook.toggleArm(0));
-    expect(hook.arming.librarians).toEqual([0]);
-    act(() => hook.pick(5));
+    act(() => hook.current.toggleArm(0));
+    expect(hook.current.arming.librarians).toEqual([0]);
+    act(() => hook.current.pick(5));
 
-    await waitFor(() => expect(hook.engine.tick).toBe(start.tick + 1));
-    const seat = hook.engine.seats[HUMAN]!;
+    await waitFor(() => expect(hook.current.engine.tick).toBe(start.tick + 1));
+    const seat = hook.current.engine.seats[HUMAN]!;
     expect(seat.pool).toEqual(expect.arrayContaining([4, 5]));
     expect(seat.pool).not.toContain(0);
   });
@@ -85,12 +80,12 @@ describe('useDraftEngine', () => {
     ).state;
     window.localStorage.setItem(`draftengine-${draft.id}`, JSON.stringify(start));
 
-    render(<Harness draft={draft} />);
-    await waitFor(() => expect(hook.ready).toContain(0));
+    const hook = renderEngine(draft);
+    await waitFor(() => expect(hook.current.ready).toContain(0));
 
-    act(() => hook.toggleArm(0));
-    act(() => hook.toggleArm(0));
-    expect(hook.arming.librarians).toEqual([]);
-    expect(hook.picksLeft).toBe(1);
+    act(() => hook.current.toggleArm(0));
+    act(() => hook.current.toggleArm(0));
+    expect(hook.current.arming.librarians).toEqual([]);
+    expect(hook.current.picksLeft).toBe(1);
   });
 });

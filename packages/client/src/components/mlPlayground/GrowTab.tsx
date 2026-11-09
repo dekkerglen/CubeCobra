@@ -1,4 +1,4 @@
-import React, { useCallback, useRef, useState } from 'react';
+import React, { useCallback, useState } from 'react';
 
 import Button from 'components/base/Button';
 import Checkbox from 'components/base/Checkbox';
@@ -44,7 +44,7 @@ const GrowTab: React.FC = () => {
   const [error, setError] = useState<PlaygroundError | null>(null);
   const [page, setPage] = useState(0);
   // The inputs the cards shown were grown from. Growing again with the same inputs continues.
-  const grownFrom = useRef<string | null>(null);
+  const [grownFrom, setGrownFrom] = useState<string | null>(null);
 
   const targetSize = clamp(target, 360, 1, MAX_TARGET);
   const stepSize = clamp(step, 10, 1, MAX_STEP);
@@ -53,8 +53,8 @@ const GrowTab: React.FC = () => {
   const grow = useCallback(async () => {
     if (!canGrow) return;
     const inputs = JSON.stringify([cards, filter, substitute]);
-    const resume = grownFrom.current === inputs && (seed?.cards.length ?? 0) + added.length < targetSize;
-    grownFrom.current = inputs;
+    const resume = grownFrom === inputs && (seed?.cards.length ?? 0) + added.length < targetSize;
+    setGrownFrom(inputs);
 
     let seedSummary = resume ? seed : null;
     let current = resume ? added : [];
@@ -105,7 +105,7 @@ const GrowTab: React.FC = () => {
     } finally {
       if (request.isCurrent()) setRunning(false);
     }
-  }, [added, begin, canGrow, cards, filter, post, seed, stepSize, substitute, targetSize]);
+  }, [added, begin, canGrow, cards, filter, grownFrom, post, seed, stepSize, substitute, targetSize]);
 
   const stop = useCallback(() => {
     invalidate();
@@ -114,7 +114,7 @@ const GrowTab: React.FC = () => {
 
   const reset = useCallback(() => {
     invalidate();
-    grownFrom.current = null;
+    setGrownFrom(null);
     setRunning(false);
     setSeed(null);
     setAdded([]);
@@ -124,8 +124,7 @@ const GrowTab: React.FC = () => {
 
   const seedCount = seed?.cards.length ?? 0;
   const total = seedCount + added.length;
-  const resumable =
-    added.length > 0 && total < targetSize && grownFrom.current === JSON.stringify([cards, filter, substitute]);
+  const resumable = added.length > 0 && total < targetSize && grownFrom === JSON.stringify([cards, filter, substitute]);
   const progress = Math.min(100, (total / targetSize) * 100);
   const allCards = () => listText([...(seed?.cards ?? []), ...added]);
   const pageCount = Math.ceil(added.length / PAGE_SIZE);
