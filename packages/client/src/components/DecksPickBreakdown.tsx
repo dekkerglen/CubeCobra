@@ -217,9 +217,9 @@ const CubeBreakdown: React.FC<BreakdownProps> = ({ draft, seatNumber, pickNumber
           oracleIds: getCardOracleIds(item.cardIndex),
         }));
 
-        // Flatten oracle_ids for the API call
-        const packOracleIds = packCardInfos.flatMap((info) => info.oracleIds);
-        const picksOracleIds = allPicks.flatMap((idx) => getCardOracleIds(idx));
+        // Flatten oracle_ids for the API call; the model only sees which cards are present, so repeats are dropped
+        const packOracleIds = [...new Set(packCardInfos.flatMap((info) => info.oracleIds))];
+        const picksOracleIds = [...new Set(allPicks.flatMap((idx) => getCardOracleIds(idx)))];
 
         const response = await fetch(`/api/draftbots/predict`, {
           method: 'POST',

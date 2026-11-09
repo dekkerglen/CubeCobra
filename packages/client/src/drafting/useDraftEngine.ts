@@ -164,9 +164,10 @@ const useDraftEngine = ({ draft, onGain, onLose, onFinished }: Options) => {
     setPredictionsLoading(true);
     setPredictError(false);
     try {
+      // The model only sees which cards are present, so repeats (a voucher's basics) are dropped.
       const inputs = state.seats.map((seat, index) => ({
-        pack: (frontPack(state, index)?.cards ?? []).flatMap(oracleIds),
-        picks: seat.pool.flatMap(oracleIds),
+        pack: [...new Set((frontPack(state, index)?.cards ?? []).flatMap(oracleIds))],
+        picks: [...new Set(seat.pool.flatMap(oracleIds))],
       }));
       const data = await fetchBatchPredict(inputs);
       setPredictions({ key, data });

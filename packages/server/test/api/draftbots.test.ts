@@ -41,8 +41,18 @@ describe('draftbot prediction limits', () => {
     expect(batch.status).toBe(200);
   });
 
+  it('accepts a pack of vouchers expanded into their sub-cards', async () => {
+    const app = buildApp();
+
+    // 20 vouchers of 21 cards each, as a Jumpstart-style voucher format deals.
+    const batch = await request(app)
+      .post('/batchpredict')
+      .send({ inputs: Array(8).fill({ pack: Array(420).fill(ORACLE), picks: Array(42).fill(ORACLE) }) });
+    expect(batch.status).toBe(200);
+  });
+
   it.each([
-    ['pack', { pack: Array(201).fill(ORACLE), picks: [] }],
+    ['pack', { pack: Array(1001).fill(ORACLE), picks: [] }],
     ['picks', { pack: [ORACLE], picks: Array(501).fill(ORACLE) }],
   ])('rejects an oversized %s list', async (_field, body) => {
     const app = buildApp();
