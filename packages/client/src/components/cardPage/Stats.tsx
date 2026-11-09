@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 
 import { ArrowSwitchIcon } from '@primer/octicons-react';
-import { cardFaceToggleLabel, detailsToCard } from '@utils/cardutil';
+import { cardFaceOrientations, cardFaceToggleLabel, detailsToCard } from '@utils/cardutil';
 import { cdnUrl } from '@utils/cdnUrl';
 import { CardDetails } from '@utils/datatypes/Card';
 import HistoryType from '@utils/datatypes/History';
@@ -9,6 +9,7 @@ import HistoryType from '@utils/datatypes/History';
 import Button from '../base/Button';
 import { Flexbox } from '../base/Layout';
 import CardIdBadge from '../card/CardIdBadge';
+import CardOrientationFrame from '../card/CardOrientationFrame';
 import ImageFallback from '../ImageFallback';
 import AddToCubeModal from '../modals/AddToCubeModal';
 import withModal from '../WithModal';
@@ -29,15 +30,27 @@ interface CardPageProps {
 const CardBreakdownStats: React.FC<CardPageProps> = ({ card, history }) => {
   const [imageUsed, setImageUsed] = useState(card.image_normal);
 
+  // Orientation is per face: a Battle's landscape front becomes a portrait back.
+  const faceOrientations = cardFaceOrientations(card);
+  const displayedOrientation = imageUsed === card.image_normal ? faceOrientations.front : faceOrientations.back;
+
+  const image = (
+    <ImageFallback
+      card={card}
+      className="w-full"
+      src={imageUsed}
+      fallbackSrc={cdnUrl('/content/loadingcard.png')}
+      alt={card.name}
+    />
+  );
+
   return (
     <Flexbox direction="col" className="my-2 mx-2" gap="2">
-      <ImageFallback
-        card={card}
-        className="w-full"
-        src={imageUsed}
-        fallbackSrc={cdnUrl('/content/loadingcard.png')}
-        alt={card.name}
-      />
+      {displayedOrientation === 'landscape' ? (
+        <CardOrientationFrame orientation="landscape">{image}</CardOrientationFrame>
+      ) : (
+        image
+      )}
       {card.image_flip && (
         <Button
           color="accent"
