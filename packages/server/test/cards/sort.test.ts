@@ -1191,6 +1191,35 @@ describe('Grouping by Types-Multicolor', () => {
   });
 });
 
+describe('Grouping by Color Category', () => {
+  const SORT = 'Color Category';
+
+  it('Labels list Hybrid and Multicolored before Colorless', () => {
+    expect(getLabelsRaw(null, SORT, false)).toEqual([
+      'White',
+      'Blue',
+      'Black',
+      'Red',
+      'Green',
+      'Hybrid',
+      'Multicolored',
+      'Colorless',
+      'Lands',
+    ]);
+  });
+
+  it('Groups Multicolored cards before Colorless cards', () => {
+    const cards = [
+      createCardFromDetails({ name: 'Card 1', type: 'Artifact', color_identity: [] }),
+      createCardFromDetails({ name: 'Card 2', type: 'Creature', color_identity: ['R', 'G'] }),
+      createCardFromDetails({ name: 'Card 3', type: 'Instant', color_identity: ['U'] }),
+    ];
+
+    const groups = sortGroupsOrdered(cards, SORT, true);
+    assertGroupOrdering(groups, ['Blue', 'Multicolored', 'Colorless']);
+  });
+});
+
 describe('Grouping by Types', () => {
   const SORT = 'Type';
 
