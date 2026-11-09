@@ -1,5 +1,5 @@
 import Record, { Match } from '@utils/datatypes/Record';
-import { BYE } from '@utils/records/pairings';
+import { BYE, UNKNOWN_OPPONENT } from '@utils/records/pairings';
 import { computeStandings, formatPercentage } from '@utils/records/standings';
 
 const played = (p1: string, p2: string, results: [number, number, number]): Match => ({ p1, p2, results });
@@ -55,6 +55,62 @@ describe('computeStandings', () => {
     expect(c!.opponentMatchWin).toBeUndefined();
     expect(a!.opponentMatchWin).toBeCloseTo(0.33, 4);
     expect(b).toMatchObject({ name: 'B', losses: 1, points: 0 });
+  });
+
+  /**
+   * MTR Appendix C: "A player's byes are ignored when computing their opponents' match-win and
+   * opponents' game-win percentages." Two numbers are needed per player — one including the bye
+   * (their own record) and one without it (what they contribute to the people who played them).
+   *
+   * The case above only shows that the byed player gains no opponent of their own; it cannot
+   * catch this, because nobody in its single round ever plays C. This one does: C byes round
+   * one, then loses to A in round two, so C's percentages reach A.
+   */
+  it("ignores a bye when the byed player's percentages feed an opponent", () => {
+    const standings = computeStandings(
+      makeRecord(
+        ['A', 'B', 'C'],
+        [
+          [played('A', 'B', [2, 0, 0]), played('C', BYE, [2, 0, 0])],
+          [played('A', 'C', [2, 0, 0]), played('B', BYE, [2, 0, 0])],
+        ],
+      ),
+    );
+    const byName = (name: string) => standings.find((standing) => standing.name === name)!;
+
+    // A played B (0-1 once the bye is set aside) and C (also 0-1): both floor at 0.33.
+    // Counting the byes instead would read each of them as 1-1 and give A 0.5.
+    expect(byName('A').opponentMatchWin).toBeCloseTo(0.33, 4);
+    expect(byName('A').opponentGameWin).toBeCloseTo(0.33, 4);
+
+    // The bye still counts for the player who got it: B and C are each 1-1 with 3 points.
+    expect(byName('B')).toMatchObject({ wins: 1, losses: 1, points: 3 });
+    expect(byName('C')).toMatchObject({ wins: 1, losses: 1, points: 3 });
+    // ...including in their own game-win percentage: 6 bye game points of 12 played.
+    expect(byName('C').gameWin).toBeCloseTo(0.5, 4);
+  });
+
+  /**
+   * A result entered against the placeholder opponent is a match that was really played — a
+   * transcribed event often knows a result without knowing who it was against. It used to be
+   * discarded whole, so a record transcribed as 2-0 showed 1-0 on this tab.
+   */
+  it('counts a result recorded against an unknown opponent', () => {
+    const standings = computeStandings(
+      makeRecord(['A', 'B'], [[played('A', UNKNOWN_OPPONENT, [2, 0, 0])], [played('A', 'B', [2, 1, 0])]]),
+    );
+    const byName = (name: string) => standings.find((standing) => standing.name === name)!;
+
+    expect(byName('A')).toMatchObject({ wins: 2, losses: 0, points: 6 });
+    // Nobody stands behind the placeholder, so it joins no opponent average: A's only
+    // countable opponent is B.
+    expect(byName('A').opponentMatchWin).toBeCloseTo(0.33, 4);
+  });
+
+  it('still ignores an unknown-opponent match nobody has reported', () => {
+    const standings = computeStandings(makeRecord(['A', 'B'], [[played('A', UNKNOWN_OPPONENT, [0, 0, 0])]]));
+
+    expect(standings.find((standing) => standing.name === 'A')).toMatchObject({ wins: 0, losses: 0, points: 0 });
   });
 
   it('does not count a match nobody has reported as a draw', () => {

@@ -1,5 +1,5 @@
 import Record, { playerRecord, WinLossDraw } from '@utils/datatypes/Record';
-import { BYE, UNKNOWN_OPPONENT } from '@utils/records/pairings';
+import { BYE } from '@utils/records/pairings';
 
 // A match-win or game-win percentage never counts below 0.33, so losing to a player who had a
 // bad day doesn't sink a strong record (MTR Appendix C). Exactly 0.33, not a third: a player on
@@ -12,7 +12,8 @@ const GAME_WIN_POINTS = 3;
 const GAME_DRAW_POINTS = 1;
 
 // A bye is played as a 2-0 win: it counts toward the player's own match and game percentages,
-// but no opponent stands behind it, so it never enters anyone's opponent percentages.
+// but MTR Appendix C ignores it when those percentages feed an opponent's tiebreakers, so the
+// two have to be tallied apart.
 const BYE_GAMES = { won: 2, lost: 0, drawn: 0 };
 
 export interface Standing extends WinLossDraw {
@@ -33,6 +34,9 @@ interface Tally extends WinLossDraw {
   matchesPlayed: number;
   gamePoints: number;
   gamesPlayed: number;
+  // How many of the above were byes. Subtracted out to get what this player contributes to
+  // the tiebreakers of everyone who played them; see `percentages` below.
+  byes: number;
   opponents: string[];
 }
 
@@ -45,8 +49,7 @@ const average = (values: (number | undefined)[]): number | undefined => {
 };
 
 // Each listed player's reported matches. A match nobody has reported yet (all three counts
-// still zero) has not been played as far as standings go, and the placeholder opponent is
-// nobody.
+// still zero) has not been played as far as standings go.
 const tallyMatches = (record: Record, names: Set<string>): Map<string, Tally> => {
   const tallies = new Map<string, Tally>();
   const tally = (name: string): Tally => {
@@ -60,6 +63,7 @@ const tallyMatches = (record: Record, names: Set<string>): Map<string, Tally> =>
         matchesPlayed: 0,
         gamePoints: 0,
         gamesPlayed: 0,
+        byes: 0,
         opponents: [],
       };
       tallies.set(name, entry);
@@ -91,21 +95,47 @@ const tallyMatches = (record: Record, names: Set<string>): Map<string, Tally> =>
   for (const round of record.matches || []) {
     for (const { p1, p2, results } of round.matches) {
       if (p1 === BYE || p2 === BYE) {
-        score(p1 === BYE ? p2 : p1, BYE_GAMES.won, BYE_GAMES.lost, BYE_GAMES.drawn);
-        continue;
-      }
-      if (p1 === UNKNOWN_OPPONENT || p2 === UNKNOWN_OPPONENT) {
+        const player = p1 === BYE ? p2 : p1;
+        score(player, BYE_GAMES.won, BYE_GAMES.lost, BYE_GAMES.drawn);
+        if (names.has(player)) {
+          tally(player).byes += 1;
+        }
         continue;
       }
       const [p1Wins, p2Wins, draws] = results;
       if (p1Wins + p2Wins + draws === 0) {
         continue;
       }
+      // No branch for the placeholder opponent: it is never a listed player, so `score` skips
+      // it as a scorer and `names.has` keeps it out of the other side's opponent list. What is
+      // left is the half that did happen — a transcribed event often knows a result without
+      // knowing who it was against, and discarding the whole match lost that player their win.
       score(p1, p1Wins, p2Wins, draws, p2);
       score(p2, p2Wins, p1Wins, draws, p1);
     }
   }
   return tallies;
+};
+
+/**
+ * A player's match-win and game-win percentages, in two forms: as their own (byes included,
+ * which is what their record says) and as they count for the people who played them (byes
+ * removed, per MTR Appendix C: "A player's byes are ignored when computing their opponents'
+ * match-win and opponents' game-win percentages").
+ */
+const percentages = (entry: Tally) => {
+  const byeGames = entry.byes * (BYE_GAMES.won + BYE_GAMES.lost + BYE_GAMES.drawn);
+  const byeGamePoints = entry.byes * (BYE_GAMES.won * GAME_WIN_POINTS + BYE_GAMES.drawn * GAME_DRAW_POINTS);
+  return {
+    matchWin: percentage(entry.matchPoints, entry.matchesPlayed, MATCH_WIN_POINTS),
+    gameWin: percentage(entry.gamePoints, entry.gamesPlayed, GAME_WIN_POINTS),
+    asOpponentMatchWin: percentage(
+      entry.matchPoints - entry.byes * MATCH_WIN_POINTS,
+      entry.matchesPlayed - entry.byes,
+      MATCH_WIN_POINTS,
+    ),
+    asOpponentGameWin: percentage(entry.gamePoints - byeGamePoints, entry.gamesPlayed - byeGames, GAME_WIN_POINTS),
+  };
 };
 
 /**
@@ -121,9 +151,16 @@ export const computeStandings = (record: Record): Standing[] => {
 
   const matchWin = new Map<string, number | undefined>();
   const gameWin = new Map<string, number | undefined>();
+  // What each player contributes to the tiebreakers of everyone who played them, which is not
+  // the same number as their own once a bye is involved.
+  const asOpponentMatchWin = new Map<string, number | undefined>();
+  const asOpponentGameWin = new Map<string, number | undefined>();
   for (const [name, entry] of tallies) {
-    matchWin.set(name, percentage(entry.matchPoints, entry.matchesPlayed, MATCH_WIN_POINTS));
-    gameWin.set(name, percentage(entry.gamePoints, entry.gamesPlayed, GAME_WIN_POINTS));
+    const computed = percentages(entry);
+    matchWin.set(name, computed.matchWin);
+    gameWin.set(name, computed.gameWin);
+    asOpponentMatchWin.set(name, computed.asOpponentMatchWin);
+    asOpponentGameWin.set(name, computed.asOpponentGameWin);
   }
 
   const seen = new Set<string>();
@@ -148,9 +185,9 @@ export const computeStandings = (record: Record): Standing[] => {
         overridden || !entry
           ? {}
           : {
-              opponentMatchWin: average(entry.opponents.map((opponent) => matchWin.get(opponent))),
+              opponentMatchWin: average(entry.opponents.map((opponent) => asOpponentMatchWin.get(opponent))),
               gameWin: gameWin.get(player.name),
-              opponentGameWin: average(entry.opponents.map((opponent) => gameWin.get(opponent))),
+              opponentGameWin: average(entry.opponents.map((opponent) => asOpponentGameWin.get(opponent))),
             };
       return {
         seat,
