@@ -157,4 +157,76 @@ describe('cube/records/edit/match', () => {
       { p1: 'Carol', p2: 'Dave', results: [0, 2, 0] },
     ]);
   });
+
+  describe('from a screen that is out of date', () => {
+    const send = (handler: any, body: object) =>
+      call(handler).as(cube.owner).withParams({ id: 'rec-1' }).withBody(body).send();
+
+    it('refuses a result for a match that has moved, sending back every round', async () => {
+      // Another device removed Alice v Bob, so Carol v Dave is match 0 now.
+      await removeMatch(0, 0);
+      const res = await send(setMatchHandler, {
+        roundIndex: 0,
+        matchIndex: 0,
+        match: { p1: 'Alice', p2: 'Bob', results: [2, 0, 0] },
+        expected: { p1: 'Alice', p2: 'Bob' },
+      });
+
+      expect(res.status).toBe(409);
+      expect(res.body.rounds[0].matches).toEqual([{ p1: 'Carol', p2: 'Dave', results: [1, 2, 0] }]);
+      expect(stored.matches[0].matches).toEqual([{ p1: 'Carol', p2: 'Dave', results: [1, 2, 0] }]);
+    });
+
+    it('refuses a removal aimed at a match that has moved', async () => {
+      await removeMatch(0, 0);
+      const res = await send(removeMatchHandler, {
+        roundIndex: 0,
+        matchIndex: 0,
+        expected: { p1: 'Alice', p2: 'Bob' },
+      });
+
+      expect(res.status).toBe(409);
+      expect(stored.matches[0].matches).toHaveLength(1);
+    });
+
+    it('refuses a match added after the rounds changed', async () => {
+      const res = await send(addMatchHandler, { roundIndex: 1, expectedRounds: 3 });
+
+      expect(res.status).toBe(409);
+      expect(recordDao.update).not.toHaveBeenCalled();
+    });
+
+    it('accepts an edit whose match is where it was', async () => {
+      const res = await send(setMatchHandler, {
+        roundIndex: 0,
+        matchIndex: 1,
+        match: { p1: 'Carol', p2: 'Dave', results: [2, 0, 0] },
+        expected: { p1: 'Carol', p2: 'Dave' },
+      });
+
+      expect(res.status).toBe(200);
+      expect(stored.matches[0].matches[1].results).toEqual([2, 0, 0]);
+    });
+  });
+
+  it('refuses to pair a player against themselves', async () => {
+    const res = await setMatch(1, 0, { p1: 'Alice', p2: 'Alice', results: [0, 0, 0] });
+
+    expect(res.status).toBe(400);
+    expect(recordDao.update).not.toHaveBeenCalled();
+  });
+
+  it('refuses a name that is not a player in the event', async () => {
+    const res = await setMatch(1, 0, { p1: 'Alice', p2: 'Zed', results: [0, 0, 0] });
+
+    expect(res.status).toBe(400);
+    expect(recordDao.update).not.toHaveBeenCalled();
+  });
+
+  it('keeps accepting a match for a player since removed from the event', async () => {
+    stored.players = stored.players.filter((player: { name: string }) => player.name !== 'Bob');
+    const res = await setMatch(0, 0, { p1: 'Alice', p2: 'Bob', results: [0, 2, 0] });
+
+    expect(res.status).toBe(200);
+  });
 });

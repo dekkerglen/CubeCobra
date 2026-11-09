@@ -1,5 +1,6 @@
 import React, { useContext } from 'react';
 
+import Draft from '@utils/datatypes/Draft';
 import Record from '@utils/datatypes/Record';
 
 import { CardBody } from 'components/base/Card';
@@ -12,15 +13,19 @@ import ShareRecordModal from 'components/modals/ShareRecordModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 
+import { RecordPlayersAction } from './RecordPlayers';
+
 const ShareRecordLink = withModal(Link, ShareRecordModal);
 
 interface RecordOverviewProps {
   record: Record;
+  // Decides whether the players action can rearrange seats or only add players.
+  draft?: Draft;
 }
 
 // The record's header block, shown at the top of the page (no longer a tab):
 // name, date, description, and owner controls.
-const RecordOverview: React.FC<RecordOverviewProps> = ({ record }) => {
+const RecordOverview: React.FC<RecordOverviewProps> = ({ record, draft }) => {
   const { canEdit } = useContext(CubeContext);
 
   const isOwner = canEdit;
@@ -43,6 +48,7 @@ const RecordOverview: React.FC<RecordOverviewProps> = ({ record }) => {
             </Text>
           </Flexbox>
           <Flexbox direction="row" gap="4" wrap="wrap" alignItems="center" className="shrink-0">
+            <RecordPlayersAction record={record} draft={draft} />
             {isOwner && <ShareRecordLink modalprops={{ record }}>Collect Decks</ShareRecordLink>}
             <Link href={`/cube/records/export/${record.cube}?record=${encodeURIComponent(record.id)}`} download>
               Export

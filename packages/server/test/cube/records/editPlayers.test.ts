@@ -165,6 +165,8 @@ describe('editRecordPlayersHandler', () => {
     });
 
     it('refuses a removed player and writes nothing', async () => {
+      // No matches, so it's the draft refusing the removal, not the matches.
+      (recordDao.getById as jest.Mock).mockResolvedValue({ ...record('draft-1'), matches: [] });
       await editPlayers([{ name: 'Alice', userId: 'user-alice' }], [0]);
 
       expect(flash).toHaveBeenCalledWith('danger', expect.stringMatching(/played draft/i));
@@ -256,6 +258,125 @@ describe('editRecordPlayersHandler', () => {
       // Players was the combined tab's "By Player" view before the split, and this is the
       // player an owner most likely just acted on — not the Full Draft grid.
       expect(redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/record/rec-1?tab=players');
+    });
+  });
+
+  describe('with round one paired at the table', () => {
+    const unpaired = () => ({ ...record(undefined), matches: [], trophy: [], overrides: {} });
+    const seatAndPair = (players: unknown, firstRound: unknown, seatOrder?: number[]) =>
+      call(editRecordPlayersHandler)
+        .as(cube.owner)
+        .withFlash(flash)
+        .withParams({ id: 'rec-1' })
+        .withBody({
+          players: JSON.stringify(players),
+          seatOrder: JSON.stringify(seatOrder ?? (players as unknown[]).map(() => -1)),
+          firstRound: JSON.stringify(firstRound),
+        })
+        .send();
+    const trio = [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Carol' }];
+
+    beforeEach(() => {
+      (recordDao.getById as jest.Mock).mockResolvedValue(unpaired());
+    });
+
+    it('saves the seating and round one together, bye included, and opens the Matches tab', async () => {
+      const round = {
+        matches: [
+          { p1: 'Alice', p2: 'Carol', results: [0, 0, 0] },
+          { p1: 'Bob', p2: 'Bye', results: [2, 0, 0] },
+        ],
+      };
+      await seatAndPair(trio, round);
+
+      const saved = (recordDao.update as jest.Mock).mock.calls[0][0];
+      expect(saved.players.map((player: { name: string }) => player.name)).toEqual(['Alice', 'Bob', 'Carol']);
+      expect(saved.matches).toEqual([round]);
+      expect(redirect).toHaveBeenCalledWith(expect.anything(), expect.anything(), '/cube/record/rec-1?tab=matches');
+    });
+
+    it('refuses a round that names someone not at the table, and writes nothing', async () => {
+      await seatAndPair(trio, { matches: [{ p1: 'Alice', p2: 'Zed', results: [0, 0, 0] }] });
+
+      expect(recordDao.update).not.toHaveBeenCalled();
+      expect(flash).toHaveBeenCalledWith('danger', expect.stringContaining('did not match'));
+    });
+
+    it('refuses a round that pairs a player twice', async () => {
+      await seatAndPair(trio, {
+        matches: [
+          { p1: 'Alice', p2: 'Bob', results: [0, 0, 0] },
+          { p1: 'Alice', p2: 'Carol', results: [0, 0, 0] },
+        ],
+      });
+
+      expect(recordDao.update).not.toHaveBeenCalled();
+    });
+
+    it('will not pair round one again on a record that already has a round', async () => {
+      (recordDao.getById as jest.Mock).mockResolvedValue(record(undefined));
+      await seatAndPair(
+        [{ name: 'Alice', userId: 'user-alice' }, { name: 'Bob' }],
+        { matches: [{ p1: 'Alice', p2: 'Bob', results: [0, 0, 0] }] },
+        [0, 1],
+      );
+
+      expect(recordDao.update).not.toHaveBeenCalled();
+      expect(flash).toHaveBeenCalledWith('danger', expect.stringContaining('already has a round'));
+    });
+  });
+
+  describe('mid-event', () => {
+    beforeEach(() => {
+      (recordDao.getById as jest.Mock).mockResolvedValue(record(undefined));
+    });
+    const send = (body: object) =>
+      call(editRecordPlayersHandler).as(cube.owner).withFlash(flash).withParams({ id: 'rec-1' }).withBody(body).send();
+
+    it('refuses to remove a player who has matches, pointing to Drop instead', async () => {
+      await editPlayers([{ name: 'Alice', userId: 'user-alice' }], [0]);
+
+      expect(recordDao.update).not.toHaveBeenCalled();
+      expect(flash).toHaveBeenCalledWith('danger', expect.stringContaining('Bob already has matches'));
+    });
+
+    it('still lets a player with no matches be removed', async () => {
+      (recordDao.getById as jest.Mock).mockResolvedValue({
+        ...record(undefined),
+        players: [{ name: 'Alice', userId: 'user-alice' }, { name: 'Bob' }, { name: 'Carol' }],
+      });
+      await editPlayers([{ name: 'Alice', userId: 'user-alice' }, { name: 'Bob' }], [0, 1]);
+
+      expect(recordDao.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('refuses a save built from a roster that has changed since', async () => {
+      await send({
+        players: JSON.stringify([{ name: 'Bob' }, { name: 'Alice', userId: 'user-alice' }]),
+        seatOrder: JSON.stringify([1, 0]),
+        // The form saw Alice and Robert; the stored list is Alice and Bob.
+        expectedPlayers: JSON.stringify(['Alice', 'Robert']),
+      });
+
+      expect(recordDao.update).not.toHaveBeenCalled();
+      expect(flash).toHaveBeenCalledWith('danger', expect.stringContaining('changed somewhere else'));
+    });
+
+    it('saves when the roster is the one the form was built from', async () => {
+      await send({
+        players: JSON.stringify([{ name: 'Bob' }, { name: 'Alice', userId: 'user-alice' }]),
+        seatOrder: JSON.stringify([1, 0]),
+        expectedPlayers: JSON.stringify(['Alice', 'Bob']),
+      });
+
+      expect(recordDao.update).toHaveBeenCalledTimes(1);
+    });
+
+    it('refuses a player named for a pairing placeholder', async () => {
+      await editPlayers([{ name: 'Alice', userId: 'user-alice' }, { name: 'bye' }], [0, 1]);
+
+      expect(recordDao.update).not.toHaveBeenCalled();
+      expect(flash).toHaveBeenCalledWith('danger', expect.stringContaining("can't be a player's name"));
     });
   });
 });

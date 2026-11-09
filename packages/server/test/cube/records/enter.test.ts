@@ -161,6 +161,60 @@ describe('transcribeRecordHandler', () => {
     (draftDao.getById as jest.Mock).mockResolvedValue(undefined);
   });
 
+  it('leaves a round clock to the live console when saving rounds', async () => {
+    // The workspace loaded a clock that has since been paused from the matches tab.
+    const loadedClock = { durationMs: 3_000_000, elapsedMs: 0, startedAt: 10 };
+    const pausedClock = { durationMs: 3_000_000, elapsedMs: 600_000 };
+    const loaded = existingRecord({
+      matches: [{ matches: [{ p1: 'Alice', p2: 'Bob', results: [0, 0, 0] }], clock: loadedClock }],
+    });
+    (recordDao.getById as jest.Mock).mockResolvedValue(
+      existingRecord({
+        matches: [{ matches: [{ p1: 'Alice', p2: 'Bob', results: [0, 0, 0] }], clock: pausedClock }],
+      }),
+    );
+
+    const res = await save(
+      fullPayload(
+        { matches: [{ matches: [{ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] }], clock: loadedClock }] },
+        loaded,
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    expect(res.body.conflicts).toEqual([]);
+    expect(savedRecord().matches).toEqual([
+      { matches: [{ p1: 'Alice', p2: 'Bob', results: [2, 1, 0] }], clock: pausedClock },
+    ]);
+  });
+
+  it('carries a drop through a rename, and forgets one for a removed player', async () => {
+    const stored = existingRecord({
+      players: [
+        { name: 'Alice', id: 'p-alice' },
+        { name: 'Bob', id: 'p-bob' },
+        { name: 'Carol', id: 'p-carol' },
+      ],
+      dropped: ['Alice', 'Carol'],
+    });
+    (recordDao.getById as jest.Mock).mockResolvedValue(stored);
+
+    const res = await save(
+      fullPayload(
+        {
+          players: [
+            { name: 'Alicia', id: 'p-alice' },
+            { name: 'Bob', id: 'p-bob' },
+          ],
+        },
+        stored,
+      ),
+    );
+
+    expect(res.status).toBe(200);
+    expect(savedRecord().dropped).toEqual(['Alicia']);
+  });
+
   it('rejects a user who cannot edit the cube', async () => {
     const res = await save(fullPayload(), createUser());
 

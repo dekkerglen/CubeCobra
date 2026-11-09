@@ -1,3 +1,5 @@
+import { Round } from '@utils/datatypes/Record';
+import { roundProblems } from '@utils/records/roundChecks';
 import { cubeDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
@@ -20,6 +22,16 @@ const roundSchema = Joi.object({
     .min(1)
     .required(), // At least one match is required
 }).unknown(false); // don't additional properties
+
+// The number of rounds the page showed when it sent the form, when it says. A different count
+// means someone else added or removed a round since, so the form's idea of which round it is
+// adding or removing is out of date.
+const roundCountChanged = (req: Request, rounds: Round[]): boolean => {
+  if (req.body.expectedRounds === undefined || req.body.expectedRounds === '') {
+    return false;
+  }
+  return parseInt(`${req.body.expectedRounds}`, 10) !== rounds.length;
+};
 
 export const addRoundHandler = async (req: Request, res: Response) => {
   try {
@@ -48,7 +60,22 @@ export const addRoundHandler = async (req: Request, res: Response) => {
     }
 
     record.matches = record.matches || [];
-    record.matches.push(JSON.parse(req.body.round));
+    if (roundCountChanged(req, record.matches)) {
+      req.flash(
+        'danger',
+        `This record has ${record.matches.length} round${record.matches.length === 1 ? '' : 's'} now, so the round you paired was out of date and wasn't added. Pair it again.`,
+      );
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=matches`);
+    }
+
+    const round: Round = JSON.parse(req.body.round);
+    const problems = roundProblems(round, record.players);
+    if (problems.length > 0) {
+      req.flash('danger', `The round wasn't added: ${problems.join(' ')}`);
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=matches`);
+    }
+
+    record.matches.push(round);
     record.dateLastUpdated = Date.now();
 
     await recordDao.update(record);
@@ -90,6 +117,13 @@ export const removeRoundHandler = async (req: Request, res: Response) => {
     const roundIndex = parseInt(req.body.roundIndex, 10);
 
     record.matches = record.matches || [];
+    if (roundCountChanged(req, record.matches)) {
+      req.flash(
+        'danger',
+        'The rounds changed since this page loaded, so no round was removed. Check them and try again.',
+      );
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=matches`);
+    }
     if (Number.isNaN(roundIndex) || roundIndex < 0 || roundIndex >= record.matches.length) {
       req.flash('danger', 'Invalid round index');
       return redirect(req, res, `/cube/record/${req.params.id}?tab=matches`);

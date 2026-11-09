@@ -1,3 +1,5 @@
+import type { RoundClock } from '@utils/records/roundClock';
+
 export type PlayerList = {
   name: string;
   userId?: string; // User ID is optional for users without an account
@@ -11,6 +13,8 @@ export interface Match {
 }
 export interface Round {
   matches: Match[];
+  // Set once the organiser starts the round's clock; see records/roundClock.
+  clock?: RoundClock;
 }
 
 export interface WinLossDraw {
@@ -33,6 +37,12 @@ export default interface Record {
   // When set it wins over the match-derived total, so a record can be entered
   // without logging individual matches.
   overrides?: { [playerName: string]: WinLossDraw };
+  // Players who have left a live event (keyed by player name). They keep their standing but
+  // are left out of later rounds' pairings.
+  dropped?: string[];
+  // When the organiser finished the event. A finished event is no longer live: no clocks, drops
+  // or pairing prompts, and its standings are final. Absent while it's running, or reopened.
+  finishedAt?: number;
 }
 
 // A player's win/loss/draw: the manual override if present, otherwise derived
@@ -66,6 +76,13 @@ export function playerRecord(record: Record, playerName: string): WinLossDraw {
   return { wins, losses, draws };
 }
 
+// A record is dated to the day of its event, so two days covers an event still being played,
+// including one running past midnight. Live tools (clock sync, drops) stay out of older records.
+const LIVE_EVENT_WINDOW_MS = 2 * 24 * 60 * 60 * 1000;
+
+export const isLiveEvent = (record: Pick<Record, 'date' | 'finishedAt'>, now: number = Date.now()): boolean =>
+  !record.finishedAt && now - record.date <= LIVE_EVENT_WINDOW_MS;
+
 export const formatRecord = ({ wins, losses, draws }: WinLossDraw): string =>
   draws > 0 ? `${wins}-${losses}-${draws}` : `${wins}-${losses}`;
 
@@ -83,6 +100,9 @@ export function applyPlayerRenames(record: Record, renames: Map<string, string>)
     matches: round.matches.map((match) => ({ ...match, p1: rename(match.p1), p2: rename(match.p2) })),
   }));
   record.trophy = (record.trophy || []).map(rename);
+  if (record.dropped) {
+    record.dropped = record.dropped.map(rename);
+  }
   if (record.overrides) {
     record.overrides = Object.fromEntries(
       Object.entries(record.overrides).map(([name, value]) => [rename(name), value]),

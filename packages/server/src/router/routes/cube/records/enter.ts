@@ -1,5 +1,5 @@
 import DraftType from '@utils/datatypes/Draft';
-import { PlayerList, WinLossDraw } from '@utils/datatypes/Record';
+import { PlayerList, Round, WinLossDraw } from '@utils/datatypes/Record';
 import UserType from '@utils/datatypes/User';
 import { deckProjection, SectionBaselines, SectionKey, sectionsEqual } from '@utils/records/recordSections';
 import { NameKeyedSections, rebaseNameKeyedSections } from '@utils/records/rebaseNames';
@@ -84,6 +84,9 @@ const roundsSectionSchema = Joi.object({
             }),
           )
           .required(),
+        // The workspace hands back whatever rounds it loaded, clocks included. Accepted so that
+        // doesn't 400, but never written: clocks belong to the live console (records/clock.ts).
+        clock: Joi.object().unknown(true).optional(),
       }),
     )
     .max(MAX_ROUNDS)
@@ -159,6 +162,9 @@ interface TranscribeSections {
 }
 
 type DeckValue = { mainboard: string[]; sideboard: string[] };
+
+// Rounds as pairings alone. Clocks are live-console state, kept out of the rounds section.
+const withoutClocks = (rounds: Round[] | undefined): Round[] => (rounds ?? []).map(({ matches }) => ({ matches }));
 
 const OVERRIDE_PREFIX = 'overrides:';
 const DECK_PREFIX = 'decks:';
@@ -309,10 +315,19 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
     if (sections.rounds) {
       const stored = { matches: record.matches };
       const rebasedBaseline = rebase({ matches: baselines.rounds?.matches });
-      if (sectionsEqual({ matches: rebasedBaseline.matches }, stored)) {
+      // Compared without clocks: a round clock ticking, paused or extended from the live console
+      // since this workspace loaded is not an edit to the pairings it would contest.
+      if (
+        sectionsEqual({ matches: withoutClocks(rebasedBaseline.matches) }, { matches: withoutClocks(stored.matches) })
+      ) {
         // The value is rebased by the same mapping as the baseline, so what lands in storage
         // is expressed in whatever name the player holds now — never the submitter's stale one.
-        record.matches = rebase({ matches: sections.rounds.matches }).matches ?? [];
+        // Each round keeps the clock stored for it, whatever clock the submission carried.
+        const storedRounds = record.matches || [];
+        record.matches = withoutClocks(rebase({ matches: sections.rounds.matches }).matches).map((round, index) => {
+          const clock = storedRounds[index]?.clock;
+          return clock ? { ...round, clock } : round;
+        });
         applied.push('rounds');
         echo.rounds = { matches: record.matches };
       } else {
@@ -396,6 +411,18 @@ export const transcribeRecordHandler = async (req: Request, res: Response) => {
 
     if (playersApplied) {
       record.players = finalPlayers;
+      // The workspace has no drops section, so a drop made from the live console follows its
+      // player through a rename here, and is forgotten along with a player removed from the list.
+      if (record.dropped) {
+        const finalNameById = new Map(finalPlayers.flatMap((player) => (player.id ? [[player.id, player.name]] : [])));
+        const finalNames = new Set(finalPlayers.map((player) => player.name));
+        record.dropped = record.dropped
+          .map((name) => {
+            const id = previousPlayers.find((player) => player.name === name)?.id;
+            return (id && finalNameById.get(id)) || name;
+          })
+          .filter((name) => finalNames.has(name));
+      }
     }
 
     const hasAppliedAnything = applied.length > 0;

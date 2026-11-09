@@ -1,7 +1,9 @@
 import React, { useId } from 'react';
 
 import { AlertIcon, XIcon } from '@primer/octicons-react';
+import classNames from 'classnames';
 import { Match, PlayerList } from '@utils/datatypes/Record';
+import { BYE, UNKNOWN_OPPONENT } from '@utils/records/pairings';
 
 import Input from 'components/base/Input';
 import MobileFieldLabel from 'components/base/MobileFieldLabel';
@@ -15,6 +17,7 @@ import {
   MATCH_RESULT_HEADINGS,
   MatchFieldGrid,
   MatchRowFrame,
+  withoutOpponent,
 } from './EditMatchRound';
 
 interface RecordMatchRowProps {
@@ -31,6 +34,49 @@ interface RecordMatchRowProps {
   onChange: (match: Match) => void;
   onRemove: () => void;
 }
+
+// The results almost every best-of-three ends in, as one tap each, read as player 1's games
+// first: "2-1" is player 1 winning two games to one. The number fields stay for anything else.
+const QUICK_RESULTS: [number, number, number][] = [
+  [2, 0, 0],
+  [2, 1, 0],
+  [1, 2, 0],
+  [0, 2, 0],
+  [1, 1, 1],
+];
+
+const QuickResults: React.FC<{ match: Match; onChange: (match: Match) => void }> = ({ match, onChange }) => (
+  <div
+    role="group"
+    aria-label={`Quick result for ${match.p1} against ${match.p2}`}
+    className="mt-1 flex flex-wrap items-center gap-1"
+  >
+    {QUICK_RESULTS.map((results) => {
+      const [p1Wins, p2Wins, draws] = results;
+      const chosen = match.results.every((count, position) => count === results[position]);
+      const label = `${p1Wins}-${p2Wins}${draws ? `-${draws}` : ''}`;
+      return (
+        <button
+          key={label}
+          type="button"
+          aria-pressed={chosen}
+          aria-label={`${match.p1} ${label} ${match.p2}`}
+          onClick={() => onChange({ ...match, results: [...results] as [number, number, number] })}
+          title={`${match.p1} ${label} ${match.p2}`}
+          className={classNames(
+            'rounded border px-3 py-1 text-sm font-medium tabular-nums transition-colors md:px-2 md:py-0.5 md:text-xs',
+            {
+              'border-button-primary bg-button-primary text-white': chosen,
+              'border-border bg-bg text-text-secondary hover:border-button-primary hover:text-text': !chosen,
+            },
+          )}
+        >
+          {label}
+        </button>
+      );
+    })}
+  </div>
+);
 
 // A standalone row rather than a parameterised EditMatchRound: that component is controlled
 // by a whole Round and a single setRound, which fits bulk entry (the transcription workspace)
@@ -53,10 +99,11 @@ const RecordMatchRow: React.FC<RecordMatchRowProps> = ({
   // A match can reference a player no longer in record.players (removed elsewhere, or a
   // round opened before they were added). That name stays selectable rather than silently
   // dropping off the list the moment the round that recorded it loses sync with the roster.
-  const knownNames = new Set(['Unknown Opponent', ...players.map((player) => player.name)]);
+  const knownNames = new Set([UNKNOWN_OPPONENT, BYE, ...players.map((player) => player.name)]);
   const stalePlayerNames = [match.p1, match.p2].filter((name) => !knownNames.has(name));
   const playerOptions = [
-    { label: 'Unknown Opponent', value: 'Unknown Opponent' },
+    { label: UNKNOWN_OPPONENT, value: UNKNOWN_OPPONENT },
+    { label: BYE, value: BYE },
     ...players.map((player) => ({ label: player.name, value: player.name })),
     ...Array.from(new Set(stalePlayerNames)).map((name) => ({ label: name, value: name })),
   ];
@@ -124,7 +171,7 @@ const RecordMatchRow: React.FC<RecordMatchRowProps> = ({
               aria-label="Player 1"
               value={match.p1}
               setValue={(value) => onChange({ ...match, p1: value })}
-              options={playerOptions}
+              options={withoutOpponent(playerOptions, match.p2, match.p1)}
             />
           </Col>
           <Col {...MATCH_PLAYER_COL}>
@@ -134,7 +181,7 @@ const RecordMatchRow: React.FC<RecordMatchRowProps> = ({
               aria-label="Player 2"
               value={match.p2}
               setValue={(value) => onChange({ ...match, p2: value })}
-              options={playerOptions}
+              options={withoutOpponent(playerOptions, match.p1, match.p2)}
             />
           </Col>
           {resultCells.map(({ position, name }) => (
@@ -154,6 +201,11 @@ const RecordMatchRow: React.FC<RecordMatchRowProps> = ({
             </Col>
           ))}
         </MatchFieldGrid>
+        {match.p1 !== BYE &&
+          match.p2 !== BYE &&
+          match.p1 !== UNKNOWN_OPPONENT &&
+          match.p2 !== UNKNOWN_OPPONENT &&
+          match.p1 !== match.p2 && <QuickResults match={match} onChange={onChange} />}
       </MatchRowFrame>
       {/* The organiser's typed value stays on screen either way — this is only the retry hint,
           never a rollback. Cleared the moment a later commit for this same match succeeds. */}

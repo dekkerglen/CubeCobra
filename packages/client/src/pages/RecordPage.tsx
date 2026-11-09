@@ -1,8 +1,8 @@
-import React, { useContext } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
-import Record from '@utils/datatypes/Record';
+import Record, { Round } from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
 
 import { Card } from 'components/base/Card';
@@ -20,6 +20,8 @@ import RecordMatches from '../records/RecordMatches';
 import RecordOverview from '../records/RecordOverview';
 import RecordPlayers, { firstPlayerIndexWithDeck } from '../records/RecordPlayers';
 import RecordStandings from '../records/RecordStandings';
+import RoundClockBanner from '../records/RoundClockBanner';
+import useRoundClocks from '../records/useRoundClocks';
 
 interface RecordPageProps {
   cube: Cube;
@@ -42,6 +44,13 @@ const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players })
     return firstWithDeck >= 0 ? firstWithDeck : 0;
   });
 
+  // What the Matches tab reports and the Standings tab drops, held here so each tab reads the
+  // other's changes without a reload.
+  const [rounds, setRounds] = useState<Round[]>(record.matches);
+  const [dropped, setDropped] = useState<string[]>(record.dropped ?? []);
+  const liveRecord = useMemo(() => ({ ...record, matches: rounds, dropped }), [record, rounds, dropped]);
+  const { serverOffset, clockAction } = useRoundClocks(liveRecord, setRounds);
+
   const tabs = [
     {
       name: 'Players',
@@ -59,7 +68,14 @@ const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players })
     {
       name: 'Matches',
       slug: 'matches',
-      component: () => <RecordMatches record={record} />,
+      component: () => (
+        <RecordMatches
+          record={liveRecord}
+          setMatches={setRounds}
+          serverOffset={serverOffset}
+          onClockAction={clockAction}
+        />
+      ),
     },
     {
       name: 'Decks',
@@ -79,7 +95,7 @@ const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players })
     {
       name: 'Standings',
       slug: 'standings',
-      component: () => <RecordStandings record={record} />,
+      component: () => <RecordStandings record={liveRecord} setDropped={setDropped} />,
     },
   ];
 
@@ -95,9 +111,11 @@ const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players })
     <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="records">
         <DynamicFlash />
+        {/* Outside the card, whose rounded corners clip, so it can stay pinned while the page scrolls. */}
+        <RoundClockBanner record={liveRecord} serverOffset={serverOffset} onClockAction={clockAction} />
         <Card className="my-2">
           {/* Overview is no longer a tab — it lives at the top of the page. */}
-          <RecordOverview record={record} />
+          <RecordOverview record={record} draft={draft} />
           <TabbedView
             activeTab={activeTabIndex}
             tabs={tabs.map((tab) => ({

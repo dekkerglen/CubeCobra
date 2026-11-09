@@ -2,6 +2,7 @@ import React, { useId } from 'react';
 
 import { PlusIcon, XIcon } from '@primer/octicons-react';
 import { Match, PlayerList, Round } from '@utils/datatypes/Record';
+import { BYE, UNKNOWN_OPPONENT } from '@utils/records/pairings';
 
 import Input from 'components/base/Input';
 import MobileFieldLabel from 'components/base/MobileFieldLabel';
@@ -13,8 +14,8 @@ import Text from 'components/base/Text';
 // The shape a match starts in, shared with whatever creates a round so a new one arrives
 // with a row in it rather than an empty body and a second click to make.
 export const emptyMatch = (): Match => ({
-  p1: 'Unknown Opponent',
-  p2: 'Unknown Opponent',
+  p1: UNKNOWN_OPPONENT,
+  p2: UNKNOWN_OPPONENT,
   results: [0, 0, 0],
 });
 
@@ -29,6 +30,14 @@ export const emptyMatch = (): Match => ({
  * their width by squeezing the two selects — down to 26px on a 390px screen, where a select
  * shows a chevron and no name at all.
  */
+// A player's own name, as a choice of opponent: never offered. The placeholders stay, since a
+// match can be waiting on two unknown opponents, and so does a self-pairing already stored
+// (from before this was prevented), which the select has to be able to show to be fixed.
+export const withoutOpponent = <T extends { value: string }>(options: T[], opponent: string, own: string): T[] =>
+  opponent === UNKNOWN_OPPONENT || opponent === BYE || opponent === own
+    ? options
+    : options.filter((option) => option.value !== opponent);
+
 export const MATCH_PLAYER_COL = { xs: 3 as const, md: 3 as const };
 export const MATCH_RESULT_COL = { xs: 1 as const, md: 1 as const };
 
@@ -108,7 +117,8 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
   const idPrefix = useId();
 
   const playerOptions = [
-    { label: 'Unknown Opponent', value: 'Unknown Opponent' },
+    { label: UNKNOWN_OPPONENT, value: UNKNOWN_OPPONENT },
+    { label: BYE, value: BYE },
     ...(players?.map((player) => ({
       label: player.name,
       value: player.name,
@@ -159,7 +169,7 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
                 aria-label="Player 1"
                 value={match.p1}
                 setValue={(value) => updateMatch(index, { p1: value })}
-                options={playerOptions}
+                options={withoutOpponent(playerOptions, match.p2, match.p1)}
               />
             </Col>
             <Col {...MATCH_PLAYER_COL}>
@@ -169,7 +179,7 @@ const EditMatchRound: React.FC<EditMatchRoundProps> = ({ round, players, setRoun
                 aria-label="Player 2"
                 value={match.p2}
                 setValue={(value) => updateMatch(index, { p2: value })}
-                options={playerOptions}
+                options={withoutOpponent(playerOptions, match.p1, match.p2)}
               />
             </Col>
             {[

@@ -1,4 +1,6 @@
-import { applyPlayerRenames } from '@utils/datatypes/Record';
+import { applyPlayerRenames, Round } from '@utils/datatypes/Record';
+import { BYE } from '@utils/records/pairings';
+import { isReservedName, playersWithMatches } from '@utils/records/roundChecks';
 import { cubeDao, draftDao, recordDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
@@ -20,6 +22,36 @@ const recordSchema = Joi.array()
   )
   .max(16)
   .required(); // Players array is required
+
+// Round one, sent with the seating by a table that paired it, checked against the players being
+// saved: every name seated, nobody paired twice, and only a bye in place of an opponent. Null
+// when it doesn't hold together, so a stale or hand-edited form can't store a round naming
+// someone who isn't at the table.
+const parseFirstRound = (raw: unknown, names: string[]): Round | null => {
+  try {
+    const round = JSON.parse(`${raw}`);
+    if (!round || !Array.isArray(round.matches) || round.matches.length === 0) {
+      return null;
+    }
+    const seated = new Set(names);
+    const paired = new Set<string>();
+    const matches = [];
+    for (const { p1, p2, results } of round.matches) {
+      const sides = p2 === BYE ? [p1] : [p1, p2];
+      if (sides.some((name) => typeof name !== 'string' || !seated.has(name) || paired.has(name)) || p1 === p2) {
+        return null;
+      }
+      if (!Array.isArray(results) || results.length !== 3 || results.some((n) => !Number.isInteger(n) || n < 0)) {
+        return null;
+      }
+      sides.forEach((name) => paired.add(name));
+      matches.push({ p1, p2, results: [...results] as [number, number, number] });
+    }
+    return { matches };
+  } catch {
+    return null;
+  }
+};
 
 export const editRecordPlayersHandler = async (req: Request, res: Response) => {
   try {
@@ -65,10 +97,74 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
       seatOrder = players.map((_: unknown, index: number) => index);
     }
 
+    // The roster the form was built from, when it says. Every seat in seatOrder is a position in
+    // that list, so if anyone has been added, removed, renamed or moved since, those positions
+    // point at different people now: a deck would follow the wrong player, and a rename would be
+    // read off the wrong seat. Refused rather than guessed at.
+    if (req.body.expectedPlayers) {
+      let expected: unknown;
+      try {
+        expected = JSON.parse(req.body.expectedPlayers);
+      } catch {
+        expected = null;
+      }
+      const stored = record.players.map((player) => player.name);
+      if (
+        !Array.isArray(expected) ||
+        expected.length !== stored.length ||
+        expected.some((name, index) => name !== stored[index])
+      ) {
+        req.flash(
+          'danger',
+          'The players changed somewhere else since this page loaded, so nothing was saved. Here is the latest list; make your change again.',
+        );
+        return redirect(req, res, `/cube/record/${req.params.id}?tab=players`);
+      }
+    }
+
+    const reserved = players.find((player: { name: string }) => isReservedName(player.name));
+    if (reserved) {
+      req.flash('danger', `"${reserved.name}" can't be a player's name: pairings use it for something else.`);
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=players`);
+    }
+
+    // A player who has been in a match can't just disappear: their opponents' results would point
+    // at nobody. Dropping them keeps the results and stops them being paired.
+    const kept = new Set(seatOrder);
+    const played = playersWithMatches(record);
+    const removedWithMatches = record.players.filter((player, index) => !kept.has(index) && played.has(player.name));
+    if (removedWithMatches.length > 0) {
+      const names = removedWithMatches.map((player) => player.name).join(', ');
+      req.flash(
+        'danger',
+        `${names} already ${removedWithMatches.length === 1 ? 'has' : 'have'} matches in this event, so can't be removed. Drop them from the Standings tab instead, or remove their matches first.`,
+      );
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=players`);
+    }
+
     const names = players.map((player: { name: string }) => player.name.toLowerCase());
     if (new Set(names).size !== names.length) {
       req.flash('danger', 'Each player in a record needs a unique name');
       return redirect(req, res, `/cube/record/${req.params.id}?tab=players`);
+    }
+
+    // A table that paired round one sends it along, so seating and pairing are one save. Only a
+    // record with no rounds yet takes one: otherwise the table was opened before someone else
+    // added a round, and saving it would put two first rounds on the record.
+    let firstRound: Round | null = null;
+    if (req.body.firstRound) {
+      if ((record.matches ?? []).some((round) => round.matches.length > 0)) {
+        req.flash('danger', 'This record already has a round, so round one was not paired again. Nothing was saved.');
+        return redirect(req, res, `/cube/record/${req.params.id}?tab=matches`);
+      }
+      firstRound = parseFirstRound(
+        req.body.firstRound,
+        players.map((player: { name: string }) => player.name),
+      );
+      if (!firstRound) {
+        req.flash('danger', 'Round one did not match the players at the table. Nothing was saved.');
+        return redirect(req, res, `/cube/record/${req.params.id}?tab=players`);
+      }
     }
 
     // A player that kept their seat but changed name was renamed: carry the new
@@ -133,9 +229,17 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
       }
     }
 
+    if (firstRound) {
+      record.matches = [firstRound];
+    }
+
     record.dateLastUpdated = Date.now();
     await recordDao.update(record);
 
+    if (firstRound) {
+      req.flash('success', 'Seated the table and paired round one');
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=matches`);
+    }
     req.flash('success', 'Record updated successfully');
     return redirect(req, res, `/cube/record/${req.params.id}?tab=players`);
   } catch {

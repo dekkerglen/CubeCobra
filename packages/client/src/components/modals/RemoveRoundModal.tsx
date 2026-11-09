@@ -34,7 +34,9 @@ const RemoveRoundModal: React.FC<RemoveRoundModalProps> = ({ isOpen, setOpen, re
         <CSRFForm
           method="POST"
           action={`/cube/records/edit/round/remove/${record.id}`}
-          formData={{ roundIndex: `${roundIndex}` }}
+          // The round count this page shows, so a round removed or added elsewhere since can't
+          // make this remove a different round than the one named above.
+          formData={{ roundIndex: `${roundIndex}`, expectedRounds: `${record.matches?.length ?? 0}` }}
           ref={formRef}
         ></CSRFForm>
       </ModalFooter>

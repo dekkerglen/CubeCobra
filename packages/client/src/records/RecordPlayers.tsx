@@ -2,7 +2,7 @@ import React, { useContext, useState } from 'react';
 
 import { KebabHorizontalIcon } from '@primer/octicons-react';
 import { getCubeDisplayOptions } from '@utils/datatypes/Cube';
-import Draft from '@utils/datatypes/Draft';
+import Draft, { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import Record, { formatRecord, PlayerList, playerRecord } from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
 import classNames from 'classnames';
@@ -26,6 +26,7 @@ import CubeContext from 'contexts/CubeContext';
 import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
 
 import EditPlayerList from './EditPlayerList';
+import SetTheTable from './SetTheTable';
 
 interface RecordPlayersProps {
   record: Record;
@@ -89,7 +90,12 @@ const AddPlayersModal: React.FC<AddPlayersModalProps> = ({ record, isOpen, setOp
         <CSRFForm
           method="POST"
           action={`/cube/records/edit/players/${record.id}`}
-          formData={{ players: JSON.stringify(players), seatOrder: JSON.stringify(seatOrder) }}
+          formData={{
+            players: JSON.stringify(players),
+            seatOrder: JSON.stringify(seatOrder),
+            // The roster seatOrder's positions refer to, so a change made elsewhere since is caught.
+            expectedPlayers: JSON.stringify(record.players.map((player) => player.name)),
+          }}
           ref={formRef}
         ></CSRFForm>
       </ModalFooter>
@@ -98,6 +104,57 @@ const AddPlayersModal: React.FC<AddPlayersModalProps> = ({ record, isOpen, setOp
 };
 
 const AddPlayersButton = withModal(Button, AddPlayersModal);
+
+const SeatingModal: React.FC<AddPlayersModalProps> = ({ record, isOpen, setOpen }) => (
+  <Modal isOpen={isOpen} setOpen={setOpen} xl>
+    <ModalHeader setOpen={setOpen}>Seating</ModalHeader>
+    <ModalBody>
+      <SetTheTable record={record} />
+    </ModalBody>
+  </Modal>
+);
+
+// Reads as a link beside the record's other actions, but is a button: it opens a dialog rather
+// than going anywhere, and has to be reachable from the keyboard.
+// withModal hands its own props on to what it wraps; they're kept off the DOM element.
+type TextButtonProps = React.ButtonHTMLAttributes<HTMLButtonElement> & {
+  modalprops?: unknown;
+  altClick?: unknown;
+  stopPropagation?: unknown;
+};
+const TextButton: React.FC<TextButtonProps> = ({
+  className,
+  modalprops: _modalprops,
+  altClick: _altClick,
+  stopPropagation: _stopPropagation,
+  ...props
+}) => (
+  <button type="button" className={classNames('font-medium text-link hover:text-link-active', className)} {...props} />
+);
+
+const SeatingAction = withModal(TextButton, SeatingModal);
+const AddPlayersAction = withModal(TextButton, AddPlayersModal);
+
+// The whole table can be rearranged only while no played draft is tied to it: a played
+// draft's seats are fixed by who actually sat where, so its record can only be added to.
+export const canRearrangeSeats = (draft: Draft | undefined): boolean => !draft || draft.type === DRAFT_TYPES.UPLOAD;
+
+/**
+ * The record header's player action, for its owner: Seating, or Add Players when a played
+ * draft fixes the seats. Absent while the record has no players, since the Players tab then
+ * shows the table (or its own Add Players) in place of the roster.
+ */
+export const RecordPlayersAction: React.FC<{ record: Record; draft?: Draft }> = ({ record, draft }) => {
+  const { canEdit } = useContext(CubeContext);
+  if (!canEdit || record.players.length === 0) {
+    return null;
+  }
+  return canRearrangeSeats(draft) ? (
+    <SeatingAction modalprops={{ record }}>Seating</SeatingAction>
+  ) : (
+    <AddPlayersAction modalprops={{ record }}>Add Players</AddPlayersAction>
+  );
+};
 
 const RecordPlayersContent: React.FC<RecordPlayersProps> = ({
   record,
@@ -118,6 +175,24 @@ const RecordPlayersContent: React.FC<RecordPlayersProps> = ({
   const selectedPlayerEntry = record.players[selectedUserIndex];
   const selectedHasDeck = seatHasDeck(draft, selectedUserIndex);
   const uploadDeckLabel = selectedPlayerEntry ? `Upload a deck for ${selectedPlayerEntry.name}` : 'Upload a deck';
+
+  const rearrangeable = canRearrangeSeats(draft);
+
+  if (record.players.length === 0 && isOwner && rearrangeable) {
+    return (
+      <CardBody>
+        <Flexbox direction="col" gap="2">
+          <Text lg semibold>
+            Seat the players
+          </Text>
+          <Text sm className="text-text-secondary">
+            Fill the table chair by chair, or paste a list and seat everyone at once.
+          </Text>
+          <SetTheTable record={record} />
+        </Flexbox>
+      </CardBody>
+    );
+  }
 
   if (record.players.length === 0) {
     return (
@@ -194,14 +269,7 @@ const RecordPlayersContent: React.FC<RecordPlayersProps> = ({
       <Flexbox direction="col" gap="4" className="md:flex-row md:items-start">
         {/* Player list — a vertical pill selector that controls which deck shows. */}
         <Flexbox direction="col" gap="2" className="md:w-60 md:shrink-0">
-          <Flexbox direction="row" justify="between" alignItems="center">
-            <Text semibold>Players</Text>
-            {isOwner && (
-              <AddPlayersButton color="primary" modalprops={{ record }}>
-                Add Players
-              </AddPlayersButton>
-            )}
-          </Flexbox>
+          <Text semibold>Players</Text>
           <Flexbox direction="col" gap="1">
             {record.players.map((player, index) => {
               const selected = index === selectedUserIndex;
