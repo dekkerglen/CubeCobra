@@ -53,7 +53,10 @@ const checkBundle = async (bucket: string, prefix: string, keys: Set<string>) =>
   ];
   for (const name of REQUIRED_MODEL_NAMES) {
     required.push(`${name}/model.json`);
-    const modelJson = await readJson<{ weightsManifest: Array<{ paths: string[] }> }>(bucket, `${prefix}${name}/model.json`);
+    const modelJson = await readJson<{ weightsManifest: Array<{ paths: string[] }> }>(
+      bucket,
+      `${prefix}${name}/model.json`,
+    );
     for (const group of modelJson?.weightsManifest || []) {
       required.push(...group.paths.map((shard) => `${name}/${shard}`));
     }
@@ -62,7 +65,13 @@ const checkBundle = async (bucket: string, prefix: string, keys: Set<string>) =>
   if (missing.length > 0) throw new Error(`Bundle is incomplete, missing: ${missing.join(', ')}`);
 };
 
-const publishToR2 = async (target: R2Target, runsBucket: string, sourceKeys: string[], sourcePrefix: string, destPrefix: string) => {
+const publishToR2 = async (
+  target: R2Target,
+  runsBucket: string,
+  sourceKeys: string[],
+  sourcePrefix: string,
+  destPrefix: string,
+) => {
   const r2 = new S3Client({
     region: 'auto',
     endpoint: target.endpoint,

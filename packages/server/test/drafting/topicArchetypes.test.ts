@@ -11,7 +11,12 @@ import {
 const shape = { avgManaValue: 3, creatureShare: 0.5, instantSorceryShare: 0.2 };
 
 // Cards a0..a9 load on topic t1 (aggro), r0..r9 on t2 (ramp), x on both; t3 shares t1's name.
-const cardTopics: ArchetypeTopicsFile['cardTopics'] = { x: [['t1', 0.5], ['t2', 0.5]] };
+const cardTopics: ArchetypeTopicsFile['cardTopics'] = {
+  x: [
+    ['t1', 0.5],
+    ['t2', 0.5],
+  ],
+};
 for (let i = 0; i < 10; i += 1) {
   cardTopics[`a${i}`] = [['t1', 1]];
   cardTopics[`r${i}`] = [['t2', 1]];

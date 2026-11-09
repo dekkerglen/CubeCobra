@@ -1,4 +1,9 @@
-import { nextReloadFailure, RELOAD_RETRY_BASE_MS, RELOAD_RETRY_MAX_MS, shouldReload } from '../src/mlutils/reloadPolicy';
+import {
+  nextReloadFailure,
+  RELOAD_RETRY_BASE_MS,
+  RELOAD_RETRY_MAX_MS,
+  shouldReload,
+} from '../src/mlutils/reloadPolicy';
 
 describe('shouldReload', () => {
   it('reloads when the pointer moves', () => {

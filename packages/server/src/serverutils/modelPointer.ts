@@ -126,9 +126,7 @@ export const refreshModelPointer = async (): Promise<void> => {
     const reloadArchetypes = archetypes === null || (archetypes.kind === 'centers' && archetypes.version !== version);
     if (reloadArchetypes) {
       const files = await readArchetypeFiles(bucket, version);
-      archetypes = files
-        ? { kind: 'topics', version, ...files }
-        : { kind: 'centers', version, ...loadStaticCenters() };
+      archetypes = files ? { kind: 'topics', version, ...files } : { kind: 'centers', version, ...loadStaticCenters() };
       console.info(`Archetypes: ${archetypes.kind} from model ${version}`);
     }
     servedVersion = version;

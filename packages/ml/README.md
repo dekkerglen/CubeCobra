@@ -4,14 +4,14 @@ Training code for the CubeCobra recommender model: one shared card-set encoder w
 cube recommendations, deck building and draft picks. It runs as part of the ML retraining pipeline
 (a Step Functions state machine in `packages/cdk/lib/ml-pipeline.ts`) after each 90-day data export.
 
-| Stage | Where | Command |
-| --- | --- | --- |
-| Process data | jobs image, Fargate | `npm run ml-process-data` (`packages/jobs/src/ml/processTrainingData.ts`) |
-| Train | this image, GPU | `python -m ccml.train` |
-| Package | this image, GPU | `python -m ccml.package` |
-| Archetypes (alongside Train and Package) | this image, Fargate | `python -m ccml.topics` |
-| Evaluate (gate) | jobs image, Fargate | `npm run ml-evaluate` |
-| Publish | jobs image, Fargate | `npm run ml-publish` |
+| Stage                                    | Where               | Command                                                                   |
+| ---------------------------------------- | ------------------- | ------------------------------------------------------------------------- |
+| Process data                             | jobs image, Fargate | `npm run ml-process-data` (`packages/jobs/src/ml/processTrainingData.ts`) |
+| Train                                    | this image, GPU     | `python -m ccml.train`                                                    |
+| Package                                  | this image, GPU     | `python -m ccml.package`                                                  |
+| Archetypes (alongside Train and Package) | this image, Fargate | `python -m ccml.topics`                                                   |
+| Evaluate (gate)                          | jobs image, Fargate | `npm run ml-evaluate`                                                     |
+| Publish                                  | jobs image, Fargate | `npm run ml-publish`                                                      |
 
 Every stage reads and writes `s3://<ML_RUNS_BUCKET>/ml/runs/<ML_RUN_ID>/`; the layout is documented
 in `packages/utils/src/ml/modelBundle.ts`. Hyperparameters live in `train-config.json`.

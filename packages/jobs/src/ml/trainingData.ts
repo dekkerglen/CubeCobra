@@ -13,8 +13,7 @@ export const fnv1a = (value: string): number => {
 };
 
 /** Every deck and pick of a draft shares the draft id, so a draft never straddles the split. */
-export const isTestRecord = (id: string, testPercent: number = TEST_PERCENT): boolean =>
-  fnv1a(id) % 100 < testPercent;
+export const isTestRecord = (id: string, testPercent: number = TEST_PERCENT): boolean => fnv1a(id) % 100 < testPercent;
 
 export const windowStartFor = (exportedAt: number, years: number = WINDOW_YEARS): number => {
   const start = new Date(exportedAt);

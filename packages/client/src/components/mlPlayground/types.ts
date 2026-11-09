@@ -1,4 +1,3 @@
-
 // Mirrors the responses of /tool/api/mlplayground/* (see server serverutils/mlPlayground).
 
 // What the model is given for a pasted card: the card itself, a stand-in, or nothing.
