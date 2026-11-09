@@ -15,14 +15,15 @@ const boardLabel = (board: string) => board.charAt(0).toUpperCase() + board.slic
 const AnalysisBoardPicker: React.FC = () => {
   const { unfilteredChangedCards } = useContext(CubeContext);
   const analysisViewContext = useContext(AnalysisViewContext);
+  const analysisBoards = analysisViewContext?.boards;
 
   const boardKeys = useMemo(
     () => Object.keys(unfilteredChangedCards).filter((board) => Array.isArray(unfilteredChangedCards[board])),
     [unfilteredChangedCards],
   );
   const selectedBoards = useMemo(
-    () => boardKeys.filter((board) => analysisViewContext?.boards.includes(board)),
-    [boardKeys, analysisViewContext?.boards],
+    () => boardKeys.filter((board) => analysisBoards?.includes(board)),
+    [boardKeys, analysisBoards],
   );
 
   const toggleBoard = useCallback(
