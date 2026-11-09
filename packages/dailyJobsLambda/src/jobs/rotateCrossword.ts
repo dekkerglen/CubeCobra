@@ -9,10 +9,12 @@
  *
  * Retried because the biggest grids don't always fill. The server already
  * exhausts a ladder of theme redraws inside one request, but it is bounded by a
- * 60-second request timeout, and Sunday's 16x16 still comes back empty about
- * three times in ten. Each call is an independent set of draws, so asking again
- * turns that into roughly three in a hundred. The endpoint is idempotent, so a
- * retry after a *successful* call just returns the stored puzzle.
+ * 60-second request timeout, and a weekend grid still comes back empty about one
+ * time in four. Every draw in that ladder is seeded off the date, so asking again
+ * the same way would fail the same way: each call sends its attempt number as the
+ * `round`, which moves the server on to a fresh set of themes and seeds. The
+ * endpoint is idempotent, so a retry after a *successful* call just returns the
+ * stored puzzle.
  */
 const ROTATE_ATTEMPTS = 3;
 
@@ -44,7 +46,9 @@ const attemptRotation = async (url: string, apiKey: string, attempt: number): Pr
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({ apiKey }),
+      // Round 1 is the server's default, and leaving it off keeps the first call
+      // valid against a server deployed before rounds existed.
+      body: JSON.stringify(attempt === 1 ? { apiKey } : { apiKey, round: attempt }),
     });
 
     // An unknown path renders the HTML error page with a 200, so a successful
@@ -52,19 +56,20 @@ const attemptRotation = async (url: string, apiKey: string, attempt: number): Pr
     // parsing, and surface a snippet when it's something else (wrong
     // API_BASE_URL, server not yet deployed, downtime page, ...).
     const contentType = response.headers.get('content-type') || '';
-    if (!response.ok || !contentType.includes('application/json')) {
+    if (!contentType.includes('application/json')) {
       const body = (await response.text()).slice(0, 200);
       console.error(
         `Crossword rotation failed: POST ${url} returned ${response.status} (${contentType || 'no content-type'}): ${body}`,
       );
-      // Wrong URL, bad key, server down — none of which a redraw fixes.
       return 'done';
     }
 
     const result = await response.json();
-    if (!result?.success) {
-      console.error(`Crossword rotation attempt ${attempt} failed: ${JSON.stringify(result)}`);
-      return 'retry';
+    if (!response.ok || !result?.success) {
+      console.error(`Crossword rotation attempt ${attempt} failed: ${response.status} ${JSON.stringify(result)}`);
+      // Only a grid that didn't fill is worth another round. A bad key or a
+      // server error is the same on the next call.
+      return result?.retryable ? 'retry' : 'done';
     }
 
     console.log(

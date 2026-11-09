@@ -15,9 +15,10 @@ import { CROSSWORD_PRINTINGS, getVocabulary, themedCardTexts } from './vocabular
  * variations of one idea.
  *
  * Static, and deliberately so. A schedule that a date maps into is the whole of
- * what makes yesterday's puzzle reproducible: given the date and this table, the
- * size, the kind, the drawn value and the seed all follow, so a puzzle can be
- * rebuilt from its date alone if Dynamo ever loses it.
+ * what makes yesterday's puzzle reproducible: given the date, the round it was
+ * built on (see `buildDailyGrid`) and this table, the size, the kind, the drawn
+ * value and the seed all follow, so a puzzle can be rebuilt if Dynamo ever
+ * loses it.
  */
 
 /**
@@ -71,6 +72,19 @@ export interface CrosswordDayPlan {
  *     Sunday @ 15   12/12 built,  8/12 themed
  *     Saturday @ 14 12/12 built, 11/12 themed
  *
+ * Those numbers predate dropping Universes Beyond from the vocabulary (see
+ * CROSSWORD_PRINTINGS), which thinned the long card names the frame is built
+ * from. Re-run over eight weekends of single requests on the smaller
+ * vocabulary:
+ *
+ *     Sunday @ 16    2/8 built,  1/8 themed
+ *     Sunday @ 15    6/8 built,  4/8 themed
+ *     Saturday @ 14  7/8 built,  6/8 themed
+ *
+ * The misses at 14 and 15 all built within the lambda's three retry rounds (see
+ * `buildDailyGrid`'s `round`). Sunday had shipped at 16 despite the note above,
+ * and was the day that went missing once the vocabulary shrank.
+ *
  * Six Sundays in twelve with no puzzle at all is not a slow Sunday, it is a
  * broken one — no grid, no streak, a hole in the archive. And the failure is
  * bimodal rather than marginal, which is why the ladder can't rescue it: the six
@@ -81,10 +95,10 @@ export interface CrosswordDayPlan {
  * So `16` here is one character away, and these are the things to do first:
  *
  *  - Pre-generate. The rotate endpoint already takes a `date` override and is
- *    already idempotent, so having the daily lambda also rotate for `today + 7`
- *    gives every date seven independent goes before anyone needs it. At the
- *    measured 50% that is a 1-in-128 miss for one extra HTTP call, and it makes
- *    16 fine.
+ *    already idempotent, so having the daily lambda also rotate for `today + 7`,
+ *    with a fresh `round` each day, gives every date seven independent goes
+ *    before anyone needs it. At the measured 50% that is a 1-in-128 miss for one
+ *    extra HTTP call, and it makes 16 fine.
  *  - Spend longer. 16x16 themed goes 6/12 -> 10/12 when a single rung gets 45s
  *    instead of 20s. It does not fit today: `index.ts` caps every request at 60
  *    seconds, and the lambda arrives through Cloudflare, whose origin timeout is
@@ -98,7 +112,7 @@ export interface CrosswordDayPlan {
  * rate by about one point.
  */
 export const WEEKLY_SCHEDULE: readonly CrosswordDayPlan[] = [
-  { size: 16, kind: 'set' }, // Sunday — biggest grid, narrowest restriction
+  { size: 15, kind: 'set' }, // Sunday — biggest grid, narrowest restriction
   { size: 9, kind: 'creatureType' }, // Monday
   { size: 10, kind: 'colour' }, // Tuesday
   { size: 11, kind: 'cardType' }, // Wednesday

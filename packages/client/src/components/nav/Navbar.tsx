@@ -2,6 +2,7 @@ import React, { useContext, useEffect, useState } from 'react';
 
 import type { Icon as OcticonIcon } from '@primer/octicons-react';
 import {
+  BeakerIcon,
   BookIcon,
   ClockIcon,
   FeedPlusIcon,
@@ -81,6 +82,7 @@ const exploreSections: NavSection[] = [
       { label: 'Search Cards', href: '/tool/searchcards', icon: SearchIcon },
       { label: 'Sets', href: '/tool/sets', icon: StackIcon },
       { label: 'Packages', href: '/packages', icon: VersionsIcon },
+      { label: 'ML Playground', href: '/tool/mlplayground', icon: BeakerIcon },
     ],
   },
   {

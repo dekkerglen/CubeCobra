@@ -38,6 +38,35 @@ export const nearestClusterId = (embedding: number[], clusterCenters: ClusterCen
   return bestClusterId;
 };
 
+export interface ArchetypeMatch {
+  label: string;
+  clusterId: number;
+  similarity: number;
+}
+
+/**
+ * Every archetype label ranked by how close its nearest cluster center is to `embedding`. Several
+ * clusters can share a label, so each label is scored by its best center.
+ */
+export const rankArchetypes = (
+  embedding: number[] | null | undefined,
+  clusterCenters: ClusterCenter[],
+  annotations: Record<string, string>,
+): ArchetypeMatch[] => {
+  if (!embedding || embedding.length === 0) return [];
+  const best = new Map<string, ArchetypeMatch>();
+  for (const { clusterId, center } of clusterCenters) {
+    const label = annotations[String(clusterId)];
+    if (!label) continue;
+    const similarity = cosineSimilarity(embedding, center);
+    const current = best.get(label);
+    if (!current || similarity > current.similarity) {
+      best.set(label, { label, clusterId, similarity });
+    }
+  }
+  return [...best.values()].sort((a, b) => b.similarity - a.similarity);
+};
+
 /** Archetype label for an embedding given the cluster centers + labels, or null if unavailable. */
 export const archetypeForEmbedding = (
   embedding: number[] | null | undefined,
