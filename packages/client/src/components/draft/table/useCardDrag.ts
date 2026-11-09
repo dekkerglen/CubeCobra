@@ -142,6 +142,8 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
     if (handle) handles.current.set(id, handle);
     else handles.current.delete(id);
   }, []);
+  // A sprite's motion values, to read where it's drawn right now.
+  const handle = useCallback((id: SpriteId): SpriteHandle | undefined => handles.current.get(id), []);
 
   const session = useRef<DragSession | null>(null);
   const tiltTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -568,6 +570,7 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
   return {
     drag,
     register,
+    handle,
     pointerDown: api.pointerDown,
     backgroundPointerDown: api.backgroundPointerDown,
     scrolled: api.scrolled,

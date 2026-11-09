@@ -6,10 +6,12 @@
  *     (previously, all custom cards in a CSV inherited the first one's
  *     characteristics because they shared the 'custom-card' sentinel cardID)
  *   - voucher cards keeping their per-row name and attributes
+ *   - voucher contents round-tripping through the "Voucher Cards" column
  *   - tricky name serialization (commas, quotes, apostrophes, em-dashes,
  *     double-faced slashes) surviving a writeCard -> CSVtoCards round-trip
  */
 import { Response } from 'express';
+import * as carddb from 'serverutils/carddb';
 import { CSV_HEADER, writeCard } from 'serverutils/cube';
 import { CSVtoCards } from 'serverutils/cubefn';
 import { IMPORT_TOO_LARGE_MESSAGE, MAX_IMPORT_CARDS } from 'serverutils/importParsing';
@@ -44,6 +46,7 @@ jest.mock('serverutils/carddb', () => {
     getMostReasonable: jest.fn(),
     reasonableId: jest.fn(() => true),
     getAllVersionIds: jest.fn(() => ['placeholder']),
+    getIdsFromName: jest.fn(() => []),
   };
 });
 
@@ -344,6 +347,85 @@ describe('CSV import — limits', () => {
   it('refuses imports with more rows than a cube can hold', () => {
     const row = 'A,1,Instant,,,,,Colorless,Not Owned,Non-foil,mainboard,false,,,,,,true,false';
     const csv = [CSV_HEADER, ...Array(MAX_IMPORT_CARDS + 1).fill(row)].join('\r\n');
+
+    expect(() => CSVtoCards(csv)).toThrow(IMPORT_TOO_LARGE_MESSAGE);
+  });
+});
+
+describe('CSV import/export — voucher contents', () => {
+  const printings: Record<string, { name: string; set: string; collector_number: string }> = {
+    'bolt-lea': { name: 'Lightning Bolt', set: 'lea', collector_number: '161' },
+    'bolt-m10': { name: 'Lightning Bolt', set: 'm10', collector_number: '146' },
+    'island-m20': { name: 'Island', set: 'm20', collector_number: '265' },
+    champion: { name: '1996 World Champion', set: 'pcel', collector_number: '1' },
+  };
+
+  const originalCardFromId = jest.mocked(carddb.cardFromId).getMockImplementation();
+  const originalGetIdsFromName = jest.mocked(carddb.getIdsFromName).getMockImplementation();
+
+  beforeEach(() => {
+    jest
+      .mocked(carddb.cardFromId)
+      .mockImplementation((id: string) =>
+        createCardDetails(
+          printings[id] ? { ...printings[id], scryfall_id: id } : { name: 'placeholder', set: '', collector_number: '' },
+        ),
+      );
+    jest
+      .mocked(carddb.getIdsFromName)
+      .mockImplementation((name: string) => Object.keys(printings).filter((id) => printings[id]!.name === name));
+  });
+
+  afterEach(() => {
+    jest.mocked(carddb.cardFromId).mockImplementation(originalCardFromId!);
+    jest.mocked(carddb.getIdsFromName).mockImplementation(originalGetIdsFromName!);
+  });
+
+  it('fills a voucher from its Voucher Cards cell, preferring the given printing', () => {
+    const csv = [
+      CSV_HEADER,
+      'Bolt Pack,0,Voucher,R,,,,Red,Owned,Non-foil,mainboard,false,,,,,,false,true,,"Lightning Bolt [m10] 146; 2 Island (M20); Lightning Bolt; Not A Card [xyz] 1"',
+      // The column is ignored on rows that aren't vouchers
+      'Island,0,Basic Land,,m20,265,common,Lands,Owned,Non-foil,mainboard,false,,,,,,false,false,,Lightning Bolt',
+    ].join('\r\n');
+
+    const { cardsByBoard, missing } = CSVtoCards(csv);
+    const [voucher, island] = cardsByBoard.mainboard!;
+    expect(voucher!.voucher_cards!.map((vc) => vc.cardID)).toEqual(['bolt-m10', 'island-m20', 'island-m20', 'bolt-lea']);
+    expect(missing).toEqual(['Not A Card [xyz] 1 (Bolt Pack)']);
+    expect(island!.voucher_cards).toBeUndefined();
+  });
+
+  it('round-trips voucher contents through writeCard + CSVtoCards', () => {
+    const voucher = {
+      cardID: 'voucher',
+      custom_name: 'Bolt Pack',
+      type_line: 'Voucher',
+      tags: [],
+      voucher_cards: [{ cardID: 'bolt-m10' }, { cardID: 'island-m20' }, { cardID: 'champion' }],
+    };
+
+    const { res, body } = makeResStub();
+    res.write(`${CSV_HEADER}\r\n`);
+    writeCard(res, voucher as any, 'mainboard');
+    expect(body()).toContain('"Lightning Bolt [m10] 146; Island [m20] 265; 1 1996 World Champion [pcel] 1"');
+
+    const { cardsByBoard, missing } = CSVtoCards(body());
+    expect(missing).toEqual([]);
+    expect(cardsByBoard.mainboard![0]!.voucher_cards!.map((vc) => vc.cardID)).toEqual([
+      'bolt-m10',
+      'island-m20',
+      'champion',
+    ]);
+  });
+
+  it('refuses voucher contents larger than an import can hold', () => {
+    const contents = Array(MAX_IMPORT_CARDS / 100 + 1)
+      .fill('100 Island')
+      .join('; ');
+    const csv = [CSV_HEADER, `Big,0,Voucher,,,,,,Owned,Non-foil,mainboard,false,,,,,,false,true,,"${contents}"`].join(
+      '\r\n',
+    );
 
     expect(() => CSVtoCards(csv)).toThrow(IMPORT_TOO_LARGE_MESSAGE);
   });

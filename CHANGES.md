@@ -11,8 +11,10 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - In the phone draft, the tab on top of your pool pulls it up to fill the bottom two thirds of the screen, and tapping it again puts it back.
 - In the phone draft, press and hold a card in your pool to see it full size.
 - Cards you drag in a draft or the deckbuilder now lean gently into the motion and settle back smoothly, without bouncing.
+- When you draft a voucher, it bursts open and the cards inside it fly into your pool.
 - Choose which daily games can show up on your dashboard under Display Preferences in your account settings. Daily P1P1 now has its own checkbox instead of following Hide featured cubes.
 - Card pages have a new Tags tab listing the card's Scryfall oracle tags and the printing's art tags. Click a tag to search for every card that has it.
+- CSV exports now list what each voucher holds in a new Voucher Cards column, and CSV uploads read it, so a cube of vouchers can be set up or copied in one upload.
 
 ## Bug Fixes
 

@@ -25,7 +25,7 @@ import Link from '../../base/Link';
 import Spinner from '../../base/Spinner';
 import Text from '../../base/Text';
 import BoosterPack from './BoosterPack';
-import CardSprite, { EnterFrom, ExitPlan, PASS_OUT_SECONDS, SpriteId } from './CardSprite';
+import CardSprite, { EnterFrom, ExitPlan, PASS_OUT_SECONDS, SpriteId, VOUCHER_CHARGE_SECONDS } from './CardSprite';
 import { isCompactWidth } from './deckLayout';
 import HiddenCards from './HiddenCards';
 import Scrollbar from './Scrollbar';
@@ -165,7 +165,8 @@ interface Placement {
 }
 
 // passed: slides in from the neighbor; burst: pops out of a pack being opened;
-// opened: deals out from the middle (a pack already in progress on load); pool: fades in place.
+// opened: deals out from the middle (a pack already in progress on load); pool: fades in place,
+// or flies out of the voucher it was in.
 type EnterKind = 'passed' | 'burst' | 'opened' | 'pool';
 
 interface Turnover {
@@ -176,6 +177,8 @@ interface Turnover {
   passPending: boolean;
   // How each newly seen card should enter the table.
   kinds: Map<number, EnterKind>;
+  // The cards inside a voucher just drafted, flying out of it as it bursts.
+  flung: Map<number, EnterFrom>;
   // Packs opened so far, used to key the opening animation.
   openings: number;
 }
@@ -200,7 +203,59 @@ const EMPTY_TURNOVER: Turnover = {
   seen: new Set(),
   passPending: false,
   kinds: new Map(),
+  flung: new Map(),
   openings: 0,
+};
+
+const GOLDEN_ANGLE = Math.PI * (3 - Math.sqrt(5));
+
+// The cards inside a drafted voucher, bursting out of it: from its middle out to a spiral
+// around it (kept on the stage), then one by one into their spots in the pool. `from` is the
+// voucher as drawn, in stage pixels, and `packCardW` the width of a pack card not grown to be
+// read; `card` is the size the pool draws its cards, and `shiftX` how far the pool is scrolled
+// sideways.
+const flingOut = (
+  from: { x: number; y: number; width: number; height: number; rotate: number },
+  packCardW: number,
+  ids: number[],
+  card: { width: number; height: number },
+  stage: { width: number; height: number },
+  shiftX: number,
+): Map<number, EnterFrom> => {
+  const entrances = new Map<number, EnterFrom>();
+  const centerX = from.x + from.width / 2;
+  const centerY = from.y + from.height / 2;
+  // They start at the voucher's size (sprites scale about their bottom middle), and fly at
+  // most the size of a pack card.
+  const startScale = from.width / card.width;
+  const flungScale = Math.max(1, (packCardW / card.width) * 0.8);
+  const flungW = card.width * flungScale;
+  const flungH = card.height * flungScale;
+  const reach = packCardW * (0.8 + 0.2 * Math.sqrt(ids.length));
+  const stagger = Math.min(0.5, 0.025 * ids.length);
+  ids.forEach((id, index) => {
+    const along = Math.sqrt((index + 0.5) / ids.length);
+    const angle = index * GOLDEN_ANGLE;
+    const x = Math.max(flungW / 2, Math.min(stage.width - flungW / 2, centerX + Math.cos(angle) * reach * along * 1.5));
+    const y = Math.max(flungH / 2, Math.min(stage.height - flungH / 2, centerY + Math.sin(angle) * reach * along));
+    entrances.set(id, {
+      x: centerX - card.width / 2 + shiftX,
+      y: centerY - card.height + (card.height * startScale) / 2,
+      rotate: from.rotate,
+      scale: startScale,
+      opacity: 0,
+      delay: VOUCHER_CHARGE_SECONDS,
+      fling: true,
+      via: {
+        x: x - card.width / 2 + shiftX,
+        y: y - card.height + flungH / 2,
+        rotate: ((id * 37) % 31) - 15,
+        scale: flungScale,
+      },
+      hold: 0.15 + (ids.length > 1 ? (index / (ids.length - 1)) * stagger : 0),
+    });
+  });
+  return entrances;
 };
 
 const sameTarget = (a: DropTarget, b: DropTarget): boolean => {
@@ -462,8 +517,11 @@ const DraftTable: React.FC<DraftTableProps> = ({
   // holding the latest of them goes last, so that card is the one in full view.
   const placed = useRef({ next: 1, order: new Map<number, number>() });
   const markPlaced = (id: number) => {
-    placed.current.order.set(id, placed.current.next);
-    placed.current.next += 1;
+    // A voucher is placed as the cards inside it.
+    for (const placedId of [id, ...(cards[id]?.voucher_card_indices ?? [])]) {
+      placed.current.order.set(placedId, placed.current.next);
+      placed.current.next += 1;
+    }
   };
   const latestLast = (segments: Segment[]) => {
     const latest = (segment: Segment) => Math.max(0, ...segment.ids.map((id) => placed.current.order.get(id) ?? 0));
@@ -712,6 +770,12 @@ const DraftTable: React.FC<DraftTableProps> = ({
     peeked,
   ]);
 
+  // Where each card was drawn as of the last render, for one that has just left (a voucher, bursting).
+  const drawnBefore = useRef(placements);
+  useLayoutEffect(() => {
+    drawnBefore.current = placements;
+  });
+
   // Phones: the tops of the pack's cards in its scrolled content, to count those scrolled out of view.
   const packTops = useMemo(
     () => [...placements.values()].filter((placement) => placement.zone === 'pack').map(({ pose }) => pose.y),
@@ -730,6 +794,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
     trashed: new Set(),
     toward: new Map(),
     passInstantly: false,
+    burst: new Set(),
   });
   useLayoutEffect(() => {
     // Leaving cards read this from their (passive) exit effects, which run after layout effects.
@@ -753,7 +818,13 @@ const DraftTable: React.FC<DraftTableProps> = ({
   const endOpening = useCallback(() => setOpening(null), []);
   const drawnSignature = geometry ? [...packIds, ...poolIds].join(',') : '';
   if (geometry && drawnSignature !== turnover.signature) {
-    const packLeft = turnover.pack.some((id) => !packIdSet.has(id) && !poolIds.has(id));
+    // A voucher drafted from the pack gives way to the cards inside it, which show up in the pool.
+    const opened = turnover.pack.filter(
+      (id) =>
+        !packIdSet.has(id) &&
+        (cards[id]?.voucher_card_indices ?? []).some((inside) => poolIds.has(inside) && !turnover.seen.has(inside)),
+    );
+    const packLeft = turnover.pack.some((id) => !packIdSet.has(id) && !poolIds.has(id) && !opened.includes(id));
     const leftBefore = packLeft || turnover.passPending;
     const entered = packIds.some((id) => !turnover.seen.has(id));
     const firstDraw = turnover.signature === '';
@@ -769,6 +840,36 @@ const DraftTable: React.FC<DraftTableProps> = ({
     poolIds.forEach((id) => {
       if (!turnover.seen.has(id)) kinds.set(id, 'pool');
     });
+    // It bursts where it's drawn, and the cards inside it that the pool shows fly out of it.
+    const flung = new Map<number, EnterFrom>();
+    if (!animationsOff) {
+      opened.forEach((voucher) => {
+        const handle = dragger.handle(voucher);
+        const inside = (cards[voucher]?.voucher_card_indices ?? []).filter(
+          (id) => !turnover.seen.has(id) && placements.get(id)?.zone === 'pool',
+        );
+        if (!handle || inside.length === 0) return;
+        // A card grown to be read grows about its bottom middle.
+        const grown = drawnBefore.current.get(voucher)?.pose.scale ?? 1;
+        const width = geometry.cardW * grown;
+        const height = geometry.cardH * grown;
+        const from = {
+          x: handle.x.get() + (geometry.cardW - width) / 2,
+          y: handle.y.get() - (compact ? packScroll.get() : 0) + geometry.cardH - height,
+          width,
+          height,
+          rotate: handle.rotate.get(),
+        };
+        const poolCard = splitPool
+          ? { width: splitPool.cardW, height: splitPool.cardH }
+          : { width: geometry.cardW, height: geometry.cardH };
+        flingOut(from, geometry.cardW, inside, poolCard, stageSize, splitPool ? poolScrollX.get() : 0).forEach(
+          (entrance, id) => flung.set(id, entrance),
+        );
+        // Read by the voucher's exit, which starts in this render.
+        exitPlan.current.burst.add(voucher);
+      });
+    }
     const openings = turnover.openings + (unwrapped ? 1 : 0);
     if (unwrapped && !animationsOff)
       setOpening({ id: openings, label: packLabel, cardCount: packIds.length, burst: false });
@@ -778,6 +879,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
       seen: new Set([...packIds, ...poolIds]),
       passPending: leftBefore && !entered,
       kinds,
+      flung,
       openings,
     });
   }
@@ -785,7 +887,7 @@ const DraftTable: React.FC<DraftTableProps> = ({
   const enterFor = (id: number, placement: Placement): EnterFrom | null => {
     const kind = turnover.kinds.get(id);
     if (!geometry || !kind || animationsOff) return null;
-    if (kind === 'pool') return { ...placement.pose, opacity: 0, delay: 0 };
+    if (kind === 'pool') return turnover.flung.get(id) ?? { ...placement.pose, opacity: 0, delay: 0 };
     const slot = packOrder.indexOf(id);
     // A slight per-card tilt so a gathered pack reads as a pile.
     const pileTilt = ((id * 37) % 9) - 4;
