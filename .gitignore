@@ -105,3 +105,7 @@ packages/docs/maintenance/r2-production-migration.md
 # Local ML model export artifacts (downloaded, multi-hundred-MB; not for git)
 cubecobra_ml_*/
 /packages/server/public/app
+
+# packages/ml local Python environment
+packages/ml/.venv/
+packages/ml/**/__pycache__/

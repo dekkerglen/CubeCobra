@@ -1,32 +1,45 @@
-import fs from 'fs';
-import path from 'path';
+import Joi from 'joi';
+import { classifyDecks } from 'serverutils/archetype';
+import { jsonLimiter } from 'serverutils/rateLimiters';
 
-import { Request, Response } from '../../../types/express';
+import { NextFunction, Request, Response } from '../../../types/express';
 
-const STATIC_DIR = path.join(__dirname, '..', '..', '..', 'static');
+// The draft simulator and the record and playtest analyses send their pools in chunks of this size.
+const MAX_POOLS = 200;
+const MAX_POOL_CARDS = 250;
 
-let cached: { centers: { clusterId: number; center: number[] }[]; annotations: Record<string, string> } | null = null;
+const ClassifyBodySchema = Joi.object({
+  pools: Joi.array()
+    .items(Joi.array().items(Joi.string().max(64)).max(MAX_POOL_CARDS))
+    .max(MAX_POOLS)
+    .required(),
+});
 
-/**
- * GET /api/archetypes
- *
- * Returns the precomputed cluster centers and human-readable archetype labels.
- * Clients use their pool embeddings to find the nearest center via cosine similarity.
- * Response is cached in memory after first load.
- */
-const archetypesHandler = (_req: Request, res: Response) => {
-  if (!cached) {
-    try {
-      const centers = JSON.parse(fs.readFileSync(path.join(STATIC_DIR, 'clusterCenters.json'), 'utf8'));
-      const annotations = JSON.parse(fs.readFileSync(path.join(STATIC_DIR, 'annotations.json'), 'utf8'));
-      cached = { centers, annotations };
-    } catch {
-      return res.status(503).json({ error: 'Archetype data not available' });
-    }
+const validateClassifyBody = (req: Request, res: Response, next: NextFunction): void => {
+  const { error } = ClassifyBodySchema.validate(req.body);
+  if (error) {
+    res.status(400).json({ error: error.details[0]?.message || 'Validation error' });
+    return;
   }
-
-  res.setHeader('Cache-Control', 'public, max-age=86400');
-  return res.json(cached);
+  next();
 };
 
-export const routes = [{ method: 'get', path: '/', handler: [archetypesHandler] }];
+/**
+ * POST /api/archetypes/classify
+ *
+ * Body: { pools: string[][] } (oracle ids per pool). Returns { labels }: each pool's archetype as
+ * drafts name decks, or null when it can't be named.
+ */
+const classifyHandler = async (req: Request, res: Response) => {
+  const { pools } = req.body as { pools: string[][] };
+  const labels = await classifyDecks(pools.map((pool) => [...new Set(pool)]));
+  return res.status(200).json({ labels });
+};
+
+export const routes = [
+  {
+    method: 'post',
+    path: '/classify',
+    handler: [jsonLimiter(60_000, 60), validateClassifyBody, classifyHandler],
+  },
+];

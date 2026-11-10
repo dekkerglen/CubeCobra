@@ -109,6 +109,7 @@ const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
         'tokens',
         'keywords',
         'combos',
+        'archetypes',
         'prices',
       ].includes(activeLink);
     }

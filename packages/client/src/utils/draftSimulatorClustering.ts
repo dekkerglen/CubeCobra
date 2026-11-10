@@ -10,49 +10,36 @@ export const LEIDEN_RES_DIVISOR = 400;
 export const CLUSTER_NEG_SAMPLES = 20;
 
 // ---------------------------------------------------------------------------
-// Archetype labeling — module-level singleton fetch + pure cosine classifier
+// Archetype labeling — the server names each pool from its cards
 // ---------------------------------------------------------------------------
-type ArchetypeData = {
-  centers: { clusterId: number; center: number[] }[];
-  annotations: Record<string, string>;
-};
+// Match MAX_POOLS and MAX_POOL_CARDS in the server's /api/archetypes/classify route.
+const CLASSIFY_CHUNK = 200;
+const MAX_POOL_CARDS = 250;
 
-let archetypeDataPromise: Promise<ArchetypeData | null> | null = null;
-
-export async function loadArchetypeData(): Promise<ArchetypeData | null> {
-  if (!archetypeDataPromise) {
-    archetypeDataPromise = (async () => {
-      try {
-        const resp = await fetch('/api/archetypes');
-        if (!resp.ok) return null;
-        return (await resp.json()) as ArchetypeData;
-      } catch {
-        return null;
-      }
-    })();
-  }
-  return archetypeDataPromise;
-}
-
-export function assignArchetypeLabels(poolEmbeddings: number[][], archetypeData: ArchetypeData): Map<number, string> {
+/**
+ * Each pool's archetype (pools are oracle ids), keyed by pool index; pools the server can't name are
+ * left out. Null when the request fails.
+ */
+export async function classifyPoolArchetypes(pools: string[][]): Promise<Map<number, string> | null> {
   const labels = new Map<number, string>();
-  for (let pi = 0; pi < poolEmbeddings.length; pi++) {
-    const emb = poolEmbeddings[pi]!;
-    const embNorm = Math.sqrt(emb.reduce((s, v) => s + v * v, 0)) || 1;
-    let bestSim = -Infinity;
-    let bestClusterId = -1;
-    for (const { clusterId, center } of archetypeData.centers) {
-      let dot = 0;
-      const cNorm = Math.sqrt(center.reduce((s, v) => s + v * v, 0)) || 1;
-      for (let d = 0; d < emb.length; d++) dot += emb[d]! * (center[d] ?? 0);
-      const sim = dot / (embNorm * cNorm);
-      if (sim > bestSim) {
-        bestSim = sim;
-        bestClusterId = clusterId;
-      }
+  try {
+    for (let start = 0; start < pools.length; start += CLASSIFY_CHUNK) {
+      const resp = await fetch('/api/archetypes/classify', {
+        method: 'POST',
+        credentials: 'same-origin',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          pools: pools.slice(start, start + CLASSIFY_CHUNK).map((pool) => [...new Set(pool)].slice(0, MAX_POOL_CARDS)),
+        }),
+      });
+      if (!resp.ok) return null;
+      const { labels: chunk } = (await resp.json()) as { labels: (string | null)[] };
+      chunk.forEach((label, index) => {
+        if (label) labels.set(start + index, label);
+      });
     }
-    const label = archetypeData.annotations[String(bestClusterId)];
-    if (label) labels.set(pi, label);
+  } catch {
+    return null;
   }
   return labels;
 }

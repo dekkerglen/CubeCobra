@@ -36,6 +36,7 @@ import { checkAndUpdateCardbase } from './serverutils/updatecards';
 import { csrfGuard } from './serverutils/csrf';
 import { cspHeaders } from './serverutils/csp';
 import { sanitizeHttpBody, sanitizeUrl } from './serverutils/logging';
+import { startModelPointerRefresh } from './serverutils/modelPointer';
 import { assertRequiredSecrets } from './serverutils/requiredSecrets';
 import { CustomError, Request as AppRequest, Response as AppResponse } from './types/express';
 
@@ -480,8 +481,9 @@ const startListening = () => {
 };
 
 if (process.env.NODE_ENV === 'production') {
-  // Production: register routes and load the card catalog concurrently, then accept traffic.
-  Promise.all([registerRoutes(app), initializeCardDb()]).then(startListening);
+  // Production: register routes, load the card catalog and read the model pointer concurrently, then
+  // accept traffic, so the first pages already carry the served model version.
+  Promise.all([registerRoutes(app), initializeCardDb(), startModelPointerRefresh()]).then(startListening);
 } else {
   // Dev: start listening immediately so nodemon restarts are near-instant, then register routes
   // and load the card catalog concurrently in the background (previously the route module graph
@@ -492,4 +494,5 @@ if (process.env.NODE_ENV === 'production') {
     registerRoutes(app).then(() => console.info('Routes ready.')),
     initializeCardDb().then(() => console.info('Card catalog ready.')),
   ]).catch((e) => console.error('Startup task failed; some routes may hang:', e));
+  startModelPointerRefresh();
 }

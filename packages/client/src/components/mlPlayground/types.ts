@@ -1,4 +1,3 @@
-import type { ArchetypeMatch } from '@utils/drafting/archetype';
 
 // Mirrors the responses of /tool/api/mlplayground/* (see server serverutils/mlPlayground).
 
@@ -55,11 +54,18 @@ export interface DeckbuildResponse {
   archetype: string | null;
 }
 
+export interface ArchetypeScore {
+  label: string;
+  score: number;
+}
+
 export interface ArchetypeResult {
   list: ListSummary;
   embedding: number[];
   colors: string[];
-  archetypes: ArchetypeMatch[];
+  // share: of the list's archetype topics. similarity: cosine to the closest legacy cluster center.
+  scoreKind: 'share' | 'similarity';
+  archetypes: ArchetypeScore[];
 }
 
 export interface ArchetypeResponse {

@@ -20,7 +20,7 @@ const processCube = async (cube: CubeType, oracleToIndex: Record<string, number>
     const [cards, following] = await Promise.all([cubeDao.getCards(cube.id), cubeDao.getAllLikers(cube.id)]);
 
     return {
-      cards: cards.mainboard.map((card: Card) => oracleToIndex[cardOracleId(card)] || -1),
+      cards: cards.mainboard.map((card: Card) => oracleToIndex[cardOracleId(card)] ?? -1),
       id: cube.id,
       name: cube.name,
       owner: cube.owner.username,

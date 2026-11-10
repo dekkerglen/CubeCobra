@@ -5,5 +5,8 @@ module.exports = {
   transform: {
     '^.+\\.(ts|js)$': ['babel-jest', { presets: ['@babel/preset-env', '@babel/preset-typescript'] }],
   },
+  moduleNameMapper: {
+    '^@utils/(.*)$': '<rootDir>/../utils/src/$1',
+  },
   testMatch: ['<rootDir>/test/**/*.test.ts'],
 };

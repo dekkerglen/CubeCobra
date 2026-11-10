@@ -27,10 +27,29 @@ const SECRET_VALUES = {
   r2SecretAccessKey: 'sentinel-r2-secret-access-key',
 };
 
+const ML_PIPELINE = {
+  exportBucket: 'test-public-bucket',
+  bedrockModelId: 'test-bedrock-model',
+  bedrockFallbackModelId: 'test-bedrock-fallback-model',
+  promoteTargets: {
+    beta: {
+      dataBucket: 'test-beta-bucket',
+      recommenderEnvironmentName: 'cubecobra-recommender-beta-v2-env',
+      ssmSegment: 'beta',
+    },
+    production: {
+      dataBucket: 'test-data-bucket',
+      recommenderEnvironmentName: 'cubecobra-recommender-production-v2-env',
+      ssmSegment: 'prod',
+    },
+  },
+};
+
 interface BuildOptions {
   secretsFromSsm?: boolean;
   r2?: boolean;
   secrets?: Partial<typeof SECRET_VALUES>;
+  mlPipeline?: boolean;
 }
 
 const buildTemplate = (recommenderSharedSecret: string, options: BuildOptions = {}): Template => {
@@ -77,6 +96,7 @@ const buildTemplate = (recommenderSharedSecret: string, options: BuildOptions = 
       recommenderSharedSecret,
       restrictAlbToCloudflare: false,
       secretsFromSsm: options.secretsFromSsm ?? false,
+      mlPipeline: options.mlPipeline ? ML_PIPELINE : undefined,
     },
     { env: { account: '123456789012', region: 'us-east-2' } },
   );
@@ -365,5 +385,338 @@ describe('without secretsFromSsm', () => {
     for (const env of [monitorEnv, dailyEnv, botEnv]) expect(env).not.toHaveProperty('DRAFTMANCER_API_KEY');
     expect(monitorEnv).not.toHaveProperty('MANAMATRIX_API_KEY');
     expect(botEnv).not.toHaveProperty('MANAMATRIX_API_KEY');
+  });
+});
+
+// ---------------------------------------------------------------------------------------------
+// ML retraining pipeline
+// ---------------------------------------------------------------------------------------------
+
+// The state machine's top-level states, with every CloudFormation token replaced by 'TOKEN'.
+const stateMachineStates = (template: Template): Record<string, any> => {
+  const machine: any = Object.values(template.findResources('AWS::StepFunctions::StateMachine'))[0];
+  const definition = machine.Properties.DefinitionString;
+  const text =
+    typeof definition === 'string'
+      ? definition
+      : definition['Fn::Join'][1].map((part: unknown) => (typeof part === 'string' ? part : 'TOKEN')).join('');
+  return JSON.parse(text).States;
+};
+
+// The states of every Parallel branch, by name.
+const branchStates = (states: Record<string, any>): Record<string, any> =>
+  Object.assign(
+    {},
+    ...Object.values(states)
+      .filter((state) => state.Type === 'Parallel')
+      .flatMap((state) => state.Branches.map((branch: any) => ({ ...branch.States, ...branchStates(branch.States) }))),
+  );
+
+// Top-level and branch states together.
+const allStates = (template: Template): Record<string, any> => {
+  const states = stateMachineStates(template);
+  return { ...states, ...branchStates(states) };
+};
+
+const taskDefinition = (template: Template, family: string): any =>
+  (Object.values(template.findResources('AWS::ECS::TaskDefinition')) as any[]).find(
+    (definition) => definition.Properties.Family === family,
+  ).Properties;
+
+const containerEnvironment = (container: any): Record<string, string> =>
+  Object.fromEntries((container.Environment as any[]).map((e) => [e.Name, e.Value]));
+
+describe('ML pipeline', () => {
+  test('is only created when configured', () => {
+    const template = buildTemplate('');
+    template.resourceCountIs('AWS::StepFunctions::StateMachine', 0);
+    expect(environmentOptionNames(template, 'cubecobra-production-v2-env')).not.toHaveProperty(
+      'ML_PIPELINE_STATE_MACHINE_ARN',
+    );
+  });
+
+  test('trains on the GPU capacity provider and runs the CPU stages on Fargate', () => {
+    const states = allStates(buildTemplate('', { mlPipeline: true }));
+
+    for (const name of ['Train', 'Package']) {
+      expect(states[name].Resource).toMatch(/ecs:runTask\.sync$/);
+      // Managed scaling only provisions from zero for tasks naming the capacity provider.
+      expect(states[name].Parameters.CapacityProviderStrategy).toEqual([{ CapacityProvider: 'TOKEN', Weight: 1 }]);
+      expect(states[name].Parameters).not.toHaveProperty('LaunchType');
+      expect(states[name].Retry[0]).toMatchObject({
+        ErrorEquals: ['ECS.AmazonECSException'],
+        IntervalSeconds: 600,
+        MaxAttempts: 6,
+      });
+    }
+    expect(states.Train.TimeoutSeconds).toBe(72 * 3600);
+    expect(states.Train.Retry[1]).toMatchObject({ ErrorEquals: ['States.TaskFailed'], MaxAttempts: 3 });
+    expect(states.Train.Parameters.Overrides.ContainerOverrides).toEqual([
+      {
+        Name: 'MlGpuContainer',
+        Command: ['python', '-m', 'ccml.train'],
+        Environment: [{ Name: 'ML_RUN_ID', 'Value.$': '$.run.runId' }],
+      },
+    ]);
+
+    for (const [name, script, hours] of [
+      ['ProcessData', 'ml-process-data', 3],
+      ['Evaluate', 'ml-evaluate', 3],
+      ['Publish', 'ml-publish', 1],
+    ] as const) {
+      expect(states[name].Parameters.LaunchType).toBe('FARGATE');
+      expect(states[name].Parameters.Overrides.ContainerOverrides[0].Command).toEqual(['npm', 'run', script]);
+      expect(states[name].TimeoutSeconds).toBe(hours * 3600);
+    }
+
+    // Archetype topics: the training image on Fargate, no GPU.
+    expect(states.Topics.Parameters.LaunchType).toBe('FARGATE');
+    expect(states.Topics.Parameters.Overrides.ContainerOverrides).toEqual([
+      {
+        Name: 'MlTopicsContainer',
+        Command: ['python', '-m', 'ccml.topics'],
+        Environment: [{ Name: 'ML_RUN_ID', 'Value.$': '$.run.runId' }],
+      },
+    ]);
+    expect(states.Topics.TimeoutSeconds).toBe(3 * 3600);
+    expect(states.Topics.Retry).toEqual([
+      expect.objectContaining({ ErrorEquals: ['States.TaskFailed'], MaxAttempts: 1 }),
+    ]);
+
+    // The label-transfer stage is gone.
+    expect(states).not.toHaveProperty('Archetypes');
+    expect(states).not.toHaveProperty('StepArchetypes');
+  });
+
+  test('training and archetype topics run in parallel between processing and evaluation', () => {
+    const states = stateMachineStates(buildTemplate('', { mlPipeline: true }));
+    expect(states.ProcessData.Next).toBe('TrainAndTopics');
+
+    const parallel = states.TrainAndTopics;
+    expect(parallel.Type).toBe('Parallel');
+    // $ comes out unchanged.
+    expect(parallel.ResultPath).toBeNull();
+    expect(parallel.Next).toBe('StepEvaluating');
+    expect(parallel.Catch).toEqual([{ ErrorEquals: ['States.ALL'], ResultPath: '$.error', Next: 'RecordFailure' }]);
+
+    const [training, topics] = parallel.Branches;
+    expect(training.StartAt).toBe('StepTraining');
+    expect(Object.keys(training.States).sort()).toEqual(['Package', 'StepPackaging', 'StepTraining', 'Train']);
+    expect(training.States.StepTraining.Next).toBe('Train');
+    expect(training.States.Train.Next).toBe('StepPackaging');
+    expect(training.States.StepPackaging.Next).toBe('Package');
+    // Only the training branch records steps on the run.
+    expect(topics.StartAt).toBe('Topics');
+    expect(Object.keys(topics.States)).toEqual(['Topics']);
+
+    // Branch states can't catch to states outside their branch; the Parallel's catch handles them.
+    for (const state of Object.values(branchStates(states))) {
+      expect(state.Catch).toBeUndefined();
+    }
+  });
+
+  test('every top-level task fails into RecordFailure, and approval waits up to 7 days for a task token', () => {
+    const states = stateMachineStates(buildTemplate('', { mlPipeline: true }));
+
+    const tasks = Object.entries(states).filter(([, state]) => state.Type === 'Task');
+    expect(tasks.length).toBeGreaterThan(15);
+    const expectedNext = (name: string): string => {
+      // Before Prepare there is no run to mark failed.
+      if (name === 'Prepare' || name === 'RecordFailure') return 'Failed';
+      // Once the pointer may have moved, the promotion is reverted first.
+      const promotion = name.match(/^(?:Promote|Verify)(Beta|Production)$/);
+      return promotion ? `Revert${promotion[1]}` : 'RecordFailure';
+    };
+    for (const [name, state] of tasks) {
+      expect(state.Catch).toEqual([expect.objectContaining({ ErrorEquals: ['States.ALL'], Next: expectedNext(name) })]);
+    }
+
+    expect(states.AwaitApproval.Resource).toMatch(/lambda:invoke\.waitForTaskToken$/);
+    expect(states.AwaitApproval.TimeoutSeconds).toBe(7 * 24 * 3600);
+    expect(states.AwaitApproval.Parameters.Payload['taskToken.$']).toBe('$$.Task.Token');
+    expect(states.GatePassed.Default).toBe('GateFailed');
+    expect(states.Mode.Choices[0].Next).toBe('StepPromotingProduction');
+  });
+
+  test('a promotion that never serves the new version is reverted, then recorded as failed', () => {
+    const states = stateMachineStates(buildTemplate('', { mlPipeline: true }));
+    for (const name of ['Beta', 'Production']) {
+      // No restart: the recommenders hot-reload the pointer within a minute.
+      expect(states[`Promote${name}`].Next).toBe(`Wait${name}Reload`);
+      expect(states[`Wait${name}Reload`].Seconds).toBe(60);
+      expect(states[`Wait${name}Again`].Seconds).toBe(60);
+      expect(states[`${name}Serving`].Choices[1]).toMatchObject({ NumericGreaterThanEquals: 20 });
+      expect(states[`${name}NotServing`].Next).toBe(`Revert${name}`);
+
+      const revert = states[`Revert${name}`];
+      // Direct Lambda integration (payloadResponseOnly): Parameters is the payload itself.
+      expect(revert.Parameters).toMatchObject({
+        action: 'revert',
+        target: name.toLowerCase(),
+        'runId.$': '$.run.runId',
+        'version.$': '$.run.version',
+      });
+      // A failing revert must not keep the run from being recorded.
+      expect(revert.Next).toBe('RecordFailure');
+      expect(revert.Catch).toEqual([
+        { ErrorEquals: ['States.ALL'], ResultPath: '$.revertError', Next: 'RecordFailure' },
+      ]);
+    }
+  });
+
+  test('the server and the export job can start runs; the ML tasks get their own settings', () => {
+    const template = buildTemplate('', { mlPipeline: true, r2: true });
+
+    expect(environmentOptionNames(template, 'cubecobra-production-v2-env')).toHaveProperty(
+      'ML_PIPELINE_STATE_MACHINE_ARN',
+    );
+    const serverActions = policyStatements(template, 'InstanceRole').flatMap((s) => [s.Action].flat());
+    expect(serverActions).toEqual(
+      expect.arrayContaining([
+        'states:StartExecution',
+        'states:DescribeExecution',
+        'states:StopExecution',
+        'states:SendTaskSuccess',
+        'states:SendTaskFailure',
+      ]),
+    );
+
+    const jobs = taskDefinition(template, 'cubecobra-jobs-production').ContainerDefinitions[0];
+    expect(containerEnvironment(jobs)).toHaveProperty('ML_PIPELINE_STATE_MACHINE_ARN');
+    const jobsActions = policyStatements(template, 'JobsTaskTaskRole').flatMap((s) => [s.Action].flat());
+    expect(jobsActions).toContain('states:StartExecution');
+    expect(jobsActions).not.toContain('states:SendTaskSuccess');
+
+    const cpu = taskDefinition(template, 'cubecobra-ml-cpu-production');
+    expect(cpu).toMatchObject({ Cpu: '8192', Memory: '61440', EphemeralStorage: { SizeInGiB: 200 } });
+    const cpuEnv = containerEnvironment(cpu.ContainerDefinitions[0]);
+    expect(cpuEnv).toMatchObject({
+      ML_RUNS_BUCKET: 'test-data-bucket',
+      ML_EXPORT_BUCKET: 'test-public-bucket',
+      ML_LIVE_BUCKET: 'test-data-bucket',
+      ML_PUBLISH_BUCKETS: 'test-beta-bucket,test-data-bucket',
+      ML_R2_TARGETS: 'production,beta',
+      DATA_BUCKET: 'test-data-bucket',
+    });
+    expect(cpuEnv).not.toHaveProperty('ML_PIPELINE_STATE_MACHINE_ARN');
+    expect(cpuEnv).not.toHaveProperty('R2_ACCESS_KEY_ID');
+    expect(cpuEnv).not.toHaveProperty('R2_SECRET_ACCESS_KEY');
+    const secrets = cpu.ContainerDefinitions[0].Secrets as any[];
+    expect(secrets.map((secret) => secret.Name).sort()).toEqual(
+      ['BETA', 'PRODUCTION']
+        .flatMap((target) =>
+          ['ENDPOINT', 'BUCKET', 'ACCESS_KEY_ID', 'SECRET_ACCESS_KEY'].map((suffix) => `ML_R2_${target}_${suffix}`),
+        )
+        .sort(),
+    );
+    expect(JSON.stringify(secrets)).toContain('parameter/cubecobra/beta/r2-secret-access-key');
+    expect(JSON.stringify(secrets)).toContain('parameter/cubecobra/prod/r2-endpoint');
+
+    const gpu = taskDefinition(template, 'cubecobra-ml-gpu-production');
+    expect(gpu).toMatchObject({ RequiresCompatibilities: ['EC2'], NetworkMode: 'bridge' });
+    expect(gpu.ContainerDefinitions[0]).toMatchObject({
+      MemoryReservation: 30720,
+      ResourceRequirements: [{ Type: 'GPU', Value: '1' }],
+    });
+    expect(containerEnvironment(gpu.ContainerDefinitions[0])).toMatchObject({ ML_RUNS_BUCKET: 'test-data-bucket' });
+
+    // Archetype topics: the training image on Fargate, CPU only, naming topics on Bedrock.
+    const topics = taskDefinition(template, 'cubecobra-ml-topics-production');
+    expect(topics).toMatchObject({
+      RequiresCompatibilities: ['FARGATE'],
+      Cpu: '8192',
+      Memory: '32768',
+      EphemeralStorage: { SizeInGiB: 100 },
+    });
+    expect(topics.ContainerDefinitions[0].Image).toEqual(gpu.ContainerDefinitions[0].Image);
+    expect(topics.ContainerDefinitions[0].ResourceRequirements).toBeUndefined();
+    expect(containerEnvironment(topics.ContainerDefinitions[0])).toEqual({
+      ML_RUNS_BUCKET: 'test-data-bucket',
+      ML_LIVE_BUCKET: 'test-data-bucket',
+      AWS_REGION: 'us-east-2',
+      ML_BEDROCK_REGION: 'us-east-2',
+      ML_BEDROCK_MODEL_ID: 'test-bedrock-model',
+      ML_BEDROCK_FALLBACK_MODEL_ID: 'test-bedrock-fallback-model',
+    });
+    const topicsStatements = policyStatements(template, 'MlPipelineTopicsTaskRole');
+    expect(topicsStatements).toContainEqual(
+      expect.objectContaining({ Action: 'bedrock-mantle:CreateInference', Resource: '*' }),
+    );
+    const topicsResources = topicsStatements.flatMap((s) => [s.Resource].flat());
+    expect(topicsResources).toEqual(
+      expect.arrayContaining([
+        'arn:aws:s3:::test-data-bucket/ml/runs/*',
+        'arn:aws:s3:::test-data-bucket/model/*',
+        'arn:aws:s3:::test-data-bucket',
+      ]),
+    );
+    // Nothing outside the production data bucket besides Bedrock.
+    expect(topicsResources.filter((r: string) => r !== '*' && !r.startsWith('arn:aws:s3:::test-data-bucket'))).toEqual(
+      [],
+    );
+  });
+
+  test('GPU capacity scales from zero on the AL2023 GPU AMI, preferring g5 over g6', () => {
+    const template = buildTemplate('', { mlPipeline: true });
+    expect(JSON.stringify(template.toJSON().Parameters)).toContain(
+      '/aws/service/ecs/optimized-ami/amazon-linux-2023/gpu/recommended/image_id',
+    );
+    template.hasResourceProperties('AWS::AutoScaling::AutoScalingGroup', {
+      MinSize: '0',
+      MaxSize: '1',
+      MixedInstancesPolicy: Match.objectLike({
+        InstancesDistribution: Match.objectLike({
+          OnDemandAllocationStrategy: 'prioritized',
+          OnDemandPercentageAboveBaseCapacity: 100,
+        }),
+        LaunchTemplate: Match.objectLike({
+          Overrides: [{ InstanceType: 'g5.2xlarge' }, { InstanceType: 'g6.2xlarge' }],
+        }),
+      }),
+    });
+    template.hasResourceProperties('AWS::ECS::CapacityProvider', {
+      AutoScalingGroupProvider: Match.objectLike({
+        ManagedScaling: Match.objectLike({ Status: 'ENABLED', TargetCapacity: 100 }),
+        ManagedTerminationProtection: 'DISABLED',
+      }),
+    });
+    template.hasResourceProperties('AWS::EC2::LaunchTemplate', {
+      LaunchTemplateData: Match.objectLike({
+        BlockDeviceMappings: [
+          { DeviceName: '/dev/xvda', Ebs: Match.objectLike({ VolumeSize: 200, VolumeType: 'gp3' }) },
+        ],
+        MetadataOptions: Match.objectLike({ HttpTokens: 'required' }),
+      }),
+    });
+  });
+
+  test('one bundle runs as a pipeline function outside the VPC and a verify function inside it', () => {
+    const template = buildTemplate('', { mlPipeline: true });
+    const functions = Object.values(template.findResources('AWS::Lambda::Function')) as any[];
+    const byName = (name: string) => functions.find((f) => f.Properties.FunctionName === name).Properties;
+
+    const pipeline = byName('MlPipeline-example-production');
+    const verify = byName('MlPipelineVerify-example-production');
+    expect(pipeline.VpcConfig).toBeUndefined();
+    expect(verify.VpcConfig).toBeDefined();
+    for (const fn of [pipeline, verify]) {
+      expect(fn.Code.S3Key).toBe('mlPipelineLambda/v1.0.0.zip');
+      expect(fn.Environment.Variables).toMatchObject({
+        ML_RUNS_BUCKET: 'test-data-bucket',
+        ML_PROMOTE_TARGETS: JSON.stringify(ML_PIPELINE.promoteTargets),
+      });
+      expect(fn.Environment.Variables).toHaveProperty('DYNAMO_TABLE');
+    }
+
+    const actions = policyStatements(template, 'MlPipelinePipelineFunctionRole').flatMap((s) => [s.Action].flat());
+    expect(actions).toEqual(expect.arrayContaining(['elasticbeanstalk:DescribeEnvironments', 'dynamodb:UpdateItem']));
+    // Promotion only moves the pointer; the recommenders hot-reload it.
+    expect(actions.filter((a: string) => a.startsWith('elasticbeanstalk:'))).toEqual([
+      'elasticbeanstalk:DescribeEnvironments',
+    ]);
+    for (const prefix of ['autoscaling:', 'ec2:', 'cloudformation:']) {
+      expect(actions.filter((a: string) => a.startsWith(prefix))).toEqual([]);
+    }
+    expect(policyStatements(template, 'MlPipelineVerifyFunctionRole')).toEqual([]);
   });
 });

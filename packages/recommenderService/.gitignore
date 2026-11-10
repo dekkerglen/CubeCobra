@@ -2,6 +2,7 @@ node_modules/
 dist/
 private/
 model/
+.model-*/
 *.log
 .env
 .DS_Store

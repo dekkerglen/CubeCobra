@@ -11,6 +11,7 @@ import DisplayContext from '../../contexts/DisplayContext';
 import PlaytestViewContext from '../../contexts/PlaytestViewContext';
 import RecordsViewContext from '../../contexts/RecordsViewContext';
 import SettingsViewContext from '../../contexts/SettingsViewContext';
+import { hasTopicArchetypes } from '../../utils/archetypes';
 
 interface MobileSubNavProps {
   cube: Cube;
@@ -94,6 +95,7 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
       'tokens',
       'keywords',
       'combos',
+      'archetypes',
       'prices',
     ].includes(activeLink)
   ) {
@@ -109,6 +111,7 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
       { key: 'tokens', label: 'Tokens' },
       { key: 'keywords', label: 'Keywords' },
       { key: 'combos', label: 'Combos' },
+      ...(hasTopicArchetypes() ? [{ key: 'archetypes', label: 'Archetypes' }] : []),
       { key: 'prices', label: 'Prices' },
     ];
   } else if (
@@ -178,6 +181,7 @@ const MobileSubNav: React.FC<MobileSubNavProps> = ({ cube: _cubeProp, activeLink
           'tokens',
           'keywords',
           'combos',
+          'archetypes',
           'prices',
         ].includes(activeLink)
       ) {

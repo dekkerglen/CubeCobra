@@ -23,13 +23,12 @@ import {
   WebGLInferenceError,
 } from '../utils/draftBot';
 import {
-  assignArchetypeLabels,
   buildClusterRecommendationInput,
+  classifyPoolArchetypes,
   CLUSTER_NEG_SAMPLES,
   computeSkeletons,
   KNN_K_DIVISOR,
   LEIDEN_RES_DIVISOR,
-  loadArchetypeData,
 } from '../utils/draftSimulatorClustering';
 import {
   type ClusteringCache,
@@ -151,10 +150,9 @@ async function buildClusterCacheForRun(
     resolution,
   );
   let poolArchetypeLabels: [number, string][] | undefined;
-  const archetypeData = await loadArchetypeData();
+  const labels = await classifyPoolArchetypes(pools);
   throwIfAborted(signal);
-  if (archetypeData) {
-    const labels = assignArchetypeLabels(poolEmbeddings, archetypeData);
+  if (labels) {
     poolArchetypeLabels = [...labels.entries()];
   }
   const nextClusterCache: ClusteringCache = {

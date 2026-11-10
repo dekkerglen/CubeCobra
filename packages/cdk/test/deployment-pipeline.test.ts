@@ -43,16 +43,18 @@ const policyStatements = (template: Template): any[] =>
 
 const asArray = <T>(value: T | T[]): T[] => (Array.isArray(value) ? value : [value]);
 
-test('Every CodeBuild project installs from the lockfile with npm ci', () => {
+test('Every CodeBuild project that installs packages does so from the lockfile with npm ci', () => {
   const specs = buildSpecs(buildTemplate());
   expect(specs.map((s) => s.name).sort()).toEqual([
+    'CubeCobra-Build-ML-Image',
     'CubeCobra-Deploy-Beta',
     'CubeCobra-Deploy-Production',
     'CubeCobra-Integration-Tests',
   ]);
-  for (const { spec } of specs) {
+  for (const { name, spec } of specs) {
     const commands = allCommands(spec);
-    expect(commands).toContain('npm ci');
+    // The ML image build only runs docker; the image installs its own dependencies.
+    if (name !== 'CubeCobra-Build-ML-Image') expect(commands).toContain('npm ci');
     expect(commands.filter((c) => /\bnpm install\b/.test(c))).toEqual([]);
   }
 });
@@ -152,6 +154,7 @@ test('Bundle uploads are limited to the publish prefixes of the app bucket', () 
             'arn:aws:s3:::cubecobra/dailyJobsLambda/*',
             'arn:aws:s3:::cubecobra/cardUpdateMonitorLambda/*',
             'arn:aws:s3:::cubecobra/botDeckbuildLambda/*',
+            'arn:aws:s3:::cubecobra/mlPipelineLambda/*',
           ],
         }),
         Match.objectLike({
@@ -161,6 +164,63 @@ test('Bundle uploads are limited to the publish prefixes of the app bucket', () 
       ]),
     },
   });
+});
+
+test('Only the production deploy publishes the ML pipeline lambda', () => {
+  const specs = buildSpecs(buildTemplate());
+  const prod = specs.find((s) => s.name === 'CubeCobra-Deploy-Production')!.spec;
+  const beta = specs.find((s) => s.name === 'CubeCobra-Deploy-Beta')!.spec;
+  const preBuild: string[] = prod.phases.pre_build.commands;
+  const publishIndex = preBuild.indexOf('cd packages/mlPipelineLambda');
+  expect(publishIndex).toBeGreaterThanOrEqual(0);
+  expect(preBuild.slice(publishIndex, publishIndex + 6)).toEqual([
+    'cd packages/mlPipelineLambda',
+    'npm run build',
+    'export CUBECOBRA_APP_BUCKET=cubecobra',
+    'export LAMBDA_VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION',
+    'node publish.js',
+    'cd ../..',
+  ]);
+  expect(allCommands(beta)).not.toContain('cd packages/mlPipelineLambda');
+});
+
+test('The ML image is built by its own long-running project after the production deploy', () => {
+  const template = buildTemplate();
+  const project: any = (Object.values(template.findResources('AWS::CodeBuild::Project')) as any[]).find(
+    (p) => p.Properties.Name === 'CubeCobra-Build-ML-Image',
+  );
+  expect(project.Properties.TimeoutInMinutes).toBe(120);
+  expect(project.Properties.Environment).toMatchObject({ ComputeType: 'BUILD_GENERAL1_LARGE', PrivilegedMode: true });
+
+  const commands = allCommands(JSON.parse(project.Properties.Source.BuildSpec));
+  expect(commands).toContain(
+    'export ML_ECR_REPO=$(aws cloudformation describe-stacks --stack-name CubeCobraProdStack --query "Stacks[0].Outputs[?contains(OutputKey, \\`MlEcr\\`) && contains(OutputKey, \\`RepositoryUri\\`)].OutputValue | [0]" --output text)',
+  );
+  const build = commands.find((c) => c.includes('docker build'))!;
+  expect(build).toContain('--build-arg GIT_SHA=$CODEBUILD_RESOLVED_SOURCE_VERSION');
+  expect(build).toContain('-f packages/ml/Dockerfile .');
+  expect(commands).toContain('docker push $ML_ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION');
+  expect(commands).toContain('docker push $ML_ECR_REPO:latest');
+
+  // It can read the production stack's outputs and push images, nothing else.
+  const statements = Object.entries(template.findResources('AWS::IAM::Policy'))
+    .filter(([id]) => id.startsWith('DeploymentPipelineMlImageBuildProjectRole'))
+    .flatMap(([, policy]: [string, any]) => policy.Properties.PolicyDocument.Statement);
+  const actions = statements.flatMap((s) => asArray(s.Action));
+  expect(actions).toContain('cloudformation:DescribeStacks');
+  expect(actions).toContain('ecr:PutImage');
+  expect(actions).not.toContain('sts:AssumeRole');
+  expect(actions).not.toContain('s3:PutObject');
+  expect(actions.filter((a: string) => a.startsWith('ssm:'))).toEqual([]);
+
+  const pipeline: any = Object.values(template.findResources('AWS::CodePipeline::Pipeline'))[0];
+  expect(pipeline.Properties.Stages.map((s: any) => s.Name)).toEqual([
+    'Source',
+    'DeployBeta',
+    'IntegrationTests',
+    'DeployProduction',
+    'BuildMlImage',
+  ]);
 });
 
 test('Pipeline artifact bucket is versioned and denies non-TLS access', () => {

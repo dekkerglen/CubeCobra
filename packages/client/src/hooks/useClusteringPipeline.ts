@@ -11,12 +11,11 @@ import {
   reshapeEmbeddings,
 } from '../utils/draftBot';
 import {
-  assignArchetypeLabels,
+  classifyPoolArchetypes,
   CLUSTER_NEG_SAMPLES,
   computeSkeletons,
   KNN_K_DIVISOR,
   LEIDEN_RES_DIVISOR,
-  loadArchetypeData,
   rescoreSkeletons,
 } from '../utils/draftSimulatorClustering';
 import {
@@ -203,7 +202,7 @@ export default function useClusteringPipeline({
   }, [displayRunData, activeDecks, selectedTs, embeddingsCache]);
 
   useEffect(() => {
-    if (!poolEmbeddings || poolEmbeddings.length === 0) {
+    if (!displayRunData || !poolEmbeddings || poolEmbeddings.length === 0) {
       // Don't clear labels that are already valid for this run (e.g. restored from cache
       // while embeddings were skipped because everything was cached).
       if (archetypeLabelsSourceKey.current !== runSourceKey) {
@@ -214,23 +213,25 @@ export default function useClusteringPipeline({
     }
     // Skip if labels were already loaded from cache (or computed) for this exact run.
     if (archetypeLabelsSourceKey.current === runSourceKey) return;
+    // The same pools the embeddings were made from.
+    const hasDecks = !!(activeDecks && activeDecks.length === displayRunData.slimPools.length);
+    const pools = displayRunData.slimPools.map((pool, i) =>
+      hasDecks ? activeDecks![i]!.mainboard : pool.picks.map((p) => p.oracle_id),
+    );
     let cancelled = false;
     (async () => {
-      const archetypeData = await loadArchetypeData();
-      if (cancelled || !archetypeData) return;
-      const labels = assignArchetypeLabels(poolEmbeddings, archetypeData);
-      if (!cancelled) {
-        setPoolArchetypeLabels(labels);
-        archetypeLabelsSourceKey.current = runSourceKey;
-        if (selectedTs) {
-          void patchClusteringCache(cubeId, selectedTs, { poolArchetypeLabels: [...labels.entries()] });
-        }
+      const labels = await classifyPoolArchetypes(pools);
+      if (cancelled || !labels) return;
+      setPoolArchetypeLabels(labels);
+      archetypeLabelsSourceKey.current = runSourceKey;
+      if (selectedTs) {
+        void patchClusteringCache(cubeId, selectedTs, { poolArchetypeLabels: [...labels.entries()] });
       }
     })();
     return () => {
       cancelled = true;
     };
-  }, [poolEmbeddings, runSourceKey, selectedTs, cubeId]);
+  }, [poolEmbeddings, displayRunData, activeDecks, runSourceKey, selectedTs, cubeId]);
 
   useEffect(() => {
     if (!displayRunData || displayRunData.slimPools.length === 0) {

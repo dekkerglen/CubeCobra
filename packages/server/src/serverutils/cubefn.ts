@@ -33,6 +33,8 @@ interface CubeCard {
   custom_name?: string;
   name?: string;
   details?: CardDetails;
+  // A voucher's contents, read from the CSV's Voucher Cards column.
+  voucher_cards?: VoucherCard[];
 }
 
 interface CubeTypeResult {

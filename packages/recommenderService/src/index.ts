@@ -23,7 +23,8 @@ import { requireInternalToken } from './internalAuth';
 import { initializeCardCatalog } from './mlutils/cardCatalog';
 import cloudwatch from './mlutils/cloudwatch';
 import { downloadModelsFromS3 } from './mlutils/downloadModel';
-import { initializeMl } from './mlutils/ml';
+import { getServedModelVersion, initializeMl, modelsHealthy } from './mlutils/ml';
+import { startModelReloadPolling } from './mlutils/modelReload';
 import { updateCardbase } from './mlutils/updateCards';
 import router from './router/router';
 import { CustomError } from './types/express';
@@ -44,6 +45,12 @@ app.use(compression());
 // healthcheck endpoint
 app.get('/healthcheck', (_req: express.Request, res: express.Response) => {
   res.status(200).send('OK');
+});
+
+// Polled by the ML pipeline after a promotion: every instance has to report the promoted version
+// (which it does only once it has swapped to it) with working models before the promotion counts.
+app.get('/version', (_req: express.Request, res: express.Response) => {
+  res.status(200).json({ modelVersion: getServedModelVersion(), ok: modelsHealthy() });
 });
 
 // Everything past the health check needs the shared secret once RECOMMENDER_SHARED_SECRET is set.
@@ -115,27 +122,14 @@ const PORT = process.env.PORT || 5002;
 
 async function startServer() {
   try {
-    // Check if models already exist locally
-    const modelDir = path.join('.', 'model');
-    // These are the actual directory names in the model folder
-    const requiredModels = ['encoder', 'cube_decoder', 'deck_build_decoder', 'draft_decoder'];
-
-    const modelDirExists = fs.existsSync(modelDir);
-    const modelsExist =
-      modelDirExists && requiredModels.every((model) => fs.existsSync(path.join(modelDir, model, 'model.json')));
-
-    if (!modelsExist) {
-      const dataBucket = process.env.DATA_BUCKET || 'cubecobra-public';
-      console.log('Models not found locally. Downloading ML models from S3...');
-      if (dataBucket !== 'cubecobra-public') {
-        console.log(
-          `Using private bucket "${dataBucket}" — make sure AWS credentials are configured, or set DATA_BUCKET=cubecobra-public in .env for local dev.`,
-        );
-      }
-      await downloadModelsFromS3('', dataBucket);
-    } else {
-      console.log('Using existing local ML models.');
+    const dataBucket = process.env.DATA_BUCKET || 'cubecobra-public';
+    if (dataBucket !== 'cubecobra-public' && process.env.NODE_ENV === 'development') {
+      console.log(
+        `Using private bucket "${dataBucket}" — make sure AWS credentials are configured, or set DATA_BUCKET=cubecobra-public in .env for local dev.`,
+      );
     }
+    // Only downloads when the bucket's model pointer names a version the local model/ isn't.
+    await downloadModelsFromS3('', dataBucket);
 
     // Check if card data files exist (only oracleToId.json needed now)
     const privateDir = path.join('.', 'private');
@@ -160,6 +154,9 @@ async function startServer() {
     server.listen(PORT, () => {
       console.log(`Recommender Service listening on port ${PORT}`);
     });
+
+    // Later promotions are picked up without a restart.
+    startModelReloadPolling('.', dataBucket);
   } catch (err) {
     console.error('Failed to start server:', err);
     process.exit(1);

@@ -32,6 +32,7 @@
     "@aws-sdk/client-s3": "^3.927.0",
     "@aws-sdk/client-ses": "^3.1053.0",
     "@aws-sdk/client-sesv2": "^3.1045.0",
+    "@aws-sdk/client-sfn": "^3.927.0",
     "@aws-sdk/client-sns": "^3.927.0",
     "@aws-sdk/client-ssm": "^3.1156.0",
     "@aws-sdk/credential-providers": "^3.926.0",

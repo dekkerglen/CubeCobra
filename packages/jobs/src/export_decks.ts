@@ -23,13 +23,25 @@ const draftCardIndexToOracle = (cardIndex: string | number, draftCards: { [x: st
 };
 
 const draftCardIndexToOracleIndex = (cardIndex: any, draftCards: any, oracleToIndex: { [x: string]: any }) => {
-  return oracleToIndex[draftCardIndexToOracle(cardIndex, draftCards)] || -1;
+  return oracleToIndex[draftCardIndexToOracle(cardIndex, draftCards)] ?? -1;
 };
 
-const processDeck = (draft: { seats: any[]; id: any; cube: any; cards: any; basics: any }, oracleToIndex: any) => {
+// Drafts store their date as a number or a Date depending on age; the export always writes epoch ms
+// so training can keep only recent drafts.
+const draftTimestamp = (date: Date | number | undefined): number | null => {
+  if (date === undefined || date === null) return null;
+  const value = typeof date === 'number' ? date : new Date(date).valueOf();
+  return Number.isFinite(value) ? value : null;
+};
+
+const processDeck = (
+  draft: { seats: any[]; id: any; cube: any; cards: any; basics: any; date?: Date | number },
+  oracleToIndex: any,
+) => {
   const seats: {
     id: any;
     cube: any;
+    date: number | null;
     owner: any;
     mainboard: number[];
     sideboard: number[];
@@ -45,6 +57,7 @@ const processDeck = (draft: { seats: any[]; id: any; cube: any; cards: any; basi
       seats.push({
         id: draft.id,
         cube: draft.cube,
+        date: draftTimestamp(draft.date),
         owner: seat.owner.id,
         mainboard: seat.mainboard
           .flat(2)
@@ -66,6 +79,8 @@ const processDeck = (draft: { seats: any[]; id: any; cube: any; cards: any; basi
 
 const processPicks = (
   draft: {
+    id: any;
+    date?: Date | number;
     seats: any[];
     InitialState: { [s: string]: unknown } | ArrayLike<unknown>;
     type: any;
@@ -77,6 +92,8 @@ const processPicks = (
   nonlandCapacity: number = 23,
 ) => {
   const picks: {
+    draft: any;
+    date: number | null;
     cube: any;
     cubeCards: number;
     owner: any;
@@ -95,7 +112,7 @@ const processPicks = (
   const cubeInstance = Object.values(draft.cards || {})
     .map((card: any) => {
       const oracleId = card?.details?.oracle_id;
-      return oracleToIndex[oracleId] || -1;
+      return oracleToIndex[oracleId] ?? -1;
     })
     .filter((index: number) => index !== -1);
 
@@ -124,6 +141,8 @@ const processPicks = (
         }).length;
 
         picks.push({
+          draft: draft.id,
+          date: draftTimestamp(draft.date),
           cube: draft.cube,
           cubeCards: 0,
           owner: seat.owner.id,

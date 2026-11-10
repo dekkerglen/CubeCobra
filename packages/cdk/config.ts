@@ -1,3 +1,29 @@
+// An environment the ML retraining pipeline promotes models to (lib/ml-pipeline.ts).
+export interface MlPromoteTarget {
+  // The environment's data bucket: the pipeline publishes model/<version>/ there and moves
+  // model/current.json to promote.
+  dataBucket: string;
+  // The environment's recommender Elastic Beanstalk environment (lib/recommender-service.ts),
+  // restarted after a promotion so it loads the new model.
+  recommenderEnvironmentName: string;
+  // SSM path segment of the environment's /cubecobra/<segment>/r2-* parameters (lib/secrets.ts
+  // ssmSegmentFor); the publish step mirrors the model to that environment's R2 bucket.
+  ssmSegment: string;
+}
+
+export interface MlPipelineConfig {
+  // Bucket the 90-day export job writes export/ to; the pipeline trains on it.
+  exportBucket: string;
+  // Bedrock models that name the archetype topics; the fallback is only used when the main model
+  // refuses.
+  bedrockModelId: string;
+  bedrockFallbackModelId: string;
+  promoteTargets: {
+    beta: MlPromoteTarget;
+    production: MlPromoteTarget;
+  };
+}
+
 export interface EnvironmentConfiguration {
   stackName: string;
   account: string;
@@ -33,6 +59,9 @@ export interface EnvironmentConfiguration {
   // Create every parameter before flipping this on; beta first, then production, following
   // packages/docs/maintenance/secrets-migration.md.
   secretsFromSsm: boolean;
+  // ML retraining pipeline (lib/ml-pipeline.ts). Set on production only: one pipeline trains on
+  // the production export and promotes to beta, then (after admin approval) production.
+  mlPipeline?: MlPipelineConfig;
 }
 
 export const environments: { [key: string]: EnvironmentConfiguration } = {
@@ -117,5 +146,22 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     manageSharedVpcEndpoints: false,
     restrictAlbToCloudflare: false,
     secretsFromSsm: false,
+    mlPipeline: {
+      exportBucket: 'cubecobra-public',
+      bedrockModelId: 'anthropic.claude-opus-5-5',
+      bedrockFallbackModelId: 'anthropic.claude-opus-4-8',
+      promoteTargets: {
+        beta: {
+          dataBucket: 'cubecobra-data-beta',
+          recommenderEnvironmentName: 'cubecobra-recommender-beta-v2-env',
+          ssmSegment: 'beta',
+        },
+        production: {
+          dataBucket: 'cubecobra-data-production',
+          recommenderEnvironmentName: 'cubecobra-recommender-production-v2-env',
+          ssmSegment: 'prod',
+        },
+      },
+    },
   },
 };

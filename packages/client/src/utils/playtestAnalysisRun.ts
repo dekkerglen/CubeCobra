@@ -14,12 +14,11 @@ import type { BuiltDeck, CardMeta, CardStats, SlimPool } from '@utils/datatypes/
 
 import { buildOracleRemapping, encodePools, loadDraftBot, reshapeEmbeddings } from './draftBot';
 import {
-  assignArchetypeLabels,
+  classifyPoolArchetypes,
   CLUSTER_NEG_SAMPLES,
   computeSkeletons,
   KNN_K_DIVISOR,
   LEIDEN_RES_DIVISOR,
-  loadArchetypeData,
 } from './draftSimulatorClustering';
 import { PlaytestAnalysisRunData, PlaytestDeck, PlaytestPick, RecordCardInfo } from './playtestAnalysisStorage';
 import { buildCardMeta } from './recordCardMeta';
@@ -331,13 +330,7 @@ export async function runPlaytestAnalysis(
       skeletons = result.skeletons;
       clusterMethod = result.clusterMethod;
 
-      let archetypeLabels: Map<number, string> | null = null;
-      try {
-        const archetypeData = await loadArchetypeData();
-        if (archetypeData) archetypeLabels = assignArchetypeLabels(embeddings, archetypeData);
-      } catch {
-        archetypeLabels = null;
-      }
+      const archetypeLabels = await classifyPoolArchetypes(pools);
 
       for (let i = 0; i < decks.length; i++) {
         decks[i]!.x = result.umapCoords[i]?.x ?? 0;
