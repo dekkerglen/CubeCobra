@@ -1,0 +1,25 @@
+[project]
+name = "ccml"
+version = "0.2.0"
+description = "CubeCobra recommender model training (run by the ML retraining pipeline)"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "boto3>=1.35,<2",
+    "h5py>=3.10,<4",
+    "numpy>=1.26,<2.0",
+    "tensorflow[and-cuda]==2.16.2",
+    "tf-keras==2.16.0",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.11.11",
+]
+
+[tool.ruff]
+line-length = 120
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

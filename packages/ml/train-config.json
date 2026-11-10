@@ -1,0 +1,15 @@
+{
+  "epochs": 200,
+  "batch_size": 256,
+  "primary_stream": "cube",
+  "learning_rate": 0.001,
+  "loss_weights": { "cube": 1.0, "deck": 1.0, "draft": 1.0, "correlation": 1.0 },
+  "land_penalty_weight": 1.0,
+  "noise": 0.2,
+  "noise_std": 0.1,
+  "checkpoint_every": 10,
+  "validate_every": 10,
+  "keep_checkpoints": 3,
+  "seed": 42,
+  "validation_sample": { "cubes": 2000, "decks": 5000, "picks": 20000 }
+}

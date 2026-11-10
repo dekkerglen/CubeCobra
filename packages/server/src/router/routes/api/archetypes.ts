@@ -1,32 +1,27 @@
-import fs from 'fs';
-import path from 'path';
+import { getArchetypeData, getServedModelVersion } from 'serverutils/modelPointer';
 
 import { Request, Response } from '../../../types/express';
-
-const STATIC_DIR = path.join(__dirname, '..', '..', '..', 'static');
-
-let cached: { centers: { clusterId: number; center: number[] }[]; annotations: Record<string, string> } | null = null;
 
 /**
  * GET /api/archetypes
  *
- * Returns the precomputed cluster centers and human-readable archetype labels.
- * Clients use their pool embeddings to find the nearest center via cosine similarity.
- * Response is cached in memory after first load.
+ * Returns the cluster centers and human-readable archetype labels for the served model version.
+ * Clients use their pool embeddings to find the nearest center via cosine similarity, so they ask
+ * with ?v=<their model version>; the URL changes with each promotion and can be cached for a day.
  */
-const archetypesHandler = (_req: Request, res: Response) => {
-  if (!cached) {
-    try {
-      const centers = JSON.parse(fs.readFileSync(path.join(STATIC_DIR, 'clusterCenters.json'), 'utf8'));
-      const annotations = JSON.parse(fs.readFileSync(path.join(STATIC_DIR, 'annotations.json'), 'utf8'));
-      cached = { centers, annotations };
-    } catch {
-      return res.status(503).json({ error: 'Archetype data not available' });
-    }
+const archetypesHandler = (req: Request, res: Response) => {
+  const { centers, annotations } = getArchetypeData();
+  if (centers.length === 0) {
+    return res.status(503).json({ error: 'Archetype data not available' });
   }
 
-  res.setHeader('Cache-Control', 'public, max-age=86400');
-  return res.json(cached);
+  const modelVersion = getServedModelVersion();
+  // A server that hasn't picked up a promotion yet must not let a cache keep its old centers under
+  // the new version's URL.
+  const requested = req.query.v;
+  const cacheable = requested === undefined || requested === modelVersion;
+  res.setHeader('Cache-Control', cacheable ? 'public, max-age=86400' : 'no-store');
+  return res.json({ centers, annotations, modelVersion });
 };
 
 export const routes = [{ method: 'get', path: '/', handler: [archetypesHandler] }];

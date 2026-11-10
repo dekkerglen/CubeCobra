@@ -1,52 +1,15 @@
 /**
  * Deck archetype classification using cluster centers and annotations.
  *
- * Loads cluster centers (128-dim embeddings) and archetype labels from static files.
- * Classifies a deck by encoding its oracle IDs via the ML service, then finding
- * the closest cluster center via cosine similarity.
+ * The cluster centers (embeddings in the served model's space) and archetype labels come from the
+ * served model bundle, or the static files when it has none (see modelPointer). Classifies a deck
+ * by encoding its oracle IDs via the ML service, then finding the closest cluster center via cosine
+ * similarity.
  */
-import {
-  archetypeForEmbedding,
-  type ArchetypeMatch,
-  type ClusterCenter,
-  rankArchetypes,
-} from '@utils/drafting/archetype';
-import fs from 'fs';
-import path from 'path';
+import { archetypeForEmbedding, type ArchetypeMatch, rankArchetypes } from '@utils/drafting/archetype';
 
 import { encode } from './ml';
-
-const STATIC_DIR = path.join(__dirname, '..', 'static');
-
-let clusterCenters: ClusterCenter[] = [];
-let annotations: Record<string, string> = {};
-let loaded = false;
-
-function loadData() {
-  if (loaded) return;
-
-  try {
-    const centersPath = path.join(STATIC_DIR, 'clusterCenters.json');
-    const annotationsPath = path.join(STATIC_DIR, 'annotations.json');
-
-    if (fs.existsSync(centersPath)) {
-      clusterCenters = JSON.parse(fs.readFileSync(centersPath, 'utf8'));
-    } else {
-      console.warn('clusterCenters.json not found, archetype classification disabled');
-    }
-
-    if (fs.existsSync(annotationsPath)) {
-      annotations = JSON.parse(fs.readFileSync(annotationsPath, 'utf8'));
-    } else {
-      console.warn('annotations.json not found, archetype classification disabled');
-    }
-
-    loaded = true;
-    console.info(`Loaded ${clusterCenters.length} cluster centers, ${Object.keys(annotations).length} annotations`);
-  } catch (err) {
-    console.warn('Failed to load archetype data:', err);
-  }
-}
+import { getArchetypeData } from './modelPointer';
 
 /**
  * Classify a deck into the closest archetype cluster.
@@ -54,15 +17,15 @@ function loadData() {
  * @returns The archetype label, or null if classification fails
  */
 export async function classifyDeck(oracleIds: string[]): Promise<string | null> {
-  loadData();
+  const { centers, annotations } = getArchetypeData();
 
-  if (clusterCenters.length === 0 || oracleIds.length === 0) {
+  if (centers.length === 0 || oracleIds.length === 0) {
     return null;
   }
 
   try {
     const embedding = await encode(oracleIds);
-    return archetypeForEmbedding(embedding, clusterCenters, annotations);
+    return archetypeForEmbedding(embedding, centers, annotations);
   } catch {
     return null;
   }
@@ -70,6 +33,6 @@ export async function classifyDeck(oracleIds: string[]): Promise<string | null> 
 
 /** Every archetype label ranked by its closest cluster center to `embedding` (cosine). */
 export function rankArchetypesForEmbedding(embedding: number[]): ArchetypeMatch[] {
-  loadData();
-  return rankArchetypes(embedding, clusterCenters, annotations);
+  const { centers, annotations } = getArchetypeData();
+  return rankArchetypes(embedding, centers, annotations);
 }

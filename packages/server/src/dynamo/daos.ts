@@ -28,6 +28,7 @@ import { NotificationDynamoDao } from './dao/NotificationDynamoDao';
 import { P1P1PackDynamoDao } from './dao/P1P1PackDynamoDao';
 import { PackageDynamoDao } from './dao/PackageDynamoDao';
 import { PasswordResetDynamoDao } from './dao/PasswordResetDynamoDao';
+import { RetrainTaskDynamoDao } from './dao/RetrainTaskDynamoDao';
 import { PatronDynamoDao } from './dao/PatronDynamoDao';
 import { PodcastDynamoDao } from './dao/PodcastDynamoDao';
 import { RecordDynamoDao } from './dao/RecordDynamoDao';
@@ -105,6 +106,7 @@ export const cardUpdateTaskDao: CardUpdateTaskDynamoDao = new CardUpdateTaskDyna
 export const cardMetadataTaskDao: CardMetadataTaskDynamoDao = new CardMetadataTaskDynamoDao(documentClient, tableName);
 export const exportTaskDao: ExportTaskDynamoDao = new ExportTaskDynamoDao(documentClient, tableName);
 export const migrationTaskDao: MigrationTaskDynamoDao = new MigrationTaskDynamoDao(documentClient, tableName);
+export const retrainTaskDao: RetrainTaskDynamoDao = new RetrainTaskDynamoDao(documentClient, tableName);
 export const comboDao: ComboDynamoDao = new ComboDynamoDao(documentClient, tableName);
 export const collaboratorIndexDao: CollaboratorIndexDynamoDao = new CollaboratorIndexDynamoDao(
   documentClient,

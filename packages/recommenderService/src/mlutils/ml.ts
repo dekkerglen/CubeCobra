@@ -1,13 +1,16 @@
-import { type GraphModel, loadGraphModel, tensor, tidy } from '@tensorflow/tfjs-node';
+import { type GraphModel, loadGraphModel, type Tensor, tensor, tidy } from '@tensorflow/tfjs-node';
 import { readFileSync } from 'fs';
+import { readFile } from 'fs/promises';
 import path from 'path';
 
 import 'dotenv/config';
 
 import { softmax } from '@utils/drafting/mlScoring';
+import { LEGACY_MODEL_VERSION } from '@utils/ml/modelBundle';
 
 import { getAllOracleIds } from './cardCatalog';
 import cloudwatch from './cloudwatch';
+import { readLocalModelVersion } from './downloadModel';
 
 let indexToOracle: Record<number, string> = {};
 let oracleToIndex: Record<string, number> = {};
@@ -17,6 +20,13 @@ let encoder: GraphModel;
 let recommendDecoder: GraphModel;
 let deckbuilderDecoder: GraphModel;
 let draftDecoder: GraphModel;
+
+// The version of the models above, as GET /version reports it. Changes only together with them.
+let servedVersion = LEGACY_MODEL_VERSION;
+
+// After a hot reload the replaced models are disposed this much later, so nothing still using them
+// loses their weights mid-prediction.
+const DISPOSE_DELAY_MS = 60 * 1000;
 
 // The recommend decoder scores the entire oracle vocabulary (~30k cards).
 // Returning every non-cube card as an `add` produced a ~3 MB JSON response.
@@ -45,6 +55,8 @@ const errorHandler = (modelName: string, err: { message: any; stack: any }) => {
 
 export async function initializeMl(rootDir: string = '.') {
   console.info('Loading ML models...');
+  servedVersion = readLocalModelVersion(rootDir) ?? LEGACY_MODEL_VERSION;
+  selfTest = null;
 
   // Load the oracle mapping
   const oracleMapPath = path.join(rootDir, 'model', 'indexToOracleMap.json');
@@ -132,6 +144,140 @@ const encodeIndeces = (indeces: number[]) => {
     });
 
   return tensor;
+};
+
+interface ModelSet {
+  encoder: GraphModel;
+  recommendDecoder: GraphModel;
+  deckbuilderDecoder: GraphModel;
+  draftDecoder: GraphModel;
+  indexToOracle: Record<number, string>;
+  oracleToIndex: Record<string, number>;
+  numOracles: number;
+}
+
+const disposeModels = (models: (GraphModel | undefined)[]): void => {
+  for (const model of models) {
+    try {
+      model?.dispose();
+    } catch {
+      // Already disposed.
+    }
+  }
+};
+
+/** True when a one-row forward pass (a few vocabulary cards through the encoder, then each decoder) is finite. */
+const runSelfTest = (models: ModelSet): boolean => {
+  try {
+    const input = new Array(models.numOracles).fill(0);
+    for (const index of [0, 1, 2, 3, 4].filter((i) => i < models.numOracles)) input[index] = 1;
+    return tidy(() => {
+      const finite = (output: Tensor) => {
+        const values = output.dataSync() as Float32Array;
+        return values.length > 0 && values.every((value) => Number.isFinite(value));
+      };
+      const encoded = models.encoder.predict(tensor([input])) as Tensor;
+      return (
+        finite(encoded) &&
+        [models.recommendDecoder, models.deckbuilderDecoder, models.draftDecoder].every((decoder) =>
+          finite(decoder.predict([encoded]) as Tensor),
+        )
+      );
+    });
+  } catch (err) {
+    const error = err as Error;
+    cloudwatch.error(`Model self-test failed: ${error.message}`, error.stack || '');
+    return false;
+  }
+};
+
+// GET /version is polled by the promotion step, so the self-test result is reused for a short while
+// rather than running a forward pass on every request.
+const SELF_TEST_TTL_MS = 30 * 1000;
+let selfTest: { ok: boolean; at: number } | null = null;
+
+/** The model version being served. */
+export const getServedModelVersion = (): string => servedVersion;
+
+/** True when all four served models are loaded and pass the self-test. */
+export const modelsHealthy = (): boolean => {
+  if (selfTest && Date.now() - selfTest.at < SELF_TEST_TTL_MS) {
+    return selfTest.ok;
+  }
+
+  const ok =
+    !!(encoder && recommendDecoder && deckbuilderDecoder && draftDecoder) &&
+    numOracles > 0 &&
+    runSelfTest({
+      encoder,
+      recommendDecoder,
+      deckbuilderDecoder,
+      draftDecoder,
+      indexToOracle,
+      oracleToIndex,
+      numOracles,
+    });
+
+  selfTest = { ok, at: Date.now() };
+  return ok;
+};
+
+// Loads a complete model set from <rootDir>/model/ without touching the served one. Rejects unless
+// every model loads.
+const loadModelSet = async (rootDir: string): Promise<ModelSet> => {
+  const modelDir = path.join(rootDir, 'model');
+  const mappingFile = await readFile(path.join(modelDir, 'indexToOracleMap.json'), 'utf8');
+  const mapping: Record<number, string> = JSON.parse(mappingFile);
+  const results = await Promise.allSettled(
+    ['encoder', 'cube_decoder', 'deck_build_decoder', 'draft_decoder'].map((name) =>
+      loadGraphModel(`file://${path.join(modelDir, name, 'model.json')}`),
+    ),
+  );
+  const loaded = results.map((result) => (result.status === 'fulfilled' ? result.value : undefined));
+  const failure = results.find((result): result is PromiseRejectedResult => result.status === 'rejected');
+  if (failure) {
+    disposeModels(loaded);
+    throw failure.reason;
+  }
+
+  const lookup = Object.fromEntries(Object.entries(mapping).map(([key, value]) => [value, parseInt(key, 10)]));
+  return {
+    encoder: loaded[0]!,
+    recommendDecoder: loaded[1]!,
+    deckbuilderDecoder: loaded[2]!,
+    draftDecoder: loaded[3]!,
+    indexToOracle: mapping,
+    oracleToIndex: lookup,
+    numOracles: Object.keys(lookup).length,
+  };
+};
+
+/**
+ * Loads the model in <rootDir>/model/ (already downloaded) and, once all four models load and pass
+ * the self-test, starts serving it as `version`. On failure the served models and version are left
+ * as they were and this rejects.
+ */
+export const reloadMl = async (rootDir: string, version: string): Promise<void> => {
+  const next = await loadModelSet(rootDir);
+  if (!runSelfTest(next)) {
+    disposeModels([next.encoder, next.recommendDecoder, next.deckbuilderDecoder, next.draftDecoder]);
+    throw new Error(`Model ${version} failed its self-test`);
+  }
+
+  const previous = [encoder, recommendDecoder, deckbuilderDecoder, draftDecoder];
+  // One synchronous step. Every prediction below runs synchronously too, so each request sees the
+  // whole old set or the whole new one, never a mix.
+  encoder = next.encoder;
+  recommendDecoder = next.recommendDecoder;
+  deckbuilderDecoder = next.deckbuilderDecoder;
+  draftDecoder = next.draftDecoder;
+  indexToOracle = next.indexToOracle;
+  oracleToIndex = next.oracleToIndex;
+  numOracles = next.numOracles;
+  servedVersion = version;
+  selfTest = { ok: true, at: Date.now() };
+
+  setTimeout(() => disposeModels(previous), DISPOSE_DELAY_MS).unref();
 };
 
 export const encode = (oracles: string[]) => {

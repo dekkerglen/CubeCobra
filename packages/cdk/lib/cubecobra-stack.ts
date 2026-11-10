@@ -5,6 +5,7 @@ import * as ecs from 'aws-cdk-lib/aws-ecs';
 import { CfnInstanceProfile, ManagedPolicy, Role, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import * as iam from 'aws-cdk-lib/aws-iam';
 
+import type { MlPipelineConfig } from '../config';
 import { BotDeckbuildLambda } from './bot-deckbuild-lambda';
 import { CardUpdateMonitorLambda } from './card-update-monitor-lambda';
 import { Certificates } from './certificates';
@@ -13,6 +14,7 @@ import { DynamodbTables } from './dynamodb-tables';
 import { ECR } from './ecr';
 import { ElasticBeanstalk } from './elastic-beanstalk';
 import { JobsEcsTask } from './jobs-ecs-task';
+import { MlPipeline } from './ml-pipeline';
 import { RecommenderService } from './recommender-service';
 import { Route53 } from './route53';
 import { S3Buckets } from './s3-buckets';
@@ -74,6 +76,8 @@ interface CubeCobraStackParams {
   // Load secrets at runtime from SSM instead of synthesizing them (see config.ts, lib/secrets.ts).
   // When true the secret params above are ignored.
   secretsFromSsm: boolean;
+  // ML retraining pipeline (lib/ml-pipeline.ts); set on production only (see config.ts).
+  mlPipeline?: MlPipelineConfig;
 }
 
 export type Environment = 'production' | 'development';
@@ -267,8 +271,36 @@ export class CubeCobraStack extends cdk.Stack {
     // Create ECR repository for jobs container
     const jobsEcr = new ECR(this, 'JobsEcr');
 
-    // Create the jobs ECS task with environment variables
     const jobsEnvVars = createJobsEnvironmentVariables(params, props, dynamoTables.table.tableName);
+
+    // ML retraining pipeline (production only): a state machine that retrains the recommender
+    // model after each export and promotes it to beta, then production. Its CPU stages run on the
+    // jobs image.
+    const mlPipeline = params.mlPipeline
+      ? new MlPipeline(this, 'MlPipeline', {
+          config: params.mlPipeline,
+          environmentName: params.environmentName,
+          vpc,
+          jobsRepository: jobsEcr.repository,
+          // A copy: the jobs environment gains the state machine ARN below, which the pipeline's
+          // own tasks must not reference (a dependency cycle).
+          jobsEnvironmentVariables: { ...jobsEnvVars },
+          lambdaEnvironmentVariables: createLambdaEnvironmentVariables(params, props, dynamoTables.table.tableName),
+          table: dynamoTables.table,
+          dataBucket: params.dataBucket,
+          codeArtifactsBucket: params.appBucket,
+          version: params.version,
+          subdomain: params.domain.split('.')[0],
+          stage: params.env,
+        })
+      : undefined;
+
+    // The export job starts a training run when an export finishes.
+    if (mlPipeline) {
+      jobsEnvVars.ML_PIPELINE_STATE_MACHINE_ARN = mlPipeline.stateMachine.stateMachineArn;
+    }
+
+    // Create the jobs ECS task with environment variables
     const jobsTask = new JobsEcsTask(this, 'JobsTask', {
       repository: jobsEcr.repository,
       cluster: fargateCluster,
@@ -280,6 +312,8 @@ export class CubeCobraStack extends cdk.Stack {
       cpu: 8192, // 8 vCPU (required for >30 GB; 4 vCPU tier caps at 30 GB)
       memoryMiB: 61440, // 60 GB (8 vCPU tier max) — update-metadata-dict holds three O(n²) oracle matrices (~16 GB off-heap, invisible to --max_old_space_size) plus the growing metadatadict heap (~36 GB cap). 30 GB was OOM-killed (exit 137) as the oracle count grew; 60 GB leaves runway for the quadratic growth
     });
+
+    mlPipeline?.stateMachine.grantStartExecution(jobsTask.taskRole);
 
     // Compute ECS networking config (same logic as card-update-monitor-lambda)
     const subnets = vpc.privateSubnets.length > 0 ? vpc.privateSubnets : vpc.publicSubnets;
@@ -302,6 +336,13 @@ export class CubeCobraStack extends cdk.Stack {
     serverEnvVars.BOT_DECKBUILD_QUEUE_NAME = botDeckbuildLambda.queue.queueName;
     serverEnvVars.BOT_DECKBUILD_DLQ_NAME = botDeckbuildLambda.deadLetterQueue.queueName;
     serverEnvVars.BOT_DECKBUILD_FUNCTION_NAME = botDeckbuildLambda.lambdaFunction.functionName;
+
+    // The admin page starts training and promotion runs, follows them and answers the approval
+    // step. The instance role is shared with the recommender, which doesn't use these.
+    if (mlPipeline) {
+      serverEnvVars.ML_PIPELINE_STATE_MACHINE_ARN = mlPipeline.stateMachine.stateMachineArn;
+      mlPipeline.grantRunControl(role);
+    }
 
     const elasticBeanstalk = new ElasticBeanstalk(this, 'ElasticBeanstalk', {
       certificate: cert.consoleCertificate,

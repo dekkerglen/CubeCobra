@@ -12,6 +12,8 @@ export const CLUSTER_NEG_SAMPLES = 20;
 // ---------------------------------------------------------------------------
 // Archetype labeling — module-level singleton fetch + pure cosine classifier
 // ---------------------------------------------------------------------------
+import { getModelVersion } from '@utils/modelVersion';
+
 type ArchetypeData = {
   centers: { clusterId: number; center: number[] }[];
   annotations: Record<string, string>;
@@ -23,7 +25,8 @@ export async function loadArchetypeData(): Promise<ArchetypeData | null> {
   if (!archetypeDataPromise) {
     archetypeDataPromise = (async () => {
       try {
-        const resp = await fetch('/api/archetypes');
+        // Centers belong to one model's embedding space; the version keeps a cached copy from matching another.
+        const resp = await fetch(`/api/archetypes?v=${encodeURIComponent(getModelVersion())}`);
         if (!resp.ok) return null;
         return (await resp.json()) as ArchetypeData;
       } catch {

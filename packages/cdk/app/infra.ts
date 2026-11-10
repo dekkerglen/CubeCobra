@@ -94,6 +94,7 @@ if (bootstrap && bootstrap === 'true') {
       recommenderSharedSecret: secret('RECOMMENDER_SHARED_SECRET'),
       restrictAlbToCloudflare: config.restrictAlbToCloudflare,
       secretsFromSsm: config.secretsFromSsm,
+      mlPipeline: config.mlPipeline,
     },
     {
       env: { account: config.account, region: config.region },

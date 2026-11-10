@@ -16,6 +16,7 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - Card pages have a new Tags tab listing the card's Scryfall oracle tags and the printing's art tags. Click a tag to search for every card that has it.
 - The new ML Playground, under Cards in the Explore menu, puts the card recommender to work on any list you paste: Smart Search against your list, the bot's pick from a pack, the deck a bot would build from a pool, the archetype a deck reads as, or a seed list grown into a full cube.
 - CSV exports now list what each voucher holds in a new Voucher Cards column, and CSV uploads read it, so a cube of vouchers can be set up or copied in one upload.
+- The public data exports now record when each draft happened, and every pick names the draft it came from.
 
 ## Bug Fixes
 
@@ -28,6 +29,7 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - Customizing a Lore Seeker's pack on a phone no longer stretches the card window past both edges of the screen.
 - Saving a large batch of changes, such as replacing a cube from a CSV, no longer fails with "Operation timed out".
 - When saving cube changes fails, the error now says what went wrong instead of always reporting a timeout, and the blog post you wrote is kept so you can try again.
+- The public data exports no longer leave out one particular card everywhere it appeared in cubes, decks and picks.
 - If saving a CSV replace fails, the bulk upload page stays open with your changes instead of jumping back to the cube list.
 - A save whose changes went through but whose blog post failed no longer leaves the changes pending, so saving again no longer reports that the cube was updated since you started editing.
 - The daily crossword no longer goes missing on weekends, as it did on November 7 and 8. Sunday's puzzle is now 15x15, one size up from Saturday's.
@@ -36,3 +38,4 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 
 - The navigation bar no longer redraws every time a draft updates, and keeps cubes that share a name apart.
 - The web server's request size limit now matches the site's own limits. It had been silently capping requests at 1MB.
+- The card recommender now retrains automatically after each quarterly data export, on drafts from the last three years and cubes updated in that time. A new model goes live only after it matches the current one on held-out drafts and an admin approves it, and admins can roll back to any earlier model.

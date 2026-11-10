@@ -232,6 +232,7 @@ console.log(card.name);                         // "Lightning Bolt"`}
   {
     "id": "draft-uuid",
     "cube": "cube-uuid",
+    "date": 1775683279151,              // When the draft happened (ms since epoch)
     "owner": "user-uuid",
     "mainboard": [42, 103, 256, ...],  // Card indexes
     "sideboard": [15, 89, ...],         // Card indexes
@@ -276,6 +277,8 @@ console.log(card.name);                         // "Lightning Bolt"`}
               <CodeBlock>
                 {`[
   {
+    "draft": "draft-uuid",
+    "date": 1775683279151,    // When the draft happened (ms since epoch)
     "cube": "cube-uuid",
     "cubeCards": 0,           // Index into cubeInstances/{n}.json array
     "owner": "user-uuid",

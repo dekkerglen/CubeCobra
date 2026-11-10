@@ -2,10 +2,18 @@ import { CfnOutput, RemovalPolicy } from 'aws-cdk-lib';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import { Construct } from 'constructs';
 
+export interface ECRProps {
+  /**
+   * Keep only this many images, expiring the oldest (the pipeline pushes a commit-tagged image on
+   * every deploy). Default: keep every image.
+   */
+  maxImageCount?: number;
+}
+
 export class ECR extends Construct {
   public readonly repository: ecr.IRepository;
 
-  constructor(scope: Construct, id: string) {
+  constructor(scope: Construct, id: string, props: ECRProps = {}) {
     super(scope, id);
 
     this.repository = new ecr.Repository(this, `${id}EcrRepository`, {
@@ -15,6 +23,7 @@ export class ECR extends Construct {
       // Tags stay MUTABLE for now: the pipeline re-pushes `latest` on every deploy and the jobs
       // task definition runs `:latest` (jobs-ecs-task.ts). Making them IMMUTABLE first requires
       // pinning the task definition to the commit tag (or digest) the pipeline already pushes.
+      lifecycleRules: props.maxImageCount ? [{ maxImageCount: props.maxImageCount }] : undefined,
     });
 
     // Output the repository name and URI; the deploy buildspec reads the URI from the stack outputs

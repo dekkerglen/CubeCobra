@@ -128,6 +128,19 @@ Encode card oracles to ML embeddings.
 }
 ```
 
+#### GET /version
+
+The model version this instance is serving and whether all four models pass a small forward pass. The service follows `model/current.json` in `DATA_BUCKET`: it reads it at startup and every minute after, and swaps a newly promoted version in without a restart once it has downloaded and loaded, so this reports the new version only after the swap. Like `/healthcheck`, it needs no shared secret.
+
+**Response:**
+
+```json
+{
+  "modelVersion": "20270206-153000",
+  "ok": true
+}
+```
+
 ## Deployment
 
 ### AWS Infrastructure

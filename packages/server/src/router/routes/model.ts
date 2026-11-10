@@ -12,9 +12,10 @@ const PUBLIC_MODEL_BASE = `https://cubecobra-public.s3.us-east-2.amazonaws.com/m
  * base URL is configured. In production the CDN serves /model/<version>/*
  * directly (versioned R2 mirror) and this route is never hit.
  *
- * The client requests the versioned path /model/<MODEL_VERSION>/..., but the
- * public S3 bucket is laid out flat (model/...). Strip the leading version
- * segment so dev keeps resolving against that flat source.
+ * The client requests the versioned path /model/<version>/... (see
+ * @utils/modelVersion), but the public S3 bucket holds the legacy model laid out
+ * flat (model/...). Strip the legacy version segment so dev keeps resolving
+ * against that flat source; any other version is fetched as-is.
  */
 // Model files are plain relative paths. Rejecting anything else (notably `%`) matters because the
 // path is pasted into a URL, and the URL parser treats "%2e%2e" segments as "..".

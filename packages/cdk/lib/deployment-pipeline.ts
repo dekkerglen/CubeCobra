@@ -71,8 +71,14 @@ export interface DeploymentPipelineProps {
 
 // Key prefixes in the app bucket that the deploy projects write build bundles to:
 // packages/scripts/src/publish.ts (builds/<version>.zip), packages/recommenderService/publish.js
-// (builds/recommender-<version>.zip) and the three lambda publish.js scripts (<lambda>/<version>.zip).
-const APP_BUCKET_PUBLISH_PREFIXES = ['builds', 'dailyJobsLambda', 'cardUpdateMonitorLambda', 'botDeckbuildLambda'];
+// (builds/recommender-<version>.zip) and the four lambda publish.js scripts (<lambda>/<version>.zip).
+const APP_BUCKET_PUBLISH_PREFIXES = [
+  'builds',
+  'dailyJobsLambda',
+  'cardUpdateMonitorLambda',
+  'botDeckbuildLambda',
+  'mlPipelineLambda',
+];
 
 // Bootstrap roles `cdk deploy` assumes. The account is bootstrapped with the default qualifier
 // (cdk.json sets no @aws-cdk/core:bootstrapQualifier; the synthesized manifest references
@@ -410,6 +416,14 @@ export class DeploymentPipeline extends Construct {
               'export LAMBDA_VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION',
               'node publish.js',
               'cd ../..',
+              // Only the production stack runs the ML retraining pipeline (config.ts mlPipeline).
+              'echo Building and publishing ML Pipeline Lambda...',
+              'cd packages/mlPipelineLambda',
+              'npm run build',
+              `export CUBECOBRA_APP_BUCKET=${props.appBucket}`,
+              'export LAMBDA_VERSION=$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              'node publish.js',
+              'cd ../..',
             ],
           },
           build: {
@@ -450,6 +464,47 @@ export class DeploymentPipeline extends Construct {
     this.grantDeployPermissions(prodDeployProject, props, props.productionStackName);
 
     this.grantBuildParameterRead(prodDeployProject, props, productionSegment, true, props.productionSecretsFromSsm);
+
+    // Builds the ML training image (packages/ml/Dockerfile) for the production stack's ML pipeline.
+    // A project of its own: the CUDA image takes long to build, and the production deploy above
+    // already runs close to CodeBuild's default 60-minute timeout. It runs after the production
+    // deploy, which creates the ECR repository it pushes to.
+    const mlImageProject = new codebuild.PipelineProject(this, 'MlImageBuildProject', {
+      projectName: 'CubeCobra-Build-ML-Image',
+      timeout: cdk.Duration.minutes(120),
+      environment: {
+        buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
+        computeType: codebuild.ComputeType.LARGE,
+        // Required for `docker build`.
+        privileged: true,
+      },
+      buildSpec: codebuild.BuildSpec.fromObject({
+        version: '0.2',
+        phases: {
+          build: {
+            commands: [
+              'echo Building and pushing ML training Docker image...',
+              `export ML_ECR_REPO=$(aws cloudformation describe-stacks --stack-name ${props.productionStackName} --query "Stacks[0].Outputs[?contains(OutputKey, \\\`MlEcr\\\`) && contains(OutputKey, \\\`RepositoryUri\\\`)].OutputValue | [0]" --output text)`,
+              'echo ML ECR Repository: $ML_ECR_REPO',
+              "export ECR_REGISTRY=$(echo $ML_ECR_REPO | cut -d'/' -f1)",
+              'aws ecr get-login-password --region $AWS_DEFAULT_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY',
+              // Reuse the previous image's layers (BuildKit inline cache) so only what changed is rebuilt.
+              'DOCKER_BUILDKIT=1 docker build --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from $ML_ECR_REPO:latest --build-arg GIT_SHA=$CODEBUILD_RESOLVED_SOURCE_VERSION -t cubecobra-ml:$CODEBUILD_RESOLVED_SOURCE_VERSION -f packages/ml/Dockerfile .',
+              'docker tag cubecobra-ml:$CODEBUILD_RESOLVED_SOURCE_VERSION $ML_ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              'docker tag cubecobra-ml:$CODEBUILD_RESOLVED_SOURCE_VERSION $ML_ECR_REPO:latest',
+              'docker push $ML_ECR_REPO:$CODEBUILD_RESOLVED_SOURCE_VERSION',
+              'docker push $ML_ECR_REPO:latest',
+            ],
+          },
+        },
+      }),
+      environmentVariables: {
+        AWS_ACCOUNT_ID: { value: props.account },
+        AWS_DEFAULT_REGION: { value: props.region },
+      },
+    });
+
+    this.grantImagePushPermissions(mlImageProject, props, props.productionStackName);
 
     // Create the pipeline
     this.pipeline = new codepipeline.Pipeline(this, 'Pipeline', {
@@ -512,6 +567,19 @@ export class DeploymentPipeline extends Construct {
         new codepipelineActions.CodeBuildAction({
           actionName: 'Deploy_To_Production',
           project: prodDeployProject,
+          input: sourceOutput,
+        }),
+      ],
+    });
+
+    // Stage 5: Build the ML training image. A stage of its own so the next commit's production
+    // deploy isn't held up while this one builds.
+    this.pipeline.addStage({
+      stageName: 'BuildMlImage',
+      actions: [
+        new codepipelineActions.CodeBuildAction({
+          actionName: 'Build_ML_Image',
+          project: mlImageProject,
           input: sourceOutput,
         }),
       ],
@@ -598,6 +666,18 @@ export class DeploymentPipeline extends Construct {
       }),
     );
 
+    this.grantImagePushPermissions(project, props, stackName);
+  }
+
+  /**
+   * Reading the stack's ECR repository output, and ECR login + image push. The repositories have
+   * CloudFormation-generated names, so the push is scoped to this account/region's repositories.
+   */
+  private grantImagePushPermissions(
+    project: codebuild.PipelineProject,
+    props: DeploymentPipelineProps,
+    stackName: string,
+  ) {
     project.addToRolePolicy(
       new iam.PolicyStatement({
         actions: ['cloudformation:DescribeStacks'],

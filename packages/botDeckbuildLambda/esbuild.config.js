@@ -28,7 +28,8 @@ const exportFixPlugin = {
   },
 };
 
-// Copy the archetype cluster files next to the bundle so classify.ts can read them at runtime.
+// Copy the archetype cluster files next to the bundle; classify.ts falls back to them when the
+// served model bundle has none (the legacy v3).
 const copyStaticPlugin = {
   name: 'copy-static',
   setup(build) {

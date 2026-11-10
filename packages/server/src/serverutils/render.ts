@@ -15,6 +15,8 @@ import { collaboratorIndexDao, cubeDao, notificationDao, patronDao } from '../dy
 import { CubeTooLargeError } from '../errors/CubeTooLargeError';
 import { Request, Response } from '../types/express';
 import { getCatalogVersion } from './cardCatalog';
+import { type AdminAlerts, getAdminAlerts } from './mlRetraining';
+import { getServedModelVersion } from './modelPointer';
 import { getBaseUrl } from './util';
 
 // Vite emits a manifest keyed by source path (e.g. "src/pages/DraftPage.tsx"). Each entry lists
@@ -241,6 +243,11 @@ interface ReactProps {
   // Version of the card data this server has loaded; the client's card details cache
   // uses it to drop entries for cards whose data is still settling (see cardCatalog).
   cardDbVersion?: string;
+  // ML model version this environment serves (see modelPointer); the browser draft bot
+  // loads its models from /model/<modelVersion>/ on the CDN.
+  modelVersion?: string;
+  // Admins only: retraining runs awaiting approval or failed and not yet dismissed.
+  adminAlerts?: AdminAlerts;
   [key: string]: any;
 }
 
@@ -293,11 +300,19 @@ const render = (
         hideUniversesBeyond: req.user.hideUniversesBeyond,
         hiddenDailyGames: req.user.hiddenDailyGames,
       };
+
+      if ((req.user.roles || []).includes(UserRoles.ADMIN)) {
+        const adminAlerts = await getAdminAlerts();
+        if (adminAlerts) {
+          reactProps.adminAlerts = adminAlerts;
+        }
+      }
     }
 
     reactProps.nitroPayEnabled = process.env.NITROPAY_ENABLED === 'true';
     reactProps.baseUrl = getBaseUrl();
     reactProps.cdnBaseUrl = process.env.CDN_BASE_URL || '';
+    reactProps.modelVersion = getServedModelVersion();
     reactProps.captchaSiteKey = process.env.CAPTCHA_SITE_KEY;
     reactProps.version = process.env.CUBECOBRA_VERSION;
     reactProps.cardDbVersion = getCatalogVersion();

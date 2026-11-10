@@ -6,24 +6,24 @@ dotenvConfig();
 import { GetObjectCommand, ListObjectsV2Command, S3Client } from '@aws-sdk/client-s3';
 import { fromNodeProviderChain } from '@aws-sdk/credential-providers';
 import { Upload } from '@aws-sdk/lib-storage';
+import { isLegacyModelKey } from '@utils/ml/modelBundle';
 import { MODEL_VERSION } from '@utils/modelVersion';
 
-// Mirrors the ML model from the data bucket (where the recommender service
-// downloads it on boot) into the R2 assets bucket so it's reachable at
-// https://assets.<domain>/model/<MODEL_VERSION>/... for the client draft bot.
+// Mirrors the legacy, unversioned ML model (the flat `model/...` files in the
+// data bucket) into the R2 assets bucket under model/<MODEL_VERSION>/ (v3), so
+// it's reachable at https://assets.<domain>/model/v3/... for the client draft bot.
 //
-// The source layout on S3 is flat and unversioned (`model/...`, overwritten in
-// place by the training pipeline). We publish into a versioned R2 prefix so the
-// browser — which caches these files `immutable` for a year — fetches a fresh
-// URL on every model rollout instead of a stale, cached graph. Bump
-// @utils/modelVersion (and redeploy the client) in the same release you run this.
+// Routine publishing is now done by the retraining pipeline: it uploads each
+// trained bundle to model/<version>/ in the data buckets and R2, and promotion
+// moves model/current.json, which the server hands to the browser as the version
+// to load (see @utils/ml/modelBundle and @utils/modelVersion). This script is
+// only for re-mirroring the legacy v3 files.
 //
 // Cross-provider (AWS S3 -> Cloudflare R2), so we stream each object from S3
 // straight into R2 — CopyObject can't span providers. Streamed via lib-storage
 // so large model files don't get buffered in memory.
 //
-// Manual, one-shot: the model changes ~once a year. Idempotent by size (ETags
-// aren't comparable across providers).
+// Manual, one-shot. Idempotent by size (ETags aren't comparable across providers).
 //
 // Env:
 //   DATA_BUCKET            — source S3 bucket (defaults to cubecobra-data-production)
@@ -87,10 +87,12 @@ const listAll = async (s3: S3Client, bucket: string, prefix: string): Promise<Ob
 const main = async (): Promise<void> => {
   console.log(`Mirroring s3://${sourceBucket}/${SOURCE_PREFIX} (${sourceRegion}) → R2 ${destBucket}/${DEST_PREFIX}`);
 
-  const [sourceObjects, destObjects] = await Promise.all([
+  const [allSourceObjects, destObjects] = await Promise.all([
     listAll(sourceS3, sourceBucket, SOURCE_PREFIX),
     listAll(destR2, destBucket!, DEST_PREFIX),
   ]);
+  // model/ also holds the pointer and the versioned bundles now; only the flat legacy files are v3.
+  const sourceObjects = allSourceObjects.filter((o) => isLegacyModelKey(o.key));
 
   if (sourceObjects.length === 0) {
     console.log('No model files in source — nothing to do.');

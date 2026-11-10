@@ -7,6 +7,7 @@
     "upload-assets": "tsx src/uploadAssets.ts",
     "sync-assets-r2-to-s3": "tsx src/syncAssetsR2ToS3.ts",
     "upload-ml-model": "tsx src/uploadMLModel.ts",
+    "migrate-model-layout": "tsx src/migrateModelLayout.ts",
     "update-hashes": "tsx src/jobs/repair_hashes.js",
     "export-cubes": "NODE_OPTIONS=--max-old-space-size=18192 tsx src/jobs/export_cubes.ts",
     "export-decks": "NODE_OPTIONS=--max-old-space-size=18192 tsx src/jobs/export_decks.ts",
