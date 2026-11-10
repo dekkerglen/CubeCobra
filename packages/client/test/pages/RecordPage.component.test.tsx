@@ -225,7 +225,11 @@ const renderPage = (
     </CSRFContext.Provider>,
   );
 
-const openDeckMenu = () => fireEvent.click(screen.getByText('More'));
+// The record header has a "More" of its own (Delete Record), so this picks the deck controls'
+// one. TabContent marks each panel `max-w-full` plus `block`/`hidden`; Flexbox also carries
+// `max-w-full`, so the visibility class is what actually tells a panel from any other wrapper.
+const openDeckMenu = () =>
+  fireEvent.click(screen.getAllByText('More').find((el) => el.closest('div.max-w-full.block, div.max-w-full.hidden'))!);
 
 /**
  * "View deck" (RecordAllDecks) is a Link used as a button — onClick only, no href — which is
@@ -353,6 +357,7 @@ describe('RecordPage', () => {
   it('still offers the share link and Enter event data', () => {
     renderPage(true);
 
+    fireEvent.click(screen.getByRole('button', { name: 'Decks' }));
     expect(screen.getByText('Collect Decks')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Edit Record' })).toHaveAttribute('href', '/cube/records/enter/rec-1');
   });
@@ -360,6 +365,7 @@ describe('RecordPage', () => {
   it('names the share action Collect Decks', () => {
     renderPage(true);
 
+    fireEvent.click(screen.getByRole('button', { name: 'Decks' }));
     expect(screen.getByText('Collect Decks')).toBeInTheDocument();
   });
 
@@ -370,22 +376,15 @@ describe('RecordPage', () => {
     expect(screen.queryByRole('link', { name: 'Enter event data' })).not.toBeInTheDocument();
   });
 
-  it('aligns Collect Decks, Export and Edit Record to the right', () => {
+  it('aligns the record-level actions to the right', () => {
     renderPage(true);
 
-    const collectDecksLink = screen.getByText('Collect Decks');
-    const exportLink = screen.getByRole('link', { name: 'Export' });
+    const exportLink = screen.getByRole('link', { name: 'Export Record' });
     const editRecordLink = screen.getByRole('link', { name: 'Edit Record' });
 
-    expect(collectDecksLink).toBeInTheDocument();
-    expect(exportLink).toBeInTheDocument();
-    expect(editRecordLink).toBeInTheDocument();
-
-    const collectDecksParent = collectDecksLink.closest('[class*="flex"]') || collectDecksLink.parentElement;
     const exportParent = exportLink.closest('[class*="flex"]') || exportLink.parentElement;
     const editRecordParent = editRecordLink.closest('[class*="flex"]') || editRecordLink.parentElement;
 
-    expect(collectDecksParent).toBe(exportParent);
     expect(exportParent).toBe(editRecordParent);
   });
 
@@ -396,20 +395,124 @@ describe('RecordPage', () => {
     renderPage(true, { ...baseRecord, description: 'Eight players, three rounds' });
 
     const header = screen.getByText('Tuesday Night').closest('div.p-4')!;
-    const order = ['Tuesday Night', 'Collect Decks', 'Export', 'Edit Record', 'Eight players, three rounds'].map(
-      (text) => header.textContent!.indexOf(text),
+    const order = ['Tuesday Night', 'Export Record', 'Edit Record', 'Eight players, three rounds'].map((text) =>
+      header.textContent!.indexOf(text),
     );
 
     expect(order.every((index) => index >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
   });
 
-  it('offers a non-owner Export but neither Collect Decks nor Edit Record', () => {
+  it('offers a non-owner Export Record but neither Collect Decks nor Edit Record', () => {
     renderPage(false);
 
     expect(screen.queryByText('Collect Decks')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'Edit Record' })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Export' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Export Record' })).toBeInTheDocument();
+  });
+
+  /*
+   * The header used to carry two stages of running an event (Seating, Collect Decks) alongside
+   * the two things you do to a record as an object. Those are different kinds of action with
+   * different audiences — both stages are owner-only, where Export is not — so each stage moved
+   * to the tab holding the thing it acts on, the way Record Matches already lives on Matches.
+   */
+  describe('record actions', () => {
+    const header = () => screen.getByText('Tuesday Night').closest('div.p-4')! as HTMLElement;
+    // Tab panels mount on first visit (TabContent) and are marked block/hidden thereafter, so
+    // the visible one is the panel just clicked.
+    const tabPanel = (name: string) => {
+      fireEvent.click(screen.getByRole('button', { name }));
+      return document.querySelector('div.max-w-full.block') as HTMLElement;
+    };
+
+    it('keeps the header to actions that apply to the record as a whole', () => {
+      renderPage(true);
+
+      expect(within(header()).getByRole('link', { name: 'Export Record' })).toHaveAttribute(
+        'href',
+        '/cube/records/export/cube-1?record=rec-1',
+      );
+      expect(within(header()).getByRole('link', { name: 'Edit Record' })).toHaveAttribute(
+        'href',
+        '/cube/records/enter/rec-1',
+      );
+      // Both moved to their own tab; each is still somewhere in the document, since every tab
+      // panel stays mounted.
+      expect(within(header()).queryByText('Collect Decks')).not.toBeInTheDocument();
+      expect(within(header()).queryByText('Seating')).not.toBeInTheDocument();
+    });
+
+    // Export is also the label of the cube hero's own button, which is on screen at the same
+    // time and exports something else entirely.
+    it('names the record export so it cannot be read as the cube export', () => {
+      renderPage(true);
+
+      expect(within(header()).queryByRole('link', { name: 'Export' })).not.toBeInTheDocument();
+    });
+
+    it('offers Delete Record behind the header overflow, marked destructive', () => {
+      renderPage(true);
+
+      expect(within(header()).queryByText('Delete Record')).not.toBeInTheDocument();
+
+      fireEvent.click(within(header()).getByText('More'));
+      expect(within(header()).getByText('Delete Record')).toHaveClass('!text-danger');
+    });
+
+    it('offers a non-owner no overflow menu at all', () => {
+      renderPage(false);
+
+      expect(within(header()).queryByText('More')).not.toBeInTheDocument();
+    });
+
+    it('puts the seating action on the Players tab', () => {
+      renderPage(true, baseRecord, null);
+
+      expect(within(tabPanel('Players')).getByRole('button', { name: 'Seating' })).toBeInTheDocument();
+    });
+
+    /*
+     * A played draft's seats are fixed by who actually sat where, so its owner gets Add Players
+     * rather than the editor — which used to mean the owner of a played draft could not see the
+     * seating at all, since the editor was the only thing that drew the table.
+     */
+    it('still shows the seating for a played draft, which cannot be rearranged', () => {
+      renderPage(true);
+
+      const players = tabPanel('Players');
+      expect(within(players).queryByRole('button', { name: 'Seating' })).not.toBeInTheDocument();
+      expect(within(players).getByRole('button', { name: 'View Seating' })).toBeInTheDocument();
+      expect(within(players).getByRole('button', { name: 'Add Players' })).toBeInTheDocument();
+    });
+
+    it('puts Collect Decks on the Decks tab', () => {
+      renderPage(true);
+
+      expect(within(tabPanel('Decks')).getByText('Collect Decks')).toBeInTheDocument();
+    });
+
+    /*
+     * Seating used to be owner-only and editing-only, so a player at a live event had no way to
+     * look up which seat they were in. The editor already shows the table, so an owner who can
+     * rearrange still gets that one rather than a second, read-only copy of it.
+     */
+    it('lets a non-owner see the seating without offering to change it', () => {
+      renderPage(false, baseRecord, null);
+
+      const players = tabPanel('Players');
+      expect(within(players).queryByRole('button', { name: 'Seating' })).not.toBeInTheDocument();
+      expect(within(players).queryByRole('button', { name: 'Add Players' })).not.toBeInTheDocument();
+
+      fireEvent.click(within(players).getByRole('button', { name: 'View Seating' }));
+
+      const dialog = screen.getByRole('dialog');
+      expect(within(dialog).getByText('Alice')).toBeInTheDocument();
+      expect(within(dialog).getByText('Bob')).toBeInTheDocument();
+      // The seat editor's own controls, none of which a viewer should get.
+      expect(within(dialog).queryByRole('button', { name: 'Seat in Order' })).not.toBeInTheDocument();
+      expect(within(dialog).queryByRole('button', { name: 'Save Seating Only' })).not.toBeInTheDocument();
+    });
   });
 
   it('offers none of them to a non-owner', () => {

@@ -1,31 +1,35 @@
 import React, { useContext } from 'react';
 
-import Draft from '@utils/datatypes/Draft';
+import { KebabHorizontalIcon } from '@primer/octicons-react';
 import Record from '@utils/datatypes/Record';
 
 import { CardBody } from 'components/base/Card';
+import Dropdown from 'components/base/Dropdown';
 import FormatttedDate from 'components/base/FormatttedDate';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import { SafeMarkdown } from 'components/Markdown';
-import ShareRecordModal from 'components/modals/ShareRecordModal';
+import RecordDeleteModal from 'components/modals/RecordDeleteModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 
-import { RecordPlayersAction } from './RecordPlayers';
-
-const ShareRecordLink = withModal(Link, ShareRecordModal);
+const DeleteRecordLink = withModal(Link, RecordDeleteModal);
 
 interface RecordOverviewProps {
   record: Record;
-  // Decides whether the players action can rearrange seats or only add players.
-  draft?: Draft;
 }
 
-// The record's header block, shown at the top of the page (no longer a tab):
-// name, date, description, and owner controls.
-const RecordOverview: React.FC<RecordOverviewProps> = ({ record, draft }) => {
+/**
+ * The record's header block, shown at the top of the page (no longer a tab): name, date,
+ * description, and the actions that apply to the record as a whole.
+ *
+ * Running an event is not one of those. Seating and Collect Decks used to sit here too, which
+ * put two owner-only stages of an event beside two things anyone does to a record — and left
+ * the event's third stage (Record Matches) on the Matches tab. Each stage now lives on the tab
+ * holding what it acts on.
+ */
+const RecordOverview: React.FC<RecordOverviewProps> = ({ record }) => {
   const { canEdit } = useContext(CubeContext);
 
   const isOwner = canEdit;
@@ -48,12 +52,38 @@ const RecordOverview: React.FC<RecordOverviewProps> = ({ record, draft }) => {
             </Text>
           </Flexbox>
           <Flexbox direction="row" gap="4" wrap="wrap" alignItems="center" className="shrink-0">
-            <RecordPlayersAction record={record} draft={draft} />
-            {isOwner && <ShareRecordLink modalprops={{ record }}>Collect Decks</ShareRecordLink>}
+            {/* Named for what it exports: the cube hero's own Export button is on screen at the
+                same time and exports the cube's card list instead. */}
             <Link href={`/cube/records/export/${record.cube}?record=${encodeURIComponent(record.id)}`} download>
-              Export
+              Export Record
             </Link>
             {isOwner && <Link href={`/cube/records/enter/${record.id}`}>Edit Record</Link>}
+            {isOwner && (
+              <Dropdown
+                trigger={
+                  <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
+                    <KebabHorizontalIcon size={16} />
+                    More
+                  </Link>
+                }
+                // These actions sit at the right edge of the card, so the menu hangs from that
+                // edge; aligned left it would open past it.
+                align="right"
+                minWidth="16rem"
+              >
+                <Flexbox direction="col" gap="2" className="p-3">
+                  {/* Behind the menu rather than in the row, so deleting a record is never one
+                      slip from exporting it. Deleting was previously reachable only from the
+                      record list, which meant leaving the record to get rid of it. */}
+                  <DeleteRecordLink
+                    className="!text-danger hover:!text-link-active hover:cursor-pointer font-medium"
+                    modalprops={{ recordId: record.id, redirectTo: `/cube/records/${record.cube}` }}
+                  >
+                    Delete Record
+                  </DeleteRecordLink>
+                </Flexbox>
+              </Dropdown>
+            )}
           </Flexbox>
         </div>
         {record.description && (

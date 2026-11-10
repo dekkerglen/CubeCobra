@@ -7,9 +7,13 @@ export interface RecordDeleteModalProps {
   isOpen: boolean;
   setOpen: () => void;
   recordId: string;
+  // Where to land once the record is gone. The record's own page has to be left behind — it
+  // would otherwise reload itself after being deleted — while the list it was deleted from
+  // just needs refreshing in place.
+  redirectTo?: string;
 }
 
-const RecordDeleteModal: React.FC<RecordDeleteModalProps> = ({ isOpen, setOpen, recordId }) => {
+const RecordDeleteModal: React.FC<RecordDeleteModalProps> = ({ isOpen, setOpen, recordId, redirectTo }) => {
   const { csrfFetch } = useContext(CSRFContext);
   const confirm = async () => {
     const response = await csrfFetch(`/cube/records/remove/${recordId}`, {
@@ -19,8 +23,10 @@ const RecordDeleteModal: React.FC<RecordDeleteModalProps> = ({ isOpen, setOpen, 
 
     if (!response.ok) {
       console.error(response);
+    } else if (redirectTo) {
+      window.location.assign(redirectTo);
     } else {
-      window.location.href = '';
+      window.location.reload();
     }
   };
 

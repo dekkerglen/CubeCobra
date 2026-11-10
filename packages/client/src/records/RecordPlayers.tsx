@@ -26,6 +26,7 @@ import CubeContext from 'contexts/CubeContext';
 import DisplayContext, { DisplayContextProvider } from 'contexts/DisplayContext';
 
 import EditPlayerList from './EditPlayerList';
+import SeatingView from './SeatingView';
 import SetTheTable from './SetTheTable';
 
 interface RecordPlayersProps {
@@ -114,6 +115,15 @@ const SeatingModal: React.FC<AddPlayersModalProps> = ({ record, isOpen, setOpen 
   </Modal>
 );
 
+const SeatingViewModal: React.FC<AddPlayersModalProps> = ({ record, isOpen, setOpen }) => (
+  <Modal isOpen={isOpen} setOpen={setOpen} xl>
+    <ModalHeader setOpen={setOpen}>Seating</ModalHeader>
+    <ModalBody>
+      <SeatingView record={record} />
+    </ModalBody>
+  </Modal>
+);
+
 // Reads as a link beside the record's other actions, but is a button: it opens a dialog rather
 // than going anywhere, and has to be reachable from the keyboard.
 // withModal hands its own props on to what it wraps; they're kept off the DOM element.
@@ -133,26 +143,34 @@ const TextButton: React.FC<TextButtonProps> = ({
 );
 
 const SeatingAction = withModal(TextButton, SeatingModal);
+const ViewSeatingAction = withModal(TextButton, SeatingViewModal);
 const AddPlayersAction = withModal(TextButton, AddPlayersModal);
 
 // The whole table can be rearranged only while no played draft is tied to it: a played
 // draft's seats are fixed by who actually sat where, so its record can only be added to.
-export const canRearrangeSeats = (draft: Draft | undefined): boolean => !draft || draft.type === DRAFT_TYPES.UPLOAD;
+const canRearrangeSeats = (draft: Draft | undefined): boolean => !draft || draft.type === DRAFT_TYPES.UPLOAD;
 
 /**
- * The record header's player action, for its owner: Seating, or Add Players when a played
- * draft fixes the seats. Absent while the record has no players, since the Players tab then
- * shows the table (or its own Add Players) in place of the roster.
+ * The Players tab's seating action. An owner who can rearrange gets the editor, which draws
+ * the table itself; everyone else gets the same table read-only, so a player can look up their
+ * own chair. A played draft fixes the seats, so its owner gets the viewer plus Add Players.
+ *
+ * Absent while the record has no players, since the tab then shows the table (or its own Add
+ * Players) in place of the roster.
  */
-export const RecordPlayersAction: React.FC<{ record: Record; draft?: Draft }> = ({ record, draft }) => {
+const RecordPlayersAction: React.FC<{ record: Record; draft?: Draft }> = ({ record, draft }) => {
   const { canEdit } = useContext(CubeContext);
-  if (!canEdit || record.players.length === 0) {
+  if (record.players.length === 0) {
     return null;
   }
-  return canRearrangeSeats(draft) ? (
-    <SeatingAction modalprops={{ record }}>Seating</SeatingAction>
-  ) : (
-    <AddPlayersAction modalprops={{ record }}>Add Players</AddPlayersAction>
+  if (canEdit && canRearrangeSeats(draft)) {
+    return <SeatingAction modalprops={{ record }}>Seating</SeatingAction>;
+  }
+  return (
+    <>
+      <ViewSeatingAction modalprops={{ record }}>View Seating</ViewSeatingAction>
+      {canEdit && <AddPlayersAction modalprops={{ record }}>Add Players</AddPlayersAction>}
+    </>
   );
 };
 
@@ -268,77 +286,85 @@ const RecordPlayersContent: React.FC<RecordPlayersProps> = ({
 
   return (
     <CardBody>
-      <Flexbox direction="col" gap="4" className="md:flex-row md:items-start">
-        {/* Player list — a vertical pill selector that controls which deck shows. */}
-        <Flexbox direction="col" gap="2" className="md:w-60 md:shrink-0">
-          <Text semibold>Players</Text>
-          <Flexbox direction="col" gap="1">
-            {record.players.map((player, index) => {
-              const selected = index === selectedUserIndex;
-              const hasDeck = seatHasDeck(draft, index);
-              const linkedUser = players.find((u) => u.id === player.userId);
-              const hasTrophy = record.trophy?.includes(player.name);
-              return (
-                <button
-                  key={index}
-                  type="button"
-                  onClick={() => setSelectedPlayer(index)}
-                  title={hasDeck ? player.name : `${player.name} (no deck)`}
-                  className={classNames(
-                    'flex items-center gap-2 w-full text-left rounded-full border px-3 py-1.5 transition-colors',
-                    selected ? 'border-link bg-bg-active' : 'border-border hover:bg-bg-active',
-                    { 'opacity-60': !hasDeck },
-                  )}
-                >
-                  {linkedUser?.image?.uri ? (
-                    <img src={linkedUser.image.uri} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
-                  ) : (
-                    <span className="w-6 h-6 rounded-full bg-bg-active border border-border shrink-0" />
-                  )}
-                  <span className="flex-1 min-w-0 truncate text-sm font-medium">
-                    {hasTrophy ? '🏆 ' : ''}
-                    {player.name}
-                  </span>
-                  <span className="shrink-0 text-xs text-text-secondary">
-                    {formatRecord(playerRecord(record, player.name))}
-                  </span>
-                </button>
-              );
-            })}
-          </Flexbox>
+      <Flexbox direction="col" gap="3">
+        {/* Seating acts on the roster below it, so it lives here rather than in the record
+            header, which is now record-level actions only. Right-aligned to match the Matches
+            tab's control row. */}
+        <Flexbox direction="row" gap="4" justify="end" wrap="wrap" alignItems="center">
+          <RecordPlayersAction record={record} draft={draft} />
         </Flexbox>
+        <Flexbox direction="col" gap="4" className="md:flex-row md:items-start">
+          {/* Player list — a vertical pill selector that controls which deck shows. */}
+          <Flexbox direction="col" gap="2" className="md:w-60 md:shrink-0">
+            <Text semibold>Players</Text>
+            <Flexbox direction="col" gap="1">
+              {record.players.map((player, index) => {
+                const selected = index === selectedUserIndex;
+                const hasDeck = seatHasDeck(draft, index);
+                const linkedUser = players.find((u) => u.id === player.userId);
+                const hasTrophy = record.trophy?.includes(player.name);
+                return (
+                  <button
+                    key={index}
+                    type="button"
+                    onClick={() => setSelectedPlayer(index)}
+                    title={hasDeck ? player.name : `${player.name} (no deck)`}
+                    className={classNames(
+                      'flex items-center gap-2 w-full text-left rounded-full border px-3 py-1.5 transition-colors',
+                      selected ? 'border-link bg-bg-active' : 'border-border hover:bg-bg-active',
+                      { 'opacity-60': !hasDeck },
+                    )}
+                  >
+                    {linkedUser?.image?.uri ? (
+                      <img src={linkedUser.image.uri} alt="" className="w-6 h-6 rounded-full object-cover shrink-0" />
+                    ) : (
+                      <span className="w-6 h-6 rounded-full bg-bg-active border border-border shrink-0" />
+                    )}
+                    <span className="flex-1 min-w-0 truncate text-sm font-medium">
+                      {hasTrophy ? '🏆 ' : ''}
+                      {player.name}
+                    </span>
+                    <span className="shrink-0 text-xs text-text-secondary">
+                      {formatRecord(playerRecord(record, player.name))}
+                    </span>
+                  </button>
+                );
+              })}
+            </Flexbox>
+          </Flexbox>
 
-        {/* Selected player's deck (or an empty state). */}
-        <Flexbox direction="col" gap="2" className="flex-1 min-w-0">
-          {selectedPlayerEntry && (
-            <Flexbox direction="row" gap="3" wrap="wrap" alignItems="center">
-              <Text lg semibold>
-                {selectedPlayerEntry.name}
-              </Text>
-              {recordControl}
-            </Flexbox>
-          )}
-          {draft && selectedHasDeck ? (
-            <>
-              {deckControls}
-              <DeckCard
-                seat={draft.seats[selectedUserIndex]}
-                draft={draft}
-                view="draft"
-                seatIndex={`${selectedUserIndex}`}
-                hideComments
-              />
-            </>
-          ) : (
-            <Flexbox direction="col" gap="2">
-              {/* Player-scoped whether or not a draft exists, to match the upload link below it.
+          {/* Selected player's deck (or an empty state). */}
+          <Flexbox direction="col" gap="2" className="flex-1 min-w-0">
+            {selectedPlayerEntry && (
+              <Flexbox direction="row" gap="3" wrap="wrap" alignItems="center">
+                <Text lg semibold>
+                  {selectedPlayerEntry.name}
+                </Text>
+                {recordControl}
+              </Flexbox>
+            )}
+            {draft && selectedHasDeck ? (
+              <>
+                {deckControls}
+                <DeckCard
+                  seat={draft.seats[selectedUserIndex]}
+                  draft={draft}
+                  view="draft"
+                  seatIndex={`${selectedUserIndex}`}
+                  hideComments
+                />
+              </>
+            ) : (
+              <Flexbox direction="col" gap="2">
+                {/* Player-scoped whether or not a draft exists, to match the upload link below it.
                   A record with no draft is simply one where nobody has a deck yet. */}
-              <Text sm className="text-text-secondary">
-                No deck has been uploaded for this player yet.
-              </Text>
-              {isOwner && <Link href={uploadDeckHref}>{uploadDeckLabel}</Link>}
-            </Flexbox>
-          )}
+                <Text sm className="text-text-secondary">
+                  No deck has been uploaded for this player yet.
+                </Text>
+                {isOwner && <Link href={uploadDeckHref}>{uploadDeckLabel}</Link>}
+              </Flexbox>
+            )}
+          </Flexbox>
         </Flexbox>
       </Flexbox>
     </CardBody>
