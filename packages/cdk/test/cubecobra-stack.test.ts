@@ -29,6 +29,8 @@ const SECRET_VALUES = {
 
 const ML_PIPELINE = {
   exportBucket: 'test-public-bucket',
+  bedrockModelId: 'test-bedrock-model',
+  bedrockFallbackModelId: 'test-bedrock-fallback-model',
   promoteTargets: {
     beta: {
       dataBucket: 'test-beta-bucket',
@@ -390,7 +392,7 @@ describe('without secretsFromSsm', () => {
 // ML retraining pipeline
 // ---------------------------------------------------------------------------------------------
 
-// The state machine definition as JSON, with every CloudFormation token replaced by 'TOKEN'.
+// The state machine's top-level states, with every CloudFormation token replaced by 'TOKEN'.
 const stateMachineStates = (template: Template): Record<string, any> => {
   const machine: any = Object.values(template.findResources('AWS::StepFunctions::StateMachine'))[0];
   const definition = machine.Properties.DefinitionString;
@@ -399,6 +401,21 @@ const stateMachineStates = (template: Template): Record<string, any> => {
       ? definition
       : definition['Fn::Join'][1].map((part: unknown) => (typeof part === 'string' ? part : 'TOKEN')).join('');
   return JSON.parse(text).States;
+};
+
+// The states of every Parallel branch, by name.
+const branchStates = (states: Record<string, any>): Record<string, any> =>
+  Object.assign(
+    {},
+    ...Object.values(states)
+      .filter((state) => state.Type === 'Parallel')
+      .flatMap((state) => state.Branches.map((branch: any) => ({ ...branch.States, ...branchStates(branch.States) }))),
+  );
+
+// Top-level and branch states together.
+const allStates = (template: Template): Record<string, any> => {
+  const states = stateMachineStates(template);
+  return { ...states, ...branchStates(states) };
 };
 
 const taskDefinition = (template: Template, family: string): any =>
@@ -419,7 +436,7 @@ describe('ML pipeline', () => {
   });
 
   test('trains on the GPU capacity provider and runs the CPU stages on Fargate', () => {
-    const states = stateMachineStates(buildTemplate('', { mlPipeline: true }));
+    const states = allStates(buildTemplate('', { mlPipeline: true }));
 
     for (const name of ['Train', 'Package']) {
       expect(states[name].Resource).toMatch(/ecs:runTask\.sync$/);
@@ -445,20 +462,64 @@ describe('ML pipeline', () => {
     for (const [name, script, hours] of [
       ['ProcessData', 'ml-process-data', 3],
       ['Evaluate', 'ml-evaluate', 3],
-      ['Archetypes', 'ml-archetypes', 2],
       ['Publish', 'ml-publish', 1],
     ] as const) {
       expect(states[name].Parameters.LaunchType).toBe('FARGATE');
       expect(states[name].Parameters.Overrides.ContainerOverrides[0].Command).toEqual(['npm', 'run', script]);
       expect(states[name].TimeoutSeconds).toBe(hours * 3600);
     }
+
+    // Archetype topics: the training image on Fargate, no GPU.
+    expect(states.Topics.Parameters.LaunchType).toBe('FARGATE');
+    expect(states.Topics.Parameters.Overrides.ContainerOverrides).toEqual([
+      {
+        Name: 'MlTopicsContainer',
+        Command: ['python', '-m', 'ccml.topics'],
+        Environment: [{ Name: 'ML_RUN_ID', 'Value.$': '$.run.runId' }],
+      },
+    ]);
+    expect(states.Topics.TimeoutSeconds).toBe(3 * 3600);
+    expect(states.Topics.Retry).toEqual([
+      expect.objectContaining({ ErrorEquals: ['States.TaskFailed'], MaxAttempts: 1 }),
+    ]);
+
+    // The label-transfer stage is gone.
+    expect(states).not.toHaveProperty('Archetypes');
+    expect(states).not.toHaveProperty('StepArchetypes');
   });
 
-  test('every task fails into RecordFailure, and approval waits up to 7 days for a task token', () => {
+  test('training and archetype topics run in parallel between processing and evaluation', () => {
+    const states = stateMachineStates(buildTemplate('', { mlPipeline: true }));
+    expect(states.ProcessData.Next).toBe('TrainAndTopics');
+
+    const parallel = states.TrainAndTopics;
+    expect(parallel.Type).toBe('Parallel');
+    // $ comes out unchanged.
+    expect(parallel.ResultPath).toBeNull();
+    expect(parallel.Next).toBe('StepEvaluating');
+    expect(parallel.Catch).toEqual([{ ErrorEquals: ['States.ALL'], ResultPath: '$.error', Next: 'RecordFailure' }]);
+
+    const [training, topics] = parallel.Branches;
+    expect(training.StartAt).toBe('StepTraining');
+    expect(Object.keys(training.States).sort()).toEqual(['Package', 'StepPackaging', 'StepTraining', 'Train']);
+    expect(training.States.StepTraining.Next).toBe('Train');
+    expect(training.States.Train.Next).toBe('StepPackaging');
+    expect(training.States.StepPackaging.Next).toBe('Package');
+    // Only the training branch records steps on the run.
+    expect(topics.StartAt).toBe('Topics');
+    expect(Object.keys(topics.States)).toEqual(['Topics']);
+
+    // Branch states can't catch to states outside their branch; the Parallel's catch handles them.
+    for (const state of Object.values(branchStates(states))) {
+      expect(state.Catch).toBeUndefined();
+    }
+  });
+
+  test('every top-level task fails into RecordFailure, and approval waits up to 7 days for a task token', () => {
     const states = stateMachineStates(buildTemplate('', { mlPipeline: true }));
 
     const tasks = Object.entries(states).filter(([, state]) => state.Type === 'Task');
-    expect(tasks.length).toBeGreaterThan(20);
+    expect(tasks.length).toBeGreaterThan(15);
     const expectedNext = (name: string): string => {
       // Before Prepare there is no run to mark failed.
       if (name === 'Prepare' || name === 'RecordFailure') return 'Failed';
@@ -527,7 +588,7 @@ describe('ML pipeline', () => {
     expect(jobsActions).not.toContain('states:SendTaskSuccess');
 
     const cpu = taskDefinition(template, 'cubecobra-ml-cpu-production');
-    expect(cpu).toMatchObject({ Cpu: '8192', Memory: '32768', EphemeralStorage: { SizeInGiB: 200 } });
+    expect(cpu).toMatchObject({ Cpu: '8192', Memory: '61440', EphemeralStorage: { SizeInGiB: 200 } });
     const cpuEnv = containerEnvironment(cpu.ContainerDefinitions[0]);
     expect(cpuEnv).toMatchObject({
       ML_RUNS_BUCKET: 'test-data-bucket',
@@ -558,6 +619,41 @@ describe('ML pipeline', () => {
       ResourceRequirements: [{ Type: 'GPU', Value: '1' }],
     });
     expect(containerEnvironment(gpu.ContainerDefinitions[0])).toMatchObject({ ML_RUNS_BUCKET: 'test-data-bucket' });
+
+    // Archetype topics: the training image on Fargate, CPU only, naming topics on Bedrock.
+    const topics = taskDefinition(template, 'cubecobra-ml-topics-production');
+    expect(topics).toMatchObject({
+      RequiresCompatibilities: ['FARGATE'],
+      Cpu: '8192',
+      Memory: '32768',
+      EphemeralStorage: { SizeInGiB: 100 },
+    });
+    expect(topics.ContainerDefinitions[0].Image).toEqual(gpu.ContainerDefinitions[0].Image);
+    expect(topics.ContainerDefinitions[0].ResourceRequirements).toBeUndefined();
+    expect(containerEnvironment(topics.ContainerDefinitions[0])).toEqual({
+      ML_RUNS_BUCKET: 'test-data-bucket',
+      ML_LIVE_BUCKET: 'test-data-bucket',
+      AWS_REGION: 'us-east-2',
+      ML_BEDROCK_REGION: 'us-east-2',
+      ML_BEDROCK_MODEL_ID: 'test-bedrock-model',
+      ML_BEDROCK_FALLBACK_MODEL_ID: 'test-bedrock-fallback-model',
+    });
+    const topicsStatements = policyStatements(template, 'MlPipelineTopicsTaskRole');
+    expect(topicsStatements).toContainEqual(
+      expect.objectContaining({ Action: 'bedrock-mantle:CreateInference', Resource: '*' }),
+    );
+    const topicsResources = topicsStatements.flatMap((s) => [s.Resource].flat());
+    expect(topicsResources).toEqual(
+      expect.arrayContaining([
+        'arn:aws:s3:::test-data-bucket/ml/runs/*',
+        'arn:aws:s3:::test-data-bucket/model/*',
+        'arn:aws:s3:::test-data-bucket',
+      ]),
+    );
+    // Nothing outside the production data bucket besides Bedrock.
+    expect(topicsResources.filter((r: string) => r !== '*' && !r.startsWith('arn:aws:s3:::test-data-bucket'))).toEqual(
+      [],
+    );
   });
 
   test('GPU capacity scales from zero on the AL2023 GPU AMI, preferring g5 over g6', () => {

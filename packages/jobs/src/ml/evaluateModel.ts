@@ -1,6 +1,8 @@
 // Retraining stage 5: scores the run's converted TF.js bundle against the model the site serves
 // now, on the same test-split examples, and writes ml/runs/<runId>/eval.json (GateReport). Exits 0
-// whether or not the candidate passes; the pipeline lambda reads `passed`.
+// whether or not the candidate passes; the pipeline lambda reads `passed`. Also writes
+// ml/runs/<runId>/archetypes.json (ArchetypeReport): how many of the same test decks would change
+// archetype.
 //
 // Both models are scored only on examples whose cards are all in BOTH vocabularies, so new cards
 // the live model has never seen don't count against it. The candidate must also reproduce the
@@ -15,6 +17,7 @@ import { GateMetrics, GateReport, PARITY_FILE, runPrefix } from '@utils/ml/model
 import fs from 'fs';
 import os from 'os';
 
+import { archetypeReport } from './archetypeShift';
 import { GATE_SAMPLE, GATE_TOLERANCE, mlLiveBucket, mlRunId, mlRunsBucket, PARITY_TOLERANCE } from './config';
 import { CubeCase, cubeRecall, deckAccuracy, mean, pickRank, splitCube } from './gateMetrics';
 import { decodeRows, encodeRows, loadModel, LoadedModel, remapCards } from './modelFiles';
@@ -182,6 +185,11 @@ const score = (model: LoadedModel, cases: Cases): GateMetrics => {
   };
   console.log(JSON.stringify(report, null, 2));
   await writeJson(runsBucket, `${prefix}eval.json`, report);
+
+  const deckOracleIds = decks.map((deck) => deck.mainboard.map((card) => candidate.indexToOracle[card]!));
+  const archetypes = archetypeReport(candidateDir, live, liveDir, deckOracleIds);
+  console.log(JSON.stringify(archetypes, null, 2));
+  await writeJson(runsBucket, `${prefix}archetypes.json`, archetypes);
   fs.rmSync(workDir, { recursive: true, force: true });
   process.exit(0);
 })().catch((error) => {

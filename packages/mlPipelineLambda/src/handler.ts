@@ -115,6 +115,7 @@ const gate = async (runId: string): Promise<{ passed: boolean }> => {
   if (!report) {
     throw new Error(`No gate report at s3://${bucket}/${prefix}eval.json`);
   }
+  // Written by the evaluate stage. Optional: without it the gate just has no archetype shift.
   const archetypes = await readJson<ArchetypeReport>(bucket, `${prefix}archetypes.json`);
 
   requireTask(
@@ -124,7 +125,7 @@ const gate = async (runId: string): Promise<{ passed: boolean }> => {
       candidate: report.candidate,
       live: report.live,
       liveVersion: report.liveVersion,
-      archetypeShift: archetypes?.shiftShare,
+      archetypeShift: typeof archetypes?.shiftShare === 'number' ? archetypes.shiftShare : undefined,
     }),
     runId,
   );

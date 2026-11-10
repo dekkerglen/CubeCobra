@@ -1,6 +1,6 @@
 import { assessColors } from '@utils/drafting/assessColors';
 import { type DeckbuildMlFns, runBatchDeckbuild } from '@utils/drafting/deckbuildCore';
-import { rankArchetypesForEmbedding } from 'serverutils/archetype';
+import { classifyDeck } from 'serverutils/archetype';
 import { getMostReasonable } from 'serverutils/carddb';
 import { computeDeckbuildFacts } from 'serverutils/deckbuildFacts';
 import {
@@ -90,23 +90,17 @@ export const deckbuildHandler = async (req: Request, res: Response) => {
     );
 
     // Named the way a draft names a bot seat. Basics are left out, as they were for the decks
-    // the archetypes were found in.
-    let archetype: string | null = null;
-    const deckModelOracles = [
+    // the archetypes were found in; the legacy centers encode the model's stand-ins for unknown cards.
+    const deckOracles = [
       ...new Set(
-        mainboard
-          .filter((oracle) => !isBasicLand(pool.details.get(oracle)) && !basicsOracles.includes(oracle))
-          .map((oracle) => facts[oracle]?.mlOracle ?? oracle),
+        mainboard.filter((oracle) => !isBasicLand(pool.details.get(oracle)) && !basicsOracles.includes(oracle)),
       ),
     ];
-    if (deckModelOracles.length > 0) {
-      try {
-        const [embedding] = await batchEncodeOrThrow([deckModelOracles]);
-        archetype = rankArchetypesForEmbedding(embedding ?? [])[0]?.label ?? null;
-      } catch {
-        archetype = null;
-      }
-    }
+    const deckModelOracles = [...new Set(deckOracles.map((oracle) => facts[oracle]?.mlOracle ?? oracle))];
+    const archetype = await classifyDeck(deckOracles, async () => {
+      const [embedding] = await batchEncodeOrThrow([deckModelOracles]);
+      return embedding ?? [];
+    });
 
     return res.status(200).json({
       success: true,

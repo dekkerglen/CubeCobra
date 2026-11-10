@@ -14,6 +14,10 @@ export interface MlPromoteTarget {
 export interface MlPipelineConfig {
   // Bucket the 90-day export job writes export/ to; the pipeline trains on it.
   exportBucket: string;
+  // Bedrock models that name the archetype topics; the fallback is only used when the main model
+  // refuses.
+  bedrockModelId: string;
+  bedrockFallbackModelId: string;
   promoteTargets: {
     beta: MlPromoteTarget;
     production: MlPromoteTarget;
@@ -144,6 +148,8 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
     secretsFromSsm: false,
     mlPipeline: {
       exportBucket: 'cubecobra-public',
+      bedrockModelId: 'anthropic.claude-opus-5-5',
+      bedrockFallbackModelId: 'anthropic.claude-opus-4-8',
       promoteTargets: {
         beta: {
           dataBucket: 'cubecobra-data-beta',

@@ -1,6 +1,6 @@
 import { cosineSimilarity } from '@utils/drafting/archetype';
 import { assessColors } from '@utils/drafting/assessColors';
-import { rankArchetypesForEmbedding } from 'serverutils/archetype';
+import { rankArchetypesForOracles } from 'serverutils/archetype';
 import {
   isBasicLand,
   ListInputError,
@@ -25,9 +25,9 @@ const listColors = (list: ResolvedList): string[] =>
   );
 
 /**
- * The encoder's 128-dimension embedding of a list, the archetypes whose cluster centers sit
- * closest to it (how drafts name decks), and, given a second list, how alike the two embeddings
- * are.
+ * The encoder's 128-dimension embedding of a list, its archetypes ranked the way drafts name decks
+ * (by share of the list's archetype topics, or for the legacy model by closest cluster center),
+ * and, given a second list, how alike the two embeddings are.
  *
  * Body: { cards, compare?, substitute?, ignoreBasics? }
  *   substitute   - give the model stand-ins for cards it doesn't know. Off by default: drafts
@@ -55,15 +55,17 @@ export const archetypeHandler = async (req: Request, res: Response) => {
     );
     const embeddings = await batchEncodeOrThrow(inputs);
 
-    const results = lists.map((list, index) => {
-      const embedding = embeddings[index] ?? [];
-      return {
-        list: summarize(list),
-        embedding,
-        colors: listColors(list),
-        archetypes: rankArchetypesForEmbedding(embedding),
-      };
-    });
+    const results = await Promise.all(
+      lists.map(async (list, index) => {
+        const embedding = embeddings[index] ?? [];
+        // Topics read the pasted cards themselves; the legacy centers read the encoder's embedding.
+        const oracles = list.cards
+          .filter((card) => !ignoreBasics || !isBasicLand(list.details.get(card.oracle)))
+          .map((card) => card.oracle);
+        const { scoreKind, archetypes } = await rankArchetypesForOracles(oracles, async () => embedding);
+        return { list: summarize(list), embedding, colors: listColors(list), scoreKind, archetypes };
+      }),
+    );
 
     const [first, second] = results;
     const similarity =

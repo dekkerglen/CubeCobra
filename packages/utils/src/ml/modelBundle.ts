@@ -1,3 +1,5 @@
+import type { ArchetypeNamingOutcome } from '../drafting/topicArchetypes';
+
 // Layout of trained ML model bundles in S3/R2, shared by the retraining pipeline (packages/ml,
 // packages/jobs/src/ml, packages/mlPipelineLambda) and every consumer of the model (recommender,
 // server, jobs, browser draft bot).
@@ -9,7 +11,9 @@
 // Bundle contents (relative to model/<version>/ or ml/runs/<runId>/bundle/):
 //   encoder/ cube_decoder/ deck_build_decoder/ draft_decoder/   TF.js graph models (model.json + shards)
 //   indexToOracleMap.json                                       { "<index>": "<oracle id>" }
-//   archetypes/clusterCenters.json, archetypes/annotations.json archetype centers in this encoder's space
+//   archetypes/topics.json                                      archetype topics over oracle tags (@utils/drafting/topicArchetypes)
+//   archetypes/names.json                                       their names; the one file admins edit after publishing
+//   archetypes/naming.json                                      how the names were produced
 //   parity.json                                                 Keras reference outputs for the TF.js parity check
 //   manifest.json                                               ModelManifest
 //
@@ -20,7 +24,7 @@
 //   metrics.json   RunMetrics: training parameters, per-epoch losses, train/test validation
 //   bundle/        the bundle above, before it is published
 //   eval.json      GateReport: candidate vs live model on the test split
-//   archetypes.json ArchetypeReport: label transfer summary
+//   archetypes.json ArchetypeReport: topic count, naming outcome, how many test decks change archetype
 
 export const MODEL_PREFIX = 'model/';
 export const MODEL_POINTER_KEY = 'model/current.json';
@@ -32,8 +36,10 @@ export type ModelName = (typeof REQUIRED_MODEL_NAMES)[number];
 export const INDEX_TO_ORACLE_FILE = 'indexToOracleMap.json';
 export const BUNDLE_MANIFEST_FILE = 'manifest.json';
 export const PARITY_FILE = 'parity.json';
-export const ARCHETYPE_CENTERS_FILE = 'archetypes/clusterCenters.json';
-export const ARCHETYPE_ANNOTATIONS_FILE = 'archetypes/annotations.json';
+export const ARCHETYPE_TOPICS_FILE = 'archetypes/topics.json';
+// The one bundle file that changes after publishing: admins rename archetypes on the admin page.
+export const ARCHETYPE_NAMES_FILE = 'archetypes/names.json';
+export const ARCHETYPE_NAMING_FILE = 'archetypes/naming.json';
 
 // The model version served before bundles were versioned. Its files sit directly under model/
 // (model/encoder/..., model/indexToOracleMap.json) and in R2 under model/v3/.
@@ -129,10 +135,11 @@ export interface RunMetrics {
 }
 
 export interface ArchetypeReport {
+  topicCount: number;
+  naming: ArchetypeNamingOutcome | null;
+  // Test decks labeled by both the live archetypes and the candidate's, and the share whose name changed.
   sampleSize: number;
   shiftShare: number;
-  clusterCount: number;
-  droppedClusters: number[];
   createdAt: number;
 }
 

@@ -4,9 +4,12 @@ version = "0.2.0"
 description = "CubeCobra recommender model training (run by the ML retraining pipeline)"
 requires-python = ">=3.11,<3.12"
 dependencies = [
+    "anthropic[bedrock]>=2,<3",
     "boto3>=1.35,<2",
     "h5py>=3.10,<4",
     "numpy>=1.26,<2.0",
+    "scikit-learn>=1.5,<2",
+    "scipy>=1.13,<2",
     "tensorflow[and-cuda]==2.16.2",
     "tf-keras==2.16.0",
 ]

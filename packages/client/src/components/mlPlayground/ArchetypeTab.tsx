@@ -18,6 +18,7 @@ import usePlaygroundRequest from './usePlaygroundRequest';
 const TOP_ARCHETYPES = 8;
 
 const formatSimilarity = (value: number): string => value.toFixed(3);
+const formatShare = (value: number): string => `${(value * 100).toFixed(1)}%`;
 
 /** The 128 embedding dimensions as a strip of cells, shaded by sign and size. */
 const EmbeddingStrip: React.FC<{ embedding: number[] }> = ({ embedding }) => {
@@ -87,7 +88,11 @@ const ResultCard: React.FC<{ title: string; result: ArchetypeResult }> = ({ titl
                 <Text sm semibold={match === top} className="w-36 shrink-0 truncate">
                   {match.label}
                 </Text>
-                <ScoreBar rating={match.similarity} format={formatSimilarity} className="flex-grow" />
+                <ScoreBar
+                  rating={match.score}
+                  format={result.scoreKind === 'share' ? formatShare : formatSimilarity}
+                  className="flex-grow"
+                />
               </Flexbox>
             ))}
             {result.archetypes.length > TOP_ARCHETYPES && (
@@ -118,8 +123,8 @@ const ResultCard: React.FC<{ title: string; result: ArchetypeResult }> = ({ titl
 };
 
 /**
- * The encoder's view of a list: its embedding, the archetypes whose cluster centers it sits
- * closest to (how drafts name decks), and how alike two lists' embeddings are.
+ * A list's archetypes as drafts name decks, the encoder's embedding of it, and how alike two
+ * lists' embeddings are.
  */
 const ArchetypeTab: React.FC = () => {
   const [cards, setCards] = useLocalStorage('mlPlayground.archetype.cards', '');

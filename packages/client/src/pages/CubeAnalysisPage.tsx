@@ -20,6 +20,7 @@ import Cube, { CubeCards } from '@utils/datatypes/Cube';
 import { cardIsLabel, getLabels } from '@utils/sorting/Sort';
 
 import AnalyticTable from '../analytics/AnalyticTable';
+import Archetypes from '../analytics/Archetypes';
 import Asfans from '../analytics/Asfans';
 import AtAGlance from '../analytics/AtAGlance';
 import Averages from '../analytics/Averages';
@@ -41,6 +42,7 @@ import AnalysisViewContext, { AnalysisViewContextProvider } from '../contexts/An
 import CubeContext from '../contexts/CubeContext';
 import CubeLayout from '../layouts/CubeLayout';
 import MainLayout from '../layouts/MainLayout';
+import { hasTopicArchetypes } from '../utils/archetypes';
 
 interface CubeAnalysisPageProps {
   cubeAnalytics: any;
@@ -189,6 +191,9 @@ const CubeAnalysisPage: React.FC<CubeAnalysisPageProps> = ({ cubeAnalytics, toke
       break;
     case 'combos':
       content = <Combos />;
+      break;
+    case 'archetypes':
+      content = hasTopicArchetypes() ? <Archetypes /> : <Averages characteristics={characteristics} />;
       break;
     case 'prices':
       content = <Prices />;

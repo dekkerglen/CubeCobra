@@ -1,8 +1,9 @@
 import { s3 } from '@server/dynamo/s3client';
 import { archetypeForEmbedding, type ClusterCenter } from '@utils/drafting/archetype';
+import { type ArchetypeNamesFile, type ArchetypeTopicsFile, classifyByTopics } from '@utils/drafting/topicArchetypes';
 import {
-  ARCHETYPE_ANNOTATIONS_FILE,
-  ARCHETYPE_CENTERS_FILE,
+  ARCHETYPE_NAMES_FILE,
+  ARCHETYPE_TOPICS_FILE,
   MODEL_POINTER_KEY,
   modelVersionPrefix,
   parseModelPointer,
@@ -13,28 +14,28 @@ import path from 'path';
 import { batchEncode } from './ml';
 
 /**
- * Deck archetype classification for bot seats. Cluster centers are positions in one model's
- * embedding space, so they come from the bundle the environment serves (model/current.json ->
- * model/<version>/archetypes/ in DATA_BUCKET), falling back to the static files copied next to the
- * bundle (see esbuild.config.js) when there is no pointer or the bundle has none (the legacy v3).
- * The nearest-cluster math is shared with the server via @utils/drafting/archetype. Encoding is
- * batched so a whole SQS batch of decks costs one /batchencode call rather than one /encode per seat.
+ * Deck archetype classification for bot seats, with the archetypes of the bundle the environment
+ * serves (model/current.json -> model/<version>/archetypes/ in DATA_BUCKET):
+ *  - archetype topics over oracle tags (@utils/drafting/topicArchetypes), loaded once per cold start
+ *    like the servers load them at boot; they classify from the cards alone.
+ *  - for the legacy v3 bundle, which has none, the static embedding cluster centers copied next to
+ *    the bundle (see esbuild.config.js). Those are positions in v3's encoder space; the decks are
+ *    encoded with one batched /batchencode call.
  */
-interface ArchetypeData {
-  version: string | null;
-  centers: ClusterCenter[];
-  annotations: Record<string, string>;
-}
+type Archetypes =
+  | { kind: 'topics'; topics: ArchetypeTopicsFile; names: ArchetypeNamesFile }
+  | { kind: 'centers'; version: string | null; centers: ClusterCenter[]; annotations: Record<string, string> };
 
-// The container can outlive a promotion, so the pointer is checked again after this long.
-const POINTER_TTL_MS = 5 * 60 * 1000;
+// The recommender hot-swaps its encoder on promotion, so while the legacy centers are in use the
+// pointer is checked again after this long; a newly promoted bundle's topics replace them.
+const CENTERS_RECHECK_MS = 5 * 60 * 1000;
 
-let bundled: ArchetypeData | null = null;
-let cached: { data: ArchetypeData; checkedAt: number } | null = null;
+let bundled: { centers: ClusterCenter[]; annotations: Record<string, string> } | null = null;
+let cached: { data: Archetypes; checkedAt: number } | null = null;
 
-const loadBundled = (): ArchetypeData => {
+const loadBundled = (version: string | null): Archetypes => {
   if (!bundled) {
-    bundled = { version: null, centers: [], annotations: {} };
+    bundled = { centers: [], annotations: {} };
     try {
       const centersPath = path.join(__dirname, 'clusterCenters.json');
       const annotationsPath = path.join(__dirname, 'annotations.json');
@@ -44,7 +45,7 @@ const loadBundled = (): ArchetypeData => {
       console.warn('bot-deckbuild: failed to load bundled archetype data', err);
     }
   }
-  return bundled;
+  return { kind: 'centers', version, ...bundled };
 };
 
 // Without s3:ListBucket a missing key reads as AccessDenied rather than NoSuchKey.
@@ -64,27 +65,29 @@ const readText = async (bucket: string, key: string): Promise<string | null> => 
   }
 };
 
-// Other S3 failures throw, so a flaky read never swaps in the wrong model's centers.
-const loadArchetypes = async (): Promise<ArchetypeData> => {
+// Other S3 failures throw, so a flaky read never swaps in the wrong archetypes.
+const loadArchetypes = async (): Promise<Archetypes> => {
   const bucket = process.env.DATA_BUCKET;
-  if (!bucket) return loadBundled();
+  if (!bucket) return loadBundled(null);
   const pointer = await readText(bucket, MODEL_POINTER_KEY);
-  if (pointer === null) return loadBundled();
+  if (pointer === null) return loadBundled(null);
 
   const { version } = parseModelPointer(pointer);
-  if (cached && cached.data.version === version) return cached.data;
+  if (cached?.data.kind === 'centers' && cached.data.version === version) return cached.data;
 
   const prefix = modelVersionPrefix(version);
-  const [centers, annotations] = await Promise.all([
-    readText(bucket, `${prefix}${ARCHETYPE_CENTERS_FILE}`),
-    readText(bucket, `${prefix}${ARCHETYPE_ANNOTATIONS_FILE}`),
+  const [topics, names] = await Promise.all([
+    readText(bucket, `${prefix}${ARCHETYPE_TOPICS_FILE}`),
+    readText(bucket, `${prefix}${ARCHETYPE_NAMES_FILE}`),
   ]);
-  if (centers === null || annotations === null) return loadBundled();
-  return { version, centers: JSON.parse(centers), annotations: JSON.parse(annotations) };
+  if (topics === null || names === null) return loadBundled(version);
+  return { kind: 'topics', topics: JSON.parse(topics), names: JSON.parse(names) };
 };
 
-const getArchetypes = async (): Promise<ArchetypeData> => {
-  if (cached && Date.now() - cached.checkedAt <= POINTER_TTL_MS) return cached.data;
+const getArchetypes = async (): Promise<Archetypes> => {
+  if (cached && (cached.data.kind === 'topics' || Date.now() - cached.checkedAt <= CENTERS_RECHECK_MS)) {
+    return cached.data;
+  }
   try {
     cached = { data: await loadArchetypes(), checkedAt: Date.now() };
   } catch (err) {
@@ -97,10 +100,9 @@ const getArchetypes = async (): Promise<ArchetypeData> => {
 
 /**
  * Classify many decks at once. Returns an archetype label (or null) per input deck, in order.
- * A single batched /encode call covers every deck.
  */
 export const classifyDecks = async (oracleIdsPerDeck: string[][]): Promise<(string | null)[]> => {
-  let archetypes: ArchetypeData;
+  let archetypes: Archetypes;
   try {
     archetypes = await getArchetypes();
   } catch (err) {
@@ -108,9 +110,14 @@ export const classifyDecks = async (oracleIdsPerDeck: string[][]): Promise<(stri
     console.warn('bot-deckbuild: failed to load archetype data', err);
     return oracleIdsPerDeck.map(() => null);
   }
+
+  if (archetypes.kind === 'topics') {
+    const { topics, names } = archetypes;
+    return oracleIdsPerDeck.map((oracleIds) => classifyByTopics(oracleIds, topics, names));
+  }
+
   const { centers, annotations } = archetypes;
   if (centers.length === 0) return oracleIdsPerDeck.map(() => null);
-
   try {
     const embeddings = await batchEncode(oracleIdsPerDeck);
     return oracleIdsPerDeck.map((oracleIds, i) =>

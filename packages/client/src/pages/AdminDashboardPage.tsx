@@ -51,6 +51,9 @@ const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ noticeCount, co
             <Button href="/admin/mlretraining" block outline color="primary" type="link">
               {adminAlerts && adminAlerts.count > 0 ? `ML Retraining (${adminAlerts.count})` : 'ML Retraining'}
             </Button>
+            <Button href="/admin/archetypes" block outline color="primary" type="link">
+              Archetypes
+            </Button>
             <Button href="/admin/patrons" block outline color="primary" type="link">
               Patrons
             </Button>

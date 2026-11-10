@@ -12,8 +12,9 @@ dotenv.config({ path: path.join(__dirname, '..', '..', '..', '.env') });
 import { GetObjectCommand, HeadObjectCommand, S3Client } from '@aws-sdk/client-s3';
 import { Upload } from '@aws-sdk/lib-storage';
 import {
-  ARCHETYPE_ANNOTATIONS_FILE,
-  ARCHETYPE_CENTERS_FILE,
+  ARCHETYPE_NAMES_FILE,
+  ARCHETYPE_NAMING_FILE,
+  ARCHETYPE_TOPICS_FILE,
   BUNDLE_MANIFEST_FILE,
   INDEX_TO_ORACLE_FILE,
   ModelManifest,
@@ -43,7 +44,13 @@ const sizeOf = async (client: S3Client, bucket: string, key: string): Promise<nu
 
 /** Throws unless every file the recommender and the browser load is in the bundle. */
 const checkBundle = async (bucket: string, prefix: string, keys: Set<string>) => {
-  const required = [BUNDLE_MANIFEST_FILE, INDEX_TO_ORACLE_FILE, ARCHETYPE_CENTERS_FILE, ARCHETYPE_ANNOTATIONS_FILE];
+  const required = [
+    BUNDLE_MANIFEST_FILE,
+    INDEX_TO_ORACLE_FILE,
+    ARCHETYPE_TOPICS_FILE,
+    ARCHETYPE_NAMES_FILE,
+    ARCHETYPE_NAMING_FILE,
+  ];
   for (const name of REQUIRED_MODEL_NAMES) {
     required.push(`${name}/model.json`);
     const modelJson = await readJson<{ weightsManifest: Array<{ paths: string[] }> }>(bucket, `${prefix}${name}/model.json`);

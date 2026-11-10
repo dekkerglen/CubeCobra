@@ -1,5 +1,6 @@
 import { RetrainMode, RetrainTask, RetrainTaskStatus } from '@utils/datatypes/RetrainTask';
 import { UserRoles } from '@utils/datatypes/User';
+import type { ArchetypeNamesFile, ArchetypeNamingOutcome, ArchetypeTopicsFile } from '@utils/drafting/topicArchetypes';
 import {
   type ArchetypeReport,
   type GateReport,
@@ -60,19 +61,32 @@ export const stateHandler = async (_req: Request, res: Response) => {
   }
 };
 
-// metrics.json, eval.json and archetypes.json for one run; each is null until the run writes it.
+// One run's metrics, gate report, archetype report and its bundle's archetype topics and names;
+// each is null until the run writes it.
 export const runDetailsHandler = async (req: Request, res: Response) => {
   const { id } = req.params;
   if (!isValidModelVersion(id)) {
     return res.status(400).json({ success: false, error: 'Invalid run id' });
   }
   try {
-    const [metrics, gate, archetypes] = await Promise.all([
+    const [metrics, gate, archetypes, topics, names, naming] = await Promise.all([
       readRunFile<RunMetrics>(id, 'metrics.json'),
       readRunFile<GateReport>(id, 'eval.json'),
       readRunFile<ArchetypeReport>(id, 'archetypes.json'),
+      readRunFile<ArchetypeTopicsFile>(id, 'bundle/archetypes/topics.json'),
+      readRunFile<ArchetypeNamesFile>(id, 'bundle/archetypes/names.json'),
+      readRunFile<ArchetypeNamingOutcome>(id, 'bundle/archetypes/naming.json'),
     ]);
-    return res.status(200).json({ success: true, metrics, gate, archetypes });
+    return res.status(200).json({
+      success: true,
+      metrics,
+      gate,
+      archetypes,
+      // Without cardTopics, the per-card table only classification needs.
+      topics: topics?.topics ?? null,
+      names: names?.names ?? null,
+      naming,
+    });
   } catch (error) {
     return res.status(500).json({ success: false, error: errorMessage(error) });
   }

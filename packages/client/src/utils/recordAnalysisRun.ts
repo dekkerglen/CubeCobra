@@ -11,12 +11,11 @@ import type { CardMeta, SlimPool } from '@utils/datatypes/SimulationReport';
 
 import { buildOracleRemapping, encodePools, loadDraftBot, reshapeEmbeddings } from './draftBot';
 import {
-  assignArchetypeLabels,
+  classifyPoolArchetypes,
   CLUSTER_NEG_SAMPLES,
   computeSkeletons,
   KNN_K_DIVISOR,
   LEIDEN_RES_DIVISOR,
-  loadArchetypeData,
 } from './draftSimulatorClustering';
 import {
   AnalysisDeck,
@@ -464,13 +463,7 @@ export async function runRecordAnalysis(
       clusterMethod = result.clusterMethod;
 
       // Human archetype labels per deck (best-effort; falls back to colors only).
-      let archetypeLabels: Map<number, string> | null = null;
-      try {
-        const archetypeData = await loadArchetypeData();
-        if (archetypeData) archetypeLabels = assignArchetypeLabels(embeddings, archetypeData);
-      } catch {
-        archetypeLabels = null;
-      }
+      const archetypeLabels = await classifyPoolArchetypes(pools);
 
       for (let i = 0; i < decks.length; i++) {
         decks[i]!.x = result.umapCoords[i]?.x ?? 0;

@@ -9,8 +9,8 @@ cube recommendations, deck building and draft picks. It runs as part of the ML r
 | Process data | jobs image, Fargate | `npm run ml-process-data` (`packages/jobs/src/ml/processTrainingData.ts`) |
 | Train | this image, GPU | `python -m ccml.train` |
 | Package | this image, GPU | `python -m ccml.package` |
+| Archetypes (alongside Train and Package) | this image, Fargate | `python -m ccml.topics` |
 | Evaluate (gate) | jobs image, Fargate | `npm run ml-evaluate` |
-| Archetypes | jobs image, Fargate | `npm run ml-archetypes` |
 | Publish | jobs image, Fargate | `npm run ml-publish` |
 
 Every stage reads and writes `s3://<ML_RUNS_BUCKET>/ml/runs/<ML_RUN_ID>/`; the layout is documented
@@ -20,6 +20,12 @@ Training uses drafts from the 3 years before the export and cubes updated in tha
 stable 5% test split by cube or draft id. Each run's `metrics.json` holds its parameters, per-epoch
 losses, and the gate metrics on the train and test splits every 10 epochs; the admin page at
 `/admin/mlretraining` shows them.
+
+Archetypes are NMF topics over the Scryfall oracle tags of the training decks' nonland cards
+(`ccml/topics.py`), named by Claude on Amazon Bedrock in an actor and a critic pass
+(`ccml/name_topics.py`, model set by `ML_BEDROCK_MODEL_ID`). Names admins edited on the live version
+carry over to the new topics with matching top tags. Naming never fails a run: without a model, or
+on any error, topics keep names built from their top tags, and `archetypes/naming.json` says why.
 
 The gate metrics are defined in `ccml/metrics.py` and `packages/jobs/src/ml/gateMetrics.ts`, which
 must stay identical; `tests/test_metrics.py` and `gateMetrics.test.ts` share their cases.

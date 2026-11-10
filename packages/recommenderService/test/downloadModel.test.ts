@@ -7,11 +7,18 @@ const mockObjects: Record<string, string> = {};
 
 jest.mock('@aws-sdk/client-s3', () => {
   const { Readable } = jest.requireActual('stream');
+  // Plain fields rather than TypeScript parameter properties, which jest's mock-factory scope check rejects.
   class GetObjectCommand {
-    constructor(public input: { Key: string }) {}
+    input: { Key: string };
+    constructor(mockInput: { Key: string }) {
+      this.input = mockInput;
+    }
   }
   class ListObjectsV2Command {
-    constructor(public input: { Prefix: string; ContinuationToken?: string }) {}
+    input: { Prefix: string; ContinuationToken?: string };
+    constructor(mockInput: { Prefix: string; ContinuationToken?: string }) {
+      this.input = mockInput;
+    }
   }
   // Lists two keys per page so every listing exercises pagination.
   class S3Client {

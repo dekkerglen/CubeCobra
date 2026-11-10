@@ -1,5 +1,5 @@
 // Settings for the ML retraining stages that run on the jobs image (processTrainingData,
-// evaluateModel, transferArchetypes, publishModel). The state machine passes ML_RUN_ID per
+// evaluateModel, publishModel). The state machine passes ML_RUN_ID per
 // execution; everything else comes from the task definition (packages/cdk/lib/ml-pipeline.ts).
 
 // Training keeps drafts from the last WINDOW_YEARS years, because drafting habits change, and cubes
@@ -28,9 +28,6 @@ export const GATE_TOLERANCE = 0.005;
 // Largest elementwise difference allowed between the Keras reference outputs and the converted
 // TF.js model on the same inputs.
 export const PARITY_TOLERANCE = 1e-4;
-
-// Decks embedded with both encoders to carry the archetype labels over.
-export const ARCHETYPE_SAMPLE = 50000;
 
 const required = (name: string): string => {
   const value = process.env[name];

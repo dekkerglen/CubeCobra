@@ -16,7 +16,7 @@ import { CubeTooLargeError } from '../errors/CubeTooLargeError';
 import { Request, Response } from '../types/express';
 import { getCatalogVersion } from './cardCatalog';
 import { type AdminAlerts, getAdminAlerts } from './mlRetraining';
-import { getServedModelVersion } from './modelPointer';
+import { getArchetypeData, getServedModelVersion } from './modelPointer';
 import { getBaseUrl } from './util';
 
 // Vite emits a manifest keyed by source path (e.g. "src/pages/DraftPage.tsx"). Each entry lists
@@ -246,6 +246,8 @@ interface ReactProps {
   // ML model version this environment serves (see modelPointer); the browser draft bot
   // loads its models from /model/<modelVersion>/ on the CDN.
   modelVersion?: string;
+  // Whether decks are named by archetype topics; the legacy cluster centers have no cube view.
+  topicArchetypes?: boolean;
   // Admins only: retraining runs awaiting approval or failed and not yet dismissed.
   adminAlerts?: AdminAlerts;
   [key: string]: any;
@@ -313,6 +315,7 @@ const render = (
     reactProps.baseUrl = getBaseUrl();
     reactProps.cdnBaseUrl = process.env.CDN_BASE_URL || '';
     reactProps.modelVersion = getServedModelVersion();
+    reactProps.topicArchetypes = getArchetypeData().kind === 'topics';
     reactProps.captchaSiteKey = process.env.CAPTCHA_SITE_KEY;
     reactProps.version = process.env.CUBECOBRA_VERSION;
     reactProps.cardDbVersion = getCatalogVersion();

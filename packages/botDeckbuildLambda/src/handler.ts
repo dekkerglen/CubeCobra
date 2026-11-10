@@ -171,7 +171,7 @@ export const handler = async (event: SQSEvent): Promise<SQSBatchResponse> => {
     };
   });
 
-  // Best-effort archetype naming; falls back to colours only if the encode call fails.
+  // Best-effort archetype naming; a seat the archetypes can't name is named by its colors alone.
   const archetypes = await classifyDecks(assembled.map((a) => a.oracleIds));
 
   const byDraft = new Map<string, { messageId: string; botSeats: BuiltBotSeat[] }>();

@@ -2,6 +2,12 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { CheckCircleFillIcon, ChevronDownIcon, ChevronRightIcon, XCircleFillIcon } from '@primer/octicons-react';
 import { RetrainMode, RetrainTask, RetrainTaskStatus } from '@utils/datatypes/RetrainTask';
+import type {
+  ArchetypeName,
+  ArchetypeNameSource,
+  ArchetypeNamingOutcome,
+  ArchetypeTopic,
+} from '@utils/drafting/topicArchetypes';
 import type { ArchetypeReport, GateMetrics, GateReport, ModelPointer, RunMetrics } from '@utils/ml/modelBundle';
 import classNames from 'classnames';
 
@@ -37,6 +43,10 @@ interface RunDetails {
   metrics: RunMetrics | null;
   gate: GateReport | null;
   archetypes: ArchetypeReport | null;
+  // From the run's bundle: archetypes/topics.json (without cardTopics), names.json and naming.json.
+  topics: ArchetypeTopic[] | null;
+  names: Record<string, ArchetypeName> | null;
+  naming: ArchetypeNamingOutcome | null;
 }
 
 interface PendingAction {
@@ -276,21 +286,54 @@ const GateSection: React.FC<{ gate: GateReport | null; run: Run }> = ({ gate, ru
   );
 };
 
-const ArchetypeSection: React.FC<{ archetypes: ArchetypeReport | null; run: Run }> = ({ archetypes, run }) => {
-  const shift = archetypes?.shiftShare ?? run.gate?.archetypeShift;
-  if (shift === undefined) return null;
+const NAME_SOURCES: Record<ArchetypeNameSource, string> = { auto: 'Auto', llm: 'LLM', edited: 'Edited' };
+
+// The run's archetype topics and their names, how they were named, and how many test decks would
+// change archetype against the live model's.
+const ArchetypeSection: React.FC<{ details: RunDetails; run: Run }> = ({ details, run }) => {
+  const { archetypes: report, topics, names } = details;
+  const naming = report?.naming ?? details.naming;
+  const shift = report?.shiftShare ?? run.gate?.archetypeShift;
+  if (!topics && !naming && shift === undefined) return null;
+
   return (
     <Section title="Archetypes">
       <Flexbox direction="row" gap="4" wrap="wrap">
-        <Field label="Shift">{(shift * 100).toFixed(1)}%</Field>
-        {archetypes && (
+        {(report || topics) && <Field label="Topics">{report?.topicCount ?? topics?.length}</Field>}
+        {shift !== undefined && <Field label="Decks Changing Archetype">{(shift * 100).toFixed(1)}%</Field>}
+        {report && <Field label="Sample">{report.sampleSize.toLocaleString()}</Field>}
+        {naming && (
           <>
-            <Field label="Clusters">{archetypes.clusterCount.toLocaleString()}</Field>
-            <Field label="Dropped">{archetypes.droppedClusters.length.toLocaleString()}</Field>
-            <Field label="Sample">{archetypes.sampleSize.toLocaleString()}</Field>
+            <Field label="Naming">{naming.mode === 'llm' ? 'LLM' : 'Auto (fallback)'}</Field>
+            <Field label="Named">{`${naming.named} / ${naming.total}`}</Field>
+            <Field label="Carried Over">{naming.carriedOver}</Field>
+            <Field label="Critic Revised">{naming.criticRevised}</Field>
+            {naming.modelId && <Field label="Model">{naming.modelId}</Field>}
           </>
         )}
       </Flexbox>
+      {naming?.reason && (
+        <Text sm className="text-text-secondary">
+          {naming.reason}
+        </Text>
+      )}
+      {topics && topics.length > 0 && (
+        <Table
+          headers={['Name', 'Source', 'Top Tags', 'Decks']}
+          wrapCells
+          rows={[...topics]
+            .sort((a, b) => b.deckShare - a.deckShare)
+            .map((topic) => {
+              const name = names?.[topic.id];
+              return {
+                Name: name?.name ?? topic.id,
+                Source: name ? NAME_SOURCES[name.source] : '-',
+                'Top Tags': topic.topTags.join(', '),
+                Decks: `${(topic.deckShare * 100).toFixed(1)}%`,
+              };
+            })}
+        />
+      )}
     </Section>
   );
 };
@@ -314,7 +357,14 @@ const RunDetailsPanel: React.FC<{
         const data = await response.json();
         if (cancelled) return;
         if (data.success) {
-          setDetails({ metrics: data.metrics, gate: data.gate, archetypes: data.archetypes });
+          setDetails({
+            metrics: data.metrics,
+            gate: data.gate,
+            archetypes: data.archetypes,
+            topics: data.topics,
+            names: data.names,
+            naming: data.naming,
+          });
         } else {
           setError(data.error || 'Request failed');
         }
@@ -409,7 +459,7 @@ const RunDetailsPanel: React.FC<{
           {details.metrics && <DataSection metrics={details.metrics} />}
           {details.metrics && <TrainingSection metrics={details.metrics} />}
           <GateSection gate={details.gate} run={run} />
-          <ArchetypeSection archetypes={details.archetypes} run={run} />
+          <ArchetypeSection details={details} run={run} />
         </>
       )}
     </Flexbox>

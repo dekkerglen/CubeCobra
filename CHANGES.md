@@ -14,6 +14,8 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - When you draft a voucher, it bursts open and the cards inside it fly into your pool.
 - Choose which daily games can show up on your dashboard under Display Preferences in your account settings. Daily P1P1 now has its own checkbox instead of following Hide featured cubes.
 - Card pages have a new Tags tab listing the card's Scryfall oracle tags and the printing's art tags. Click a tag to search for every card that has it.
+- Deck archetypes are now recognized from what the cards do, using Scryfall's oracle tags, and cover around a hundred strategies instead of 37 hand-picked ones.
+- Cube analytics has a new Archetypes view showing which archetypes your card list supports and the cards that carry each one.
 - The new ML Playground, under Cards in the Explore menu, puts the card recommender to work on any list you paste: Smart Search against your list, the bot's pick from a pack, the deck a bot would build from a pool, the archetype a deck reads as, or a seed list grown into a full cube.
 - CSV exports now list what each voucher holds in a new Voucher Cards column, and CSV uploads read it, so a cube of vouchers can be set up or copied in one upload.
 - The public data exports now record when each draft happened, and every pick names the draft it came from.
@@ -38,4 +40,4 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 
 - The navigation bar no longer redraws every time a draft updates, and keeps cubes that share a name apart.
 - The web server's request size limit now matches the site's own limits. It had been silently capping requests at 1MB.
-- The card recommender now retrains automatically after each quarterly data export, on drafts from the last three years and cubes updated in that time. A new model goes live only after it matches the current one on held-out drafts and an admin approves it, and admins can roll back to any earlier model.
+- The card recommender now retrains automatically after each quarterly data export, on drafts from the last three years and cubes updated in that time. A new model goes live only after it matches the current one on held-out drafts and an admin approves it, and admins can roll back to any earlier model. Each retrain also finds and names deck archetypes automatically, and admins can rename them.

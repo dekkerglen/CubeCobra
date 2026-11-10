@@ -30,7 +30,13 @@ export const toClientRun = (task: RetrainTask): ClientRetrainTask => {
   return run as ClientRetrainTask;
 };
 
-export type RunFile = 'metrics.json' | 'eval.json' | 'archetypes.json';
+export type RunFile =
+  | 'metrics.json'
+  | 'eval.json'
+  | 'archetypes.json'
+  | 'bundle/archetypes/topics.json'
+  | 'bundle/archetypes/names.json'
+  | 'bundle/archetypes/naming.json';
 
 /** A file from ml/runs/<runId>/ in the production data bucket, or null when it isn't there (yet). */
 export const readRunFile = async <T>(runId: string, file: RunFile): Promise<T | null> =>

@@ -3,6 +3,8 @@
 // Reads s3://<ML_EXPORT_BUCKET>/export/ and writes s3://<ML_RUNS_BUCKET>/ml/runs/<ML_RUN_ID>/data/:
 //   vocab.json                    card index -> oracle id (the export's indexToOracleMap, as a list)
 //   isLand.json                   1 for lands, by card index (used by the draft head's land penalty)
+//   cards.json                    per card index: { oracle, name, type, cmc, tags } (oracle tags, for
+//                                 archetype topics, from the card catalog in DATA_BUCKET)
 //   oracleFrequency.json          training cubes containing each card
 //   correlations.bin              int32 little-endian card x card mainboard co-occurrence counts
 //                                 from training decks, row-major
@@ -18,11 +20,14 @@ import path from 'path';
 import 'module-alias/register';
 dotenv.config({ path: path.join(__dirname, '..', '..', '..', '.env') });
 
+import { getMostReasonableById, getVersionsByOracleId } from '@server/serverutils/carddb';
+import { updateCardbase } from '@server/serverutils/updatecards';
 import { runPrefix, SplitCounts, TrainingDataManifest } from '@utils/ml/modelBundle';
 import fs from 'fs';
 import os from 'os';
 
 import { MIN_MAINBOARD, mlExportBucket, mlRunId, mlRunsBucket, SHARD_SIZE, TEST_PERCENT, WINDOW_YEARS } from './config';
+import { getJobsBucket } from '../utils/s3';
 import { listKeys, readJson, uploadDirectory } from './s3';
 import {
   cleanCube,
@@ -109,13 +114,35 @@ const writeInt32File = (filePath: string, values: Int32Array) => {
     return oracle;
   });
 
-  const cardDict = (await readJson<Record<string, { type?: string | null }>>(exportBucket, 'export/simpleCardDict.json')) || {};
+  const cardDict =
+    (await readJson<Record<string, { name?: string | null; type?: string | null; cmc?: number | null }>>(
+      exportBucket,
+      'export/simpleCardDict.json',
+    )) || {};
   const isLand = vocab.map((oracle) => ((cardDict[oracle]?.type || '').includes('Land') ? 1 : 0));
+
+  // Oracle tags aren't in the export; they come from the card catalog the daily card update keeps
+  // in DATA_BUCKET, so they're as of this run rather than the export date.
+  await updateCardbase(path.join(workDir, 'cards'), getJobsBucket());
+  const tagsFor = (oracle: string): string[] => {
+    const versions = getVersionsByOracleId(oracle);
+    const card = versions[0] ? getMostReasonableById(versions[0]) : null;
+    return card?.oracle_tags ?? [];
+  };
+  const cards = vocab.map((oracle) => {
+    const card = cardDict[oracle];
+    return { oracle, name: card?.name ?? '', type: card?.type ?? '', cmc: card?.cmc ?? 0, tags: tagsFor(oracle) };
+  });
+  const taggedCards = cards.filter((card) => card.tags.length > 0).length;
+  if (taggedCards === 0) {
+    throw new Error('The card catalog has no oracle tags');
+  }
 
   fs.mkdirSync(outDir, { recursive: true });
   fs.writeFileSync(path.join(outDir, 'vocab.json'), JSON.stringify(vocab));
   fs.writeFileSync(path.join(outDir, 'isLand.json'), JSON.stringify(isLand));
-  console.log(`${numCards} cards in the vocabulary, ${isLand.filter(Boolean).length} lands`);
+  fs.writeFileSync(path.join(outDir, 'cards.json'), JSON.stringify(cards));
+  console.log(`${numCards} cards in the vocabulary, ${isLand.filter(Boolean).length} lands, ${taggedCards} tagged`);
 
   const writers = {} as Record<Split, Record<Kind, ShardWriter>>;
   for (const split of ['train', 'test'] as Split[]) {

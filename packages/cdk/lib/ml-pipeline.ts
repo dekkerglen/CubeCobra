@@ -70,9 +70,9 @@ const objectArn = (bucket: string, key: string): string => `arn:aws:s3:::${bucke
  * Automated retraining of the recommender model, run after each 90-day export.
  *
  * A Step Functions state machine runs the stages as ECS tasks on a dedicated cluster: process data
- * (CPU) -> train (GPU) -> package (GPU) -> evaluate -> archetype label transfer (CPU) -> gate
- * (lambda) -> publish (CPU) -> promote to beta -> admin approval on the site -> promote to
- * production. Promoting moves model/current.json in that environment's data bucket, which its
+ * (CPU) -> in parallel, train + package (GPU) and archetype topics (CPU; NMF over Scryfall oracle
+ * tags, named by Claude on Bedrock, independent of the model) -> evaluate (CPU) -> gate (lambda) ->
+ * publish (CPU) -> promote to beta -> admin approval on the site -> promote to production. Promoting moves model/current.json in that environment's data bucket, which its
  * recommenders poll and hot-reload, and waits until every response reports the new version (a
  * promotion that doesn't get there is reverted). Rollback is the same machine in PROMOTE mode.
  * Each run is recorded as a RetrainTask (packages/mlPipelineLambda).
@@ -222,7 +222,7 @@ export class MlPipeline extends Construct {
     });
 
     // ---------------------------------------------------------------------------------------------
-    // CPU task: data processing, evaluation, archetypes and publishing (packages/jobs/src/ml)
+    // CPU task: data processing, evaluation and publishing (packages/jobs/src/ml)
     // ---------------------------------------------------------------------------------------------
 
     const cpuTaskRole = new iam.Role(this, 'CpuTaskRole', {
@@ -240,12 +240,13 @@ export class MlPipeline extends Construct {
         resources: [objectArn(runsBucket, 'ml/runs/*')],
       }),
     );
-    // The live model (evaluation baseline, archetype source) and the published bundles: publish
-    // writes model/<version>/ to every promote target's bucket.
+    // The live model (evaluation baseline), and the card catalog the daily card update writes, which
+    // data processing reads each card's oracle tags from. Publish writes model/<version>/ to every
+    // promote target's bucket.
     cpuTaskRole.addToPolicy(
       new iam.PolicyStatement({
         actions: ['s3:GetObject'],
-        resources: [objectArn(runsBucket, 'model/*')],
+        resources: [objectArn(runsBucket, 'model/*'), objectArn(runsBucket, 'cards/*')],
       }),
     );
     cpuTaskRole.addToPolicy(
@@ -270,11 +271,12 @@ export class MlPipeline extends Construct {
       }),
     );
 
-    // The data step holds a ~6 GB card x card co-occurrence matrix and writes its shards to disk.
+    // The data step holds the card catalog and a ~6 GB card x card co-occurrence matrix, and writes
+    // its shards to disk.
     const cpuTaskDefinition = new ecs.FargateTaskDefinition(this, 'CpuTaskDefinition', {
       family: `cubecobra-ml-cpu-${props.environmentName}`,
       cpu: 8192,
-      memoryLimitMiB: 32768,
+      memoryLimitMiB: 61440,
       ephemeralStorageGiB: 200,
       taskRole: cpuTaskRole,
     });
@@ -314,6 +316,66 @@ export class MlPipeline extends Construct {
       vpc: props.vpc,
       description: 'ML CPU tasks: egress only',
       allowAllOutbound: true,
+    });
+
+    // ---------------------------------------------------------------------------------------------
+    // Topics task: archetype topics on the training image, CPU only (packages/ml, ccml.topics)
+    // ---------------------------------------------------------------------------------------------
+
+    const topicsTaskRole = new iam.Role(this, 'TopicsTaskRole', {
+      assumedBy: new iam.ServicePrincipal('ecs-tasks.amazonaws.com'),
+    });
+    topicsTaskRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['s3:GetObject', 's3:PutObject', 's3:DeleteObject', 's3:AbortMultipartUpload'],
+        resources: [objectArn(runsBucket, 'ml/runs/*')],
+      }),
+    );
+    // The live model bundle, read-only.
+    topicsTaskRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['s3:GetObject'],
+        resources: [objectArn(runsBucket, 'model/*')],
+      }),
+    );
+    // Bucket-wide for the same 404-vs-403 reason as the GPU task role.
+    topicsTaskRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['s3:ListBucket'],
+        resources: [bucketArn(runsBucket)],
+      }),
+    );
+    // Naming the topics: the Anthropic SDK's Bedrock Mantle client posts to
+    // bedrock-mantle.<region>.api.aws/anthropic/v1/messages, which is authorized by
+    // bedrock-mantle:CreateInference on the model. The model ARN format for this action isn't
+    // documented anywhere available here, so this isn't scoped to the two model ids yet.
+    topicsTaskRole.addToPolicy(
+      new iam.PolicyStatement({
+        actions: ['bedrock-mantle:CreateInference'],
+        resources: ['*'],
+      }),
+    );
+
+    const topicsTaskDefinition = new ecs.FargateTaskDefinition(this, 'TopicsTaskDefinition', {
+      family: `cubecobra-ml-topics-${props.environmentName}`,
+      cpu: 8192,
+      memoryLimitMiB: 32768,
+      // Fargate counts the multi-GB training image against this too.
+      ephemeralStorageGiB: 100,
+      taskRole: topicsTaskRole,
+    });
+    const topicsContainer = topicsTaskDefinition.addContainer('MlTopicsContainer', {
+      image: ecs.ContainerImage.fromEcrRepository(mlEcr.repository, 'latest'),
+      logging: ecs.LogDriver.awsLogs({ streamPrefix: 'topics', logGroup }),
+      environment: {
+        ML_RUNS_BUCKET: runsBucket,
+        ML_LIVE_BUCKET: runsBucket,
+        AWS_REGION: stack.region,
+        // Bedrock in the stack's own region (us-east-2).
+        ML_BEDROCK_REGION: stack.region,
+        ML_BEDROCK_MODEL_ID: props.config.bedrockModelId,
+        ML_BEDROCK_FALLBACK_MODEL_ID: props.config.bedrockFallbackModelId,
+      },
     });
 
     // ---------------------------------------------------------------------------------------------
@@ -461,24 +523,26 @@ export class MlPipeline extends Construct {
       return state;
     };
 
+    // onError null: no catch, for states inside the Parallel below. Those can't transition out of
+    // their branch; an error fails the branch, and the Parallel's own catch takes it from there.
     const invoke = (
       stateId: string,
       payload: { [key: string]: unknown },
       resultPath: string = sfn.JsonPath.DISCARD,
-      onError: sfn.IChainable = recordFailure,
-    ) =>
-      guard(
-        new tasks.LambdaInvoke(this, stateId, {
-          lambdaFunction: pipelineFunction,
-          payloadResponseOnly: true,
-          payload: sfn.TaskInput.fromObject(payload),
-          resultPath,
-        }),
-        onError,
-      );
+      onError: sfn.IChainable | null = recordFailure,
+    ) => {
+      const state = new tasks.LambdaInvoke(this, stateId, {
+        lambdaFunction: pipelineFunction,
+        payloadResponseOnly: true,
+        payload: sfn.TaskInput.fromObject(payload),
+        resultPath,
+      });
+      return onError ? guard(state, onError) : state;
+    };
 
     // Records the stage the run is entering on its RetrainTask.
-    const step = (stateId: string, name: string) => invoke(stateId, { action: 'step', runId, step: name });
+    const step = (stateId: string, name: string, onError: sfn.IChainable | null = recordFailure) =>
+      invoke(stateId, { action: 'step', runId, step: name }, sfn.JsonPath.DISCARD, onError);
 
     // Routes to RecordFailure with an error of our own.
     const failWith = (stateId: string, error: string, cause: string) =>
@@ -507,6 +571,7 @@ export class MlPipeline extends Construct {
         }),
       );
 
+    // Inside the Parallel, so no catch of its own (see invoke).
     const gpuStage = (stateId: string, pythonModule: string, timeout: Duration) => {
       const state = new tasks.EcsRunTask(this, stateId, {
         integrationPattern: sfn.IntegrationPattern.RUN_JOB,
@@ -531,7 +596,7 @@ export class MlPipeline extends Construct {
         maxAttempts: 6,
         backoffRate: 1,
       });
-      return guard(state);
+      return state;
     };
 
     // Promote `target`, then poll its recommender until every response reports the new version.
@@ -646,18 +711,44 @@ export class MlPipeline extends Construct {
     const packageModel = gpuStage('Package', 'ccml.package', Duration.hours(2));
     packageModel.addRetry({ errors: ['States.TaskFailed'], interval: Duration.minutes(2), maxAttempts: 1 });
 
+    // Archetype topics only need the processed data, not the model, so they run alongside training.
+    // No catch of its own (inside the Parallel, see invoke).
+    const topics = new tasks.EcsRunTask(this, 'Topics', {
+      integrationPattern: sfn.IntegrationPattern.RUN_JOB,
+      cluster,
+      taskDefinition: topicsTaskDefinition,
+      launchTarget: new tasks.EcsFargateLaunchTarget({ platformVersion: ecs.FargatePlatformVersion.LATEST }),
+      subnets: { subnets },
+      assignPublicIp: usePublicSubnets,
+      securityGroups: [cpuSecurityGroup],
+      containerOverrides: [
+        { containerDefinition: topicsContainer, command: ['python', '-m', 'ccml.topics'], environment: runIdOverride },
+      ],
+      taskTimeout: sfn.Timeout.duration(Duration.hours(3)),
+      resultPath: sfn.JsonPath.DISCARD,
+    });
+    topics.addRetry({ errors: ['States.TaskFailed'], interval: Duration.minutes(2), maxAttempts: 1 });
+
+    // Training records its steps on the run; the topics branch records none, so the two branches
+    // never flip the run's step back and forth. If either branch fails, the other is stopped and
+    // the Parallel's catch records the failure. $ comes out unchanged.
+    const trainAndTopics = new sfn.Parallel(this, 'TrainAndTopics', { resultPath: sfn.JsonPath.DISCARD })
+      .branch(
+        sfn.Chain.start(step('StepTraining', 'Training', null))
+          .next(train)
+          .next(step('StepPackaging', 'Packaging', null))
+          .next(packageModel),
+      )
+      .branch(topics);
+    trainAndTopics.addCatch(recordFailure, { resultPath: '$.error' });
+
     const gate = invoke('Gate', { action: 'gate', runId }, '$.gate');
 
     const trainFlow = sfn.Chain.start(step('StepProcessing', 'Processing data'))
       .next(cpuStage('ProcessData', 'ml-process-data', Duration.hours(3)))
-      .next(step('StepTraining', 'Training'))
-      .next(train)
-      .next(step('StepPackaging', 'Packaging'))
-      .next(packageModel)
+      .next(trainAndTopics)
       .next(step('StepEvaluating', 'Evaluating'))
       .next(cpuStage('Evaluate', 'ml-evaluate', Duration.hours(3)))
-      .next(step('StepArchetypes', 'Archetypes'))
-      .next(cpuStage('Archetypes', 'ml-archetypes', Duration.hours(2)))
       .next(step('StepGate', 'Gate'))
       .next(gate)
       .next(

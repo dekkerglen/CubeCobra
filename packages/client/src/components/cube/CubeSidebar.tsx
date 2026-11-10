@@ -24,6 +24,7 @@ import RecordsViewContext from '../../contexts/RecordsViewContext';
 import SettingsViewContext from '../../contexts/SettingsViewContext';
 import UserContext from '../../contexts/UserContext';
 import useStickyPanelHeight from '../../hooks/useStickyPanelHeight';
+import { hasTopicArchetypes } from '../../utils/archetypes';
 import { Flexbox } from '../base/Layout';
 import ScrollShadowContainer from '../base/ScrollShadowContainer';
 
@@ -106,6 +107,7 @@ const getNavigationItems = (cube: Cube, isCubeOwner: boolean, canEdit: boolean):
         { label: 'Tokens', key: 'tokens' },
         { label: 'Keywords', key: 'keywords' },
         { label: 'Combos', key: 'combos' },
+        ...(hasTopicArchetypes() ? [{ label: 'Archetypes', key: 'archetypes' }] : []),
         { label: 'Prices', key: 'prices' },
       ],
     },
@@ -531,6 +533,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                                             'tokens',
                                             'keywords',
                                             'combos',
+                                            'archetypes',
                                             'prices',
                                           ].includes(activeLink))
                                       ) {
@@ -774,6 +777,7 @@ const CubeSidebar: React.FC<CubeSidebarProps> = ({ cube: _cubeProp, activeLink, 
                                 'tokens',
                                 'keywords',
                                 'combos',
+                                'archetypes',
                                 'prices',
                               ].includes(activeLink))
                           ) {
