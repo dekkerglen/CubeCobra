@@ -5,8 +5,6 @@ import Record from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
 
 import { CardBody } from 'components/base/Card';
-import { Flexbox } from 'components/base/Layout';
-import Text from 'components/base/Text';
 import CubeContext from 'contexts/CubeContext';
 
 import RecordAllDecks from './RecordAllDecks';
@@ -27,21 +25,15 @@ const RecordDecks: React.FC<RecordDecksProps> = ({ record, draft, players, onSel
 
   return (
     <CardBody>
-      {draft ? (
-        <RecordAllDecks
-          record={record}
-          draft={draft}
-          players={players}
-          canEdit={canEdit}
-          onSelectPlayer={onSelectPlayer}
-        />
-      ) : (
-        <Flexbox direction="col" gap="4">
-          <Text sm className="text-text-secondary">
-            No draft data available for this record.
-          </Text>
-        </Flexbox>
-      )}
+      {/* RecordAllDecks handles a record with no draft itself, listing each player as deckless
+          with their own upload link — the same thing it shows for a draft nobody has filled in. */}
+      <RecordAllDecks
+        record={record}
+        draft={draft}
+        players={players}
+        canEdit={canEdit}
+        onSelectPlayer={onSelectPlayer}
+      />
     </CardBody>
   );
 };

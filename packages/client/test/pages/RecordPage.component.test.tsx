@@ -519,14 +519,35 @@ describe('RecordPage', () => {
     expect(screen.queryByText('No decks have been uploaded to this record yet.')).not.toBeInTheDocument();
   });
 
-  it('says the Decks tab has nothing to show when the record has no draft', () => {
-    // Review Focus 5
+  /*
+   * A record carries no draft at all until its first deck upload, so this — not the empty-draft
+   * case above — is the state every new record is in. It used to render a flat "No draft data
+   * available for this record.", naming an entity the owner never sees and offering nothing to
+   * act on. Same treatment as the empty draft: a player with no deck is a player with no deck.
+   */
+  it('lists every player on the Decks tab when the record has no draft at all', () => {
     renderPage(true, baseRecord, null);
     fireEvent.click(screen.getByRole('button', { name: 'Decks' }));
 
-    // The Players tab (still mounted, just hidden) says the same thing about itself, so this
-    // checks for at least one rather than exactly one.
-    expect(screen.getAllByText('No draft data available for this record.').length).toBeGreaterThan(0);
+    const cards = screen.getAllByText('No deck yet').map((text) => text.closest('div.border') as HTMLElement);
+    expect(cards).toHaveLength(2);
+    expect(within(cards[0]).getByRole('link', { name: 'Upload a deck for Alice' })).toBeInTheDocument();
+    expect(within(cards[1]).getByRole('link', { name: 'Upload a deck for Bob' })).toBeInTheDocument();
+    expect(screen.queryByText('No draft data available for this record.')).not.toBeInTheDocument();
+  });
+
+  /*
+   * The Players tab's panel describes one player and offers that player their own upload link,
+   * so it says so whether or not a draft exists. It used to fall back to a record-wide sentence
+   * directly above a button reading "Upload a deck for Bob".
+   */
+  it('keeps the deckless message player-scoped when the record has no draft', () => {
+    renderPage(true, baseRecord, null);
+    fireEvent.click(screen.getByText('Bob'));
+
+    const panel = screen.getByText('No deck has been uploaded for this player yet.').closest('div.p-4')!;
+    expect(within(panel as HTMLElement).getByRole('link', { name: 'Upload a deck for Bob' })).toBeInTheDocument();
+    expect(screen.queryByText('No draft data available for this record.')).not.toBeInTheDocument();
   });
 
   it('offers no By Player / Full Draft switch anywhere', () => {

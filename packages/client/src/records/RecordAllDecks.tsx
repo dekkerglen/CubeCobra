@@ -11,7 +11,9 @@ import { deckPiles, DeckStacksStatic } from 'components/DeckCard';
 
 interface RecordAllDecksProps {
   record: Record;
-  draft: Draft;
+  // Absent until the first deck upload creates one, which is the state every new record starts
+  // in. Treated as "no player has a deck" rather than as a tab with nothing to say.
+  draft?: Draft;
   players: User[];
   // Jump to the Players tab, focused on this player's single-deck view. Crosses tabs rather
   // than switching a local sub-view, since Players and Decks are separate tabs now.
@@ -59,9 +61,9 @@ const RecordAllDecks: React.FC<RecordAllDecksProps> = ({ record, draft, players,
     () =>
       record.players
         .map((player, index) => {
-          const seat = draft.seats[index];
+          const seat = draft?.seats[index];
           const piles = deckPiles(seat?.mainboard);
-          const cardCount = piles.flat(3).filter((cardIndex) => draft.cards[cardIndex]).length;
+          const cardCount = piles.flat(3).filter((cardIndex) => draft?.cards[cardIndex]).length;
           return { player, index, seat, piles, cardCount };
         })
         .filter((deck) => deck.cardCount > 0),
@@ -90,25 +92,28 @@ const RecordAllDecks: React.FC<RecordAllDecksProps> = ({ record, draft, players,
 
   return (
     <Flexbox direction="col" gap="4">
-      {decks.map(({ player, index, seat, piles, cardCount }) => (
-        <Flexbox key={index} direction="col" gap="2" className={CARD_CLASS}>
-          <PlayerHeading record={record} player={player} user={linkedUser(player.userId)}>
-            {/* The generated archetype name ("WU Flyers"), when the seat has one. */}
-            {seat?.name && (
+      {/* `draft &&` is the type narrowing, not a second condition: no draft means no seats to
+          read, so `decks` is already empty here. */}
+      {draft &&
+        decks.map(({ player, index, seat, piles, cardCount }) => (
+          <Flexbox key={index} direction="col" gap="2" className={CARD_CLASS}>
+            <PlayerHeading record={record} player={player} user={linkedUser(player.userId)}>
+              {/* The generated archetype name ("WU Flyers"), when the seat has one. */}
+              {seat?.name && (
+                <Text sm className="text-text-secondary">
+                  {seat.name}
+                </Text>
+              )}
               <Text sm className="text-text-secondary">
-                {seat.name}
+                {cardCount} cards
               </Text>
-            )}
-            <Text sm className="text-text-secondary">
-              {cardCount} cards
-            </Text>
-            <Link onClick={() => onSelectPlayer(index)}>View deck</Link>
-            {canEdit && <Link href={`/draft/deckbuilder/${draft.id}?seat=${index}`}>Edit</Link>}
-          </PlayerHeading>
-          {/* p-0: the section around it already supplies the padding. */}
-          <DeckStacksStatic piles={piles} cards={draft.cards} className="p-0" />
-        </Flexbox>
-      ))}
+              <Link onClick={() => onSelectPlayer(index)}>View deck</Link>
+              {canEdit && <Link href={`/draft/deckbuilder/${draft.id}?seat=${index}`}>Edit</Link>}
+            </PlayerHeading>
+            {/* p-0: the section around it already supplies the padding. */}
+            <DeckStacksStatic piles={piles} cards={draft.cards} className="p-0" />
+          </Flexbox>
+        ))}
       {withoutDecks.map(({ player, index }) => (
         <Flexbox key={index} direction="col" gap="2" className={CARD_CLASS}>
           <PlayerHeading record={record} player={player} user={linkedUser(player.userId)}>

@@ -331,8 +331,10 @@ const RecordPlayersContent: React.FC<RecordPlayersProps> = ({
             </>
           ) : (
             <Flexbox direction="col" gap="2">
+              {/* Player-scoped whether or not a draft exists, to match the upload link below it.
+                  A record with no draft is simply one where nobody has a deck yet. */}
               <Text sm className="text-text-secondary">
-                {draft ? 'No deck has been uploaded for this player yet.' : 'No draft data available for this record.'}
+                No deck has been uploaded for this player yet.
               </Text>
               {isOwner && <Link href={uploadDeckHref}>{uploadDeckLabel}</Link>}
             </Flexbox>
