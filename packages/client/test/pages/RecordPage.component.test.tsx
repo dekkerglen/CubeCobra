@@ -377,13 +377,14 @@ describe('RecordPage', () => {
   it('aligns the record-level actions to the right', () => {
     renderPage(true);
 
-    const exportLink = screen.getByRole('link', { name: 'Export Record' });
+    // Export Record moved into the overflow menu, so what shares this row is Edit Record and
+    // the menu's own trigger.
     const editRecordLink = screen.getByRole('link', { name: 'Edit Record' });
+    const header = screen.getByText('Tuesday Night').closest('div.p-4')! as HTMLElement;
+    const moreTrigger = within(header).getByText('More');
 
-    const exportParent = exportLink.closest('[class*="flex"]') || exportLink.parentElement;
-    const editRecordParent = editRecordLink.closest('[class*="flex"]') || editRecordLink.parentElement;
-
-    expect(exportParent).toBe(editRecordParent);
+    const editRecordRow = editRecordLink.closest('[class*="flex-row"]');
+    expect(moreTrigger.closest('[class*="flex-row"]')).toBe(editRecordRow);
   });
 
   it('orders the header title, date, actions, then description', () => {
@@ -393,14 +394,9 @@ describe('RecordPage', () => {
     renderPage(true, { ...baseRecord, description: 'Eight players, three rounds' });
 
     const header = screen.getByText('Tuesday Night').closest('div.p-4')!;
-    const order = [
-      'Tuesday Night',
-      'View Seating',
-      'Collect Decks',
-      'Export Record',
-      'Edit Record',
-      'Eight players, three rounds',
-    ].map((text) => header.textContent!.indexOf(text));
+    const order = ['Tuesday Night', 'View Seating', 'Collect Decks', 'Edit Record', 'Eight players, three rounds'].map(
+      (text) => header.textContent!.indexOf(text),
+    );
 
     expect(order.every((index) => index >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
@@ -409,9 +405,14 @@ describe('RecordPage', () => {
   it('offers a non-owner Export Record but neither Collect Decks nor Edit Record', () => {
     renderPage(false);
 
-    expect(screen.queryByText('Collect Decks')).not.toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: 'Edit Record' })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Export Record' })).toBeInTheDocument();
+    // Scoped to the header: the deck controls have a "More" of their own, so an unscoped
+    // lookup opens that one instead and finds nothing it was looking for.
+    const header = screen.getByText('Tuesday Night').closest('div.p-4')! as HTMLElement;
+    expect(within(header).queryByText('Collect Decks')).not.toBeInTheDocument();
+    expect(within(header).queryByRole('link', { name: 'Edit Record' })).not.toBeInTheDocument();
+
+    fireEvent.click(within(header).getByText('More'));
+    expect(within(header).getByRole('link', { name: 'Export Record' })).toBeInTheDocument();
   });
 
   /*
@@ -438,18 +439,12 @@ describe('RecordPage', () => {
     it('keeps the record-level actions in their own row, apart from the event stages', () => {
       renderPage(true, baseRecord, null);
 
-      expect(within(header()).getByRole('link', { name: 'Export Record' })).toHaveAttribute(
-        'href',
-        '/cube/records/export/cube-1?record=rec-1',
-      );
-      expect(within(header()).getByRole('link', { name: 'Edit Record' })).toHaveAttribute(
-        'href',
-        '/cube/records/enter/rec-1',
-      );
+      const h = header();
+      expect(within(h).getByRole('link', { name: 'Edit Record' })).toHaveAttribute('href', '/cube/records/enter/rec-1');
 
       // The stages are buttons; the record-level actions are links in a separate row.
-      const exportRow = within(header()).getByRole('link', { name: 'Export Record' }).parentElement;
-      expect(within(header()).getByRole('button', { name: 'Seating' }).parentElement).not.toBe(exportRow);
+      const editRow = within(h).getByRole('link', { name: 'Edit Record' }).parentElement;
+      expect(within(h).getByRole('button', { name: 'Seating' }).parentElement).not.toBe(editRow);
     });
 
     // Export is also the label of the cube hero's own button, which is on screen at the same
@@ -457,22 +452,39 @@ describe('RecordPage', () => {
     it('names the record export so it cannot be read as the cube export', () => {
       renderPage(true);
 
+      fireEvent.click(within(header()).getByText('More'));
+      expect(within(header()).getByRole('link', { name: 'Export Record' })).toHaveAttribute(
+        'href',
+        '/cube/records/export/cube-1?record=rec-1',
+      );
       expect(within(header()).queryByRole('link', { name: 'Export' })).not.toBeInTheDocument();
     });
 
-    it('offers Delete Record behind the header overflow, marked destructive', () => {
+    it('offers Delete Record behind the header overflow, marked destructive, below Export', () => {
       renderPage(true);
 
       expect(within(header()).queryByText('Delete Record')).not.toBeInTheDocument();
 
       fireEvent.click(within(header()).getByText('More'));
+      const menu = within(header()).getByText('Delete Record').parentElement!;
       expect(within(header()).getByText('Delete Record')).toHaveClass('!text-danger');
+
+      // Destructive last, after the one anybody can use.
+      const order = ['Export Record', 'Delete Record'].map((text) => menu.textContent!.indexOf(text));
+      expect(order.every((index) => index >= 0)).toBe(true);
+      expect([...order].sort((a, b) => a - b)).toEqual(order);
     });
 
-    it('offers a non-owner no overflow menu at all', () => {
+    /*
+     * The menu is where Export Record lives, and exporting is the one record-level action open
+     * to anyone — so unlike Edit and Delete the menu itself cannot be owner-gated.
+     */
+    it('gives a non-owner the overflow menu with only the export in it', () => {
       renderPage(false);
 
-      expect(within(header()).queryByText('More')).not.toBeInTheDocument();
+      fireEvent.click(within(header()).getByText('More'));
+      expect(within(header()).getByRole('link', { name: 'Export Record' })).toBeInTheDocument();
+      expect(within(header()).queryByText('Delete Record')).not.toBeInTheDocument();
     });
 
     /*

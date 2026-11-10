@@ -79,38 +79,45 @@ const RecordOverview: React.FC<RecordOverviewProps> = ({ record, draft }) => {
             </Flexbox>
           </Flexbox>
           <Flexbox direction="row" gap="4" wrap="wrap" alignItems="center" className="shrink-0">
-            {/* Named for what it exports: the cube hero's own Export button is on screen at the
-                same time and exports the cube's card list instead. */}
-            <Link href={`/cube/records/export/${record.cube}?record=${encodeURIComponent(record.id)}`} download>
-              Export Record
-            </Link>
             {isOwner && <Link href={`/cube/records/enter/${record.id}`}>Edit Record</Link>}
-            {isOwner && (
-              <Dropdown
-                trigger={
-                  <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
-                    <KebabHorizontalIcon size={16} />
-                    More
-                  </Link>
-                }
-                // These actions sit at the right edge of the card, so the menu hangs from that
-                // edge; aligned left it would open past it.
-                align="right"
-                minWidth="16rem"
-              >
-                <Flexbox direction="col" gap="2" className="p-3">
-                  {/* Behind the menu rather than in the row, so deleting a record is never one
-                      slip from exporting it. Deleting was previously reachable only from the
-                      record list, which meant leaving the record to get rid of it. */}
+            {/* Not owner-gated, unlike everything in it bar the export: exporting is the one
+                record-level action open to anyone, so gating the menu would leave a reader with
+                nothing at all. */}
+            <Dropdown
+              trigger={
+                <Link className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2">
+                  <KebabHorizontalIcon size={16} />
+                  More
+                </Link>
+              }
+              // These actions sit at the right edge of the card, so the menu hangs from that
+              // edge; aligned left it would open past it.
+              align="right"
+              minWidth="16rem"
+            >
+              <Flexbox direction="col" gap="2" className="p-3">
+                {/* Named for what it exports: the cube hero's own Export button is on screen at
+                    the same time and exports the cube's card list instead. */}
+                <Link
+                  className="!text-text hover:!text-link-active hover:cursor-pointer font-medium"
+                  href={`/cube/records/export/${record.cube}?record=${encodeURIComponent(record.id)}`}
+                  download
+                >
+                  Export Record
+                </Link>
+                {/* Last and behind the menu, so deleting a record is never one slip from
+                    exporting it. Deleting was previously reachable only from the record list,
+                    which meant leaving the record to get rid of it. */}
+                {isOwner && (
                   <DeleteRecordLink
                     className="!text-danger hover:!text-link-active hover:cursor-pointer font-medium"
                     modalprops={{ recordId: record.id, redirectTo: `/cube/records/${record.cube}` }}
                   >
                     Delete Record
                   </DeleteRecordLink>
-                </Flexbox>
-              </Dropdown>
-            )}
+                )}
+              </Flexbox>
+            </Dropdown>
           </Flexbox>
         </div>
         {record.description && (
