@@ -406,12 +406,10 @@ describe('RecordPage', () => {
     renderPage(false);
 
     // Scoped to the header: the deck controls have a "More" of their own, so an unscoped
-    // lookup opens that one instead and finds nothing it was looking for.
+    // lookup finds that one instead.
     const header = screen.getByText('Tuesday Night').closest('div.p-4')! as HTMLElement;
     expect(within(header).queryByText('Collect Decks')).not.toBeInTheDocument();
     expect(within(header).queryByRole('link', { name: 'Edit Record' })).not.toBeInTheDocument();
-
-    fireEvent.click(within(header).getByText('More'));
     expect(within(header).getByRole('link', { name: 'Export Record' })).toBeInTheDocument();
   });
 
@@ -476,15 +474,20 @@ describe('RecordPage', () => {
     });
 
     /*
-     * The menu is where Export Record lives, and exporting is the one record-level action open
-     * to anyone — so unlike Edit and Delete the menu itself cannot be owner-gated.
+     * An overflow menu is a promise that there is more behind it. A non-owner's only
+     * record-level action is the export, so for them the menu would be a lid over a single
+     * item — one more click, and one more guess about what is under it, than just showing it.
      */
-    it('gives a non-owner the overflow menu with only the export in it', () => {
+    it('gives a non-owner the export itself rather than a menu holding only the export', () => {
       renderPage(false);
 
-      fireEvent.click(within(header()).getByText('More'));
-      expect(within(header()).getByRole('link', { name: 'Export Record' })).toBeInTheDocument();
-      expect(within(header()).queryByText('Delete Record')).not.toBeInTheDocument();
+      const h = header();
+      expect(within(h).queryByText('More')).not.toBeInTheDocument();
+      expect(within(h).getByRole('link', { name: 'Export Record' })).toHaveAttribute(
+        'href',
+        '/cube/records/export/cube-1?record=rec-1',
+      );
+      expect(within(h).queryByText('Delete Record')).not.toBeInTheDocument();
     });
 
     /*
