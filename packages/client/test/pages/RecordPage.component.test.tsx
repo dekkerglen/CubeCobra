@@ -357,16 +357,14 @@ describe('RecordPage', () => {
   it('still offers the share link and Enter event data', () => {
     renderPage(true);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Decks' }));
-    expect(screen.getByText('Collect Decks')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Collect Decks' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Edit Record' })).toHaveAttribute('href', '/cube/records/enter/rec-1');
   });
 
   it('names the share action Collect Decks', () => {
     renderPage(true);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Decks' }));
-    expect(screen.getByText('Collect Decks')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Collect Decks' })).toBeInTheDocument();
   });
 
   it('offers Edit Record in the menu rather than Enter event data above the tabs', () => {
@@ -389,15 +387,20 @@ describe('RecordPage', () => {
   });
 
   it('orders the header title, date, actions, then description', () => {
-    // jsdom applies no media queries, so the responsive split (actions beside the title from
-    // md up, under the date below it) is verified by measurement in a browser. What is
-    // assertable here is the document order the narrow layout follows directly.
+    // jsdom applies no media queries, so the responsive split (the record-level actions beside
+    // the title from md up, under the stage buttons below it) is verified by measurement in a
+    // browser. What is assertable here is the document order the narrow layout follows directly.
     renderPage(true, { ...baseRecord, description: 'Eight players, three rounds' });
 
     const header = screen.getByText('Tuesday Night').closest('div.p-4')!;
-    const order = ['Tuesday Night', 'Export Record', 'Edit Record', 'Eight players, three rounds'].map((text) =>
-      header.textContent!.indexOf(text),
-    );
+    const order = [
+      'Tuesday Night',
+      'View Seating',
+      'Collect Decks',
+      'Export Record',
+      'Edit Record',
+      'Eight players, three rounds',
+    ].map((text) => header.textContent!.indexOf(text));
 
     expect(order.every((index) => index >= 0)).toBe(true);
     expect([...order].sort((a, b) => a - b)).toEqual(order);
@@ -412,10 +415,16 @@ describe('RecordPage', () => {
   });
 
   /*
-   * The header used to carry two stages of running an event (Seating, Collect Decks) alongside
-   * the two things you do to a record as an object. Those are different kinds of action with
-   * different audiences — both stages are owner-only, where Export is not — so each stage moved
-   * to the tab holding the thing it acts on, the way Record Matches already lives on Matches.
+   * The header carries two kinds of thing. Running an event is a sequence of stages, each one
+   * owner-only and used once; exporting and editing are things done to a record as an object,
+   * one of them by anyone. The stages were briefly moved onto the tab holding what each acts
+   * on, which buried them: a right-aligned text link inside a tab is not where anyone looks for
+   * the first thing they have to do. They are buttons under the name instead, where the record
+   * identifies itself, and the record-level actions keep the quieter row opposite.
+   *
+   * Record Matches stays on its own tab. It is the one stage used repeatedly rather than once,
+   * while looking at the matches it creates, and it is already the Matches empty state's own
+   * action — moving it up would empty that state again.
    */
   describe('record actions', () => {
     const header = () => screen.getByText('Tuesday Night').closest('div.p-4')! as HTMLElement;
@@ -426,8 +435,8 @@ describe('RecordPage', () => {
       return document.querySelector('div.max-w-full.block') as HTMLElement;
     };
 
-    it('keeps the header to actions that apply to the record as a whole', () => {
-      renderPage(true);
+    it('keeps the record-level actions in their own row, apart from the event stages', () => {
+      renderPage(true, baseRecord, null);
 
       expect(within(header()).getByRole('link', { name: 'Export Record' })).toHaveAttribute(
         'href',
@@ -437,10 +446,10 @@ describe('RecordPage', () => {
         'href',
         '/cube/records/enter/rec-1',
       );
-      // Both moved to their own tab; each is still somewhere in the document, since every tab
-      // panel stays mounted.
-      expect(within(header()).queryByText('Collect Decks')).not.toBeInTheDocument();
-      expect(within(header()).queryByText('Seating')).not.toBeInTheDocument();
+
+      // The stages are buttons; the record-level actions are links in a separate row.
+      const exportRow = within(header()).getByRole('link', { name: 'Export Record' }).parentElement;
+      expect(within(header()).getByRole('button', { name: 'Seating' }).parentElement).not.toBe(exportRow);
     });
 
     // Export is also the label of the cube hero's own button, which is on screen at the same
@@ -466,10 +475,28 @@ describe('RecordPage', () => {
       expect(within(header()).queryByText('More')).not.toBeInTheDocument();
     });
 
-    it('puts the seating action on the Players tab', () => {
+    /*
+     * Seating comes first and is the one an organiser is looking for before anything else has
+     * happened, so it is the filled button and Collect Decks the quieter one beside it.
+     */
+    it('offers the event stages as buttons under the record name', () => {
       renderPage(true, baseRecord, null);
 
-      expect(within(tabPanel('Players')).getByRole('button', { name: 'Seating' })).toBeInTheDocument();
+      const h = header();
+      expect(within(h).getByRole('button', { name: 'Seating' })).toHaveClass('bg-button-primary');
+      expect(within(h).getByRole('button', { name: 'Collect Decks' })).toHaveClass('bg-button-secondary');
+
+      // Under the name and date rather than beside them, and ahead of the description.
+      const order = ['Tuesday Night', 'Seating', 'Collect Decks'].map((text) => h.textContent!.indexOf(text));
+      expect(order.every((index) => index >= 0)).toBe(true);
+      expect([...order].sort((a, b) => a - b)).toEqual(order);
+    });
+
+    it('leaves the tabs themselves free of the stage actions', () => {
+      renderPage(true, baseRecord, null);
+
+      expect(within(tabPanel('Players')).queryByRole('button', { name: 'Seating' })).not.toBeInTheDocument();
+      expect(within(tabPanel('Decks')).queryByText('Collect Decks')).not.toBeInTheDocument();
     });
 
     /*
@@ -480,16 +507,10 @@ describe('RecordPage', () => {
     it('still shows the seating for a played draft, which cannot be rearranged', () => {
       renderPage(true);
 
-      const players = tabPanel('Players');
-      expect(within(players).queryByRole('button', { name: 'Seating' })).not.toBeInTheDocument();
-      expect(within(players).getByRole('button', { name: 'View Seating' })).toBeInTheDocument();
-      expect(within(players).getByRole('button', { name: 'Add Players' })).toBeInTheDocument();
-    });
-
-    it('puts Collect Decks on the Decks tab', () => {
-      renderPage(true);
-
-      expect(within(tabPanel('Decks')).getByText('Collect Decks')).toBeInTheDocument();
+      const h = header();
+      expect(within(h).queryByRole('button', { name: 'Seating' })).not.toBeInTheDocument();
+      expect(within(h).getByRole('button', { name: 'View Seating' })).toBeInTheDocument();
+      expect(within(h).getByRole('button', { name: 'Add Players' })).toBeInTheDocument();
     });
 
     /*
@@ -500,11 +521,12 @@ describe('RecordPage', () => {
     it('lets a non-owner see the seating without offering to change it', () => {
       renderPage(false, baseRecord, null);
 
-      const players = tabPanel('Players');
-      expect(within(players).queryByRole('button', { name: 'Seating' })).not.toBeInTheDocument();
-      expect(within(players).queryByRole('button', { name: 'Add Players' })).not.toBeInTheDocument();
+      const h = header();
+      expect(within(h).queryByRole('button', { name: 'Seating' })).not.toBeInTheDocument();
+      expect(within(h).queryByRole('button', { name: 'Add Players' })).not.toBeInTheDocument();
+      expect(within(h).queryByText('Collect Decks')).not.toBeInTheDocument();
 
-      fireEvent.click(within(players).getByRole('button', { name: 'View Seating' }));
+      fireEvent.click(within(h).getByRole('button', { name: 'View Seating' }));
 
       const dialog = screen.getByRole('dialog');
       expect(within(dialog).getByText('Alice')).toBeInTheDocument();

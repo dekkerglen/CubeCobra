@@ -115,7 +115,7 @@ const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players })
         <RoundClockBanner record={liveRecord} serverOffset={serverOffset} onClockAction={clockAction} />
         <Card className="my-2">
           {/* Overview is no longer a tab — it lives at the top of the page. */}
-          <RecordOverview record={record} />
+          <RecordOverview record={record} draft={draft} />
           <TabbedView
             activeTab={activeTabIndex}
             tabs={tabs.map((tab) => ({
