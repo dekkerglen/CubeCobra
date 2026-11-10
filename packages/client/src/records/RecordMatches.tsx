@@ -310,7 +310,23 @@ const RecordMatches: React.FC<RecordMatchesProps> = ({ record, setMatches, serve
             </button>
           </div>
         )}
-        {matches.length === 0 && <Text sm>{'No matches have been recorded for this record yet.'}</Text>}
+        {matches.length === 0 ? (
+          /* The empty state the other tabs use: muted text with its one action directly
+             beneath it. The button lived in the right-aligned control row below, which is
+             right once that row has Show Pairings and Finish Tournament in it, but with
+             nothing else there it put the sentence and the thing to do about it at opposite
+             corners of an otherwise blank card. */
+          <Flexbox direction="col" gap="2" alignItems="start">
+            <Text sm className="text-text-secondary">
+              No matches have been recorded for this record yet.
+            </Text>
+            {canEdit && !finished && (
+              <AddRoundLink color="primary" modalprops={{ record }}>
+                Record Matches
+              </AddRoundLink>
+            )}
+          </Flexbox>
+        ) : null}
         {finished && (
           <div className="flex flex-wrap items-center justify-between gap-3 rounded-md border border-border bg-bg-accent px-4 py-3">
             <span className="flex items-center gap-2">
@@ -329,17 +345,15 @@ const RecordMatches: React.FC<RecordMatchesProps> = ({ record, setMatches, serve
             )}
           </div>
         )}
-        {(canEdit || matches.length > 0) && (
+        {(canEdit || matches.length > 0) && matches.length > 0 && (
           <Flexbox direction="row" gap="2" justify="end" wrap="wrap">
-            {matches.length > 0 && (
-              <Button color="secondary" outline onClick={() => setShowPairings(true)}>
-                <span className="flex items-center gap-2">
-                  <ScreenFullIcon size={16} />
-                  Show Pairings
-                </span>
-              </Button>
-            )}
-            {canEdit && !finished && matches.length > 0 && !readyForNextRound && (
+            <Button color="secondary" outline onClick={() => setShowPairings(true)}>
+              <span className="flex items-center gap-2">
+                <ScreenFullIcon size={16} />
+                Show Pairings
+              </span>
+            </Button>
+            {canEdit && !finished && !readyForNextRound && (
               <FinishTournamentLink color="secondary" outline modalprops={{ record }}>
                 Finish Tournament
               </FinishTournamentLink>
@@ -349,10 +363,7 @@ const RecordMatches: React.FC<RecordMatchesProps> = ({ record, setMatches, serve
               // here since then decide the next round's pairings. Quieter while the prompt below
               // the rounds offers the same thing as the obvious next step.
               <AddRoundLink color="primary" outline={readyForNextRound} modalprops={{ record }}>
-                {/* No status field backs this label — it is purely a function of matches.length,
-                    so a record that has never opened a round offers to record its matches, and
-                    one that has offers to add another round. */}
-                {matches.length === 0 ? 'Record Matches' : 'Add Round'}
+                Add Round
               </AddRoundLink>
             )}
           </Flexbox>

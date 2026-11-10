@@ -570,8 +570,11 @@ describe('RecordPage', () => {
   it('keeps Add Players for an empty record that a played draft is attached to', () => {
     renderPage(true, emptyPlayersRecord);
 
-    expect(screen.getByText('No players have been added to this record yet.')).toBeInTheDocument();
+    const message = screen.getByText('No players have been added to this record yet.');
+    expect(message).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Add Players' })).toBeInTheDocument();
+    // Muted like every other empty tab; this one read as full-strength body copy.
+    expect(message.className).toContain('text-text-secondary');
   });
 
   describe('setting the table', () => {
@@ -1131,6 +1134,37 @@ describe('RecordPage', () => {
       // The label is a function of matches.length, not a stored status — there is none.
       expect(screen.getByRole('button', { name: 'Record Matches' })).toBeInTheDocument();
       expect(screen.queryByRole('button', { name: 'Add Round' })).not.toBeInTheDocument();
+    });
+
+    /**
+     * Every other empty tab says its piece in muted text and offers its one action directly
+     * beneath it, left-aligned: Decks ("No decks have been uploaded…" then "Upload a deck to
+     * this record"), Players ("No players have been added…" then "Add Players"). Matches read
+     * as full-strength body copy with its button alone on a second row against the right edge,
+     * so the sentence and the thing to do about it were at opposite corners of the card.
+     */
+    it('presents its empty state the way the other tabs do', () => {
+      renderPage(true, noRoundsRecord);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      const message = screen.getByText('No matches have been recorded for this record yet.');
+      expect(message.className).toContain('text-text-secondary');
+
+      // The action sits with the message, not in the right-aligned row the other controls use.
+      const action = screen.getByRole('button', { name: 'Record Matches' });
+      const group = message.parentElement!;
+      expect(group).toContainElement(action);
+      expect(group.className).not.toContain('justify-end');
+    });
+
+    // Once there are rounds, the controls go back to the right-aligned row they share with
+    // Show Pairings and Finish Tournament — this is an empty-state treatment, not a move.
+    it('keeps Add Round in the right-aligned control row once a round exists', () => {
+      renderPage(true, baseRecord);
+      fireEvent.click(screen.getByRole('button', { name: 'Matches' }));
+
+      const addRound = screen.getByRole('button', { name: 'Add Round' });
+      expect(addRound.closest('div.justify-end')).not.toBeNull();
     });
 
     it('lets the first round be paired across the table or at random', () => {

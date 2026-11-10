@@ -198,7 +198,9 @@ const RecordPlayersContent: React.FC<RecordPlayersProps> = ({
     return (
       <CardBody>
         <Flexbox direction="col" gap="2" alignItems="start">
-          <Text sm>No players have been added to this record yet.</Text>
+          <Text sm className="text-text-secondary">
+            No players have been added to this record yet.
+          </Text>
           {isOwner && (
             <AddPlayersButton color="primary" modalprops={{ record }}>
               Add Players
