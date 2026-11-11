@@ -25,6 +25,11 @@ interface IndefinitePaginatedTableProps<T> {
   itemsKey?: string;
   header: string;
   headers: string[];
+  // Headers whose column is dropped below md, passed through to Table.
+  hideOnMobile?: string[];
+  // Rendered in the header beside the pager, for an action that belongs to the whole list
+  // rather than to one of its rows.
+  headerActions?: React.ReactNode;
   inCard?: boolean;
 }
 
@@ -40,6 +45,8 @@ const IndefinitePaginatedTable = <T,>({
   noneMessage = 'No items found.',
   itemsKey = 'items',
   headers,
+  hideOnMobile,
+  headerActions,
   inCard = false,
 }: IndefinitePaginatedTableProps<T>) => {
   const { callApi } = useContext(CSRFContext);
@@ -89,7 +96,11 @@ const IndefinitePaginatedTable = <T,>({
   const body =
     safeItems.length > 0 ? (
       <Flexbox direction="col" gap="2">
-        <Table headers={headers} rows={safeItems.slice(page * pageSize, (page + 1) * pageSize).map(renderItem)} />
+        <Table
+          headers={headers}
+          hideOnMobile={hideOnMobile}
+          rows={safeItems.slice(page * pageSize, (page + 1) * pageSize).map(renderItem)}
+        />
         <Flexbox direction="row" justify="end" alignItems="center" className="w-full">
           {pager}
         </Flexbox>
@@ -107,7 +118,10 @@ const IndefinitePaginatedTable = <T,>({
           <Text lg semibold>
             {header}
           </Text>
-          {pager}
+          <Flexbox direction="row" gap="3" alignItems="center">
+            {headerActions}
+            {pager}
+          </Flexbox>
         </Flexbox>
         {body}
       </Flexbox>
@@ -117,11 +131,14 @@ const IndefinitePaginatedTable = <T,>({
   return (
     <Card>
       <CardHeader>
-        <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
+        <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap" className="w-full">
           <Text lg semibold>
             {header}
           </Text>
-          {pager}
+          <Flexbox direction="row" gap="3" alignItems="center">
+            {headerActions}
+            {pager}
+          </Flexbox>
         </Flexbox>
       </CardHeader>
       <CardBody>{body}</CardBody>

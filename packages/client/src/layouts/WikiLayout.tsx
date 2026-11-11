@@ -74,7 +74,7 @@ interface WikiLayoutProps {
 const WikiLayout: React.FC<WikiLayoutProps> = ({ tree, activeSlug, searchQuery = '', children }) => (
   <MainLayout useContainer={false}>
     <div className="w-full px-4 py-4">
-      <Flexbox direction="row" gap="4" className="md:flex-row flex-col">
+      <Flexbox direction="col" gap="4" className="md:flex-row">
         <div className="md:w-64 md:flex-shrink-0 min-w-0">
           <div className="md:sticky md:top-4">
             <a href="/wiki" className="flex items-center gap-2 px-2 py-2 text-text">

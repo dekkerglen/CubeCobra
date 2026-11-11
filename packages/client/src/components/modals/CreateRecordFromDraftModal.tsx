@@ -19,7 +19,7 @@ import {
   hasIndefiniteMore,
 } from 'utils/indefinitePagination';
 
-import { defaultRecordName } from '../../records/recordName';
+import { defaultRecordName } from '@utils/records/recordName';
 import { Modal, ModalBody, ModalFooter, ModalHeader } from '../base/Modal';
 
 interface CreateRecordFromDraftModalProps {

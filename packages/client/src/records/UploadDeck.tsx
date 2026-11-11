@@ -3,14 +3,14 @@ import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } 
 import { detailsToCard } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
 import Record from '@utils/datatypes/Record';
+import { DecklistBoard, parseDecklist } from '@utils/decklistParsing';
 
 import Alert, { UncontrolledAlertProps } from 'components/base/Alert';
 import AutocompleteInput from 'components/base/AutocompleteInput';
 import Button from 'components/base/Button';
 import Checkbox from 'components/base/Checkbox';
-import Collapse from 'components/base/Collapse';
 import Input from 'components/base/Input';
-import { Flexbox } from 'components/base/Layout';
+import { Col, Flexbox, Row } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Text from 'components/base/Text';
 import TextArea from 'components/base/TextArea';
@@ -19,13 +19,35 @@ import BasicsModal from 'components/modals/BasicsModal';
 import { CSRFContext } from 'contexts/CSRFContext';
 import { cardNameMatches, cubeCardNameMatches } from 'utils/cardAutocomplete';
 import { getCard } from 'utils/cards/getCard';
+import { getCards } from 'utils/cards/getCards';
 
 // Select sentinel for "add a new player inline" (vs. an existing player index).
 export const NEW_PLAYER = -1;
 
+// Section markers written back into the textarea alongside lines that failed to resolve, so a
+// retried paste keeps each line on the board it was parsed onto. Both round-trip through
+// parseDecklist.
+const BOARD_MARKER_LINES: { [board in DecklistBoard]: string } = {
+  mainboard: 'Mainboard',
+  sideboard: 'Sideboard',
+};
+
 interface UploadDeckProps {
   selectedUser: number;
   setSelectedUser: (userId: number) => void;
+  // Whose deck this is, as a picker. A surface that already binds the editor to one player —
+  // the transcription workspace renders one per row — answers that question by its position,
+  // so it turns the picker off rather than asking again.
+  showPlayerPicker?: boolean;
+  // Rendered at the end of the editor's own heading line. The transcription workspace puts
+  // its remove-player control here rather than on a line of its own.
+  controlsExtra?: React.ReactNode;
+  // Names what this editor is, for a surface where it is one section among several rather
+  // than the whole page.
+  heading?: string;
+  // Rendered below the single-card controls in the left column. The photo scanner is a third
+  // way to enter the same deck, so a caller that shows it belongs beside the other two.
+  photoScanner?: React.ReactNode;
   // Optional: when provided, an inline "+ Add new player" option is offered.
   newPlayerName?: string;
   setNewPlayerName?: (name: string) => void;
@@ -40,11 +62,22 @@ interface UploadDeckProps {
   setSideboardCards: React.Dispatch<React.SetStateAction<CardDetails[]>>;
   setAlerts: React.Dispatch<React.SetStateAction<UncontrolledAlertProps[]>>;
   cubeId: string;
+  // Optional: when provided, the pasted text and the lines that failed to resolve live in
+  // the caller instead of here, so they survive this editor being unmounted. A surface that
+  // owns a whole page has no need for them and keeps the local state below.
+  decklistText?: string;
+  setDecklistText?: (text: string) => void;
+  parseErrors?: string[];
+  setParseErrors?: (errors: string[]) => void;
 }
 
 const UploadDeck: React.FC<UploadDeckProps> = ({
   selectedUser,
   setSelectedUser,
+  showPlayerPicker = true,
+  controlsExtra,
+  heading,
+  photoScanner,
   newPlayerName,
   setNewPlayerName,
   renamePlayer,
@@ -56,16 +89,26 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
   setSideboardCards,
   setAlerts,
   cubeId,
+  decklistText: controlledDecklistText,
+  setDecklistText: setControlledDecklistText,
+  parseErrors: controlledParseErrors,
+  setParseErrors: setControlledParseErrors,
 }) => {
   const [allowCardsOutsideOfCube, setAllowCardsOutsideOfCube] = useState<boolean>(false);
-  const [addToSideboard, setAddToSideboard] = useState<boolean>(false);
+  // Which board everything on this surface lands on — one typed card, a modal of basics, or a
+  // paste with no section marker of its own. Shared by both columns, so it sits above them.
+  const [targetBoard, setTargetBoard] = useState<DecklistBoard>('mainboard');
+  const addToSideboard = targetBoard === 'sideboard';
   const { csrfFetch } = useContext(CSRFContext);
   const removeRef = useRef<HTMLInputElement>(null);
   const [cardNameValue, setCardNameValue] = useState<string>('');
-  const [decklistText, setDecklistText] = useState<string>('');
-  const [parseErrors, setParseErrors] = useState<string[]>([]);
+  const [localDecklistText, setLocalDecklistText] = useState<string>('');
+  const [localParseErrors, setLocalParseErrors] = useState<string[]>([]);
+  const decklistText = controlledDecklistText ?? localDecklistText;
+  const setDecklistText = setControlledDecklistText ?? setLocalDecklistText;
+  const parseErrors = controlledParseErrors ?? localParseErrors;
+  const setParseErrors = setControlledParseErrors ?? setLocalParseErrors;
   const [isParsing, setIsParsing] = useState<boolean>(false);
-  const [showPasteForm, setShowPasteForm] = useState<boolean>(false);
   // The cube's basic lands, fed to the same Add Basic Lands modal the deckbuilder
   // uses. They live on their own board, so they're absent from the cube autocomplete
   // and tedious to type a mana base out of.
@@ -160,7 +203,10 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
     [csrfFetch, setAlerts, setMainboardCards, setSideboardCards, addToSideboard],
   );
 
-  const parseDecklist = useCallback(
+  // Pasted decklists go through the same line parser the cube bulk importer uses, so quantities,
+  // set codes and collector numbers are handled identically, and "Sideboard" style section markers
+  // split the paste across boards. Every name is resolved in one request.
+  const handleParseDecklist = useCallback(
     async (text: string) => {
       if (!text.trim()) {
         return;
@@ -169,176 +215,277 @@ const UploadDeck: React.FC<UploadDeckProps> = ({
       setIsParsing(true);
       setParseErrors([]);
 
-      const lines = text.match(/[^\r\n]+/g) || [];
-      const errors: string[] = [];
-      const erroredLines: string[] = [];
-      const cardsToAdd: CardDetails[] = [];
+      // Unmarked lines are mainboard. The board selector belongs to the single-card field
+      // and the basics beside it; a paste says where its own cards go, and the overwhelming
+      // majority of exported lists open with the maindeck.
+      const defaultBoard: DecklistBoard = 'mainboard';
 
-      for (const line of lines) {
-        const item = line.toLowerCase().trim();
-        if (!item) continue;
+      // Comment lines ("// Lands", as Cockatrice and TappedOut emit) parse as card lines. Drop them
+      // rather than reporting them as cards that couldn't be found.
+      const entries = parseDecklist(text, defaultBoard).filter((entry) => !entry.name.startsWith('//'));
 
-        // Parse quantity (e.g., "2x cardname" or "2 cardname")
-        const numericMatch = item.match(/([0-9]+)x?\s+(.*)/);
-        const cardName = numericMatch ? numericMatch[2] : item;
-        const quantity = numericMatch ? parseInt(numericMatch[1], 10) : 1;
+      if (entries.length === 0) {
+        // Nothing but markers and comments: say so rather than silently emptying the box.
+        setParseErrors(['Could not find any cards in the pasted text.']);
+        setIsParsing(false);
+        return;
+      }
 
-        try {
-          const card = await getCard(csrfFetch, '', cardName, setAlerts);
-          if (card) {
-            // Add the card 'quantity' times
-            for (let i = 0; i < quantity; i++) {
-              cardsToAdd.push(card);
+      try {
+        const resolved = await getCards(
+          csrfFetch,
+          '',
+          entries.map((entry) => entry.name),
+        );
+
+        const errors: string[] = [];
+        const erroredLines: string[] = [];
+        const mainboardToAdd: CardDetails[] = [];
+        const sideboardToAdd: CardDetails[] = [];
+        // The board the retained text is sitting in as it's rebuilt. Markers are re-emitted whenever
+        // it changes, so a retried paste routes its surviving lines to the boards they came from.
+        let retainedBoard: DecklistBoard = defaultBoard;
+
+        entries.forEach((entry, index) => {
+          const card = resolved[index];
+          if (!card) {
+            errors.push(`Could not find card: "${entry.line}"`);
+            if (entry.board !== retainedBoard) {
+              erroredLines.push(BOARD_MARKER_LINES[entry.board]);
+              retainedBoard = entry.board;
             }
-          } else {
-            errors.push(`Could not find card: "${line}"`);
-            erroredLines.push(line);
+            erroredLines.push(entry.line);
+            return;
           }
-        } catch {
-          errors.push(`Error parsing line: "${line}"`);
-          erroredLines.push(line);
+
+          const board = entry.board === 'sideboard' ? sideboardToAdd : mainboardToAdd;
+          for (let i = 0; i < entry.count; i++) {
+            board.push(card);
+          }
+        });
+
+        if (mainboardToAdd.length > 0) {
+          setMainboardCards((prevCards) => [...prevCards, ...mainboardToAdd]);
         }
+        if (sideboardToAdd.length > 0) {
+          setSideboardCards((prevCards) => [...prevCards, ...sideboardToAdd]);
+        }
+
+        setParseErrors(errors);
+        // Keep only errored lines in the textarea, so the paste can be fixed up and retried.
+        setDecklistText(erroredLines.join('\n'));
+      } catch (e) {
+        console.error(e);
+        // The paste is left alone so it can be retried once the lookup works again.
+        setParseErrors(['Could not look these cards up. Please try again.']);
+      } finally {
+        setIsParsing(false);
       }
-
-      // Add all found cards to the appropriate list
-      if (addToSideboard) {
-        setSideboardCards((prevCards) => [...prevCards, ...cardsToAdd]);
-      } else {
-        setMainboardCards((prevCards) => [...prevCards, ...cardsToAdd]);
-      }
-
-      setParseErrors(errors);
-      setIsParsing(false);
-
-      // Keep only errored lines in the textarea
-      setDecklistText(erroredLines.join('\n'));
     },
-    [csrfFetch, setAlerts, setMainboardCards, setSideboardCards, addToSideboard],
+    [csrfFetch, setMainboardCards, setSideboardCards, setDecklistText, setParseErrors],
   );
 
   return (
     <>
-      <Select
-        value={`${selectedUser}`}
-        setValue={(value) => {
-          const userId = parseInt(value, 10);
-          setSelectedUser(userId);
-          const player = record.players[userId - 1];
-          setRenamePlayer?.(player ? (player.userId ? `@${player.name}` : player.name) : '');
-        }}
-        label="Upload deck for player"
-        options={[
-          { value: '0', label: 'Select a player' },
-          ...record.players.map((player, index) => ({
-            value: `${index + 1}`,
-            label: player.name,
-          })),
-          ...(setNewPlayerName ? [{ value: `${NEW_PLAYER}`, label: '+ Add new player' }] : []),
-        ]}
-      />
-      {selectedUser === NEW_PLAYER && setNewPlayerName && (
-        <Input
-          type="text"
-          value={newPlayerName ?? ''}
-          onChange={(e) => setNewPlayerName(e.target.value)}
-          placeholder="New player name"
-          autoComplete="off"
-        />
-      )}
-      {selectedUser > 0 && setRenamePlayer && (
-        <Input
-          type="text"
-          label="Name on this record (fix a misspelling, or use @username to link your account)"
-          value={renamePlayer ?? ''}
-          onChange={(e) => setRenamePlayer(e.target.value)}
-          placeholder="Player name"
-          autoComplete="off"
-        />
-      )}
-      <Flexbox direction="row" justify="start" gap="2">
-        <Checkbox
-          label="Use Cards Outside of Cube"
-          checked={allowCardsOutsideOfCube}
-          setChecked={(value) => setAllowCardsOutsideOfCube(value)}
-        />
-        <Checkbox label="Add to Sideboard" checked={addToSideboard} setChecked={(value) => setAddToSideboard(value)} />
-      </Flexbox>
-      <Flexbox direction="row" justify="start" gap="2">
-        <AutocompleteInput
-          cubeId={cubeId}
-          getMatches={allowCardsOutsideOfCube ? cardNameMatches(false, true) : cubeCardNameMatches(cubeId, 'mainboard')}
-          type="text"
-          innerRef={removeRef}
-          name="remove"
-          value={cardNameValue}
-          setValue={setCardNameValue}
-          onSubmit={(e, val) => handleAdd(e, val!)}
-          placeholder={addToSideboard ? 'Card to Add to Sideboard' : 'Card to Add to Mainboard'}
-          autoComplete="off"
-          data-lpignore
-          className="square-right"
-        />
-        <Button color="primary" disabled={cardNameValue.length === 0} onClick={(e) => handleAdd(e, cardNameValue)}>
-          <span className="text-nowrap">Add Cards</span>
-        </Button>
-        {basicDetails.length > 0 && (
-          <>
-            <Button color="accent" onClick={() => setBasicsOpen(true)}>
-              <span className="text-nowrap">Add Basic Lands</span>
-            </Button>
-            {/* Rendered only once the basics have loaded: the modal seeds its per-land
-                counts from this list on mount. */}
-            <BasicsModal
-              isOpen={basicsOpen}
-              setOpen={setBasicsOpen}
-              addBasics={handleAddBasics}
-              deck={basicsModalDeck}
-              basics={basicsModalBasics}
-              cards={basicsModalCards}
+      {/* Choosing who the deck belongs to is a separate step from entering it, so it gets its
+          own block with a rule under it rather than running straight into the card fields.
+          Absent entirely in the transcription workspace, where the row already names the
+          player — which is why the spacing lives here and not on the section around it. */}
+      {showPlayerPicker && (
+        <Flexbox direction="col" gap="2" className="pb-4 mb-2 border-b border-border">
+          <Select
+            value={`${selectedUser}`}
+            setValue={(value) => {
+              const userId = parseInt(value, 10);
+              setSelectedUser(userId);
+              const player = record.players[userId - 1];
+              setRenamePlayer?.(player ? (player.userId ? `@${player.name}` : player.name) : '');
+            }}
+            id="upload-deck-player"
+            label="Select Player"
+            options={[
+              { value: '0', label: 'Select a player' },
+              ...record.players.map((player, index) => ({
+                value: `${index + 1}`,
+                label: player.name,
+              })),
+              ...(setNewPlayerName ? [{ value: `${NEW_PLAYER}`, label: '+ Add new player' }] : []),
+            ]}
+          />
+          {selectedUser === NEW_PLAYER && setNewPlayerName && (
+            <Input
+              type="text"
+              value={newPlayerName ?? ''}
+              onChange={(e) => setNewPlayerName(e.target.value)}
+              placeholder="New player name"
+              autoComplete="off"
             />
-          </>
-        )}
-      </Flexbox>
-      <Button color="accent" onClick={() => setShowPasteForm(!showPasteForm)} block className="mt-2">
-        {showPasteForm ? 'Hide' : 'Show'} Paste Decklist
-      </Button>
+          )}
+          {selectedUser > 0 && setRenamePlayer && (
+            <Input
+              type="text"
+              label="Name on this record (fix a misspelling, or use @username to link your account)"
+              value={renamePlayer ?? ''}
+              onChange={(e) => setRenamePlayer(e.target.value)}
+              placeholder="Player name"
+              autoComplete="off"
+            />
+          )}
+        </Flexbox>
+      )}
+      {(heading || controlsExtra) && (
+        <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
+          {heading ? <Text semibold>{heading}</Text> : <span />}
+          {controlsExtra}
+        </Flexbox>
+      )}
+      {/* Two ways in, side by side from md up rather than stacked: typing cards one at a time
+          and pasting a list are alternatives, and stacking them buried the paste box below a
+          fold while leaving both at a width neither needs. One above the other below md,
+          where neither is wide enough to use side by side.
+          A Row rather than a Flexbox with a `flex-col` className: Flexbox emits `flex-row`
+          from its direction prop, which wins in the cascade, so that override never applied
+          and this stayed two squeezed columns at every width. */}
+      <Row xs={1} md={2} className="items-stretch">
+        <Col xs={1} md={1} className="min-w-0">
+          <Flexbox direction="col" gap="2">
+            <Text sm semibold>
+              Add Card
+            </Text>
+            <Flexbox direction="row" justify="start" gap="2">
+              <AutocompleteInput
+                cubeId={cubeId}
+                getMatches={
+                  allowCardsOutsideOfCube ? cardNameMatches(false, true) : cubeCardNameMatches(cubeId, 'mainboard')
+                }
+                type="text"
+                innerRef={removeRef}
+                name="remove"
+                value={cardNameValue}
+                setValue={setCardNameValue}
+                onSubmit={(e, val) => handleAdd(e, val!)}
+                placeholder={addToSideboard ? 'Card to Add to Sideboard' : 'Card to Add to Mainboard'}
+                autoComplete="off"
+                data-lpignore
+                className="square-right"
+              />
+              <Button
+                color="primary"
+                disabled={cardNameValue.length === 0}
+                onClick={(e) => handleAdd(e, cardNameValue)}
+              >
+                <span className="text-nowrap">Add</span>
+              </Button>
+            </Flexbox>
+            {/* Directly under the field it filters. It changes what this autocomplete offers
+              and nothing else — a name typed in full is resolved against the whole catalogue
+              either way, as are a pasted list and a scanned photo — so on a line of shared
+              controls it read as governing all three. */}
+            {/* Under the field it serves, not on a line of its own above both columns, where
+              it looked like it governed the paste box and the scanner too. It does not: the
+              scanner routes per card from its own checkboxes, and a paste is routed by its
+              own section markers. It sets the board for a typed card and for the basics
+              below. Fixed width, because a control that resizes to its value moves
+              everything beside it. */}
+            <Flexbox direction="row" justify="start" gap="3" alignItems="end" wrap="wrap">
+              <div className="w-40 shrink-0">
+                <Select
+                  id="upload-deck-board"
+                  label="Board"
+                  value={targetBoard}
+                  setValue={(value) => setTargetBoard(value as DecklistBoard)}
+                  options={[
+                    { value: 'mainboard', label: 'Mainboard' },
+                    { value: 'sideboard', label: 'Sideboard' },
+                  ]}
+                />
+              </div>
+              {/* The Select carries a label above its box and the checkbox does not, so
+                bottom-aligning the two leaves the checkbox sitting ~7px below the Select's
+                centre line. This lifts it back onto it. */}
+              <div className="pb-1.5">
+                <Checkbox
+                  label="Show Cards not in Cube"
+                  checked={allowCardsOutsideOfCube}
+                  setChecked={(value) => setAllowCardsOutsideOfCube(value)}
+                />
+              </div>
+            </Flexbox>
+            {/* Adding basics and scanning a photo are not steps after typing a card name;
+              they are two more ways to fill the same deck. */}
+            {basicDetails.length > 0 && (
+              <>
+                <Button className="mt-4" color="accent" onClick={() => setBasicsOpen(true)}>
+                  <span className="text-nowrap">Add Basic Lands</span>
+                </Button>
+                {/* Rendered only once the basics have loaded: the modal seeds its per-land
+                  counts from this list on mount. */}
+                <BasicsModal
+                  isOpen={basicsOpen}
+                  setOpen={setBasicsOpen}
+                  addBasics={handleAddBasics}
+                  deck={basicsModalDeck}
+                  basics={basicsModalBasics}
+                  cards={basicsModalCards}
+                />
+              </>
+            )}
+            {/* Space rather than a rule: these are three ways to fill the same deck, and a
+              line across the column shouted a separation that a gap states quietly. */}
+            {/* A flex column, so the scanner's button fills the column the way the one above
+              it does rather than shrinking to its label. */}
+            {photoScanner && <div className="mt-4 flex flex-col">{photoScanner}</div>}
+          </Flexbox>
+        </Col>
 
-      <Collapse isOpen={showPasteForm}>
-        <Flexbox direction="col" gap="2" className="mt-2">
-          <Text sm>Acceptable formats: one card per line, or with quantity like "2x Island"</Text>
-          <TextArea
-            value={decklistText}
-            onChange={(e) => setDecklistText(e.target.value)}
-            placeholder={`Paste your decklist here...
+        <Col xs={1} md={1} className="min-w-0">
+          <Flexbox direction="col" gap="2">
+            <Text sm semibold>
+              Paste a decklist
+            </Text>
+            <Text sm className="text-text-secondary">
+              One card per line, with an optional quantity like &quot;2x Island&quot;. Lines go to the mainboard until a
+              &quot;Sideboard&quot; line, which sends everything below it to the sideboard.
+            </Text>
+            <TextArea
+              value={decklistText}
+              onChange={(e) => setDecklistText(e.target.value)}
+              placeholder={`Paste your decklist here...
 
 e.g.:
 2x Lightning Bolt
 4 Island
-Counterspell`}
-            rows={8}
-          />
-          <Button
-            color="primary"
-            disabled={!decklistText.trim() || isParsing}
-            onClick={() => parseDecklist(decklistText)}
-            block
-          >
-            {isParsing ? 'Parsing...' : `Parse and Add to ${addToSideboard ? 'Sideboard' : 'Mainboard'}`}
-          </Button>
-          {parseErrors.length > 0 && (
-            <Alert color="warning">
-              <Text semibold>Could not parse the following lines:</Text>
-              <ul className="mb-0">
-                {parseErrors.map((error, index) => (
-                  <li key={index}>
-                    <Text sm>{error}</Text>
-                  </li>
-                ))}
-              </ul>
-            </Alert>
-          )}
-        </Flexbox>
-      </Collapse>
+Counterspell
+
+Sideboard
+2 Pyroblast`}
+              rows={8}
+            />
+            <Button
+              color="primary"
+              disabled={!decklistText.trim() || isParsing}
+              onClick={() => handleParseDecklist(decklistText)}
+              block
+            >
+              {/* Not "Add to Mainboard": a list carrying its own section markers is split
+                across both boards, which is the Draftmancer export this exists for. */}
+              {isParsing ? 'Parsing...' : 'Parse and Add'}
+            </Button>
+            {parseErrors.length > 0 && (
+              <Alert color="warning">
+                <Text semibold>Could not parse the following lines:</Text>
+                <ul className="mb-0">
+                  {parseErrors.map((error, index) => (
+                    <li key={index}>
+                      <Text sm>{error}</Text>
+                    </li>
+                  ))}
+                </ul>
+              </Alert>
+            )}
+          </Flexbox>
+        </Col>
+      </Row>
       {mainboardCards.length > 0 && (
         <>
           <Text sm semibold>

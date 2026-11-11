@@ -19,18 +19,20 @@ import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 
 import UploadDeck, { NEW_PLAYER } from '../records/UploadDeck';
-import UploadDeckFromPhoto from '../records/UploadDeckFromPhoto';
+import ScanDeckPhotoButton from '../records/ScanDeckPhotoButton';
 
 interface RecordUploadDeckPageProps {
   cube: Cube;
   record: Record;
   draft?: Draft;
+  // 1-based player index to open with selected, matching `selectedUser` below.
+  initialPlayerIndex?: number;
 }
 
-const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, record, draft }) => {
+const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, record, draft, initialPlayerIndex }) => {
   const user = useContext(UserContext);
   const formRef = createRef<HTMLFormElement>();
-  const [selectedUser, setSelectedUser] = useState<number>(0);
+  const [selectedUser, setSelectedUser] = useState<number>(initialPlayerIndex ?? 0);
   // Default a new player to the uploader's linked account (a leading @ links it
   // to their CubeCobra account server-side).
   const [newPlayerName, setNewPlayerName] = useState<string>(user?.username ? `@${user.username}` : '');
@@ -71,13 +73,15 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
           </CardHeader>
           <CardBody>
             <Flexbox direction="col" gap="2">
-              <UploadDeckFromPhoto
-                cube={cube}
-                setMainboardCards={setMainboardCards}
-                setSideboardCards={setSideboardCards}
-                setAlerts={setAlerts}
-              />
               <UploadDeck
+                photoScanner={
+                  <ScanDeckPhotoButton
+                    cube={cube}
+                    setMainboardCards={setMainboardCards}
+                    setSideboardCards={setSideboardCards}
+                    setAlerts={setAlerts}
+                  />
+                }
                 selectedUser={selectedUser}
                 setSelectedUser={setSelectedUser}
                 newPlayerName={newPlayerName}
@@ -95,11 +99,6 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
                   {message}
                 </Alert>
               ))}
-              {disabledExplanation && (
-                <Alert color="warning" className="mt-2">
-                  {disabledExplanation}
-                </Alert>
-              )}
               <CSRFForm
                 method="POST"
                 action={`/cube/records/uploaddeck/${record.id}`}
@@ -120,6 +119,16 @@ const RecordUploadDeckPage: React.FC<RecordUploadDeckPageProps> = ({ cube, recor
                   Upload
                 </LoadingButton>
               </CSRFForm>
+              {/* Why Upload is disabled, as quiet text under the button rather than a warning
+                  banner. It describes live form state, not an event to acknowledge: on arrival
+                  "no cards added yet" is simply what the page looks like before you have done
+                  anything, and a dismissable banner could be shut once and then never report
+                  the reason that actually mattered. */}
+              {disabledExplanation && (
+                <Text sm className="text-text-secondary text-center">
+                  {disabledExplanation}
+                </Text>
+              )}
             </Flexbox>
           </CardBody>
         </Card>

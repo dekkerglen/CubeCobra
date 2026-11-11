@@ -8,6 +8,9 @@ import Input from 'components/base/Input';
 
 const clearButton = () => screen.queryByRole('button', { name: 'Clear' });
 
+// The input sits inside a `relative` div inside the outer wrapper.
+const wrapperOf = (input: HTMLElement) => input.parentElement!.parentElement!;
+
 describe('Input clear button', () => {
   it('does not render a clear button when onClear is omitted', () => {
     render(<Input value="abc" onChange={jest.fn()} />);
@@ -100,5 +103,34 @@ describe('Input clear button', () => {
 
     expect(clearButton()).not.toHaveClass('hover:text-text');
     expect(clearButton()).toHaveClass('text-text-secondary');
+  });
+});
+
+describe('Input wrapper width', () => {
+  it('wraps in block w-full by default', () => {
+    render(<Input value="abc" onChange={jest.fn()} />);
+
+    expect(wrapperOf(screen.getByRole('textbox'))).toHaveClass('block', 'w-full');
+  });
+
+  it('replaces the wrapper classes when wrapperClassName is given', () => {
+    render(<Input value="abc" onChange={jest.fn()} wrapperClassName="w-20" />);
+
+    const wrapper = wrapperOf(screen.getByRole('textbox'));
+
+    expect(wrapper).toHaveClass('w-20');
+    expect(wrapper).not.toHaveClass('w-full');
+  });
+
+  it('still applies className to the inner input, not the wrapper', () => {
+    const { rerender } = render(<Input value="abc" onChange={jest.fn()} className="text-center" />);
+
+    expect(screen.getByRole('textbox')).toHaveClass('text-center');
+    expect(wrapperOf(screen.getByRole('textbox'))).not.toHaveClass('text-center');
+
+    rerender(<Input value="abc" onChange={jest.fn()} className="text-center" wrapperClassName="w-20" />);
+
+    expect(screen.getByRole('textbox')).toHaveClass('text-center');
+    expect(wrapperOf(screen.getByRole('textbox'))).not.toHaveClass('text-center');
   });
 });

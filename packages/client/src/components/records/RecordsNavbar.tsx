@@ -1,61 +1,51 @@
-import React, { useContext, useRef } from 'react';
+import React, { useContext } from 'react';
 
-import { DownloadIcon, PlusIcon, UploadIcon } from '@primer/octicons-react';
+import { ChecklistIcon, ChevronDownIcon, FileIcon, PlayIcon, PlusIcon, UploadIcon } from '@primer/octicons-react';
 import { getCubeId } from '@utils/Util';
 
+import Dropdown from 'components/base/Dropdown';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import ResponsiveDiv from 'components/base/ResponsiveDiv';
-import CSRFForm from 'components/CSRFForm';
 import CreateRecordFromDraftModal from 'components/modals/CreateRecordFromDraftModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
 
-import { defaultRecordName } from '../../records/recordName';
-
 const navItemClass =
   'flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer px-2';
 
+// Everything inside the menu builds a record from something that already exists. They are
+// each rarer than the two ways to start one from nothing, and three of them in the same row
+// made six undifferentiated links out of what is really two choices and a menu.
+const menuItemClass = 'flex items-center gap-2 !text-link hover:!text-link-active font-medium cursor-pointer';
+
 const FromDraftLink = withModal(Link, CreateRecordFromDraftModal);
 
-// One click: POST a record with today's date + a default name, server redirects
-// straight to the new record.
-const CreateNewRecordButton: React.FC<{ cubeId: string }> = ({ cubeId }) => {
-  const formRef = useRef<HTMLFormElement>(null);
+// Both creation paths link to the wizard rather than posting anything. The wizard's own form
+// creates the record on submit, so opening either and abandoning it leaves no orphaned record
+// behind — unlike a click-time POST, which created one the moment the button was pressed.
+const StartEventLink: React.FC<{ cubeId: string }> = ({ cubeId }) => (
+  <Link href={`/cube/records/create/${cubeId}`} className={navItemClass}>
+    <PlayIcon size={16} />
+    <ResponsiveDiv baseVisible md>
+      Start Event
+    </ResponsiveDiv>
+    <ResponsiveDiv md>Start an Event</ResponsiveDiv>
+  </Link>
+);
 
-  // Build the record when the button is pressed rather than during render. `new Date()` in
-  // render is impure, and the previous version baked the render-time date into a hidden input,
-  // so a page left open overnight would have created a record dated the day before.
-  const handleClick = () => {
-    const form = formRef.current;
-    if (!form) {
-      return;
-    }
-
-    const now = new Date();
-    const recordInput = form.elements.namedItem('record') as HTMLInputElement | null;
-    if (recordInput) {
-      recordInput.value = JSON.stringify({ name: defaultRecordName(now), date: now.valueOf() });
-    }
-
-    form.submit();
-  };
-
-  return (
-    <>
-      <button type="button" className={navItemClass} onClick={handleClick}>
-        <PlusIcon size={16} />
-        <ResponsiveDiv baseVisible md>
-          New Record
-        </ResponsiveDiv>
-        <ResponsiveDiv md>Create New Record</ResponsiveDiv>
-      </button>
-      <div className="hidden">
-        <CSRFForm method="POST" action={`/cube/records/create/${cubeId}`} formData={{ record: '' }} ref={formRef} />
-      </div>
-    </>
-  );
-};
+// Straight to the transcription workspace, which collects a record's name, date and
+// description in its own Event details card — the three things a wizard in front of it would
+// have asked for. Nothing is created until that page's first Save.
+const InputFinishedEventLink: React.FC<{ cubeId: string }> = ({ cubeId }) => (
+  <Link href={`/cube/records/enter/new/${cubeId}`} className={navItemClass}>
+    <ChecklistIcon size={16} />
+    <ResponsiveDiv baseVisible md>
+      Input Event
+    </ResponsiveDiv>
+    <ResponsiveDiv md>Input Finished Event</ResponsiveDiv>
+  </Link>
+);
 
 const RecordsNavbar: React.FC = () => {
   const { cube, canEdit } = useContext(CubeContext);
@@ -64,50 +54,48 @@ const RecordsNavbar: React.FC = () => {
     return null;
   }
 
-  // Exporting is open to anyone who can see the cube; everything else needs edit rights.
-  const exportLink = (
-    <a href={`/cube/records/export/${getCubeId(cube)}`} download className={navItemClass}>
-      <DownloadIcon size={16} />
-      <ResponsiveDiv baseVisible md>
-        Export
-      </ResponsiveDiv>
-      <ResponsiveDiv md>Export All Records</ResponsiveDiv>
-    </a>
-  );
-
+  // Exporting moved into the Draft Reports card's own header: it acts on the list, not on
+  // this row of ways to add to it. Nothing else here is open to a reader, so for one there is
+  // no row to show.
   if (!canEdit) {
-    return (
-      <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2" wrap="wrap">
-        {exportLink}
-      </Flexbox>
-    );
+    return null;
   }
 
   return (
     <Flexbox direction="row" gap="2" alignItems="center" justify="start" className="px-2" wrap="wrap">
-      <CreateNewRecordButton cubeId={getCubeId(cube)} />
-      <FromDraftLink className={navItemClass} modalprops={{ cube }}>
-        <PlusIcon size={16} />
-        <ResponsiveDiv baseVisible md>
-          From Draft
-        </ResponsiveDiv>
-        <ResponsiveDiv md>Create from Draft</ResponsiveDiv>
-      </FromDraftLink>
-      <Link href={`/cube/records/hedron/${getCubeId(cube)}`} className={navItemClass}>
-        <UploadIcon size={16} />
-        <ResponsiveDiv baseVisible md>
-          Hedron
-        </ResponsiveDiv>
-        <ResponsiveDiv md>Import from Hedron Network</ResponsiveDiv>
-      </Link>
-      <Link href={`/cube/records/importfile/${getCubeId(cube)}`} className={navItemClass}>
-        <UploadIcon size={16} />
-        <ResponsiveDiv baseVisible md>
-          Import
-        </ResponsiveDiv>
-        <ResponsiveDiv md>Import from File</ResponsiveDiv>
-      </Link>
-      {exportLink}
+      <StartEventLink cubeId={getCubeId(cube)} />
+      <InputFinishedEventLink cubeId={getCubeId(cube)} />
+      <Dropdown
+        align="left"
+        minWidth="16rem"
+        trigger={
+          <Link className={navItemClass}>
+            <PlusIcon size={16} />
+            <ResponsiveDiv baseVisible md>
+              Existing
+            </ResponsiveDiv>
+            <ResponsiveDiv md>From an existing event</ResponsiveDiv>
+            <ChevronDownIcon size={16} />
+          </Link>
+        }
+      >
+        <Flexbox direction="col" gap="3" className="p-3">
+          <FromDraftLink className={menuItemClass} modalprops={{ cube }}>
+            <PlayIcon size={16} />
+            Create from Draft
+          </FromDraftLink>
+          <Link href={`/cube/records/hedron/${getCubeId(cube)}`} className={menuItemClass}>
+            <UploadIcon size={16} />
+            Import from Hedron Network
+          </Link>
+          <Link href={`/cube/records/importfile/${getCubeId(cube)}`} className={menuItemClass}>
+            {/* Its own icon: sharing UploadIcon with Hedron made the two indistinguishable at
+                the glance an icon exists for. */}
+            <FileIcon size={16} />
+            Import from File
+          </Link>
+        </Flexbox>
+      </Dropdown>
     </Flexbox>
   );
 };

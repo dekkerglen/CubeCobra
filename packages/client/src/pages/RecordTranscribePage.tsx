@@ -1,0 +1,668 @@
+import React, { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+
+import Cube from '@utils/datatypes/Cube';
+import Draft from '@utils/datatypes/Draft';
+import Record, { PlayerList, Round, WinLossDraw } from '@utils/datatypes/Record';
+import User from '@utils/datatypes/User';
+import { SectionBaselines, SectionKey } from '@utils/records/recordSections';
+import classNames from 'classnames';
+
+import Alert, { UncontrolledAlertProps } from 'components/base/Alert';
+import Button from 'components/base/Button';
+import { Card, CardBody, CardHeader } from 'components/base/Card';
+import { Flexbox } from 'components/base/Layout';
+import Link from 'components/base/Link';
+import Text from 'components/base/Text';
+import DynamicFlash from 'components/DynamicFlash';
+import RenderToRoot from 'components/RenderToRoot';
+import { CSRFContext } from 'contexts/CSRFContext';
+import CubeLayout from 'layouts/CubeLayout';
+import MainLayout from 'layouts/MainLayout';
+import { navigateTo } from 'utils/navigate';
+
+import EditDescription from '../records/EditDescription';
+import { ConflictsAlert, SectionConflictMarker } from '../records/transcribe/SectionConflictNotice';
+import TranscribePlayers from '../records/transcribe/TranscribePlayers';
+import TranscribeRounds, { AddRoundButton, ResultsMode } from '../records/transcribe/TranscribeRounds';
+import {
+  applyPlayerEdit,
+  areSeatsEditable,
+  CardsUpdate,
+  DeckBoard,
+  errorsFor,
+  errorsForAny,
+  fallbackRecord,
+  isDirty,
+  keepLocalSection,
+  keepStoredSection,
+  movePastes,
+  reconcileAfterSave,
+  SaveConflict,
+  seedTranscribeState,
+  setDeckCards,
+  toTranscribePayload,
+  TranscribePaste,
+  TranscribeState,
+  ValidationField,
+  validationErrors,
+} from '../records/transcribe/transcribeState';
+
+interface RecordTranscribePageProps {
+  cube: Cube;
+  record: Record;
+  draft?: Draft;
+  players: User[];
+  // True when the record does not exist yet and the first Save is what creates it. The page
+  // is otherwise identical — the Event details card already collects everything a record
+  // needs to be created with.
+  isNew?: boolean;
+}
+
+interface Workspace {
+  state: TranscribeState;
+  // What the record looked like when it was loaded, or when the last save landed. isDirty
+  // compares against it, so it has to move only when the server has caught up.
+  seeded: TranscribeState;
+}
+
+// A round with no matches in it is a round that has been added but not filled in, which is
+// not yet a transcribed pairing. The results mode is seeded off this, and so is the note
+// telling the user what final-records mode is hiding.
+const anyPairings = (matches: Round[]): boolean => matches.some((round) => round.matches.length > 0);
+
+const RecordTranscribePage: React.FC<RecordTranscribePageProps> = ({ cube, record, draft, players, isNew }) => {
+  const { csrfFetch } = useContext(CSRFContext);
+  // A record that does not exist yet: the first successful save creates it, and from then on
+  // this page behaves like any other workspace. Held in state rather than read from the prop
+  // so the page does not have to reload to stop being new. An empty id is what every branch
+  // below tests, so `isNew` decides it once here rather than being consulted in each of them.
+  const [recordId, setRecordId] = useState<string>(isNew ? '' : record.id);
+  const [workspace, setWorkspace] = useState<Workspace>(() => {
+    const seeded = seedTranscribeState(record, draft);
+    return { state: seeded, seeded };
+  });
+  // The decklist each player's paste box is holding, plus the lines the last parse could not
+  // resolve. Kept here rather than in the deck editor, which is unmounted the moment another
+  // player's row is opened — the retained-errored-lines correction path is the whole reason
+  // that text is still on screen, and collapsing a row must not throw it away.
+  const [pastes, setPastes] = useState<{ [playerIndex: number]: TranscribePaste }>({});
+  const [alerts, setAlerts] = useState<UncontrolledAlertProps[]>([]);
+  const [saveError, setSaveError] = useState<string>('');
+  // Set by "Save & Finish" once its save lands cleanly; the effect below waits for the page to
+  // settle before leaving, so the beforeunload guard is already off.
+  const [finishWhenClean, setFinishWhenClean] = useState(false);
+  const [saving, setSaving] = useState<boolean>(false);
+  // The same flag as a ref, because applyPlayers below is reached from handlers that await a
+  // network lookup before applying: their closures captured `saving` as it was when the edit
+  // was started, which is false even if a save opened while the lookup was outstanding.
+  const savingRef = useRef<boolean>(false);
+  const [savedMessage, setSavedMessage] = useState<string>('');
+  // The sections the last save was refused on, with whatever the server currently holds for
+  // each. Empty whenever nothing is contested — most of the time, and always before a first
+  // save. Resolving one (see keepTheirs/keepMine below) removes it from here, which is also
+  // what makes its marker disappear.
+  const [conflicts, setConflicts] = useState<SaveConflict[]>([]);
+  // Which kind of record is being written down: every pairing, or each player's final record.
+  // It governs the whole page rather than one section, and it is presentation only — both
+  // sides stay in TranscribeState and both are submitted whichever one is on screen. It opens
+  // on whichever side the record already carries, so a standings-only record does not land on
+  // an empty pairings list.
+  const initialResultsMode: ResultsMode =
+    Object.values(record.overrides ?? {}).some(Boolean) && !anyPairings(record.matches ?? []) ? 'records' : 'pairings';
+  const [resultsMode, setResultsMode] = useState<ResultsMode>(initialResultsMode);
+  // The mode the record was loaded in, or the mode the last save landed under. isDirty and
+  // toTranscribePayload both compare an override's current value against the mode this
+  // tracks, not the mode on screen right now — a record that opens in records mode with some
+  // players lacking a stored override must not read as dirty before anything is touched, which
+  // it would if the baseline were synthesized under whatever mode is live instead of the one
+  // it was actually seeded under. It moves to the submitted mode on a successful save, exactly
+  // like `seeded` itself.
+  const [seededResultsMode, setSeededResultsMode] = useState<ResultsMode>(initialResultsMode);
+
+  const { state, seeded } = workspace;
+
+  const updateState = useCallback((update: (previous: TranscribeState) => TranscribeState) => {
+    setWorkspace((previous) => ({ ...previous, state: update(previous.state) }));
+  }, []);
+
+  // The draft answers for the whole record: the state module seeds every seat's editable
+  // flag from exactly this, so a zero-player record cannot drift from its seats.
+  const seatsEditable = areSeatsEditable(draft);
+
+  // The live state as a Record, so the players section can use playerRecord and formatRecord
+  // rather than reimplementing them against TranscribeState.
+  const liveRecord: Record = useMemo(
+    () => ({
+      ...record,
+      name: state.name,
+      date: state.date,
+      description: state.description,
+      players: state.players,
+      matches: state.matches,
+      trophy: state.trophy,
+      overrides: Object.fromEntries(
+        Object.entries(state.overrides).filter(([, value]) => !!value),
+      ) as Record['overrides'],
+    }),
+    [record, state.name, state.date, state.description, state.players, state.matches, state.trophy, state.overrides],
+  );
+
+  const setDeckBoard = useCallback(
+    (playerIndex: number, board: DeckBoard, update: CardsUpdate) =>
+      updateState((previous) => setDeckCards(previous, playerIndex, board, update)),
+    [updateState],
+  );
+
+  const applyPlayers = useCallback(
+    (edited: PlayerList, originSeats: number[]): boolean => {
+      // The one chokepoint every player edit passes through, guarded here rather than only in
+      // the handlers so that an edit cannot land mid-save by any route, including one a future
+      // handler invents. When the save lands the seatOrder is re-based to identity against the
+      // player list the server was sent; a permutation created against the seats it has
+      // already moved would misattribute every deck on the next save. An add is worse still:
+      // it would leave a longer player list than the seatOrder the re-base writes.
+      //
+      // Read from a ref rather than the `saving` state, because an edit that awaited an
+      // @handle lookup applies with the closure it was started in — which captured `saving`
+      // from before the request opened.
+      if (savingRef.current) {
+        return false;
+      }
+      updateState((previous) => applyPlayerEdit(previous, edited, originSeats, seatsEditable));
+      // A pending paste follows its player, exactly as applyPlayerEdit moves their deck.
+      setPastes((previous) => movePastes(previous, originSeats));
+      return true;
+    },
+    [updateState, seatsEditable],
+  );
+
+  const setPasteText = useCallback(
+    (playerIndex: number, text: string) =>
+      setPastes((previous) => ({ ...previous, [playerIndex]: { text, errors: previous[playerIndex]?.errors ?? [] } })),
+    [],
+  );
+
+  const setPasteErrors = useCallback(
+    (playerIndex: number, errors: string[]) =>
+      setPastes((previous) => ({ ...previous, [playerIndex]: { text: previous[playerIndex]?.text ?? '', errors } })),
+    [],
+  );
+
+  // The override lives in this page's state, so the player rows are handed the setter rather
+  // than owning it: a rename re-keys it through applyPlayerEdit, and Save submits it whether
+  // or not the mode that edits it is the one on screen.
+  const setOverride = useCallback(
+    (playerName: string, value: WinLossDraw | undefined) =>
+      updateState((previous) => ({ ...previous, overrides: { ...previous.overrides, [playerName]: value } })),
+    [updateState],
+  );
+
+  const errors = useMemo(() => validationErrors(state), [state]);
+
+  // The mode decides what Save writes — records mode gives every player an explicit record
+  // so nothing falls back to the matches. isDirty is given both the live mode, governing what
+  // each override currently reads as, and the seeded mode, governing what its baseline reads
+  // as — the same mode switch still dirties every override (both sides disagree the moment
+  // the mode itself differs), but a record that has always been in records mode no longer
+  // reads as dirty purely because some player has no stored override.
+  const dirty = useMemo(
+    () => isDirty(state, seeded, resultsMode === 'records', seededResultsMode === 'records'),
+    [state, seeded, resultsMode, seededResultsMode],
+  );
+
+  useEffect(() => {
+    if (!dirty) {
+      return undefined;
+    }
+    const handleBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = '';
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [dirty]);
+
+  const save = useCallback(
+    async ({ finish = false }: { finish?: boolean } = {}) => {
+      const submittedMode = resultsMode;
+      const payload = toTranscribePayload(state, seeded, submittedMode === 'records', seededResultsMode === 'records');
+      setSaving(true);
+      savingRef.current = true;
+      setSaveError('');
+      setSavedMessage('');
+
+      try {
+        // The create-and-save door until the record exists, the ordinary one after.
+        const saveUrl = recordId ? `/cube/records/enter/${recordId}` : `/cube/records/enter/new/${cube.id}`;
+        const response = await csrfFetch(saveUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+        const json = await response.json();
+
+        if (json.success !== 'true') {
+          // The page stays exactly as it is — the whole point of saving over JSON rather than
+          // a redirecting form post is that a rejection costs the user none of their typing.
+          setSaveError(json.message || 'Could not save this record.');
+          return;
+        }
+
+        // The first save of a new record creates it, and the response says under which id. From
+        // here on this is an ordinary workspace: later saves go to that record, and the address
+        // bar is corrected so a refresh reloads what was just created rather than a second blank
+        // one.
+        if (!recordId && typeof json.recordId === 'string' && json.recordId) {
+          setRecordId(json.recordId);
+          window.history.replaceState(null, '', `/cube/records/enter/${json.recordId}`);
+        }
+
+        // A response naming which sections landed is read exactly as it says; one that
+        // doesn't (an older or stubbed endpoint) is read the way a whole-record save always
+        // behaved — everything submitted applied, nothing conflicted.
+        const appliedKeys: SectionKey[] = Array.isArray(json.applied)
+          ? json.applied
+          : (Object.keys(payload.sections) as SectionKey[]);
+        const conflictList: SaveConflict[] = Array.isArray(json.conflicts) ? json.conflicts : [];
+        const responseRecord: SectionBaselines = json.record ?? fallbackRecord(payload.sections);
+
+        setSeededResultsMode(submittedMode);
+        setConflicts(conflictList);
+        setWorkspace((previous) => {
+          const { state: nextState, seeded: nextSeeded } = reconcileAfterSave(
+            previous.state,
+            previous.seeded,
+            appliedKeys,
+            responseRecord,
+          );
+          return { state: nextState, seeded: nextSeeded };
+        });
+        setSavedMessage(
+          conflictList.length > 0
+            ? 'Some sections could not be saved — someone else changed them. Resolve them below.'
+            : 'Record saved.',
+        );
+        // Leaving is deferred to an effect rather than done here: `dirty` is derived from state
+        // this save has only just queued, and the unsaved-changes guard reads it. Navigating in
+        // this tick would prompt the user to confirm leaving a page with nothing outstanding.
+        // Never after a partial save — the sections it refused are still unresolved above.
+        if (finish && conflictList.length === 0) {
+          setFinishWhenClean(true);
+        }
+      } catch {
+        setSaveError('Could not save this record. Please try again.');
+      } finally {
+        savingRef.current = false;
+        setSaving(false);
+      }
+    },
+    [csrfFetch, recordId, cube.id, state, seeded, resultsMode, seededResultsMode],
+  );
+
+  // Both buttons commit the same thing, so they are live and dead together.
+  const saveDisabled = !dirty || saving || errors.length > 0;
+
+  // "Save & Finish" leaves for the record once the save it triggered has settled: nothing
+  // dirty, nothing in flight, and an id to go to. Waiting for `dirty` to clear rather than
+  // navigating from the save itself is what keeps the unsaved-changes guard quiet.
+  useEffect(() => {
+    if (finishWhenClean && !dirty && !saving && recordId) {
+      navigateTo(`/cube/record/${recordId}`);
+    }
+  }, [finishWhenClean, dirty, saving, recordId]);
+
+  // Resolving a conflict this way can immediately satisfy the "clean save" footer condition
+  // (no conflicts left, nothing else dirty) — the message from the save that reported them
+  // must not linger into that success alert and read as if a section is still contested.
+  const clearConflict = useCallback((section: SectionKey) => {
+    setConflicts((previous) => {
+      const next = previous.filter((item) => item.section !== section);
+      if (next.length === 0) {
+        setSavedMessage('');
+      }
+      return next;
+    });
+  }, []);
+
+  // "Keep theirs": the conflicted section's local edit is discarded outright, both sides
+  // taking the server's current value, so it reads clean immediately.
+  const keepTheirs = useCallback(
+    (conflict: SaveConflict) => {
+      setWorkspace((previous) => {
+        const { state: nextState, seeded: nextSeeded } = keepStoredSection(previous.state, previous.seeded, conflict);
+        return { state: nextState, seeded: nextSeeded };
+      });
+      clearConflict(conflict.section);
+    },
+    [clearConflict],
+  );
+
+  // "Keep mine": only the baseline moves — the local edit survives and stays dirty, so the
+  // next Save resubmits it against a baseline that now matches storage, overwriting it.
+  const keepMine = useCallback(
+    (conflict: SaveConflict) => {
+      setWorkspace((previous) => ({
+        ...previous,
+        seeded: keepLocalSection(previous.state, previous.seeded, conflict),
+      }));
+      clearConflict(conflict.section);
+    },
+    [clearConflict],
+  );
+
+  const conflictFor = useCallback(
+    (key: SectionKey) => conflicts.find((conflict) => conflict.section === key),
+    [conflicts],
+  );
+
+  const conflictMarker = (conflict: SaveConflict | undefined) =>
+    conflict && (
+      <SectionConflictMarker
+        conflict={conflict}
+        players={state.players}
+        onKeepTheirs={() => keepTheirs(conflict)}
+        onKeepMine={() => keepMine(conflict)}
+        disabled={saving}
+      />
+    );
+
+  // Validation messages for a whole section, shown at the top of the card that owns them.
+  // Used for the problems that belong to a collection rather than to one input — the roster,
+  // the rounds, a seat's deck — where the message itself names the player or seat.
+  const sectionErrors = (match: (field: ValidationField) => boolean, testId: string) => {
+    const messages = errorsForAny(errors, match);
+    // A plain div rather than Flexbox, which does not forward data-testid.
+    return messages.length > 0 ? (
+      <div data-testid={testId} className="flex flex-col gap-1" role="alert">
+        {messages.map((message) => (
+          <Text sm key={message} className="text-danger">
+            {message}
+          </Text>
+        ))}
+      </div>
+    ) : null;
+  };
+
+  // Everyone the Players card is responsible for: the list itself, the trophy (per-player
+  // data, but one section with no row of its own to sit on), and every per-player override or
+  // deck — each gets its own marker so resolving one never touches the others.
+  const playerSectionConflicts = useMemo(
+    () =>
+      conflicts.filter(
+        (conflict) =>
+          conflict.section === 'players' ||
+          conflict.section === 'trophy' ||
+          conflict.section.startsWith('overrides:') ||
+          conflict.section.startsWith('decks:'),
+      ),
+    [conflicts],
+  );
+
+  return (
+    <MainLayout useContainer={false}>
+      <CubeLayout cube={cube} activeLink="records">
+        <DynamicFlash />
+        <Card className="my-2">
+          <CardHeader>
+            <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
+              <Text lg semibold>
+                {`Enter event data: ${record.name}`}
+              </Text>
+              {/* Nothing to go back to until the first save has made one. */}
+              {recordId && <Link href={`/cube/record/${recordId}`}>Back to the record</Link>}
+            </Flexbox>
+          </CardHeader>
+          <CardBody>
+            <Flexbox direction="col" gap="4">
+              <Text sm className="text-text-secondary">
+                Enter a whole event here — the overview, who played, their decks and how the rounds went. Save as often
+                as you like; Save &amp; Finish commits and takes you to the record.
+              </Text>
+
+              <ConflictsAlert conflicts={conflicts} players={state.players} />
+
+              {/* One card per section. The headings alone said where a section began but
+                  never where it ended, so Players ran into Rounds with nothing between. */}
+              <Card>
+                <CardHeader>
+                  <Text lg semibold>
+                    Event details
+                  </Text>
+                </CardHeader>
+                <CardBody>
+                  <Flexbox direction="col" gap="2">
+                    {conflictMarker(conflictFor('overview'))}
+                    <EditDescription
+                      value={{ name: state.name, date: state.date, description: state.description }}
+                      errors={{
+                        name: errorsFor(errors, 'name')[0],
+                        date: errorsFor(errors, 'date')[0],
+                        description: errorsFor(errors, 'description')[0],
+                      }}
+                      setValue={(value) =>
+                        updateState((previous) => ({
+                          ...previous,
+                          name: value.name ?? '',
+                          // A cleared date field reports undefined. Keeping it as NaN rather than
+                          // falling back to a number leaves it visibly unset and fails validation,
+                          // instead of silently dating the record to the epoch.
+                          date: value.date ?? NaN,
+                          description: value.description ?? '',
+                        }))
+                      }
+                    />
+                  </Flexbox>
+                </CardBody>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <Text lg semibold>
+                    Results
+                  </Text>
+                </CardHeader>
+                <CardBody>
+                  <Flexbox direction="col" gap="2">
+                    {/* The Rounds card below only exists in "Pairings" mode, but a `rounds`
+                        conflict can still be outstanding while viewing "Final records only" —
+                        this is the only resolution control for it, so it must stay reachable
+                        in both modes rather than living inside that conditional card. */}
+                    {conflictMarker(conflictFor('rounds'))}
+                    <Text sm className="text-text-secondary">
+                      Are you transcribing every pairing, or only each player&apos;s final record?
+                    </Text>
+                    <Flexbox direction="row" gap="2" alignItems="center">
+                      {[
+                        { value: 'pairings' as const, label: 'Pairings' },
+                        { value: 'records' as const, label: 'Final records only' },
+                      ].map((option) => (
+                        <button
+                          key={option.value}
+                          type="button"
+                          onClick={() => setResultsMode(option.value)}
+                          // The selected mode is otherwise conveyed by colour alone, and this
+                          // toggle governs whether half the page renders.
+                          aria-pressed={resultsMode === option.value}
+                          className={classNames(
+                            'rounded-full border px-3 py-1 text-sm font-medium transition-colors',
+                            resultsMode === option.value
+                              ? 'border-link bg-bg-active'
+                              : 'border-border hover:bg-bg-active',
+                          )}
+                        >
+                          {option.label}
+                        </button>
+                      ))}
+                    </Flexbox>
+                    {resultsMode === 'records' && anyPairings(state.matches) && (
+                      <Text sm className="text-text-secondary">
+                        Rounds of pairings are hidden in this mode, and ignored: each player&apos;s record is whatever
+                        you type below. They are still recorded, and Save keeps them.
+                      </Text>
+                    )}
+                  </Flexbox>
+                </CardBody>
+              </Card>
+
+              <Card>
+                <CardHeader>
+                  <Text lg semibold>
+                    Players
+                  </Text>
+                </CardHeader>
+                <CardBody>
+                  <Flexbox direction="col" gap="2">
+                    {playerSectionConflicts.map((conflict) => (
+                      <React.Fragment key={conflict.section}>{conflictMarker(conflict)}</React.Fragment>
+                    ))}
+                    {/* Player-roster and deck-size problems, at the top of the section that
+                        owns them. Each message already names the player or seat it is about,
+                        which a footer list could not do without the reader hunting for it. */}
+                    {sectionErrors(
+                      (field) => field === 'players' || field.startsWith('deck:'),
+                      'transcribe-players-errors',
+                    )}
+                    <TranscribePlayers
+                      cube={cube}
+                      record={liveRecord}
+                      draft={draft}
+                      linkedUsers={players}
+                      decks={state.decks}
+                      setDeckBoard={setDeckBoard}
+                      setTrophy={(trophy) => updateState((previous) => ({ ...previous, trophy }))}
+                      resultsMode={resultsMode}
+                      overrides={state.overrides}
+                      setOverride={setOverride}
+                      seatsEditable={seatsEditable}
+                      editsDisabled={saving}
+                      onApplyPlayers={applyPlayers}
+                      pastes={pastes}
+                      setPasteText={setPasteText}
+                      setPasteErrors={setPasteErrors}
+                      setAlerts={setAlerts}
+                    />
+                  </Flexbox>
+                </CardBody>
+              </Card>
+
+              {resultsMode === 'pairings' && (
+                <Card>
+                  <CardHeader>
+                    <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
+                      <Text lg semibold>
+                        Rounds
+                      </Text>
+                      <AddRoundButton
+                        matches={state.matches}
+                        setMatches={(matches) => updateState((previous) => ({ ...previous, matches }))}
+                      />
+                    </Flexbox>
+                  </CardHeader>
+                  <CardBody>
+                    <Flexbox direction="col" gap="2">
+                      {sectionErrors((field) => field === 'rounds', 'transcribe-rounds-errors')}
+                      <TranscribeRounds
+                        players={state.players}
+                        matches={state.matches}
+                        setMatches={(matches) => updateState((previous) => ({ ...previous, matches }))}
+                      />
+                    </Flexbox>
+                  </CardBody>
+                </Card>
+              )}
+
+              {alerts.map(({ color, message }, index) => (
+                <Alert key={index} color={color}>
+                  {message}
+                </Alert>
+              ))}
+            </Flexbox>
+          </CardBody>
+        </Card>
+
+        <div data-testid="transcribe-save-bar" className="sticky bottom-0 z-10 border-t border-border bg-bg p-3">
+          <Flexbox direction="col" gap="2">
+            {/* Status, not notifications: these describe what the bar's own Save button will
+                do, so none of them is dismissable. An Alert here could be shut once — it keeps
+                `visible` per instance and is not keyed by its message — and would then
+                suppress every later message, leaving Save disabled with nothing saying why.
+                Capped and scrollable because the bar is sticky: a long message would
+                otherwise push the record being typed in off the screen. */}
+            {(errors.length > 0 || saveError || savedMessage) && (
+              <div data-testid="transcribe-save-messages" className="max-h-24 overflow-y-auto">
+                <Flexbox direction="col" gap="1">
+                  {/* The problems themselves are shown against the fields and sections they
+                      belong to, where they need no words saying which input they are about.
+                      All the bar owes the reader is why its button is dead, and where to
+                      look — a copy of every message here was an unreadable red wall in a
+                      fixed footer, and still left them matching messages back to fields. */}
+                  {errors.length > 0 && (
+                    <Text sm className="text-text-secondary">
+                      {errors.length === 1
+                        ? 'One problem above to fix before saving.'
+                        : `${errors.length} problems above to fix before saving.`}
+                    </Text>
+                  )}
+                  {saveError && (
+                    <div role="alert">
+                      <Text sm className="text-danger">
+                        {saveError}
+                      </Text>
+                    </div>
+                  )}
+                  {/* Distinguishes a clean save from one that landed only partly — the latter
+                      stays visible regardless of `dirty`, since the sections it refused are, by
+                      definition, still dirty until resolved above. */}
+                  {!saveError && savedMessage && conflicts.length > 0 && (
+                    <Text sm className="text-yellow-600">
+                      {savedMessage}
+                    </Text>
+                  )}
+                  {!saveError && savedMessage && conflicts.length === 0 && !dirty && (
+                    <Flexbox direction="row" gap="2" alignItems="center" wrap="wrap">
+                      <Text sm className="text-green-600">
+                        {savedMessage}
+                      </Text>
+                      {/* The way out, beside the message that makes it relevant. The link at
+                          the top of the page is the only other one, and on a long event it is
+                          hundreds of pixels above a bar that is pinned to the viewport — so
+                          the control that finishes the task was always on screen and the exit
+                          from it never was. */}
+                      {recordId && <Link href={`/cube/record/${recordId}`}>View record</Link>}
+                    </Flexbox>
+                  )}
+                </Flexbox>
+              </div>
+            )}
+            <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap">
+              <Text sm className="text-text-secondary">
+                {dirty ? 'Unsaved changes' : 'No unsaved changes'}
+              </Text>
+              {/* Two intents, said out loud rather than inferred. Typing an event in is a task
+                  with an end, and one button that stayed put read as an autosave; editing a
+                  record already entered is not, and being thrown to the record page after
+                  every correction would be worse. Which one leads follows how the workspace
+                  was opened — "Input Finished Event" is the one-shot path — but both are
+                  always offered, so a transcriber can still save partway through without
+                  being sent anywhere. */}
+              <Flexbox direction="row" gap="2" alignItems="center">
+                <Button color={isNew ? 'secondary' : 'primary'} onClick={() => save()} disabled={saveDisabled}>
+                  {saving && !finishWhenClean ? 'Saving...' : 'Save'}
+                </Button>
+                <Button
+                  color={isNew ? 'primary' : 'secondary'}
+                  onClick={() => save({ finish: true })}
+                  disabled={saveDisabled}
+                >
+                  {saving && finishWhenClean ? 'Saving...' : 'Save & Finish'}
+                </Button>
+              </Flexbox>
+            </Flexbox>
+          </Flexbox>
+        </div>
+      </CubeLayout>
+    </MainLayout>
+  );
+};
+
+export default RenderToRoot(RecordTranscribePage);

@@ -58,6 +58,8 @@ export interface UnhydratedRecord {
   dateCreated: number;
   dateLastUpdated: number;
   overrides?: { [playerName: string]: WinLossDraw };
+  dropped?: string[];
+  finishedAt?: number;
 }
 
 interface QueryResult {
@@ -125,6 +127,8 @@ export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecor
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
       overrides: item.overrides,
+      dropped: item.dropped,
+      finishedAt: item.finishedAt,
     };
   }
 
@@ -146,6 +150,8 @@ export class RecordDynamoDao extends BaseDynamoDao<RecordEntity, UnhydratedRecor
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
       overrides: item.overrides,
+      dropped: item.dropped,
+      finishedAt: item.finishedAt,
     };
   }
 

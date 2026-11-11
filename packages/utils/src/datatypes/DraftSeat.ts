@@ -21,4 +21,6 @@ export default interface DraftSeat {
   draftNotes?: Record<number, DraftNote[]>;
   // Cards removed from the draft (Cogwork Grinder, Animus of Predation), newest first.
   removedorder?: number[];
+  // Editing-time identity of the record player this seat belongs to; absent on older records
+  playerId?: string;
 }

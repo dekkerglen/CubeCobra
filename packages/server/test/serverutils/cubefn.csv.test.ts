@@ -10,11 +10,11 @@
  *   - tricky name serialization (commas, quotes, apostrophes, em-dashes,
  *     double-faced slashes) surviving a writeCard -> CSVtoCards round-trip
  */
+import { IMPORT_TOO_LARGE_MESSAGE, MAX_IMPORT_CARDS } from '@utils/importParsing';
 import { Response } from 'express';
 import * as carddb from 'serverutils/carddb';
 import { CSV_HEADER, writeCard } from 'serverutils/cube';
 import { CSVtoCards } from 'serverutils/cubefn';
-import { IMPORT_TOO_LARGE_MESSAGE, MAX_IMPORT_CARDS } from 'serverutils/importParsing';
 
 import { createCardDetails } from '../test-utils/data';
 

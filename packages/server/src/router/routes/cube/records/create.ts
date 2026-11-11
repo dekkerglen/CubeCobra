@@ -43,7 +43,7 @@ export const createRecordPageHandler = async (req: Request, res: Response) => {
         cube,
       },
       {
-        title: `${abbreviate(cube.name)} - Create Record`,
+        title: `${abbreviate(cube.name)} - Start an Event`,
         metadata: generateMeta(
           cube.brief,
           cube.image.uri,
@@ -115,6 +115,7 @@ const recordSchema = Joi.object({
       Joi.object({
         userId: Joi.string().optional(), // Optional userId
         name: Joi.string().min(1).max(255).required(), // Player name is required
+        id: Joi.string().max(64).optional(), // Accepted shape consistency only — this route creates a record, so there's nothing to inherit from.
       }),
     )
     .min(0)
@@ -132,7 +133,9 @@ const recordSchema = Joi.object({
   trophy: Joi.array().items(Joi.string()).optional(), // Trophy is optional
 }).unknown(true); // allow additional properties like dateCreated, dateLastUpdated
 
-export const createRecordHandler = async (req: Request, res: Response) => {
+// The landing page is a parameter because createRecordFromDraftHandler below also creates a
+// record and sends the user somewhere of its own.
+const createRecordAndRedirect = async (req: Request, res: Response, redirectTo: (recordId: string) => string) => {
   try {
     if (!req.params.id) {
       req.flash('danger', 'Cube ID is required');
@@ -186,11 +189,14 @@ export const createRecordHandler = async (req: Request, res: Response) => {
     }
 
     req.flash('success', 'Record created successfully');
-    return redirect(req, res, `/cube/record/${createdRecordId}`);
+    return redirect(req, res, redirectTo(createdRecordId));
   } catch (err) {
     return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }
 };
+
+export const createRecordHandler = async (req: Request, res: Response) =>
+  createRecordAndRedirect(req, res, (recordId) => `/cube/record/${recordId}`);
 
 export const createRecordFromDraftHandler = async (req: Request, res: Response) => {
   try {
@@ -241,6 +247,22 @@ export const createRecordFromDraftHandler = async (req: Request, res: Response) 
       return redirect(req, res, `/cube/records/${req.params.id}`);
     }
 
+    // A record's players must be uniquely named — editing them is refused otherwise —
+    // and a draft's ownerless seats all come through as "Unknown Player", so without
+    // disambiguation a bot draft would produce a record whose players could never be
+    // edited. Matching is case-insensitive, like the uniqueness check on edit.
+    const usedNames = new Set<string>();
+    const uniqueName = (name: string): string => {
+      let candidate = name;
+      let suffix = 1;
+      while (usedNames.has(candidate.toLowerCase())) {
+        suffix += 1;
+        candidate = `${name} ${suffix}`;
+      }
+      usedNames.add(candidate.toLowerCase());
+      return candidate;
+    };
+
     const newRecord: DraftRecord = {
       cube: cube.id,
       date: record.date || new Date().valueOf(),
@@ -251,11 +273,11 @@ export const createRecordFromDraftHandler = async (req: Request, res: Response) 
           return {
             // if it's a string use it, otherwise use .id
             userId: typeof seat.owner === 'string' ? seat.owner : seat.owner.id,
-            name: typeof seat.owner === 'string' ? seat.owner : seat.owner.username,
+            name: uniqueName(typeof seat.owner === 'string' ? seat.owner : seat.owner.username),
           };
         }
         return {
-          name: seat.playerName || 'Unknown Player',
+          name: uniqueName(seat.playerName || 'Unknown Player'),
         };
       }),
       matches: record.matches || [],

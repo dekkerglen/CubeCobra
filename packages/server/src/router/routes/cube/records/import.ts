@@ -159,7 +159,7 @@ export const importRecordHandler = async (req: Request, res: Response) => {
       await associateNewDraft(cube, record, userIndex, mainboard, sideboard);
 
       req.flash('success', 'Deck uploaded successfully. A new draft has been created and associated with this record');
-      return redirect(req, res, `/cube/record/${recordId}?tab=0`);
+      return redirect(req, res, `/cube/record/${recordId}?tab=players`);
     }
 
     const draft = await draftDao.getById(record.draft);
@@ -178,7 +178,7 @@ export const importRecordHandler = async (req: Request, res: Response) => {
         'success',
         'Deck uploaded successfully. Draft not found, a new draft has been created and associated with this record.',
       );
-      return redirect(req, res, `/cube/record/${recordId}?tab=0`);
+      return redirect(req, res, `/cube/record/${recordId}?tab=players`);
     }
 
     // if this draft already has a deck for this user, we don't want to overwrite it
@@ -191,7 +191,7 @@ export const importRecordHandler = async (req: Request, res: Response) => {
     await associateWithExistingDraft(cube, draft, userIndex, mainboard, sideboard);
 
     req.flash('success', 'Deck uploaded successfully. Draft associated with this record has been updated.');
-    return redirect(req, res, `/cube/record/${recordId}?tab=0`);
+    return redirect(req, res, `/cube/record/${recordId}?tab=players`);
   } catch (err) {
     return handleRouteError(req, res, err, `/cube/list/${req.params.id}`);
   }

@@ -14,7 +14,7 @@ import {
 import type { Request, Response } from '../types/express';
 import catalog from './cardCatalog';
 import { cardFromId, getIdsFromName, getMostReasonable, getOracleForMl, getReasonableCardByOracle } from './carddb';
-import { parseNonCSVLine } from './importParsing';
+import { parseNonCSVLine } from '@utils/importParsing';
 import { isMlServiceError } from './ml';
 
 // Most lines one pasted list may hold, and the longest text it may be. Room for a large cube.

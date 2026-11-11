@@ -1,8 +1,8 @@
-import React, { useContext } from 'react';
+import React, { useContext, useMemo, useState } from 'react';
 
 import Cube from '@utils/datatypes/Cube';
 import Draft from '@utils/datatypes/Draft';
-import Record from '@utils/datatypes/Record';
+import Record, { Round } from '@utils/datatypes/Record';
 import User from '@utils/datatypes/User';
 
 import { Card } from 'components/base/Card';
@@ -18,7 +18,10 @@ import MainLayout from 'layouts/MainLayout';
 import RecordDecks from '../records/RecordDecks';
 import RecordMatches from '../records/RecordMatches';
 import RecordOverview from '../records/RecordOverview';
+import RecordPlayers, { firstPlayerIndexWithDeck } from '../records/RecordPlayers';
 import RecordStandings from '../records/RecordStandings';
+import RoundClockBanner from '../records/RoundClockBanner';
+import useRoundClocks from '../records/useRoundClocks';
 
 interface RecordPageProps {
   cube: Cube;
@@ -28,36 +31,96 @@ interface RecordPageProps {
 }
 
 const RecordPage: React.FC<RecordPageProps> = ({ cube, record, draft, players }) => {
-  const [activeTab, setActiveTab] = useQueryParam('tab', '0');
+  // Tabs are addressed by a slug in the URL (not a position) so a later reorder can't
+  // silently repoint every server redirect that still hardcodes an index.
+  const [activeTabSlug, setActiveTabSlug] = useQueryParam('tab', '');
   const user = useContext(UserContext);
+
+  // Lifted out of the Players tab so the Decks tab's "View deck" can hand a selection across
+  // tabs instead of switching a sub-view within one. Defaults to the first player who has an
+  // uploaded deck, falling back to the first player.
+  const [selectedPlayer, setSelectedPlayer] = React.useState<number>(() => {
+    const firstWithDeck = firstPlayerIndexWithDeck(record, draft);
+    return firstWithDeck >= 0 ? firstWithDeck : 0;
+  });
+
+  // What the Matches tab reports and the Standings tab drops, held here so each tab reads the
+  // other's changes without a reload.
+  const [rounds, setRounds] = useState<Round[]>(record.matches);
+  const [dropped, setDropped] = useState<string[]>(record.dropped ?? []);
+  const liveRecord = useMemo(() => ({ ...record, matches: rounds, dropped }), [record, rounds, dropped]);
+  const { serverOffset, clockAction } = useRoundClocks(liveRecord, setRounds);
 
   const tabs = [
     {
-      name: 'Decks',
-      component: () => <RecordDecks record={record} draft={draft} players={players} />,
-    },
-    {
-      name: 'Standings',
-      component: () => <RecordStandings record={record} />,
+      name: 'Players',
+      slug: 'players',
+      component: () => (
+        <RecordPlayers
+          record={record}
+          draft={draft}
+          players={players}
+          selectedPlayer={selectedPlayer}
+          setSelectedPlayer={setSelectedPlayer}
+        />
+      ),
     },
     {
       name: 'Matches',
-      component: () => <RecordMatches record={record} />,
+      slug: 'matches',
+      component: () => (
+        <RecordMatches
+          record={liveRecord}
+          setMatches={setRounds}
+          serverOffset={serverOffset}
+          onClockAction={clockAction}
+        />
+      ),
+    },
+    {
+      name: 'Decks',
+      slug: 'decks',
+      component: () => (
+        <RecordDecks
+          record={record}
+          draft={draft}
+          players={players}
+          onSelectPlayer={(index) => {
+            setSelectedPlayer(index);
+            setActiveTabSlug('players');
+          }}
+        />
+      ),
+    },
+    {
+      name: 'Standings',
+      slug: 'standings',
+      component: () => <RecordStandings record={liveRecord} setDropped={setDropped} />,
     },
   ];
+
+  // An absent or unrecognised slug — including an old `?tab=<index>` bookmark from before
+  // tabs were addressed by name — falls back to the first tab rather than landing on a
+  // blank page or, worse, whatever tab used to sit at that index.
+  const activeTabIndex = Math.max(
+    tabs.findIndex((tab) => tab.slug === activeTabSlug),
+    0,
+  );
 
   return (
     <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="records">
         <DynamicFlash />
+        {/* Outside the card, whose rounded corners clip, so it can stay pinned while the page scrolls. */}
+        <RoundClockBanner record={liveRecord} serverOffset={serverOffset} onClockAction={clockAction} />
         <Card className="my-2">
           {/* Overview is no longer a tab — it lives at the top of the page. */}
-          <RecordOverview record={record} />
+          <RecordOverview record={record} draft={draft} />
           <TabbedView
-            activeTab={parseInt(activeTab || '0', 10)}
-            tabs={tabs.map((tab, index) => ({
+            activeTab={activeTabIndex}
+            tabs={tabs.map((tab) => ({
               label: tab.name,
-              onClick: () => setActiveTab(`${index}`),
+              onClick: () => setActiveTabSlug(tab.slug),
               content: tab.component(),
             }))}
           />

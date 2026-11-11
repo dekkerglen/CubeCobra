@@ -12,9 +12,28 @@ import { csrfProtection, ensureAuth } from 'router/middleware';
 import { cardFromId, getReasonableCardByOracle, getVersionsByOracleId } from 'serverutils/carddb';
 import { addBasics, basicsBoardFor, createPool, getBasicCardsFromCube } from 'serverutils/cube';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { reconcilePlayerIds, stampSeatPlayerIds } from 'serverutils/playerIdentity';
+import { isPlayedDraft } from 'serverutils/recordSeats';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../../types/express';
+
+// `?player=` arrives from a player's row on the record's Decks tab, so the upload form can
+// open with that player already chosen. 1-based, matching UploadDeck's `selectedUser`, where
+// 0 means "no player selected". Anything unparseable or out of range is dropped rather than
+// turned into a selection that does not exist.
+const parsePlayerIndex = (raw: unknown, playerCount: number): number | undefined => {
+  if (typeof raw !== 'string') {
+    return undefined;
+  }
+
+  const index = Number(raw);
+  if (!Number.isInteger(index) || index < 1 || index > playerCount) {
+    return undefined;
+  }
+
+  return index;
+};
 
 export const uploadDeckPageHandler = async (req: Request, res: Response) => {
   try {
@@ -42,6 +61,8 @@ export const uploadDeckPageHandler = async (req: Request, res: Response) => {
       draft = await draftDao.getById(record.draft);
     }
 
+    const initialPlayerIndex = parsePlayerIndex(req.query.player, record.players.length);
+
     return render(
       req,
       res,
@@ -50,6 +71,7 @@ export const uploadDeckPageHandler = async (req: Request, res: Response) => {
         cube,
         record,
         draft,
+        ...(initialPlayerIndex !== undefined && { initialPlayerIndex }),
       },
       { title: `${abbreviate(cube.name)} - Upload Deck` },
     );
@@ -94,21 +116,12 @@ const resolveCardByOracle = (oracle: string, cubePool: CardType[]) => {
   return selectedId ? { cardID: selectedId, details: cardFromId(selectedId) } : null;
 };
 
-export const associateNewDraft = async (
-  cube: CubeType,
-  record: RecordEntity,
-  userIndex: number,
-  mainboardOracles: string[],
-  sideboardOracles: string[] = [],
-) => {
-  const cubeCards = await cubeDao.getCards(cube.id);
-  const cubePool = buildCubeCardPool(cube, cubeCards);
-
-  const deck: number[][][] = createPool();
-  const sideboard: number[][][] = setupPicks(1, 8);
-  const cards: CardType[] = [];
-
-  const processCard = (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
+// Resolve an oracle id against the cube and drop it into a seat pool: creatures on row 0
+// and everything else on row 1, column by mana value clamped to 0-7. A sideboard is a
+// single row, so everything there goes on row 0. `cards` is the draft's shared card list;
+// what lands in the pool is the card's index into it, so the two must stay in step.
+const createCardPlacer =
+  (cubePool: CardType[], cards: CardType[]) => (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
     const selected = resolveCardByOracle(oracle, cubePool);
 
     if (selected) {
@@ -124,6 +137,22 @@ export const associateNewDraft = async (
       }
     }
   };
+
+export const associateNewDraft = async (
+  cube: CubeType,
+  record: RecordEntity,
+  userIndex: number,
+  mainboardOracles: string[],
+  sideboardOracles: string[] = [],
+) => {
+  const cubeCards = await cubeDao.getCards(cube.id);
+  const cubePool = buildCubeCardPool(cube, cubeCards);
+
+  const deck: number[][][] = createPool();
+  const sideboard: number[][][] = setupPicks(1, 8);
+  const cards: CardType[] = [];
+
+  const processCard = createCardPlacer(cubePool, cards);
 
   for (const oracle of mainboardOracles) {
     processCard(oracle, deck, false);
@@ -147,12 +176,19 @@ export const associateNewDraft = async (
     date: record.date,
     type: DRAFT_TYPES.UPLOAD,
     cards: cardsWithIndex,
-    seats: record.players.map((player) => ({
-      owner: player.userId,
-      title: `${player.name}`,
-      mainboard: createPool() as number[][][],
-      sideboard: setupPicks(1, 8) as number[][][],
-    })),
+    // Every seat is built fresh from record.players here, so — like
+    // associateDecksWithNewDraft below — a brand new upload draft's seats get their
+    // playerId stamped immediately; type: DRAFT_TYPES.UPLOAD guarantees this can
+    // never be a played draft, so no isPlayedDraft guard is needed.
+    seats: stampSeatPlayerIds(
+      record.players.map((player) => ({
+        owner: player.userId,
+        title: `${player.name}`,
+        mainboard: createPool() as number[][][],
+        sideboard: setupPicks(1, 8) as number[][][],
+      })),
+      record.players,
+    ),
     complete: true,
     basics: [] as number[], // Will be populated by addBasics
   };
@@ -195,22 +231,7 @@ export const associateWithExistingDraft = async (
   const sideboard: number[][][] = setupPicks(1, 8);
   const cards: CardType[] = draft.cards;
 
-  const processCard = (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
-    const selected = resolveCardByOracle(oracle, cubePool);
-
-    if (selected) {
-      const isCreature = selected.details.type.toLowerCase().includes('creature');
-      const cmc = selected.details.cmc;
-
-      const row = isSideboard ? 0 : isCreature ? 0 : 1;
-      const col = Math.max(0, Math.min(7, Math.floor(cmc)));
-
-      if (targetPool[row] && targetPool[row][col]) {
-        targetPool[row][col].push(cards.length);
-        cards.push(selected);
-      }
-    }
-  };
+  const processCard = createCardPlacer(cubePool, cards);
 
   for (const oracle of mainboardOracles) {
     processCard(oracle, deck, false);
@@ -230,6 +251,53 @@ export const associateWithExistingDraft = async (
   await draftDao.update(draft);
 };
 
+// Write several seats of an existing draft in one pass. Calling associateWithExistingDraft
+// per seat would re-read the cube pool and read-modify-write the whole draft once per deck;
+// the transcription workspace submits up to sixteen at a time. Seats missing from
+// decksByIndex are left alone, because re-writing an unchanged seat appends a freshly
+// resolved copy of each card to draft.cards and orphans the indices it replaced.
+export const associateDecksWithExistingDraft = async (
+  cube: CubeType,
+  draft: Draft,
+  // sideboard is required rather than optional: an omitted one resolves to an empty pool and
+  // wipes whatever the seat was holding, so leaving it out has to be a deliberate clear.
+  decksByIndex: { [userIndex: number]: { mainboard: string[]; sideboard: string[] } },
+  // Pass the cube's cards when attaching decks to many records, to load them once.
+  preloadedCubeCards?: CubeCards,
+) => {
+  const cubeCards = preloadedCubeCards ?? (await cubeDao.getCards(cube.id));
+  const cubePool = buildCubeCardPool(cube, cubeCards);
+  const cards: CardType[] = draft.cards;
+
+  const processCard = createCardPlacer(cubePool, cards);
+
+  for (const [rawIndex, deck] of Object.entries(decksByIndex)) {
+    // 1-based, matching associateDecksWithNewDraft.
+    const seat = draft.seats[Number(rawIndex) - 1];
+    if (!seat) {
+      continue;
+    }
+
+    // Built fresh rather than cleared in place, so an empty mainboard resets the seat
+    // instead of leaving the previous deck behind.
+    const seatMainboard: number[][][] = createPool();
+    const seatSideboard: number[][][] = setupPicks(1, 8);
+
+    for (const oracle of deck.mainboard) {
+      processCard(oracle, seatMainboard, false);
+    }
+
+    for (const oracle of deck.sideboard) {
+      processCard(oracle, seatSideboard, true);
+    }
+
+    seat.mainboard = seatMainboard;
+    seat.sideboard = seatSideboard;
+  }
+
+  await draftDao.update(draft);
+};
+
 // Build a single draft with EVERY player's deck placed at once, then create it in
 // one draftDao.createDraft call. This mirrors the regular draft workflow: that one
 // createDraft pass names every seat from its mainboard archetype (assessColors),
@@ -245,20 +313,7 @@ export const associateDecksWithNewDraft = async (
   const cubePool = buildCubeCardPool(cube, cubeCards);
   const cards: CardType[] = [];
 
-  const processCard = (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
-    const selected = resolveCardByOracle(oracle, cubePool);
-
-    if (selected) {
-      const isCreature = selected.details.type.toLowerCase().includes('creature');
-      const cmc = selected.details.cmc;
-      const row = isSideboard ? 0 : isCreature ? 0 : 1;
-      const col = Math.max(0, Math.min(7, Math.floor(cmc)));
-      if (targetPool[row] && targetPool[row][col]) {
-        targetPool[row][col].push(cards.length);
-        cards.push(selected);
-      }
-    }
-  };
+  const processCard = createCardPlacer(cubePool, cards);
 
   const seats = record.players.map((player, idx) => {
     const deck = decksByIndex[idx + 1];
@@ -295,7 +350,10 @@ export const associateDecksWithNewDraft = async (
     date: record.date,
     type: DRAFT_TYPES.UPLOAD,
     cards: cardsWithIndex,
-    seats,
+    // Built fresh from record.players, exactly like associateNewDraft — so, like
+    // that one, stamped immediately. type: DRAFT_TYPES.UPLOAD above means this can
+    // never be a played draft, so no isPlayedDraft guard is needed.
+    seats: stampSeatPlayerIds(seats, record.players),
     complete: true,
     basics: [] as number[], // populated by addBasics
   };
@@ -360,7 +418,9 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
         name = linked?.username || handle || rawNewPlayer;
         linkedUserId = linked?.id;
       }
-      record.players = [...(record.players || []), linkedUserId ? { name, userId: linkedUserId } : { name }];
+      const storedPlayers = record.players || [];
+      const added = linkedUserId ? { name, userId: linkedUserId } : { name };
+      record.players = reconcilePlayerIds([...storedPlayers, added], storedPlayers);
       userIndex = record.players.length; // the new player's 1-based index
       await recordDao.update(record);
       // If a draft already exists, give the new player a seat to match.
@@ -373,6 +433,11 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
             mainboard: createPool() as number[][][],
             sideboard: setupPicks(1, 8) as number[][][],
           });
+          // A played draft's seats are historical and must never be stamped with a
+          // record player's id — only an upload draft's seats exist to be reconciled.
+          if (!isPlayedDraft(existingDraft)) {
+            existingDraft.seats = stampSeatPlayerIds(existingDraft.seats, record.players);
+          }
           await draftDao.update(existingDraft);
         }
       }
@@ -383,7 +448,7 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
       await associateNewDraft(cube, record, userIndex, mainboard, sideboard);
 
       req.flash('success', 'Deck uploaded successfully. A new draft has been created and associated with this record');
-      return redirect(req, res, `/cube/record/${req.params.id}?tab=0`);
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=players`);
     }
 
     const draft = await draftDao.getById(record.draft);
@@ -396,7 +461,7 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
         'success',
         'Deck uploaded successfully. Draft not found, a new draft has been created and associated with this record.',
       );
-      return redirect(req, res, `/cube/record/${req.params.id}?tab=0`);
+      return redirect(req, res, `/cube/record/${req.params.id}?tab=players`);
     }
 
     // if this draft already has a deck for this user, we don't want to overwrite it
@@ -409,7 +474,7 @@ export const uploadDeckHandler = async (req: Request, res: Response) => {
     await associateWithExistingDraft(cube, draft, userIndex, mainboard, sideboard);
 
     req.flash('success', 'Deck uploaded successfully. Draft associated with this record has been updated.');
-    return redirect(req, res, `/cube/record/${req.params.id}?tab=0`);
+    return redirect(req, res, `/cube/record/${req.params.id}?tab=players`);
   } catch (err: unknown) {
     return handleRouteError(req, res, err, `/cube/records/uploaddeck/${req.params.id}`);
   }

@@ -8,7 +8,7 @@ import RecordsNavbar from 'components/records/RecordsNavbar';
 import CubeContext from 'contexts/CubeContext';
 
 // The "from draft" entry point opens a modal that pulls in the whole draft picker; not relevant
-// to the create-record button under test.
+// to the entry-point controls under test.
 jest.mock('components/modals/CreateRecordFromDraftModal', () => ({
   __esModule: true,
   default: () => <div />,
@@ -23,66 +23,83 @@ const renderNavbar = () =>
     </CubeContext.Provider>,
   );
 
-describe('RecordsNavbar create-record button', () => {
+describe('RecordsNavbar entry points', () => {
   afterEach(() => {
     jest.restoreAllMocks();
   });
 
-  it('leaves the record field empty until the button is pressed', () => {
-    const { container } = renderNavbar();
+  it('offers Start an Event and Input Finished Event in place of Create New Record', () => {
+    renderNavbar();
 
-    const recordInput = container.querySelector('input[name="record"]') as HTMLInputElement;
-    expect(recordInput).toBeInTheDocument();
-    expect(recordInput.value).toBe('');
+    // "Create New Record" POSTed a blank record straight to the read-built record page; it has
+    // been replaced entirely, not merely relabeled.
+    expect(screen.queryByText('Create New Record')).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /start an event/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /input finished event/i })).toBeInTheDocument();
   });
 
-  it('builds the record payload at click time, not at render time', () => {
-    const submit = jest.fn();
-    // jsdom does not implement form submission.
-    Object.defineProperty(HTMLFormElement.prototype, 'submit', {
-      configurable: true,
-      writable: true,
-      value: submit,
-    });
-
-    const clickTime = new Date('2024-06-15T12:00:00Z');
-    jest.useFakeTimers().setSystemTime(clickTime);
-
+  /**
+   * Neither entry point creates anything when pressed. Input Finished Event used to POST on
+   * click, so a record existed the moment it was pressed — abandoning the page it opened left
+   * an empty one behind, and the list had no way to show it was empty. Both now open the same
+   * wizard, whose own form is what creates the record.
+   */
+  it('creates nothing on click: both entry points are links, and the navbar posts no form', () => {
     const { container } = renderNavbar();
-    const recordInput = container.querySelector('input[name="record"]') as HTMLInputElement;
 
-    fireEvent.click(screen.getByRole('button', { name: /new record/i }));
-
-    expect(submit).toHaveBeenCalledTimes(1);
-    const payload = JSON.parse(recordInput.value);
-    expect(payload.date).toBe(clickTime.valueOf());
-    expect(typeof payload.name).toBe('string');
-    expect(payload.name.length).toBeGreaterThan(0);
-
-    jest.useRealTimers();
+    expect(screen.getByRole('link', { name: /start an event/i })).toHaveAttribute(
+      'href',
+      '/cube/records/create/cube-1',
+    );
+    expect(screen.getByRole('link', { name: /input finished event/i })).toHaveAttribute(
+      'href',
+      '/cube/records/enter/new/cube-1',
+    );
+    expect(container.querySelector('form')).toBeNull();
+    expect(container.querySelector('input[name="record"]')).toBeNull();
   });
 
-  it('uses the time of the click even when the page was rendered much earlier', () => {
-    const submit = jest.fn();
-    Object.defineProperty(HTMLFormElement.prototype, 'submit', {
-      configurable: true,
-      writable: true,
-      value: submit,
-    });
+  /**
+   * Three ways to build a record from something you already have, each rarer than the two ways
+   * to start one from nothing. In the row they made six undifferentiated links out of what is
+   * really two choices and a menu.
+   */
+  it('puts the ways to build from an existing event behind one menu', () => {
+    renderNavbar();
 
-    // Render "yesterday" and click "today": the payload must carry the click time. The previous
-    // implementation baked the render-time date into the hidden input, so a page left open
-    // overnight created a record dated the day before.
-    jest.useFakeTimers().setSystemTime(new Date('2024-06-14T23:00:00Z'));
-    const { container } = renderNavbar();
-    const recordInput = container.querySelector('input[name="record"]') as HTMLInputElement;
+    expect(screen.queryByText('Create from Draft')).not.toBeInTheDocument();
+    expect(screen.queryByText('Import from Hedron Network')).not.toBeInTheDocument();
 
-    const clickTime = new Date('2024-06-15T09:00:00Z');
-    jest.setSystemTime(clickTime);
-    fireEvent.click(screen.getByRole('button', { name: /new record/i }));
+    fireEvent.click(screen.getByText('From an existing event'));
 
-    expect(JSON.parse(recordInput.value).date).toBe(clickTime.valueOf());
+    expect(screen.getByText('Create from Draft')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Import from Hedron Network' })).toHaveAttribute(
+      'href',
+      '/cube/records/hedron/cube-1',
+    );
+    expect(screen.getByRole('link', { name: 'Import from File' })).toHaveAttribute(
+      'href',
+      '/cube/records/importfile/cube-1',
+    );
+  });
 
-    jest.useRealTimers();
+  // Exporting acts on the list, not on this row of ways to add to it, so it moved into the
+  // list's own header.
+  it('offers no export, which belongs to the list', () => {
+    renderNavbar();
+
+    expect(screen.queryByText(/export/i)).not.toBeInTheDocument();
+  });
+
+  // Every control here needs edit rights, so a reader gets no row at all rather than an empty
+  // one where six links used to be.
+  it('renders nothing for someone who cannot edit the cube', () => {
+    const { container } = render(
+      <CubeContext.Provider value={{ cube, canEdit: false } as any}>
+        <RecordsNavbar />
+      </CubeContext.Provider>,
+    );
+
+    expect(container).toBeEmptyDOMElement();
   });
 });
