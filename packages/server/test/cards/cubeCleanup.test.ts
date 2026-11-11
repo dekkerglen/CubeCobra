@@ -1,6 +1,7 @@
 import {
   cleanupOracleKey,
   findDuplicateRemovals,
+  findOverlapRemovals,
   findPrintingCandidates,
   findPrintingUpdates,
   makeSwapPredicate,
@@ -266,7 +267,7 @@ describe('findDuplicateRemovals', () => {
     expect(findDuplicateRemovals(cards)).toEqual([]);
   });
 
-  it('groups copies across boards, since callers pass every board they want cleaned together', () => {
+  it('groups on oracle id alone, never consulting the board, so callers must pass one board at a time', () => {
     const cards = [
       createCard({ index: 0, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) }),
       createCard({ index: 1, board: 'maybeboard', details: createCardDetails({ oracle_id: 'abc' }) }),
@@ -275,66 +276,143 @@ describe('findDuplicateRemovals', () => {
     expect(findDuplicateRemovals(cards)).toEqual([{ index: 1, board: 'maybeboard' }]);
   });
 
-  it('keeps the copy on the earliest board in the order, ahead of every other criterion', () => {
-    const cards = [
+  it('returns an empty array for an empty board', () => {
+    expect(findDuplicateRemovals([])).toEqual([]);
+  });
+});
+
+describe('findOverlapRemovals', () => {
+  it('removes every target card whose oracle id appears in the reference board', () => {
+    const target = [
+      createCard({ index: 0, board: 'maybeboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+      createCard({ index: 1, board: 'maybeboard', details: createCardDetails({ oracle_id: 'def' }) }),
+      createCard({ index: 2, board: 'maybeboard', details: createCardDetails({ oracle_id: 'ghi' }) }),
+    ];
+    const reference = [
+      createCard({ index: 0, board: 'mainboard', details: createCardDetails({ oracle_id: 'ghi' }) }),
+      createCard({ index: 1, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+    ];
+
+    expect(findOverlapRemovals(target, reference)).toEqual([
+      { index: 0, board: 'maybeboard' },
+      { index: 2, board: 'maybeboard' },
+    ]);
+  });
+
+  it('removes all copies, keeping no survivor, when the target holds two copies of an overlapping card', () => {
+    const target = [
+      createCard({ index: 0, board: 'maybeboard', tags: ['keep'], details: createCardDetails({ oracle_id: 'abc' }) }),
+      createCard({ index: 1, board: 'maybeboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+    ];
+    const reference = [createCard({ index: 0, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) })];
+
+    expect(findOverlapRemovals(target, reference)).toEqual([
+      { index: 0, board: 'maybeboard' },
+      { index: 1, board: 'maybeboard' },
+    ]);
+  });
+
+  it('returns nothing when the boards share no oracle ids', () => {
+    const target = [createCard({ index: 0, board: 'maybeboard', details: createCardDetails({ oracle_id: 'abc' }) })];
+    const reference = [createCard({ index: 0, board: 'mainboard', details: createCardDetails({ oracle_id: 'def' }) })];
+
+    expect(findOverlapRemovals(target, reference)).toEqual([]);
+  });
+
+  it('ignores reference cards marked for delete when building the overlap set', () => {
+    const target = [createCard({ index: 0, board: 'maybeboard', details: createCardDetails({ oracle_id: 'abc' }) })];
+    const reference = [
+      createCard({
+        index: 0,
+        board: 'mainboard',
+        markedForDelete: true,
+        details: createCardDetails({ oracle_id: 'abc' }),
+      }),
+    ];
+
+    expect(findOverlapRemovals(target, reference)).toEqual([]);
+  });
+
+  it('ignores target cards marked for delete', () => {
+    const target = [
       createCard({
         index: 0,
         board: 'maybeboard',
-        tags: ['a', 'b'],
-        notes: 'long notes',
-        addedTmsp: '1',
+        markedForDelete: true,
         details: createCardDetails({ oracle_id: 'abc' }),
       }),
-      createCard({ index: 5, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+      createCard({ index: 1, board: 'maybeboard', details: createCardDetails({ oracle_id: 'abc' }) }),
     ];
+    const reference = [createCard({ index: 0, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) })];
 
-    expect(findDuplicateRemovals(cards, undefined, ['mainboard', 'maybeboard'])).toEqual([
-      { index: 0, board: 'maybeboard' },
-    ]);
+    expect(findOverlapRemovals(target, reference)).toEqual([{ index: 1, board: 'maybeboard' }]);
   });
 
-  it('removes every copy on a later board when an earlier board holds the card', () => {
-    const cards = [
+  it('reports nothing when every eligible target card is already marked for delete', () => {
+    const target = [
+      createCard({
+        index: 0,
+        board: 'maybeboard',
+        markedForDelete: true,
+        details: createCardDetails({ oracle_id: 'abc' }),
+      }),
+      createCard({
+        index: 1,
+        board: 'maybeboard',
+        markedForDelete: true,
+        details: createCardDetails({ oracle_id: 'abc' }),
+      }),
+    ];
+    const reference = [createCard({ index: 0, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) })];
+
+    expect(findOverlapRemovals(target, reference)).toEqual([]);
+  });
+
+  it('ignores swapped cards on both the target and reference sides', () => {
+    const target = [
       createCard({ index: 0, board: 'maybeboard', details: createCardDetails({ oracle_id: 'abc' }) }),
-      createCard({ index: 1, board: 'maybeboard', details: createCardDetails({ oracle_id: 'abc' }) }),
-      createCard({ index: 2, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+      createCard({ index: 1, board: 'maybeboard', details: createCardDetails({ oracle_id: 'def' }) }),
+    ];
+    const reference = [
+      createCard({ index: 0, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+      createCard({ index: 1, board: 'mainboard', details: createCardDetails({ oracle_id: 'def' }) }),
     ];
 
-    expect(findDuplicateRemovals(cards, undefined, ['mainboard', 'maybeboard'])).toEqual([
-      { index: 0, board: 'maybeboard' },
-      { index: 1, board: 'maybeboard' },
-    ]);
+    // Swaps the target copy of abc and the reference copy of def, so neither oracle can match.
+    const isSwapped = (card: Card): boolean =>
+      (card.board === 'maybeboard' && card.index === 0) || (card.board === 'mainboard' && card.index === 1);
+
+    expect(findOverlapRemovals(target, reference, isSwapped)).toEqual([]);
   });
 
-  it('returns removals in board order, then index order', () => {
-    const cards = [
-      createCard({ index: 0, board: 'maybeboard', details: createCardDetails({ oracle_id: 'abc' }) }),
-      createCard({ index: 1, board: 'maybeboard', details: createCardDetails({ oracle_id: 'abc' }) }),
-      createCard({ index: 4, board: 'mainboard', details: createCardDetails({ oracle_id: 'def' }) }),
-      createCard({ index: 3, board: 'mainboard', details: createCardDetails({ oracle_id: 'def' }) }),
-      createCard({ index: 2, board: 'mainboard', details: createCardDetails({ oracle_id: 'def' }) }),
+  it('never matches custom cards or vouchers on either side', () => {
+    const target = [
+      createCard({
+        index: 0,
+        board: 'maybeboard',
+        cardID: 'custom-card',
+        custom_name: 'Cobra One',
+        details: createCardDetails({ oracle_id: 'abc' }),
+      }),
+      createCard({ index: 1, board: 'maybeboard', details: createCardDetails({ oracle_id: 'def' }) }),
+    ];
+    const reference = [
+      createCard({ index: 0, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) }),
+      createCard({
+        index: 1,
+        board: 'mainboard',
+        cardID: 'voucher',
+        details: createCardDetails({ oracle_id: 'def' }),
+      }),
     ];
 
-    expect(findDuplicateRemovals(cards, undefined, ['mainboard', 'maybeboard'])).toEqual([
-      { index: 3, board: 'mainboard' },
-      { index: 4, board: 'mainboard' },
-      { index: 1, board: 'maybeboard' },
-    ]);
+    expect(findOverlapRemovals(target, reference)).toEqual([]);
   });
 
-  it('ranks a board missing from the order after every listed board', () => {
-    const cards = [
-      createCard({ index: 0, board: 'rares', details: createCardDetails({ oracle_id: 'abc' }) }),
-      createCard({ index: 1, board: 'maybeboard', details: createCardDetails({ oracle_id: 'abc' }) }),
-    ];
+  it('returns an empty array when the reference board is empty', () => {
+    const target = [createCard({ index: 0, board: 'maybeboard', details: createCardDetails({ oracle_id: 'abc' }) })];
 
-    expect(findDuplicateRemovals(cards, undefined, ['mainboard', 'maybeboard'])).toEqual([
-      { index: 0, board: 'rares' },
-    ]);
-  });
-
-  it('returns an empty array for an empty board', () => {
-    expect(findDuplicateRemovals([])).toEqual([]);
+    expect(findOverlapRemovals(target, [])).toEqual([]);
   });
 });
 

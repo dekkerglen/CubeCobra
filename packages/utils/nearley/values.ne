@@ -12,6 +12,7 @@
 # const fetchedOperation = (op, value) => ...
 # const propertyComparisonOperation = (op) => ...
 # const setContainsOperation = (op, value) => ...
+# const compileScryfallRegex = (pattern) => ...
 
 positiveHalfIntOpValue -> anyOperator positiveHalfIntValue {% ([op, value]) => defaultOperation(op, value) %}
 
@@ -489,7 +490,12 @@ nameStringOpValue -> equalityOperator stringValue {% ([op, value]) => nameString
 
 stringValue -> (noQuoteStringValue | dqstring | sqstring) {% ([[value]]) => value.toLowerCase() %}
 
+# Scryfall-style /regex/: anything up to the next unescaped slash. Compiled here so a malformed pattern is a parse
+# error rather than a filter that throws.
+regexValue -> "/" ([^/\\\n] | "\\" [^\n]):* "/" {% ([, chars], _l, reject) => compileScryfallRegex(chars.flat().join('')) ?? reject %}
+
 # anything that isn't a special character and isn't "and" or "or".
+# A bare word never starts with a slash, which would read as the start of a /regex/.
 # A bare word can never start with a parenthesis, and any parentheses inside it must come in
 # balanced pairs (wordParens), so "tag:removal(cheap)" is one word but a paren that could be a
 # grouping paren never is. If words could absorb grouping parens, every "(word)" would have several
@@ -497,7 +503,7 @@ stringValue -> (noQuoteStringValue | dqstring | sqstring) {% ([[value]]) => valu
 # with parentheses must be quoted, e.g. name:"Erase (Not the Urza's Legacy One)".
 noQuoteStringValue -> 
   ("a"i | "an"i | "o"i) {% ([[value]]) => value.toLowerCase() %}
-  | ([^aAoO\- \t\n"'\\=<>:()] 
+  | ([^aAoO\-/ \t\n"'\\=<>:()] 
     | "a"i ([^nN \t\n"'\\=<>:()] | wordParens)
     | "an"i ([^dD \t\n"'\\=<>:()] | wordParens)
     | "and"i ([^ \t\n"'\\=<>:()] | wordParens)
@@ -512,7 +518,7 @@ wordTail -> [^ \t\n"\\=<>:()]:* (wordParens [^ \t\n"\\=<>:()]:*):* {% ([chars, s
 wordParens -> "(" wordTail ")" {% ([, inner]) => `(${inner})` %}
 # "
 
-manaCostOpValue -> equalityOperator manaCostValue {% ([op, value]) => manaCostOperation(op, value) %}
+manaCostOpValue -> anyOperator manaCostValue {% ([op, value]) => manaCostOperation(op, value) %}
 
 manaCostValue -> manaSymbol:+ {% id %}
 

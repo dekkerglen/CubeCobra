@@ -17,13 +17,15 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - Split cards, battles, planes and schemes now turn the right way up in hover previews, the card window and on card pages, instead of showing sideways.
 - Deck archetypes are now recognized from what the cards do, using Scryfall's oracle tags, and cover around a hundred strategies instead of 37 hand-picked ones.
 - Cube analytics has a new Archetypes view showing which archetypes your card list supports and the cards that carry each one.
+- Combos in cube analytics now list the cards in your cube that fit each combo's open slots, such as which creatures with persist you could use.
 - Comparing two cubes has a new look: the cubes face off in a split banner, a bar shows how much of each list they share, and clicking part of the bar shows just those cards laid out like a cube list. Comparing a cube to an earlier version shows what was removed and added.
 - The new ML Playground, under Cards in the Explore menu, puts the card recommender to work on any list you paste: Smart Search against your list, the bot's pick from a pack, the deck a bot would build from a pool, the archetype a deck reads as, or a seed list grown into a full cube.
 - CSV exports now list what each voucher holds in a new Voucher Cards column, and CSV uploads read it, so a cube of vouchers can be set up or copied in one upload.
 - The public data exports now record when each draft happened, and every pick names the draft it came from.
 - The public API can now fetch a cube's details without its card list.
-- A new Cleanup button in the cube list's edit panel tidies one or more boards in one click: drop duplicate entries, including copies of mainboard cards sitting on the maybeboard, or move every card to its default, most recent, first, or cheapest printing. The changes land in your change list to review before you save.
+- A new Cleanup button in the cube list's edit panel tidies your boards in one click: drop a board's duplicate entries, drop everything in it that's already in another board, or swap every card in the boards you pick to its default, most recent, first, or cheapest printing. The changes land in your change list to review before you save.
 - Filtering a cube by quantity, count, copies, or singleton now counts copies of the same card together even when they're different printings under different names, and stops counting cards you've already staged for removal.
+- Filters now take regular expressions between slashes for oracle text, type lines and names, as on Scryfall, including its shorthands like `\sc` for any colored mana symbol: `o:/^{T}: add/` finds cards that tap for mana. They also take `!"name"` to match a card's whole name, and `<`, `<=`, `>` and `>=` on mana costs. `-m<{0}` finds cards that have a mana cost.
 - Type in a whole finished event at once with Input Finished Event on a cube's records: the details, every player and their deck (typed, pasted, or scanned from a photo), and either each round's pairings and results or just each player's final record. Edit Record opens the same page for any record.
 - Run a live event from its record: seat players around a table by hand or at random, then pair each round across the table, by record, at random, or by hand, with byes for odd numbers, and report each match's result with one tap.
 - Each round of a live event can have a clock that stays in sync on every device, and Show Pairings puts the round's tables, results and clock on a full screen for a projector so players can find their seat.
@@ -61,6 +63,8 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - Records named automatically no longer show a different date in their name than in the Date column in some time zones.
 - Signed-out visitors can page through a cube's records list. The second page had asked them to log in.
 - Error messages meant to show in red, in about a dozen places across the site, now do.
+- Cube analytics no longer lists combos that need a kind of card the cube doesn't have, such as Cathars' Crusade and Viscera Seer in a cube without a creature with persist.
+- Filtering by mana cost with `m:` now works as it does on Scryfall: `m:rr` needs two red symbols instead of matching any red card, `m:2ww` no longer matches {2}{W}, and `m:2` counts generic mana, so it also finds {4}{W}. Split and adventure cards match on either half's cost.
 
 ## Technical Changes
 
@@ -70,3 +74,4 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - Mentioning someone with @ in a comment or blog post now notifies only people actually named in the saved post, each once, up to a set number per post.
 - A post written to make a row of card images (`<<...>>`) take seconds to draw now loads quickly, with that row left as plain text.
 - The card recommender now retrains automatically after each quarterly data export, on drafts from the last three years and cubes updated in that time. A new model goes live only after it matches the current one on held-out drafts and an admin approves it, and admins can roll back to any earlier model. Each retrain also finds and names deck archetypes automatically, and admins can rename them.
+- Regular expressions in filters run on an engine whose running time can't blow up however the pattern is written, so a pattern in a search, a cube view or a shared link can't freeze the page or the server. Filters are limited in how many and how large their regular expressions can be, and searches over every card that use them have their own rate limit and give up after two seconds.

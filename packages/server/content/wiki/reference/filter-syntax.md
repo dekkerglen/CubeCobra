@@ -19,12 +19,13 @@ as are all filtering conditions (`TYPE:instant and o:DESTROY` will still work, f
 | `t:instant t:tribal`     | cards that are both instants and tribal.     |
 
 Text without a filtering condition is treated as a name. You can use quotes to require an exact
-match.
+match, and `!` before quotes to match the whole name (or one face's name).
 
 | Query                           | Matches                                                                       |
 | ------------------------------- | ----------------------------------------------------------------------------- |
 | `goblin blood`                  | cards whose names contain both "blood" and "goblin".                          |
 | `"goblin blood"`                | cards whose names contain exactly "goblin blood".                             |
+| `!"opt"`                        | only the card named Opt, not Ornithopter or Panoptic Mirror.                  |
 | `o:destroy o:target o:creature` | cards whose oracle text contains each of "destroy", "target", and "creature". |
 | `o:"destroy target creature"`   | cards whose oracle text contains exactly "destroy target creature".           |
 
@@ -104,6 +105,26 @@ lower case.
 | `o:":"`           | cards whose oracle text contains ":" (cards with activated abilities). |
 | `s:war`           | cards from War of the Spark.                                           |
 
+## Regular Expressions
+
+Put a regular expression between slashes instead of quotes to search oracle text (`o:`), type lines
+(`t:`) or names (`name:`) with one, as on Scryfall. Matching ignores case, and `^` and `$` match at
+the start and end of each line of oracle text. In oracle text, `~` matches the card's own name.
+
+Scryfall's shorthands work too: `\sm` for any mana symbol, `\sc` for any colored mana symbol, `\ss`
+for any symbol, `\smh` for hybrid, `\smp` for Phyrexian, and `\spt`, `\spp`, `\smm` for X/X, +X/+X
+and -X/-X.
+
+Lookaheads, lookbehinds, backreferences and `\smr` aren't supported. A filter can use up to 5 regular
+expressions, each up to 200 characters, with repeat counts like `{3}` up to 100.
+
+| Query                                | Matches                                                    |
+| ------------------------------------ | ---------------------------------------------------------- |
+| `o:/^{T}: add/`                      | cards with a mana ability that only costs tapping.         |
+| `o:/deals \d+ damage to any target/` | cards that deal a set amount of damage to any target.      |
+| `t:/^legendary creature/`            | legendary creatures, but not legendary artifact creatures. |
+| `name:/^[^ ]+$/`                     | cards with a one-word name.                                |
+
 ## Keywords
 
 You can use `kw:`, `keyword:`, or `keywords:` to search for cards with specific keywords (e.g.
@@ -166,7 +187,13 @@ tag.
 
 You can use `m:` or `mana:` to search for cards with specific mana costs.
 
-Operators supported: `:`, `=`.
+Operators supported: `:`, `=`, `!=`, `<`, `<=`, `>`, `>=`.
+
+Costs compare as they do on Scryfall: `m:` finds costs that contain at least the symbols you list
+(the same as `>=`), and `=` finds costs that are exactly those symbols. Generic mana counts as an
+amount, so `m:{2}` also finds {4}{W}. A cost is less than another when it has no more generic mana and
+no more of each other symbol, and a card with no mana cost at all (lands, suspend-only cards) is less
+than `{0}`. Split and adventure cards match if either half's cost does.
 
 You can use plain numbers and letters for the 5 basic colors, snow, colorless, and x, y, and z
 costs. For hybrid costs, you can use braces, i.e. `{2/G}`, `{R/G}`, etc. For phyrexian mana, use
@@ -176,14 +203,18 @@ costs. For hybrid costs, you can use braces, i.e. `{2/G}`, `{R/G}`, etc. For phy
 You can search for cards that require two or more colors with `is:gold`, cards that contain hybrid
 symbols with `is:hybrid`, or Phyrexian mana symbols with `is:phyrexian`.
 
-| Query          | Matches                                                                |
-| -------------- | ---------------------------------------------------------------------- |
-| `m:{r/g}{r/g}` | cards that cost two hybrid red/green mana, i.e. Burning-Tree Emissary. |
-| `m:2ww`        | cards that cost 2 generic mana and 2 white mana.                       |
-| `is:gold`      | cards that require two or more colors.                                 |
-| `is:hybrid`    | cards with one or more hybrid mana symbols.                            |
-| `is:phyrexian` | cards with one or more Phyrexian mana symbols.                         |
-| `is:twobrid`   | cards with one or more "two generic or a color" symbols.               |
+| Query          | Matches                                                                      |
+| -------------- | ---------------------------------------------------------------------------- |
+| `m:{r/g}{r/g}` | cards with two or more hybrid red/green symbols, i.e. Burning-Tree Emissary. |
+| `m:2ww`        | cards that cost at least 2 generic mana and 2 white mana.                    |
+| `m=2ww`        | cards that cost exactly {2}{W}{W}.                                           |
+| `m<={1}{R}`    | cards that cost {1}{R}, {R}, {1}, {0}, or nothing.                           |
+| `m>{R}{R}`     | cards whose cost includes {R}{R} and more.                                   |
+| `-m<{0}`       | cards that have a mana cost.                                                 |
+| `is:gold`      | cards that require two or more colors.                                       |
+| `is:hybrid`    | cards with one or more hybrid mana symbols.                                  |
+| `is:phyrexian` | cards with one or more Phyrexian mana symbols.                               |
+| `is:twobrid`   | cards with one or more "two generic or a color" symbols.                     |
 
 ## Mana Value
 
@@ -469,8 +500,8 @@ staging a duplicate removal clears the view, because the copies left behind drop
 
 Because custom cards and vouchers are counted here but skipped by the cube list's **Cleanup**
 button, `not:singleton` is not a reliable preview of what **Remove Duplicates** will stage on a
-board holding them — it will list repeated custom cards that Cleanup leaves alone. The list Cleanup
-shows before you remove anything is always exact.
+board holding them — it will list repeated custom cards that Cleanup leaves alone. The count on the
+Remove Duplicates button is always exact.
 
 Outside a cube list (global card search, Smart Search, etc.) every card is treated as one copy, so
 `quantity>1` returns nothing and `is:singleton` matches everything.

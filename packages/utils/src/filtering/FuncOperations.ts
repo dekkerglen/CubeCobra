@@ -1,3 +1,5 @@
+import { RE2JS } from 're2js';
+
 import { cardDevotion, cardLegalIn, cardRestrictedIn } from '../cardutil';
 import Card, { CardDetails } from '../datatypes/Card';
 import { arrayIsSubset, arraysAreEqualSets } from '../Util';
@@ -286,6 +288,23 @@ const getShorthand = (details: CardDetails): string | undefined => {
   return undefined;
 };
 
+// Replace every way a card's text refers to itself (its name, each face's name, a legendary shorthand, "this
+// creature") with `~`.
+const expandSelfReferences = (fieldValue: string, details: CardDetails): string => {
+  // Multi-faced cards refer to each face by that face's name.
+  const names = [details.name, ...details.name.split(' // ')];
+  let expandedValue = fieldValue;
+  for (const name of names) {
+    expandedValue = expandedValue.replace(new RegExp(escapeRegExp(name), 'g'), NAME_PLACEHOLDER);
+  }
+  expandedValue = expandedValue.replace(NAME_ALIAS, NAME_PLACEHOLDER);
+  const shorthand = getShorthand(details);
+  if (shorthand) {
+    expandedValue = expandedValue.replace(new RegExp(escapeRegExp(shorthand), 'g'), NAME_PLACEHOLDER);
+  }
+  return expandedValue;
+};
+
 export const nameStringOperation = (op: OperatorType, value: string): ((fieldValue: string, card: Card) => boolean) => {
   const strOp = stringOperation(op, value);
   return described(
@@ -293,21 +312,91 @@ export const nameStringOperation = (op: OperatorType, value: string): ((fieldVal
       if (!card.details) {
         return strOp(fieldValue);
       }
-      // Multi-faced cards refer to each face by that face's name.
-      const names = [card.details.name, ...card.details.name.split(' // ')];
-      let expandedValue = fieldValue;
-      for (const name of names) {
-        expandedValue = expandedValue.replace(new RegExp(escapeRegExp(name), 'g'), NAME_PLACEHOLDER);
-      }
-      expandedValue = expandedValue.replace(NAME_ALIAS, NAME_PLACEHOLDER);
-      const shorthand = getShorthand(card.details);
-      if (shorthand) {
-        expandedValue = expandedValue.replace(new RegExp(escapeRegExp(shorthand), 'g'), NAME_PLACEHOLDER);
-      }
-      return strOp(fieldValue) || strOp(expandedValue);
+      return strOp(fieldValue) || strOp(expandSelfReferences(fieldValue, card.details));
     },
     (strOp as any).describe,
   );
+};
+
+// Scryfall's `!"Name"`: the full name or any one face's name, ignoring case.
+export const exactNameOperation = (value: string): FilterFunction<string> => {
+  value = value.toLowerCase();
+  return described(
+    (fieldValue: string) => fieldValue === value || fieldValue.split(' // ').includes(value),
+    `is exactly "${value}"`,
+  );
+};
+
+// Scryfall's non-standard regex shorthands (https://scryfall.com/docs/regular-expressions), longest first so `\smh`
+// is not read as `\sm` + "h". `\smr` (a repeated symbol) needs a backreference, which RE2 doesn't have, so a pattern
+// using it fails to compile.
+const SCRYFALL_REGEX_SHORTHANDS: [string, string][] = [
+  ['smh', '\\{(?:[wubrg]|[2c])\\/[wubrg](?:\\/p)?\\}'],
+  ['smp', '\\{(?:[wubrg]\\/)?(?:[wubrg]\\/)?p\\}'],
+  ['smm', '-(?:\\d+|x)\\/-(?:\\d+|x)'],
+  ['spt', '(?:\\d+|x|\\*)\\/(?:\\d+|x|\\*)'],
+  ['spp', '\\+(?:\\d+|x)\\/\\+(?:\\d+|x)'],
+  ['sm', '\\{(?:\\d+|[wubrgcsxyz]|(?:[wubrg]|[2c])\\/[wubrgp](?:\\/p)?)\\}'],
+  ['sc', '\\{(?:[wubrg](?:\\/[wubrgp])?(?:\\/p)?|[2c]\\/[wubrg](?:\\/p)?)\\}'],
+  ['ss', '\\{[^{}]+\\}'],
+];
+
+export interface ScryfallRegex {
+  // The pattern as written, for describing the filter.
+  source: string;
+  test: (text: string) => boolean;
+}
+
+// Compile a Scryfall regex: case-insensitive, `^`/`$` match at line breaks, and the shorthands above expanded.
+// Patterns run on RE2, which takes time linear in the text however the pattern is written, so a user's pattern can't
+// backtrack for minutes the way a native RegExp can. The price is that RE2 has no lookarounds or backreferences;
+// patterns using them fail to compile. Returns null when the pattern is not valid.
+export const compileScryfallRegex = (pattern: string): ScryfallRegex | null => {
+  let translated = '';
+  for (let i = 0; i < pattern.length; i++) {
+    if (pattern[i] !== '\\') {
+      translated += pattern[i];
+      continue;
+    }
+    const shorthand = SCRYFALL_REGEX_SHORTHANDS.find(([name]) => pattern.startsWith(name, i + 1));
+    const unicode = /^u([0-9a-f]{4})/i.exec(pattern.slice(i + 1));
+    if (pattern.startsWith('\\smr', i)) {
+      return null;
+    } else if (shorthand) {
+      translated += shorthand[1];
+      i += shorthand[0].length;
+    } else if (unicode) {
+      // RE2 spells \uHHHH as \x{HHHH}.
+      translated += `\\x{${unicode[1]}}`;
+      i += 5;
+    } else {
+      translated += pattern.slice(i, i + 2);
+      i += 1;
+    }
+  }
+  try {
+    const regex = RE2JS.compile(translated, RE2JS.CASE_INSENSITIVE | RE2JS.MULTILINE);
+    return { source: pattern, test: (text) => regex.test(text) };
+  } catch {
+    return null;
+  }
+};
+
+// `selfReference` lets `~` in the pattern match the card's own name, as `o:` does with plain strings. Printings share
+// their oracle text, so each distinct text (with the card's name, for `~`) is only tested once.
+const regexOperation = (regex: ScryfallRegex, selfReference: boolean): FilterFunctionWithCard<string> => {
+  const results = new Map<string, boolean>();
+  return described((fieldValue: string, card: Card) => {
+    const key = selfReference && card.details ? `${card.details.name}\n${fieldValue}` : fieldValue;
+    let result = results.get(key);
+    if (result === undefined) {
+      result =
+        regex.test(fieldValue) ||
+        (selfReference && !!card.details && regex.test(expandSelfReferences(fieldValue, card.details)));
+      results.set(key, result);
+    }
+    return result;
+  }, `matches /${regex.source}/`);
 };
 
 export const stringContainOperation = (op: OperatorType, value: string): FilterFunction<string> => {
@@ -479,24 +568,97 @@ export const colorCategoryOperation = (op: OperatorType, value: string): FilterF
 export const convertParsedCost = (parsedCost: string[]): string[][] =>
   parsedCost.map((symbol: string) => symbol.toLowerCase().split('-'));
 
+// Mana costs compare the way Scryfall's do: one cost is within another when it has no more generic mana and no more
+// of each other symbol, so `m:` (like `m>=`) finds costs containing at least the given symbols. A card with no mana
+// cost at all sits below every cost, including {0}, so `-m<{0}` means "has a mana cost".
+interface CostMultiset {
+  exists: boolean;
+  generic: number;
+  symbols: Map<string, number>;
+}
+
+const toCostMultiset = (symbols: string[][]): CostMultiset => {
+  const result: CostMultiset = { exists: symbols.length > 0, generic: 0, symbols: new Map() };
+  for (const symbol of symbols) {
+    if (symbol.length === 1 && /^\d+$/.test(symbol[0]!)) {
+      result.generic += parseInt(symbol[0]!, 10);
+    } else {
+      const key = symbol
+        .map((part) => part.toLowerCase())
+        .sort()
+        .join('/');
+      result.symbols.set(key, (result.symbols.get(key) ?? 0) + 1);
+    }
+  }
+  return result;
+};
+
+// Split, adventure and prepare cards list each half's cost separated by a 'split' symbol. Like Scryfall, a cost
+// filter matches when either half's cost does.
+const costFaces = (parsedCost: string[]): CostMultiset[] => {
+  const faces: string[][][] = [[]];
+  for (const symbol of convertParsedCost(parsedCost)) {
+    if (symbol.length === 1 && symbol[0] === 'split') {
+      faces.push([]);
+    } else {
+      faces[faces.length - 1]!.push(symbol);
+    }
+  }
+  return faces.map(toCostMultiset);
+};
+
+const costIsWithin = (inner: CostMultiset, outer: CostMultiset): boolean =>
+  !inner.exists ||
+  (outer.exists &&
+    inner.generic <= outer.generic &&
+    [...inner.symbols].every(([symbol, count]) => (outer.symbols.get(symbol) ?? 0) >= count));
+
+const costsAreEqual = (a: CostMultiset, b: CostMultiset): boolean =>
+  a.exists === b.exists && costIsWithin(a, b) && costIsWithin(b, a);
+
 export const manaCostOperation = (op: OperatorType, value: string[][]): FilterFunction<string[]> => {
   const cost = describeMana(value);
+  const target = toCostMultiset(value);
+  const anyFace =
+    (test: (face: CostMultiset) => boolean): FilterFunction<string[]> =>
+    (fieldValue: string[]) =>
+      costFaces(fieldValue).some(test);
   switch (op.toString()) {
     case ':':
       return described(
-        (fieldValue: string[]) => arrayIsSubset(value, convertParsedCost(fieldValue), arraysAreEqualSets),
+        anyFace((face) => costIsWithin(target, face)),
         `contains ${cost}`,
       );
     case '=':
       return described(
-        (fieldValue: string[]) => arraysAreEqualSets(convertParsedCost(fieldValue), value, arraysAreEqualSets),
+        anyFace((face) => costsAreEqual(face, target)),
         `is exactly ${cost}`,
       );
     case '!=':
     case '<>':
       return described(
-        (fieldValue: string[]) => !arraysAreEqualSets(convertParsedCost(fieldValue), value, arraysAreEqualSets),
+        (fieldValue: string[]) => !costFaces(fieldValue).some((face) => costsAreEqual(face, target)),
         `is not exactly ${cost}`,
+      );
+    case '<':
+      return described(
+        anyFace((face) => costIsWithin(face, target) && !costsAreEqual(face, target)),
+        numericPhrase(op, cost),
+      );
+    case '<=':
+      return described(
+        anyFace((face) => costIsWithin(face, target)),
+        numericPhrase(op, cost),
+      );
+    case '>':
+      return described(
+        anyFace((face) => costIsWithin(target, face) && !costsAreEqual(face, target)),
+        numericPhrase(op, cost),
+      );
+    case '>=':
+      return described(
+        anyFace((face) => costIsWithin(target, face)),
+        numericPhrase(op, cost),
       );
     default:
       throw new Error(`Unrecognized operator '${op}'`);
@@ -745,6 +907,19 @@ export const genericCondition = (
   // Compose the clause description as "<field label> <value fragment>".
   const fragment = (valuePred as any).describe;
   (result as any).describe = fragment ? `${fieldLabel(propertyName)} ${fragment}` : fieldLabel(propertyName);
+  return result;
+};
+
+// A regex clause also lists its pattern on the filter's `regexes`, which makeFilter uses to cap how many and how
+// large they can be.
+export const regexCondition = (
+  propertyName: string,
+  propertyAccessor: (card: Card) => any,
+  regex: ScryfallRegex,
+  selfReference: boolean,
+) => {
+  const result = genericCondition(propertyName, propertyAccessor, regexOperation(regex, selfReference));
+  (result as any).regexes = [regex.source];
   return result;
 };
 

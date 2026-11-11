@@ -12,7 +12,8 @@ import {
   summarize,
 } from 'serverutils/mlPlayground';
 import { recommendOrThrow } from 'serverutils/ml';
-import { jsonLimiter } from 'serverutils/rateLimiters';
+import { budgetRegexFilter, FilterTimeoutError } from 'serverutils/filterBudget';
+import { jsonLimiter, regexFilterLimiter } from 'serverutils/rateLimiters';
 import { isExcludedFromSmartSearch } from 'serverutils/smartSearch';
 import { applyUniversesBeyondSetting } from 'serverutils/universesBeyond';
 
@@ -71,7 +72,10 @@ export const recommendHandler = async (req: Request, res: Response) => {
     // Same candidate pool as Smart Search: one printing per oracle, no tokens, basics or
     // playtest cards.
     const eligibleByOracle = new Map<string, CardDetails>();
-    for (const card of getAllMostReasonable(applyUniversesBeyondSetting(filter, req.user, text)!, printing)) {
+    for (const card of getAllMostReasonable(
+      applyUniversesBeyondSetting(budgetRegexFilter(filter), req.user, text)!,
+      printing,
+    )) {
       const oracle = card.oracle_id;
       if (!oracle || eligibleByOracle.has(oracle)) continue;
       if (isExcludedFromSmartSearch(card)) continue;
@@ -108,6 +112,9 @@ export const recommendHandler = async (req: Request, res: Response) => {
       totalAdds: result.totalAdds,
     });
   } catch (err) {
+    if (err instanceof FilterTimeoutError) {
+      return res.status(400).json({ success: false, message: err.message });
+    }
     return sendPlaygroundError(req, res, err, 'ML Playground recommend');
   }
 };
@@ -117,6 +124,6 @@ export const routes = [
     method: 'post',
     path: '',
     // Grow calls this once per step, so allow more than Smart Search's 60 a minute.
-    handler: [jsonLimiter(60_000, 120), recommendHandler],
+    handler: [jsonLimiter(60_000, 120), regexFilterLimiter((req) => req.body?.filterText), recommendHandler],
   },
 ];

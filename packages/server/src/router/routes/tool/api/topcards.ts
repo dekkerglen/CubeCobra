@@ -2,7 +2,8 @@ import { makeFilter, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCar
 import { OrderedSortsType, SortFunctions } from '@utils/sorting/Sort';
 import { SortDirections, SortDirectionsType } from '@utils/sorting/sortContext';
 import Joi from 'joi';
-import { expensiveGetLimiter } from 'serverutils/rateLimiters';
+import { budgetRegexFilter, FilterTimeoutError } from 'serverutils/filterBudget';
+import { expensiveGetLimiter, regexFilterLimiter } from 'serverutils/rateLimiters';
 import { searchCards } from 'serverutils/tools';
 import { applyUniversesBeyondSetting } from 'serverutils/universesBeyond';
 
@@ -43,7 +44,7 @@ export const getTopCardsPage = async (req: Request, res: Response) => {
     }
 
     const { data, numResults } = searchCards(
-      applyUniversesBeyondSetting(filter, req.user, req.query.f)!, //On error the filter is null, which is handled
+      applyUniversesBeyondSetting(budgetRegexFilter(filter), req.user, req.query.f)!, //On error the filter is null, which is handled
       req.query.s as OrderedSortsType,
       parseInt(req.query.p as string, 10),
       req.query.d as SortDirectionsType,
@@ -56,6 +57,10 @@ export const getTopCardsPage = async (req: Request, res: Response) => {
       numResults,
     });
   } catch (err) {
+    if (err instanceof FilterTimeoutError) {
+      res.status(400).send({ success: 'false', message: err.message, numResults: 0, data: [] });
+      return;
+    }
     const error = err as Error;
     req.logger.error(error.message, error.stack);
     res.status(500).send({
@@ -70,6 +75,11 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [expensiveGetLimiter(60_000, 120), validateQuery, getTopCardsPage],
+    handler: [
+      expensiveGetLimiter(60_000, 120),
+      regexFilterLimiter((req) => req.query.f),
+      validateQuery,
+      getTopCardsPage,
+    ],
   },
 ];

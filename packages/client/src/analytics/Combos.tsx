@@ -1,6 +1,12 @@
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import { cardId, cardName, cardOracleId } from '@utils/cardutil';
+import {
+  matchComboRequirements,
+  RequirementMatch,
+  requirementsAreMet,
+  templateFilterText,
+} from '@utils/comboRequirements';
 import { Combo } from '@utils/datatypes/CardCatalog';
 
 import { Card, CardBody } from 'components/base/Card';
@@ -13,11 +19,15 @@ import { CSRFContext } from 'contexts/CSRFContext';
 import { Col, Flexbox, Row } from '../components/base/Layout';
 import Link from '../components/base/Link';
 import Text from '../components/base/Text';
+import withAutocard from '../components/WithAutocard';
 import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
 
+const AutocardLink = withAutocard(Link);
+
 interface ComboCardProps {
   combo: Combo;
+  requirements: RequirementMatch[];
 }
 
 const zoneLocations: Record<string, string> = {
@@ -31,7 +41,7 @@ const zoneLocations: Record<string, string> = {
   S: 'in the stack',
 };
 
-const ComboCard: React.FC<ComboCardProps> = ({ combo }) => {
+const ComboCard: React.FC<ComboCardProps> = ({ combo, requirements }) => {
   const analysisCards = useAnalysisCards();
 
   const cards = useMemo(() => {
@@ -77,18 +87,35 @@ const ComboCard: React.FC<ComboCardProps> = ({ combo }) => {
               )}
             </Flexbox>
           ))}
-          {(combo.requires ?? []).map((requirement, index) => (
+          {requirements.map(({ requirement, cards: slotCards }, index) => (
             <Flexbox key={index} direction="col">
               <Text>
                 <strong>{requirement?.quantity && requirement.quantity > 1 ? `${requirement.quantity}x ` : ''}</strong>
-                <Link
-                  href={`https://scryfall.com/search?q=${encodeURIComponent(requirement?.template?.scryfallQuery ?? '')}`}
-                >
-                  {requirement?.template?.name ?? 'Unknown requirement'}
-                </Link>{' '}
+                {slotCards ? (
+                  <Link
+                    href={`/tool/searchcards?f=${encodeURIComponent(templateFilterText(requirement.template.scryfallQuery))}`}
+                  >
+                    {requirement.template.name}
+                  </Link>
+                ) : (
+                  (requirement?.template?.name ?? 'Unknown requirement')
+                )}{' '}
                 {(requirement?.zoneLocations ?? []).map((zone) => zoneLocations[zone]).join(', ')}
                 {'.'}
               </Text>
+              {slotCards && slotCards.length > 0 && (
+                <Text className="ml-4">
+                  + In cube:{' '}
+                  {slotCards.map((card, cardIndex) => (
+                    <React.Fragment key={cardOracleId(card)}>
+                      {cardIndex > 0 && ', '}
+                      <AutocardLink card={card} href={`/tool/card/${encodeURIComponent(cardId(card))}`}>
+                        {cardName(card)}
+                      </AutocardLink>
+                    </React.Fragment>
+                  ))}
+                </Text>
+              )}
               {requirement?.mustBeCommander && <Text className="ml-4">+ Must be a commander</Text>}
               {requirement?.exileCardState && <Text className="ml-4">+ Exile State: {requirement.exileCardState}</Text>}
               {requirement?.libraryCardState && (
@@ -175,12 +202,21 @@ const Combos: React.FC = () => {
     fetchCombos();
   }, [cards, csrfFetch, cube.id]);
 
+  // Drop combos with an open slot (e.g. "a creature with persist") that nothing in the cube can fill.
+  const eligibleCombos = useMemo(
+    () =>
+      comboData
+        .map((combo) => ({ combo, requirements: matchComboRequirements(combo, cards) }))
+        .filter(({ requirements }) => requirementsAreMet(requirements)),
+    [comboData, cards],
+  );
+
   const allResults = useMemo(() => {
     const allResults: {
       id: number;
       name: string;
     }[] = [];
-    for (const combo of comboData) {
+    for (const { combo } of eligibleCombos) {
       for (const produce of combo.produces ?? []) {
         if (!produce?.feature) continue;
         if (allResults.some((result) => result.id === produce.feature.id)) continue;
@@ -192,12 +228,12 @@ const Combos: React.FC = () => {
     }
 
     return allResults;
-  }, [comboData]);
+  }, [eligibleCombos]);
 
   return (
     <Flexbox direction="col" gap="2" className="m-2">
       <Text semibold lg>
-        Combos ({comboData.length})
+        Combos ({eligibleCombos.length})
       </Text>
       <Text>
         A list of combos in the cube. These combos are curated by{' '}
@@ -223,15 +259,15 @@ const Combos: React.FC = () => {
         </Flexbox>
       ) : (
         <Row>
-          {comboData
-            .filter((combo) => {
+          {eligibleCombos
+            .filter(({ combo }) => {
               if (resultFilter === '') return true;
               return combo.produces.some((produce) => produce.feature.id === Number(resultFilter));
             })
-            .sort((a, b) => b.popularity - a.popularity)
-            .map((combo, index) => (
+            .sort((a, b) => b.combo.popularity - a.combo.popularity)
+            .map(({ combo, requirements }, index) => (
               <Col key={index} xs={12} lg={6}>
-                <ComboCard combo={combo} />
+                <ComboCard combo={combo} requirements={requirements} />
               </Col>
             ))}
         </Row>

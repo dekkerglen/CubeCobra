@@ -1,4 +1,4 @@
-import type { Request as ExpressRequest } from 'express';
+import type { NextFunction, Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import rateLimit, { ipKeyGenerator, type Options } from 'express-rate-limit';
 
 import type { Request, Response } from '../types/express';
@@ -65,3 +65,14 @@ export const expensiveGetLimiter = (windowMs: number, limit: number) =>
     keyGenerator: userOrIpKey,
     message: '429: Too Many Requests',
   });
+
+// Filters with /regex/ clauses cost the most to run over the whole catalog, so requests that use them also share one
+// tighter limit across every endpoint that does that. Spotting ":/" in the raw text is enough to pick the limit
+// without parsing; a quoted ":/" just counts against it too.
+const regexFilterRequests = jsonLimiter(60_000, 30);
+
+export const regexFilterLimiter =
+  (filterText: (req: ExpressRequest) => unknown) => (req: ExpressRequest, res: ExpressResponse, next: NextFunction) => {
+    const text = filterText(req);
+    return typeof text === 'string' && text.includes(':/') ? regexFilterRequests(req, res, next) : next();
+  };

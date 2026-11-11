@@ -817,3 +817,195 @@ describe('custom image filters', () => {
     expect(matches('is:image', customWithoutArt)).toBe(false);
   });
 });
+
+describe('Exact name (!) filter syntax', () => {
+  const named = (name: string): Card =>
+    createCard({ details: createCardDetails({ name, name_lower: name.toLowerCase() }) });
+
+  const matches = (query: string, card: Card): boolean => {
+    const { err, filter } = makeFilter(query);
+    expect(err).toBeFalsy();
+    return filter!(card);
+  };
+
+  it('matches the whole name, ignoring case', () => {
+    expect(matches('!"Lightning Bolt"', named('Lightning Bolt'))).toBe(true);
+    expect(matches("!'lightning bolt'", named('Lightning Bolt'))).toBe(true);
+    expect(matches('!"Lightning"', named('Lightning Bolt'))).toBe(false);
+  });
+
+  it('matches either face of a multi-faced card', () => {
+    const card = named('Delver of Secrets // Insectile Aberration');
+    expect(matches('!"Delver of Secrets"', card)).toBe(true);
+    expect(matches('!"Insectile Aberration"', card)).toBe(true);
+    expect(matches('!"Delver of Secrets // Insectile Aberration"', card)).toBe(true);
+  });
+
+  it('can be negated and combined', () => {
+    expect(matches('-!"Lightning Bolt"', named('Lightning Bolt'))).toBe(false);
+    expect(matches('t:instant -!"Chain Lightning"', named('Lightning Bolt'))).toBe(true);
+  });
+});
+
+describe('Mana cost comparisons', () => {
+  const withCost = (parsed_cost: string[]): Card => createCard({ details: createCardDetails({ parsed_cost }) });
+
+  const matches = (query: string, card: Card): boolean => {
+    const { err, filter } = makeFilter(query);
+    expect(err).toBeFalsy();
+    return filter!(card);
+  };
+
+  const noCost = withCost([]);
+  const zero = withCost(['0']);
+  const one = withCost(['1']);
+  const red = withCost(['r']);
+  const twoRedRed = withCost(['r', 'r', '2']);
+  const finks = withCost(['g-w', 'g-w', '1']);
+
+  it('treats a card with no mana cost as less than {0}', () => {
+    expect(matches('m<{0}', noCost)).toBe(true);
+    expect(matches('m<{0}', zero)).toBe(false);
+    expect(matches('m<={0}', zero)).toBe(true);
+    expect(matches('-m<{0}', zero)).toBe(true);
+    expect(matches('-m<{0}', noCost)).toBe(false);
+  });
+
+  it('treats any mana cost as at least {0}', () => {
+    expect(matches('m>={0}', zero)).toBe(true);
+    expect(matches('m>={0}', twoRedRed)).toBe(true);
+    expect(matches('m>=0', red)).toBe(true);
+    expect(matches('m>={0}', noCost)).toBe(false);
+    expect(matches('m>{0}', zero)).toBe(false);
+    expect(matches('m>{0}', one)).toBe(true);
+  });
+
+  it('compares generic mana by amount and other symbols by count', () => {
+    expect(matches('m>{R}{R}', twoRedRed)).toBe(true);
+    expect(matches('m>{R}{R}', red)).toBe(false);
+    expect(matches('m<{R}{R}', red)).toBe(true);
+    expect(matches('m<{2}', one)).toBe(true);
+    expect(matches('m<{2}', red)).toBe(false);
+    expect(matches('m<={3}{R}{R}', twoRedRed)).toBe(true);
+    expect(matches('m>={1}{R}', twoRedRed)).toBe(true);
+  });
+
+  it('matches hybrid symbols in either order', () => {
+    expect(matches('m>={G/W}{G/W}', finks)).toBe(true);
+    expect(matches('m>={W/G}', finks)).toBe(true);
+    expect(matches('m>={G}', finks)).toBe(false);
+  });
+
+  it('treats m: as "contains at least these symbols", like m>=', () => {
+    const redGreen = withCost(['g', 'r']);
+    const twoWhite = withCost(['w', '2']);
+    const fourWhiteWhite = withCost(['w', 'w', '4']);
+    expect(matches('m:rr', redGreen)).toBe(false);
+    expect(matches('m:rr', twoRedRed)).toBe(true);
+    expect(matches('-mana:{R}{R}', redGreen)).toBe(true);
+    expect(matches('m:2ww', twoWhite)).toBe(false);
+    expect(matches('m:2ww', fourWhiteWhite)).toBe(true);
+    expect(matches('m:{2}', twoRedRed)).toBe(true);
+    expect(matches('m:{2}', red)).toBe(false);
+  });
+
+  it('compares = and != by symbol counts', () => {
+    const rrg = withCost(['g', 'r', 'r']);
+    const rgg = withCost(['g', 'g', 'r']);
+    expect(matches('m={R}{R}{G}', rrg)).toBe(true);
+    expect(matches('m={R}{R}{G}', rgg)).toBe(false);
+    expect(matches('m!={R}{R}{G}', rgg)).toBe(true);
+    expect(matches('m={2}{R}{R}', twoRedRed)).toBe(true);
+    expect(matches('m={R}{R}', twoRedRed)).toBe(false);
+  });
+
+  it('matches either half of a split card', () => {
+    const fireIce = withCost(['u', '1', 'split', 'r', '1']);
+    expect(matches('m={1}{R}', fireIce)).toBe(true);
+    expect(matches('m={1}{U}', fireIce)).toBe(true);
+    expect(matches('m:{U}{R}', fireIce)).toBe(false);
+    expect(matches('m<={1}{R}', fireIce)).toBe(true);
+    expect(matches('m!={1}{R}', fireIce)).toBe(false);
+  });
+});
+
+describe('Regex filters', () => {
+  const cardWithText = (name: string, oracle_text: string, type = 'Creature — Human'): Card =>
+    createCard({ details: createCardDetails({ name, name_lower: name.toLowerCase(), oracle_text, type }) });
+
+  const matches = (query: string, card: Card): boolean => {
+    const { err, filter } = makeFilter(query);
+    expect(err).toBeFalsy();
+    return filter!(card);
+  };
+
+  const factory = cardWithText(
+    "Mishra's Factory",
+    "{T}: Add {C}.\n{1}: Mishra's Factory becomes a 2/2 Assembly-Worker artifact creature until end of turn. It's still a land.",
+    'Land',
+  );
+
+  it('is case-insensitive and anchors at line starts', () => {
+    expect(matches('o:/^{T}: add/', factory)).toBe(true);
+    expect(matches('o:/^\\{1\\}: /', factory)).toBe(true);
+    expect(matches('o:/^becomes/', factory)).toBe(false);
+  });
+
+  it('matches ~ against the card name', () => {
+    expect(matches('o:/~ becomes a \\d\\/\\d/', factory)).toBe(true);
+  });
+
+  it('expands Scryfall shorthands', () => {
+    const cycler = cardWithText('Some Land', 'Cycling {B}', 'Land');
+    expect(matches('o:/^cycling (\\{1\\}|\\sc)$/', cycler)).toBe(true);
+    expect(matches('o:/^cycling \\sm$/', cycler)).toBe(true);
+    expect(matches('o:/\\spt/', factory)).toBe(true);
+    expect(matches('o:/^cycling (\\{1\\}|\\sc)$/', cardWithText('Other Land', 'Cycling {2}', 'Land'))).toBe(false);
+  });
+
+  it('works on type and name', () => {
+    expect(matches('t:/^land$/', factory)).toBe(true);
+    expect(matches('name:/^mishra/', factory)).toBe(true);
+    expect(matches('name:/factory$/ t:/creature/', factory)).toBe(false);
+  });
+
+  it('can be negated and combined with other clauses', () => {
+    expect(matches('-o:/^becomes/ t:land', factory)).toBe(true);
+    expect(matches('o:/^nothing/ or name:/factory$/', factory)).toBe(true);
+  });
+
+  it('translates \\u escapes', () => {
+    expect(matches('name:/\\u006dishra/', factory)).toBe(true);
+  });
+
+  it('rejects invalid patterns and syntax RE2 lacks', () => {
+    expect(makeFilter('o:/(unclosed/').err).toBeTruthy();
+    expect(makeFilter('o:/\\smr/').err).toBeTruthy();
+    expect(makeFilter('o:/(?=add)/').err).toBeTruthy();
+    expect(makeFilter('o:/(a)\\1/').err).toBeTruthy();
+  });
+
+  it('caps how many regexes a filter has and how large they are', () => {
+    expect(makeFilter(Array(5).fill('o:/a/').join(' ')).err).toBeFalsy();
+    expect(makeFilter(Array(6).fill('o:/a/').join(' ')).err).toBeTruthy();
+    expect(makeFilter(`o:/${'a'.repeat(200)}/`).err).toBeFalsy();
+    expect(makeFilter(`o:/${'a'.repeat(201)}/`).err).toBeTruthy();
+    expect(makeFilter('o:/a{1,100}/').err).toBeFalsy();
+    expect(makeFilter('o:/a{101}/').err).toBeTruthy();
+    expect(makeFilter('o:/a{2,101}/').err).toBeTruthy();
+    expect(makeFilter('o:/\\{101\\}/').err).toBeFalsy();
+  });
+
+  it('runs patterns that backtrack catastrophically elsewhere in linear time', () => {
+    const card = cardWithText('Some Card', `${'a'.repeat(5000)}!`);
+    const start = Date.now();
+    expect(matches('o:/(a+)+$/', card)).toBe(false);
+    expect(matches('o:/(.*)*x/', card)).toBe(false);
+    expect(Date.now() - start).toBeLessThan(1000);
+  });
+
+  it('does not change how bare words with slashes parse', () => {
+    expect(makeFilter('o:+1/+1').err).toBeFalsy();
+    expect(makeFilter('o:"/"').err).toBeFalsy();
+  });
+});

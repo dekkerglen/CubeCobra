@@ -22,6 +22,9 @@ import {
   stringOperation,
   stringContainOperation,
   nameStringOperation,
+  exactNameOperation,
+  compileScryfallRegex,
+  regexCondition,
   equalityOperation,
   setOperation,
   rarityOperation,
@@ -93,6 +96,7 @@ import {
 const negated = (inner) => {
   const result = (card) => !inner(card);
   result.fieldsUsed = inner.fieldsUsed;
+  result.regexes = inner.regexes;
   result.describe = `not (${inner.describe})`;
   return result;
 };
@@ -116,6 +120,7 @@ var grammar = {
     {"name": "filter", "symbols": ["filter", "__", "connector", "clause"], "postprocess":  ([clause1, , connectorFunc, clause2]) => {
           const result = connectorFunc(clause1, clause2);
           result.fieldsUsed = [...new Set(clause1.fieldsUsed.concat(clause2.fieldsUsed))];
+          result.regexes = [...(clause1.regexes ?? []), ...(clause2.regexes ?? [])];
           result.conn = connectorFunc.conn;
           result.describe = describeConnect(clause1, clause2, connectorFunc.conn);
           return result;
@@ -2173,6 +2178,11 @@ var grammar = {
     {"name": "stringValue$subexpression$1", "symbols": ["dqstring"]},
     {"name": "stringValue$subexpression$1", "symbols": ["sqstring"]},
     {"name": "stringValue", "symbols": ["stringValue$subexpression$1"], "postprocess": ([[value]]) => value.toLowerCase()},
+    {"name": "regexValue$ebnf$1", "symbols": []},
+    {"name": "regexValue$ebnf$1$subexpression$1", "symbols": [/[^/\\\n]/]},
+    {"name": "regexValue$ebnf$1$subexpression$1", "symbols": [{"literal":"\\"}, /[^\n]/]},
+    {"name": "regexValue$ebnf$1", "symbols": ["regexValue$ebnf$1", "regexValue$ebnf$1$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
+    {"name": "regexValue", "symbols": [{"literal":"/"}, "regexValue$ebnf$1", {"literal":"/"}], "postprocess": ([, chars], _l, reject) => compileScryfallRegex(chars.flat().join('')) ?? reject},
     {"name": "noQuoteStringValue$subexpression$1$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "noQuoteStringValue$subexpression$1", "symbols": ["noQuoteStringValue$subexpression$1$subexpression$1"]},
     {"name": "noQuoteStringValue$subexpression$1$subexpression$2", "symbols": [/[aA]/, /[nN]/], "postprocess": function(d) {return d.join(""); }},
@@ -2180,7 +2190,7 @@ var grammar = {
     {"name": "noQuoteStringValue$subexpression$1$subexpression$3", "symbols": [/[oO]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "noQuoteStringValue$subexpression$1", "symbols": ["noQuoteStringValue$subexpression$1$subexpression$3"]},
     {"name": "noQuoteStringValue", "symbols": ["noQuoteStringValue$subexpression$1"], "postprocess": ([[value]]) => value.toLowerCase()},
-    {"name": "noQuoteStringValue$subexpression$2", "symbols": [/[^aAoO\- \t\n"'\\=<>:()]/]},
+    {"name": "noQuoteStringValue$subexpression$2", "symbols": [/[^aAoO\-/ \t\n"'\\=<>:()]/]},
     {"name": "noQuoteStringValue$subexpression$2$subexpression$1", "symbols": [/[aA]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "noQuoteStringValue$subexpression$2$subexpression$2", "symbols": [/[^nN \t\n"'\\=<>:()]/]},
     {"name": "noQuoteStringValue$subexpression$2$subexpression$2", "symbols": ["wordParens"]},
@@ -2211,7 +2221,7 @@ var grammar = {
     {"name": "wordTail$ebnf$2", "symbols": ["wordTail$ebnf$2", "wordTail$ebnf$2$subexpression$1"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "wordTail", "symbols": ["wordTail$ebnf$1", "wordTail$ebnf$2"], "postprocess": ([chars, segments]) => chars.join('') + segments.map(([parens, rest]) => parens + rest.join('')).join('')},
     {"name": "wordParens", "symbols": [{"literal":"("}, "wordTail", {"literal":")"}], "postprocess": ([, inner]) => `(${inner})`},
-    {"name": "manaCostOpValue", "symbols": ["equalityOperator", "manaCostValue"], "postprocess": ([op, value]) => manaCostOperation(op, value)},
+    {"name": "manaCostOpValue", "symbols": ["anyOperator", "manaCostValue"], "postprocess": ([op, value]) => manaCostOperation(op, value)},
     {"name": "manaCostValue$ebnf$1", "symbols": ["manaSymbol"]},
     {"name": "manaCostValue$ebnf$1", "symbols": ["manaCostValue$ebnf$1", "manaSymbol"], "postprocess": function arrpush(d) {return d[0].concat([d[1]]);}},
     {"name": "manaCostValue", "symbols": ["manaCostValue$ebnf$1"], "postprocess": id},
@@ -2525,6 +2535,15 @@ var grammar = {
     {"name": "typeCondition$subexpression$1$subexpression$4", "symbols": [/[tT]/, /[yY]/, /[pP]/, /[eE]/, /[lL]/, /[iI]/, /[nN]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "typeCondition$subexpression$1", "symbols": ["typeCondition$subexpression$1$subexpression$4"]},
     {"name": "typeCondition", "symbols": ["typeCondition$subexpression$1", "stringContainOpValue"], "postprocess": ([, valuePred]) => genericCondition('type_line', cardType, valuePred)},
+    {"name": "typeCondition$subexpression$2$subexpression$1", "symbols": [/[tT]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "typeCondition$subexpression$2", "symbols": ["typeCondition$subexpression$2$subexpression$1"]},
+    {"name": "typeCondition$subexpression$2$subexpression$2", "symbols": [/[tT]/, /[yY]/, /[pP]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "typeCondition$subexpression$2", "symbols": ["typeCondition$subexpression$2$subexpression$2"]},
+    {"name": "typeCondition$subexpression$2$subexpression$3", "symbols": [/[tT]/, /[yY]/, /[pP]/, /[eE]/, {"literal":"_"}, /[lL]/, /[iI]/, /[nN]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "typeCondition$subexpression$2", "symbols": ["typeCondition$subexpression$2$subexpression$3"]},
+    {"name": "typeCondition$subexpression$2$subexpression$4", "symbols": [/[tT]/, /[yY]/, /[pP]/, /[eE]/, /[lL]/, /[iI]/, /[nN]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "typeCondition$subexpression$2", "symbols": ["typeCondition$subexpression$2$subexpression$4"]},
+    {"name": "typeCondition", "symbols": ["typeCondition$subexpression$2", {"literal":":"}, "regexValue"], "postprocess": ([, , regex]) => regexCondition('type_line', cardType, regex, false)},
     {"name": "oracleCondition$subexpression$1$subexpression$1", "symbols": [/[oO]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "oracleCondition$subexpression$1", "symbols": ["oracleCondition$subexpression$1$subexpression$1"]},
     {"name": "oracleCondition$subexpression$1$subexpression$2", "symbols": [/[oO]/, /[rR]/, /[aA]/, /[cC]/, /[lL]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
@@ -2532,6 +2551,13 @@ var grammar = {
     {"name": "oracleCondition$subexpression$1$subexpression$3", "symbols": [/[tT]/, /[eE]/, /[xX]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "oracleCondition$subexpression$1", "symbols": ["oracleCondition$subexpression$1$subexpression$3"]},
     {"name": "oracleCondition", "symbols": ["oracleCondition$subexpression$1", "nameStringOpValue"], "postprocess": ([, valuePred]) => genericCondition('oracle_text', cardOracleText, valuePred)},
+    {"name": "oracleCondition$subexpression$2$subexpression$1", "symbols": [/[oO]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "oracleCondition$subexpression$2", "symbols": ["oracleCondition$subexpression$2$subexpression$1"]},
+    {"name": "oracleCondition$subexpression$2$subexpression$2", "symbols": [/[oO]/, /[rR]/, /[aA]/, /[cC]/, /[lL]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "oracleCondition$subexpression$2", "symbols": ["oracleCondition$subexpression$2$subexpression$2"]},
+    {"name": "oracleCondition$subexpression$2$subexpression$3", "symbols": [/[tT]/, /[eE]/, /[xX]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "oracleCondition$subexpression$2", "symbols": ["oracleCondition$subexpression$2$subexpression$3"]},
+    {"name": "oracleCondition", "symbols": ["oracleCondition$subexpression$2", {"literal":":"}, "regexValue"], "postprocess": ([, , regex]) => regexCondition('oracle_text', cardOracleText, regex, true)},
     {"name": "setCondition$subexpression$1$subexpression$1", "symbols": [/[sS]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "setCondition$subexpression$1", "symbols": ["setCondition$subexpression$1$subexpression$1"]},
     {"name": "setCondition$subexpression$1$subexpression$2", "symbols": [/[sS]/, /[eE]/, /[tT]/], "postprocess": function(d) {return d.join(""); }},
@@ -2691,6 +2717,14 @@ var grammar = {
     {"name": "nameCondition$subexpression$1$subexpression$2", "symbols": [/[nN]/, /[aA]/, /[mM]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "nameCondition$subexpression$1", "symbols": ["nameCondition$subexpression$1$subexpression$2"]},
     {"name": "nameCondition", "symbols": ["nameCondition$subexpression$1", "stringOpValue"], "postprocess": ([, valuePred]) => genericCondition('name_lower', cardNameLower, valuePred)},
+    {"name": "nameCondition$subexpression$2$subexpression$1", "symbols": [/[nN]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "nameCondition$subexpression$2", "symbols": ["nameCondition$subexpression$2$subexpression$1"]},
+    {"name": "nameCondition$subexpression$2$subexpression$2", "symbols": [/[nN]/, /[aA]/, /[mM]/, /[eE]/], "postprocess": function(d) {return d.join(""); }},
+    {"name": "nameCondition$subexpression$2", "symbols": ["nameCondition$subexpression$2$subexpression$2"]},
+    {"name": "nameCondition", "symbols": ["nameCondition$subexpression$2", {"literal":":"}, "regexValue"], "postprocess": ([, , regex]) => regexCondition('name_lower', cardNameLower, regex, false)},
+    {"name": "nameCondition$subexpression$3", "symbols": ["dqstring"]},
+    {"name": "nameCondition$subexpression$3", "symbols": ["sqstring"]},
+    {"name": "nameCondition", "symbols": [{"literal":"!"}, "nameCondition$subexpression$3"], "postprocess": ([, [value]]) => genericCondition('name_lower', cardNameLower, exactNameOperation(value))},
     {"name": "nameCondition", "symbols": ["stringValue"], "postprocess": ([value]) => { const pred = (fieldValue) => fieldValue.includes(value.toLowerCase()); pred.describe = `contains "${value.toLowerCase()}"`; return genericCondition('name_lower', cardNameLower, pred); }},
     {"name": "manaCostCondition$subexpression$1$subexpression$1", "symbols": [/[mM]/, /[aA]/, /[nN]/, /[aA]/], "postprocess": function(d) {return d.join(""); }},
     {"name": "manaCostCondition$subexpression$1", "symbols": ["manaCostCondition$subexpression$1$subexpression$1"]},

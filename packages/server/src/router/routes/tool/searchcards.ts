@@ -4,7 +4,8 @@ import { CardDetails } from '@utils/datatypes/Card';
 import { makeFilter, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
 import { OrderedSortsType } from '@utils/sorting/Sort';
 import { SortDirectionsType } from '@utils/sorting/sortContext';
-import { expensiveGetLimiter } from 'serverutils/rateLimiters';
+import { budgetRegexFilter, FilterTimeoutError } from 'serverutils/filterBudget';
+import { expensiveGetLimiter, regexFilterLimiter } from 'serverutils/rateLimiters';
 import { render } from 'serverutils/render';
 import { searchAllCards } from 'serverutils/tools';
 import { applyUniversesBeyondSetting } from 'serverutils/universesBeyond';
@@ -64,7 +65,7 @@ export const csvHandler = async (req: Request, res: Response) => {
 
     const includeExtras = req.query.ie === '1' || req.query.ie === 'true';
     const cards = searchAllCards(
-      applyUniversesBeyondSetting(filter, req.user, filterText)!,
+      applyUniversesBeyondSetting(budgetRegexFilter(filter), req.user, filterText)!,
       req.query.s as OrderedSortsType,
       req.query.d as SortDirectionsType,
       toDistinct(req.query.di as string | undefined),
@@ -81,6 +82,10 @@ export const csvHandler = async (req: Request, res: Response) => {
     }
     return res.end();
   } catch (error) {
+    if (error instanceof FilterTimeoutError) {
+      res.status(400).send(error.message);
+      return;
+    }
     const e = error as Error;
     req.logger.error(e.message, e.stack);
     res.status(500).send('Error generating CSV');
@@ -98,6 +103,6 @@ export const routes = [
     method: 'get',
     path: '/csv',
     // Exports every matching card, so it is far heavier than a page of results.
-    handler: [expensiveGetLimiter(60_000, 10), csvHandler],
+    handler: [expensiveGetLimiter(60_000, 10), regexFilterLimiter((req) => req.query.f), csvHandler],
   },
 ];

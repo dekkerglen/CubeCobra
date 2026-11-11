@@ -4,7 +4,8 @@ import { makeFilter, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCar
 import { cubeDao } from 'dynamo/daos';
 import { cardFromId, getAllMostReasonable } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
-import { jsonLimiter } from 'serverutils/rateLimiters';
+import { budgetRegexFilter, FilterTimeoutError } from 'serverutils/filterBudget';
+import { jsonLimiter, regexFilterLimiter } from 'serverutils/rateLimiters';
 import { recommendOrThrow } from 'serverutils/ml';
 import { isExcludedFromSmartSearch } from 'serverutils/smartSearch';
 import { applyUniversesBeyondSetting } from 'serverutils/universesBeyond';
@@ -83,7 +84,7 @@ export const addsHandler = async (req: Request, res: Response) => {
     // playtest cards. Each eligible oracle maps to one displayable
     // (printing-preferred) card.
     const eligible = getAllMostReasonable(
-      applyUniversesBeyondSetting(filter, req.user, filterText)!,
+      applyUniversesBeyondSetting(budgetRegexFilter(filter), req.user, filterText)!,
       printingPreference,
     );
     const eligibleByOracle = new Map<string, CardDetails>();
@@ -146,6 +147,11 @@ export const addsHandler = async (req: Request, res: Response) => {
       totalAdds: result.totalAdds,
     });
   } catch (err) {
+    if (err instanceof FilterTimeoutError) {
+      return res
+        .status(400)
+        .send({ success: 'false', message: err.message, cardIDs: [], hasMoreAdds: false, totalAdds: 0 });
+    }
     const error = err as Error;
     req.logger.error(error.message, error.stack);
     return res.status(500).send({
@@ -163,6 +169,6 @@ export const routes = [
     method: 'post',
     path: '',
     // Each call runs a recommender query plus a filter parse, so keep anonymous callers in check.
-    handler: [jsonLimiter(60_000, 60), addsHandler],
+    handler: [jsonLimiter(60_000, 60), regexFilterLimiter((req) => req.body?.filterText), addsHandler],
   },
 ];

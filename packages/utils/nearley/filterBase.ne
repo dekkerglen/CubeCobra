@@ -22,6 +22,7 @@ filter ->
     filter __ connector clause {% ([clause1, , connectorFunc, clause2]) => {
       const result = connectorFunc(clause1, clause2);
       result.fieldsUsed = [...new Set(clause1.fieldsUsed.concat(clause2.fieldsUsed))];
+      result.regexes = [...(clause1.regexes ?? []), ...(clause2.regexes ?? [])];
       result.conn = connectorFunc.conn;
       result.describe = describeConnect(clause1, clause2, connectorFunc.conn);
       return result;

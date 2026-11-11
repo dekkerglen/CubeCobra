@@ -1,14 +1,14 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { ArrowRightIcon } from '@primer/octicons-react';
-import { cardName } from '@utils/cardutil';
 import {
+  CleanupCardRef,
   findDuplicateRemovals,
+  findOverlapRemovals,
   findPrintingCandidates,
   findPrintingUpdates,
   makeSwapPredicate,
 } from '@utils/cubeCleanup';
-import Card, {
+import {
   BoardType,
   CardDetails,
   DefaultPrintingPreference,
@@ -24,13 +24,10 @@ import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
 import { TabbedView } from 'components/base/Tabs';
 import Text from 'components/base/Text';
-import withAutocard from 'components/WithAutocard';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
 import { trackEvent } from 'utils/analytics';
 import { getPrintings } from 'utils/cards/getPrintings';
-
-const AutocardSpan = withAutocard('span');
 
 const PRINTINGS_TAB = 1;
 
@@ -40,53 +37,6 @@ const PRINTING_OPTIONS = [
   { value: PrintingPreference.FIRST, label: 'First' },
   { value: PrintingPreference.CHEAPEST, label: 'Cheapest' },
 ];
-
-const printingLabel = (details: CardDetails | undefined): string =>
-  details ? `${details.set.toUpperCase()}-${details.collector_number}` : '';
-
-// The card as it looks on a given printing. A custom image would hide the printing, which is
-// the whole point of the preview, so it is dropped.
-const printingPreview = (card: Card, details: CardDetails | undefined): Card => ({
-  ...card,
-  cardID: details?.scryfall_id ?? card.cardID,
-  details,
-  imgUrl: undefined,
-  imgBackUrl: undefined,
-});
-
-const positionKey = (board: string | undefined, index: number | undefined): string => `${board}:${index}`;
-
-const CardRows: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <div className="max-h-72 overflow-y-auto rounded border border-border">{children}</div>
-);
-
-interface CardRowProps {
-  card: Card | undefined;
-  // The printing previews carry the hover on that row, so its name stays plain.
-  plainName?: boolean;
-  children: React.ReactNode;
-}
-
-const CardRow: React.FC<CardRowProps> = ({ card, plainName = false, children }) => (
-  <Flexbox
-    direction="row"
-    justify="between"
-    alignItems="center"
-    gap="2"
-    className="px-2 py-1 text-sm border-b border-border last:border-b-0"
-  >
-    {card && !plainName ? (
-      <AutocardSpan card={card} className="truncate">
-        {cardName(card)}
-      </AutocardSpan>
-    ) : (
-      <span className="truncate">{card ? cardName(card) : ''}</span>
-    )}
-    <Flexbox direction="row" alignItems="center" gap="2" className="shrink-0 text-text-secondary">
-      {children}
-    </Flexbox>
-  </Flexbox>
-);
 
 interface BoardOption {
   value: string;
@@ -110,7 +60,9 @@ const CubeCleanupModal: React.FC<CubeCleanupModalProps> = ({ isOpen, setOpen, bo
   const { cube, changes, changedCards, bulkRemoveCard, bulkEditPrinting } = useContext(CubeContext)!;
 
   const [activeTab, setActiveTab] = useState(0);
-  const [selectedBoards, setSelectedBoards] = useState<string[]>([boardToEdit]);
+  const [cleanBoard, setCleanBoard] = useState<string>(boardToEdit);
+  const [pickedReference, setPickedReference] = useState('');
+  const [printingBoards, setPrintingBoards] = useState<string[]>([boardToEdit]);
   const [wasOpen, setWasOpen] = useState(isOpen);
   const [printing, setPrinting] = useState<PrintingPreference>(
     isPrintingPreference(cube.defaultPrinting) ? cube.defaultPrinting : DefaultPrintingPreference,
@@ -119,50 +71,63 @@ const CubeCleanupModal: React.FC<CubeCleanupModalProps> = ({ isOpen, setOpen, bo
   const [results, setResults] = useState<Record<string, Record<string, CardDetails>>>({});
   const [failedKey, setFailedKey] = useState<string | null>(null);
 
-  // Every opening starts from the edited board alone. Adjusted during render rather than in an
-  // effect, so the first frame of the opened modal already shows it.
+  // Every opening starts from the edited board. Adjusted during render rather than in an effect,
+  // so the first frame of the opened modal already shows it.
   if (isOpen !== wasOpen) {
     setWasOpen(isOpen);
     if (isOpen) {
-      setSelectedBoards([boardToEdit]);
+      setCleanBoard(boardToEdit);
+      setPickedReference('');
+      setPrintingBoards([boardToEdit]);
     }
   }
-
-  // Kept in the cube's board order, whatever order the boxes were ticked in.
-  const targetBoards = useMemo(
-    () => boardOptions.filter((board) => selectedBoards.includes(board.value)),
-    [boardOptions, selectedBoards],
-  );
-  const boardLabels = useMemo(
-    () => Object.fromEntries(boardOptions.map((board) => [board.value, board.label])),
-    [boardOptions],
-  );
-
-  const setBoardSelected = (board: string, selected: boolean) =>
-    setSelectedBoards((prev) => (selected ? [...prev, board] : prev.filter((value) => value !== board)));
 
   // Precomputes the swapped positions once, rather than on every card of every render.
   const isSwapped = useMemo(() => makeSwapPredicate(changes), [changes]);
 
-  const targetCards = useMemo(
-    () => targetBoards.flatMap((board) => changedCards[board.value] ?? []),
-    [targetBoards, changedCards],
+  const cleanCards = useMemo(() => changedCards[cleanBoard] ?? [], [changedCards, cleanBoard]);
+
+  const duplicateRemovals = useMemo(() => findDuplicateRemovals(cleanCards, isSwapped), [cleanCards, isSwapped]);
+
+  const referenceBoards = useMemo(
+    () => boardOptions.filter((board) => board.value !== cleanBoard),
+    [boardOptions, cleanBoard],
   );
 
-  // Duplicates are found across every checked board at once, and the copy kept sits on the
-  // earliest of them, so checking the mainboard alongside the maybeboard clears the maybeboard of
-  // everything the mainboard already holds.
-  const duplicateRemovals = useMemo(
-    () =>
-      findDuplicateRemovals(
-        targetCards,
+  // Worked out for every other board so each choice in the dropdown can say what it would remove.
+  const overlapByBoard = useMemo(() => {
+    const removalsByBoard: Record<string, CleanupCardRef[]> = {};
+    for (const reference of referenceBoards) {
+      removalsByBoard[reference.value] = findOverlapRemovals(
+        cleanCards,
+        changedCards[reference.value] ?? [],
         isSwapped,
-        targetBoards.map((board) => board.value),
-      ),
-    [targetCards, isSwapped, targetBoards],
+      );
+    }
+
+    return removalsByBoard;
+  }, [referenceBoards, cleanCards, changedCards, isSwapped]);
+
+  const referenceBoard = referenceBoards.some((board) => board.value === pickedReference)
+    ? pickedReference
+    : referenceBoards[0]?.value;
+  const overlapRemovals = referenceBoard ? (overlapByBoard[referenceBoard] ?? []) : [];
+
+  // Kept in the cube's board order, whatever order the boxes were ticked in.
+  const printingTargets = useMemo(
+    () => boardOptions.filter((board) => printingBoards.includes(board.value)),
+    [boardOptions, printingBoards],
   );
 
-  const candidates = useMemo(() => findPrintingCandidates(targetCards, isSwapped), [targetCards, isSwapped]);
+  const setPrintingBoardSelected = (board: string, selected: boolean) =>
+    setPrintingBoards((prev) => (selected ? [...prev, board] : prev.filter((value) => value !== board)));
+
+  const printingCards = useMemo(
+    () => printingTargets.flatMap((board) => changedCards[board.value] ?? []),
+    [printingTargets, changedCards],
+  );
+
+  const candidates = useMemo(() => findPrintingCandidates(printingCards, isSwapped), [printingCards, isSwapped]);
   const requestKey = `${printing}:${candidates.join(',')}`;
   const printings = results[requestKey];
 
@@ -194,31 +159,28 @@ const CubeCleanupModal: React.FC<CubeCleanupModalProps> = ({ isOpen, setOpen, bo
   const printingUpdates = useMemo(
     () =>
       printings
-        ? targetBoards.flatMap((board) => findPrintingUpdates(changedCards[board.value] ?? [], printings, isSwapped))
+        ? printingTargets.flatMap((board) => findPrintingUpdates(changedCards[board.value] ?? [], printings, isSwapped))
         : [],
-    [printings, targetBoards, changedCards, isSwapped],
+    [printings, printingTargets, changedCards, isSwapped],
   );
 
-  const cardsByPosition = useMemo(() => {
-    const map = new Map<string, Card>();
-    for (const card of targetCards) {
-      map.set(positionKey(card.board, card.index), card);
-    }
-    return map;
-  }, [targetCards]);
-
   const printingsLoading = !printings && failedKey !== requestKey;
-  const trackedBoards = targetBoards.map((board) => board.value).join(',');
 
-  const handleRemoveDuplicates = useCallback(() => {
-    if (duplicateRemovals.length === 0) {
-      return;
-    }
+  const boardLabel = (value: string | undefined): string =>
+    boardOptions.find((board) => board.value === value)?.label ?? value ?? '';
 
-    bulkRemoveCard(duplicateRemovals);
-    trackEvent('cube_cleanup_duplicates', { count: duplicateRemovals.length, board: trackedBoards });
-    setOpen(false);
-  }, [duplicateRemovals, bulkRemoveCard, trackedBoards, setOpen]);
+  const handleRemove = useCallback(
+    (removals: CleanupCardRef[], event: string, otherBoard?: string) => {
+      if (removals.length === 0) {
+        return;
+      }
+
+      bulkRemoveCard(removals);
+      trackEvent(event, { count: removals.length, board: cleanBoard, ...(otherBoard ? { otherBoard } : {}) });
+      setOpen(false);
+    },
+    [bulkRemoveCard, cleanBoard, setOpen],
+  );
 
   const handleUpdatePrintings = useCallback(() => {
     if (printingUpdates.length === 0) {
@@ -226,118 +188,128 @@ const CubeCleanupModal: React.FC<CubeCleanupModalProps> = ({ isOpen, setOpen, bo
     }
 
     bulkEditPrinting(printingUpdates);
-    trackEvent('cube_cleanup_printings', { count: printingUpdates.length, board: trackedBoards, printing });
+    trackEvent('cube_cleanup_printings', {
+      count: printingUpdates.length,
+      board: printingTargets.map((board) => board.value).join(','),
+      printing,
+    });
     setOpen(false);
-  }, [printingUpdates, bulkEditPrinting, trackedBoards, printing, setOpen]);
+  }, [printingUpdates, bulkEditPrinting, printingTargets, printing, setOpen]);
 
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} md>
       <ModalHeader setOpen={setOpen}>Cleanup</ModalHeader>
       <ModalBody>
-        <Flexbox direction="col" gap="2">
-          <Text sm semibold>
-            Boards
-          </Text>
-          <Flexbox direction="row" wrap="wrap" gap="4">
-            {boardOptions.map((board) => (
-              <Checkbox
-                key={board.value}
-                label={board.label}
-                checked={selectedBoards.includes(board.value)}
-                setChecked={(selected) => setBoardSelected(board.value, selected)}
-              />
-            ))}
-          </Flexbox>
-          <TabbedView
-            activeTab={activeTab}
-            tabs={[
-              {
-                label: 'Remove Duplicates',
-                onClick: () => setActiveTab(0),
-                content: (
-                  <Flexbox direction="col" gap="2" className="pt-3">
-                    {duplicateRemovals.length > 0 && (
-                      <CardRows>
-                        {duplicateRemovals.map((removal) => {
-                          const card = cardsByPosition.get(positionKey(removal.board, removal.index));
-                          return (
-                            <CardRow key={positionKey(removal.board, removal.index)} card={card}>
-                              {targetBoards.length > 1 && <span>{boardLabels[removal.board] ?? removal.board}</span>}
-                              <span>{printingLabel(card?.details)}</span>
-                            </CardRow>
-                          );
-                        })}
-                      </CardRows>
-                    )}
-                    <Button
-                      color="primary"
-                      block
-                      disabled={duplicateRemovals.length === 0}
-                      onClick={handleRemoveDuplicates}
-                    >
-                      {`Remove Duplicates (${duplicateRemovals.length})`}
-                    </Button>
-                  </Flexbox>
-                ),
-              },
-              {
-                label: 'Update Printings',
-                onClick: () => setActiveTab(PRINTINGS_TAB),
-                content: (
-                  <Flexbox direction="col" gap="2" className="pt-3">
-                    <Select
-                      id="cleanup-printing"
-                      label="Printing"
-                      value={printing}
-                      setValue={(value) => setPrinting(value as PrintingPreference)}
-                      options={PRINTING_OPTIONS}
-                    />
-                    {printingsLoading ? (
-                      <Flexbox direction="row" justify="center" className="w-full py-2">
-                        <Spinner />
-                      </Flexbox>
-                    ) : !printings ? (
+        <Text sm className="text-text-secondary">
+          Cleanup only changes cards shown by the current filter, and skips custom cards and vouchers. Its changes go to
+          your change list to review before you save.
+        </Text>
+        <TabbedView
+          activeTab={activeTab}
+          tabs={[
+            {
+              label: 'Remove Duplicates',
+              onClick: () => setActiveTab(0),
+              content: (
+                <Flexbox direction="col" gap="2" className="pt-3">
+                  <Select
+                    id="cleanup-board"
+                    label="Board"
+                    value={cleanBoard}
+                    setValue={setCleanBoard}
+                    options={boardOptions}
+                  />
+                  <Text sm className="text-text-secondary">
+                    Keeps one copy of each card in {boardLabel(cleanBoard)} and removes the rest, counting different
+                    printings of a card as copies. The copy kept is the one with the most tags and notes.
+                  </Text>
+                  <Button
+                    color="primary"
+                    block
+                    disabled={duplicateRemovals.length === 0}
+                    onClick={() => handleRemove(duplicateRemovals, 'cube_cleanup_duplicates')}
+                  >
+                    {`Remove Duplicates (${duplicateRemovals.length})`}
+                  </Button>
+                  {referenceBoard && (
+                    <Flexbox direction="col" gap="2" className="mt-2 pt-3 border-t border-border">
+                      <Select
+                        id="cleanup-reference"
+                        label="Remove cards also in"
+                        value={referenceBoard}
+                        setValue={setPickedReference}
+                        options={referenceBoards.map((board) => ({
+                          value: board.value,
+                          label: `${board.label} (${overlapByBoard[board.value]?.length ?? 0})`,
+                        }))}
+                      />
                       <Text sm className="text-text-secondary">
-                        Failed to load printings.
+                        Removes every card in {boardLabel(cleanBoard)} that's also in {boardLabel(referenceBoard)}.
                       </Text>
-                    ) : (
-                      printingUpdates.length > 0 && (
-                        <CardRows>
-                          {printingUpdates.map((update) => {
-                            const card = cardsByPosition.get(positionKey(update.board, update.index));
-                            return (
-                              <CardRow key={positionKey(update.board, update.index)} card={card} plainName>
-                                {card && (
-                                  <>
-                                    <AutocardSpan card={printingPreview(card, card.details)}>
-                                      {printingLabel(card.details)}
-                                    </AutocardSpan>
-                                    <ArrowRightIcon size={12} />
-                                    <AutocardSpan card={printingPreview(card, update.details)}>
-                                      {printingLabel(update.details)}
-                                    </AutocardSpan>
-                                  </>
-                                )}
-                              </CardRow>
-                            );
-                          })}
-                        </CardRows>
-                      )
-                    )}
-                    <Button
-                      color="primary"
-                      block
-                      disabled={printingsLoading || printingUpdates.length === 0}
-                      onClick={handleUpdatePrintings}
-                    >
-                      {`Update Printings (${printingUpdates.length})`}
-                    </Button>
+                      <Button
+                        color="primary"
+                        block
+                        disabled={overlapRemovals.length === 0}
+                        onClick={() => handleRemove(overlapRemovals, 'cube_cleanup_overlap', referenceBoard)}
+                      >
+                        {`Remove Cards (${overlapRemovals.length})`}
+                      </Button>
+                    </Flexbox>
+                  )}
+                </Flexbox>
+              ),
+            },
+            {
+              label: 'Update Printings',
+              onClick: () => setActiveTab(PRINTINGS_TAB),
+              content: (
+                <Flexbox direction="col" gap="2" className="pt-3">
+                  <Text sm semibold>
+                    Boards
+                  </Text>
+                  <Flexbox direction="row" wrap="wrap" gap="4">
+                    {boardOptions.map((board) => (
+                      <Checkbox
+                        key={board.value}
+                        label={board.label}
+                        checked={printingBoards.includes(board.value)}
+                        setChecked={(selected) => setPrintingBoardSelected(board.value, selected)}
+                      />
+                    ))}
                   </Flexbox>
-                ),
-              },
-            ]}
-          />
-        </Flexbox>
+                  <Select
+                    id="cleanup-printing"
+                    label="Printing"
+                    value={printing}
+                    setValue={(value) => setPrinting(value as PrintingPreference)}
+                    options={PRINTING_OPTIONS}
+                  />
+                  <Text sm className="text-text-secondary">
+                    Swaps every card in the checked boards to that printing of the same card.
+                  </Text>
+                  {printingsLoading && (
+                    <Flexbox direction="row" justify="center" className="w-full py-2">
+                      <Spinner />
+                    </Flexbox>
+                  )}
+                  {!printingsLoading && !printings && (
+                    <Text sm className="text-text-secondary">
+                      Failed to load printings.
+                    </Text>
+                  )}
+                  <Button
+                    color="primary"
+                    block
+                    disabled={printingsLoading || printingUpdates.length === 0}
+                    onClick={handleUpdatePrintings}
+                  >
+                    {`Update Printings (${printingUpdates.length})`}
+                  </Button>
+                </Flexbox>
+              ),
+            },
+          ]}
+        />
       </ModalBody>
     </Modal>
   );

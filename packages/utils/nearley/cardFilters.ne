@@ -6,6 +6,9 @@ import {
   stringOperation,
   stringContainOperation,
   nameStringOperation,
+  exactNameOperation,
+  compileScryfallRegex,
+  regexCondition,
   equalityOperation,
   setOperation,
   rarityOperation,
@@ -78,6 +81,7 @@ import {
 const negated = (inner) => {
   const result = (card) => !inner(card);
   result.fieldsUsed = inner.fieldsUsed;
+  result.regexes = inner.regexes;
   result.describe = `not (${inner.describe})`;
   return result;
 };
@@ -149,8 +153,10 @@ colorIdentityCondition -> ("ci"i | "id"i | "identity"i | "coloridentity"i | "col
 colorCategoryCondition -> ("cc"i | "colorcategory"i | "color_category"i) colorCategoryOpValue {% ([, valuePred]) => genericCondition('colorcategory', cardColorCategory, valuePred) %}
 
 typeCondition -> ("t"i |  "type"i | "type_line"i | "typeline"i) stringContainOpValue {% ([, valuePred]) => genericCondition('type_line', cardType, valuePred) %}
+  | ("t"i |  "type"i | "type_line"i | "typeline"i) ":" regexValue {% ([, , regex]) => regexCondition('type_line', cardType, regex, false) %}
 
 oracleCondition -> ("o"i | "oracle"i | "text"i) nameStringOpValue {% ([, valuePred]) => genericCondition('oracle_text', cardOracleText, valuePred) %}
+  | ("o"i | "oracle"i | "text"i) ":" regexValue {% ([, , regex]) => regexCondition('oracle_text', cardOracleText, regex, true) %}
 
 setCondition -> ("s"i | "set"i | "e"i | "edition"i) alphaNumericOpValue {% ([, valuePred]) => genericCondition('set', cardSet, valuePred) %}
 
@@ -205,6 +211,8 @@ edhrecRankCondition -> ("edhrec"i | "edhrecrank"i | "rank"i) integerOpValue {% (
 saltCondition -> ("salt"i | "saltiness"i | "edhrecsalt"i) floatOpValue {% ([, valuePred]) => genericCondition('edhrecSalt', cardEdhrecSalt, valuePred) %}
 
 nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCondition('name_lower', cardNameLower, valuePred) %}
+  | ("n"i | "name"i) ":" regexValue {% ([, , regex]) => regexCondition('name_lower', cardNameLower, regex, false) %}
+  | "!" (dqstring | sqstring) {% ([, [value]]) => genericCondition('name_lower', cardNameLower, exactNameOperation(value)) %}
   | stringValue {% ([value]) => { const pred = (fieldValue) => fieldValue.includes(value.toLowerCase()); pred.describe = `contains "${value.toLowerCase()}"`; return genericCondition('name_lower', cardNameLower, pred); } %}
 
 manaCostCondition -> ("mana"i | "cost"i | "m"i) manaCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred) %}

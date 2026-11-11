@@ -12,6 +12,7 @@
   "description": "",
   "dependencies": {
     "nearley": "^2.20.1",
+    "re2js": "^2.10.0",
     "seedrandom": "^3.0.5"
   }
 }
