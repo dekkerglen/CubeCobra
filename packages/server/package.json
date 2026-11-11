@@ -65,6 +65,7 @@
     "passport": "^0.7.0",
     "passport-local": "^1.0.0",
     "pug": "^3.0.3",
+    "re2js": "^2.10.0",
     "response-time": "^2.3.4",
     "rss": "^1.2.2",
     "rss-parser": "^3.13.0",
