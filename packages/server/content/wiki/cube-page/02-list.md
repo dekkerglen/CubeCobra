@@ -104,26 +104,42 @@ by writing the set code and collector number in brackets, like `Lightning Bolt [
 Extras** widens the search to promos, tokens, digital-only printings, and other versions that are
 normally hidden.
 
-### Cleaning up a board
+### Cleaning up boards
 
-The **Cleanup** menu tidies the board picked in the **Board** dropdown, which is named at the top
-of the menu — it is not always the board on screen, so check it before you click. **Remove
-Duplicates** stages every repeated entry on that board, keeping one copy of each card. **Remove
-cards also in…** lists the cube's other boards; picking one stages every entry on the edited board
-that already exists on the board you picked. Each item shows how many cards it would stage before
-you click it, and an item with nothing to do is greyed out.
+The **Cleanup** button opens a window with a checklist of the cube's boards at the top, and
+everything in it acts on every checked board. It opens with only the board picked in the **Board**
+dropdown checked — that is not always the board on screen, so check the list before you click. Its
+two tabs are **Remove Duplicates** and **Update Printings**.
 
-Both actions only ever touch cards the active filter is showing, on both boards — a card hidden by
-the filter is neither removed nor treated as already present elsewhere. Two entries count as the
+On the **Remove Duplicates** tab, **Remove Duplicates** stages every repeated entry across the
+checked boards, keeping one copy of each card. Copies on different boards count as duplicates too,
+and the copy kept is the one on the board listed first — so checking the mainboard and the
+maybeboard together clears the maybeboard of everything the mainboard already holds. The tab lists
+every card that would be removed, with its board when more than one is checked and its set code and
+collector number; hover over a name to see the card. The button shows how many there are, and is
+greyed out when there's nothing to remove.
+
+On the **Update Printings** tab, pick a printing — **Default**, **Most Recent**, **First**, or
+**Cheapest**, the same choices as the cube's default printing — and every card on the checked boards
+moves to that printing of itself. The tab lists each card that would change, with its current and
+new set code and collector number; hover over either to see that printing. The button shows how many
+cards there are. Cards already on the chosen printing are left alone. A card only ever moves between
+printings that share its name, so a card printed under another name, like a Through the Omenpaths
+card, keeps that name. Promos, digital printings, and other unusual versions are passed over unless
+a card has nothing else. A card's tags, notes, finish, and other settings are kept.
+
+All of these only ever touch cards the active filter is showing, on every board involved — a card
+hidden by the filter is neither changed nor counted as a copy of anything. That makes the filter a
+handy way to aim them: filter to one set, say, before updating printings. Two entries count as the
 same card when they share an oracle identity, whatever printing they use and whatever name that
-printing carries. When duplicates are removed, the copy that survives is the one with the most
+printing carries. Among copies on the same board, the one that survives is the one with the most
 tags, then the longest notes, then the earliest added date. Custom cards and vouchers are skipped
 entirely, since there's no way to tell whether two of them are meant to be the same card — so a
-`not:singleton` filter can show repeated custom cards that Cleanup will not touch. The count on the
-menu item is the reliable preview.
+`not:singleton` filter can show repeated custom cards that Cleanup will not touch. The list on each
+tab is the reliable preview.
 
-Nothing is committed: the removals land in the change list like any other edit, for you to review
-and save or discard.
+Nothing is committed: the removals and printing changes land in the change list like any other
+edit, for you to review and save or discard.
 
 ### The change list
 

@@ -221,6 +221,28 @@ export function getMostReasonableById(
   return getMostReasonable(card.name, printing, filter);
 }
 
+/**
+ * The printing of this exact card that best fits a printing preference, chosen only among the
+ * printings sharing both its oracle id and its name — so it never turns into a different card
+ * that happens to share the name, or into a printing sold under another name (a Through the
+ * Omenpaths name, say), and a pre-flipped entry stays pre-flipped. Null when the id isn't
+ * in the catalog.
+ */
+export function getPreferredPrinting(id: string, printingPreference: PrintingPreference): CardDetails | null {
+  const card = catalog._carddict[id];
+  if (!card) {
+    return null;
+  }
+
+  const name = getNameForComparison(card.name);
+  const ids = getVersionsByOracleId(card.oracle_id).filter((versionId) => {
+    const version = catalog._carddict[versionId];
+    return !!version && getNameForComparison(version.name) === name && !!version.isExtra === !!card.isExtra;
+  });
+
+  return getMostReasonableByPrintingPreference(ids.length > 0 ? ids : [id], printingPreference);
+}
+
 export function getFirstReasonable(ids: string[]): CardDetails {
   // Prefer the precomputed default printing, then any reasonable printing.
   return cardFromId(ids.find(isDefaultId) || ids.find(reasonableId) || ids[0] || '');

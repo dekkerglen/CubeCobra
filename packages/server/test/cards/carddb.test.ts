@@ -37,6 +37,7 @@ import {
   getIdsFromName,
   getMostReasonable,
   getMostReasonableByPrintingPreference,
+  getPreferredPrinting,
 } from 'serverutils/carddb';
 import cardCatalog from 'serverutils/cardCatalog';
 
@@ -494,5 +495,85 @@ describe('getIdsFromName', () => {
   it('does not strip quotes that do not fully surround the name', () => {
     mockCardCatalog.nameToId['balance'] = ['balance-id'];
     expect(getIdsFromName('"Balance')).toEqual([]);
+  });
+});
+
+describe('getPreferredPrinting', () => {
+  const fillCatalog = (details: CardDetails[]) => {
+    mockCardCatalog._carddict = {};
+    mockCardCatalog.oracleToId = {};
+    details.forEach((card) => {
+      mockCardCatalog._carddict[card.scryfall_id] = card;
+      if (!mockCardCatalog.oracleToId[card.oracle_id]) {
+        mockCardCatalog.oracleToId[card.oracle_id] = [];
+      }
+      mockCardCatalog.oracleToId[card.oracle_id]?.push(card.scryfall_id);
+    });
+  };
+
+  const printing = (overrides: Partial<CardDetails>): CardDetails =>
+    createCardDetails({
+      ...overridesForNormalDetails,
+      name: 'Lightning Bolt',
+      name_lower: 'lightning bolt',
+      oracle_id: 'bolt',
+      isDefault: false,
+      ...overrides,
+    });
+
+  const oldest = printing({ scryfall_id: 'bolt-lea', set: 'lea', released_at: '1993/08/05', prices: { usd: 400 } });
+  const middle = printing({
+    scryfall_id: 'bolt-m10',
+    set: 'm10',
+    released_at: '2009/07/17',
+    prices: { usd: 0.5 },
+    isDefault: true,
+  });
+  const newest = printing({ scryfall_id: 'bolt-clb', set: 'clb', released_at: '2022/06/10', prices: { usd: 2 } });
+
+  it.each([
+    [PrintingPreference.FIRST, oldest],
+    [PrintingPreference.RECENT, newest],
+    [PrintingPreference.CHEAPEST, middle],
+    [PrintingPreference.DEFAULT, middle],
+  ])('picks the %s printing among its printings', (preference, expected) => {
+    fillCatalog([oldest, middle, newest]);
+
+    expect(getPreferredPrinting(newest.scryfall_id, preference)).toEqual(expected);
+  });
+
+  it('never moves to a printing sold under another name', () => {
+    const renamed = printing({
+      scryfall_id: 'bolt-om1',
+      name: 'Omenpath Bolt',
+      name_lower: 'omenpath bolt',
+      set: 'om1',
+      released_at: '2025/09/26',
+    });
+    fillCatalog([oldest, newest, renamed]);
+
+    expect(getPreferredPrinting(oldest.scryfall_id, PrintingPreference.RECENT)).toEqual(newest);
+    expect(getPreferredPrinting(renamed.scryfall_id, PrintingPreference.FIRST)).toEqual(renamed);
+  });
+
+  it('never moves to a different card that shares the name', () => {
+    const sameName = printing({ scryfall_id: 'other-bolt', oracle_id: 'not-bolt', released_at: '2024/01/01' });
+    fillCatalog([oldest, newest, sameName]);
+
+    expect(getPreferredPrinting(oldest.scryfall_id, PrintingPreference.RECENT)).toEqual(newest);
+  });
+
+  it('keeps a pre-flipped entry among pre-flipped entries', () => {
+    const flippedOld = printing({ scryfall_id: 'bolt-lea2', set: 'lea', released_at: '1993/08/05', isExtra: true });
+    const flippedNew = printing({ scryfall_id: 'bolt-clb2', set: 'clb', released_at: '2022/06/10', isExtra: true });
+    fillCatalog([oldest, newest, flippedOld, flippedNew]);
+
+    expect(getPreferredPrinting(flippedOld.scryfall_id, PrintingPreference.RECENT)).toEqual(flippedNew);
+  });
+
+  it('returns null for an id not in the catalog', () => {
+    fillCatalog([oldest]);
+
+    expect(getPreferredPrinting('missing', PrintingPreference.RECENT)).toBeNull();
   });
 });

@@ -1,5 +1,5 @@
 import { cardName, cardOracleId, isCustomOrVoucher } from './cardutil';
-import Card, { BoardType, Changes, isBoardChanges } from './datatypes/Card';
+import Card, { BoardType, CardDetails, Changes, isBoardChanges } from './datatypes/Card';
 
 export interface CleanupCardRef {
   index: number;
@@ -62,20 +62,36 @@ const compareAddedTmsp = (a: Card, b: Card): number => {
 };
 
 /*
- * Orders a group best-survivor first: most tags, then longest notes, then oldest
- * addedTmsp, then lowest index so the result never depends on array order.
+ * Orders a group best-survivor first: earliest board in the given order, then most tags, then
+ * longest notes, then oldest addedTmsp, then lowest index so the result never depends on array
+ * order.
  */
-const compareSurvivors = (a: Card, b: Card): number =>
-  (b.tags?.length ?? 0) - (a.tags?.length ?? 0) ||
-  (b.notes?.length ?? 0) - (a.notes?.length ?? 0) ||
-  compareAddedTmsp(a, b) ||
-  a.index! - b.index!;
+const compareSurvivors =
+  (boardRank: (card: Card) => number) =>
+  (a: Card, b: Card): number =>
+    boardRank(a) - boardRank(b) ||
+    (b.tags?.length ?? 0) - (a.tags?.length ?? 0) ||
+    (b.notes?.length ?? 0) - (a.notes?.length ?? 0) ||
+    compareAddedTmsp(a, b) ||
+    a.index! - b.index!;
 
 /**
- * Finds the redundant entries within a single board: for every oracle id with more than
- * one eligible copy, every copy except the best survivor. Returned in ascending index order.
+ * Finds the redundant entries across the given cards, which may span several boards: for every
+ * oracle id with more than one eligible copy, every copy except the best survivor. The survivor
+ * sits on the earliest of its boards in `boardOrder`, so a card on the mainboard outlives its
+ * copy on the maybeboard; boards missing from the order rank last. Returned in board order, then
+ * ascending index.
  */
-export const findDuplicateRemovals = (cards: Card[], isSwapped?: (card: Card) => boolean): CleanupCardRef[] => {
+export const findDuplicateRemovals = (
+  cards: Card[],
+  isSwapped?: (card: Card) => boolean,
+  boardOrder: string[] = [],
+): CleanupCardRef[] => {
+  const rankOf = (board: string | undefined): number => {
+    const rank = board === undefined ? -1 : boardOrder.indexOf(board);
+    return rank === -1 ? boardOrder.length : rank;
+  };
+
   const groups = new Map<string, Card[]>();
 
   for (const card of cards) {
@@ -92,49 +108,60 @@ export const findDuplicateRemovals = (cards: Card[], isSwapped?: (card: Card) =>
     }
   }
 
+  const byBoardRank = compareSurvivors((card) => rankOf(card.board));
   const removals: CleanupCardRef[] = [];
   for (const group of groups.values()) {
     if (group.length < 2) {
       continue;
     }
 
-    const [, ...losers] = [...group].sort(compareSurvivors);
+    const [, ...losers] = [...group].sort(byBoardRank);
     for (const card of losers) {
       removals.push({ index: card.index!, board: card.board! });
     }
   }
 
-  return removals.sort((a, b) => a.index - b.index);
+  return removals.sort((a, b) => rankOf(a.board) - rankOf(b.board) || a.index - b.index);
 };
 
 /**
- * Finds the entries of one board that are already represented in another: every eligible
- * target card whose oracle id appears on the reference board. No survivor is kept, because
- * each removed card remains available on the reference board. The same exclusions apply to
- * both sides. Returned in ascending index order.
+ * The distinct printings a printing update would ask about: every eligible card's cardID, by
+ * the same rules as the removals above. Sorted, so an unchanged board yields an equal list.
  */
-export const findOverlapRemovals = (
-  targetCards: Card[],
-  referenceCards: Card[],
+export const findPrintingCandidates = (cards: Card[], isSwapped?: (card: Card) => boolean): string[] => {
+  const ids = new Set<string>();
+  for (const card of cards) {
+    if (cleanupGroupKey(card, isSwapped) !== null) {
+      ids.add(card.cardID);
+    }
+  }
+
+  return [...ids].sort();
+};
+
+export interface PrintingUpdate extends CleanupCardRef {
+  details: CardDetails;
+}
+
+/**
+ * Pairs every eligible card with the printing it moves to. `printings` maps a current cardID
+ * to its preferred printing and leaves out cards already on it, so those are skipped. Returned
+ * in ascending index order.
+ */
+export const findPrintingUpdates = (
+  cards: Card[],
+  printings: Record<string, CardDetails>,
   isSwapped?: (card: Card) => boolean,
-): CleanupCardRef[] => {
-  const referenceKeys = new Set<string>();
-  for (const card of referenceCards) {
-    const key = cleanupGroupKey(card, isSwapped);
-    if (key !== null) {
-      referenceKeys.add(key);
+): PrintingUpdate[] => {
+  const updates: PrintingUpdate[] = [];
+  for (const card of cards) {
+    const details = printings[card.cardID];
+    if (details && details.scryfall_id !== card.cardID && cleanupGroupKey(card, isSwapped) !== null) {
+      updates.push({ index: card.index!, board: card.board!, details });
     }
   }
 
-  const removals: CleanupCardRef[] = [];
-  for (const card of targetCards) {
-    const key = cleanupGroupKey(card, isSwapped);
-    if (key !== null && referenceKeys.has(key)) {
-      removals.push({ index: card.index!, board: card.board! });
-    }
-  }
-
-  return removals.sort((a, b) => a.index - b.index);
+  return updates.sort((a, b) => a.index - b.index);
 };
 
 /*

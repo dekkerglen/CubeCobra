@@ -294,7 +294,7 @@ const Changelist: React.FC = () => {
                   {removes &&
                     removes.map((remove: CubeCardRemove, index: number) => (
                       <Remove
-                        key={remove.oldCard.cardID}
+                        key={remove.index}
                         card={{
                           ...remove.oldCard,
                           details: unfilteredChangedCards[board]?.[remove.index]?.details,
@@ -319,7 +319,7 @@ const Changelist: React.FC = () => {
                   {edits &&
                     edits.map((edit: CubeCardEdit, index: number) => (
                       <Edit
-                        key={edit.oldCard.cardID}
+                        key={edit.index}
                         card={{
                           ...edit.newCard,
                           details: unfilteredChangedCards[board]?.[edit.index]?.details,

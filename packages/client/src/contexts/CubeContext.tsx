@@ -98,6 +98,8 @@ export interface CubeContextValue {
   bulkRemoveCard: (list: { index: number; board: BoardType }[]) => void;
   bulkRevertRemove: (list: { index: number; board: BoardType }[]) => void;
   bulkEditNewCard: (cards: Card[]) => Promise<void>;
+  /** Moves each listed card to the printing its details describe, keeping any edit already staged on it. */
+  bulkEditPrinting: (list: { index: number; board: BoardType; details: CardDetails }[]) => void;
   alerts: UncontrolledAlertProps[];
   setAlerts: Dispatch<SetStateAction<UncontrolledAlertProps[]>>;
   loading: boolean;
@@ -156,6 +158,7 @@ const CubeContext = createContext<CubeContextValue>({
   bulkRemoveCard: defaultFn,
   bulkRevertRemove: defaultFn,
   bulkEditNewCard: defaultFn,
+  bulkEditPrinting: defaultFn,
   alerts: [],
   setAlerts: defaultFn,
   loading: false,
@@ -1421,6 +1424,43 @@ export function CubeContextProvider({
     [changes, setChanges, setOpenCollapse, cube.cards],
   );
 
+  const bulkEditPrinting = useCallback(
+    (list: { index: number; board: BoardType; details: CardDetails }[]) => {
+      const newChanges = deepCopy(changes);
+
+      for (const { index, board, details } of list) {
+        const card = cube.cards[board]?.[index];
+        if (!card) {
+          continue;
+        }
+
+        const boardChanges = ensureBoardChanges(newChanges, board);
+
+        // don't push an edit if this card is marked for delete
+        if (boardChanges.removes?.some((remove: CubeCardRemove) => remove.index === index)) {
+          continue;
+        }
+
+        // The new printing's details ride along on the edit, as editCard does, so the list shows
+        // its art and set before the save. commitChanges strips them.
+        const edits = boardChanges.edits || [];
+        const existing = edits.find((e: CubeCardEdit) => e.index === index);
+        if (existing) {
+          existing.newCard = { ...existing.newCard, cardID: details.scryfall_id, details };
+        } else {
+          const oldCard = deepCopy(card);
+          delete oldCard.details;
+          edits.push({ index, oldCard, newCard: { ...oldCard, cardID: details.scryfall_id, details } });
+        }
+        boardChanges.edits = edits;
+      }
+
+      setChanges(newChanges);
+      setOpenCollapse('edit');
+    },
+    [changes, setChanges, setOpenCollapse, cube.cards],
+  );
+
   const bulkRevertRemove = useCallback(
     (list: { index: number; board: BoardType }[]) => {
       const newChanges = deepCopy(changes);
@@ -1622,6 +1662,7 @@ export function CubeContextProvider({
       bulkRemoveCard,
       bulkRevertRemove,
       bulkEditNewCard,
+      bulkEditPrinting,
       alerts,
       setAlerts,
       loading,
@@ -1675,6 +1716,7 @@ export function CubeContextProvider({
       bulkRemoveCard,
       bulkRevertRemove,
       bulkEditNewCard,
+      bulkEditPrinting,
       alerts,
       setAlerts,
       loading,
