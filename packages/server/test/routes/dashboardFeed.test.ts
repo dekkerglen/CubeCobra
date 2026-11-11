@@ -34,6 +34,8 @@ const personalFeed = (items: BlogPost[], lastKey?: Record<string, any>) => ({
   lastKey,
 });
 
+const streamCursor = (date: number, ids: string[] = []) => ({ date, ids, done: false });
+
 const fetchFeed = (body: any = {}) =>
   call(feedHandler as any)
     .as(createUser({ id: 'user-1' }))
@@ -98,14 +100,21 @@ describe('dashboard feed', () => {
 
     const res = await fetchFeed();
 
-    expect(res.body.lastKey).toEqual({ date: 300, ids: ['p-1'] });
+    expect(res.body.lastKey).toEqual({
+      personal: streamCursor(300, ['p-1']),
+      announcements: streamCursor(300, ['p-1']),
+    });
   });
 
   it('passes the cursor date as the upper bound on both streams', async () => {
-    await fetchFeed({ lastKey: { date: 1700000000000, ids: ['seen'] } });
+    const date = 1700000000000;
 
-    expect(feedDao.getByTo).toHaveBeenCalledWith('user-1', undefined, 50, 1700000000000);
-    expect(blogDao.queryByCube).toHaveBeenCalledWith('DEVBLOG', undefined, 50, 1700000000000);
+    await fetchFeed({
+      lastKey: { personal: streamCursor(date, ['seen']), announcements: streamCursor(date, ['seen']) },
+    });
+
+    expect(feedDao.getByTo).toHaveBeenCalledWith('user-1', undefined, 50, date);
+    expect(blogDao.queryByCube).toHaveBeenCalledWith('DEVBLOG', undefined, 50, date);
   });
 
   it('still hides blog posts from non-public cubes', async () => {

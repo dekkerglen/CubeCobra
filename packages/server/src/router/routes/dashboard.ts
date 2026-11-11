@@ -122,8 +122,11 @@ const getMoreFeedItemsHandler = async (req: Request, res: Response) => {
     // every user gets. Both are bounded by the cursor's date rather than resumed from a
     // DynamoDB start key, because a merged page consumes a partial page from each.
     const [personalResult, announcementResult] = await Promise.all([
-      feedDao.getByTo(user.id, undefined, FEED_PAGE_SIZE, cursor?.date),
-      blogDao.queryByCube(DEV_BLOG_CUBE, undefined, FEED_PAGE_SIZE, cursor?.date),
+      // PLACEHOLDER — replaced by Task 4, which threads each stream's own watermark through to
+      // its query. Until then both streams take the personal watermark, which under the merge's
+      // current placeholder is the same value written to both stream entries.
+      feedDao.getByTo(user.id, undefined, FEED_PAGE_SIZE, cursor?.personal.date),
+      blogDao.queryByCube(DEV_BLOG_CUBE, undefined, FEED_PAGE_SIZE, cursor?.personal.date),
     ]);
 
     const merged = mergeFeedStreams({

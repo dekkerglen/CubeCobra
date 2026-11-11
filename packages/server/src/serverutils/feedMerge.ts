@@ -4,25 +4,37 @@ import BlogPost from '@utils/datatypes/BlogPost';
 export const DEV_BLOG_CUBE = 'DEVBLOG';
 
 /**
- * Position in the merged feed: the date of the last item shown, plus the ids already shown at
- * exactly that date. The date bound on each stream query is inclusive, so without the ids the
- * last item of a page would reappear as the first item of the next one.
+ * Position of a single stream in the merged feed: the date of the last item shown from it, plus
+ * the ids already shown at exactly that date. The date bound on each stream query is inclusive,
+ * so without the ids the last item of a page would reappear as the first item of the next one.
+ * `done` means this stream has nothing left to contribute.
  */
-export interface FeedCursor {
+export interface FeedStreamCursor {
   date: number;
   ids: string[];
+  done: boolean;
 }
 
 /**
- * Reads a cursor off a client request body. Returns undefined — meaning "start from the top" —
- * for anything malformed, and never throws, because this value is client-supplied.
+ * Position in the merged feed, as one watermark per stream.
+ *
+ * The streams are queried under independent limits and have independent densities, so a page cut
+ * leaves them at different depths: one stream can be truncated at its limit with unfetched items
+ * still above the cut while the other is exhausted far below it. A single shared watermark would
+ * advance the truncated stream past those unfetched items and drop them permanently, so each
+ * stream carries its own.
  */
-export const parseFeedCursor = (raw: unknown): FeedCursor | undefined => {
+export interface FeedCursor {
+  personal: FeedStreamCursor;
+  announcements: FeedStreamCursor;
+}
+
+const parseStreamCursor = (raw: unknown): FeedStreamCursor | undefined => {
   if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
     return undefined;
   }
 
-  const { date, ids } = raw as { date?: unknown; ids?: unknown };
+  const { date, ids, done } = raw as { date?: unknown; ids?: unknown; done?: unknown };
 
   if (typeof date !== 'number' || !Number.isFinite(date)) {
     return undefined;
@@ -31,7 +43,31 @@ export const parseFeedCursor = (raw: unknown): FeedCursor | undefined => {
   return {
     date,
     ids: Array.isArray(ids) ? ids.filter((id): id is string => typeof id === 'string') : [],
+    done: done === true,
   };
+};
+
+/**
+ * Reads a cursor off a client request body. Returns undefined — meaning "start from the top" —
+ * for anything malformed, including the legacy single-date shape, and never throws, because this
+ * value is client-supplied. A cursor is accepted only if both of its streams parse: half a
+ * position is not a position.
+ */
+export const parseFeedCursor = (raw: unknown): FeedCursor | undefined => {
+  if (typeof raw !== 'object' || raw === null || Array.isArray(raw)) {
+    return undefined;
+  }
+
+  const { personal, announcements } = raw as { personal?: unknown; announcements?: unknown };
+
+  const parsedPersonal = parseStreamCursor(personal);
+  const parsedAnnouncements = parseStreamCursor(announcements);
+
+  if (!parsedPersonal || !parsedAnnouncements) {
+    return undefined;
+  }
+
+  return { personal: parsedPersonal, announcements: parsedAnnouncements };
 };
 
 const newestFirst = (a: BlogPost, b: BlogPost): number => b.date - a.date || a.id.localeCompare(b.id);
@@ -65,7 +101,16 @@ export const mergeFeedStreams = ({
   cursor?: FeedCursor;
   isVisible?: (item: BlogPost) => boolean;
 }): { items: BlogPost[]; cursor?: FeedCursor } => {
-  const alreadyShown = new Set(cursor?.ids ?? []);
+  // PLACEHOLDER — replaced by Task 2 with the real per-stream watermark rule. Until then this
+  // reads the incoming bound from the personal stream only and writes the one watermark it
+  // computes to both streams, reproducing the behaviour of the single shared cursor under the
+  // new per-stream type.
+  const sharedWatermark = (date: number, ids: string[]): FeedCursor => ({
+    personal: { date, ids: [...ids], done: false },
+    announcements: { date, ids: [...ids], done: false },
+  });
+
+  const alreadyShown = new Set(cursor?.personal.ids ?? []);
 
   const merged = [...personal.filter((item) => item.cube !== DEV_BLOG_CUBE), ...announcements]
     .filter((item) => !alreadyShown.has(item.id) && isVisible(item))
@@ -88,15 +133,15 @@ export const mergeFeedStreams = ({
     // client the same empty page forever. Step strictly past it. Nothing here was displayed,
     // so nothing is hidden by skipping it — and recording these ids instead would suppress a
     // legitimate announcement that shares its id with a legacy feed row.
-    return { items, cursor: { date: Math.min(...fetched.map((item) => item.date)) - 1, ids: [] } };
+    return { items, cursor: sharedWatermark(Math.min(...fetched.map((item) => item.date)) - 1, []) };
   }
 
   const date = items[items.length - 1]!.date;
   const ids = items.filter((item) => item.date === date).map((item) => item.id);
 
-  if (cursor?.date === date) {
-    ids.push(...cursor.ids);
+  if (cursor?.personal.date === date) {
+    ids.push(...cursor.personal.ids);
   }
 
-  return { items, cursor: { date, ids: [...new Set(ids)] } };
+  return { items, cursor: sharedWatermark(date, [...new Set(ids)]) };
 };

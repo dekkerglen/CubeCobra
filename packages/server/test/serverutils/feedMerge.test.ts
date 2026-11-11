@@ -1,6 +1,6 @@
 import BlogPost from '@utils/datatypes/BlogPost';
 
-import { FeedCursor, mergeFeedStreams, parseFeedCursor } from '../../src/serverutils/feedMerge';
+import { FeedCursor, FeedStreamCursor, mergeFeedStreams, parseFeedCursor } from '../../src/serverutils/feedMerge';
 
 const post = (id: string, date: number, cube: string = 'cube-1'): BlogPost =>
   ({ id, date, cube, cubeName: 'Cube', body: '', owner: { id: 'u', username: 'u' } }) as unknown as BlogPost;
@@ -21,6 +21,13 @@ const merge = (input: {
     limit: input.limit ?? 10,
     cursor: input.cursor,
   });
+
+const streamCursor = (date: number, ids: string[] = [], done = false): FeedStreamCursor => ({ date, ids, done });
+
+const cursorFor = (personal: FeedStreamCursor, announcements: FeedStreamCursor): FeedCursor => ({
+  personal,
+  announcements,
+});
 
 describe('mergeFeedStreams', () => {
   it('interleaves the two streams newest first', () => {
@@ -60,7 +67,8 @@ describe('mergeFeedStreams', () => {
       announcementsHasMore: true,
     });
 
-    expect(cursor).toEqual({ date: 100, ids: ['p1'] });
+    expect(cursor!.personal).toEqual(streamCursor(100, ['p1']));
+    expect(cursor!.announcements).toEqual(streamCursor(100, ['p1']));
   });
 
   it('returns a cursor when the page was truncated by the limit', () => {
@@ -70,13 +78,14 @@ describe('mergeFeedStreams', () => {
     });
 
     expect(items.map((i) => i.id)).toEqual(['p300']);
-    expect(cursor).toEqual({ date: 300, ids: ['p300'] });
+    expect(cursor!.personal).toEqual(streamCursor(300, ['p300']));
+    expect(cursor!.announcements).toEqual(streamCursor(300, ['p300']));
   });
 
   it('suppresses ids already emitted at the watermark date', () => {
     const { items } = merge({
       personal: [post('p1', 100), post('p2', 100)],
-      cursor: { date: 100, ids: ['p1'] },
+      cursor: cursorFor(streamCursor(100, ['p1']), streamCursor(100, ['p1'])),
     });
 
     expect(items.map((i) => i.id)).toEqual(['p2']);
@@ -86,11 +95,11 @@ describe('mergeFeedStreams', () => {
     const { cursor } = merge({
       personal: [post('p2', 100), post('p3', 100)],
       personalHasMore: true,
-      cursor: { date: 100, ids: ['p1'] },
+      cursor: cursorFor(streamCursor(100, ['p1']), streamCursor(100, ['p1'])),
     });
 
-    expect(cursor!.date).toBe(100);
-    expect([...cursor!.ids].sort()).toEqual(['p1', 'p2', 'p3']);
+    expect(cursor!.personal.date).toBe(100);
+    expect([...cursor!.personal.ids].sort()).toEqual(['p1', 'p2', 'p3']);
   });
 
   it('carries a millisecond tie across a page boundary exactly once', () => {
@@ -112,7 +121,8 @@ describe('mergeFeedStreams', () => {
     });
 
     expect(items).toEqual([]);
-    expect(cursor).toEqual({ date: 99, ids: [] });
+    expect(cursor!.personal).toEqual(streamCursor(99));
+    expect(cursor!.announcements).toEqual(streamCursor(99));
   });
 
   it('never suppresses an announcement by the id of its legacy feed row', () => {
@@ -123,7 +133,8 @@ describe('mergeFeedStreams', () => {
       personalHasMore: true,
     });
 
-    expect(cursor!.ids).not.toContain('shared');
+    expect(cursor!.personal.ids).not.toContain('shared');
+    expect(cursor!.announcements.ids).not.toContain('shared');
   });
 
   it('returns no cursor when nothing was fetched at all', () => {
@@ -182,34 +193,68 @@ describe('mergeFeedStreams', () => {
       });
 
       expect(items).toEqual([]);
-      expect(cursor).toEqual({ date: 199, ids: [] });
+      expect(cursor!.personal).toEqual(streamCursor(199));
+      expect(cursor!.announcements).toEqual(streamCursor(199));
     });
   });
 });
 
 describe('parseFeedCursor', () => {
-  it.each([null, undefined, 'x', 42, {}, { date: 'x' }, [], { ids: ['a'] }])(
-    'returns undefined for malformed cursor %p',
+  const stream = { date: 100, ids: ['a'], done: false };
+
+  it('parses a well-formed per-stream cursor', () => {
+    expect(parseFeedCursor({ personal: stream, announcements: stream })).toEqual({
+      personal: { date: 100, ids: ['a'], done: false },
+      announcements: { date: 100, ids: ['a'], done: false },
+    });
+  });
+
+  it('rejects the legacy single-date cursor shape', () => {
+    expect(parseFeedCursor({ date: 100, ids: ['a'] })).toBeUndefined();
+  });
+
+  it.each([null, undefined, 'x', 7, [], {}, { personal: stream }, { announcements: stream }])(
+    'returns undefined for %p',
     (raw) => {
       expect(parseFeedCursor(raw)).toBeUndefined();
     },
   );
 
-  it('coerces a missing ids array to empty', () => {
-    expect(parseFeedCursor({ date: 100 })).toEqual({ date: 100, ids: [] });
+  it.each([NaN, Infinity, -Infinity, '100'])('returns undefined for a non-finite date %p', (date) => {
+    expect(parseFeedCursor({ personal: { ...stream, date }, announcements: stream })).toBeUndefined();
   });
 
-  it('coerces a non-array ids to empty', () => {
-    expect(parseFeedCursor({ date: 100, ids: 'nope' })).toEqual({ date: 100, ids: [] });
+  it('coerces a missing or malformed ids array to empty', () => {
+    const parsed = parseFeedCursor({
+      personal: { date: 100, done: false },
+      announcements: { date: 100, ids: 'nope', done: false },
+    });
+    expect(parsed!.personal.ids).toEqual([]);
+    expect(parsed!.announcements.ids).toEqual([]);
   });
 
   it('keeps only string ids', () => {
-    expect(parseFeedCursor({ date: 100, ids: ['a', 7, null, 'b'] })).toEqual({ date: 100, ids: ['a', 'b'] });
+    const parsed = parseFeedCursor({
+      personal: { date: 100, ids: ['a', 1, null, 'b'], done: false },
+      announcements: stream,
+    });
+    expect(parsed!.personal.ids).toEqual(['a', 'b']);
+  });
+
+  it('coerces a non-boolean done to false', () => {
+    const parsed = parseFeedCursor({ personal: { date: 100, ids: [], done: 'yes' }, announcements: stream });
+    expect(parsed!.personal.done).toBe(false);
   });
 
   it('round-trips a cursor produced by the merge', () => {
-    const { cursor } = merge({ personal: [post('p1', 100)], personalHasMore: true });
+    const { cursor } = merge({
+      personal: [post('p1', 100)],
+      personalHasMore: true,
+      announcements: [post('a1', 200, 'DEVBLOG')],
+      announcementsHasMore: true,
+    });
 
+    expect(cursor).toBeDefined();
     expect(parseFeedCursor(JSON.parse(JSON.stringify(cursor)))).toEqual(cursor);
   });
 });
