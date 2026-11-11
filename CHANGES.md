@@ -23,6 +23,7 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 
 ## Bug Fixes
 
+- Sorting by Color Category puts Hybrid and Multicolored cards before Colorless again, as it did before December 2024. This affects the cube list views, deck views, and exports.
 - Smart Search now finds conspiracies, planes, schemes, contraptions, and other cards that start the game outside your deck. Searching for them used to return no results.
 - With Disable Animations turned on, cards you drag in a draft or the deckbuilder no longer tilt back and forth as you move them.
 - In a draft, a card you draft on a phone, or click over to your sideboard or back, now lands in full view at the bottom of its stack, instead of getting tucked into the middle of it.

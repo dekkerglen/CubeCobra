@@ -1,15 +1,16 @@
 import type { Pack } from './Draft';
 import { ManaSymbol } from './Mana';
 
+// Order is the display order of the Color Category sort.
 export const COLOR_CATEGORIES = [
   'White',
   'Blue',
   'Black',
   'Red',
   'Green',
-  'Colorless',
-  'Multicolored',
   'Hybrid',
+  'Multicolored',
+  'Colorless',
   'Lands',
 ] as const;
 export type ColorCategory = (typeof COLOR_CATEGORIES)[number];
