@@ -71,7 +71,8 @@ The **Export** menu downloads the list in whichever format your tools need:
 
 Two checkboxes apply to every format: **Export ALL boards** includes the maybeboard and any
 custom boards instead of just the mainboard, and **Use Filter** exports only the cards matching your
-current filter.
+current filter. If you are exporting a CSV as a backup, clear the filter first or untick **Use
+Filter**, or the file will hold only the cards you are currently looking at.
 
 Exports always use a fixed order and always include every card in scope, so a download never repeats
 or omits a card no matter how the page happens to be sorted. Changing the sort or the "Show Unsorted
