@@ -51,7 +51,7 @@
     "tailwindcss": "^4.3.5"
   },
   "devDependencies": {
-    "@types/node": "^20.19.43",
+    "@types/node": "^22.20.5",
     "@types/rss": "^0.0.32",
     "@types/serialize-javascript": "^5.0.4",
     "@types/shuffle-seed": "^1.1.3",
