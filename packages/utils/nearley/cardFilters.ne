@@ -212,7 +212,7 @@ saltCondition -> ("salt"i | "saltiness"i | "edhrecsalt"i) floatOpValue {% ([, va
 
 nameCondition -> ("n"i | "name"i) stringOpValue {% ([, valuePred]) => genericCondition('name_lower', cardNameLower, valuePred) %}
   | ("n"i | "name"i) ":" regexValue {% ([, , regex]) => regexCondition('name_lower', cardNameLower, regex, false) %}
-  | "!" (dqstring | sqstring) {% ([, [value]]) => genericCondition('name_lower', cardNameLower, exactNameOperation(value)) %}
+  | "!" (dqstring | sqstring | noQuoteStringValue) {% ([, [value]]) => genericCondition('name_lower', cardNameLower, exactNameOperation(value)) %}
   | stringValue {% ([value]) => { const pred = (fieldValue) => fieldValue.includes(value.toLowerCase()); pred.describe = `contains "${value.toLowerCase()}"`; return genericCondition('name_lower', cardNameLower, pred); } %}
 
 manaCostCondition -> ("mana"i | "cost"i | "m"i) manaCostOpValue {% ([, valuePred]) => genericCondition('parsed_cost', cardCost, valuePred) %}

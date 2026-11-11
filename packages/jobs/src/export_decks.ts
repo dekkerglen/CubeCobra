@@ -212,7 +212,11 @@ const taskId = process.env.EXPORT_TASK_ID;
       if (!info) {
         info = cubeDao.getById(id).then((cube) =>
           cube
-            ? { visibility: cube.visibility, deckbuildLands: cube.deckbuildLands, deckbuildSpells: cube.deckbuildSpells }
+            ? {
+                visibility: cube.visibility,
+                deckbuildLands: cube.deckbuildLands,
+                deckbuildSpells: cube.deckbuildSpells,
+              }
             : null,
         );
         cubeInfoCache.set(id, info);

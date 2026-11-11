@@ -63,9 +63,7 @@ export const encodeRows = (model: LoadedModel, rows: number[][]): Float32Array[]
   const out: Float32Array[] = [];
   for (let start = 0; start < rows.length; start += BATCH_SIZE) {
     const batch = rows.slice(start, start + BATCH_SIZE);
-    out.push(
-      ...tf.tidy(() => splitRows(model.encoder.predict(multiHot(batch, model.numCards)) as tf.Tensor2D)),
-    );
+    out.push(...tf.tidy(() => splitRows(model.encoder.predict(multiHot(batch, model.numCards)) as tf.Tensor2D)));
   }
   return out;
 };

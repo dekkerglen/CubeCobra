@@ -495,7 +495,11 @@ stringValue -> (noQuoteStringValue | dqstring | sqstring) {% ([[value]]) => valu
 regexValue -> "/" ([^/\\\n] | "\\" [^\n]):* "/" {% ([, chars], _l, reject) => compileScryfallRegex(chars.flat().join('')) ?? reject %}
 
 # anything that isn't a special character and isn't "and" or "or".
-# A bare word never starts with a slash, which would read as the start of a /regex/.
+# A bare word never starts with a slash, which would read as the start of a /regex/, or with a bang,
+# which would read as the start of an !exact name. Reserving the bang is what keeps that syntax
+# unambiguous: otherwise "!fire" parses both as an exact-name match and as the bare word "!fire",
+# and "!'x'" likewise, since wordTail allows ' (names like "Urza's Saga" need it). Double quotes
+# need no such rule: wordTail already excludes them.
 # A bare word can never start with a parenthesis, and any parentheses inside it must come in
 # balanced pairs (wordParens), so "tag:removal(cheap)" is one word but a paren that could be a
 # grouping paren never is. If words could absorb grouping parens, every "(word)" would have several
@@ -503,7 +507,7 @@ regexValue -> "/" ([^/\\\n] | "\\" [^\n]):* "/" {% ([, chars], _l, reject) => co
 # with parentheses must be quoted, e.g. name:"Erase (Not the Urza's Legacy One)".
 noQuoteStringValue -> 
   ("a"i | "an"i | "o"i) {% ([[value]]) => value.toLowerCase() %}
-  | ([^aAoO\-/ \t\n"'\\=<>:()] 
+  | ([^aAoO\-/! \t\n"'\\=<>:()] 
     | "a"i ([^nN \t\n"'\\=<>:()] | wordParens)
     | "an"i ([^dD \t\n"'\\=<>:()] | wordParens)
     | "and"i ([^ \t\n"'\\=<>:()] | wordParens)

@@ -78,10 +78,7 @@ export interface TopicProfile {
   weights: Map<string, number>;
 }
 
-export const topicProfile = (
-  oracleIds: string[],
-  cardTopics: ArchetypeTopicsFile['cardTopics'],
-): TopicProfile => {
+export const topicProfile = (oracleIds: string[], cardTopics: ArchetypeTopicsFile['cardTopics']): TopicProfile => {
   const weights = new Map<string, number>();
   let tagged = 0;
   for (const oracleId of new Set(oracleIds)) {
@@ -163,7 +160,10 @@ export const listArchetypeProfile = (
     const contributions = unique
       .map((oracleId) => ({
         oracleId,
-        weight: (topics.cardTopics[oracleId] ?? []).reduce((sum, [topicId, w]) => (ids.has(topicId) ? sum + w : sum), 0),
+        weight: (topics.cardTopics[oracleId] ?? []).reduce(
+          (sum, [topicId, w]) => (ids.has(topicId) ? sum + w : sum),
+          0,
+        ),
       }))
       .filter(({ weight }) => weight > 0)
       .sort((a, b) => b.weight - a.weight || a.oracleId.localeCompare(b.oracleId));

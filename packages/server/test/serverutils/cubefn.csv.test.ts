@@ -368,7 +368,9 @@ describe('CSV import/export — voucher contents', () => {
       .mocked(carddb.cardFromId)
       .mockImplementation((id: string) =>
         createCardDetails(
-          printings[id] ? { ...printings[id], scryfall_id: id } : { name: 'placeholder', set: '', collector_number: '' },
+          printings[id]
+            ? { ...printings[id], scryfall_id: id }
+            : { name: 'placeholder', set: '', collector_number: '' },
         ),
       );
     jest
@@ -391,7 +393,12 @@ describe('CSV import/export — voucher contents', () => {
 
     const { cardsByBoard, missing } = CSVtoCards(csv);
     const [voucher, island] = cardsByBoard.mainboard!;
-    expect(voucher!.voucher_cards!.map((vc) => vc.cardID)).toEqual(['bolt-m10', 'island-m20', 'island-m20', 'bolt-lea']);
+    expect(voucher!.voucher_cards!.map((vc) => vc.cardID)).toEqual([
+      'bolt-m10',
+      'island-m20',
+      'island-m20',
+      'bolt-lea',
+    ]);
     expect(missing).toEqual(['Not A Card [xyz] 1 (Bolt Pack)']);
     expect(island!.voucher_cards).toBeUndefined();
   });

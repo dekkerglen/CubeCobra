@@ -133,14 +133,23 @@ const score = (model: LoadedModel, cases: Cases): GateMetrics => {
   const inLive = (cards: number[]) => (live ? remapCards(cards, candidate, live) !== null : true);
   const toLive = (cards: number[]) => (live ? remapCards(cards, candidate, live)! : cards);
 
-  const cubes = await sampleShards<number[], number[]>(runsBucket, `${prefix}data/test/cubes/`, GATE_SAMPLE.cubes, (cube) =>
-    cube.length >= 10 && inLive(cube) ? cube : null,
+  const cubes = await sampleShards<number[], number[]>(
+    runsBucket,
+    `${prefix}data/test/cubes/`,
+    GATE_SAMPLE.cubes,
+    (cube) => (cube.length >= 10 && inLive(cube) ? cube : null),
   );
-  const decks = await sampleShards<CleanDeck, CleanDeck>(runsBucket, `${prefix}data/test/decks/`, GATE_SAMPLE.decks, (deck) =>
-    inLive([...deck.mainboard, ...deck.sideboard]) ? deck : null,
+  const decks = await sampleShards<CleanDeck, CleanDeck>(
+    runsBucket,
+    `${prefix}data/test/decks/`,
+    GATE_SAMPLE.decks,
+    (deck) => (inLive([...deck.mainboard, ...deck.sideboard]) ? deck : null),
   );
-  const picks = await sampleShards<CleanPick, CleanPick>(runsBucket, `${prefix}data/test/picks/`, GATE_SAMPLE.picks, (pick) =>
-    inLive([...pick.pool, ...pick.pack]) ? pick : null,
+  const picks = await sampleShards<CleanPick, CleanPick>(
+    runsBucket,
+    `${prefix}data/test/picks/`,
+    GATE_SAMPLE.picks,
+    (pick) => (inLive([...pick.pool, ...pick.pack]) ? pick : null),
   );
   console.log(`Scoring ${cubes.length} cubes, ${decks.length} decks, ${picks.length} picks`);
 
@@ -150,7 +159,11 @@ const score = (model: LoadedModel, cases: Cases): GateMetrics => {
     ? score(live, {
         cubes: cases.cubes.map(({ visible, hidden }) => ({ visible: toLive(visible), hidden: toLive(hidden) })),
         decks: decks.map((deck) => ({ mainboard: toLive(deck.mainboard), sideboard: toLive(deck.sideboard) })),
-        picks: picks.map((pick) => ({ pool: toLive(pick.pool), pack: toLive(pick.pack), pick: toLive([pick.pick])[0]! })),
+        picks: picks.map((pick) => ({
+          pool: toLive(pick.pool),
+          pack: toLive(pick.pack),
+          pick: toLive([pick.pick])[0]!,
+        })),
       })
     : null;
 

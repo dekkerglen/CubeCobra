@@ -8,8 +8,7 @@ import { RetrainMode } from '@utils/datatypes/RetrainTask';
 import { stateMachineArn } from './mlRetraining';
 
 export type PipelineInput =
-  | { mode: RetrainMode.TRAIN; runId?: string }
-  | { mode: RetrainMode.PROMOTE; version: string };
+  { mode: RetrainMode.TRAIN; runId?: string } | { mode: RetrainMode.PROMOTE; version: string };
 
 let client: SFNClient | null = null;
 

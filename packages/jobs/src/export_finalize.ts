@@ -59,7 +59,10 @@ const taskId = process.env.EXPORT_TASK_ID;
 })().catch(async (error) => {
   console.error('Finalizing the export failed:', error);
   if (taskId) {
-    await exportTaskDao.markAsFailed(taskId, error instanceof Error ? error.message : 'Unknown error finalizing export');
+    await exportTaskDao.markAsFailed(
+      taskId,
+      error instanceof Error ? error.message : 'Unknown error finalizing export',
+    );
   }
   process.exit(1);
 });

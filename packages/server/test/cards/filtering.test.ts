@@ -845,6 +845,24 @@ describe('Exact name (!) filter syntax', () => {
     expect(matches('-!"Lightning Bolt"', named('Lightning Bolt'))).toBe(false);
     expect(matches('t:instant -!"Chain Lightning"', named('Lightning Bolt'))).toBe(true);
   });
+
+  // Scryfall prefixes "words or quoted phrases" with !, so the unquoted single-word form has to
+  // work too: https://scryfall.com/docs/syntax#exact
+  it('matches an unquoted word', () => {
+    expect(matches('!fire', named('Fire'))).toBe(true);
+    expect(matches('!FIRE', named('Fire'))).toBe(true);
+    expect(matches('!fire', named('Fireball'))).toBe(false);
+  });
+
+  it('keeps an apostrophe inside an unquoted exact name', () => {
+    expect(matches("!urza's", named("Urza's Saga"))).toBe(false);
+    expect(matches("!urza's", named("Urza's"))).toBe(true);
+  });
+
+  it('negates and combines an unquoted exact name', () => {
+    expect(matches('-!fire', named('Fire'))).toBe(false);
+    expect(matches('t:instant -!fire', named('Lightning Bolt'))).toBe(true);
+  });
 });
 
 describe('Mana cost comparisons', () => {

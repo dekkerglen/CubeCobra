@@ -19,13 +19,14 @@ as are all filtering conditions (`TYPE:instant and o:DESTROY` will still work, f
 | `t:instant t:tribal`     | cards that are both instants and tribal.     |
 
 Text without a filtering condition is treated as a name. You can use quotes to require an exact
-match, and `!` before quotes to match the whole name (or one face's name).
+match, and `!` before a word or a quoted phrase to match the whole name (or one face's name).
 
 | Query                           | Matches                                                                       |
 | ------------------------------- | ----------------------------------------------------------------------------- |
 | `goblin blood`                  | cards whose names contain both "blood" and "goblin".                          |
 | `"goblin blood"`                | cards whose names contain exactly "goblin blood".                             |
 | `!"opt"`                        | only the card named Opt, not Ornithopter or Panoptic Mirror.                  |
+| `!opt`                          | the same thing; quotes are only needed for a name with spaces in it.          |
 | `o:destroy o:target o:creature` | cards whose oracle text contains each of "destroy", "target", and "creature". |
 | `o:"destroy target creature"`   | cards whose oracle text contains exactly "destroy target creature".           |
 

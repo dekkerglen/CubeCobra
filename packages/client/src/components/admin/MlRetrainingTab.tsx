@@ -484,11 +484,15 @@ const MlRetraining: React.FC<RetrainingState> = (props) => {
   // The pipeline writes the run's record a few seconds after the execution starts; until it shows
   // up, keep Start disabled and keep polling.
   const [startRequested, setStartRequested] = useState(false);
+  // Clock sample used to show elapsed time for still-running runs, re-read on every poll rather
+  // than during render so the table stays a pure function of state.
+  const [now, setNow] = useState(() => Date.now());
 
   const { runs, pointer, servedVersion, publishedVersions, configured } = state;
   const activeRun = runs.find(isActive);
 
   const refresh = useCallback(async () => {
+    setNow(Date.now());
     try {
       const response = await csrfFetch(`${BASE_URL}/state`, { method: 'GET' });
       const data = await response.json();
@@ -649,7 +653,7 @@ const MlRetraining: React.FC<RetrainingState> = (props) => {
                     {runs.map((run, index) => {
                       const open = expanded.has(run.id);
                       const rowColor = index % 2 === 0 ? 'bg-bg-accent/80' : 'bg-bg-active/80';
-                      const endedAt = run.completedAt ?? (isActive(run) ? Date.now() : undefined);
+                      const endedAt = run.completedAt ?? (isActive(run) ? now : undefined);
                       return (
                         <React.Fragment key={run.id}>
                           <tr
