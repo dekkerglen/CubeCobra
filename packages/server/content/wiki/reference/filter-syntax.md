@@ -460,8 +460,17 @@ Available options are "Not Owned", "Ordered", "Owned", "Premium Owned", "Proxied
 ## Copies in Board
 
 **Filters for individual cubes:** you can use `quantity:`, `count:`, or `copies:` to filter by how
-many copies of a card exist in the same board (matches the "Collapse Duplicates" grouping).
+many copies of a card exist in the same board. Copies are counted by oracle identity, so two
+differently-named printings of the same card count as copies of each other. Cards without an oracle
+ID — custom cards and vouchers — are counted by name instead. Cards staged for removal are not
+counted, and a staged card reports a single copy of itself — so with `not:singleton` active,
+staging a duplicate removal clears the view, because the copies left behind drop to one as well.
 `is:singleton` and `not:singleton` are convenience aliases for `quantity=1` and `quantity>1`.
+
+Because custom cards and vouchers are counted here but skipped by the cube list's **Cleanup** menu,
+`not:singleton` is not a reliable preview of what **Remove Duplicates** will stage on a board
+holding them — it will list repeated custom cards that Cleanup leaves alone. The count shown on the
+menu item itself is always exact.
 
 Outside a cube list (global card search, Smart Search, etc.) every card is treated as one copy, so
 `quantity>1` returns nothing and `is:singleton` matches everything.

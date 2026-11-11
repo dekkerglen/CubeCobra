@@ -104,6 +104,27 @@ by writing the set code and collector number in brackets, like `Lightning Bolt [
 Extras** widens the search to promos, tokens, digital-only printings, and other versions that are
 normally hidden.
 
+### Cleaning up a board
+
+The **Cleanup** menu tidies the board picked in the **Board** dropdown, which is named at the top
+of the menu — it is not always the board on screen, so check it before you click. **Remove
+Duplicates** stages every repeated entry on that board, keeping one copy of each card. **Remove
+cards also in…** lists the cube's other boards; picking one stages every entry on the edited board
+that already exists on the board you picked. Each item shows how many cards it would stage before
+you click it, and an item with nothing to do is greyed out.
+
+Both actions only ever touch cards the active filter is showing, on both boards — a card hidden by
+the filter is neither removed nor treated as already present elsewhere. Two entries count as the
+same card when they share an oracle identity, whatever printing they use and whatever name that
+printing carries. When duplicates are removed, the copy that survives is the one with the most
+tags, then the longest notes, then the earliest added date. Custom cards and vouchers are skipped
+entirely, since there's no way to tell whether two of them are meant to be the same card — so a
+`not:singleton` filter can show repeated custom cards that Cleanup will not touch. The count on the
+menu item is the reliable preview.
+
+Nothing is committed: the removals land in the change list like any other edit, for you to review
+and save or discard.
+
 ### The change list
 
 Staged changes appear in the panel as the change list: additions, removals, swaps, and edits, each
