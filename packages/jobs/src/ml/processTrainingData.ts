@@ -66,11 +66,13 @@ class ShardWriter {
 }
 
 // Export batch files are numbered (decks/0.json, decks/1.json, ...); process them in order so a
-// rerun produces identical shards.
-const sortedBatchKeys = async (bucket: string, prefix: string): Promise<string[]> => {
+// rerun produces identical shards. Files numbered at or past the manifest's batch count are left
+// over from an earlier export.
+const sortedBatchKeys = async (bucket: string, prefix: string, batches?: number): Promise<string[]> => {
   const batchNumber = (key: string) => parseInt(path.basename(key, '.json'), 10);
   return (await listKeys(bucket, prefix))
     .filter((key) => key.endsWith('.json'))
+    .filter((key) => batches === undefined || batchNumber(key) < batches)
     .sort((a, b) => batchNumber(a) - batchNumber(b));
 };
 
@@ -95,7 +97,10 @@ const writeInt32File = (filePath: string, values: Int32Array) => {
     excluded[reason] = (excluded[reason] || 0) + 1;
   };
 
-  const exportManifest = await readJson<{ exportedAt: number }>(exportBucket, 'export/manifest.json');
+  const exportManifest = await readJson<{ exportedAt: number; deckBatches?: number }>(
+    exportBucket,
+    'export/manifest.json',
+  );
   if (!exportManifest?.exportedAt) {
     throw new Error('export/manifest.json is missing; this export predates the retraining pipeline, rerun it');
   }
@@ -181,7 +186,7 @@ const writeInt32File = (filePath: string, values: Int32Array) => {
 
   // Decks, plus mainboard co-occurrence counts from the training decks
   const correlations = new Int32Array(numCards * numCards);
-  const deckKeys = await sortedBatchKeys(exportBucket, 'export/decks/');
+  const deckKeys = await sortedBatchKeys(exportBucket, 'export/decks/', exportManifest.deckBatches);
   for (const [i, key] of deckKeys.entries()) {
     const decks = (await readJson<ExportedDeck[]>(exportBucket, key)) || [];
     for (const deck of decks) {
@@ -218,7 +223,7 @@ const writeInt32File = (filePath: string, values: Int32Array) => {
   console.log(`Decks: ${writers.train.decks.count} train, ${writers.test.decks.count} test`);
 
   // Picks
-  const pickKeys = await sortedBatchKeys(exportBucket, 'export/picks/');
+  const pickKeys = await sortedBatchKeys(exportBucket, 'export/picks/', exportManifest.deckBatches);
   for (const [i, key] of pickKeys.entries()) {
     const picks = (await readJson<ExportedPick[]>(exportBucket, key)) || [];
     for (const pick of picks) {

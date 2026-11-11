@@ -12,7 +12,7 @@
     "repair-cube-hashes": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/repairCubeHashes.js --",
     "repair-package-hashes": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/repairPackageHashes.js --",
     "export-cubes": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/export_cubes.js",
-    "export-decks": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/export_decks.js",
+    "export-decks": "NODE_OPTIONS=--max_old_space_size=28672 S3_MAX_SOCKETS=256 node dist/jobs/src/export_decks.js",
     "export-simple-card-dict": "NODE_OPTIONS=--max_old_space_size=28672 node dist/jobs/src/export_simple_card_dict.js",
     "export-finalize": "node dist/jobs/src/export_finalize.js",
     "export-all": "npm run init-data && npm run export-cubes && npm run export-decks && npm run export-simple-card-dict && npm run export-finalize",

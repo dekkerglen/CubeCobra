@@ -14,8 +14,10 @@ import { SFNClient, StartExecutionCommand } from '@aws-sdk/client-sfn';
 import { exportTaskDao } from '@server/dynamo/daos';
 import { newRunId } from '@utils/ml/modelBundle';
 
-import { getPublicBucket } from './utils/s3';
+import fs from 'fs';
+
 import { writeJson } from './ml/s3';
+import { getPublicBucket } from './utils/s3';
 
 const taskId = process.env.EXPORT_TASK_ID;
 
@@ -25,7 +27,10 @@ const taskId = process.env.EXPORT_TASK_ID;
   }
 
   const exportedAt = Date.now();
-  await writeJson(getPublicBucket(), 'export/manifest.json', { exportedAt, exportTaskId: taskId ?? null });
+  // export/decks|picks|cubeInstances/0..deckBatches-1.json are this export's; files numbered past it
+  // are left over from an earlier, larger export.
+  const deckBatches = JSON.parse(fs.readFileSync('./temp/export/deckBatches.json', 'utf8')).count as number;
+  await writeJson(getPublicBucket(), 'export/manifest.json', { exportedAt, exportTaskId: taskId ?? null, deckBatches });
   console.log(`Export finished at ${new Date(exportedAt).toISOString()}`);
 
   const stateMachineArn = process.env.ML_PIPELINE_STATE_MACHINE_ARN;

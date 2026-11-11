@@ -10,6 +10,11 @@ export const s3 = new S3({
   forcePathStyle: !!process.env.AWS_ENDPOINT,
   credentials: fromNodeProviderChain(),
   region: process.env.AWS_REGION,
+  // The SDK allows 50 concurrent connections by default; bulk jobs (the public export) raise it with
+  // S3_MAX_SOCKETS so their parallel reads aren't queued behind that limit.
+  ...(process.env.S3_MAX_SOCKETS
+    ? { requestHandler: { httpsAgent: { maxSockets: Number(process.env.S3_MAX_SOCKETS) } } }
+    : {}),
 });
 
 // Public S3 client with no credentials for accessing public buckets

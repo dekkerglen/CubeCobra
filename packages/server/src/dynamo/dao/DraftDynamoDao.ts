@@ -788,6 +788,50 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
   }
 
   /**
+   * Complete drafts of a type whose GSI4 sort key (`DATE#<date>`) lies in [from, to] (either bound
+   * optional, both inclusive), hydrated. Incomplete drafts are filtered out in DynamoDB, so their
+   * cards and seats are never read from S3. The bounds compare as strings, like the stored keys.
+   * Limit counts items evaluated before the filter, so a page can come back with fewer (or no)
+   * items and still have a lastKey.
+   */
+  public async queryCompleteByTypeInDateKeyRange(
+    type: string,
+    range: { from?: number; to?: number },
+    lastKey?: Record<string, NativeAttributeValue>,
+    limit: number = 1000,
+  ): Promise<QueryResult> {
+    const values: Record<string, NativeAttributeValue> = {
+      ':type': `${this.itemType()}#TYPE#${type}`,
+      ':complete': true,
+    };
+    let sortKeyCondition = '';
+    if (range.from !== undefined && range.to !== undefined) {
+      sortKeyCondition = ' AND GSI4SK BETWEEN :from AND :to';
+    } else if (range.from !== undefined) {
+      sortKeyCondition = ' AND GSI4SK >= :from';
+    } else if (range.to !== undefined) {
+      sortKeyCondition = ' AND GSI4SK <= :to';
+    }
+    if (range.from !== undefined) values[':from'] = `DATE#${range.from}`;
+    if (range.to !== undefined) values[':to'] = `DATE#${range.to}`;
+
+    return this.query({
+      TableName: this.tableName,
+      IndexName: 'GSI4',
+      KeyConditionExpression: `GSI4PK = :type${sortKeyCondition}`,
+      FilterExpression: '#item.#complete = :complete',
+      ExpressionAttributeNames: {
+        '#item': 'item',
+        '#complete': 'complete',
+      },
+      ExpressionAttributeValues: values,
+      ScanIndexForward: false,
+      Limit: limit,
+      ExclusiveStartKey: lastKey,
+    });
+  }
+
+  /**
    * Queries drafts by type within a specific date range without hydration (no S3 reads).
    * Returns only the metadata stored in DynamoDB - cards and seats are not loaded.
    * This is much more efficient when you only need basic draft information.

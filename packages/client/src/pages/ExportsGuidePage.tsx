@@ -70,6 +70,7 @@ const ExportsGuidePage: React.FC = () => (
               </Text>
               <CodeBlock>
                 {`export/
+├── manifest.json            # Export date and batch count
 ├── indexToOracleMap.json    # Index → Oracle ID mapping
 ├── simpleCardDict.json      # Oracle ID → Card metadata
 ├── cubes.json               # All cube lists
@@ -225,7 +226,10 @@ console.log(card.name);                         // "Lightning Bolt"`}
             <Flexbox direction="col" gap="3">
               <Text md className="text-text-secondary">
                 Contains completed draft decks, batched across multiple files. Each file contains an array of deck
-                objects from completed drafts.
+                objects from completed drafts. Files 0 through{' '}
+                <code className="bg-bg-active px-1 rounded">deckBatches - 1</code> (from{' '}
+                <code className="bg-bg-active px-1 rounded">manifest.json</code>) belong to the current export, for
+                decks, picks and cube instances alike; higher-numbered files are left over from an earlier export.
               </Text>
               <CodeBlock>
                 {`[

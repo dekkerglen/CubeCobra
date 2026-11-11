@@ -11,6 +11,7 @@ import type DraftType from '@utils/datatypes/Draft';
 import { getDrafterState } from '@utils/draftutil';
 import fs from 'fs';
 
+import { buildDraftKeySlices, draftKey, sliceHasKey } from './utils/draftKeySlices';
 import { uploadFileToPublicBucket } from './utils/s3';
 
 const draftCardIndexToOracle = (cardIndex: string | number, draftCards: { [x: string]: any }) => {
@@ -191,115 +192,110 @@ const taskId = process.env.EXPORT_TASK_ID;
 
     console.log('Starting draft export...');
 
-    // Query all draft types to get all drafts
+    // Drafts are read in date slices by a pool of workers. Each slice pages through complete drafts
+    // only (incomplete ones are filtered out in DynamoDB), already loaded with their cards and seats,
+    // so no draft is read twice. Batch files are numbered as they're written, not by date.
     const draftTypes = ['d', 'g', 's', 'u']; // Draft, Grid, Sealed, Upload
+    const concurrency = Number(process.env.EXPORT_CONCURRENCY) || 8;
+    const PAGE_SIZE = 500;
+    const SLICE_MS = 30 * 24 * 60 * 60 * 1000;
 
-    let totalBatches = 0;
-    const UPLOAD_INTERVAL = 10; // Upload to S3 and cleanup every 10 batches
+    const EARLIEST = Date.UTC(2015, 0, 1); // before the first CubeCobra draft
+    const slices = buildDraftKeySlices(draftTypes, EARLIEST, Date.now() + SLICE_MS, SLICE_MS);
+    console.log(`${slices.length} slices across ${draftTypes.length} draft types, ${concurrency} at a time`);
 
-    // Helper function to upload batch files to S3 and clean up local files
-    const uploadAndCleanup = async (startBatch: number, endBatch: number) => {
-      console.log(`Uploading batches ${startBatch} to ${endBatch - 1} to S3...`);
-
-      for (let i = startBatch; i < endBatch; i++) {
-        const decksPath = `./temp/export/decks/${i}.json`;
-        const picksPath = `./temp/export/picks/${i}.json`;
-        const cubeInstancesPath = `./temp/export/cubeInstances/${i}.json`;
-
-        // Upload to S3 public bucket
-        await Promise.all([
-          uploadFileToPublicBucket(`export/decks/${i}.json`, decksPath),
-          uploadFileToPublicBucket(`export/picks/${i}.json`, picksPath),
-          uploadFileToPublicBucket(`export/cubeInstances/${i}.json`, cubeInstancesPath),
-        ]);
-
-        // Clean up local files
-        fs.unlinkSync(decksPath);
-        fs.unlinkSync(picksPath);
-        fs.unlinkSync(cubeInstancesPath);
+    // Only these cube fields are used; one fetch per cube, shared by every worker.
+    type CubeInfo = { visibility: string; deckbuildLands?: number; deckbuildSpells?: number };
+    const cubeInfoCache = new Map<string, Promise<CubeInfo | null>>();
+    const cubeInfo = (id: string): Promise<CubeInfo | null> => {
+      let info = cubeInfoCache.get(id);
+      if (!info) {
+        info = cubeDao.getById(id).then((cube) =>
+          cube
+            ? { visibility: cube.visibility, deckbuildLands: cube.deckbuildLands, deckbuildSpells: cube.deckbuildSpells }
+            : null,
+        );
+        cubeInfoCache.set(id, info);
       }
-
-      console.log(`Uploaded and cleaned up batches ${startBatch} to ${endBatch - 1}`);
+      return info;
     };
 
-    const cubeCache: Record<string, any> = {};
-    let lastUploadedBatch = 0;
+    let nextBatch = 0;
+    let exportedDrafts = 0;
 
-    for (const draftType of draftTypes) {
-      console.log(`Processing draft type: ${draftType}`);
-      let typeLastKey: any = null;
-      let totalProcessed = 0;
+    const exportPage = async (drafts: any[]): Promise<number> => {
+      const cubes = await Promise.all(drafts.map((draft) => (draft.cube ? cubeInfo(draft.cube) : null)));
+      // Only export drafts from public cubes
+      const publicDrafts = drafts
+        .map((draft, i) => ({ draft, cube: cubes[i] }))
+        .filter(({ cube }) => cube?.visibility === CUBE_VISIBILITY.PUBLIC);
+      if (publicDrafts.length === 0) return 0;
 
-      do {
-        // Load a page of draft metadata and process it directly (no artificial batch size limit)
-        const result = await draftDao.queryByTypeAndDate(draftType, typeLastKey, 2000);
-        const batchToProcess = result.items;
-        typeLastKey = result.lastKey;
+      const processedDrafts = publicDrafts.map(({ draft }) => processDeck(draft, oracleToIndex));
+      const picksResults = publicDrafts.map(({ draft, cube }) =>
+        processPicks(draft, oracleToIndex, cube?.deckbuildLands, cube?.deckbuildSpells),
+      );
 
-        if (batchToProcess.length === 0) {
-          continue;
-        }
+      // Collect cube instances and picks for this batch
+      const batchCubeInstances: number[][] = [];
+      const batchPicks = picksResults.flatMap((result) => {
+        // Add this cube instance to the batch array
+        const batchIndex = batchCubeInstances.length;
+        batchCubeInstances.push(result.cubeInstance);
 
-        const draftIds = batchToProcess
-          .filter((item: { complete: any }) => item.complete)
-          .map((row: { id: any }) => row.id);
-        const drafts = await Promise.all(draftIds.map((id: string) => draftDao.getById(id)));
-        const validDrafts = drafts.filter((d): d is NonNullable<typeof d> => d !== null);
-
-        for (const d of validDrafts) {
-          if (d.cube && !cubeCache[d.cube]) cubeCache[d.cube] = await cubeDao.getById(d.cube);
-        }
-
-        // Only export drafts from public cubes
-        const publicDrafts = validDrafts.filter((draft: any) => {
-          const cube = cubeCache[draft.cube];
-          return cube && cube.visibility === CUBE_VISIBILITY.PUBLIC;
+        // Update all picks to reference the batch cube instance index
+        result.picks.forEach((pick) => {
+          pick.cubeCards = batchIndex;
         });
 
-        const processedDrafts = publicDrafts.map((draft: any) => processDeck(draft, oracleToIndex));
-        const picksResults = publicDrafts.map((draft: any) => {
-          const cube = cubeCache[draft.cube];
-          return processPicks(draft, oracleToIndex, cube?.deckbuildLands, cube?.deckbuildSpells);
-        });
+        return result.picks;
+      });
 
-        // Collect cube instances and picks for this batch
-        const batchCubeInstances: number[][] = [];
-        const batchPicks = picksResults.flatMap((result) => {
-          // Add this cube instance to the batch array
-          const batchIndex = batchCubeInstances.length;
-          batchCubeInstances.push(result.cubeInstance);
+      const batch = nextBatch++;
+      const files = [
+        { key: `export/decks/${batch}.json`, data: processedDrafts.flat() },
+        { key: `export/picks/${batch}.json`, data: batchPicks },
+        { key: `export/cubeInstances/${batch}.json`, data: batchCubeInstances },
+      ];
+      for (const { key, data } of files) fs.writeFileSync(`./temp/${key}`, JSON.stringify(data));
+      await Promise.all(files.map(({ key }) => uploadFileToPublicBucket(key, `./temp/${key}`)));
+      for (const { key } of files) fs.unlinkSync(`./temp/${key}`);
 
-          // Update all picks to reference the batch cube instance index
-          result.picks.forEach((pick) => {
-            pick.cubeCards = batchIndex;
-          });
+      exportedDrafts += publicDrafts.length;
+      return publicDrafts.length;
+    };
 
-          return result.picks;
-        });
-
-        fs.writeFileSync(`./temp/export/decks/${totalBatches}.json`, JSON.stringify(processedDrafts.flat()));
-        fs.writeFileSync(`./temp/export/picks/${totalBatches}.json`, JSON.stringify(batchPicks));
-        fs.writeFileSync(`./temp/export/cubeInstances/${totalBatches}.json`, JSON.stringify(batchCubeInstances));
-
-        totalBatches += 1;
-        totalProcessed += batchToProcess.length;
-
+    let nextSlice = 0;
+    const worker = async () => {
+      while (nextSlice < slices.length) {
+        const index = nextSlice++;
+        const slice = slices[index]!;
+        let lastKey: Record<string, any> | undefined;
+        let sliceDrafts = 0;
+        do {
+          const page = await draftDao.queryCompleteByTypeInDateKeyRange(
+            slice.type,
+            { from: slice.from, to: slice.to },
+            lastKey,
+            PAGE_SIZE,
+          );
+          lastKey = page.lastKey;
+          const drafts = page.items.filter((draft) => sliceHasKey(slice, draftKey(draft.date)));
+          sliceDrafts += await exportPage(drafts);
+        } while (lastKey);
+        const label = slice.from === undefined ? 'before 2015' : new Date(slice.from).toISOString().slice(0, 10);
         console.log(
-          `Processed batch ${totalBatches} (${totalProcessed} drafts from type ${draftType}, ${validDrafts.length} complete drafts in this batch)`,
+          `Slice ${index + 1}/${slices.length} (type ${slice.type}, from ${label}): ` +
+            `${sliceDrafts} drafts; ${exportedDrafts} exported in ${nextBatch} batches so far`,
         );
+      }
+    };
+    await Promise.all(Array.from({ length: concurrency }, worker));
 
-        // Upload to S3 and cleanup every UPLOAD_INTERVAL batches
-        if (totalBatches - lastUploadedBatch >= UPLOAD_INTERVAL) {
-          await uploadAndCleanup(lastUploadedBatch, totalBatches);
-          lastUploadedBatch = totalBatches;
-        }
-      } while (typeLastKey);
-    }
-
-    // Upload any remaining batches that haven't been uploaded yet
-    if (totalBatches > lastUploadedBatch) {
-      await uploadAndCleanup(lastUploadedBatch, totalBatches);
-    }
+    // Earlier exports may have written more batch files than this one; the manifest's count tells
+    // readers which files belong to this export.
+    const totalBatches = nextBatch;
+    fs.writeFileSync('./temp/export/deckBatches.json', JSON.stringify({ count: totalBatches }));
 
     console.log(`Export complete! Processed ${totalBatches} total batches.`);
     process.exit(0);

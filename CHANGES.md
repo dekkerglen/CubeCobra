@@ -41,3 +41,4 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - The navigation bar no longer redraws every time a draft updates, and keeps cubes that share a name apart.
 - The web server's request size limit now matches the site's own limits. It had been silently capping requests at 1MB.
 - The card recommender now retrains automatically after each quarterly data export, on drafts from the last three years and cubes updated in that time. A new model goes live only after it matches the current one on held-out drafts and an admin approves it, and admins can roll back to any earlier model. Each retrain also finds and names deck archetypes automatically, and admins can rename them.
+- The quarterly data export reads each draft once instead of twice, skips incomplete drafts up front, and works through date ranges in parallel, so it finishes far sooner. Its manifest now says how many batch files belong to it.
