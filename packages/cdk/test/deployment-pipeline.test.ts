@@ -184,6 +184,14 @@ test('Only the production deploy publishes the ML pipeline lambda', () => {
   expect(allCommands(beta)).not.toContain('cd packages/mlPipelineLambda');
 });
 
+test("The production deploy has room past CodeBuild's default 60-minute timeout", () => {
+  const template = buildTemplate();
+  const project: any = (Object.values(template.findResources('AWS::CodeBuild::Project')) as any[]).find(
+    (p) => p.Properties.Name === 'CubeCobra-Deploy-Production',
+  );
+  expect(project.Properties.TimeoutInMinutes).toBe(120);
+});
+
 test('The ML image is built by its own long-running project after the production deploy', () => {
   const template = buildTemplate();
   const project: any = (Object.values(template.findResources('AWS::CodeBuild::Project')) as any[]).find(

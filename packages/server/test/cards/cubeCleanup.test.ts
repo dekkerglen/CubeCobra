@@ -257,6 +257,25 @@ describe('findDuplicateRemovals', () => {
     expect(findDuplicateRemovals(cards)).toEqual([{ index: 0, board: 'mainboard' }]);
   });
 
+  it('reads a numeric addedTmsp, which older cards store despite the string type', () => {
+    const cards = [
+      createCard({
+        index: 0,
+        board: 'mainboard',
+        addedTmsp: 2000 as unknown as string,
+        details: createCardDetails({ oracle_id: 'abc' }),
+      }),
+      createCard({
+        index: 1,
+        board: 'mainboard',
+        addedTmsp: 1000 as unknown as string,
+        details: createCardDetails({ oracle_id: 'abc' }),
+      }),
+    ];
+
+    expect(findDuplicateRemovals(cards)).toEqual([{ index: 0, board: 'mainboard' }]);
+  });
+
   it('skips cards that carry no index or no board', () => {
     const cards = [
       createCard({ index: undefined, board: 'mainboard', details: createCardDetails({ oracle_id: 'abc' }) }),

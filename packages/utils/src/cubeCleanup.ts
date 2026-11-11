@@ -37,8 +37,9 @@ const cleanupGroupKey = (card: Card, isSwapped?: (card: Card) => boolean): strin
 const addedTmspValue = (card: Card): number => {
   // Missing, blank, or unparseable timestamps sort as the newest, so a card with no
   // data never wins the "oldest" criterion. Guard the blank case explicitly, since
-  // Number('') is 0 and would otherwise read as the epoch.
-  const raw = card.addedTmsp?.trim();
+  // Number('') is 0 and would otherwise read as the epoch. Older cards store a raw number
+  // despite the string type, so coerce before trimming.
+  const raw = card.addedTmsp == null ? '' : String(card.addedTmsp).trim();
   if (!raw) {
     return Number.POSITIVE_INFINITY;
   }

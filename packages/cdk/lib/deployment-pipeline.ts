@@ -369,6 +369,11 @@ export class DeploymentPipeline extends Construct {
     // Create CodeBuild project for deploying to production
     const prodDeployProject = new codebuild.PipelineProject(this, 'ProdDeployProject', {
       projectName: 'CubeCobra-Deploy-Production',
+      // The two Elastic Beanstalk environment updates run one after the other (~45 min together),
+      // which put this at CodeBuild's default 60 minutes. A timeout there still leaves the stack
+      // updated, but skips the jobs image push and the ML image stage, so the ML pipeline's tasks
+      // run images older than its state machine.
+      timeout: cdk.Duration.minutes(120),
       environment: {
         buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
         computeType: codebuild.ComputeType.MEDIUM,
@@ -467,7 +472,7 @@ export class DeploymentPipeline extends Construct {
 
     // Builds the ML training image (packages/ml/Dockerfile) for the production stack's ML pipeline.
     // A project of its own: the CUDA image takes long to build, and the production deploy above
-    // already runs close to CodeBuild's default 60-minute timeout. It runs after the production
+    // already takes about an hour. It runs after the production
     // deploy, which creates the ECR repository it pushes to.
     const mlImageProject = new codebuild.PipelineProject(this, 'MlImageBuildProject', {
       projectName: 'CubeCobra-Build-ML-Image',
