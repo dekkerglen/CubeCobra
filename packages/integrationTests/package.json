@@ -25,14 +25,14 @@
   "author": "Gwen Dekker",
   "license": "ISC",
   "dependencies": {
-    "@playwright/test": "^1.49.1",
+    "@playwright/test": "^1.65.0",
     "cross-env": "^7.0.3"
   },
   "devDependencies": {
     "@faker-js/faker": "^10.6.0",
     "@types/node": "^22.20.5",
     "node-fetch": "^2.7.0",
-    "tsx": "^4.7.0",
+    "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   }
 }
