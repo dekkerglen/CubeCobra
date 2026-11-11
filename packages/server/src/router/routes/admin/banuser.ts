@@ -2,6 +2,7 @@ import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
 import { blogDao, commentDao, cubeDao, draftDao, noticeDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { adminTabUrl } from 'serverutils/adminDashboard';
 import { redirect } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 
@@ -11,7 +12,7 @@ export const banuserHandler = async (req: Request, res: Response) => {
 
     if (!notice) {
       req.flash('danger', 'Notice not found.');
-      return redirect(req, res, '/admin/notices');
+      return redirect(req, res, adminTabUrl('notices'));
     }
 
     const userToBan = notice.subject!;
@@ -107,11 +108,11 @@ export const banuserHandler = async (req: Request, res: Response) => {
       'success',
       `User ${userToBan} has been banned. ${aggregates.cubesDeleted} cubes, ${aggregates.blogPostsDeleted} blog posts, ${aggregates.draftsDeleted} drafts, and ${aggregates.commentsWiped} comments were deleted.`,
     );
-    return redirect(req, res, '/admin/notices');
+    return redirect(req, res, adminTabUrl('notices'));
   } catch (err) {
     const error = err as Error;
     req.flash('danger', error.message);
-    return redirect(req, res, '/admin/notices');
+    return redirect(req, res, adminTabUrl('notices'));
   }
 };
 

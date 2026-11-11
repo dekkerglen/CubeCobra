@@ -18,6 +18,20 @@ export type DailyGameKey = 'manamatrix' | 'synergyconnect' | 'crossword' | 'dail
 
 export const DAILY_GAME_KEYS: DailyGameKey[] = ['manamatrix', 'synergyconnect', 'crossword', 'dailyp1p1'];
 
+/**
+ * How far back the range picker may reach.
+ *
+ * 30 days is not an arbitrary round number: the server's info log group is created with
+ * RetentionDays.ONE_MONTH (see packages/cdk/lib/elastic-beanstalk.ts), so page hits older
+ * than that do not exist to be queried. Allowing a wider range would silently drop the
+ * top of the funnel for the older half of the chart.
+ *
+ * It also bounds the read cost. A range is one GSI2 query per game per day — see the cost
+ * note on `submissionSeries` in the server's admin/dailygames route — and 30 days is where
+ * that stays comfortable.
+ */
+export const MAX_RANGE_DAYS = 30;
+
 /** One puzzle date's funnel for one game, from persisted submissions. */
 export interface DailyGameDayStats {
   /** Puzzle date, YYYY-MM-DD. */

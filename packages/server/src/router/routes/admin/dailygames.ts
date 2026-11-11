@@ -4,6 +4,7 @@ import {
   DailyGameKey,
   DailyGamePageHits,
   DailyGameSeries,
+  MAX_RANGE_DAYS,
 } from '@utils/datatypes/DailyGameStats';
 import { DailyP1P1 } from '@utils/datatypes/DailyP1P1';
 import { UserRoles } from '@utils/datatypes/User';
@@ -16,6 +17,7 @@ import {
 } from 'dynamo/daos';
 import Joi from 'joi';
 import { bodyValidation, csrfProtection, ensureRole } from 'router/middleware';
+import { redirectToAdminTab } from 'serverutils/adminDashboard';
 import { isMissingLogGroup } from 'serverutils/adminInsights';
 import { logGroupFor, runTimeSeries } from 'serverutils/cloudwatchInsights';
 import {
@@ -26,22 +28,8 @@ import {
   summarizeManaMatrixDay,
   summarizeSynergyConnectDay,
 } from 'serverutils/dailyGameFunnel';
-import { handleRouteError, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
-
-/**
- * How far back the range picker may reach.
- *
- * 30 days is not an arbitrary round number: the server's info log group is created with
- * RetentionDays.ONE_MONTH (see packages/cdk/lib/elastic-beanstalk.ts), so page hits older
- * than that do not exist to be queried. Allowing a wider range would silently drop the
- * top of the funnel for the older half of the chart.
- *
- * It also bounds the read cost. A range is one GSI2 query per game per day — see the cost
- * note on `submissionSeries` — and 30 days is where that stays comfortable.
- */
-export const MAX_RANGE_DAYS = 30;
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -49,9 +37,6 @@ export const DailyGameStatsSchema = Joi.object({
   startDate: Joi.string().pattern(DATE_PATTERN).required(),
   endDate: Joi.string().pattern(DATE_PATTERN).required(),
 });
-
-const utcDay = (offsetDays: number): string =>
-  new Date(Date.now() + offsetDays * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
 /**
  * The page route whose request-log hits stand in for "opened the game".
@@ -276,24 +261,6 @@ const cacheStore = (key: string, series: DailyGameSeries[]): void => {
   cache.set(key, { at: now, series });
 };
 
-export const dailyGamesPageHandler = async (req: Request, res: Response) => {
-  try {
-    return render(
-      req,
-      res,
-      'AdminDailyGamesPage',
-      {
-        defaultStartDate: utcDay(-13),
-        defaultEndDate: utcDay(0),
-        maxRangeDays: MAX_RANGE_DAYS,
-      },
-      { title: 'Daily Games - Admin' },
-    );
-  } catch (err) {
-    return handleRouteError(req, res, err, '/');
-  }
-};
-
 export const dailyGamesStatsHandler = async (req: Request, res: Response) => {
   try {
     const { startDate, endDate } = req.body as { startDate: string; endDate: string };
@@ -354,7 +321,7 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), dailyGamesPageHandler],
+    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), redirectToAdminTab('dailygames')],
   },
   {
     method: 'post',

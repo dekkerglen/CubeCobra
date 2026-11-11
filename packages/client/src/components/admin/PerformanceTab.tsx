@@ -1,5 +1,7 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
+import { PERFORMANCE_METRICS } from '@utils/datatypes/AdminInsights';
+
 import {
   LineChart,
   StackedBarChart,
@@ -8,23 +10,13 @@ import {
   statusColor,
 } from 'components/admin/AdminCharts';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Container from 'components/base/Container';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
 import Table from 'components/base/Table';
 import Text from 'components/base/Text';
-import DynamicFlash from 'components/DynamicFlash';
-import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
-import MainLayout from 'layouts/MainLayout';
-
-interface MetricOption {
-  key: string;
-  label: string;
-  unit: string;
-}
 
 interface PerfRow {
   matchedPath: string;
@@ -47,11 +39,7 @@ interface DistBucket {
   bytes: number;
 }
 
-interface AdminPerformancePageProps {
-  defaultWindow: number;
-  defaultMetric: string;
-  metrics: MetricOption[];
-}
+const DEFAULT_WINDOW = '180';
 
 const WINDOW_OPTIONS = [
   { value: '60', label: 'Last 1 hour' },
@@ -107,10 +95,10 @@ const byteScaleFor = (maxValue: number): { divisor: number; suffix: string } => 
   return { divisor: 1000 ** exp, suffix: units[exp] };
 };
 
-const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWindow, defaultMetric, metrics }) => {
+const PerformanceTab: React.FC = () => {
   const { callApi } = useContext(CSRFContext);
-  const [windowMinutes, setWindowMinutes] = useState(String(defaultWindow));
-  const [metric, setMetric] = useState(defaultMetric);
+  const [windowMinutes, setWindowMinutes] = useState(DEFAULT_WINDOW);
+  const [metric, setMetric] = useState<string>(PERFORMANCE_METRICS[0].key);
   const [limit, setLimit] = useState('50');
 
   const [rows, setRows] = useState<PerfRow[]>([]);
@@ -213,7 +201,11 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
   const headers = ['Route', valueHeader, ...extraColumns.map((c) => EXTRA_HEADER[c] ?? c)];
   const tableRows = rows.map((r) => {
     const row: { [key: string]: React.ReactNode } = {
-      Route: <Link href={`/admin/pathanalysis?path=${encodeURIComponent(r.matchedPath)}`}>{r.matchedPath}</Link>,
+      Route: (
+        <Link href={`/admin/dashboard?tab=pathanalysis&path=${encodeURIComponent(r.matchedPath)}`}>
+          {r.matchedPath}
+        </Link>
+      ),
       [valueHeader]: isByteUnit ? formatBytes(r.value) : Math.round(r.value).toLocaleString(),
     };
     for (const c of extraColumns) {
@@ -225,7 +217,7 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
 
   const win = Number(windowMinutes);
 
-  const selectedMetric = metrics.find((m) => m.key === metric);
+  const selectedMetric = PERFORMANCE_METRICS.find((m) => m.key === metric);
   const metricIsBytes = (selectedMetric?.unit || '').includes('bytes');
   const maxPathValue = Math.max(0, ...pathOrder.flatMap((p) => pathSeries[p] || []));
   const { divisor, suffix } = byteScaleFor(maxPathValue);
@@ -252,131 +244,126 @@ const AdminPerformancePage: React.FC<AdminPerformancePageProps> = ({ defaultWind
   const egressDistData = magnitudes.map((m) => egressByMag.get(m) || 0);
 
   return (
-    <MainLayout>
-      <DynamicFlash />
-      <Container xl>
-        <Card className="my-3">
-          <CardHeader>
-            <Flexbox direction="col" gap="2" className="w-full">
-              <Text semibold xl>
-                Performance
+    <Card>
+      <CardHeader>
+        <Flexbox direction="col" gap="2" className="w-full">
+          <Text semibold xl>
+            Performance
+          </Text>
+          <Flexbox direction="row" gap="2" wrap="wrap" alignItems="end">
+            <Select
+              label="Metric"
+              dense
+              options={PERFORMANCE_METRICS.map((m) => ({ value: m.key, label: m.label }))}
+              value={metric}
+              setValue={setMetric}
+            />
+            <Select
+              label="Time frame"
+              dense
+              options={WINDOW_OPTIONS}
+              value={windowMinutes}
+              setValue={setWindowMinutes}
+            />
+            <Select label="Rows" dense options={LIMIT_OPTIONS} value={limit} setValue={setLimit} />
+            <Select label="Chart lines" dense options={TOP_PATH_OPTIONS} value={topPaths} setValue={setTopPaths} />
+          </Flexbox>
+        </Flexbox>
+      </CardHeader>
+      <CardBody>
+        <Flexbox direction="col" gap="4">
+          {pathChartLoading ? (
+            <Flexbox direction="row" justify="center" className="w-full py-4">
+              <Spinner />
+            </Flexbox>
+          ) : (
+            <div>
+              <Text sm semibold>
+                {selectedMetric?.label || 'Selected metric'} over time{pathChartUnit ? ` (${pathChartUnit})` : ''}
               </Text>
-              <Flexbox direction="row" gap="2" wrap="wrap" alignItems="end">
-                <Select
-                  label="Metric"
-                  dense
-                  options={metrics.map((m) => ({ value: m.key, label: m.label }))}
-                  value={metric}
-                  setValue={setMetric}
-                />
-                <Select
-                  label="Time frame"
-                  dense
-                  options={WINDOW_OPTIONS}
-                  value={windowMinutes}
-                  setValue={setWindowMinutes}
-                />
-                <Select label="Rows" dense options={LIMIT_OPTIONS} value={limit} setValue={setLimit} />
-                <Select label="Chart lines" dense options={TOP_PATH_OPTIONS} value={topPaths} setValue={setTopPaths} />
-              </Flexbox>
-            </Flexbox>
-          </CardHeader>
-          <CardBody>
-            <Flexbox direction="col" gap="4">
-              {pathChartLoading ? (
-                <Flexbox direction="row" justify="center" className="w-full py-4">
-                  <Spinner />
-                </Flexbox>
-              ) : (
-                <div>
-                  <Text sm semibold>
-                    {selectedMetric?.label || 'Selected metric'} over time{pathChartUnit ? ` (${pathChartUnit})` : ''}
-                  </Text>
-                  <LineChart labels={pathLabels} datasets={pathDatasets} height={320} />
-                </div>
-              )}
+              <LineChart labels={pathLabels} datasets={pathDatasets} height={320} />
+            </div>
+          )}
 
-              {chartsLoading ? (
-                <Flexbox direction="row" justify="center" className="w-full py-4">
-                  <Spinner />
-                </Flexbox>
-              ) : (
-                <Row>
-                  <Col xs={12} md={6}>
-                    <Text sm semibold>
-                      Requests over time
-                    </Text>
-                    <LineChart
-                      labels={trafficLabels}
-                      datasets={[{ label: 'Requests', data: traffic.map((p) => p.hits), color: '#67A6D3' }]}
-                    />
-                  </Col>
-                  <Col xs={12} md={6}>
-                    <Text sm semibold>
-                      Ingress / egress over time (MB)
-                    </Text>
-                    <LineChart
-                      labels={trafficLabels}
-                      datasets={[
-                        { label: 'Ingress (MB)', data: traffic.map((p) => p.ingress / 1e6), color: '#67A6D3' },
-                        { label: 'Egress (MB)', data: traffic.map((p) => p.egress / 1e6), color: '#6AB572' },
-                      ]}
-                    />
-                  </Col>
-                  <Col xs={12} md={6}>
-                    <Text sm semibold>
-                      Latency over time (ms)
-                    </Text>
-                    <LineChart
-                      labels={trafficLabels}
-                      datasets={[
-                        { label: 'Avg (ms)', data: traffic.map((p) => p.avgLatency), color: '#6AB572' },
-                        { label: 'p99 (ms)', data: traffic.map((p) => p.p99Latency), color: '#D85F69' },
-                      ]}
-                    />
-                  </Col>
-                  <Col xs={12}>
-                    <Text sm semibold>
-                      Requests by status code
-                    </Text>
-                    <StackedBarChart labels={statusLabels} datasets={statusDatasets} />
-                  </Col>
-                  <Col xs={12} md={6}>
-                    <Text sm semibold>
-                      Requests by request size
-                    </Text>
-                    <StackedBarChart
-                      labels={distLabels}
-                      datasets={[{ label: 'Requests', data: ingressDistData, color: '#67A6D3' }]}
-                    />
-                  </Col>
-                  <Col xs={12} md={6}>
-                    <Text sm semibold>
-                      Requests by response size
-                    </Text>
-                    <StackedBarChart
-                      labels={distLabels}
-                      datasets={[{ label: 'Responses', data: egressDistData, color: '#6AB572' }]}
-                    />
-                  </Col>
-                </Row>
-              )}
-
-              {loading ? (
-                <Flexbox direction="row" justify="center" className="w-full py-4">
-                  <Spinner />
-                </Flexbox>
-              ) : error ? (
-                <Text className="text-text-red">{error}</Text>
-              ) : (
-                <Table headers={headers} rows={tableRows} wrapCells />
-              )}
+          {chartsLoading ? (
+            <Flexbox direction="row" justify="center" className="w-full py-4">
+              <Spinner />
             </Flexbox>
-          </CardBody>
-        </Card>
-      </Container>
-    </MainLayout>
+          ) : (
+            <Row>
+              <Col xs={12} md={6}>
+                <Text sm semibold>
+                  Requests over time
+                </Text>
+                <LineChart
+                  labels={trafficLabels}
+                  datasets={[{ label: 'Requests', data: traffic.map((p) => p.hits), color: '#67A6D3' }]}
+                />
+              </Col>
+              <Col xs={12} md={6}>
+                <Text sm semibold>
+                  Ingress / egress over time (MB)
+                </Text>
+                <LineChart
+                  labels={trafficLabels}
+                  datasets={[
+                    { label: 'Ingress (MB)', data: traffic.map((p) => p.ingress / 1e6), color: '#67A6D3' },
+                    { label: 'Egress (MB)', data: traffic.map((p) => p.egress / 1e6), color: '#6AB572' },
+                  ]}
+                />
+              </Col>
+              <Col xs={12} md={6}>
+                <Text sm semibold>
+                  Latency over time (ms)
+                </Text>
+                <LineChart
+                  labels={trafficLabels}
+                  datasets={[
+                    { label: 'Avg (ms)', data: traffic.map((p) => p.avgLatency), color: '#6AB572' },
+                    { label: 'p99 (ms)', data: traffic.map((p) => p.p99Latency), color: '#D85F69' },
+                  ]}
+                />
+              </Col>
+              <Col xs={12}>
+                <Text sm semibold>
+                  Requests by status code
+                </Text>
+                <StackedBarChart labels={statusLabels} datasets={statusDatasets} />
+              </Col>
+              <Col xs={12} md={6}>
+                <Text sm semibold>
+                  Requests by request size
+                </Text>
+                <StackedBarChart
+                  labels={distLabels}
+                  datasets={[{ label: 'Requests', data: ingressDistData, color: '#67A6D3' }]}
+                />
+              </Col>
+              <Col xs={12} md={6}>
+                <Text sm semibold>
+                  Requests by response size
+                </Text>
+                <StackedBarChart
+                  labels={distLabels}
+                  datasets={[{ label: 'Responses', data: egressDistData, color: '#6AB572' }]}
+                />
+              </Col>
+            </Row>
+          )}
+
+          {loading ? (
+            <Flexbox direction="row" justify="center" className="w-full py-4">
+              <Spinner />
+            </Flexbox>
+          ) : error ? (
+            <Text className="text-text-red">{error}</Text>
+          ) : (
+            <Table headers={headers} rows={tableRows} wrapCells />
+          )}
+        </Flexbox>
+      </CardBody>
+    </Card>
   );
 };
 
-export default RenderToRoot(AdminPerformancePage);
+export default PerformanceTab;

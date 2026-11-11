@@ -1,6 +1,7 @@
 import { UserRoles } from '@utils/datatypes/User';
 import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { adminTabUrl } from 'serverutils/adminDashboard';
 import { addNewCubeToQueue } from 'serverutils/featuredQueue';
 import { redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
@@ -9,24 +10,24 @@ import { Request, Response } from 'types/express';
 export const queueHandler = async (req: Request, res: Response) => {
   if (!req.body.cubeId) {
     req.flash('danger', 'Cube ID not sent');
-    return redirect(req, res, '/admin/featuredcubes');
+    return redirect(req, res, adminTabUrl('featuredcubes'));
   }
   const cube = await cubeDao.getById(req.body.cubeId);
   if (!cube) {
     req.flash('danger', 'Cube does not exist');
-    return redirect(req, res, '/admin/featuredcubes');
+    return redirect(req, res, adminTabUrl('featuredcubes'));
   }
 
   if (cube.visibility === 'pr') {
     req.flash('danger', 'Cannot feature private cube');
-    return redirect(req, res, '/admin/featuredcubes');
+    return redirect(req, res, adminTabUrl('featuredcubes'));
   }
 
   try {
     await addNewCubeToQueue(cube.owner.id, cube.id);
   } catch (err) {
     req.flash('danger', (err as Error).message);
-    return redirect(req, res, '/admin/featuredcubes');
+    return redirect(req, res, adminTabUrl('featuredcubes'));
   }
 
   if (req.user) {
@@ -37,7 +38,7 @@ export const queueHandler = async (req: Request, res: Response) => {
       'An admin added your cube to the featured cubes queue.',
     );
   }
-  return redirect(req, res, '/admin/featuredcubes');
+  return redirect(req, res, adminTabUrl('featuredcubes'));
 };
 
 export const routes = [

@@ -12,6 +12,7 @@ import {
 import { retrainTaskDao } from 'dynamo/daos';
 import { getBucketName } from 'dynamo/s3client';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { redirectToAdminTab } from 'serverutils/adminDashboard';
 import {
   clearAdminAlertsCache,
   isPipelineConfigured,
@@ -20,7 +21,6 @@ import {
   toClientRun,
 } from 'serverutils/mlRetraining';
 import { readModelPointer } from 'serverutils/modelPointer';
-import { handleRouteError, render } from 'serverutils/render';
 import { approveRun, isStaleTokenError, rejectRun, startPipeline } from 'serverutils/stepFunctions';
 import { NextFunction, Request, Response } from 'types/express';
 
@@ -28,7 +28,7 @@ const RUN_LIMIT = 25;
 
 const errorMessage = (error: unknown) => (error instanceof Error ? error.message : 'Unknown error');
 
-// Everything the page shows; also served as JSON so the page can refresh itself after an action.
+// Everything the tab shows; it loads this when opened and again to refresh after an action.
 const loadState = async () => {
   const bucket = getBucketName();
   const [{ items }, pointer, publishedVersions] = await Promise.all([
@@ -43,14 +43,6 @@ const loadState = async () => {
     publishedVersions,
     configured: isPipelineConfigured(),
   };
-};
-
-export const mlRetrainingHandler = async (req: Request, res: Response) => {
-  try {
-    return render(req, res, 'AdminMlRetrainingPage', await loadState(), { title: 'ML Retraining - Admin' });
-  } catch (err) {
-    return handleRouteError(req, res, err, '/admin/dashboard');
-  }
 };
 
 export const stateHandler = async (_req: Request, res: Response) => {
@@ -206,7 +198,7 @@ export const promoteHandler = async (req: Request, res: Response) => {
 const admin = [csrfProtection, ensureRole(UserRoles.ADMIN)];
 
 export const routes = [
-  { method: 'get', path: '/', handler: [...admin, mlRetrainingHandler] },
+  { method: 'get', path: '/', handler: [...admin, redirectToAdminTab('mlretraining')] },
   { method: 'get', path: '/state', handler: [...admin, stateHandler] },
   { method: 'get', path: '/run/:id', handler: [...admin, runDetailsHandler] },
   { method: 'post', path: '/run/:id/approve', handler: [...admin, ensureConfigured, decisionHandler(true)] },

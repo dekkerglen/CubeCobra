@@ -3,18 +3,16 @@ import React from 'react';
 import { NoticeType } from '@utils/datatypes/Notice';
 import User from '@utils/datatypes/User';
 
+import AdminTabData from 'components/admin/AdminTabData';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Datetime from 'components/base/Datetime';
-import { Col, Row } from 'components/base/Layout';
+import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import PostButton from 'components/base/PostButton';
 import Text from 'components/base/Text';
-import DynamicFlash from 'components/DynamicFlash';
 import ConfirmActionModal from 'components/modals/ConfirmActionModal';
-import RenderToRoot from 'components/RenderToRoot';
 import withModal from 'components/WithModal';
-import MainLayout from 'layouts/MainLayout';
 
 const ConfirmActionModalButton = withModal(Button, ConfirmActionModal);
 
@@ -27,19 +25,18 @@ interface Notice {
   subject?: string;
 }
 
-interface NoticePageProps {
+interface NoticesProps {
   notices: Notice[];
 }
 
-const NoticePage: React.FC<NoticePageProps> = ({ notices }) => {
+const Notices: React.FC<NoticesProps> = ({ notices }) => {
   const applications = notices.filter((notice) => notice.type === NoticeType.APPLICATION);
   const commentReports = notices.filter((notice) => notice.type === NoticeType.COMMENT_REPORT);
   const cubeReports = notices.filter((notice) => notice.type === NoticeType.CUBE_REPORT);
 
   return (
-    <MainLayout>
-      <DynamicFlash />
-      <Card className="my-3">
+    <Flexbox direction="col" gap="3">
+      <Card>
         <CardHeader>
           <Text md semibold>
             Content Creator Applications
@@ -82,7 +79,7 @@ const NoticePage: React.FC<NoticePageProps> = ({ notices }) => {
           </Card>
         ))}
       </Card>
-      <Card className="my-3">
+      <Card>
         <CardHeader>
           <Text md semibold>
             Recent Comment Reports
@@ -121,7 +118,7 @@ const NoticePage: React.FC<NoticePageProps> = ({ notices }) => {
           </Card>
         ))}
       </Card>
-      <Card className="my-3">
+      <Card>
         <CardHeader>
           <Text md semibold>
             Recent Cube Reports
@@ -169,8 +166,12 @@ const NoticePage: React.FC<NoticePageProps> = ({ notices }) => {
           </Card>
         ))}
       </Card>
-    </MainLayout>
+    </Flexbox>
   );
 };
 
-export default RenderToRoot(NoticePage);
+const NoticesTab: React.FC = () => (
+  <AdminTabData<NoticesProps> url="/admin/notices/data">{({ notices }) => <Notices notices={notices} />}</AdminTabData>
+);
+
+export default NoticesTab;

@@ -2,15 +2,11 @@ import React, { useCallback, useContext, useEffect, useState } from 'react';
 
 import { LineChart, formatBucketLabel } from 'components/admin/AdminCharts';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
-import DynamicFlash from 'components/DynamicFlash';
-import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
-import MainLayout from 'layouts/MainLayout';
 
 interface ErrorRow {
   signature: string;
@@ -31,9 +27,7 @@ interface TimePoint {
   errors: number;
 }
 
-interface AdminErrorsPageProps {
-  defaultWindow: number;
-}
+const DEFAULT_WINDOW = '1440';
 
 const WINDOW_OPTIONS = [
   { value: '60', label: 'Last 1 hour' },
@@ -90,9 +84,9 @@ const ErrorDetail: React.FC<{ row: ErrorRow }> = ({ row }) => {
   );
 };
 
-const AdminErrorsPage: React.FC<AdminErrorsPageProps> = ({ defaultWindow }) => {
+const ErrorsTab: React.FC = () => {
   const { callApi } = useContext(CSRFContext);
-  const [windowMinutes, setWindowMinutes] = useState(String(defaultWindow));
+  const [windowMinutes, setWindowMinutes] = useState(DEFAULT_WINDOW);
   const [rows, setRows] = useState<ErrorRow[]>([]);
   const [points, setPoints] = useState<TimePoint[]>([]);
   const [loading, setLoading] = useState(false);
@@ -130,53 +124,42 @@ const AdminErrorsPage: React.FC<AdminErrorsPageProps> = ({ defaultWindow }) => {
   const chartLabels = points.map((p) => formatBucketLabel(p.t, Number(windowMinutes)));
 
   return (
-    <MainLayout>
-      <DynamicFlash />
-      <Container xl>
-        <Card className="my-3">
-          <CardHeader>
-            <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
-              <Text semibold xl>
-                Backend Errors
-              </Text>
-              <Select
-                label="Time frame"
-                dense
-                options={WINDOW_OPTIONS}
-                value={windowMinutes}
-                setValue={setWindowMinutes}
-              />
+    <Card>
+      <CardHeader>
+        <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
+          <Text semibold xl>
+            Backend Errors
+          </Text>
+          <Select label="Time frame" dense options={WINDOW_OPTIONS} value={windowMinutes} setValue={setWindowMinutes} />
+        </Flexbox>
+      </CardHeader>
+      <CardBody>
+        {loading ? (
+          <Flexbox direction="row" justify="center" className="w-full py-4">
+            <Spinner />
+          </Flexbox>
+        ) : error ? (
+          <Text className="text-text-red">{error}</Text>
+        ) : (
+          <Flexbox direction="col" gap="4">
+            <LineChart
+              labels={chartLabels}
+              datasets={[{ label: 'Errors', data: points.map((p) => p.errors), color: '#D85F69' }]}
+            />
+            <Text sm className="text-text-secondary">
+              {rows.length} distinct errors, {totalErrors} total occurrences — click a row for the stack and request
+              context
+            </Text>
+            <Flexbox direction="col" gap="0">
+              {rows.map((row, i) => (
+                <ErrorDetail key={i} row={row} />
+              ))}
             </Flexbox>
-          </CardHeader>
-          <CardBody>
-            {loading ? (
-              <Flexbox direction="row" justify="center" className="w-full py-4">
-                <Spinner />
-              </Flexbox>
-            ) : error ? (
-              <Text className="text-text-red">{error}</Text>
-            ) : (
-              <Flexbox direction="col" gap="4">
-                <LineChart
-                  labels={chartLabels}
-                  datasets={[{ label: 'Errors', data: points.map((p) => p.errors), color: '#D85F69' }]}
-                />
-                <Text sm className="text-text-secondary">
-                  {rows.length} distinct errors, {totalErrors} total occurrences — click a row for the stack and request
-                  context
-                </Text>
-                <Flexbox direction="col" gap="0">
-                  {rows.map((row, i) => (
-                    <ErrorDetail key={i} row={row} />
-                  ))}
-                </Flexbox>
-              </Flexbox>
-            )}
-          </CardBody>
-        </Card>
-      </Container>
-    </MainLayout>
+          </Flexbox>
+        )}
+      </CardBody>
+    </Card>
   );
 };
 
-export default RenderToRoot(AdminErrorsPage);
+export default ErrorsTab;

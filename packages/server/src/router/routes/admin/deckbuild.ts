@@ -1,8 +1,8 @@
 import { UserRoles } from '@utils/datatypes/User';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { redirectToAdminTab } from 'serverutils/adminDashboard';
 import { clampWindow } from 'serverutils/adminInsights';
 import { getMetricData, MetricSpec, periodFor } from 'serverutils/cloudwatchMetrics';
-import { render } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 
 const DEFAULT_WINDOW = 180;
@@ -64,19 +64,6 @@ const meanNonZero = (values: number[]): number => {
   return present.length ? sum(present) / present.length : 0;
 };
 
-export const deckbuildHandler = async (req: Request, res: Response) => {
-  return render(
-    req,
-    res,
-    'AdminDeckbuildPage',
-    {
-      defaultWindow: DEFAULT_WINDOW,
-      configured: !!(queueName() && dlqName() && functionName()),
-    },
-    { title: 'Bot Deckbuild - Admin' },
-  );
-};
-
 export const deckbuildMetricsHandler = async (req: Request, res: Response) => {
   try {
     const queue = queueName();
@@ -130,7 +117,7 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), deckbuildHandler],
+    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), redirectToAdminTab('deckbuild')],
   },
   {
     method: 'post',

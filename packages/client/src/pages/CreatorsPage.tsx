@@ -1,7 +1,5 @@
 import React from 'react';
 
-import Banner from 'components/Banner';
-import Controls from 'components/base/Controls';
 import { Flexbox } from 'components/base/Layout';
 import { TabContent, Tabs } from 'components/base/Tabs';
 import Text from 'components/base/Text';
@@ -24,46 +22,34 @@ interface CreatorsPageProps {
   podcasts: ContentItems;
 }
 
+const TABS = ['Articles', 'Podcasts', 'Videos'];
+
 const CreatorsPage: React.FC<CreatorsPageProps> = ({ articles, videos, podcasts }) => {
   const [tab, setTab] = useQueryParam('tab', '0');
+  const activeTab = parseInt(tab || '0', 10);
 
   return (
     <MainLayout>
-      <Controls>
-        <Flexbox direction="col" gap="2" className="mx-2">
-          <Banner />
-          <Text semibold xl>
-            Content Creator Dashboard
-          </Text>
-          <DynamicFlash />
-          <Tabs
-            tabs={[
-              {
-                label: 'Articles',
-                onClick: () => setTab('0'),
-              },
-              {
-                label: 'Podcasts',
-                onClick: () => setTab('1'),
-              },
-              {
-                label: 'Videos',
-                onClick: () => setTab('2'),
-              },
-            ]}
-            activeTab={parseInt(tab || '0', 10)}
-          />
-        </Flexbox>
-      </Controls>
-      <TabContent
-        activeTab={parseInt(tab || '0', 10)}
-        contents={[
-          <CreatorArticles articles={articles.items} lastKey={articles.lastKey} key="articles" />,
-          <CreatorPodcasts podcasts={podcasts.items} lastKey={podcasts.lastKey} key="podcasts" />,
-          <CreatorVideos videos={videos.items} lastKey={videos.lastKey} key="videos" />,
-        ]}
-        className="mt-2"
-      />
+      <Flexbox direction="col" gap="2" className="my-3">
+        <DynamicFlash />
+        <Text xl semibold>
+          Content Creator Dashboard
+        </Text>
+        <Tabs
+          className="border-b border-border"
+          tabs={TABS.map((label, index) => ({ label, onClick: () => setTab(`${index}`) }))}
+          activeTab={activeTab}
+        />
+        <TabContent
+          activeTab={activeTab}
+          contents={[
+            <CreatorArticles articles={articles.items} lastKey={articles.lastKey} key="articles" />,
+            <CreatorPodcasts podcasts={podcasts.items} lastKey={podcasts.lastKey} key="podcasts" />,
+            <CreatorVideos videos={videos.items} lastKey={videos.lastKey} key="videos" />,
+          ]}
+          className="mt-1"
+        />
+      </Flexbox>
     </MainLayout>
   );
 };

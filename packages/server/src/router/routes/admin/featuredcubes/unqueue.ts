@@ -1,6 +1,7 @@
 import { UserRoles } from '@utils/datatypes/User';
 import { featuredQueueDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { adminTabUrl } from 'serverutils/adminDashboard';
 import { redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
 import { Request, Response } from 'types/express';
@@ -8,14 +9,14 @@ import { Request, Response } from 'types/express';
 export const unqueueHandler = async (req: Request, res: Response) => {
   if (!req.body.cubeId) {
     req.flash('danger', 'Cube ID not sent');
-    return redirect(req, res, '/admin/featuredcubes');
+    return redirect(req, res, adminTabUrl('featuredcubes'));
   }
 
   const queuedCube = await featuredQueueDao.getByCube(req.body.cubeId);
 
   if (!queuedCube) {
     req.flash('danger', 'Cube not found in featured queue');
-    return redirect(req, res, '/admin/featuredcubes');
+    return redirect(req, res, adminTabUrl('featuredcubes'));
   }
 
   await featuredQueueDao.delete(queuedCube);
@@ -29,7 +30,7 @@ export const unqueueHandler = async (req: Request, res: Response) => {
       'An admin removed your cube from the featured cubes queue.',
     );
   }
-  return redirect(req, res, '/admin/featuredcubes');
+  return redirect(req, res, adminTabUrl('featuredcubes'));
 };
 
 export const routes = [

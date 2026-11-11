@@ -3,6 +3,7 @@ import { UserRoles } from '@utils/datatypes/User';
 import { userDao } from 'dynamo/daos';
 import { articleDao, episodeDao, podcastDao, videoDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { adminTabUrl } from 'serverutils/adminDashboard';
 import sendEmail from 'serverutils/email';
 import { redirect } from 'serverutils/render';
 import { addNotification, getBaseUrl } from 'serverutils/util';
@@ -21,12 +22,12 @@ export const publishHandler = async (req: Request, res: Response) => {
 
   if (!document) {
     req.flash('danger', 'Content not found');
-    return redirect(req, res, '/admin/reviewcontent');
+    return redirect(req, res, adminTabUrl('reviewcontent'));
   }
 
   if (document.status !== ContentStatus.IN_REVIEW) {
     req.flash('danger', `Content not in review`);
-    return redirect(req, res, '/admin/reviewcontent');
+    return redirect(req, res, adminTabUrl('reviewcontent'));
   }
 
   document.status = ContentStatus.PUBLISHED;
@@ -67,7 +68,7 @@ export const publishHandler = async (req: Request, res: Response) => {
 
   req.flash('success', `Content published: ${document.title}`);
 
-  return redirect(req, res, '/admin/reviewcontent');
+  return redirect(req, res, adminTabUrl('reviewcontent'));
 };
 
 export const routes = [

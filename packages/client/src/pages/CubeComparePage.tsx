@@ -6,10 +6,10 @@ import Cube, { getCubeDisplayOptions } from '@utils/datatypes/Cube';
 import { useCardDetails } from 'hooks/useCardDetails';
 import { applyIndexMap } from 'utils/applyIndexMap';
 import { getPlaceholderCardDetails } from 'utils/placeholderCardDetails';
-import Query from 'utils/Query';
 
-import CompareView from '../components/CompareView';
-import CubeCompareNavbar from '../components/cube/CubeCompareNavbar';
+import { CompareSet, CompareSides } from '../components/compare/CompareArt';
+import CompareHeader from '../components/compare/CompareHeader';
+import CompareView from '../components/compare/CompareView';
 import DynamicFlash from '../components/DynamicFlash';
 import ErrorBoundary from '../components/ErrorBoundary';
 import RenderToRoot from '../components/RenderToRoot';
@@ -44,8 +44,54 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({
   pitCardCount,
   changelogId,
 }) => {
-  const [openCollapse, setOpenCollapse] = useState<string | null>(Query.get('f') ? 'filter' : null);
+  const [focus, setFocus] = useState<CompareSet | null>(null);
   const { cardFilter } = useContext(FilterContext);
+
+  // A changelog compare is the same cube then and now; otherwise two cubes, base and comparison.
+  const sides = useMemo<CompareSides>(
+    () =>
+      pitDate
+        ? {
+            a: {
+              kicker: 'Then',
+              title: pitDate,
+              titleHint: pitTimestamp ? new Date(pitTimestamp).toLocaleString() : undefined,
+              href: changelogId ? `/cube/changelog/${cube.id}/${changelogId}/list` : undefined,
+              image: cube.image,
+              cardCount: pitCardCount ?? onlyA.length + both.length,
+              past: true,
+            },
+            b: {
+              kicker: 'Now',
+              title: cube.name,
+              href: `/cube/list/${cube.id}`,
+              image: cube.image,
+              cardCount: cubeB.cardCount,
+              owner: cube.owner,
+            },
+            captions: { onlyA: 'Removed', both: 'In Both', onlyB: 'Added' },
+          }
+        : {
+            a: {
+              kicker: 'Base',
+              title: cube.name,
+              href: `/cube/list/${cube.id}`,
+              image: cube.image,
+              cardCount: cube.cardCount,
+              owner: cube.owner,
+            },
+            b: {
+              kicker: 'Comparison',
+              title: cubeB.name,
+              href: `/cube/list/${cubeB.id}`,
+              image: cubeB.image,
+              cardCount: cubeB.cardCount,
+              owner: cubeB.owner,
+            },
+            captions: { onlyA: 'Only in Base', both: 'In Both', onlyB: 'Only in Comparison' },
+          },
+    [cube, cubeB, pitDate, pitTimestamp, pitCardCount, changelogId, onlyA.length, both.length],
+  );
 
   const filteredCards = cardFilter ? cards.filter(cardFilter.filter) : cards;
 
@@ -75,32 +121,22 @@ const CubeComparePageInner: React.FC<CubeComparePageProps> = ({
 
   return (
     <>
-      <CubeCompareNavbar
+      <DynamicFlash />
+      <CompareHeader
+        sides={sides}
+        shared={both.length}
+        focus={focus}
+        setFocus={setFocus}
         cubeA={cube}
-        cubeAID={cube.id}
         cubeB={cubeB}
-        cubeBID={cubeB.id}
-        openCollapse={openCollapse}
-        setOpenCollapse={setOpenCollapse}
         cards={filteredCards}
         both={filteredBoth}
         onlyA={filteredOnlyA}
         onlyB={filteredOnlyB}
         pitDate={pitDate}
-        pitTimestamp={pitTimestamp}
-        pitCardCount={pitCardCount}
-        changelogId={changelogId}
       />
-      <DynamicFlash />
       <ErrorBoundary>
-        <CompareView
-          cards={filteredCards}
-          onlyA={onlyA}
-          onlyB={onlyB}
-          both={both}
-          baseLabel={pitDate}
-          comparisonLabel={pitDate ? 'Present' : undefined}
-        />
+        <CompareView cards={filteredCards} onlyA={onlyA} onlyB={onlyB} both={both} sides={sides} focus={focus} />
       </ErrorBoundary>
     </>
   );

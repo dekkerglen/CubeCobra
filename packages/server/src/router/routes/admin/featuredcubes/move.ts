@@ -2,19 +2,20 @@ import { FeaturedQueueItem } from '@utils/datatypes/FeaturedQueue';
 import { UserRoles } from '@utils/datatypes/User';
 import { featuredQueueDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { adminTabUrl } from 'serverutils/adminDashboard';
 import { redirect } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 
 export const moveHandler = async (req: Request, res: Response) => {
   if (!req.body.cubeId) {
     req.flash('danger', 'Cube ID not sent');
-    return redirect(req, res, '/admin/featuredcubes');
+    return redirect(req, res, adminTabUrl('featuredcubes'));
   }
 
   const position = parseInt(req.body.position, 10);
   if (!Number.isInteger(position)) {
     req.flash('danger', 'Invalid position');
-    return redirect(req, res, '/admin/featuredcubes');
+    return redirect(req, res, adminTabUrl('featuredcubes'));
   }
 
   // Fetch the entire queue, sorted ascending by date (same ordering the page shows).
@@ -29,7 +30,7 @@ export const moveHandler = async (req: Request, res: Response) => {
   const moving = queue.find((item) => item.cube === req.body.cubeId);
   if (!moving) {
     req.flash('danger', 'Cube not found in featured queue');
-    return redirect(req, res, '/admin/featuredcubes');
+    return redirect(req, res, adminTabUrl('featuredcubes'));
   }
 
   // Positions are 1-indexed to match the queue display. The cube is placed between
@@ -38,14 +39,14 @@ export const moveHandler = async (req: Request, res: Response) => {
   const targetIndex = position - 1;
   if (targetIndex < 2 || targetIndex > queue.length - 1) {
     req.flash('danger', `Position must be between 3 and ${queue.length}`);
-    return redirect(req, res, '/admin/featuredcubes');
+    return redirect(req, res, adminTabUrl('featuredcubes'));
   }
 
   const before = queue[targetIndex - 1];
   const after = queue[targetIndex];
   if (!before || !after) {
     req.flash('danger', 'Invalid position');
-    return redirect(req, res, '/admin/featuredcubes');
+    return redirect(req, res, adminTabUrl('featuredcubes'));
   }
 
   // Midpoint keeps the moved cube strictly between its new neighbors without
@@ -53,7 +54,7 @@ export const moveHandler = async (req: Request, res: Response) => {
   moving.date = (before.date + after.date) / 2;
   await featuredQueueDao.update(moving);
 
-  return redirect(req, res, '/admin/featuredcubes');
+  return redirect(req, res, adminTabUrl('featuredcubes'));
 };
 
 export const routes = [

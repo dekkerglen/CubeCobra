@@ -22,7 +22,7 @@ export const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, className }) => {
       {tabs.map((tab, index) => {
         const isActive = activeTab === index;
         const commonClasses = classNames(
-          'px-2 md:px-4 py-2 font-medium focus:outline-none transition-colors duration-300',
+          'px-2 md:px-4 py-2 font-medium focus:outline-none transition-colors duration-300 cursor-pointer',
           'text-sm md:text-base', // Small text on small screens, medium text on larger screens
           'box-border', // Ensure border doesn't affect the size
           {

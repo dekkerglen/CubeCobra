@@ -1,24 +1,18 @@
 import React, { useCallback, useContext, useEffect, useState } from 'react';
 
+import { PATH_ANALYSIS_GROUPINGS } from '@utils/datatypes/AdminInsights';
+
 import { LineChart, formatBucketLabel } from 'components/admin/AdminCharts';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Container from 'components/base/Container';
 import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
 import Table from 'components/base/Table';
 import Text from 'components/base/Text';
-import DynamicFlash from 'components/DynamicFlash';
-import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
-import MainLayout from 'layouts/MainLayout';
-
-interface GroupingOption {
-  key: string;
-  label: string;
-}
+import Query from 'utils/Query';
 
 interface TrafficPoint {
   t: number;
@@ -33,11 +27,7 @@ interface BreakdownRow {
   egress: number;
 }
 
-interface AdminPathAnalysisPageProps {
-  defaultWindow: number;
-  initialPath: string;
-  groupings: GroupingOption[];
-}
+const DEFAULT_WINDOW = '180';
 
 const WINDOW_OPTIONS = [
   { value: '60', label: 'Last 1 hour' },
@@ -56,14 +46,14 @@ const formatBytes = (bytes: number): string => {
   return `${value >= 100 || exp === 0 ? Math.round(value) : value.toFixed(1)} ${units[exp]}`;
 };
 
-const AdminPathAnalysisPage: React.FC<AdminPathAnalysisPageProps> = ({ defaultWindow, initialPath, groupings }) => {
+const PathAnalysisTab: React.FC = () => {
   const { callApi } = useContext(CSRFContext);
-  const [windowMinutes, setWindowMinutes] = useState(String(defaultWindow));
-  const [pathInput, setPathInput] = useState(initialPath);
+  const [windowMinutes, setWindowMinutes] = useState(DEFAULT_WINDOW);
+  const [pathInput, setPathInput] = useState(() => Query.get('path', ''));
   // The path actually being analyzed; only updates when the user submits, so typing
   // doesn't fire a query per keystroke.
-  const [activePath, setActivePath] = useState(initialPath.trim());
-  const [groupBy, setGroupBy] = useState(groupings[0]?.key || 'username');
+  const [activePath, setActivePath] = useState(() => Query.get('path', '').trim());
+  const [groupBy, setGroupBy] = useState<string>(PATH_ANALYSIS_GROUPINGS[0].key);
 
   const [traffic, setTraffic] = useState<TrafficPoint[]>([]);
   const [chartLoading, setChartLoading] = useState(false);
@@ -75,8 +65,7 @@ const AdminPathAnalysisPage: React.FC<AdminPathAnalysisPageProps> = ({ defaultWi
     const next = pathInput.trim();
     setActivePath(next);
     // Keep the URL shareable/linkable for the path being analyzed.
-    const query = next ? `?path=${encodeURIComponent(next)}` : '';
-    window.history.replaceState(null, '', `/admin/pathanalysis${query}`);
+    Query.setMany({ path: next || null });
   };
 
   const runChart = useCallback(async () => {
@@ -132,7 +121,7 @@ const AdminPathAnalysisPage: React.FC<AdminPathAnalysisPageProps> = ({ defaultWi
   const win = Number(windowMinutes);
   const trafficLabels = traffic.map((p) => formatBucketLabel(p.t, win));
 
-  const groupLabel = groupings.find((g) => g.key === groupBy)?.label || 'Group';
+  const groupLabel = PATH_ANALYSIS_GROUPINGS.find((g) => g.key === groupBy)?.label || 'Group';
   const headers = [groupLabel, 'Hits', 'Avg ms', 'Max ms', 'Egress'];
   const tableRows = rows.map((r) => ({
     [groupLabel]: r.key,
@@ -143,86 +132,81 @@ const AdminPathAnalysisPage: React.FC<AdminPathAnalysisPageProps> = ({ defaultWi
   }));
 
   return (
-    <MainLayout>
-      <DynamicFlash />
-      <Container xl>
-        <Card className="my-3">
-          <CardHeader>
-            <Flexbox direction="col" gap="2" className="w-full">
-              <Text semibold xl>
-                Path Analysis
-              </Text>
-              <Flexbox direction="row" gap="2" wrap="wrap" alignItems="end">
-                <div className="flex-grow min-w-64">
-                  <Input
-                    label="Route path"
-                    placeholder="/cube/list/:id"
-                    value={pathInput}
-                    onChange={(e) => setPathInput(e.target.value)}
-                    onEnter={analyze}
-                  />
-                </div>
-                <Select
-                  label="Time frame"
-                  dense
-                  options={WINDOW_OPTIONS}
-                  value={windowMinutes}
-                  setValue={setWindowMinutes}
-                />
-                <Select
-                  label="Group by"
-                  dense
-                  options={groupings.map((g) => ({ value: g.key, label: g.label }))}
-                  value={groupBy}
-                  setValue={setGroupBy}
-                />
-                <Button color="primary" onClick={analyze}>
-                  Analyze
-                </Button>
+    <Card>
+      <CardHeader>
+        <Flexbox direction="col" gap="2" className="w-full">
+          <Text semibold xl>
+            Path Analysis
+          </Text>
+          <Flexbox direction="row" gap="2" wrap="wrap" alignItems="end">
+            <div className="flex-grow min-w-64">
+              <Input
+                label="Route path"
+                placeholder="/cube/list/:id"
+                value={pathInput}
+                onChange={(e) => setPathInput(e.target.value)}
+                onEnter={analyze}
+              />
+            </div>
+            <Select
+              label="Time frame"
+              dense
+              options={WINDOW_OPTIONS}
+              value={windowMinutes}
+              setValue={setWindowMinutes}
+            />
+            <Select
+              label="Group by"
+              dense
+              options={PATH_ANALYSIS_GROUPINGS.map((g) => ({ value: g.key, label: g.label }))}
+              value={groupBy}
+              setValue={setGroupBy}
+            />
+            <Button color="primary" onClick={analyze}>
+              Analyze
+            </Button>
+          </Flexbox>
+        </Flexbox>
+      </CardHeader>
+      <CardBody>
+        {!activePath ? (
+          <Text className="text-text-secondary">
+            Enter a route path (as it appears on the Performance page, e.g. /cube/list/:id) to see its traffic and who
+            is requesting it.
+          </Text>
+        ) : (
+          <Flexbox direction="col" gap="4">
+            {chartLoading ? (
+              <Flexbox direction="row" justify="center" className="w-full py-4">
+                <Spinner />
               </Flexbox>
-            </Flexbox>
-          </CardHeader>
-          <CardBody>
-            {!activePath ? (
-              <Text className="text-text-secondary">
-                Enter a route path (as it appears on the Performance page, e.g. /cube/list/:id) to see its traffic and
-                who is requesting it.
-              </Text>
             ) : (
-              <Flexbox direction="col" gap="4">
-                {chartLoading ? (
-                  <Flexbox direction="row" justify="center" className="w-full py-4">
-                    <Spinner />
-                  </Flexbox>
-                ) : (
-                  <div>
-                    <Text sm semibold>
-                      Requests over time — {activePath}
-                    </Text>
-                    <LineChart
-                      labels={trafficLabels}
-                      datasets={[{ label: 'Requests', data: traffic.map((p) => p.hits), color: '#67A6D3' }]}
-                      height={320}
-                    />
-                  </div>
-                )}
-
-                {tableLoading ? (
-                  <Flexbox direction="row" justify="center" className="w-full py-4">
-                    <Spinner />
-                  </Flexbox>
-                ) : error ? (
-                  <Text className="text-text-red">{error}</Text>
-                ) : (
-                  <Table headers={headers} rows={tableRows} wrapCells />
-                )}
-              </Flexbox>
+              <div>
+                <Text sm semibold>
+                  Requests over time — {activePath}
+                </Text>
+                <LineChart
+                  labels={trafficLabels}
+                  datasets={[{ label: 'Requests', data: traffic.map((p) => p.hits), color: '#67A6D3' }]}
+                  height={320}
+                />
+              </div>
             )}
-          </CardBody>
-        </Card>
-      </Container>
-    </MainLayout>
+
+            {tableLoading ? (
+              <Flexbox direction="row" justify="center" className="w-full py-4">
+                <Spinner />
+              </Flexbox>
+            ) : error ? (
+              <Text className="text-text-red">{error}</Text>
+            ) : (
+              <Table headers={headers} rows={tableRows} wrapCells />
+            )}
+          </Flexbox>
+        )}
+      </CardBody>
+    </Card>
   );
 };
 
-export default RenderToRoot(AdminPathAnalysisPage);
+export default PathAnalysisTab;

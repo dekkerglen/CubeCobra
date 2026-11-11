@@ -1,6 +1,7 @@
 import { UserRoles } from '@utils/datatypes/User';
 import { userDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { adminTabUrl } from 'serverutils/adminDashboard';
 import { rotateFeatured } from 'serverutils/featuredQueue';
 import { redirect } from 'serverutils/render';
 import { addNotification } from 'serverutils/util';
@@ -14,7 +15,7 @@ export const rotateHandler = async (req: Request, res: Response) => {
 
   if (rotate.success === 'false') {
     req.flash('danger', 'featured Cube rotation failed!');
-    return redirect(req, res, '/admin/featuredcubes');
+    return redirect(req, res, adminTabUrl('featuredcubes'));
   }
 
   const olds = await userDao.batchGet(rotate.removed.map((f: any) => f.ownerID));
@@ -31,7 +32,7 @@ export const rotateHandler = async (req: Request, res: Response) => {
     }
   }
   await Promise.all(notifications);
-  return redirect(req, res, '/admin/featuredcubes');
+  return redirect(req, res, adminTabUrl('featuredcubes'));
 };
 
 export const routes = [

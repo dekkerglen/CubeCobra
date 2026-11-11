@@ -1,11 +1,11 @@
 import { UserRoles } from '@utils/datatypes/User';
 import { cardMetadataTaskDao, cardUpdateTaskDao, exportTaskDao, migrationTaskDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
-import { handleRouteError, render } from 'serverutils/render';
+import { redirectToAdminTab } from 'serverutils/adminDashboard';
 
 import { Request, Response } from '../../../types/express';
 
-export const getCardUpdatesHandler = async (req: Request, res: Response) => {
+export const getCardUpdatesDataHandler = async (req: Request, res: Response) => {
   try {
     // Get the last 10 card updates (all statuses)
     const { items: cardUpdates } = await cardUpdateTaskDao.listAll(10);
@@ -19,22 +19,16 @@ export const getCardUpdatesHandler = async (req: Request, res: Response) => {
     // Get the last 10 migration tasks (all statuses)
     const { items: migrationTasks } = await migrationTaskDao.listAll(10);
 
-    return render(
-      req,
-      res,
-      'AdminCardUpdatesPage',
-      {
-        cardUpdates,
-        cardMetadataTasks,
-        exportTasks,
-        migrationTasks,
-      },
-      {
-        title: 'Card Updates - Admin',
-      },
-    );
+    return res.status(200).json({
+      success: true,
+      cardUpdates,
+      cardMetadataTasks,
+      exportTasks,
+      migrationTasks,
+    });
   } catch (err) {
-    return handleRouteError(req, res, err, '/404');
+    req.logger.error((err as Error).message, (err as Error).stack);
+    return res.status(500).json({ success: false, error: (err as Error).message });
   }
 };
 
@@ -42,6 +36,11 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), getCardUpdatesHandler],
+    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), redirectToAdminTab('cardupdates')],
+  },
+  {
+    method: 'get',
+    path: '/data',
+    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), getCardUpdatesDataHandler],
   },
 ];

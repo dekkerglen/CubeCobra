@@ -2,6 +2,7 @@ import { NoticeStatus } from '@utils/datatypes/Notice';
 import { UserRoles } from '@utils/datatypes/User';
 import { noticeDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { adminTabUrl } from 'serverutils/adminDashboard';
 import sendEmail from 'serverutils/email';
 import { redirect } from 'serverutils/render';
 import { Request, Response } from 'types/express';
@@ -11,7 +12,7 @@ export const approveHandler = async (req: Request, res: Response) => {
 
   if (!application) {
     req.flash('danger', 'Application not found.');
-    return redirect(req, res, '/admin/notices');
+    return redirect(req, res, adminTabUrl('notices'));
   }
 
   if (!application.user.roles) {
@@ -39,7 +40,7 @@ export const approveHandler = async (req: Request, res: Response) => {
   }
 
   req.flash('success', `Application for ${application.user.username} approved.`);
-  return redirect(req, res, `/admin/notices`);
+  return redirect(req, res, adminTabUrl('notices'));
 };
 
 export const routes = [

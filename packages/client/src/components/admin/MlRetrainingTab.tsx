@@ -12,6 +12,7 @@ import type { ArchetypeReport, GateMetrics, GateReport, ModelPointer, RunMetrics
 import classNames from 'classnames';
 
 import { LineChart } from 'components/admin/AdminCharts';
+import AdminTabData from 'components/admin/AdminTabData';
 import Badge from 'components/base/Badge';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
@@ -21,23 +22,19 @@ import Spinner from 'components/base/Spinner';
 import Table from 'components/base/Table';
 import Text from 'components/base/Text';
 import ConfirmActionModal from 'components/modals/ConfirmActionModal';
-import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
-import MainLayout from 'layouts/MainLayout';
 
 // The server never sends the Step Functions task token.
 type Run = Omit<RetrainTask, 'taskToken'>;
 
-interface PageState {
+interface RetrainingState {
   runs: Run[];
   pointer: ModelPointer | null;
   servedVersion: string;
   publishedVersions: string[];
   configured: boolean;
 }
-
-type AdminMlRetrainingPageProps = PageState;
 
 interface RunDetails {
   metrics: RunMetrics | null;
@@ -468,10 +465,10 @@ const RunDetailsPanel: React.FC<{
 
 const RUN_HEADERS = ['Run', 'Mode', 'Status', 'Step', 'Started', 'Duration', 'Version'];
 
-const AdminMlRetrainingPage: React.FC<AdminMlRetrainingPageProps> = (props) => {
+const MlRetraining: React.FC<RetrainingState> = (props) => {
   const { csrfFetch, callApi } = useContext(CSRFContext);
   const { alerts, addAlert, dismissAlerts } = useAlerts();
-  const [state, setState] = useState<PageState>({
+  const [state, setState] = useState<RetrainingState>({
     runs: props.runs,
     pointer: props.pointer,
     servedVersion: props.servedVersion,
@@ -562,12 +559,12 @@ const AdminMlRetrainingPage: React.FC<AdminMlRetrainingPageProps> = (props) => {
   const servedIndex = publishedVersions.indexOf(servedVersion);
 
   return (
-    <MainLayout>
-      <Card className="m-2">
+    <>
+      <Card>
         <CardHeader>
           <Flexbox direction="row" alignItems="center" justify="between" gap="2" wrap="wrap">
             <Text semibold xl>
-              ML Retraining - Admin View
+              ML Retraining
             </Text>
             <Button
               color="primary"
@@ -721,8 +718,12 @@ const AdminMlRetrainingPage: React.FC<AdminMlRetrainingPageProps> = (props) => {
         buttonText={pending?.buttonText ?? ''}
         onClick={confirm}
       />
-    </MainLayout>
+    </>
   );
 };
 
-export default RenderToRoot(AdminMlRetrainingPage);
+const MlRetrainingTab: React.FC = () => (
+  <AdminTabData<RetrainingState> url={`${BASE_URL}/state`}>{(state) => <MlRetraining {...state} />}</AdminTabData>
+);
+
+export default MlRetrainingTab;

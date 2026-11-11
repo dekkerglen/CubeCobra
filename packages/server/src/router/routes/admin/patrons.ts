@@ -1,7 +1,8 @@
 import { UserRoles } from '@utils/datatypes/User';
 import { patronDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureRole } from 'router/middleware';
-import { handleRouteError, render } from 'serverutils/render';
+import { redirectToAdminTab } from 'serverutils/adminDashboard';
+import { handleRouteError } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 
 const PAGE_SIZE = 48;
@@ -33,23 +34,15 @@ const toRows = async (
   }));
 };
 
-export const patronsHandler = async (req: Request, res: Response) => {
+export const patronsDataHandler = async (req: Request, res: Response) => {
   try {
     const { items, lastKey } = await patronDao.getAllPatrons(undefined, PAGE_SIZE);
     const patrons = await toRows(items);
 
-    return render(
-      req,
-      res,
-      'AdminPatronsPage',
-      {
-        patrons,
-        lastKey: lastKey ?? null,
-      },
-      { title: 'Patrons - Admin' },
-    );
+    return res.status(200).json({ success: true, patrons, lastKey: lastKey ?? null });
   } catch (err) {
-    return handleRouteError(req, res, err as Error, '/404');
+    req.logger.error((err as Error).message, (err as Error).stack);
+    return res.status(500).json({ success: false, error: (err as Error).message });
   }
 };
 
@@ -73,7 +66,12 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), patronsHandler],
+    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), redirectToAdminTab('patrons')],
+  },
+  {
+    method: 'get',
+    path: '/data',
+    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), patronsDataHandler],
   },
   {
     method: 'post',

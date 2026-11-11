@@ -1,8 +1,8 @@
 import { UserRoles } from '@utils/datatypes/User';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { redirectToAdminTab } from 'serverutils/adminDashboard';
 import { clampWindow, isMissingLogGroup, normalizeErrorMessage, parseErrorEntry } from 'serverutils/adminInsights';
 import { binIntervalFor, logGroupFor, runInsightsQuery, runTimeSeries } from 'serverutils/cloudwatchInsights';
-import { render } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 
 // Re-exported so existing tests (test/admin/errors.test.ts) keep their import path.
@@ -10,18 +10,6 @@ export { normalizeErrorMessage };
 
 const DEFAULT_WINDOW = 1440;
 const MAX_ROWS = 200;
-
-export const errorsHandler = async (req: Request, res: Response) => {
-  return render(
-    req,
-    res,
-    'AdminErrorsPage',
-    {
-      defaultWindow: DEFAULT_WINDOW,
-    },
-    { title: 'Errors - Admin' },
-  );
-};
 
 export const errorsQueryHandler = async (req: Request, res: Response) => {
   try {
@@ -120,7 +108,7 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), errorsHandler],
+    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), redirectToAdminTab('errors')],
   },
   {
     method: 'post',

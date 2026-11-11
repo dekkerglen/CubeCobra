@@ -2,15 +2,11 @@ import React, { useCallback, useContext, useEffect, useMemo, useState } from 're
 
 import { LineChart, StackedBarChart, colorForIndex, formatBucketLabel } from 'components/admin/AdminCharts';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Container from 'components/base/Container';
 import { Flexbox } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
-import DynamicFlash from 'components/DynamicFlash';
-import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
-import MainLayout from 'layouts/MainLayout';
 
 interface ErrorRow {
   signature: string;
@@ -37,9 +33,7 @@ interface TimePoint {
   errors: number;
 }
 
-interface AdminClientErrorsPageProps {
-  defaultWindow: number;
-}
+const DEFAULT_WINDOW = '1440';
 
 const WINDOW_OPTIONS = [
   { value: '60', label: 'Last 1 hour' },
@@ -101,9 +95,9 @@ const ClientErrorDetail: React.FC<{ row: ErrorRow }> = ({ row }) => (
   </details>
 );
 
-const AdminClientErrorsPage: React.FC<AdminClientErrorsPageProps> = ({ defaultWindow }) => {
+const ClientErrorsTab: React.FC = () => {
   const { callApi } = useContext(CSRFContext);
-  const [windowMinutes, setWindowMinutes] = useState(String(defaultWindow));
+  const [windowMinutes, setWindowMinutes] = useState(DEFAULT_WINDOW);
   const [filter, setFilter] = useState('app');
   const [rows, setRows] = useState<ErrorRow[]>([]);
   const [byKind, setByKind] = useState<KindCount[]>([]);
@@ -160,75 +154,70 @@ const AdminClientErrorsPage: React.FC<AdminClientErrorsPageProps> = ({ defaultWi
     .map((kind, i) => ({ label: kind, data: kindSeries[kind], color: colorForIndex(i) }));
 
   return (
-    <MainLayout>
-      <DynamicFlash />
-      <Container xl>
-        <Card className="my-3">
-          <CardHeader>
-            <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
-              <Text semibold xl>
-                Client Errors
-              </Text>
-              <Flexbox direction="row" gap="2" alignItems="end">
-                <Select label="Show" dense options={FILTER_OPTIONS} value={filter} setValue={setFilter} />
-                <Select
-                  label="Time frame"
-                  dense
-                  options={WINDOW_OPTIONS}
-                  value={windowMinutes}
-                  setValue={setWindowMinutes}
-                />
-              </Flexbox>
-            </Flexbox>
-          </CardHeader>
-          <CardBody>
-            {loading ? (
-              <Flexbox direction="row" justify="center" className="w-full py-4">
-                <Spinner />
-              </Flexbox>
-            ) : error ? (
-              <Text className="text-text-red">{error}</Text>
-            ) : notReady ? (
-              <Text className="text-text-secondary">
-                No client errors have been reported yet — the client error log group is created on the first report.
-              </Text>
-            ) : (
-              <Flexbox direction="col" gap="4">
-                <Flexbox direction="row" gap="2" wrap="wrap">
-                  <div className="min-w-[280px] flex-1">
-                    <Text sm semibold>
-                      Client errors over time
-                    </Text>
-                    <LineChart
-                      labels={chartLabels}
-                      datasets={[{ label: 'Errors', data: points.map((p) => p.errors), color: '#D85F69' }]}
-                    />
-                  </div>
-                  <div className="min-w-[280px] flex-1">
-                    <Text sm semibold>
-                      By kind over time
-                    </Text>
-                    <StackedBarChart labels={kindLabels} datasets={kindDatasets} />
-                  </div>
-                </Flexbox>
-                <Text sm className="text-text-secondary">
-                  {visibleRows.length} distinct errors, {totalErrors} occurrences
-                  {hiddenCount > 0 && ` — ${hiddenCount} extension/third-party group(s) hidden`}
-                  {byKind.length > 0 && ` — ${byKind.map((k) => `${k.kind}: ${k.count}`).join(', ')}`}
-                  {' — click a row for the stack, URL, browser and user'}
+    <Card>
+      <CardHeader>
+        <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
+          <Text semibold xl>
+            Client Errors
+          </Text>
+          <Flexbox direction="row" gap="2" alignItems="end">
+            <Select label="Show" dense options={FILTER_OPTIONS} value={filter} setValue={setFilter} />
+            <Select
+              label="Time frame"
+              dense
+              options={WINDOW_OPTIONS}
+              value={windowMinutes}
+              setValue={setWindowMinutes}
+            />
+          </Flexbox>
+        </Flexbox>
+      </CardHeader>
+      <CardBody>
+        {loading ? (
+          <Flexbox direction="row" justify="center" className="w-full py-4">
+            <Spinner />
+          </Flexbox>
+        ) : error ? (
+          <Text className="text-text-red">{error}</Text>
+        ) : notReady ? (
+          <Text className="text-text-secondary">
+            No client errors have been reported yet — the client error log group is created on the first report.
+          </Text>
+        ) : (
+          <Flexbox direction="col" gap="4">
+            <Flexbox direction="row" gap="2" wrap="wrap">
+              <div className="min-w-[280px] flex-1">
+                <Text sm semibold>
+                  Client errors over time
                 </Text>
-                <Flexbox direction="col" gap="0">
-                  {visibleRows.map((row, i) => (
-                    <ClientErrorDetail key={i} row={row} />
-                  ))}
-                </Flexbox>
-              </Flexbox>
-            )}
-          </CardBody>
-        </Card>
-      </Container>
-    </MainLayout>
+                <LineChart
+                  labels={chartLabels}
+                  datasets={[{ label: 'Errors', data: points.map((p) => p.errors), color: '#D85F69' }]}
+                />
+              </div>
+              <div className="min-w-[280px] flex-1">
+                <Text sm semibold>
+                  By kind over time
+                </Text>
+                <StackedBarChart labels={kindLabels} datasets={kindDatasets} />
+              </div>
+            </Flexbox>
+            <Text sm className="text-text-secondary">
+              {visibleRows.length} distinct errors, {totalErrors} occurrences
+              {hiddenCount > 0 && ` — ${hiddenCount} extension/third-party group(s) hidden`}
+              {byKind.length > 0 && ` — ${byKind.map((k) => `${k.kind}: ${k.count}`).join(', ')}`}
+              {' — click a row for the stack, URL, browser and user'}
+            </Text>
+            <Flexbox direction="col" gap="0">
+              {visibleRows.map((row, i) => (
+                <ClientErrorDetail key={i} row={row} />
+              ))}
+            </Flexbox>
+          </Flexbox>
+        )}
+      </CardBody>
+    </Card>
   );
 };
 
-export default RenderToRoot(AdminClientErrorsPage);
+export default ClientErrorsTab;

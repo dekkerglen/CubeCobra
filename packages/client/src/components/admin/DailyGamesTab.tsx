@@ -1,27 +1,17 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { DailyGameSeries, DailyGameStatsResponse } from '@utils/datatypes/DailyGameStats';
+import { DailyGameSeries, DailyGameStatsResponse, MAX_RANGE_DAYS } from '@utils/datatypes/DailyGameStats';
 
 import { LineChart, StackedBarChart } from 'components/admin/AdminCharts';
 import Alert from 'components/base/Alert';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
-import Container from 'components/base/Container';
 import Input from 'components/base/Input';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
-import DynamicFlash from 'components/DynamicFlash';
-import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
-import MainLayout from 'layouts/MainLayout';
-
-interface AdminDailyGamesPageProps {
-  defaultStartDate: string;
-  defaultEndDate: string;
-  maxRangeDays: number;
-}
 
 // Semantic colours, reused across every game so a glance at two cards compares like with
 // like: green finished, amber still going, blue page hits, grey logged-in visitors.
@@ -301,14 +291,12 @@ const GameCard: React.FC<{ series: DailyGameSeries }> = ({ series }) => {
   );
 };
 
-const AdminDailyGamesPage: React.FC<AdminDailyGamesPageProps> = ({
-  defaultStartDate,
-  defaultEndDate,
-  maxRangeDays,
-}) => {
+const DailyGamesTab: React.FC = () => {
   const { callApi } = useContext(CSRFContext);
-  const [startDate, setStartDate] = useState(defaultStartDate);
-  const [endDate, setEndDate] = useState(defaultEndDate);
+  // The last two weeks, today included.
+  const [initialRange] = useState(() => ({ startDate: utcDayOffset(-13), endDate: utcDayOffset(0) }));
+  const [startDate, setStartDate] = useState(initialRange.startDate);
+  const [endDate, setEndDate] = useState(initialRange.endDate);
   const [series, setSeries] = useState<DailyGameSeries[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -335,8 +323,8 @@ const AdminDailyGamesPage: React.FC<AdminDailyGamesPageProps> = ({
   );
 
   useEffect(() => {
-    load(defaultStartDate, defaultEndDate);
-  }, [load, defaultStartDate, defaultEndDate]);
+    load(initialRange.startDate, initialRange.endDate);
+  }, [load, initialRange]);
 
   const applyPreset = useCallback(
     (days: string) => {
@@ -371,99 +359,96 @@ const AdminDailyGamesPage: React.FC<AdminDailyGamesPageProps> = ({
     return match ? match.value : CUSTOM_RANGE;
   }, [endDate, rangeDays]);
 
-  const rangeInvalid = rangeDays === 0 || rangeDays > maxRangeDays;
+  const rangeInvalid = rangeDays === 0 || rangeDays > MAX_RANGE_DAYS;
 
   return (
-    <MainLayout>
-      <DynamicFlash />
-      <Container xl>
-        <Card className="my-3">
-          <CardHeader>
-            <Text semibold xl>
-              Daily Games
+    <>
+      <Card>
+        <CardHeader>
+          <Text semibold xl>
+            Daily Games
+          </Text>
+        </CardHeader>
+        <CardBody>
+          <Flexbox direction="col" gap="3">
+            <Text sm className="text-text-secondary">
+              Starts, partial completions and finishes per day for each daily game. Two data sources sit side by side
+              here and they count different people: the started / partial / finished bars come from persisted
+              submissions, so they are <strong>logged-in players only</strong> — ManaMatrix, Synergy Connect and the
+              Crossword all play anonymously without storing anything. Page hits come from the server request log, so
+              they include anonymous visitors <em>and bots</em>, which nothing filters. Use the gap between them as a
+              rough play-through rate, not as a precise one.
             </Text>
-          </CardHeader>
-          <CardBody>
-            <Flexbox direction="col" gap="3">
-              <Text sm className="text-text-secondary">
-                Starts, partial completions and finishes per day for each daily game. Two data sources sit side by side
-                here and they count different people: the started / partial / finished bars come from persisted
-                submissions, so they are <strong>logged-in players only</strong> — ManaMatrix, Synergy Connect and the
-                Crossword all play anonymously without storing anything. Page hits come from the server request log, so
-                they include anonymous visitors <em>and bots</em>, which nothing filters. Use the gap between them as a
-                rough play-through rate, not as a precise one.
-              </Text>
 
-              <Row xs={12} gutters={2}>
-                <Col xs={12} md={3}>
-                  <Input
-                    type="date"
-                    label="Start date"
-                    id="daily-games-start"
-                    value={startDate}
-                    onChange={(event) => setStartDate(event.target.value)}
-                  />
-                </Col>
-                <Col xs={12} md={3}>
-                  <Input
-                    type="date"
-                    label="End date"
-                    id="daily-games-end"
-                    value={endDate}
-                    onChange={(event) => setEndDate(event.target.value)}
-                  />
-                </Col>
-                <Col xs={12} md={3}>
-                  <Select
-                    label="Preset"
-                    id="daily-games-preset"
-                    options={RANGE_OPTIONS}
-                    value={presetValue}
-                    setValue={applyPreset}
-                  />
-                </Col>
-                <Col xs={12} md={3}>
-                  <Flexbox direction="col" gap="1" justify="end" className="h-full">
-                    <Button
-                      color="primary"
-                      block
-                      onClick={() => load(startDate, endDate)}
-                      disabled={loading || rangeInvalid}
-                    >
-                      {loading ? 'Loading…' : 'Apply'}
-                    </Button>
-                  </Flexbox>
-                </Col>
-              </Row>
+            <Row xs={12} gutters={2}>
+              <Col xs={12} md={3}>
+                <Input
+                  type="date"
+                  label="Start date"
+                  id="daily-games-start"
+                  value={startDate}
+                  onChange={(event) => setStartDate(event.target.value)}
+                />
+              </Col>
+              <Col xs={12} md={3}>
+                <Input
+                  type="date"
+                  label="End date"
+                  id="daily-games-end"
+                  value={endDate}
+                  onChange={(event) => setEndDate(event.target.value)}
+                />
+              </Col>
+              <Col xs={12} md={3}>
+                <Select
+                  label="Preset"
+                  id="daily-games-preset"
+                  options={RANGE_OPTIONS}
+                  value={presetValue}
+                  setValue={applyPreset}
+                />
+              </Col>
+              <Col xs={12} md={3}>
+                <Flexbox direction="col" gap="1" justify="end" className="h-full">
+                  <Button
+                    color="primary"
+                    block
+                    onClick={() => load(startDate, endDate)}
+                    disabled={loading || rangeInvalid}
+                  >
+                    {loading ? 'Loading…' : 'Apply'}
+                  </Button>
+                </Flexbox>
+              </Col>
+            </Row>
 
-              <Text xs className="text-text-secondary">
-                {`Range capped at ${maxRangeDays} days: the request log group is kept for one month, so page hits older than that do not exist to query.`}
-              </Text>
+            <Text xs className="text-text-secondary">
+              {`Range capped at ${MAX_RANGE_DAYS} days: the request log group is kept for one month, so page hits older than that do not exist to query.`}
+            </Text>
 
-              {rangeInvalid && (
-                <Alert color="warning">
-                  {rangeDays === 0
-                    ? 'End date must not precede start date.'
-                    : `That is ${rangeDays} days; the cap is ${maxRangeDays}.`}
-                </Alert>
-              )}
-              {error && <Alert color="danger">{error}</Alert>}
-            </Flexbox>
-          </CardBody>
-        </Card>
-
-        {loading && series.length === 0 && (
-          <Flexbox direction="row" justify="center" className="my-5">
-            <Spinner />
+            {rangeInvalid && (
+              <Alert color="warning">
+                {rangeDays === 0
+                  ? 'End date must not precede start date.'
+                  : `That is ${rangeDays} days; the cap is ${MAX_RANGE_DAYS}.`}
+              </Alert>
+            )}
+            {error && <Alert color="danger">{error}</Alert>}
           </Flexbox>
-        )}
+        </CardBody>
+      </Card>
 
-        {series.map((gameSeries) => (
-          <GameCard key={gameSeries.game} series={gameSeries} />
-        ))}
-      </Container>
-    </MainLayout>
+      {loading && series.length === 0 && (
+        <Flexbox direction="row" justify="center" className="my-5">
+          <Spinner />
+        </Flexbox>
+      )}
+
+      {series.map((gameSeries) => (
+        <GameCard key={gameSeries.game} series={gameSeries} />
+      ))}
+    </>
   );
 };
 
-export default RenderToRoot(AdminDailyGamesPage);
+export default DailyGamesTab;

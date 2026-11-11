@@ -2,7 +2,7 @@ import bodyParser from 'body-parser';
 import rateLimit from 'express-rate-limit';
 import { ipKey } from 'serverutils/rateLimiters';
 
-import { Request, Response } from '../../../types/express';
+import { NextFunction, Request, Response } from '../../../types/express';
 
 // Browsers post CSP violation reports here (see serverutils/csp.ts). They are logged so the
 // report-only script policy can be tightened into an enforced one.
@@ -10,6 +10,19 @@ const reportParser = bodyParser.json({
   type: ['application/csp-report', 'application/reports+json', 'application/json'],
   limit: '16kb',
 });
+
+// A report that can't be read is dropped with the same 204 rather than reaching the error
+// handler as a logged 413/500: some reports exceed the limit, and a browser that navigates
+// away mid-send leaves the request stream closed before the parser gets to it.
+const parseReport = (req: Request, res: Response, next: NextFunction) => {
+  reportParser(req, res, (err?: unknown) => {
+    if (err) {
+      res.status(204).end();
+      return;
+    }
+    next();
+  });
+};
 
 const truncate = (value: unknown): string | undefined => (typeof value === 'string' ? value.slice(0, 300) : undefined);
 
@@ -53,6 +66,6 @@ export const routes = [
   {
     path: '/',
     method: 'post',
-    handler: [reportLimiter, reportParser, cspReportHandler],
+    handler: [reportLimiter, parseReport, cspReportHandler],
   },
 ];

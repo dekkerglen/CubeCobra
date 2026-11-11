@@ -3,8 +3,8 @@ import type { ArchetypeName, ArchetypeNamesFile } from '@utils/drafting/topicArc
 import { LEGACY_MODEL_VERSION } from '@utils/ml/modelBundle';
 import { getBucketName, getObjectWithETag, putObjectIfMatch } from 'dynamo/s3client';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { redirectToAdminTab } from 'serverutils/adminDashboard';
 import { archetypeNamesKey, readArchetypeFiles, readModelPointer } from 'serverutils/modelPointer';
-import { handleRouteError, render } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 
 export const MAX_ARCHETYPE_NAME_LENGTH = 40;
@@ -17,23 +17,19 @@ const loadServed = async () => {
   return { bucket, version, files };
 };
 
-export const archetypesHandler = async (req: Request, res: Response) => {
+export const archetypesDataHandler = async (req: Request, res: Response) => {
   try {
     const { version, files } = await loadServed();
-    return render(
-      req,
-      res,
-      'AdminArchetypesPage',
-      {
-        version,
-        // cardTopics (every tagged card) is only needed to classify, not to name.
-        topics: files?.topics.topics ?? [],
-        names: files?.names.names ?? {},
-      },
-      { title: 'Archetypes - Admin' },
-    );
-  } catch (err) {
-    return handleRouteError(req, res, err, '/admin/dashboard');
+    return res.status(200).json({
+      success: true,
+      version,
+      // cardTopics (every tagged card) is only needed to classify, not to name.
+      topics: files?.topics.topics ?? [],
+      names: files?.names.names ?? {},
+    });
+  } catch (error) {
+    req.logger.error(`Loading archetypes failed: ${(error as Error).message}`);
+    return res.status(500).json({ success: false, error: (error as Error).message });
   }
 };
 
@@ -110,6 +106,11 @@ export const saveHandler = async (req: Request, res: Response) => {
 };
 
 export const routes = [
-  { method: 'get', path: '/', handler: [csrfProtection, ensureRole(UserRoles.ADMIN), archetypesHandler] },
+  {
+    method: 'get',
+    path: '/',
+    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), redirectToAdminTab('archetypes')],
+  },
+  { method: 'get', path: '/data', handler: [csrfProtection, ensureRole(UserRoles.ADMIN), archetypesDataHandler] },
   { method: 'post', path: '/save', handler: [csrfProtection, ensureRole(UserRoles.ADMIN), saveHandler] },
 ];

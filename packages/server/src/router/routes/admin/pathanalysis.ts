@@ -1,44 +1,24 @@
+import { PATH_ANALYSIS_GROUPINGS, PathAnalysisGroupKey } from '@utils/datatypes/AdminInsights';
 import { UserRoles } from '@utils/datatypes/User';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { redirectToAdminTab } from 'serverutils/adminDashboard';
 import { clampWindow } from 'serverutils/adminInsights';
 import { binIntervalFor, logGroupFor, runInsightsQuery, runTimeSeries } from 'serverutils/cloudwatchInsights';
-import { render } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 
 const DEFAULT_WINDOW = 180;
 const BREAKDOWN_LIMIT = 100;
 
-// Dimensions the breakdown table can aggregate a route's requests by. Whitelisted so the
-// client can never inject an arbitrary field into the Insights query.
-type GroupKey = 'username' | 'remoteAddr' | 'status' | 'method' | 'path';
-
-const GROUPINGS: Record<GroupKey, { label: string; field: string }> = {
-  username: { label: 'User', field: 'username' },
-  remoteAddr: { label: 'IP address', field: 'remoteAddr' },
-  status: { label: 'Status code', field: 'status' },
-  method: { label: 'Method', field: 'method' },
-  path: { label: 'Exact URL', field: 'path' },
-};
+// Each grouping's key is the log field it aggregates by. Checked against the list so the client
+// can never inject an arbitrary field into the Insights query.
+const isGroupKey = (value: unknown): value is PathAnalysisGroupKey =>
+  PATH_ANALYSIS_GROUPINGS.some((grouping) => grouping.key === value);
 
 // The analyzed path is interpolated into the Insights query as an exact-match string;
 // JSON.stringify quotes and escapes it so user input can't break out of the literal.
 const pathFilter = (routePath: string): string => `filter matchedPath = ${JSON.stringify(routePath)}`;
 
 const requestedPath = (req: Request): string => String(req.body?.path ?? '').trim();
-
-export const pathAnalysisHandler = async (req: Request, res: Response) => {
-  return render(
-    req,
-    res,
-    'AdminPathAnalysisPage',
-    {
-      defaultWindow: DEFAULT_WINDOW,
-      initialPath: typeof req.query.path === 'string' ? req.query.path : '',
-      groupings: Object.entries(GROUPINGS).map(([key, def]) => ({ key, label: def.label })),
-    },
-    { title: 'Path Analysis - Admin' },
-  );
-};
 
 export const pathAnalysisTimeseriesHandler = async (req: Request, res: Response) => {
   try {
@@ -74,8 +54,7 @@ export const pathAnalysisBreakdownHandler = async (req: Request, res: Response) 
     }
 
     const windowMinutes = clampWindow(req.body?.windowMinutes, DEFAULT_WINDOW);
-    const groupKey = (req.body?.groupBy as GroupKey) in GROUPINGS ? (req.body.groupBy as GroupKey) : 'username';
-    const grouping = GROUPINGS[groupKey];
+    const groupKey: PathAnalysisGroupKey = isGroupKey(req.body?.groupBy) ? req.body.groupBy : 'username';
 
     const endTimeMs = Date.now();
     const startTimeMs = endTimeMs - windowMinutes * 60 * 1000;
@@ -84,14 +63,14 @@ export const pathAnalysisBreakdownHandler = async (req: Request, res: Response) 
       logGroupName: logGroupFor('info'),
       queryString:
         `${pathFilter(routePath)} | stats count(*) as hits, avg(duration) as avgMs, max(duration) as maxMs, ` +
-        `sum(responseSize) as egress by ${grouping.field} | sort hits desc | limit ${BREAKDOWN_LIMIT}`,
+        `sum(responseSize) as egress by ${groupKey} | sort hits desc | limit ${BREAKDOWN_LIMIT}`,
       startTimeMs,
       endTimeMs,
       limit: BREAKDOWN_LIMIT,
     });
 
     const rows = rawRows.map((row) => ({
-      key: row[grouping.field] || '(none)',
+      key: row[groupKey] || '(none)',
       hits: Number(row.hits) || 0,
       avgMs: Number(row.avgMs) || 0,
       maxMs: Number(row.maxMs) || 0,
@@ -109,7 +88,7 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), pathAnalysisHandler],
+    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), redirectToAdminTab('pathanalysis')],
   },
   {
     method: 'post',

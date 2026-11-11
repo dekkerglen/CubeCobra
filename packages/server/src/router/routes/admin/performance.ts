@@ -1,5 +1,7 @@
+import { PERFORMANCE_METRICS, PerformanceMetricKey } from '@utils/datatypes/AdminInsights';
 import { UserRoles } from '@utils/datatypes/User';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { redirectToAdminTab } from 'serverutils/adminDashboard';
 import { clampWindow } from 'serverutils/adminInsights';
 import {
   binIntervalFor,
@@ -8,7 +10,6 @@ import {
   runInsightsQuery,
   runTimeSeries,
 } from 'serverutils/cloudwatchInsights';
-import { render } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 
 const DEFAULT_WINDOW = 180;
@@ -18,23 +19,7 @@ const MAX_LIMIT = 200;
 const DEFAULT_SERIES_PATHS = 5;
 const MAX_SERIES_PATHS = 50;
 
-// The metrics the Performance page can rank routes by. Each builds an Insights `stats ...`
-// query grouped by matchedPath (the route pattern, so /cube/list/:id groups together).
-// `value` is the ranked column; extra columns give context.
-type MetricKey =
-  | 'hits'
-  | 'slowest_avg'
-  | 'slowest_p95'
-  | 'slowest_p99'
-  | 'server_time'
-  | 'egress'
-  | 'egress_avg'
-  | 'ingress'
-  | 'ingress_avg';
-
 interface MetricDef {
-  label: string;
-  unit: string;
   // Builds the query body after the shared `filter`. {limit} is interpolated by the caller.
   stats: string;
   // The single aggregate used when charting this metric over time per path.
@@ -45,69 +30,54 @@ interface MetricDef {
   extraFilter?: string;
 }
 
-const METRICS: Record<MetricKey, MetricDef> = {
+// How each Performance metric (see PERFORMANCE_METRICS) is computed: an Insights `stats ...` query
+// grouped by matchedPath (the route pattern, so /cube/list/:id groups together). `value` is the
+// ranked column; extra columns give context.
+const METRICS: Record<PerformanceMetricKey, MetricDef> = {
   hits: {
-    label: 'Most hit routes',
-    unit: 'requests',
     stats: 'stats count(*) as value by matchedPath',
     seriesStat: 'count(*)',
     extraColumns: [],
   },
   slowest_avg: {
-    label: 'Slowest routes (avg)',
-    unit: 'ms avg',
     stats: 'stats avg(duration) as value, count(*) as hits, max(duration) as maxMs by matchedPath',
     seriesStat: 'avg(duration)',
     extraColumns: ['hits', 'maxMs'],
   },
   slowest_p95: {
-    label: 'Slowest routes (p95)',
-    unit: 'ms p95',
     stats: 'stats pct(duration, 95) as value, count(*) as hits by matchedPath',
     seriesStat: 'pct(duration, 95)',
     extraColumns: ['hits'],
   },
   slowest_p99: {
-    label: 'Slowest routes (p99)',
-    unit: 'ms p99',
     stats: 'stats pct(duration, 99) as value, count(*) as hits by matchedPath',
     seriesStat: 'pct(duration, 99)',
     extraColumns: ['hits'],
   },
   server_time: {
-    label: 'Most server time (sum of duration)',
-    unit: 'ms total',
     stats: 'stats sum(duration) as value, count(*) as hits by matchedPath',
     seriesStat: 'sum(duration)',
     extraColumns: ['hits'],
   },
   egress: {
-    label: 'Most egress (sum of response bytes)',
-    unit: 'bytes total',
     stats: 'stats sum(responseSize) as value, count(*) as hits, avg(responseSize) as avgBytes by matchedPath',
     seriesStat: 'sum(responseSize)',
     extraColumns: ['hits', 'avgBytes'],
     extraFilter: 'responseSize > 0',
   },
   egress_avg: {
-    label: 'Largest responses (avg response bytes)',
-    unit: 'bytes avg',
     stats: 'stats avg(responseSize) as value, count(*) as hits, max(responseSize) as maxBytes by matchedPath',
     seriesStat: 'avg(responseSize)',
     extraColumns: ['hits', 'maxBytes'],
     extraFilter: 'responseSize > 0',
   },
   ingress: {
-    label: 'Most ingress (sum of request bytes)',
-    unit: 'bytes total',
     stats: 'stats sum(requestSize) as value, count(*) as hits, avg(requestSize) as avgBytes by matchedPath',
     seriesStat: 'sum(requestSize)',
     extraColumns: ['hits', 'avgBytes'],
     extraFilter: 'requestSize > 0',
   },
   ingress_avg: {
-    label: 'Largest requests (avg request bytes)',
-    unit: 'bytes avg',
     stats: 'stats avg(requestSize) as value, count(*) as hits, max(requestSize) as maxBytes by matchedPath',
     seriesStat: 'avg(requestSize)',
     extraColumns: ['hits', 'maxBytes'],
@@ -144,25 +114,12 @@ const runDistribution = async (field: string, startTimeMs: number, endTimeMs: nu
     .sort((a, b) => a.magnitude - b.magnitude);
 };
 
-export const performanceHandler = async (req: Request, res: Response) => {
-  return render(
-    req,
-    res,
-    'AdminPerformancePage',
-    {
-      defaultWindow: DEFAULT_WINDOW,
-      defaultMetric: 'hits',
-      metrics: Object.entries(METRICS).map(([key, def]) => ({ key, label: def.label, unit: def.unit })),
-    },
-    { title: 'Performance - Admin' },
-  );
-};
-
 export const performanceQueryHandler = async (req: Request, res: Response) => {
   try {
     const windowMinutes = clampWindow(req.body?.windowMinutes, DEFAULT_WINDOW);
 
-    const metricKey = (req.body?.metric as MetricKey) in METRICS ? (req.body.metric as MetricKey) : 'hits';
+    const metricKey =
+      (req.body?.metric as PerformanceMetricKey) in METRICS ? (req.body.metric as PerformanceMetricKey) : 'hits';
     const metric = METRICS[metricKey];
 
     const requestedLimit = Number(req.body?.limit);
@@ -205,7 +162,7 @@ export const performanceQueryHandler = async (req: Request, res: Response) => {
       rows,
       windowMinutes,
       metric: metricKey,
-      unit: metric.unit,
+      unit: PERFORMANCE_METRICS.find((m) => m.key === metricKey)!.unit,
       extraColumns: metric.extraColumns,
     });
   } catch (err) {
@@ -257,7 +214,8 @@ export const performancePathTimeseriesHandler = async (req: Request, res: Respon
   try {
     const windowMinutes = clampWindow(req.body?.windowMinutes, DEFAULT_WINDOW);
 
-    const metricKey = (req.body?.metric as MetricKey) in METRICS ? (req.body.metric as MetricKey) : 'hits';
+    const metricKey =
+      (req.body?.metric as PerformanceMetricKey) in METRICS ? (req.body.metric as PerformanceMetricKey) : 'hits';
     const metric = METRICS[metricKey];
 
     const requestedTop = Number(req.body?.topPaths);
@@ -311,7 +269,7 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), performanceHandler],
+    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), redirectToAdminTab('performance')],
   },
   {
     method: 'post',

@@ -55,7 +55,7 @@ describe('cspReportHandler', () => {
 
 describe('CSP report route', () => {
   // Loads the route fresh, so the test starts with an empty rate-limit window.
-  const buildApp = () => {
+  const buildApp = (before: RequestHandler[] = []) => {
     let routes: any[] = [];
     jest.isolateModules(() => {
       routes = require('../../src/router/routes/api/cspreport').routes;
@@ -65,7 +65,10 @@ describe('CSP report route', () => {
       req.logger = { info: jest.fn() };
       next();
     });
-    app.post('/api/cspreport', ...(routes[0].handler as RequestHandler[]));
+    app.post('/api/cspreport', ...before, ...(routes[0].handler as RequestHandler[]));
+    app.use((_err: any, _req: any, res: any, _next: any) => {
+      res.status(500).end();
+    });
     return app;
   };
 
@@ -79,5 +82,34 @@ describe('CSP report route', () => {
         .send(JSON.stringify(report));
       expect(res.status).toBe(204);
     }
+  });
+
+  it('answers 204 for a report over the size limit', async () => {
+    const res = await request(buildApp())
+      .post('/api/cspreport')
+      .set('Content-Type', 'application/csp-report')
+      .send(JSON.stringify({ 'csp-report': { 'script-sample': 'x'.repeat(20_000) } }));
+    expect(res.status).toBe(204);
+  });
+
+  it('answers 204 for a malformed report', async () => {
+    const res = await request(buildApp())
+      .post('/api/cspreport')
+      .set('Content-Type', 'application/csp-report')
+      .send('{"csp-report":');
+    expect(res.status).toBe(204);
+  });
+
+  it('answers 204 when the request stream is no longer readable', async () => {
+    // Stands in for a browser that dropped the connection before the parser ran.
+    const drain: RequestHandler = (req, _res, next) => {
+      req.on('end', () => next());
+      req.resume();
+    };
+    const res = await request(buildApp([drain]))
+      .post('/api/cspreport')
+      .set('Content-Type', 'application/csp-report')
+      .send(JSON.stringify(report));
+    expect(res.status).toBe(204);
   });
 });

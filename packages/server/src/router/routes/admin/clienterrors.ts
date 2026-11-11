@@ -1,5 +1,6 @@
 import { UserRoles } from '@utils/datatypes/User';
 import { csrfProtection, ensureRole } from 'router/middleware';
+import { redirectToAdminTab } from 'serverutils/adminDashboard';
 import { clampWindow, isMissingLogGroup, summarizeError } from 'serverutils/adminInsights';
 import {
   binIntervalFor,
@@ -8,7 +9,6 @@ import {
   runInsightsQuery,
   runTimeSeries,
 } from 'serverutils/cloudwatchInsights';
-import { render } from 'serverutils/render';
 import { Request, Response } from 'types/express';
 
 const DEFAULT_WINDOW = 1440;
@@ -44,18 +44,6 @@ const sourceLocation = (e: Record<string, string>): string | undefined => {
   const line = e.lineno ? `:${e.lineno}` : '';
   const col = e.colno ? `:${e.colno}` : '';
   return `${e.source}${line}${col}`;
-};
-
-export const clientErrorsHandler = async (req: Request, res: Response) => {
-  return render(
-    req,
-    res,
-    'AdminClientErrorsPage',
-    {
-      defaultWindow: DEFAULT_WINDOW,
-    },
-    { title: 'Client Errors - Admin' },
-  );
 };
 
 export const clientErrorsQueryHandler = async (req: Request, res: Response) => {
@@ -165,7 +153,7 @@ export const routes = [
   {
     method: 'get',
     path: '/',
-    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), clientErrorsHandler],
+    handler: [csrfProtection, ensureRole(UserRoles.ADMIN), redirectToAdminTab('clienterrors')],
   },
   {
     method: 'post',

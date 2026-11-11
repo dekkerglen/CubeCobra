@@ -6,6 +6,7 @@ import { CardUpdateTask } from '@utils/datatypes/CardUpdateTask';
 import { ExportTask } from '@utils/datatypes/ExportTask';
 import { MigrationTask } from '@utils/datatypes/MigrationTask';
 
+import AdminTabData from 'components/admin/AdminTabData';
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
@@ -13,13 +14,11 @@ import Spinner from 'components/base/Spinner';
 import { TabbedView } from 'components/base/Tabs';
 import Text from 'components/base/Text';
 import ConfirmActionModal from 'components/modals/ConfirmActionModal';
-import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
 import useAlerts, { Alerts } from 'hooks/UseAlerts';
 import useQueryParam from 'hooks/useQueryParam';
-import MainLayout from 'layouts/MainLayout';
 
-interface AdminCardUpdatesPageProps {
+interface CardUpdatesProps {
   cardUpdates: CardUpdateTask[];
   cardMetadataTasks: CardMetadataTask[];
   exportTasks: ExportTask[];
@@ -208,53 +207,46 @@ const RunJobButton: React.FC<{
   );
 };
 
-const AdminCardUpdatesPage: React.FC<AdminCardUpdatesPageProps> = ({
-  cardUpdates,
-  cardMetadataTasks,
-  exportTasks,
-  migrationTasks,
-}) => {
-  const [activeTab, setActiveTab] = useQueryParam('tab', '0');
+const CardUpdates: React.FC<CardUpdatesProps> = ({ cardUpdates, cardMetadataTasks, exportTasks, migrationTasks }) => {
+  const [activeTab, setActiveTab] = useQueryParam('subtab', '0');
 
   return (
-    <MainLayout>
-      <Card className="m-2">
-        <CardHeader>
-          <Text semibold xl>
-            Card Updates, Metadata, Exports & Migrations - Admin View
-          </Text>
-        </CardHeader>
-        <TabbedView
-          activeTab={parseInt(activeTab || '0', 10)}
-          tabs={[
-            {
-              label: 'Card Updates',
-              onClick: () => setActiveTab('0'),
-              content: <CardUpdatesTab updates={cardUpdates} />,
-            },
-            {
-              label: 'Card Metadata',
-              onClick: () => setActiveTab('1'),
-              content: <CardMetadataTab tasks={cardMetadataTasks} />,
-            },
-            {
-              label: 'Export Tasks',
-              onClick: () => setActiveTab('2'),
-              content: <ExportTasksTab tasks={exportTasks} />,
-            },
-            {
-              label: 'Migrations',
-              onClick: () => setActiveTab('3'),
-              content: <MigrationTasksTab tasks={migrationTasks} />,
-            },
-          ]}
-        />
-      </Card>
-    </MainLayout>
+    <Card>
+      <CardHeader>
+        <Text semibold xl>
+          Card Updates, Metadata, Exports & Migrations
+        </Text>
+      </CardHeader>
+      <TabbedView
+        activeTab={parseInt(activeTab || '0', 10)}
+        tabs={[
+          {
+            label: 'Card Updates',
+            onClick: () => setActiveTab('0'),
+            content: <CardUpdateTasksTab updates={cardUpdates} />,
+          },
+          {
+            label: 'Card Metadata',
+            onClick: () => setActiveTab('1'),
+            content: <CardMetadataTab tasks={cardMetadataTasks} />,
+          },
+          {
+            label: 'Export Tasks',
+            onClick: () => setActiveTab('2'),
+            content: <ExportTasksTab tasks={exportTasks} />,
+          },
+          {
+            label: 'Migrations',
+            onClick: () => setActiveTab('3'),
+            content: <MigrationTasksTab tasks={migrationTasks} />,
+          },
+        ]}
+      />
+    </Card>
   );
 };
 
-const CardUpdatesTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) => {
+const CardUpdateTasksTab: React.FC<{ updates: CardUpdateTask[] }> = ({ updates }) => {
   const { alerts, addAlert, dismissAlerts } = useAlerts();
 
   return (
@@ -710,4 +702,17 @@ const MigrationTasksTab: React.FC<{ tasks: MigrationTask[] }> = ({ tasks }) => {
   );
 };
 
-export default RenderToRoot(AdminCardUpdatesPage);
+const CardUpdatesTab: React.FC = () => (
+  <AdminTabData<CardUpdatesProps> url="/admin/cardupdates/data">
+    {(data) => (
+      <CardUpdates
+        cardUpdates={data.cardUpdates}
+        cardMetadataTasks={data.cardMetadataTasks}
+        exportTasks={data.exportTasks}
+        migrationTasks={data.migrationTasks}
+      />
+    )}
+  </AdminTabData>
+);
+
+export default CardUpdatesTab;

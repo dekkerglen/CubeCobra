@@ -32,6 +32,23 @@ interface Alert {
   message: string;
 }
 
+/**
+ * The card at full modal width, shrinking to whatever height the rest of the modal leaves, so the
+ * controls below it are always on screen. The box is card-shaped and a size container, and the
+ * image takes its height, so the image itself shrinks rather than being letterboxed.
+ */
+const CardArt: React.FC<{ card: Card }> = ({ card }) => (
+  <div className="aspect-[63/88] w-full min-h-0 [container-type:size]">
+    <ImageFallback
+      card={card}
+      className="mx-auto block h-[100cqh] w-auto"
+      src={cardImageUrl(card)}
+      fallbackSrc={cdnUrl('/content/loadingcard.png')}
+      alt={cardName(card)}
+    />
+  </div>
+);
+
 const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
   card,
   isOpen,
@@ -182,17 +199,9 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
     return (
       <Modal isOpen={isOpen} setOpen={setOpen} sm scrollable>
         <ModalHeader setOpen={setOpen}>{cardName(card)}</ModalHeader>
-        <ModalBody className="centered" scrollable>
-          <Flexbox direction="col" alignItems="center" gap="2">
-            <ImageFallback
-              card={card}
-              className="w-full mb-3"
-              src={cardImageUrl(card)}
-              fallbackSrc={cdnUrl('/content/loadingcard.png')}
-              alt={cardName(card)}
-            />
-            <p>You don't appear to have any cubes to add this card to. Are you logged in?</p>
-          </Flexbox>
+        <ModalBody className="flex min-h-0 flex-col items-center gap-3">
+          <CardArt card={card} />
+          <p>You don't appear to have any cubes to add this card to. Are you logged in?</p>
         </ModalBody>
         <ModalFooter>
           <Flexbox direction="row" justify="between" gap="2" className="w-full">
@@ -210,26 +219,23 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
   return (
     <Modal isOpen={isOpen} setOpen={setOpen} sm scrollable>
       <ModalHeader setOpen={setOpen}>{`Add ${cardName(card)} to Cube`}</ModalHeader>
-      <ModalBody scrollable>
-        <Flexbox direction="col" alignItems="center" gap="2">
-          {alerts.map(({ color, message }) => (
-            <Alert key={message} color={color} className="mt-2">
-              {message}
-            </Alert>
-          ))}
-          <ImageFallback
-            card={card}
-            className="w-full"
-            src={cardImageUrl(card)}
-            fallbackSrc={cdnUrl('/content/loadingcard.png')}
-            alt={cardName(card)}
-          />
+      {/* The body never scrolls: the card gives up height so the selects stay in view (see CardArt). */}
+      <ModalBody className="flex min-h-0 flex-col items-center gap-2">
+        {alerts.map(({ color, message }) => (
+          <Alert key={message} color={color} className="mt-2 w-full">
+            {message}
+          </Alert>
+        ))}
+        <CardArt card={card} />
+        <div className="w-full shrink-0">
           <Select
             label="Cube"
             options={cubes.map((cube) => ({ value: cube.id, label: cube.name }))}
             value={selectedCube}
             setValue={(val) => setSelectedCube(val)}
           />
+        </div>
+        <div className="w-full shrink-0">
           <Select
             label="Board"
             options={boardOptions ?? []}
@@ -237,7 +243,7 @@ const AddToCubeModal: React.FC<AddToCubeModalProps> = ({
             setValue={(val) => setSelectedBoard(val)}
             loading={!boardOptions}
           />
-        </Flexbox>
+        </div>
       </ModalBody>
       <ModalFooter>
         <Flexbox direction="row" justify="between" gap="2" className="w-full">
