@@ -195,6 +195,11 @@ app.use(
     },
   }),
 );
+// body-parser 2 leaves req.body undefined when no body was parsed; handlers expect the 1.x `{}`.
+app.use((req, _res, next) => {
+  req.body ??= {};
+  next();
+});
 
 // Load view engine
 app.set('views', path.join(__dirname, '../src/views'));

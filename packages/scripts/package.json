@@ -29,7 +29,7 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/node": "^24.10.0",
+    "@types/node": "^22.20.5",
     "tsconfig-paths": "^4.2.0",
     "tsx": "^4.19.0",
     "typescript": "^7.0.2"
@@ -45,7 +45,7 @@
     "@aws-sdk/lib-storage": "^3.927.0",
     "@aws-sdk/util-dynamodb": "^3.927.0",
     "archiver": "^7.0.1",
-    "dotenv": "^17.2.3",
+    "dotenv": "^18.0.10",
     "module-alias": "^2.2.3"
   }
 }

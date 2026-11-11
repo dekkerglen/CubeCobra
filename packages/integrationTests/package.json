@@ -30,7 +30,7 @@
   },
   "devDependencies": {
     "@faker-js/faker": "^10.6.0",
-    "@types/node": "^20.11.0",
+    "@types/node": "^22.20.5",
     "node-fetch": "^2.7.0",
     "tsx": "^4.7.0",
     "typescript": "^7.0.2"
