@@ -12,6 +12,7 @@ const merge = (input: {
   announcementsHasMore?: boolean;
   limit?: number;
   cursor?: FeedCursor;
+  isVisible?: (item: BlogPost) => boolean;
 }) =>
   mergeFeedStreams({
     personal: input.personal ?? [],
@@ -20,6 +21,7 @@ const merge = (input: {
     announcementsHasMore: input.announcementsHasMore ?? false,
     limit: input.limit ?? 10,
     cursor: input.cursor,
+    isVisible: input.isVisible ?? (() => true),
   });
 
 const streamCursor = (date: number, ids: string[] = [], done = false): FeedStreamCursor => ({ date, ids, done });
@@ -116,9 +118,7 @@ describe('mergeFeedStreams', () => {
     expect(new Set(seen).size).toBe(2);
   });
 
-  // Skipped: owned by Task 3, which replaces the combined step-back these assert with a
-  // per-stream escape hatch.
-  it.skip('advances past the oldest fetched date when every fetched item was suppressed', () => {
+  it('advances past the oldest fetched date when every fetched item was suppressed', () => {
     const { items, cursor } = merge({
       personal: [post('legacy', 100, 'DEVBLOG')],
       personalHasMore: true,
@@ -126,11 +126,10 @@ describe('mergeFeedStreams', () => {
 
     expect(items).toEqual([]);
     expect(cursor!.personal).toEqual(streamCursor(99));
-    expect(cursor!.announcements).toEqual(streamCursor(99));
+    expect(cursor!.announcements.done).toBe(true);
   });
 
-  // Skipped: owned by Task 3, alongside the per-stream escape hatch.
-  it.skip('never suppresses an announcement by the id of its legacy feed row', () => {
+  it('never suppresses an announcement by the id of its legacy feed row', () => {
     // 'shared' is one blog post reachable from both streams. If the empty-page cursor
     // recorded its id, the announcement would be hidden on every later page.
     const { cursor } = merge({
@@ -142,7 +141,67 @@ describe('mergeFeedStreams', () => {
     expect(cursor!.announcements.ids).not.toContain('shared');
   });
 
-  it('returns no cursor when nothing was fetched at all', () => {
+  it('steps each stream back to its own oldest fetched date when the page is empty', () => {
+    const { items, cursor } = merge({
+      personal: [post('legacy', 1000, 'DEVBLOG')],
+      personalHasMore: true,
+      announcements: [],
+      limit: 10,
+    });
+
+    expect(items).toEqual([]);
+    expect(cursor!.personal.date).toBe(999);
+    expect(cursor!.announcements.done).toBe(true);
+  });
+
+  it('does not drag one stream back to the other stream oldest date on an empty page', () => {
+    const { cursor } = merge({
+      personal: [post('legacy', 1000, 'DEVBLOG')],
+      personalHasMore: true,
+      announcements: [post('legacyA', 5, 'DEVBLOG')],
+      announcementsHasMore: true,
+      isVisible: () => false,
+      limit: 10,
+    });
+
+    expect(cursor!.personal.date).toBe(999);
+    expect(cursor!.announcements.date).toBe(4);
+  });
+
+  it('leaves a stream that fetched nothing on an empty page exactly where it stood', () => {
+    // The personal stream can come back empty with more to read, because feed rows whose blog
+    // post was deleted are dropped during hydration. There is no date to step past, so the
+    // stream must hold its bound — and keep the ids it already showed there suppressed.
+    const { cursor } = merge({
+      personal: [],
+      personalHasMore: true,
+      announcements: [post('legacyA', 1000, 'DEVBLOG')],
+      announcementsHasMore: true,
+      isVisible: () => false,
+      cursor: cursorFor(streamCursor(500, ['p0']), streamCursor(2000)),
+      limit: 10,
+    });
+
+    expect(cursor!.personal).toEqual(streamCursor(500, ['p0']));
+    expect(cursor!.announcements.date).toBe(999);
+  });
+
+  it('holds a stream that fetched nothing above every date when it has no cursor yet', () => {
+    // Without a prior bound there is nothing to hold, and any ordinary date would claim this
+    // stream had been read down to it. The next query must still start from the top.
+    const { cursor } = merge({
+      personal: [],
+      personalHasMore: true,
+      announcements: [post('legacyA', 1000, 'DEVBLOG')],
+      announcementsHasMore: true,
+      isVisible: () => false,
+      limit: 10,
+    });
+
+    expect(cursor!.personal).toEqual(streamCursor(Number.MAX_SAFE_INTEGER));
+  });
+
+  it('returns no cursor when neither stream fetched anything', () => {
     expect(merge({ personalHasMore: true }).cursor).toBeUndefined();
   });
 
@@ -316,7 +375,7 @@ describe('mergeFeedStreams', () => {
 
       expect(items).toEqual([]);
       expect(cursor!.personal).toEqual(streamCursor(199));
-      expect(cursor!.announcements).toEqual(streamCursor(199));
+      expect(cursor!.announcements.done).toBe(true);
     });
   });
 });
