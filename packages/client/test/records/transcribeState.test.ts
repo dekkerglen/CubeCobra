@@ -273,6 +273,38 @@ describe('toTranscribePayload', () => {
     expect(payload.sections['overrides:bob-id']).toEqual({ wins: 0, losses: 0, draws: 0 });
   });
 
+  // The user report: a record carrying one player's override and no pairings opens in records
+  // mode, where an untouched player's override reads as a synthesized 0-0-0 so the page is not
+  // dirty on mount. That synthesis must not reach the *baseline*: storage holds nothing at all
+  // for such a player, so submitting 0-0-0 as "what I loaded" had the endpoint refuse the
+  // section as contested on every attempt — and "Keep mine" could not break the loop, since it
+  // re-baselines to the stored absence the workspace already had.
+  it('baselines an override against what storage holds, never a mode-synthesized 0-0-0', () => {
+    const record = createRecord({
+      players: [
+        { name: 'Alice', id: 'alice-id' },
+        { name: 'Bob', id: 'bob-id' },
+      ],
+      overrides: { Alice: { wins: 3, losses: 0, draws: 0 } },
+      matches: [],
+      trophy: [],
+    });
+    const { state, seeded } = seedBoth(record);
+    state.overrides = {
+      ...state.overrides,
+      Alice: { wins: 2, losses: 1, draws: 0 },
+      Bob: { wins: 0, losses: 2, draws: 0 },
+    };
+
+    const payload = toTranscribePayload(state, seeded, true, true);
+
+    expect(Object.keys(payload.sections).sort()).toEqual(['overrides:alice-id', 'overrides:bob-id']);
+    expect(payload.baselines.overrides).toEqual({
+      'alice-id': { wins: 3, losses: 0, draws: 0 },
+      'bob-id': null,
+    });
+  });
+
   it('keys a dirty deck by seat index when the player has no id', () => {
     const state = threePlayerState();
     state.decks[1]!.mainboard = [createCardDetails()];
