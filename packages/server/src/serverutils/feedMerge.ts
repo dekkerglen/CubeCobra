@@ -78,18 +78,16 @@ const oldestFetchedDate = (stream: BlogPost[]): number | undefined =>
 /**
  * Where one stream resumes on the next page.
  *
- * The bound is `max(cutDate, oldestFetched)`: a stream whose fetched rows reach past the page cut
- * resumes at the cut, while a stream truncated above the cut resumes at its own oldest fetched
- * row, so the rows it never fetched are not skipped.
+ * The bound is `max(cutDate, oldestFetched)`, clamped to the stream's own incoming bound: a
+ * stream whose fetched rows reach past the page cut resumes at the cut, while a stream truncated
+ * above the cut resumes at its own oldest fetched row, so the rows it never fetched are not
+ * skipped.
  *
  * `ids` are the ids this stream emitted at exactly that bound, since the date bound on the query
  * is inclusive, unioned with the incoming ids when the bound has not moved.
  *
  * `done` is not simply `!hasMore`: a stream with nothing left to query can still have visible
  * items that fell past the page limit, and those must be re-queried rather than dropped.
- *
- * `cutDate` is absent only when the page emitted nothing at all, which the caller still handles
- * with a combined step-back rather than through here.
  */
 const nextStreamCursor = ({
   emitted,
@@ -104,9 +102,23 @@ const nextStreamCursor = ({
   oldestFetched?: number;
   hasMore: boolean;
   incoming?: FeedStreamCursor;
-  cutDate?: number;
+  cutDate: number;
 }): FeedStreamCursor => {
-  const date = Math.max(cutDate ?? -Infinity, oldestFetched ?? -Infinity);
+  const reached = oldestFetched === undefined ? cutDate : Math.max(cutDate, oldestFetched);
+
+  // `reached` is only a lower bound — it proves no unfetched row is skipped, not that the
+  // watermark stays put. `cutDate` is the oldest date on the merged page and can come entirely
+  // from the *other* stream, so when that stream fills the page above this one's incoming bound,
+  // an unclamped watermark jumps up and re-reads rows this stream already emitted.
+  //
+  // Clamping discards nothing: `reached > incoming.date` implies `cutDate > incoming.date`,
+  // which implies this stream emitted nothing this page, because every row it holds is
+  // `<= incoming.date < cutDate <=` every emitted date. Its leftovers and unfetched rows are
+  // therefore all `<= incoming.date`, which the inclusive bound re-reads. The clamp also keeps
+  // `incoming.date === date` true, so the incoming ids carry forward instead of being dropped
+  // along with the jump.
+  const date = incoming === undefined ? reached : Math.min(reached, incoming.date);
+
   const ids = emitted.filter((item) => item.date === date).map((item) => item.id);
 
   if (incoming?.date === date) {
@@ -125,12 +137,13 @@ const nextStreamCursor = ({
  * `personal` is a row left behind by the fan-out this replaced, and is dropped so followers
  * of an admin do not see announcements twice.
  *
- * Each stream leaves the page with its own watermark, `max(cutDate, oldestFetched)`, where
- * `cutDate` is the date of the last emitted item and `oldestFetched` the oldest date that stream
- * fetched. That is sufficient because the page is the newest `limit` items across both streams,
- * so every *visible* item newer than the cut was emitted; the only items still unprocessed are
- * ones a stream never fetched, and those start below its own `oldestFetched`. A single shared
- * watermark would advance a stream truncated above the cut past rows it never fetched.
+ * Each stream leaves the page with its own watermark, `max(cutDate, oldestFetched)` clamped to
+ * that stream's incoming bound, where `cutDate` is the date of the last emitted item and
+ * `oldestFetched` the oldest date that stream fetched. That is sufficient because the page is the
+ * newest `limit` items across both streams, so every *visible* item newer than the cut was
+ * emitted; the only items still unprocessed are ones a stream never fetched, and those start
+ * below its own `oldestFetched`. A single shared watermark would advance a stream truncated above
+ * the cut past rows it never fetched.
  *
  * `oldestFetched` is read off the input arrays before any filtering, because those arrays are
  * everything the caller fetched and this merge considered, legacy and invisible rows included.

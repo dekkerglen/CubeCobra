@@ -255,6 +255,23 @@ describe('mergeFeedStreams', () => {
     expect(items.map((i) => i.id).sort()).toEqual(['a2', 'p2']);
   });
 
+  it('never advances a stream past the bound it was queried under', () => {
+    // The personal stream filled the whole page above the announcement stream's incoming bound.
+    // Without a clamp the announcement watermark jumps up to the page cut and re-reads every row
+    // between 50 and 900 — including a0, which the cursor recorded as already shown.
+    const { cursor } = merge({
+      personal: [post('p1', 1000), post('p2', 900)],
+      personalHasMore: true,
+      announcements: [post('a1', 50, 'DEVBLOG')],
+      announcementsHasMore: true,
+      cursor: cursorFor(streamCursor(2000, []), streamCursor(50, ['a0'])),
+      limit: 2,
+    });
+
+    expect(cursor!.announcements.date).toBe(50);
+    expect(cursor!.announcements.ids).toEqual(['a0']);
+  });
+
   describe('visibility', () => {
     const hidden = new Set(['hidden-1', 'hidden-2']);
     const isVisible = (item: BlogPost) => !hidden.has(item.id);
