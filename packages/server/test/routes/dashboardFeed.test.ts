@@ -34,7 +34,7 @@ const personalFeed = (items: BlogPost[], lastKey?: Record<string, any>) => ({
   lastKey,
 });
 
-const streamCursor = (date: number, ids: string[] = []) => ({ date, ids, done: false });
+const streamCursor = (date: number, ids: string[] = [], done = false) => ({ date, ids, done });
 
 const fetchFeed = (body: any = {}) =>
   call(feedHandler as any)
@@ -100,9 +100,11 @@ describe('dashboard feed', () => {
 
     const res = await fetchFeed();
 
+    // Each stream reports its own position: the personal stream is exhausted, while the
+    // announcement stream resumes at the oldest date it fetched.
     expect(res.body.lastKey).toEqual({
-      personal: streamCursor(300, ['p-1']),
-      announcements: streamCursor(300, ['p-1']),
+      personal: streamCursor(300, ['p-1'], true),
+      announcements: streamCursor(500, ['dev-1']),
     });
   });
 

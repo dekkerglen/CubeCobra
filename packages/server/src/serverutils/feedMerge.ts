@@ -72,14 +72,68 @@ export const parseFeedCursor = (raw: unknown): FeedCursor | undefined => {
 
 const newestFirst = (a: BlogPost, b: BlogPost): number => b.date - a.date || a.id.localeCompare(b.id);
 
+const oldestFetchedDate = (stream: BlogPost[]): number | undefined =>
+  stream.length === 0 ? undefined : Math.min(...stream.map((item) => item.date));
+
+/**
+ * Where one stream resumes on the next page.
+ *
+ * The bound is `max(cutDate, oldestFetched)`: a stream whose fetched rows reach past the page cut
+ * resumes at the cut, while a stream truncated above the cut resumes at its own oldest fetched
+ * row, so the rows it never fetched are not skipped.
+ *
+ * `ids` are the ids this stream emitted at exactly that bound, since the date bound on the query
+ * is inclusive, unioned with the incoming ids when the bound has not moved.
+ *
+ * `done` is not simply `!hasMore`: a stream with nothing left to query can still have visible
+ * items that fell past the page limit, and those must be re-queried rather than dropped.
+ *
+ * `cutDate` is absent only when the page emitted nothing at all, which the caller still handles
+ * with a combined step-back rather than through here.
+ */
+const nextStreamCursor = ({
+  emitted,
+  leftover,
+  oldestFetched,
+  hasMore,
+  incoming,
+  cutDate,
+}: {
+  emitted: BlogPost[];
+  leftover: number;
+  oldestFetched?: number;
+  hasMore: boolean;
+  incoming?: FeedStreamCursor;
+  cutDate?: number;
+}): FeedStreamCursor => {
+  const date = Math.max(cutDate ?? -Infinity, oldestFetched ?? -Infinity);
+  const ids = emitted.filter((item) => item.date === date).map((item) => item.id);
+
+  if (incoming?.date === date) {
+    ids.push(...incoming.ids);
+  }
+
+  return { date, ids: [...new Set(ids)], done: !hasMore && leftover === 0 };
+};
+
 /**
  * Merges the viewer's personal feed with the site-wide announcement stream into one
  * date-descending page.
  *
- * Both streams arrive newest-first and already bounded by the incoming cursor's date.
+ * Both streams arrive newest-first, each bounded by its own entry in the incoming cursor.
  * Announcements reach the feed only through `announcements`; a `DEVBLOG` post found in
  * `personal` is a row left behind by the fan-out this replaced, and is dropped so followers
  * of an admin do not see announcements twice.
+ *
+ * Each stream leaves the page with its own watermark, `max(cutDate, oldestFetched)`, where
+ * `cutDate` is the date of the last emitted item and `oldestFetched` the oldest date that stream
+ * fetched. That is sufficient because the page is the newest `limit` items across both streams,
+ * so every *visible* item newer than the cut was emitted; the only items still unprocessed are
+ * ones a stream never fetched, and those start below its own `oldestFetched`. A single shared
+ * watermark would advance a stream truncated above the cut past rows it never fetched.
+ *
+ * `oldestFetched` is read off the input arrays before any filtering, because those arrays are
+ * everything the caller fetched and this merge considered, legacy and invisible rows included.
  *
  * `isVisible` is applied before the page is cut, not after. Filtering a page the caller has
  * already sliced can empty it while items it could have shown sit just past the limit.
@@ -101,23 +155,21 @@ export const mergeFeedStreams = ({
   cursor?: FeedCursor;
   isVisible?: (item: BlogPost) => boolean;
 }): { items: BlogPost[]; cursor?: FeedCursor } => {
-  // PLACEHOLDER — replaced by Task 2 with the real per-stream watermark rule. Until then this
-  // reads the incoming bound from the personal stream only and writes the one watermark it
-  // computes to both streams, reproducing the behaviour of the single shared cursor under the
-  // new per-stream type.
-  const sharedWatermark = (date: number, ids: string[]): FeedCursor => ({
-    personal: { date, ids: [...ids], done: false },
-    announcements: { date, ids: [...ids], done: false },
-  });
+  const alreadyShown = new Set([...(cursor?.personal.ids ?? []), ...(cursor?.announcements.ids ?? [])]);
 
-  const alreadyShown = new Set(cursor?.personal.ids ?? []);
+  // Dropping the legacy DEVBLOG rows first makes the two streams' id sets disjoint, so an
+  // emitted item can be attributed back to the stream it came from.
+  const personalFeed = personal.filter((item) => item.cube !== DEV_BLOG_CUBE);
+  const personalIds = new Set(personalFeed.map((item) => item.id));
+  const fromPersonal = (item: BlogPost): boolean => personalIds.has(item.id);
 
-  const merged = [...personal.filter((item) => item.cube !== DEV_BLOG_CUBE), ...announcements]
+  const merged = [...personalFeed, ...announcements]
     .filter((item) => !alreadyShown.has(item.id) && isVisible(item))
     .sort(newestFirst);
 
   const items = merged.slice(0, limit);
-  const hasMore = merged.length > limit || personalHasMore || announcementsHasMore;
+  const leftovers = merged.slice(limit);
+  const hasMore = leftovers.length > 0 || personalHasMore || announcementsHasMore;
 
   if (!hasMore) {
     return { items };
@@ -133,15 +185,38 @@ export const mergeFeedStreams = ({
     // client the same empty page forever. Step strictly past it. Nothing here was displayed,
     // so nothing is hidden by skipping it — and recording these ids instead would suppress a
     // legitimate announcement that shares its id with a legacy feed row.
-    return { items, cursor: sharedWatermark(Math.min(...fetched.map((item) => item.date)) - 1, []) };
+    // TODO(Task 3): step each stream back past its own oldest fetched date.
+    const steppedBack = Math.min(...fetched.map((item) => item.date)) - 1;
+    return {
+      items,
+      cursor: {
+        personal: { date: steppedBack, ids: [], done: false },
+        announcements: { date: steppedBack, ids: [], done: false },
+      },
+    };
   }
 
-  const date = items[items.length - 1]!.date;
-  const ids = items.filter((item) => item.date === date).map((item) => item.id);
+  const cutDate = items[items.length - 1]!.date;
 
-  if (cursor?.personal.date === date) {
-    ids.push(...cursor.personal.ids);
-  }
-
-  return { items, cursor: sharedWatermark(date, [...new Set(ids)]) };
+  return {
+    items,
+    cursor: {
+      personal: nextStreamCursor({
+        emitted: items.filter(fromPersonal),
+        leftover: leftovers.filter(fromPersonal).length,
+        oldestFetched: oldestFetchedDate(personal),
+        hasMore: personalHasMore,
+        incoming: cursor?.personal,
+        cutDate,
+      }),
+      announcements: nextStreamCursor({
+        emitted: items.filter((item) => !fromPersonal(item)),
+        leftover: leftovers.filter((item) => !fromPersonal(item)).length,
+        oldestFetched: oldestFetchedDate(announcements),
+        hasMore: announcementsHasMore,
+        incoming: cursor?.announcements,
+        cutDate,
+      }),
+    },
+  };
 };
