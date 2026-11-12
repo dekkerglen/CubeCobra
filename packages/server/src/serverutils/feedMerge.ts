@@ -100,6 +100,11 @@ const oldestFetchedDate = (stream: BlogPost[]): number | undefined =>
  *
  * `done` is not simply `!hasMore`: a stream with nothing left to query can still have visible
  * items that fell past the page limit, and those must be re-queried rather than dropped.
+ *
+ * A done stream's watermark is deliberately left unmaintained from then on — it fetches nothing,
+ * so its `date` drifts down toward the other stream's `cutDate` and its `ids` are dropped with
+ * the move — which is inert only because `done` is sticky: a done stream is never queried again,
+ * so nothing reads those fields.
  */
 const nextStreamCursor = ({
   emitted,

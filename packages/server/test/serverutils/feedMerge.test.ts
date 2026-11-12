@@ -396,6 +396,166 @@ describe('mergeFeedStreams', () => {
       expect(cursor!.announcements).toEqual(streamCursor(Number.MAX_SAFE_INTEGER, [], true));
     });
   });
+
+  describe('paging to exhaustion', () => {
+    const MAX_ROUNDS = 100;
+
+    const idsOf = (items: BlogPost[]): string[] => items.map((item) => item.id);
+
+    // One stream's side of one round, as the DAOs serve it: the newest `fetchLimit` rows at or
+    // below that stream's own cursor date, plus whether any row remains below them. The date
+    // bound is inclusive — the DAOs compare `GSI1SK <= 'DATE#' + before` — which is why the
+    // last row of a page comes back on the next query and has to be suppressed by id. A stream
+    // the merge marked done is not queried at all, matching the handler's EXHAUSTED_STREAM.
+    const queryStream = (
+      all: BlogPost[],
+      cursor: FeedStreamCursor | undefined,
+      fetchLimit: number,
+    ): { items: BlogPost[]; hasMore: boolean } => {
+      if (cursor?.done) {
+        return { items: [], hasMore: false };
+      }
+
+      const available = all
+        .filter((item) => cursor === undefined || item.date <= cursor.date)
+        .sort((a, b) => b.date - a.date || a.id.localeCompare(b.id));
+
+      return { items: available.slice(0, fetchLimit), hasMore: available.length > fetchLimit };
+    };
+
+    // Simulates the handler: each round re-queries both streams bounded by their own
+    // cursor date, taking at most `fetchLimit` items per stream, until no cursor remains.
+    // Throws after 100 rounds so non-termination fails loudly instead of hanging.
+    // Returns the concatenated ids of every page, in page order.
+    //
+    // `fetchLimit` is deliberately larger than `pageLimit` in every call below. Production runs
+    // them equal, which means one stream can never fill a whole page on its own, and that
+    // arithmetic coincidence hides watermark bugs that only appear when it can.
+    const drain = (
+      personalAll: BlogPost[],
+      announcementsAll: BlogPost[],
+      pageLimit: number,
+      fetchLimit: number,
+      isVisible: (item: BlogPost) => boolean = () => true,
+    ): string[] => {
+      const seen: string[] = [];
+      let cursor: FeedCursor | undefined;
+
+      for (let round = 0; round < MAX_ROUNDS; round += 1) {
+        const personal = queryStream(personalAll, cursor?.personal, fetchLimit);
+        const announcements = queryStream(announcementsAll, cursor?.announcements, fetchLimit);
+
+        // An empty page is a round that contributes nothing, which is what the handler's own
+        // retry loop does before it answers the client.
+        const page = merge({
+          personal: personal.items,
+          personalHasMore: personal.hasMore,
+          announcements: announcements.items,
+          announcementsHasMore: announcements.hasMore,
+          limit: pageLimit,
+          cursor,
+          isVisible,
+        });
+
+        seen.push(...idsOf(page.items));
+        cursor = page.cursor;
+
+        if (!cursor) {
+          return seen;
+        }
+      }
+
+      throw new Error(`drain did not terminate within ${MAX_ROUNDS} rounds`);
+    };
+
+    it('yields every visible item exactly once when announcements are ancient and sparse', () => {
+      const personalAll = Array.from({ length: 40 }, (_, i) => post(`p${i}`, 10000 - i));
+      const announcementsAll = Array.from({ length: 5 }, (_, i) => post(`a${i}`, 100 - i, 'DEVBLOG'));
+
+      const seen = drain(personalAll, announcementsAll, 10, 25);
+
+      expect(new Set(seen).size).toBe(45);
+      expect(seen.length).toBe(45);
+      expect(new Set(seen)).toEqual(new Set(idsOf([...personalAll, ...announcementsAll])));
+    });
+
+    it('yields every visible item exactly once when the personal stream is ancient and sparse', () => {
+      const personalAll = Array.from({ length: 5 }, (_, i) => post(`p${i}`, 100 - i));
+      const announcementsAll = Array.from({ length: 40 }, (_, i) => post(`a${i}`, 10000 - i, 'DEVBLOG'));
+
+      const seen = drain(personalAll, announcementsAll, 10, 25);
+
+      expect(new Set(seen).size).toBe(45);
+      expect(seen.length).toBe(45);
+      expect(new Set(seen)).toEqual(new Set(idsOf([...personalAll, ...announcementsAll])));
+    });
+
+    it('yields every visible item exactly once when most personal rows are invisible', () => {
+      const personalAll = Array.from({ length: 40 }, (_, i) =>
+        post(`p${i}`, 10000 - i, i % 4 === 0 ? 'cube-1' : 'hidden'),
+      );
+      const announcementsAll = Array.from({ length: 5 }, (_, i) => post(`a${i}`, 100 - i, 'DEVBLOG'));
+
+      const seen = drain(personalAll, announcementsAll, 10, 25, (item) => item.cube !== 'hidden');
+
+      expect(seen.length).toBe(15);
+      expect(new Set(seen).size).toBe(15);
+      expect(new Set(seen)).toEqual(
+        new Set(idsOf([...personalAll.filter((item) => item.cube !== 'hidden'), ...announcementsAll])),
+      );
+    });
+
+    it('yields every visible item exactly once when one stream fills whole pages above the other bound', () => {
+      // The Task 2 regression: a dense recent stream fills every page slot while the other
+      // stream's bound sits far below, which is where an unclamped watermark regresses upward
+      // and re-emits. Requires fetchLimit > pageLimit to reach.
+      const personalAll = Array.from({ length: 60 }, (_, i) => post(`p${i}`, 10000 - i));
+      const announcementsAll = Array.from({ length: 8 }, (_, i) => post(`a${i}`, 100 - i, 'DEVBLOG'));
+
+      const seen = drain(personalAll, announcementsAll, 10, 25);
+
+      expect(seen.length).toBe(68);
+      expect(new Set(seen).size).toBe(68);
+      expect(new Set(seen)).toEqual(new Set(idsOf([...personalAll, ...announcementsAll])));
+    });
+
+    it('yields every visible item exactly once when a page cuts inside the announcements and the next does not', () => {
+      // The Task 2 regression, reached. The fixture above does not get there: its personal
+      // stream is dense enough that the cut never lands inside the announcements while personal
+      // rows remain above, so the announcement watermark never has recorded ids to lose.
+      //
+      // Here the first fetch window of the personal stream is mostly invisible, so the first
+      // page tails with ancient announcements and the announcement cursor records a2 at date 98.
+      // The second window is dense, so the second page is filled entirely by personal rows far
+      // above 98. An unclamped watermark follows that cut up to ~9966, drops the a2 id with the
+      // move, and re-emits a0-a2 on the page after it.
+      const personalAll = Array.from({ length: 40 }, (_, i) =>
+        post(`p${i}`, 10000 - i, i >= 25 || i % 4 === 0 ? 'cube-1' : 'hidden'),
+      );
+      const announcementsAll = Array.from({ length: 8 }, (_, i) => post(`a${i}`, 100 - i, 'DEVBLOG'));
+
+      const seen = drain(personalAll, announcementsAll, 10, 25, (item) => item.cube !== 'hidden');
+
+      expect(seen.length).toBe(30);
+      expect(new Set(seen).size).toBe(30);
+      expect(new Set(seen)).toEqual(
+        new Set(idsOf([...personalAll.filter((item) => item.cube !== 'hidden'), ...announcementsAll])),
+      );
+    });
+
+    it('terminates rather than looping', () => {
+      // drain() throws after 100 rounds; reaching that is the failure. The personal stream here
+      // is dense, entirely invisible, and longer than one fetch, so round after round comes back
+      // empty and only the per-stream step-back moves the cursor. A step-back that failed to
+      // move — or that moved one stream by the other's reach — would spin here forever.
+      const personalAll = Array.from({ length: 60 }, (_, i) => post(`p${i}`, 10000 - i, 'hidden'));
+      const announcementsAll = Array.from({ length: 5 }, (_, i) => post(`a${i}`, 100 - i, 'DEVBLOG'));
+
+      const seen = drain(personalAll, announcementsAll, 10, 25, (item) => item.cube !== 'hidden');
+
+      expect(seen).toEqual(['a0', 'a1', 'a2', 'a3', 'a4']);
+    });
+  });
 });
 
 describe('parseFeedCursor', () => {

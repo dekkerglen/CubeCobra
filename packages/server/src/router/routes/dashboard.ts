@@ -16,7 +16,9 @@ const MAX_FEED_FETCH_ROUNDS = 5;
 
 // Stands in for a stream the merge has marked done. No `lastKey` means "nothing more", which is
 // exactly what done asserts, so the merge keeps the stream done without it being queried again.
-const EXHAUSTED_STREAM: { items: never[]; lastKey?: Record<string, any> } = { items: [] };
+// Frozen, and typed readonly, because it is a module-level singleton handed to every request:
+// nothing writes to it today, and that stays true by structure rather than by audit.
+const EXHAUSTED_STREAM: Readonly<{ items: never[]; lastKey?: Record<string, any> }> = Object.freeze({ items: [] });
 
 // Blog posts embed a Changelog hydrated with full card details by
 // ChangelogDynamoDao.hydrateChangelog. We strip those before shipping to the

@@ -144,6 +144,18 @@ describe('dashboard feed', () => {
     expect(feedDao.getByTo).toHaveBeenCalledWith('user-1', undefined, 50, 900);
   });
 
+  it('queries nothing and ends the feed when both streams are marked done', async () => {
+    // The one cursor shape a client actually reaches, on the last page. Neither stream is
+    // queried, and the response must end the feed rather than hand back a cursor that would
+    // ask for the same empty page forever.
+    const res = await fetchFeed(cursorBody({ date: 900, ids: [], done: true }, { date: 50, ids: [], done: true }));
+
+    expect(feedDao.getByTo).not.toHaveBeenCalled();
+    expect(blogDao.queryByCube).not.toHaveBeenCalled();
+    expect(res.body.items).toEqual([]);
+    expect(res.body.lastKey).toBeNull();
+  });
+
   it('restarts from the top when given a legacy cursor', async () => {
     await fetchFeed({ lastKey: legacyCursor });
 
