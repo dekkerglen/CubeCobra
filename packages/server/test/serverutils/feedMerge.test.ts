@@ -433,9 +433,9 @@ describe('mergeFeedStreams', () => {
     // Simulates the handler: each round re-queries both streams bounded by their own
     // cursor date, taking at most `fetchLimit` items per stream, until no cursor remains.
     // Throws after 100 rounds so non-termination fails loudly instead of hanging. Also throws
-    // on a run of more than MAX_CONSECUTIVE_EMPTY_ROUNDS empty pages, because that is the point
-    // at which the handler gives up and hands the client a page it cannot advance from — the
-    // merge getting there eventually is not good enough.
+    // on a run of MAX_CONSECUTIVE_EMPTY_ROUNDS empty pages, because the last of them is the
+    // round at which the handler gives up and hands the client a page it cannot advance from —
+    // the merge getting there eventually is not good enough.
     // Returns the concatenated ids of every page, in page order.
     //
     // `fetchLimit` is deliberately larger than `pageLimit` in every call below. Production runs
