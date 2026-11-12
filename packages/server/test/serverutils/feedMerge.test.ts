@@ -126,7 +126,7 @@ describe('mergeFeedStreams', () => {
 
     expect(items).toEqual([]);
     expect(cursor!.personal).toEqual(streamCursor(99));
-    expect(cursor!.announcements.done).toBe(true);
+    expect(cursor!.announcements).toEqual(streamCursor(Number.MAX_SAFE_INTEGER, [], true));
   });
 
   it('never suppresses an announcement by the id of its legacy feed row', () => {
@@ -166,6 +166,23 @@ describe('mergeFeedStreams', () => {
 
     expect(cursor!.personal.date).toBe(999);
     expect(cursor!.announcements.date).toBe(4);
+  });
+
+  it('holds a stream on an empty page when its step-back would land at or above its own bound', () => {
+    // Reachable today: the route queries both streams under the personal watermark, so the
+    // announcement stream can fetch rows newer than its own bound. Stepping back from one of
+    // those would move it up over announcements it has already shown.
+    const { cursor } = merge({
+      personal: [post('legacy', 1000, 'DEVBLOG')],
+      personalHasMore: true,
+      announcements: [post('legacyA', 900, 'DEVBLOG')],
+      announcementsHasMore: true,
+      isVisible: () => false,
+      cursor: cursorFor(streamCursor(2000), streamCursor(500, ['a0'])),
+      limit: 10,
+    });
+
+    expect(cursor!.announcements).toEqual(streamCursor(500, ['a0']));
   });
 
   it('leaves a stream that fetched nothing on an empty page exactly where it stood', () => {
@@ -375,7 +392,7 @@ describe('mergeFeedStreams', () => {
 
       expect(items).toEqual([]);
       expect(cursor!.personal).toEqual(streamCursor(199));
-      expect(cursor!.announcements.done).toBe(true);
+      expect(cursor!.announcements).toEqual(streamCursor(Number.MAX_SAFE_INTEGER, [], true));
     });
   });
 });

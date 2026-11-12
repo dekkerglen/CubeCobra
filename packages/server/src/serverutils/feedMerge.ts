@@ -73,9 +73,14 @@ export const parseFeedCursor = (raw: unknown): FeedCursor | undefined => {
 const newestFirst = (a: BlogPost, b: BlogPost): number => b.date - a.date || a.id.localeCompare(b.id);
 
 /**
- * The bound for a stream that has no position yet: above every date a row can carry, so a query
- * made under it reads the stream from the top. A cursor entry must hold a finite date, so
- * "unbounded" has to be spelled as a date no row can reach.
+ * The bound for a stream that has no position yet, so a query made under it reads the stream from
+ * the top. A cursor entry must hold a finite date, so "unbounded" has to be spelled as a date no
+ * row can reach.
+ *
+ * This outranks every stored row through its *string* form: the DAOs bound their queries with
+ * `GSI1SK <= 'DATE#' + before`, compared lexicographically, and `DATE#9007199254740991` sorts above
+ * every 13-digit epoch-millisecond key because `'9' > '1'`. A bound rendered some other way would
+ * need checking again.
  */
 const TOP_OF_STREAM = Number.MAX_SAFE_INTEGER;
 
@@ -144,10 +149,13 @@ const nextStreamCursor = ({
  * A stream that fetched nothing has no page of its own to step past, so it does not move: it
  * resumes at the bound it was queried under, which on a first page is the top of the stream.
  *
- * The step-back takes the place of `cutDate`, since there is no page cut without emitted items.
- * It needs no clamp to the incoming bound the way a real cut does: this stream was queried for
- * rows at or below that bound, so `oldestFetched <= incoming.date` and the step-back is strictly
- * below it already.
+ * The step-back takes the place of `cutDate`, since there is no page cut without emitted items. It
+ * adds no clamp of its own: it inherits `nextStreamCursor`'s, which is load-bearing here and must
+ * stay. A stream is *meant* to be queried for rows at or below its own bound, which would make
+ * `oldestFetched - 1 < incoming.date` and the clamp a no-op — but the dashboard route still passes
+ * the personal watermark to both queries, so the announcement stream can fetch rows newer than its
+ * own bound and step back to or above it. The clamp is what holds it in place until the caller
+ * queries each stream under its own watermark.
  *
  * No fetched id is recorded, because none was displayed, and recording them would suppress a
  * legitimate announcement sharing its id with a legacy feed row. A stream that did not move
