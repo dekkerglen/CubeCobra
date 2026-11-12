@@ -14,6 +14,10 @@ import { csrfProtection, ensureAuth } from '../middleware';
 const FEED_PAGE_SIZE = 50;
 const MAX_FEED_FETCH_ROUNDS = 5;
 
+// Stands in for a stream the merge has marked done. No `lastKey` means "nothing more", which is
+// exactly what done asserts, so the merge keeps the stream done without it being queried again.
+const EXHAUSTED_STREAM: { items: never[]; lastKey?: Record<string, any> } = { items: [] };
+
 // Blog posts embed a Changelog hydrated with full card details by
 // ChangelogDynamoDao.hydrateChangelog. We strip those before shipping to the
 // client — the React feed component rehydrates from utils/cardDetailsCache.
@@ -119,14 +123,17 @@ const getMoreFeedItemsHandler = async (req: Request, res: Response) => {
   // the request open.
   for (let round = 0; round < MAX_FEED_FETCH_ROUNDS; round += 1) {
     // Two date-descending streams: what this user follows, and the site-wide announcements
-    // every user gets. Both are bounded by the cursor's date rather than resumed from a
-    // DynamoDB start key, because a merged page consumes a partial page from each.
+    // every user gets. Each is bounded by its own cursor date rather than resumed from a
+    // DynamoDB start key, because a merged page consumes a partial page from each — and the
+    // bounds are per stream because the cut leaves the two at different depths. A stream the
+    // merge has marked done has nothing left below its bound, so it is not queried at all.
     const [personalResult, announcementResult] = await Promise.all([
-      // PLACEHOLDER — replaced by Task 4, which threads each stream's own watermark through to
-      // its query. Until then both streams take the personal watermark, which under the merge's
-      // current placeholder is the same value written to both stream entries.
-      feedDao.getByTo(user.id, undefined, FEED_PAGE_SIZE, cursor?.personal.date),
-      blogDao.queryByCube(DEV_BLOG_CUBE, undefined, FEED_PAGE_SIZE, cursor?.personal.date),
+      cursor?.personal.done
+        ? EXHAUSTED_STREAM
+        : feedDao.getByTo(user.id, undefined, FEED_PAGE_SIZE, cursor?.personal.date),
+      cursor?.announcements.done
+        ? EXHAUSTED_STREAM
+        : blogDao.queryByCube(DEV_BLOG_CUBE, undefined, FEED_PAGE_SIZE, cursor?.announcements.date),
     ]);
 
     const merged = mergeFeedStreams({

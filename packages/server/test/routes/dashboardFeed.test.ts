@@ -36,6 +36,10 @@ const personalFeed = (items: BlogPost[], lastKey?: Record<string, any>) => ({
 
 const streamCursor = (date: number, ids: string[] = [], done = false) => ({ date, ids, done });
 
+const legacyCursor = { date: 500, ids: [] };
+
+const cursorBody = (personal: any, announcements: any) => ({ lastKey: { personal, announcements } });
+
 const fetchFeed = (body: any = {}) =>
   call(feedHandler as any)
     .as(createUser({ id: 'user-1' }))
@@ -117,6 +121,58 @@ describe('dashboard feed', () => {
 
     expect(feedDao.getByTo).toHaveBeenCalledWith('user-1', undefined, 50, date);
     expect(blogDao.queryByCube).toHaveBeenCalledWith('DEVBLOG', undefined, 50, date);
+  });
+
+  it('bounds each stream by its own watermark', async () => {
+    await fetchFeed(cursorBody({ date: 900, ids: [], done: false }, { date: 50, ids: [], done: false }));
+
+    expect(feedDao.getByTo).toHaveBeenCalledWith('user-1', undefined, 50, 900);
+    expect(blogDao.queryByCube).toHaveBeenCalledWith('DEVBLOG', undefined, 50, 50);
+  });
+
+  it('does not query a stream marked done', async () => {
+    await fetchFeed(cursorBody({ date: 900, ids: [], done: true }, { date: 50, ids: [], done: false }));
+
+    expect(feedDao.getByTo).not.toHaveBeenCalled();
+    expect(blogDao.queryByCube).toHaveBeenCalledWith('DEVBLOG', undefined, 50, 50);
+  });
+
+  it('does not query the announcement stream when only it is marked done', async () => {
+    await fetchFeed(cursorBody({ date: 900, ids: [], done: false }, { date: 50, ids: [], done: true }));
+
+    expect(blogDao.queryByCube).not.toHaveBeenCalled();
+    expect(feedDao.getByTo).toHaveBeenCalledWith('user-1', undefined, 50, 900);
+  });
+
+  it('restarts from the top when given a legacy cursor', async () => {
+    await fetchFeed({ lastKey: legacyCursor });
+
+    expect(feedDao.getByTo).toHaveBeenCalledWith('user-1', undefined, 50, undefined);
+    expect(blogDao.queryByCube).toHaveBeenCalledWith('DEVBLOG', undefined, 50, undefined);
+  });
+
+  it('returns a cursor that advances when every round is fully filtered', async () => {
+    // Private-cube posts are fetched and then dropped by isPubliclyVisible, so every
+    // round produces an empty page. The response must still let the client move on.
+    (feedDao.getByTo as jest.Mock).mockResolvedValue(
+      personalFeed([post('hidden', 400, { cubeVisibility: CUBE_VISIBILITY.PRIVATE })], { k: 1 }),
+    );
+
+    const res = await fetchFeed(cursorBody({ date: 900, ids: [], done: false }, { date: 900, ids: [], done: true }));
+
+    expect(res.body.items).toEqual([]);
+    expect(res.body.lastKey.personal.date).toBeLessThan(400);
+  });
+
+  it('keeps paging the personal stream when the page tails with ancient announcements', async () => {
+    // The reported bug, end to end: the personal stream is truncated at its limit and the
+    // page ends on a years-old dev post. The next bound must come from the personal stream.
+    (feedDao.getByTo as jest.Mock).mockResolvedValue(personalFeed([post('p-1', 10000), post('p-2', 9999)], { k: 1 }));
+    (blogDao.queryByCube as jest.Mock).mockResolvedValue({ items: [devPost('dev-old', 5)] });
+
+    const res = await fetchFeed();
+
+    expect(res.body.lastKey.personal.date).toBe(9999);
   });
 
   it('still hides blog posts from non-public cubes', async () => {

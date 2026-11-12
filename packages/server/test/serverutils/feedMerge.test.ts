@@ -169,9 +169,10 @@ describe('mergeFeedStreams', () => {
   });
 
   it('holds a stream on an empty page when its step-back would land at or above its own bound', () => {
-    // Reachable today: the route queries both streams under the personal watermark, so the
-    // announcement stream can fetch rows newer than its own bound. Stepping back from one of
-    // those would move it up over announcements it has already shown.
+    // Not reachable through the dashboard route any more, now that it queries each stream under
+    // its own watermark — this pins the guard that keeps it that way. A stream queried above its
+    // own bound fetches rows newer than it, and stepping back from one would move the stream up
+    // over announcements it has already shown.
     const { cursor } = merge({
       personal: [post('legacy', 1000, 'DEVBLOG')],
       personalHasMore: true,

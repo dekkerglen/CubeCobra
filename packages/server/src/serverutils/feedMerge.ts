@@ -150,12 +150,11 @@ const nextStreamCursor = ({
  * resumes at the bound it was queried under, which on a first page is the top of the stream.
  *
  * The step-back takes the place of `cutDate`, since there is no page cut without emitted items. It
- * adds no clamp of its own: it inherits `nextStreamCursor`'s, which is load-bearing here and must
- * stay. A stream is *meant* to be queried for rows at or below its own bound, which would make
- * `oldestFetched - 1 < incoming.date` and the clamp a no-op — but the dashboard route still passes
- * the personal watermark to both queries, so the announcement stream can fetch rows newer than its
- * own bound and step back to or above it. The clamp is what holds it in place until the caller
- * queries each stream under its own watermark.
+ * adds no clamp of its own and inherits `nextStreamCursor`'s. Now that the caller queries each
+ * stream under its own watermark, every row a stream fetches is `<= incoming.date`, so
+ * `oldestFetched - 1 < incoming.date` and that clamp is a no-op on this path. It stays as the
+ * guard it is in `nextStreamCursor`: a stream queried above its own bound could otherwise step
+ * back from a row newer than that bound and move up over announcements it has already shown.
  *
  * No fetched id is recorded, because none was displayed, and recording them would suppress a
  * legitimate announcement sharing its id with a legacy feed row. A stream that did not move
