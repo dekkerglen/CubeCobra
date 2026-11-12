@@ -12,6 +12,11 @@ import CubeContext, { CubeContextProvider } from 'contexts/CubeContext';
 import { DisplayContextProvider } from 'contexts/DisplayContext';
 import { FilterContextProvider } from 'contexts/FilterContext';
 
+jest.mock('utils/cardDetailsCache', () => ({
+  getCardDetail: jest.fn(),
+  getCardDetails: jest.fn(async () => ({})),
+}));
+
 const SORTS = ['Color Category', 'Types-Multicolor', 'Mana Value', 'Alphabetical'];
 
 const cube = {
@@ -19,6 +24,7 @@ const cube = {
   shortId: 'c1',
   name: 'Test Cube',
   version: 3,
+  cardCount: 1,
   defaultSorts: SORTS,
   views: [{ name: 'Mainboard', boards: ['mainboard'], displayView: 'table', defaultSorts: SORTS }],
 } as unknown as Cube;
@@ -36,12 +42,13 @@ const pendingChanges = {
 };
 
 const CommitButton: React.FC = () => {
-  const { commitChanges, alerts } = useContext(CubeContext);
+  const { commitChanges, alerts, cube: contextCube } = useContext(CubeContext);
   const [result, setResult] = React.useState<string>('none');
   return (
     <>
       <button onClick={async () => setResult(String(await commitChanges('title', 'blog')))}>commit</button>
       <span data-testid="result">{result}</span>
+      <span data-testid="card-count">{contextCube.cardCount}</span>
       {alerts.map((alert, i) => (
         <span key={i} data-testid={`alert-${alert.color}`}>
           {alert.message}
@@ -53,14 +60,14 @@ const CommitButton: React.FC = () => {
 
 const csrfFetch = jest.fn();
 
-const renderAndCommit = async () => {
+const renderAndCommit = async (initialCube: Cube = cube, initialCards: ReturnType<typeof cards> = cards()) => {
   window.history.replaceState({}, '', '/cube/list/c1');
   render(
     <CSRFContext.Provider value={{ csrfFetch, callApi: jest.fn() } as any}>
       <DisplayContextProvider cubeID="c1" viewSlugs={['mainboard']}>
         <FilterContextProvider>
-          <ChangesContextProvider cube={cube} cards={cards() as any}>
-            <CubeContextProvider initialCube={cube} cards={cards() as any}>
+          <ChangesContextProvider cube={initialCube} cards={initialCards as any}>
+            <CubeContextProvider initialCube={initialCube} cards={initialCards as any}>
               <CommitButton />
             </CubeContextProvider>
           </ChangesContextProvider>
@@ -104,6 +111,36 @@ describe('CubeContext commitChanges', () => {
 
     expect(screen.getByTestId('result')).toHaveTextContent('true');
     expect(storedChanges()).toEqual({});
+  });
+
+  // The spam gate on the overview, primer, and blog editors reads cube.cardCount. A brand new cube
+  // starts at zero, so if the commit doesn't refresh it the gate stays shut until a page reload.
+  it('updates the card count when the first card is added to an empty cube', async () => {
+    const emptyCube = { ...cube, cardCount: 0 } as Cube;
+    localStorage.setItem(
+      CHANGES_KEY,
+      JSON.stringify({ version: 3, mainboard: { adds: [{ cardID: 'b', addedTmsp: 0 }] } }),
+    );
+    csrfFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ success: 'true', updateApplied: true, version: 4 }),
+    });
+    await renderAndCommit(emptyCube, { mainboard: [], maybeboard: [] });
+
+    expect(screen.getByTestId('result')).toHaveTextContent('true');
+    expect(screen.getByTestId('card-count')).toHaveTextContent('1');
+  });
+
+  it('updates the card count when cards are removed', async () => {
+    csrfFetch.mockResolvedValue({
+      ok: true,
+      status: 200,
+      json: async () => ({ success: 'true', updateApplied: true, version: 4 }),
+    });
+    await renderAndCommit();
+
+    expect(screen.getByTestId('card-count')).toHaveTextContent('0');
   });
 
   it('treats a commit whose blog post failed as saved', async () => {

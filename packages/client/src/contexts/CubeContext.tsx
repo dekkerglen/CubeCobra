@@ -1319,6 +1319,10 @@ export function CubeContextProvider({
           ...cube,
           cards: committedCards,
           version: newVersion, // Update cube version too
+          // Mirror how the server recounts the cube (mainboard only). Without this the stale count
+          // keeps the empty-cube spam gate shut on the overview, primer, and blog editors until the
+          // page is reloaded, even though the cube now has cards.
+          cardCount: committedCards.mainboard?.length ?? cube.cardCount,
         });
         const newTags = getAllTags(committedCards as any);
         //Make sure to use tagColors instead of cube.tagColors so any previous edits apply
