@@ -400,6 +400,12 @@ describe('mergeFeedStreams', () => {
   describe('paging to exhaustion', () => {
     const MAX_ROUNDS = 100;
 
+    // The handler retries an empty page only this many times before answering the client, and
+    // the client renders its "no feed items" state on an empty page with no way to advance. So a
+    // run of empty rounds longer than this strands a real viewer even though the merge would
+    // eventually have moved past it.
+    const MAX_CONSECUTIVE_EMPTY_ROUNDS = 5;
+
     const idsOf = (items: BlogPost[]): string[] => items.map((item) => item.id);
 
     // One stream's side of one round, as the DAOs serve it: the newest `fetchLimit` rows at or
@@ -425,7 +431,10 @@ describe('mergeFeedStreams', () => {
 
     // Simulates the handler: each round re-queries both streams bounded by their own
     // cursor date, taking at most `fetchLimit` items per stream, until no cursor remains.
-    // Throws after 100 rounds so non-termination fails loudly instead of hanging.
+    // Throws after 100 rounds so non-termination fails loudly instead of hanging. Also throws
+    // on a run of more than MAX_CONSECUTIVE_EMPTY_ROUNDS empty pages, because that is the point
+    // at which the handler gives up and hands the client a page it cannot advance from — the
+    // merge getting there eventually is not good enough.
     // Returns the concatenated ids of every page, in page order.
     //
     // `fetchLimit` is deliberately larger than `pageLimit` in every call below. Production runs
@@ -440,13 +449,12 @@ describe('mergeFeedStreams', () => {
     ): string[] => {
       const seen: string[] = [];
       let cursor: FeedCursor | undefined;
+      let emptyRounds = 0;
 
       for (let round = 0; round < MAX_ROUNDS; round += 1) {
         const personal = queryStream(personalAll, cursor?.personal, fetchLimit);
         const announcements = queryStream(announcementsAll, cursor?.announcements, fetchLimit);
 
-        // An empty page is a round that contributes nothing, which is what the handler's own
-        // retry loop does before it answers the client.
         const page = merge({
           personal: personal.items,
           personalHasMore: personal.hasMore,
@@ -462,6 +470,17 @@ describe('mergeFeedStreams', () => {
 
         if (!cursor) {
           return seen;
+        }
+
+        // An empty page contributes nothing, which is a round the handler spends inside its own
+        // retry loop. Budgeting them here keeps drain an oracle for "the client can always
+        // advance" rather than for the weaker "the merge terminates eventually".
+        emptyRounds = page.items.length === 0 ? emptyRounds + 1 : 0;
+
+        if (emptyRounds > MAX_CONSECUTIVE_EMPTY_ROUNDS) {
+          throw new Error(
+            `drain produced ${emptyRounds} consecutive empty pages, more than the handler's ${MAX_CONSECUTIVE_EMPTY_ROUNDS} retries`,
+          );
         }
       }
 
@@ -506,9 +525,17 @@ describe('mergeFeedStreams', () => {
     });
 
     it('yields every visible item exactly once when one stream fills whole pages above the other bound', () => {
-      // The Task 2 regression: a dense recent stream fills every page slot while the other
-      // stream's bound sits far below, which is where an unclamped watermark regresses upward
-      // and re-emits. Requires fetchLimit > pageLimit to reach.
+      // A dense recent stream fills every page slot on its own — which needs fetchLimit >
+      // pageLimit — while the other stream's bound sits far below. This pins exhaustion under
+      // that shape: the dense stream must not be dragged down to the sparse one's depth, and the
+      // sparse one must still be delivered once the dense one runs out.
+      //
+      // It does *not* pin the Task 2 watermark clamp, despite filling pages above the other
+      // bound. The announcement cursor carries `ids: []` on every round here, because the cut
+      // never lands inside the announcements while personal rows remain above, so an unclamped
+      // watermark has no recorded id to drop and this fixture passes clean without the clamp.
+      // The clamp is pinned by 'a page cuts inside the announcements and the next does not'
+      // below; keep both.
       const personalAll = Array.from({ length: 60 }, (_, i) => post(`p${i}`, 10000 - i));
       const announcementsAll = Array.from({ length: 8 }, (_, i) => post(`a${i}`, 100 - i, 'DEVBLOG'));
 
@@ -520,9 +547,10 @@ describe('mergeFeedStreams', () => {
     });
 
     it('yields every visible item exactly once when a page cuts inside the announcements and the next does not', () => {
-      // The Task 2 regression, reached. The fixture above does not get there: its personal
-      // stream is dense enough that the cut never lands inside the announcements while personal
-      // rows remain above, so the announcement watermark never has recorded ids to lose.
+      // The Task 2 watermark clamp, pinned. 'one stream fills whole pages above the other bound'
+      // above does not reach it: its personal stream is uniformly dense, so the cut never lands
+      // inside the announcements while personal rows remain above, and the announcement cursor
+      // never records an id for an unclamped watermark to drop.
       //
       // Here the first fetch window of the personal stream is mostly invisible, so the first
       // page tails with ancient announcements and the announcement cursor records a2 at date 98.
