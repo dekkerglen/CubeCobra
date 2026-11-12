@@ -1,9 +1,7 @@
 import React, { lazy, Suspense } from 'react';
 
 import { AdminTabSpinner } from 'components/admin/AdminTabData';
-import Alert from 'components/base/Alert';
 import { Flexbox } from 'components/base/Layout';
-import Link from 'components/base/Link';
 import { TabContent, Tabs } from 'components/base/Tabs';
 import Text from 'components/base/Text';
 import DynamicFlash from 'components/DynamicFlash';
@@ -11,7 +9,6 @@ import ErrorBoundary from 'components/ErrorBoundary';
 import RenderToRoot from 'components/RenderToRoot';
 import useQueryParam from 'hooks/useQueryParam';
 import MainLayout from 'layouts/MainLayout';
-import { AdminAlerts } from 'utils/adminAlerts';
 
 // Each tab is its own chunk, fetched (along with its data) the first time the tab is opened. The keys
 // are the old page names, which the server's /admin/<key> routes and form actions redirect to.
@@ -34,35 +31,26 @@ const TABS = [
 interface AdminDashboardPageProps {
   noticeCount: number;
   contentInReview: number;
-  adminAlerts?: AdminAlerts;
 }
 
 const withCount = (label: string, count?: number): string => (count ? `${label} (${count})` : label);
 
-const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ noticeCount, contentInReview, adminAlerts }) => {
+const AdminDashboardPage: React.FC<AdminDashboardPageProps> = ({ noticeCount, contentInReview }) => {
   const [tab, setTab] = useQueryParam('tab', TABS[0].key);
   const activeTab = Math.max(
     0,
     TABS.findIndex(({ key }) => key === tab),
   );
 
-  const alertCount = adminAlerts?.count ?? 0;
   const counts: Record<string, number> = {
     notices: noticeCount,
     reviewcontent: contentInReview,
-    mlretraining: alertCount,
   };
 
   return (
     <MainLayout>
       <Flexbox direction="col" gap="2" className="my-3">
         <DynamicFlash />
-        {alertCount > 0 && (
-          <Alert color="warning">
-            <Link onClick={() => setTab('mlretraining')}>ML Retraining</Link>:{' '}
-            {alertCount === 1 ? '1 run needs attention' : `${alertCount} runs need attention`}
-          </Alert>
-        )}
         <Text xl semibold>
           Admin Dashboard
         </Text>

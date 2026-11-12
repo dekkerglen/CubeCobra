@@ -378,51 +378,37 @@ const RunDetailsPanel: React.FC<{
 
   return (
     <Flexbox direction="col" gap="3">
-      {(run.status === RetrainTaskStatus.AWAITING_APPROVAL ||
-        (run.status === RetrainTaskStatus.FAILED && !run.acknowledged)) && (
+      {run.status === RetrainTaskStatus.AWAITING_APPROVAL && (
         <Flexbox direction="row" gap="2">
-          {run.status === RetrainTaskStatus.AWAITING_APPROVAL ? (
-            <>
-              <Button
-                color="primary"
-                disabled={!configured || busy}
-                onClick={() =>
-                  onConfirm({
-                    title: 'Approve',
-                    message: `Approve ${run.version}?`,
-                    buttonText: 'Approve',
-                    run: () => onAction(`${runPath}/approve`, `Approved ${run.id}`),
-                  })
-                }
-              >
-                Approve
-              </Button>
-              <Button
-                color="danger"
-                outline
-                disabled={!configured || busy}
-                onClick={() =>
-                  onConfirm({
-                    title: 'Reject',
-                    message: `Reject ${run.version}?`,
-                    buttonText: 'Reject',
-                    run: () => onAction(`${runPath}/reject`, `Rejected ${run.id}`),
-                  })
-                }
-              >
-                Reject
-              </Button>
-            </>
-          ) : (
-            <Button
-              color="secondary"
-              outline
-              disabled={!configured || busy}
-              onClick={() => onAction(`${runPath}/acknowledge`, `Dismissed ${run.id}`)}
-            >
-              Dismiss
-            </Button>
-          )}
+          <Button
+            color="primary"
+            disabled={!configured || busy}
+            onClick={() =>
+              onConfirm({
+                title: 'Approve',
+                message: `Approve ${run.version}?`,
+                buttonText: 'Approve',
+                run: () => onAction(`${runPath}/approve`, `Approved ${run.id}`),
+              })
+            }
+          >
+            Approve
+          </Button>
+          <Button
+            color="danger"
+            outline
+            disabled={!configured || busy}
+            onClick={() =>
+              onConfirm({
+                title: 'Reject',
+                message: `Reject ${run.version}?`,
+                buttonText: 'Reject',
+                run: () => onAction(`${runPath}/reject`, `Rejected ${run.id}`),
+              })
+            }
+          >
+            Reject
+          </Button>
         </Flexbox>
       )}
 

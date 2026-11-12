@@ -47,8 +47,6 @@ export interface RetrainTask extends BaseObject {
   taskToken?: string;
   decidedBy?: string; // admin user id who approved or rejected
   errorMessage?: string;
-  // Set when an admin dismisses a failed run's alert.
-  acknowledged?: boolean;
   completedAt?: number;
   dateCreated: number;
   dateLastUpdated: number;

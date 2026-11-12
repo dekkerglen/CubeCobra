@@ -1,7 +1,7 @@
 /**
- * Server-side reads for the ML retraining admin page and the admin alert in the nav: run records,
- * the files a training run leaves under ml/runs/<runId>/, and the model versions published under
- * model/ in DATA_BUCKET. Starting and resuming executions is in stepFunctions.ts.
+ * Server-side reads for the ML retraining admin page: run records, the files a training run leaves
+ * under ml/runs/<runId>/, and the model versions published under model/ in DATA_BUCKET. Starting
+ * and resuming executions is in stepFunctions.ts.
  */
 import { RetrainTask } from '@utils/datatypes/RetrainTask';
 import {
@@ -12,7 +12,6 @@ import {
   runPrefix,
 } from '@utils/ml/modelBundle';
 
-import { retrainTaskDao } from '../dynamo/daos';
 import { getBucketName, getObject, s3 } from '../dynamo/s3client';
 
 /** The retraining state machine; only production has one. */
@@ -99,44 +98,4 @@ export const listPublishedVersions = async (bucket: string): Promise<string[]> =
     if (b === LEGACY_MODEL_VERSION) return -1;
     return b.localeCompare(a);
   });
-};
-
-/** Runs an admin should look at, for the nav indicator and the admin dashboard. */
-export interface AdminAlerts {
-  count: number;
-  ids: string[];
-}
-
-// Every admin page render reads this, so the query result is shared for a minute.
-const ALERTS_TTL_MS = 60 * 1000;
-let alertsCache: { value: AdminAlerts; at: number } | null = null;
-let alertsInflight: Promise<AdminAlerts> | null = null;
-
-const loadAdminAlerts = async (): Promise<AdminAlerts> => {
-  let value = alertsCache?.value ?? { count: 0, ids: [] };
-  try {
-    const runs = await retrainTaskDao.listNeedingAttention();
-    value = { count: runs.length, ids: runs.map((run) => run.id) };
-  } catch (err) {
-    console.warn('Could not load ML retraining alerts:', (err as Error).message);
-  }
-  alertsCache = { value, at: Date.now() };
-  return value;
-};
-
-/** Null where there is no retraining pipeline. Never throws. */
-export const getAdminAlerts = async (): Promise<AdminAlerts | null> => {
-  if (!isPipelineConfigured()) return null;
-  if (alertsCache && Date.now() - alertsCache.at < ALERTS_TTL_MS) return alertsCache.value;
-  if (!alertsInflight) {
-    alertsInflight = loadAdminAlerts().finally(() => {
-      alertsInflight = null;
-    });
-  }
-  return alertsInflight;
-};
-
-/** After an admin acts on a run, so their next page shows the alert gone. */
-export const clearAdminAlertsCache = (): void => {
-  alertsCache = null;
 };

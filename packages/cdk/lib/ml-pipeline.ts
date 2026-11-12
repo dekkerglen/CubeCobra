@@ -70,8 +70,8 @@ const objectArn = (bucket: string, key: string): string => `arn:aws:s3:::${bucke
  * Automated retraining of the recommender model, run after each 90-day export.
  *
  * A Step Functions state machine runs the stages as ECS tasks on a dedicated cluster: process data
- * (CPU) -> in parallel, train + package (GPU) and archetype topics (CPU; NMF over Scryfall oracle
- * tags, named by Claude on Bedrock, independent of the model) -> evaluate (CPU) -> gate (lambda) ->
+ * (CPU) -> in parallel, train + package (GPU) and archetype topics (CPU; k-means over decks' Scryfall
+ * oracle tags, named by Claude on Bedrock, independent of the model) -> evaluate (CPU) -> gate (lambda) ->
  * publish (CPU) -> promote to beta -> admin approval on the site -> promote to production. Promoting moves model/current.json in that environment's data bucket, which its
  * recommenders poll and hot-reload, and waits until every response reports the new version (a
  * promotion that doesn't get there is reverted). Rollback is the same machine in PROMOTE mode.
@@ -371,8 +371,7 @@ export class MlPipeline extends Construct {
         ML_RUNS_BUCKET: runsBucket,
         ML_LIVE_BUCKET: runsBucket,
         AWS_REGION: stack.region,
-        // Bedrock in the stack's own region (us-east-2).
-        ML_BEDROCK_REGION: stack.region,
+        ML_BEDROCK_REGION: props.config.bedrockRegion,
         ML_BEDROCK_MODEL_ID: props.config.bedrockModelId,
         ML_BEDROCK_FALLBACK_MODEL_ID: props.config.bedrockFallbackModelId,
       },

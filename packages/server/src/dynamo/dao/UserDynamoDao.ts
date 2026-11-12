@@ -14,6 +14,7 @@
  * - getByEmail(email): Get user by email (case-insensitive)
  * - getByIdOrUsername(idOrUsername): Get user by ID first, fallback to username
  * - batchGet(ids): Get multiple users by IDs
+ * - listByRole(role): Every user with a role, from their role rows
  *
  * GSI STRUCTURE:
  * - GSI1: Query by username (usernameLower)
@@ -37,6 +38,7 @@ import User, {
   DefaultGridTightnessPreference,
   DefaultYourCubesSortOrder,
   UnhydratedUser,
+  UserRoles,
   UserWithSensitiveInformation,
 } from '@utils/datatypes/User';
 import { hostedImageToImageData } from '@utils/hostedImagesUtil';
@@ -529,6 +531,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
     };
 
     await super.put(userWithId);
+    await this.syncRoleRows(userId, [], userWithId.roles);
 
     return userId;
   }
@@ -547,6 +550,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
     };
 
     await super.put(itemWithLower);
+    await this.syncRoleRows(item.id, [], item.roles);
   }
 
   /**
@@ -575,6 +579,7 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
     merged.dateLastUpdated = Date.now();
 
     await super.update(merged as UserWithBaseFields);
+    await this.syncRoleRows(document.id, existing.roles, merged.roles);
   }
 
   /**
@@ -618,6 +623,9 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
     }) as UserWithBaseFields[];
 
     await super.batchPut(normalizedDocs);
+    await Promise.all(
+      normalizedDocs.map((doc, index) => this.syncRoleRows(doc.id, existingUsers[index]?.roles, doc.roles)),
+    );
   }
 
   /**
@@ -678,6 +686,64 @@ export class UserDynamoDao extends BaseDynamoDao<UserWithBaseFields, StoredUserW
 
   public async incrementFollowingCount(userId: string, delta: number): Promise<number> {
     return this.incrementCounter(userId, 'followingCount', delta);
+  }
+
+  // ---------- Role rows ----------
+  // Each role a user holds is a row on their hash partition, so a role's holders are one query:
+  //   PK = HASH#USER#{id}
+  //   SK = ROLE#{role}
+  //   GSI1PK = USER#ROLE#{role}   (for "who has this role" via GSI)
+  //   GSI1SK = {id}
+  // put, createUser, update and batchPut keep them in step with User.roles.
+
+  private roleSK(role: UserRoles): string {
+    return `ROLE#${role}`;
+  }
+
+  private roleGSI1PK(role: UserRoles): string {
+    return `${this.itemType()}#ROLE#${role}`;
+  }
+
+  /** Writes and deletes role rows to go from the roles in `before` to those in `after`. */
+  public async syncRoleRows(userId: string, before: UserRoles[] = [], after: UserRoles[] = []): Promise<void> {
+    const added = [...new Set(after)].filter((role) => !before.includes(role));
+    const removed = [...new Set(before)].filter((role) => !after.includes(role));
+    const PK = `HASH#${this.typedKey(userId)}`;
+
+    await Promise.all([
+      ...added.map((role) =>
+        this.dynamoClient.send(
+          new PutCommand({
+            TableName: this.tableName,
+            Item: { PK, SK: this.roleSK(role), GSI1PK: this.roleGSI1PK(role), GSI1SK: userId, userId, role },
+          }),
+        ),
+      ),
+      ...removed.map((role) =>
+        this.dynamoClient.send(new DeleteCommand({ TableName: this.tableName, Key: { PK, SK: this.roleSK(role) } })),
+      ),
+    ]);
+  }
+
+  /** Every user holding `role`. */
+  public async listByRole(role: UserRoles): Promise<User[]> {
+    const userIds: string[] = [];
+    let lastKey: Record<string, any> | undefined;
+    do {
+      const result = await this.dynamoClient.send(
+        new QueryCommand({
+          TableName: this.tableName,
+          IndexName: 'GSI1',
+          KeyConditionExpression: 'GSI1PK = :pk',
+          ExpressionAttributeValues: { ':pk': this.roleGSI1PK(role) },
+          ExclusiveStartKey: lastKey,
+        }),
+      );
+      userIds.push(...(result.Items || []).map((item: any) => item.userId));
+      lastKey = result.LastEvaluatedKey;
+    } while (lastKey);
+
+    return this.batchGet(userIds);
   }
 
   // ---------- User Follow relationships ----------

@@ -1,11 +1,12 @@
 /**
- * Archetypes as topics over Scryfall oracle tags. Each retrain, packages/ml/ccml/topics.py factors
- * recent decks' nonland tag counts into topics and ccml/name_topics.py names them; the result ships
- * in the model bundle as archetypes/topics.json and archetypes/names.json (see @utils/ml/modelBundle).
+ * Archetypes as clusters of decks by Scryfall oracle tags (called topics here). Each retrain,
+ * packages/ml/ccml/topics.py clusters recent decks' nonland tag vectors and ccml/name_topics.py names
+ * the clusters; the result ships in the model bundle as archetypes/topics.json and
+ * archetypes/names.json (see @utils/ml/modelBundle).
  *
  * A deck or card list is classified from its cards alone: each tagged nonland card brings its top
- * topics, and the list's profile is their sum. No recommender call is needed, so the server, the
- * bot-deckbuild lambda and the evaluate stage share these functions.
+ * cluster scores, and the list's profile is their sum. No recommender call is needed, so the server,
+ * the bot-deckbuild lambda and the evaluate stage share these functions.
  *
  * Topic ids are only meaningful within one bundle; anything stored should store the name.
  */
@@ -15,22 +16,15 @@ export const ARCHETYPE_TOPICS_FORMAT = 1;
 // Below this many tagged nonland cards, a deck says too little to name an archetype.
 export const MIN_TAGGED_CARDS = 8;
 
-export interface ArchetypeTopicShape {
-  avgManaValue: number;
-  creatureShare: number;
-  instantSorceryShare: number;
-}
-
 export interface ArchetypeTopic {
   id: string;
-  // Highest-weighted tags, most important first.
+  // The tags that set the topic's decks apart most, most important first.
   topTags: string[];
-  // Names of the nonland cards that load on the topic most heavily.
-  cards: string[];
-  // Share of training decks whose dominant topic this is.
+  // The topic's tag vector: the tags its decks have most beyond decks overall, weighted relative to
+  // the strongest (1), which is what it is named from. Absent on topics built before tag vectors.
+  tagWeights?: [string, number][];
+  // Share of training decks in this topic.
   deckShare: number;
-  // Average makeup of those decks' nonland mainboards.
-  shape: ArchetypeTopicShape;
 }
 
 export interface ArchetypeTopicsFile {

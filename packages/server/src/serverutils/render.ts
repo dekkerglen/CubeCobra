@@ -15,7 +15,6 @@ import { collaboratorIndexDao, cubeDao, notificationDao, patronDao } from '../dy
 import { CubeTooLargeError } from '../errors/CubeTooLargeError';
 import { Request, Response } from '../types/express';
 import { getCatalogVersion } from './cardCatalog';
-import { type AdminAlerts, getAdminAlerts } from './mlRetraining';
 import { getArchetypeData, getServedModelVersion } from './modelPointer';
 import { getBaseUrl } from './util';
 
@@ -248,8 +247,6 @@ interface ReactProps {
   modelVersion?: string;
   // Whether decks are named by archetype topics; the legacy cluster centers have no cube view.
   topicArchetypes?: boolean;
-  // Admins only: retraining runs awaiting approval or failed and not yet dismissed.
-  adminAlerts?: AdminAlerts;
   [key: string]: any;
 }
 
@@ -302,13 +299,6 @@ const render = (
         hideUniversesBeyond: req.user.hideUniversesBeyond,
         hiddenDailyGames: req.user.hiddenDailyGames,
       };
-
-      if ((req.user.roles || []).includes(UserRoles.ADMIN)) {
-        const adminAlerts = await getAdminAlerts();
-        if (adminAlerts) {
-          reactProps.adminAlerts = adminAlerts;
-        }
-      }
     }
 
     reactProps.nitroPayEnabled = process.env.NITROPAY_ENABLED === 'true';

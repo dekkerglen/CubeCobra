@@ -1,12 +1,13 @@
 // Steps of the ML retraining state machine (packages/cdk/lib/ml-pipeline.ts). One bundle, deployed
 // twice: MlPipeline-* (outside the VPC; DynamoDB, S3, Elastic Beanstalk) runs every action but
 // `verify`, which runs in MlPipelineVerify-* (inside the VPC, to reach the recommenders' internal
-// load balancers). Each action that touches a run keeps its RetrainTask up to date for the admin page.
+// load balancers). Each action that touches a run keeps its RetrainTask up to date for the admin page,
+// and the admins get a site notification when a run awaits their approval or fails.
 //
 // Promoting only moves model/current.json: every recommender instance polls it and hot-reloads the
 // model it names, and its GET /version reports the version it actually serves.
 import { retrainTaskDao } from '@server/dynamo/daos';
-import { PromotionTarget, RetrainMode, RetrainTask } from '@utils/datatypes/RetrainTask';
+import { PromotionTarget, RetrainMode, RetrainTask, RetrainTaskStatus } from '@utils/datatypes/RetrainTask';
 import {
   ArchetypeReport,
   BUNDLE_MANIFEST_FILE,
@@ -25,6 +26,7 @@ import {
 import { isPromotionTarget, promoteTarget, runsBucket } from './config';
 import { readyEndpoint } from './environment';
 import { StepFunctionsError, summarizeError } from './errors';
+import { notifyAdmins } from './notify';
 import { deleteObject, objectExists, readJson, readText, writeJson } from './s3';
 import { servesVersion } from './verify';
 
@@ -223,6 +225,7 @@ export const handler = async (event: MlPipelineEvent): Promise<unknown> => {
     case 'awaitApproval':
       // The state now waits for the web server to answer with this token.
       requireTask(await retrainTaskDao.awaitApproval(event.runId, event.taskToken), event.runId);
+      await notifyAdmins(`ML retraining run ${event.runId} is awaiting approval`);
       return null;
 
     case 'promote':
@@ -247,7 +250,11 @@ export const handler = async (event: MlPipelineEvent): Promise<unknown> => {
       const message = summarizeError(event.error);
       console.error(`ML pipeline run ${event.runId ?? '(not created)'} failed: ${message}`);
       if (event.runId) {
-        await retrainTaskDao.markAsFailed(event.runId, message);
+        const task = await retrainTaskDao.markAsFailed(event.runId, message);
+        // A rejection was an admin's own decision.
+        if (task?.status === RetrainTaskStatus.FAILED) {
+          await notifyAdmins(`ML retraining run ${event.runId} failed`);
+        }
       }
       return null;
     }

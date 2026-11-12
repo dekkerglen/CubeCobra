@@ -18,6 +18,9 @@ export interface MlPipelineConfig {
   // refuses.
   bedrockModelId: string;
   bedrockFallbackModelId: string;
+  // Region of the Bedrock Mantle endpoint the naming calls go to. For this account, us-east-2 and
+  // us-west-2 answer 404 "model does not exist" for Opus 5.5 and 4.8; us-east-1 serves them.
+  bedrockRegion: string;
   promoteTargets: {
     beta: MlPromoteTarget;
     production: MlPromoteTarget;
@@ -150,6 +153,7 @@ export const environments: { [key: string]: EnvironmentConfiguration } = {
       exportBucket: 'cubecobra-public',
       bedrockModelId: 'anthropic.claude-opus-5-5',
       bedrockFallbackModelId: 'anthropic.claude-opus-4-8',
+      bedrockRegion: 'us-east-1',
       promoteTargets: {
         beta: {
           dataBucket: 'cubecobra-data-beta',
