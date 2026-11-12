@@ -400,9 +400,10 @@ describe('mergeFeedStreams', () => {
   describe('paging to exhaustion', () => {
     const MAX_ROUNDS = 100;
 
-    // The handler retries an empty page only this many times before answering the client, and
-    // the client renders its "no feed items" state on an empty page with no way to advance. So a
-    // run of empty rounds longer than this strands a real viewer even though the merge would
+    // The handler fetches at most this many rounds (MAX_FEED_FETCH_ROUNDS) before answering the
+    // client, and the client renders its "no feed items" state on an empty page with no way to
+    // advance. So a run of this many empty rounds — not one more — already strands a real viewer,
+    // because the last of them is the round the handler gives up on, even though the merge would
     // eventually have moved past it.
     const MAX_CONSECUTIVE_EMPTY_ROUNDS = 5;
 
@@ -477,9 +478,11 @@ describe('mergeFeedStreams', () => {
         // advance" rather than for the weaker "the merge terminates eventually".
         emptyRounds = page.items.length === 0 ? emptyRounds + 1 : 0;
 
-        if (emptyRounds > MAX_CONSECUTIVE_EMPTY_ROUNDS) {
+        if (emptyRounds >= MAX_CONSECUTIVE_EMPTY_ROUNDS) {
           throw new Error(
-            `drain produced ${emptyRounds} consecutive empty pages, more than the handler's ${MAX_CONSECUTIVE_EMPTY_ROUNDS} retries`,
+            `drain produced ${emptyRounds} consecutive empty pages; the handler fetches at most ` +
+              `${MAX_CONSECUTIVE_EMPTY_ROUNDS} rounds, so it would answer with an empty page and a ` +
+              `lastKey the client cannot advance past, stranding the viewer`,
           );
         }
       }
