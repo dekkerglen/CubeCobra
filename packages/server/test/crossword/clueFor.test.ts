@@ -541,7 +541,40 @@ describe('clueFor, one class at a time', () => {
   });
 
   it('blanks a name word out of one of its cards', () => {
-    expect(clueFor(ENTRIES.nameWord, fakeRng(0), ctx).clue).toBe('Grizzly ____');
+    // 0.9 skips the positional shape below.
+    expect(clueFor(ENTRIES.nameWord, fakeRng(0.9), ctx).clue).toBe('Grizzly ____');
+  });
+
+  describe('a name word by its position in the name', () => {
+    // Lightning Bolt says BOLT in its own text, which is the card naming itself
+    // rather than the rules using the word.
+    const bolt = entry({
+      text: 'BOLT',
+      display: 'Lightning Bolt',
+      entryClass: 'nameWord',
+      sourceCardName: 'Lightning Bolt',
+      sourceCardNames: ['Lightning Bolt'],
+    });
+
+    it('quotes the rules text of the card it is in, on half the draws', () => {
+      expect(clueFor(bolt, fakeRng(0), ctx)).toEqual({
+        clue: 'Second word in the name; ~ deals 3 damage to any target.',
+        clueSource: 'Lightning Bolt',
+      });
+      expect(clueFor(bolt, fakeRng(0.9), ctx).clue).toBe('Lightning ____');
+    });
+
+    it('describes the card by a filter when it has no rules text', () => {
+      const { clue, clueFilter, clueSource } = clueFor(ENTRIES.nameWord, fakeRng(0), ctx);
+      expect(clue.startsWith('Second word in the name; color identity is exactly Green')).toBe(true);
+      expect(clueFilter?.startsWith('ci=g')).toBe(true);
+      expect(clueSource).toBe('Grizzly Bears');
+    });
+
+    it('never clues a word the rules text uses this way', () => {
+      const rulesCtx = { ...ctx, rulesWords: new Set([...ctx.rulesWords, 'BOLT']) };
+      expect(clueFor(bolt, fakeRng(0), rulesCtx).clue).toBe('Lightning ____');
+    });
   });
 
   it('blanks an adjacent pair of words, one blank each', () => {
@@ -1354,6 +1387,8 @@ describe('a clue reports the card it cited', () => {
 
   it('names a card that really is one of the entry sources, for every citing class', () => {
     const sources = ['Grizzly Bears', 'Ancient Bears', 'Sleeping Bears', 'Dancing Bears'];
+    // As a rules word BEARS is always blanked, so every draw here is about the pool.
+    const rulesCtx = { ...ctx, rulesWords: new Set([...ctx.rulesWords, 'BEARS']) };
     const seen = new Set<string>();
     for (const seed of ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h']) {
       const { clue, clueSource } = clueFor(
@@ -1365,7 +1400,7 @@ describe('a clue reports the card it cited', () => {
           sourceCardNames: sources,
         }),
         seedrandom(seed),
-        ctx,
+        rulesCtx,
       );
       expect(sources).toContain(clueSource);
       // The cited card is the one the clue blanked, whichever it was.

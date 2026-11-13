@@ -24,7 +24,8 @@
     "migrate-cube-likes": "tsx src/dynamoMigrations/migrateCubeLikes.ts",
     "migrate-user-follows": "tsx src/dynamoMigrations/migrateUserFollows.ts",
     "transfer-followers": "tsx src/dynamoMigrations/transferFollowers.ts",
-    "backfill-user-role-rows": "tsx src/dynamoMigrations/backfillUserRoleRows.ts"
+    "backfill-user-role-rows": "tsx src/dynamoMigrations/backfillUserRoleRows.ts",
+    "backfill-site-activity": "tsx src/backfillSiteActivity.ts"
   },
   "author": "",
   "license": "ISC",

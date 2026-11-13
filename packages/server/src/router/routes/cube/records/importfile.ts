@@ -7,6 +7,7 @@ import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { resolveExportCard } from 'serverutils/recordExport';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
@@ -144,6 +145,7 @@ export const importFileHandler = async (req: Request, res: Response) => {
 
       const recordId = await recordDao.createRecord(newRecord);
       created.push({ id: recordId, name: entry.name });
+      recordSiteActivity('recordsCreated', req.logger);
 
       // Decks are keyed by player name; the draft wants them by 1-based player index.
       const indexByName = new Map(newRecord.players.map((p, i) => [p.name, i + 1]));

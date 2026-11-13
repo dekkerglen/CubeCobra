@@ -12,6 +12,7 @@ import { blogDao, changelogDao, cubeDao, feedDao, packageDao, userDao } from 'dy
 import { ensureAuth } from 'router/middleware';
 import { cardFromId, getMostReasonableById } from 'serverutils/carddb';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { newCard } from 'serverutils/util';
 
 import { AppError } from '../../../../../errors/AppError';
@@ -206,6 +207,10 @@ export const addtocubeHandler = async (req: Request, res: Response) => {
       },
       cube.id,
     );
+    recordSiteActivity('cubeEdits', req.logger);
+    if (req.body.packid) {
+      recordSiteActivity('packagesAddedToCubes', req.logger);
+    }
 
     if (req.body.packid && createBlogPost && packageTitle) {
       const id = await blogDao.createBlog({

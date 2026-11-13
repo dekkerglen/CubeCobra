@@ -200,7 +200,7 @@ const score = (model: LoadedModel, cases: Cases): GateMetrics => {
   await writeJson(runsBucket, `${prefix}eval.json`, report);
 
   const deckOracleIds = decks.map((deck) => deck.mainboard.map((card) => candidate.indexToOracle[card]!));
-  const archetypes = archetypeReport(candidateDir, live, liveDir, deckOracleIds);
+  const archetypes = archetypeReport(candidateDir, liveDir, deckOracleIds);
   console.log(JSON.stringify(archetypes, null, 2));
   await writeJson(runsBucket, `${prefix}archetypes.json`, archetypes);
   fs.rmSync(workDir, { recursive: true, force: true });

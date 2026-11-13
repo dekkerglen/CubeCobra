@@ -16,6 +16,7 @@ import { buildDeckbuildJob, writeDeckbuildJob } from 'serverutils/deckbuildJob';
 import { publishBotDeckBuild } from 'serverutils/deckbuildQueue';
 import { formatMainboard, formatSideboard, getPicksFromPlayer } from 'serverutils/draftmancerUtil';
 import { matchesSecret } from 'serverutils/passwordPolicy';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -154,6 +155,7 @@ export const handler = async (req: Request, res: Response) => {
     }
 
     const draftId = await draftDao.createDraft(draft);
+    recordSiteActivity('draftsFinished', req.logger);
 
     if (queueEnabled) {
       // Write the claim-check job (needs the created draft id), then enqueue just the id. On

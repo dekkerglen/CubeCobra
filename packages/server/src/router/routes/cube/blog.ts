@@ -9,6 +9,7 @@ import { csrfProtection, ensureAuth, ensureAuthJson } from 'router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta, { summarizeChangelist, truncateForMeta } from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { addNotification, getBaseUrl, getSafeReferrer } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
@@ -127,6 +128,7 @@ export const createBlogHandler = async (req: Request, res: Response) => {
       cube: cube.id,
       title: req.body.title,
     });
+    recordSiteActivity('blogPosts', req.logger);
 
     // The client extracts mentions from the markdown, so the submitted list is untrusted: validate it
     // against the body we actually stored before notifying anyone.

@@ -6,6 +6,7 @@ import Cube from '@utils/datatypes/Cube';
 import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
+import Link from '../base/Link';
 import CubeContext from '../../contexts/CubeContext';
 import UserContext from '../../contexts/UserContext';
 
@@ -181,6 +182,13 @@ const CubeBottomNav: React.FC<CubeBottomNavProps> = ({ cube, activeLink }) => {
             </a>
           );
         })}
+        {shouldShowAds && (
+          <div className="absolute bottom-0 left-0 right-0 h-[50px] flex items-center justify-center text-xs">
+            <Link href="https://www.patreon.com/cubecobra" target="_blank" rel="noopener noreferrer">
+              Remove ads for $1/month on Patreon
+            </Link>
+          </div>
+        )}
       </nav>
     </>
   );

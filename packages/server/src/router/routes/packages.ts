@@ -6,6 +6,7 @@ import { packageDao, patronDao, userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth, ensureRole } from 'router/middleware';
 import { cardFromId, getMostReasonable } from 'serverutils/carddb';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 
 import { Request, Response } from '../../types/express';
 
@@ -473,6 +474,7 @@ export const submitHandler = async (req: Request, res: Response) => {
       voters: [],
       keywords: distinctKeywords,
     });
+    recordSiteActivity('packagesCreated', req.logger);
 
     return res.status(200).send({
       success: 'true',
@@ -512,8 +514,13 @@ export const upvoteHandler = async (req: Request, res: Response) => {
       });
     }
 
+    // Upvoting again succeeds without changing anything, so only a first vote is counted.
+    const firstVote = !pack.voters.includes(req.user.id);
     pack.voters = [...new Set([...pack.voters, req.user.id])];
     await packageDao.update(pack);
+    if (firstVote) {
+      recordSiteActivity('packageUpvotes', req.logger);
+    }
 
     return res.status(200).send({
       success: 'true',

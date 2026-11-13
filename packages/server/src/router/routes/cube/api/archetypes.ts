@@ -11,7 +11,7 @@ const MAX_ORACLES = 20000;
  *
  * Body: { oracles: string[] }, a cube's card list. Returns the archetypes the list supports, best
  * first, each with its share of the list's archetype topics and the cards that carry it most. null
- * when the served archetypes are the legacy cluster centers, which only classify whole decks.
+ * when the served version has no archetypes.
  */
 export const archetypesHandler = async (req: Request, res: Response) => {
   const { oracles } = req.body || {};
@@ -24,7 +24,7 @@ export const archetypesHandler = async (req: Request, res: Response) => {
   }
 
   const data = getArchetypeData();
-  if (data.kind !== 'topics') {
+  if (!data) {
     return res.status(200).json({ archetypes: null });
   }
 

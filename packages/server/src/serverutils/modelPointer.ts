@@ -10,10 +10,9 @@
  * Archetypes are read once at boot from the served bundle: archetype topics over oracle tags
  * (archetypes/topics.json + names.json, see @utils/drafting/topicArchetypes) and kept in memory, so
  * an admin's renames and a newly promoted version's topics reach the site on the next restart. The
- * legacy v3 bundle has no topics; it uses the static embedding cluster centers in src/static/,
- * which classify through the recommender's encoder.
+ * legacy v3 bundle has none, so while it is served decks get no archetype, and the archetypes are
+ * read again whenever the served version changes.
  */
-import type { ClusterCenter } from '@utils/drafting/archetype';
 import type { ArchetypeNamesFile, ArchetypeTopicsFile } from '@utils/drafting/topicArchetypes';
 import {
   ARCHETYPE_NAMES_FILE,
@@ -24,25 +23,23 @@ import {
   modelVersionPrefix,
   parseModelPointer,
 } from '@utils/ml/modelBundle';
-import fs from 'fs';
-import path from 'path';
-
 import { publicS3, s3 } from '../dynamo/s3client';
 
-export type ArchetypeData =
-  | { kind: 'topics'; version: string; topics: ArchetypeTopicsFile; names: ArchetypeNamesFile }
-  | { kind: 'centers'; version: string; centers: ClusterCenter[]; annotations: Record<string, string> };
+export interface ArchetypeData {
+  version: string;
+  topics: ArchetypeTopicsFile;
+  names: ArchetypeNamesFile;
+}
 
 const REFRESH_INTERVAL_MS = 5 * 60 * 1000;
 // Production waits for the first read before taking traffic; don't let a hung S3 call hold boot.
 const INITIAL_READ_TIMEOUT_MS = 10 * 1000;
 
-const STATIC_DIR = path.join(__dirname, '..', 'static');
-
 let servedVersion = LEGACY_MODEL_VERSION;
-// Null until the first successful read; the static centers stand in until then.
+// Null until a served version's archetypes are read, and while the served version has none.
 let archetypes: ArchetypeData | null = null;
-let staticCenters: { centers: ClusterCenter[]; annotations: Record<string, string> } | null = null;
+// The version whose archetypes were last looked for, so a version without any isn't re-read.
+let archetypesCheckedFor: string | null = null;
 let refreshTimer: NodeJS.Timeout | null = null;
 
 const clientFor = (bucket: string) => (bucket === 'cubecobra-public' ? publicS3 : s3);
@@ -89,30 +86,11 @@ export const readArchetypeFiles = async (
   return { topics: JSON.parse(topics), names: JSON.parse(names) };
 };
 
-const loadStaticCenters = (): { centers: ClusterCenter[]; annotations: Record<string, string> } => {
-  if (!staticCenters) {
-    const readJson = <T>(file: string, fallback: T): T => {
-      try {
-        return JSON.parse(fs.readFileSync(path.join(STATIC_DIR, file), 'utf8'));
-      } catch {
-        console.warn(`${file} not found, archetype classification disabled`);
-        return fallback;
-      }
-    };
-    staticCenters = {
-      centers: readJson<ClusterCenter[]>('clusterCenters.json', []),
-      annotations: readJson<Record<string, string>>('annotations.json', {}),
-    };
-  }
-  return staticCenters;
-};
-
 /** The model version this environment serves. */
 export const getServedModelVersion = (): string => servedVersion;
 
-/** The archetypes decks are classified with. */
-export const getArchetypeData = (): ArchetypeData =>
-  archetypes ?? { kind: 'centers', version: servedVersion, ...loadStaticCenters() };
+/** The archetypes decks are classified with, or null when the served version has none. */
+export const getArchetypeData = (): ArchetypeData | null => archetypes;
 
 /** Re-reads the pointer and, when needed, the archetypes (see refreshModelPointer). Never throws. */
 export const refreshModelPointer = async (): Promise<void> => {
@@ -121,13 +99,12 @@ export const refreshModelPointer = async (): Promise<void> => {
   try {
     const version = (await readModelPointer(bucket))?.version ?? LEGACY_MODEL_VERSION;
     // Topics classify from cards alone, so the ones loaded at boot stay valid whatever model is
-    // served, and they change only on a restart. Centers are positions in one encoder's embedding
-    // space, and the recommender hot-swaps its encoder on promotion, so they have to follow it.
-    const reloadArchetypes = archetypes === null || (archetypes.kind === 'centers' && archetypes.version !== version);
-    if (reloadArchetypes) {
+    // served, and they change only on a restart. Until some are loaded, each new version is checked.
+    if (archetypes === null && archetypesCheckedFor !== version) {
       const files = await readArchetypeFiles(bucket, version);
-      archetypes = files ? { kind: 'topics', version, ...files } : { kind: 'centers', version, ...loadStaticCenters() };
-      console.info(`Archetypes: ${archetypes.kind} from model ${version}`);
+      archetypes = files ? { version, ...files } : null;
+      archetypesCheckedFor = version;
+      console.info(files ? `Archetypes from model ${version}` : `Model ${version} has no archetypes`);
     }
     servedVersion = version;
   } catch (err) {

@@ -88,11 +88,7 @@ const ResultCard: React.FC<{ title: string; result: ArchetypeResult }> = ({ titl
                 <Text sm semibold={match === top} className="w-36 shrink-0 truncate">
                   {match.label}
                 </Text>
-                <ScoreBar
-                  rating={match.score}
-                  format={result.scoreKind === 'share' ? formatShare : formatSimilarity}
-                  className="flex-grow"
-                />
+                <ScoreBar rating={match.score} format={formatShare} className="flex-grow" />
               </Flexbox>
             ))}
             {result.archetypes.length > TOP_ARCHETYPES && (

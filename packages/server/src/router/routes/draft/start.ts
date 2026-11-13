@@ -7,6 +7,7 @@ import { cardFromId } from 'serverutils/carddb';
 import { addBasics, basicsBoardFor, getBasicCardsFromCube } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 
 import { NextFunction, Request, Response } from '../../../types/express';
 
@@ -158,6 +159,7 @@ const handler = async (req: Request, res: Response) => {
     addBasics(draft, basicsToAdd);
 
     const draftId = await draftDao.createDraft(draft);
+    recordSiteActivity('draftsStarted', req.logger);
 
     return redirect(req, res, `/draft/${draftId}`);
   } catch (err) {

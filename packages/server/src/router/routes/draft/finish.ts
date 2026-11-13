@@ -7,6 +7,7 @@ import Joi from 'joi';
 import { applyNaiveBotLayout, buildBotDecks } from 'serverutils/botDeckBuilder';
 import { buildDeckbuildJob, writeDeckbuildJob } from 'serverutils/deckbuildJob';
 import { publishBotDeckBuild } from 'serverutils/deckbuildQueue';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { addNotification } from 'serverutils/util';
 
 import { NextFunction, Request, Response } from '../../../types/express';
@@ -119,6 +120,8 @@ export const handler = async (req: Request, res: Response) => {
       firstSeat.mainboard = body.mainboard;
       firstSeat.sideboard = body.sideboard;
     }
+    // Finishing again resubmits the same draft, so only the first finish is counted.
+    const firstFinish = !draft.complete;
     draft.complete = true;
 
     const cube = await cubeDao.getById(draft.cube);
@@ -151,6 +154,9 @@ export const handler = async (req: Request, res: Response) => {
     const draftOwner = draft.owner;
 
     await draftDao.update(draft);
+    if (firstFinish) {
+      recordSiteActivity('draftsFinished', req.logger);
+    }
 
     if (queueEnabled && job) {
       // Write the claim-check job to S3, then enqueue just the draft id. If that fails, the

@@ -2,6 +2,7 @@ import { p1p1PackDao } from 'dynamo/daos';
 import Joi from 'joi';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { bodyValidation } from 'router/middleware';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -34,10 +35,15 @@ export const voteP1P1Handler = async (req: Request, res: Response) => {
     }
 
     // Add vote (this handles updating existing votes)
+    const firstVote = pack.votesByUser[user.id] === undefined;
     const updatedPack = await p1p1PackDao.addVote(packId, user.id, cardIndex);
 
     if (!updatedPack) {
       return res.status(404).json({ error: 'Failed to update pack with vote' });
+    }
+    // Changing a pick goes through here too; only the first vote on a pack is counted.
+    if (firstVote) {
+      recordSiteActivity('p1p1Votes', req.logger);
     }
 
     // Get vote summary

@@ -12,6 +12,7 @@ import cloudwatch from './cloudwatch';
 import { csvRow } from './csv';
 import { CSVtoCards } from './cubefn';
 import { handleRouteError, redirect, render } from './render';
+import { recordSiteActivity } from './siteActivity';
 
 const CARD_HEIGHT = 680;
 const CARD_WIDTH = 488;
@@ -97,6 +98,7 @@ async function updateCubeAndBlog(
       await cubeDao.updateCards(cube.id, cardsToWrite);
 
       const changelist = await changelogDao.createChangelog(changelog, cube.id);
+      recordSiteActivity('cubeEdits', req.logger);
 
       try {
         const id = await blogDao.createBlog({

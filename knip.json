@@ -28,7 +28,6 @@
     },
     "packages/integrationTests": {
       "entry": ["tests/**/*.ts", "scripts/**/*.ts"]
-    },
-    "packages/archetypeAnnotater": {}
+    }
   }
 }

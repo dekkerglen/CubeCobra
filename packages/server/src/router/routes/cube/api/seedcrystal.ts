@@ -12,6 +12,7 @@ import carddb, {
 } from 'serverutils/carddb';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { recommend } from 'serverutils/ml';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { hidesUniversesBeyond } from 'serverutils/universesBeyond';
 import { newCard } from 'serverutils/util';
 
@@ -487,6 +488,7 @@ export const seedCrystalHandler = async (req: Request, res: Response) => {
     let changelistId: string | undefined;
     try {
       changelistId = await changelogDao.createChangelog({ mainboard: { adds: builtCards } }, req.params.id);
+      recordSiteActivity('cubeEdits', req.logger);
     } catch (err) {
       // Changelog failure shouldn't fail the whole flow — the cube is already updated.
       req.logger.error((err as Error).message, (err as Error).stack);

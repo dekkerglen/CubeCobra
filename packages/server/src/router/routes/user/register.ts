@@ -8,6 +8,7 @@ import sendEmail from 'serverutils/email';
 import { hashPassword, newAccountToken, newPasswordValidator, tokensMatch } from 'serverutils/passwordPolicy';
 import { formLimiter } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { hasProfanity, validateEmail } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
@@ -105,6 +106,7 @@ export const postHandler = async (req: Request, res: Response) => {
     const id = await userDao.createUser(newUser);
 
     trackServerEvent('sign_up', { method: 'email' }, { clientId: id, logger: req.logger });
+    recordSiteActivity('signups', req.logger);
 
     if (!skipVerification) {
       await sendEmail(email, 'Please verify your new Cube Cobra account', 'confirm_email', {
@@ -143,6 +145,7 @@ export const confirmHandler = async (req: Request, res: Response) => {
     user.emailVerified = true;
     user.token = '';
     await userDao.update(user);
+    recordSiteActivity('emailVerifications', req.logger);
 
     req.flash('success', 'Email verified. You can now login.');
     return redirect(req, res, '/user/login');

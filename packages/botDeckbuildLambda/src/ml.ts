@@ -58,11 +58,3 @@ export const batchBuild = async (inputs: string[][]): Promise<Ranked[]> =>
 
 export const batchDraft = async (inputs: { pack: string[]; pool: string[] }[]): Promise<Ranked[]> =>
   (await mlRequest<{ results: Ranked[] }>('batchdraft', { inputs })).results;
-
-export const encode = async (oracles: string[]): Promise<number[]> =>
-  (await mlRequest<{ encoding: number[] }>('encode', { oracles })).encoding;
-
-// One batched call that encodes every deck's oracle list at once — used for archetype naming
-// so a batch of drafts doesn't fan out to one /encode call per bot seat.
-export const batchEncode = async (inputs: string[][]): Promise<number[][]> =>
-  (await mlRequest<{ results: number[][] }>('batchencode', { inputs })).results;

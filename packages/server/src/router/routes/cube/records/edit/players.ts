@@ -9,6 +9,7 @@ import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { reconcilePlayerIds, stampSeatPlayerIds } from 'serverutils/playerIdentity';
 import { isPlayedDraft, realignDraftSeats, seatAlignmentUnchanged } from 'serverutils/recordSeats';
 import { redirect } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 
 import { Request, Response } from '../../../../../types/express';
 
@@ -237,6 +238,7 @@ export const editRecordPlayersHandler = async (req: Request, res: Response) => {
     await recordDao.update(record);
 
     if (firstRound) {
+      recordSiteActivity('tournamentsStarted', req.logger);
       req.flash('success', 'Seated the table and paired round one');
       return redirect(req, res, `/cube/record/${req.params.id}?tab=matches`);
     }

@@ -15,6 +15,7 @@ import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { reconcilePlayerIds, stampSeatPlayerIds } from 'serverutils/playerIdentity';
 import { isPlayedDraft } from 'serverutils/recordSeats';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -120,6 +121,9 @@ const resolveCardByOracle = (oracle: string, cubePool: CardType[]) => {
 // and everything else on row 1, column by mana value clamped to 0-7. A sideboard is a
 // single row, so everything there goes on row 0. `cards` is the draft's shared card list;
 // what lands in the pool is the card's index into it, so the two must stay in step.
+/** True when a seat already holds a deck, so writing it again replaces rather than adds. */
+const seatHasDeck = (seat: { mainboard?: number[][][] }): boolean => (seat.mainboard ?? []).flat(3).length > 0;
+
 const createCardPlacer =
   (cubePool: CardType[], cards: CardType[]) => (oracle: string, targetPool: number[][][], isSideboard: boolean) => {
     const selected = resolveCardByOracle(oracle, cubePool);
@@ -215,6 +219,7 @@ export const associateNewDraft = async (
   record.dateLastUpdated = Date.now();
   // Update the record with the draft ID
   await recordDao.update(record);
+  recordSiteActivity('recordDecksAdded', undefined, mainboardOracles.length > 0 ? 1 : 0);
 };
 
 export const associateWithExistingDraft = async (
@@ -242,6 +247,8 @@ export const associateWithExistingDraft = async (
   }
 
   const targetSeat = draft.seats[userIndex - 1];
+  // Replacing a seat's deck isn't a new deck on the record.
+  const added = !!targetSeat && !seatHasDeck(targetSeat) && mainboardOracles.length > 0;
   if (targetSeat) {
     targetSeat.mainboard = deck;
     targetSeat.sideboard = sideboard;
@@ -249,6 +256,7 @@ export const associateWithExistingDraft = async (
 
   // Update the draft with the new seat data
   await draftDao.update(draft);
+  recordSiteActivity('recordDecksAdded', undefined, added ? 1 : 0);
 };
 
 // Write several seats of an existing draft in one pass. Calling associateWithExistingDraft
@@ -270,12 +278,16 @@ export const associateDecksWithExistingDraft = async (
   const cards: CardType[] = draft.cards;
 
   const processCard = createCardPlacer(cubePool, cards);
+  let added = 0;
 
   for (const [rawIndex, deck] of Object.entries(decksByIndex)) {
     // 1-based, matching associateDecksWithNewDraft.
     const seat = draft.seats[Number(rawIndex) - 1];
     if (!seat) {
       continue;
+    }
+    if (!seatHasDeck(seat) && deck.mainboard.length > 0) {
+      added += 1;
     }
 
     // Built fresh rather than cleared in place, so an empty mainboard resets the seat
@@ -296,6 +308,7 @@ export const associateDecksWithExistingDraft = async (
   }
 
   await draftDao.update(draft);
+  recordSiteActivity('recordDecksAdded', undefined, added);
 };
 
 // Build a single draft with EVERY player's deck placed at once, then create it in
@@ -369,6 +382,11 @@ export const associateDecksWithNewDraft = async (
   record.draft = id;
   record.dateLastUpdated = Date.now();
   await recordDao.update(record);
+  recordSiteActivity(
+    'recordDecksAdded',
+    undefined,
+    record.players.filter((_, idx) => (decksByIndex[idx + 1]?.mainboard.length ?? 0) > 0).length,
+  );
 };
 
 export const uploadDeckHandler = async (req: Request, res: Response) => {

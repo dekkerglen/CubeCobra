@@ -5,6 +5,7 @@ import { csrfProtection, ensureAuth } from 'router/middleware';
 import { bodyValidation } from 'router/middleware';
 import { cardFromId } from 'serverutils/carddb';
 import { isCubeViewable } from 'serverutils/cubefn';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { getBotPrediction } from 'serverutils/userUtil';
 
 import { Request, Response } from '../../../../types/express';
@@ -152,6 +153,7 @@ export const createP1P1FromPackHandler = async (req: Request, res: Response) => 
       },
       s3Data,
     );
+    recordSiteActivity('p1p1PacksCreated', req.logger);
 
     return res.status(200).json({
       success: true,

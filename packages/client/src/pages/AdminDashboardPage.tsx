@@ -26,6 +26,7 @@ const TABS = [
   { key: 'pathanalysis', label: 'Path Analysis', Content: lazy(() => import('components/admin/PathAnalysisTab')) },
   { key: 'deckbuild', label: 'Bot Deckbuild', Content: lazy(() => import('components/admin/DeckbuildTab')) },
   { key: 'dailygames', label: 'Daily Games', Content: lazy(() => import('components/admin/DailyGamesTab')) },
+  { key: 'siteactivity', label: 'Site Activity', Content: lazy(() => import('components/admin/SiteActivityTab')) },
 ];
 
 interface AdminDashboardPageProps {

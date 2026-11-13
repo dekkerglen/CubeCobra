@@ -32,6 +32,7 @@ import { RetrainTaskDynamoDao } from './dao/RetrainTaskDynamoDao';
 import { PatronDynamoDao } from './dao/PatronDynamoDao';
 import { PodcastDynamoDao } from './dao/PodcastDynamoDao';
 import { RecordDynamoDao } from './dao/RecordDynamoDao';
+import { SiteActivityDynamoDao } from './dao/SiteActivityDynamoDao';
 import { SynergyConnectPuzzleDynamoDao } from './dao/SynergyConnectPuzzleDynamoDao';
 import { SynergyConnectSubmissionDynamoDao } from './dao/SynergyConnectSubmissionDynamoDao';
 import { SynergyConnectUserStatsDynamoDao } from './dao/SynergyConnectUserStatsDynamoDao';
@@ -112,3 +113,4 @@ export const collaboratorIndexDao: CollaboratorIndexDynamoDao = new Collaborator
   documentClient,
   tableName,
 );
+export const siteActivityDao: SiteActivityDynamoDao = new SiteActivityDynamoDao(documentClient, tableName);

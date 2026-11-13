@@ -245,7 +245,7 @@ interface ReactProps {
   // ML model version this environment serves (see modelPointer); the browser draft bot
   // loads its models from /model/<modelVersion>/ on the CDN.
   modelVersion?: string;
-  // Whether decks are named by archetype topics; the legacy cluster centers have no cube view.
+  // Whether the served version has archetype topics; without them nothing is classified.
   topicArchetypes?: boolean;
   [key: string]: any;
 }
@@ -305,7 +305,7 @@ const render = (
     reactProps.baseUrl = getBaseUrl();
     reactProps.cdnBaseUrl = process.env.CDN_BASE_URL || '';
     reactProps.modelVersion = getServedModelVersion();
-    reactProps.topicArchetypes = getArchetypeData().kind === 'topics';
+    reactProps.topicArchetypes = getArchetypeData() !== null;
     reactProps.captchaSiteKey = process.env.CAPTCHA_SITE_KEY;
     reactProps.version = process.env.CUBECOBRA_VERSION;
     reactProps.cardDbVersion = getCatalogVersion();

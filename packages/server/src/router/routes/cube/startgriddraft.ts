@@ -4,6 +4,7 @@ import { body } from 'express-validator';
 import { addBasics, basicsBoardFor, createPool, getBasicCardsFromCube, shuffle } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 
 import { Request, Response } from '../../../types/express';
 
@@ -98,6 +99,7 @@ export const startGridDraftHandler = async (req: Request, res: Response) => {
     }
 
     const id = await draftDao.createDraft(doc);
+    recordSiteActivity('gridDraftsStarted', req.logger);
 
     return redirect(req, res, `/cube/griddraft/${id}`);
   } catch (err) {

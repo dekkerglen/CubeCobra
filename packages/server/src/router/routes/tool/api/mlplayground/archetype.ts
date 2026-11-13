@@ -1,4 +1,3 @@
-import { cosineSimilarity } from '@utils/drafting/archetype';
 import { assessColors } from '@utils/drafting/assessColors';
 import { rankArchetypesForOracles } from 'serverutils/archetype';
 import {
@@ -16,6 +15,18 @@ import { jsonLimiter } from 'serverutils/rateLimiters';
 
 import { Request, Response } from '../../../../../types/express';
 
+const cosineSimilarity = (a: number[], b: number[]): number => {
+  let dot = 0;
+  let normA = 0;
+  let normB = 0;
+  for (let i = 0; i < a.length; i += 1) {
+    dot += a[i]! * b[i]!;
+    normA += a[i]! * a[i]!;
+    normB += b[i]! * b[i]!;
+  }
+  return normA === 0 || normB === 0 ? 0 : dot / Math.sqrt(normA * normB);
+};
+
 const listColors = (list: ResolvedList): string[] =>
   assessColors(
     list.cards.map((card) => {
@@ -26,8 +37,8 @@ const listColors = (list: ResolvedList): string[] =>
 
 /**
  * The encoder's 128-dimension embedding of a list, its archetypes ranked the way drafts name decks
- * (by share of the list's archetype topics, or for the legacy model by closest cluster center),
- * and, given a second list, how alike the two embeddings are.
+ * (by share of the list's archetype topics), and, given a second list, how alike the two
+ * embeddings are.
  *
  * Body: { cards, compare?, substitute?, ignoreBasics? }
  *   substitute   - give the model stand-ins for cards it doesn't know. Off by default: drafts
@@ -58,12 +69,12 @@ export const archetypeHandler = async (req: Request, res: Response) => {
     const results = await Promise.all(
       lists.map(async (list, index) => {
         const embedding = embeddings[index] ?? [];
-        // Topics read the pasted cards themselves; the legacy centers read the encoder's embedding.
+        // Archetypes read the pasted cards themselves, not the model's stand-ins.
         const oracles = list.cards
           .filter((card) => !ignoreBasics || !isBasicLand(list.details.get(card.oracle)))
           .map((card) => card.oracle);
-        const { scoreKind, archetypes } = await rankArchetypesForOracles(oracles, async () => embedding);
-        return { list: summarize(list), embedding, colors: listColors(list), scoreKind, archetypes };
+        const archetypes = await rankArchetypesForOracles(oracles);
+        return { list: summarize(list), embedding, colors: listColors(list), archetypes };
       }),
     );
 
