@@ -239,7 +239,7 @@ describe('UserDynamoDao role rows', () => {
 
     expect(admins.map((user) => user.id)).toEqual(['admin-1', 'admin-2']);
     const query = send.mock.calls.map(([command]) => command).find((command) => command instanceof QueryCommand);
-    expect(query.input).toMatchObject({
+    expect(query?.input).toMatchObject({
       IndexName: 'GSI1',
       KeyConditionExpression: 'GSI1PK = :pk',
       ExpressionAttributeValues: { ':pk': 'USER#ROLE#Admin' },

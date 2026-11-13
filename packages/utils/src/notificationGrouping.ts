@@ -26,8 +26,10 @@ export type NotificationDisplayEntry = Notification | NotificationGroup;
 export const isNotificationGroup = (entry: NotificationDisplayEntry): entry is NotificationGroup =>
   (entry as NotificationGroup).isGroup === true;
 
-// A notification can only participate in grouping if it carries both a type and a subject.
-const groupKeyOf = (n: Notification): string | null => (n.type && n.subject ? `${n.type}:${n.subject}` : null);
+// A notification can only participate in grouping if it carries both a type and a subject. Read and
+// unread notifications never share a group, so already-seen items don't inflate a "new" count.
+const groupKeyOf = (n: Notification): string | null =>
+  n.type && n.subject ? `${n.type}:${n.subject}:${n.status}` : null;
 
 const mergedBody = (type: NotificationType, count: number, subjectName?: string): string => {
   const name = subjectName || 'your content';
