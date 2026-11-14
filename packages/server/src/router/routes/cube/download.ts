@@ -1,13 +1,20 @@
-import { cardCollectorNumber, cardName, cardSet } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
-import { CubeCards } from '@utils/datatypes/Cube';
+import Cube, { CubeCards } from '@utils/datatypes/Cube';
 import filterutil, { FilterFunction, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
-import { sortForDownload } from '@utils/sorting/Sort';
+import { getCubeSorts, sortForDownload } from '@utils/sorting/Sort';
 import { cubeDao } from 'dynamo/daos';
 import type { NextFunction, Request as ExpressRequest, Response as ExpressResponse } from 'express';
 import { cardFromId } from 'serverutils/carddb';
 import { CSV_HEADER, exportToMtgo, writeCard } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
+import {
+  exportCardName,
+  exportFileName,
+  exportTextValue,
+  forgeLine,
+  setAndNumberLine,
+  xmageLine,
+} from 'serverutils/textExport';
 import { expensiveGetLimiter } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect } from 'serverutils/render';
 
@@ -62,16 +69,30 @@ const filterLimiter = expensiveGetLimiter(60_000, 30);
 const limitFilteredDownloads = (req: ExpressRequest, res: ExpressResponse, next: NextFunction) =>
   req.query.filter ? filterLimiter(req, res, next) : next();
 
-const sortCardsByQuery = (req: Request, cards: Card[], filter: FilterFunction | null): Card[] => {
+const sortCardsByQuery = (
+  req: Request,
+  cards: Card[],
+  filter: FilterFunction | null,
+  cube: Cube,
+  sortByDefault = true,
+): Card[] => {
   const filteredCards = filter ? cards.filter(filter) : cards;
+
+  if (req.query.nosort === 'true' || (!sortByDefault && req.query.primary === undefined)) {
+    return filteredCards;
+  }
+
+  const showOther = req.query.showother !== undefined ? req.query.showother === 'true' : cube.showUnsorted || false;
+  const [primary, secondary, tertiary, quaternary] = getCubeSorts(cube);
 
   return sortForDownload(
     filteredCards,
-    req.query.primary as string | undefined,
-    req.query.secondary as string | undefined,
-    req.query.tertiary as string | undefined,
-    req.query.quaternary as string | undefined,
-    req.query.showother === 'true', // Coerce string parameter to boolean
+    (req.query.primary as string | undefined) ?? primary,
+    (req.query.secondary as string | undefined) ?? secondary,
+    (req.query.tertiary as string | undefined) ?? tertiary,
+    (req.query.quaternary as string | undefined) ?? quaternary,
+    showOther,
+    cube,
   );
 };
 
@@ -103,13 +124,13 @@ export const cubecobraHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards, filter);
+    allCards = sortCardsByQuery(req, allCards, filter, cube);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(cube.name)}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     for (const card of allCards) {
-      res.write(`${cardName(card)}\r\n`);
+      res.write(`${exportCardName(card)}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -123,6 +144,8 @@ export const csvHandler = async (req: Request, res: Response) => {
       req.flash('danger', 'Invalid cube ID');
       return redirect(req, res, '/404');
     }
+
+    const filter = getQueryFilter(req);
 
     const cube = await cubeDao.getById(req.params.id);
 
@@ -147,7 +170,7 @@ export const csvHandler = async (req: Request, res: Response) => {
       }
     }
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.csv`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(cube.name)}.csv`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write(`${CSV_HEADER}\r\n`);
@@ -156,7 +179,8 @@ export const csvHandler = async (req: Request, res: Response) => {
     for (const boardKey of boardsToExport) {
       const boardCards = cards[boardKey];
       if (!Array.isArray(boardCards)) continue;
-      for (const card of boardCards as Card[]) {
+      // Bare CSV URLs serve as backups, so keep every card in stored order unless a sort is requested.
+      for (const card of sortCardsByQuery(req, boardCards as Card[], filter, cube, false)) {
         writeCard(res, card, boardKey);
       }
     }
@@ -196,16 +220,16 @@ export const forgeHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards, filter);
+    allCards = sortCardsByQuery(req, allCards, filter, cube);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(cube.name)}.dck`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     res.write('[metadata]\r\n');
-    res.write(`name=${cube.name}\r\n`);
+    res.write(`name=${exportTextValue(cube.name)}\r\n`);
     res.write('[Main]\r\n');
     for (const card of allCards) {
-      res.write(`1 ${cardName(card)}|${cardSet(card).toUpperCase()}\r\n`);
+      res.write(`1 ${forgeLine(card)}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -242,7 +266,7 @@ export const mtgoHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards, filter);
+    allCards = sortCardsByQuery(req, allCards, filter, cube);
 
     // MTGO format uses main/side split; put all selected boards in main
     return exportToMtgo(res, cube.name, allCards, []);
@@ -280,13 +304,13 @@ export const xmageHandler = async (req: Request, res: Response) => {
       allCards = allCards.concat(boardCards as Card[]);
     }
 
-    allCards = sortCardsByQuery(req, allCards, filter);
+    allCards = sortCardsByQuery(req, allCards, filter, cube);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.dck`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(cube.name)}.dck`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
     for (const card of allCards) {
-      res.write(`1 [${cardSet(card).toUpperCase()}:${cardCollectorNumber(card)}] ${cardName(card)}\r\n`);
+      res.write(`1 ${xmageLine(card)}\r\n`);
     }
     return res.end();
   } catch (err) {
@@ -314,7 +338,7 @@ export const versionedHandler = async (req: Request, res: Response) => {
 
     const boardsToExport = getBoardsToExport(req, cards);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(cube.name)}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
 
@@ -325,7 +349,7 @@ export const versionedHandler = async (req: Request, res: Response) => {
         const details = cardFromId(card.cardID);
         card.details = details;
       }
-      const sorted = sortCardsByQuery(req, list as Card[], filter);
+      const sorted = sortCardsByQuery(req, list as Card[], filter, cube);
 
       // Put all selected boards in main
       // Moxfield/Archidekt/Draftmancer all use different rules
@@ -334,18 +358,7 @@ export const versionedHandler = async (req: Request, res: Response) => {
         // 1 Cardname
         // 1 Cardname (SET)
         // 1 Cardname (SET) 123
-        const set = cardSet(card).toUpperCase();
-        const collectorNumber = cardCollectorNumber(card);
-
-        let line = `1 ${cardName(card)}`;
-        if (set) {
-          line += ` (${set})`;
-          if (collectorNumber) {
-            line += ` ${collectorNumber}`;
-          }
-        }
-
-        res.write(`${line}\r\n`);
+        res.write(`1 ${setAndNumberLine(card)}\r\n`);
       }
 
       res.write(`\r\n`);
@@ -378,7 +391,7 @@ export const plaintextHandler = async (req: Request, res: Response) => {
     // Determine which boards to export
     const boardsToExport = getBoardsToExport(req, cards);
 
-    res.setHeader('Content-disposition', `attachment; filename=${cube.name.replace(/\W/g, '')}.txt`);
+    res.setHeader('Content-disposition', `attachment; filename=${exportFileName(cube.name)}.txt`);
     res.setHeader('Content-type', 'text/plain');
     res.charset = 'UTF-8';
 
@@ -389,11 +402,11 @@ export const plaintextHandler = async (req: Request, res: Response) => {
         const details = cardFromId(card.cardID);
         card.details = details;
       }
-      const sorted = sortCardsByQuery(req, list as Card[], filter);
+      const sorted = sortCardsByQuery(req, list as Card[], filter, cube);
 
       res.write(`# ${boardname}\r\n`);
       for (const card of sorted) {
-        res.write(`${cardName(card)}\r\n`);
+        res.write(`${exportCardName(card)}\r\n`);
       }
       res.write(`\r\n`);
     }
@@ -413,7 +426,7 @@ export const routes = [
   {
     path: '/csv/:id',
     method: 'get',
-    handler: [csvHandler],
+    handler: [limitFilteredDownloads, csvHandler],
   },
   {
     path: '/forge/:id',

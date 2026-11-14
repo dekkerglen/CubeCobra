@@ -36,6 +36,10 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 
 ## Bug Fixes
 
+- Exports now contain every card in your cube exactly once. Custom cards and vouchers were being left out of downloads, and cards that fit more than one sort category could be written out several times, depending on how the page happened to be sorted.
+- Exporting to MTGO, Forge or XMage no longer produces a broken file when the cube holds custom cards or vouchers. MTGO listed every custom card as a single "Invalid Card" entry, and Forge and XMage wrote lines their importers reject.
+- A card or cube named with a line break no longer adds phantom cards to a downloaded list.
+- The Export menu no longer has a Use Sort option. Exports always use a fixed order, so a download no longer changes with the page's sort or the Show Unsorted Cards setting.
 - Sorting by Color Category puts Hybrid and Multicolored cards before Colorless again, as it did before December 2024. This affects the cube list views, deck views, and exports.
 - Smart Search says how many pages of suggestions there are, and jumping to a later page no longer waits on every page before it. A search with no results says so instead of showing Page 1 of 0.
 - Smart Search now finds conspiracies, planes, schemes, contraptions, and other cards that start the game outside your deck. Searching for them used to return no results.

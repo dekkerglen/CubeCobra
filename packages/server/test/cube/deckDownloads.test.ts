@@ -154,4 +154,82 @@ describe('Deck downloads', () => {
     expect(lines[0]).toBe('Quantity,"Name",Scryfall,Zone');
     expect(lines[1]).toBe('"1","\'=cmd|""/c calc""!A1","card-1","main"');
   });
+  describe('formatting and escaping', () => {
+    // Seat names are user-supplied, and the text formats have no quoting, so they are the deck
+    // equivalent of the cube-name injection the cube exports guard against.
+    const seatedDeck = (seatName: string, cards: any[], mainboard: number[][][] = [[[0]]]) => {
+      const built = createCompletedSoloDraft({ id: 'deck-2', cube: cube.id, cards });
+      built.seats[0]!.name = seatName;
+      built.seats[0]!.mainboard = mainboard;
+      built.seats[0]!.sideboard = [[[]]];
+      return built;
+    };
+
+    const run = async (handler: any, built: any) => {
+      (draftDao.getById as jest.Mock).mockResolvedValue(built);
+      (cubefn.isCubeViewable as jest.Mock).mockReturnValue(true);
+      const stream = createStreamingResponse();
+      await handler(createRequest({ id: 'deck-2', seat: '0' }), stream.res);
+      return stream;
+    };
+
+    const unprinted = createCard({
+      cardID: 'custom-card',
+      custom_name: 'My Custom',
+      details: createCardDetails({ name: 'Invalid Card', oracle_id: 'oracle-2', set: '', collector_number: '' }),
+    });
+
+    beforeEach(() => {
+      (carddb.cardFromId as jest.Mock).mockImplementation((id: string) =>
+        id === 'custom-card' ? unprinted.details : card.details,
+      );
+    });
+
+    it.each([
+      ['xmage', downloadXmageHandler],
+      ['forge', downloadForgeHandler],
+    ])('%s: stops a seat name from adding a line of its own', async (_name, handler) => {
+      const stream = await run(handler, seatedDeck('Evil\r\n1 Black Lotus', [card]));
+
+      expect(stream.body()).toContain('Evil 1 Black Lotus');
+      expect(stream.body()).not.toMatch(/\r\n1 Black Lotus/);
+    });
+
+    it('falls back to a usable filename when the seat name has no word characters', async () => {
+      const stream = await run(downloadTxtHandler, seatedDeck('キューブ', [card]));
+
+      expect(stream.headers['content-disposition']).toBe('attachment; filename=deck.txt');
+    });
+
+    it('xmage: omits the version block for a card with no printing', async () => {
+      const stream = await run(downloadXmageHandler, seatedDeck('Seat', [unprinted]));
+
+      expect(stream.body()).toContain('1 My Custom');
+      expect(stream.body()).not.toContain('[:]');
+    });
+
+    it('forge: drops the set separator for a card with no printing', async () => {
+      const stream = await run(downloadForgeHandler, seatedDeck('Seat', [unprinted]));
+
+      expect(stream.body()).toContain('1 My Custom\r\n');
+    });
+
+    it.each([
+      ['txt', downloadTxtHandler],
+      ['mtgo', downloadMtgoHandler],
+      ['cockatrice', downloadCockatriceHandler],
+      ['arena', downloadArenaHandler],
+    ])('%s: names a custom card by its own name, not the catalog placeholder', async (_name, handler) => {
+      const stream = await run(handler, seatedDeck('Seat', [unprinted]));
+
+      expect(stream.body()).toContain('My Custom');
+      expect(stream.body()).not.toContain('Invalid Card');
+    });
+
+    it('still groups identical cards behind a quantity', async () => {
+      const stream = await run(downloadCockatriceHandler, seatedDeck('Seat', [unprinted], [[[0, 0]]]));
+
+      expect(stream.body()).toContain('2x My Custom');
+    });
+  });
 });

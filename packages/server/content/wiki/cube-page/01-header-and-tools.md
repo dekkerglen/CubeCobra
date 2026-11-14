@@ -69,9 +69,14 @@ The **Export** menu downloads the list in whichever format your tools need:
 - Print and Play (.pdf), which asks for a few options and then produces a PDF of card images, nine
   to a page at actual card size on US Letter paper, for proxying the cube at home.
 
-Three checkboxes apply to every format: **Export ALL boards** includes the maybeboard and any
-custom boards instead of just the mainboard, **Use Sort** writes the cards in your current sort
-order, and **Use Filter** exports only the cards matching your current filter.
+Two checkboxes apply to every format: **Export ALL boards** includes the maybeboard and any
+custom boards instead of just the mainboard, and **Use Filter** exports only the cards matching your
+current filter. If you are exporting a CSV as a backup, clear the filter first or untick **Use
+Filter**, or the file will hold only the cards you are currently looking at.
+
+Exports always use a fixed order and always include every card in scope, so a download never repeats
+or omits a card no matter how the page happens to be sorted. Changing the sort or the "Show Unsorted
+cards" setting on the page does not change what you get.
 
 Signed-in users also get **Clone Cube** at the top of this menu; see below.
 

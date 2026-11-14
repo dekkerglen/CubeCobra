@@ -2,7 +2,7 @@ import React, { useContext, useEffect, useMemo, useState } from 'react';
 
 import Card, { CardDetails } from '@utils/datatypes/Card';
 import { findViewBySlug } from '@utils/datatypes/Cube';
-import { sortForDownload } from '@utils/sorting/Sort';
+import { EXPORT_SORTS, sortForDownload } from '@utils/sorting/Sort';
 
 import CubeContext from '../../contexts/CubeContext';
 import DisplayContext from '../../contexts/DisplayContext';
@@ -17,7 +17,6 @@ import TextArea from '../base/TextArea';
 interface ArenaExportModalProps {
   isOpen: boolean;
   setOpen: (open: boolean) => void;
-  isSortUsed: boolean;
   isFilterUsed: boolean;
   exportAllBoards?: boolean;
 }
@@ -25,17 +24,13 @@ interface ArenaExportModalProps {
 const ArenaExportModal: React.FC<ArenaExportModalProps> = ({
   isOpen,
   setOpen,
-  isSortUsed,
   isFilterUsed,
   exportAllBoards = false,
 }) => {
   const { alerts, addAlert, dismissAlerts } = useAlerts();
   const [text, setText] = useState('');
-  const { cube, sortPrimary, sortSecondary, sortTertiary, sortQuaternary } = useContext(CubeContext);
-  const {
-    activeView,
-    displayOptions: { showUnsorted },
-  } = useContext(DisplayContext);
+  const { cube } = useContext(CubeContext);
+  const { activeView } = useContext(DisplayContext);
   const { cardFilter } = useContext(FilterContext)!;
 
   // Derive boards to export
@@ -76,19 +71,10 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({
         cards = cards.filter(cardFilter.filter);
       }
 
-      let sortedCards = cards;
-      if (isSortUsed) {
-        //Use ?? in case the sorts are null. Undefined results in the defaults within sortForDownload being used
-        sortedCards = sortForDownload(
-          cards,
-          sortPrimary ?? undefined,
-          sortSecondary ?? undefined,
-          sortTertiary ?? undefined,
-          sortQuaternary ?? undefined,
-          showUnsorted,
-          cube,
-        );
-      }
+      // Fixed ordering, and showOther so nothing in scope is dropped - same contract as the
+      // download links.
+      const [primary, secondary, tertiary, quaternary] = EXPORT_SORTS;
+      const sortedCards = sortForDownload(cards, primary, secondary, tertiary, quaternary, true, cube);
 
       let exportText = '';
       for (const card of sortedCards) {
@@ -121,20 +107,7 @@ const ArenaExportModal: React.FC<ArenaExportModalProps> = ({
     }
 
     generateArenaExport();
-  }, [
-    cube.cards,
-    isFilterUsed,
-    isSortUsed,
-    cardFilter,
-    sortPrimary,
-    sortSecondary,
-    sortTertiary,
-    sortQuaternary,
-    showUnsorted,
-    cube,
-    exportAllBoards,
-    currentViewBoards,
-  ]);
+  }, [cube.cards, isFilterUsed, cardFilter, cube, exportAllBoards, currentViewBoards]);
 
   async function copyToClipboard() {
     //Dismiss any remaining alerts before adding the new one, so multiple don't stack up
