@@ -31,23 +31,23 @@
   "license": "ISC",
   "description": "",
   "devDependencies": {
-    "@types/node": "^24.10.0",
+    "@types/node": "^22.20.5",
     "tsconfig-paths": "^4.2.0",
-    "tsx": "^4.19.0",
+    "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   },
   "dependencies": {
     "@aws-crypto/sha256-js": "^5.2.0",
-    "@aws-sdk/client-cloudformation": "^3.927.0",
-    "@aws-sdk/client-dynamodb": "^3.948.0",
-    "@aws-sdk/client-ecs": "^3.927.0",
-    "@aws-sdk/client-s3": "^3.927.0",
-    "@aws-sdk/credential-providers": "^3.927.0",
-    "@aws-sdk/lib-dynamodb": "^3.948.0",
-    "@aws-sdk/lib-storage": "^3.927.0",
-    "@aws-sdk/util-dynamodb": "^3.927.0",
+    "@aws-sdk/client-cloudformation": "^3.1166.0",
+    "@aws-sdk/client-dynamodb": "^3.1166.0",
+    "@aws-sdk/client-ecs": "^3.1166.0",
+    "@aws-sdk/client-s3": "^3.1166.0",
+    "@aws-sdk/credential-providers": "^3.1166.0",
+    "@aws-sdk/lib-dynamodb": "^3.1166.0",
+    "@aws-sdk/lib-storage": "^3.1166.0",
+    "@aws-sdk/util-dynamodb": "^3.996.9",
     "archiver": "^7.0.1",
-    "dotenv": "^17.2.3",
-    "module-alias": "^2.2.3"
+    "dotenv": "^18.0.10",
+    "module-alias": "^2.3.5"
   }
 }

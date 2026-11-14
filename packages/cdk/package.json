@@ -17,20 +17,20 @@
   },
   "type": "commonjs",
   "devDependencies": {
-    "@swc/core": "^1.15.43",
+    "@swc/core": "^1.16.22",
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",
-    "@types/node": "22.7.9",
-    "aws-cdk": "^2.1137.0",
+    "@types/node": "^22.20.5",
+    "aws-cdk": "^2.1148.1",
     "jest": "^30.5.2",
-    "tsx": "^4.19.0",
+    "tsx": "^4.23.15",
     "typescript": "^7.0.2"
   },
   "dependencies": {
-    "aws-cdk-lib": "2.260.0",
-    "aws-cdk-local": "^3.0.1",
-    "constructs": "^10.0.0",
-    "dotenv": "^16.0.0",
+    "aws-cdk-lib": "2.276.0",
+    "aws-cdk-local": "^3.1.0",
+    "constructs": "^10.8.1",
+    "dotenv": "^18.0.10",
     "source-map-support": "^0.5.21"
   }
 }

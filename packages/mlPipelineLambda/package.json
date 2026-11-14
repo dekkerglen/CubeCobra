@@ -12,16 +12,16 @@
     "test": "jest"
   },
   "dependencies": {
-    "@aws-sdk/client-elastic-beanstalk": "^3.927.0",
-    "@aws-sdk/client-s3": "^3.927.0",
+    "@aws-sdk/client-elastic-beanstalk": "^3.1166.0",
+    "@aws-sdk/client-s3": "^3.1166.0",
     "archiver": "^7.0.1"
   },
   "devDependencies": {
-    "@swc/core": "^1.15.43",
+    "@swc/core": "^1.16.22",
     "@swc/jest": "^0.2.39",
     "@types/jest": "^30.0.0",
-    "@types/node": "^20.11.16",
-    "esbuild": "^0.28.1",
+    "@types/node": "^22.20.5",
+    "esbuild": "^0.28.2",
     "jest": "^30.5.2",
     "typescript": "^7.0.2"
   }

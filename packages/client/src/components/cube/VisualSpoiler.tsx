@@ -51,12 +51,7 @@ const VisualSpoiler: React.FC<VisualSpoilerProps> = ({ cards }) => {
       const byKey = new Map<string, CardType[]>();
       for (const card of section) {
         const key = `${card.board}|${cardName(card)}`;
-        const group = byKey.get(key);
-        if (group) {
-          group.push(card);
-        } else {
-          byKey.set(key, [card]);
-        }
+        byKey.set(key, [...(byKey.get(key) ?? []), card]);
       }
       return Array.from(byKey.values());
     });

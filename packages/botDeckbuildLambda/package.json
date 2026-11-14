@@ -13,11 +13,11 @@
   "license": "ISC",
   "description": "Consumes draft ids from SQS and builds bot (AI opponent) decks off the request path.",
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.927.0",
+    "@aws-sdk/client-s3": "^3.1166.0",
     "archiver": "^7.0.1"
   },
   "devDependencies": {
-    "dotenv": "^16.0.0",
-    "esbuild": "^0.28.1"
+    "dotenv": "^18.0.10",
+    "esbuild": "^0.28.2"
   }
 }
