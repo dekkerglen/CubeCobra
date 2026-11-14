@@ -24,6 +24,7 @@ import { isCubeViewable } from 'serverutils/cubefn';
 import { getImageData } from 'serverutils/imageutil';
 import generateMeta, { truncateForMeta } from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { addNotification, getBaseUrl } from 'serverutils/util';
 
 import { Request, Response } from '../../types/express';
@@ -322,6 +323,7 @@ export const addCommentHandler = async (req: Request, res: Response) => {
   };
 
   const createdComment = await commentDao.createComment(comment);
+  recordSiteActivity('comments', req.logger);
   const id = createdComment.id;
 
   if (isNotifiableCommentType(type)) {

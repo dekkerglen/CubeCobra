@@ -11,6 +11,7 @@ import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { reconcilePlayerIds, stampSeatPlayerIds } from 'serverutils/playerIdentity';
 import { isPlayedDraft, realignDraftSeats, seatAlignmentUnchanged } from 'serverutils/recordSeats';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 
 import { v4 as uuidv4 } from 'uuid';
 
@@ -599,6 +600,7 @@ export const transcribeNewRecordHandler = async (req: Request, res: Response) =>
     if (!createdRecordId) {
       return res.status(500).json({ success: 'false', message: 'Error creating record' });
     }
+    recordSiteActivity('recordsCreated', req.logger);
 
     // Delegating rather than reimplementing: everything a save does — players, rounds,
     // trophies, overrides, decks and the draft they hang off — is one long handler, and a

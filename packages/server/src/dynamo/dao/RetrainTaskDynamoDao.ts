@@ -10,7 +10,7 @@ import {
 import { BaseDynamoDao } from './BaseDynamoDao';
 
 // Records of ML retraining state machine runs. Written by the ML pipeline lambda as the run
-// moves through its stages; read and acted on (approve, reject, acknowledge) by the admin page.
+// moves through its stages; read and acted on (approve, reject) by the admin page.
 export class RetrainTaskDynamoDao extends BaseDynamoDao<RetrainTask, RetrainTask> {
   constructor(dynamoClient: DynamoDBDocumentClient, tableName: string) {
     super(dynamoClient, tableName);
@@ -68,7 +68,6 @@ export class RetrainTaskDynamoDao extends BaseDynamoDao<RetrainTask, RetrainTask
       taskToken: item.taskToken,
       decidedBy: item.decidedBy,
       errorMessage: item.errorMessage,
-      acknowledged: item.acknowledged,
       completedAt: item.completedAt,
       dateCreated: item.dateCreated,
       dateLastUpdated: item.dateLastUpdated,
@@ -186,12 +185,6 @@ export class RetrainTaskDynamoDao extends BaseDynamoDao<RetrainTask, RetrainTask
     });
   }
 
-  public async acknowledge(id: string): Promise<RetrainTask | undefined> {
-    return this.modify(id, (task) => {
-      task.acknowledged = true;
-    });
-  }
-
   public async listAll(
     limit: number = 50,
     lastKey?: Record<string, any>,
@@ -218,14 +211,5 @@ export class RetrainTaskDynamoDao extends BaseDynamoDao<RetrainTask, RetrainTask
       Limit: limit,
     };
     return (await this.query(input)).items;
-  }
-
-  /** Runs an admin should look at: awaiting approval, or failed and not yet dismissed. */
-  public async listNeedingAttention(): Promise<RetrainTask[]> {
-    const [awaiting, failed] = await Promise.all([
-      this.listByStatus(RetrainTaskStatus.AWAITING_APPROVAL),
-      this.listByStatus(RetrainTaskStatus.FAILED),
-    ]);
-    return [...awaiting, ...failed.filter((task) => !task.acknowledged)];
   }
 }

@@ -7,6 +7,7 @@ import { bodyValidation } from 'router/middleware';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
@@ -142,6 +143,7 @@ export const hedronImportHandler = async (req: Request, res: Response) => {
       req.flash('danger', 'Error creating record');
       return redirect(req, res, `/cube/records/${req.params.id}`);
     }
+    recordSiteActivity('recordsCreated', req.logger);
 
     // Attach the auto-annotated decklists (oracle ids, keyed by 1-based player
     // index). Each entry is a built mainboard + its leftover sideboard. We build

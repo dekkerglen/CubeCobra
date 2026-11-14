@@ -13,13 +13,7 @@ import { retrainTaskDao } from 'dynamo/daos';
 import { getBucketName } from 'dynamo/s3client';
 import { csrfProtection, ensureRole } from 'router/middleware';
 import { redirectToAdminTab } from 'serverutils/adminDashboard';
-import {
-  clearAdminAlertsCache,
-  isPipelineConfigured,
-  listPublishedVersions,
-  readRunFile,
-  toClientRun,
-} from 'serverutils/mlRetraining';
+import { isPipelineConfigured, listPublishedVersions, readRunFile, toClientRun } from 'serverutils/mlRetraining';
 import { readModelPointer } from 'serverutils/modelPointer';
 import { approveRun, isStaleTokenError, rejectRun, startPipeline } from 'serverutils/stepFunctions';
 import { NextFunction, Request, Response } from 'types/express';
@@ -111,7 +105,6 @@ const decisionHandler = (approved: boolean) => async (req: Request, res: Respons
     }
 
     await retrainTaskDao.recordDecision(task.id, approved, req.user!.id);
-    clearAdminAlertsCache();
     try {
       if (approved) {
         await approveRun(taskToken, req.user!.id);
@@ -130,22 +123,6 @@ const decisionHandler = (approved: boolean) => async (req: Request, res: Respons
     return res.status(200).json({ success: true });
   } catch (error) {
     req.logger.error(`ML retraining decision failed: ${errorMessage(error)}`);
-    return res.status(500).json({ success: false, error: errorMessage(error) });
-  }
-};
-
-// Dismisses a failed run's admin alert.
-export const acknowledgeHandler = async (req: Request, res: Response) => {
-  try {
-    const task = await findRun(req, res);
-    if (!task) return undefined;
-    if (task.status !== RetrainTaskStatus.FAILED) {
-      return res.status(409).json({ success: false, error: 'Only failed runs can be dismissed.' });
-    }
-    await retrainTaskDao.acknowledge(task.id);
-    clearAdminAlertsCache();
-    return res.status(200).json({ success: true });
-  } catch (error) {
     return res.status(500).json({ success: false, error: errorMessage(error) });
   }
 };
@@ -203,7 +180,6 @@ export const routes = [
   { method: 'get', path: '/run/:id', handler: [...admin, runDetailsHandler] },
   { method: 'post', path: '/run/:id/approve', handler: [...admin, ensureConfigured, decisionHandler(true)] },
   { method: 'post', path: '/run/:id/reject', handler: [...admin, ensureConfigured, decisionHandler(false)] },
-  { method: 'post', path: '/run/:id/acknowledge', handler: [...admin, ensureConfigured, acknowledgeHandler] },
   { method: 'post', path: '/start', handler: [...admin, ensureConfigured, startHandler] },
   { method: 'post', path: '/promote', handler: [...admin, ensureConfigured, promoteHandler] },
 ];

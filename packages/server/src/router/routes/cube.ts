@@ -25,6 +25,7 @@ import { generatePackImage } from 'serverutils/imageUtils';
 import generateMeta from 'serverutils/meta';
 import { expensiveGetLimiter } from 'serverutils/rateLimiters';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { addNotification, getBaseUrl, isAdmin } from 'serverutils/util';
 
 import { Request, Response } from '../../types/express';
@@ -284,6 +285,7 @@ export const followHandler = async (req: Request, res: Response) => {
   const alreadyLiked = await cubeDao.getLike(cube.id, user!.id);
   if (!alreadyLiked) {
     await cubeDao.writeLike(cube.id, user!.id);
+    recordSiteActivity('cubeLikes', req.logger);
     const newLikeCount = await cubeDao.incrementLikeCount(cube.id, 1);
     await userDao.incrementLikedCubesCount(user!.id, 1);
 

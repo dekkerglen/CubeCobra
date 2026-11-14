@@ -31,14 +31,26 @@ describe('groupNotifications', () => {
     expect(groupsOf(entries)[0].ids).toEqual(['n1', 'n2']);
   });
 
-  it('counts how many members of a group are unread', () => {
+  it('keeps read notifications out of an unread group', () => {
     const entries = groupNotifications([
       follow('n1', NotificationStatus.UNREAD),
       follow('n2', NotificationStatus.UNREAD),
       follow('n3', NotificationStatus.READ),
     ]);
 
+    expect(entries).toHaveLength(2);
+    expect(groupsOf(entries)[0].count).toBe(2);
     expect(groupsOf(entries)[0].unreadCount).toBe(2);
+    expect(entries[1]).toMatchObject({ id: 'n3' });
+  });
+
+  it('does not group a single unread notification with an already-read one', () => {
+    const draft = (id: string, status: NotificationStatus) =>
+      n({ id, status, type: NotificationType.DRAFT, subject: 'cube1', subjectName: 'My Cube' });
+    const entries = groupNotifications([draft('d2', NotificationStatus.UNREAD), draft('d1', NotificationStatus.READ)]);
+
+    expect(entries).toHaveLength(2);
+    expect(groupsOf(entries)).toHaveLength(0);
   });
 
   it('reports no unread members once every member has been read', () => {

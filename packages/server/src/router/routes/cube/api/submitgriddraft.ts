@@ -1,6 +1,7 @@
 import { DRAFT_TYPES, mergeSubmittedSeats } from '@utils/datatypes/Draft';
 import { draftDao } from 'dynamo/daos';
 import { ensureAuth } from 'router/middleware';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 
 import { Request, Response } from '../../../../types/express';
 
@@ -62,6 +63,7 @@ export const submitgriddraftHandler = async (req: Request, res: Response) => {
     draft.complete = true;
 
     await draftDao.update(draft);
+    recordSiteActivity('draftsFinished', req.logger);
 
     return res.status(200).send({
       success: 'true',

@@ -31,6 +31,7 @@ const ML_PIPELINE = {
   exportBucket: 'test-public-bucket',
   bedrockModelId: 'test-bedrock-model',
   bedrockFallbackModelId: 'test-bedrock-fallback-model',
+  bedrockRegion: 'us-east-1',
   promoteTargets: {
     beta: {
       dataBucket: 'test-beta-bucket',
@@ -634,7 +635,7 @@ describe('ML pipeline', () => {
       ML_RUNS_BUCKET: 'test-data-bucket',
       ML_LIVE_BUCKET: 'test-data-bucket',
       AWS_REGION: 'us-east-2',
-      ML_BEDROCK_REGION: 'us-east-2',
+      ML_BEDROCK_REGION: 'us-east-1',
       ML_BEDROCK_MODEL_ID: 'test-bedrock-model',
       ML_BEDROCK_FALLBACK_MODEL_ID: 'test-bedrock-fallback-model',
     });

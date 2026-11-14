@@ -7,6 +7,7 @@ import { isCubeViewable } from 'serverutils/cubefn';
 import { budgetRegexFilter, FilterTimeoutError } from 'serverutils/filterBudget';
 import { jsonLimiter, regexFilterLimiter } from 'serverutils/rateLimiters';
 import { recommendOrThrow } from 'serverutils/ml';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { isExcludedFromSmartSearch } from 'serverutils/smartSearch';
 import { applyUniversesBeyondSetting } from 'serverutils/universesBeyond';
 
@@ -71,6 +72,11 @@ export const addsHandler = async (req: Request, res: Response) => {
         hasMoreAdds: false,
         totalAdds: 0,
       });
+    }
+
+    // Infinite scroll asks for later pages with skip > 0; those are the same search.
+    if (skip === 0) {
+      recordSiteActivity('smartSearches', req.logger);
     }
 
     // The cube's own cards. Fetched concurrently with the (synchronous) catalog

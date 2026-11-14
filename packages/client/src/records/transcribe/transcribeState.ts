@@ -380,9 +380,11 @@ const EMPTY_DECK_SECTION = { mainboard: [], sideboard: [] };
 // suffix as a seat position for either one, not just decks.
 const playerSectionKey = (player: PlayerList[number] | undefined, index: number): string => player?.id ?? String(index);
 
-// One section's value alongside the baseline it is compared against, for whichever of
+// One section's value alongside the baseline submitted with it, for whichever of
 // toTranscribePayload or dirtySections is asking. Computed once so both stay in lockstep
-// instead of drifting into two slightly different definitions of "changed".
+// instead of drifting into two slightly different definitions of "changed". `baseline` is
+// always the value this workspace loaded — for an override that is not necessarily the value
+// the diff was judged against, which runs through the seeded mode's synthesis.
 interface SectionDiff {
   key: SectionKey;
   value: TranscribeSectionValue;
@@ -437,7 +439,15 @@ const diffSections = (
       ? effectiveOverride(seeded.overrides, seededPlayer.name, seededFinalRecordsOnly)
       : null;
     if (!sameOverride(effective, baseline)) {
-      diffs.push({ key: `overrides:${playerSectionKey(player, index)}`, value: effective, baseline });
+      // Submitted against what this workspace *loaded*, never against the value the seeded
+      // mode synthesizes above. The synthesis is a presentation rule — records mode shows an
+      // unset player as 0-0-0 — and storage holds nothing at all for such a player, so sending
+      // the synthesized 0-0-0 as "what I loaded" makes the endpoint read the section as
+      // changed by someone else on every attempt. "Keep mine" cannot break that loop either:
+      // it re-baselines to the stored absence this side already had, and the next save
+      // synthesizes the 0-0-0 right back.
+      const stored = seededPlayer ? (seeded.overrides[seededPlayer.name] ?? null) : null;
+      diffs.push({ key: `overrides:${playerSectionKey(player, index)}`, value: effective, baseline: stored });
     }
   });
 

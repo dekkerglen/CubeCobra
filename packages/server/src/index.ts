@@ -38,6 +38,7 @@ import { cspHeaders } from './serverutils/csp';
 import { sanitizeHttpBody, sanitizeUrl } from './serverutils/logging';
 import { startModelPointerRefresh } from './serverutils/modelPointer';
 import { assertRequiredSecrets } from './serverutils/requiredSecrets';
+import { trackActiveUsers } from './serverutils/siteActivity';
 import { CustomError, Request as AppRequest, Response as AppResponse } from './types/express';
 
 // global listeners for promise rejections
@@ -371,6 +372,9 @@ if (process.env.DOWNTIME_ACTIVE === 'true') {
 }
 
 app.use(rejectBannedUser);
+
+// Counts each logged-in user once per UTC day for the admin Site Activity dashboard.
+app.use(trackActiveUsers);
 
 // Cross-site request forgery protection for every state-changing request (see serverutils/csrf).
 app.use(csrfGuard as express.RequestHandler);

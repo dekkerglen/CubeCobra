@@ -36,6 +36,7 @@ import Alert from 'components/base/Alert';
 import { Card as CardUI, CardBody, CardHeader } from 'components/base/Card';
 import Checkbox from 'components/base/Checkbox';
 import { Col, Flexbox, Row } from 'components/base/Layout';
+import { Modal, ModalBody, ModalHeader } from 'components/base/Modal';
 import Select from 'components/base/Select';
 import Spinner from 'components/base/Spinner';
 import Text from 'components/base/Text';
@@ -46,15 +47,19 @@ import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
 
 import ClusterDetailPanel from '../components/draftSimulator/ClusterDetailPanel';
-import DraftMapScatter, { type DraftMapPoint } from '../components/draftSimulator/DraftMapScatter';
+import DraftMapScatter, {
+  ColorPieSwatch,
+  type DraftMapColorMode,
+  type DraftMapPoint,
+} from '../components/draftSimulator/DraftMapScatter';
 import SimDeckView from '../components/draftSimulator/SimDeckView';
 import SimulationProgressBar, {
   getOverallSimProgress,
   type SimulationPhase,
 } from '../components/draftSimulator/SimulationProgressBar';
-import { computeColorProfileFromDecks } from '../components/draftSimulator/SimulatorCharts';
 import useLocalRecordAnalysisHistory from '../hooks/useLocalRecordAnalysisHistory';
 import useLocalStorage from '../hooks/useLocalStorage';
+import { rescoreSkeletons } from '../utils/draftSimulatorClustering';
 import { getPlaceholderCardDetails } from '../utils/placeholderCardDetails';
 import { runRecordAnalysis } from '../utils/recordAnalysisRun';
 import {
@@ -431,6 +436,46 @@ const colorComboName = (colors?: string[]): string =>
   !colors || colors.length === 0 ? 'Colorless' : getColorCombination([...colors]);
 const deckLabel = (d: AnalysisDeck): string => `${colorComboName(d.colors)}${d.archetype ? ` ${d.archetype}` : ''}`;
 
+// One deck as a list row: trophy, player, label · event, match record, win %.
+const DeckRow: React.FC<{ deck: AnalysisDeck; baseline: number; active?: boolean; onClick: () => void }> = ({
+  deck: d,
+  baseline,
+  active = false,
+  onClick,
+}) => {
+  const wr = rate(d.matchWins, d.matchLosses, d.matchDraws);
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`flex items-center gap-2 w-full text-left px-2 py-1.5 border-b border-border last:border-b-0 ${
+        active ? 'bg-bg-active' : 'hover:bg-bg-active'
+      }`}
+    >
+      <span className="w-4 shrink-0 flex justify-center text-yellow-500">
+        {d.trophy ? <TrophyIcon size={14} /> : null}
+      </span>
+      <Flexbox direction="col" gap="0" className="min-w-0 flex-1">
+        <Text sm semibold className="truncate">
+          {d.playerName}
+        </Text>
+        <Text xs className="text-text-secondary truncate">
+          {deckLabel(d)} · {d.recordName}
+        </Text>
+      </Flexbox>
+      <Text xs semibold className="tabular-nums w-12 text-right shrink-0">
+        {recordStr(d)}
+      </Text>
+      <Text sm semibold className="tabular-nums w-14 text-right shrink-0">
+        <span style={{ color: perfColor(wr, baseline) }}>{fmtPct(wr)}</span>
+      </Text>
+    </button>
+  );
+};
+
+const byWinRate = (a: AnalysisDeck, b: AnalysisDeck): number =>
+  rate(b.matchWins, b.matchLosses, b.matchDraws) - rate(a.matchWins, a.matchLosses, a.matchDraws);
+
 // The deck map: every recorded deck projected to 2D by the ML model (decks that
 // play alike cluster together), rendered with the draft simulator's own
 // DraftMapScatter. Clicking a deck focuses its whole cluster — every deck in the
@@ -438,11 +483,12 @@ const deckLabel = (d: AnalysisDeck): string => `${colorComboName(d.colors)}${d.a
 const DeckMap: React.FC<{
   decks: AnalysisDeck[];
   skeletons: ArchetypeSkeleton[];
-  colorBy: 'cluster' | 'deckColor';
-  selectedClusterId: number | null;
+  colorBy: DraftMapColorMode;
+  archetypeIndex: Map<string, number>; // archetype name → color slot
+  activePoolIndices: number[] | null; // the selected group's decks
   selectedPoolIndex: number | null;
   onSelectPoint: (poolIndex: number, clusterId: number | null) => void;
-}> = ({ decks, skeletons, colorBy, selectedClusterId, selectedPoolIndex, onSelectPoint }) => {
+}> = ({ decks, skeletons, colorBy, archetypeIndex, activePoolIndices, selectedPoolIndex, onSelectPoint }) => {
   // deck index → cluster slot (skeleton position drives the cluster color).
   const points = useMemo<DraftMapPoint[]>(() => {
     const byDeck = new Map<number, number>();
@@ -459,18 +505,15 @@ const DeckMap: React.FC<{
       clusterIndex: byDeck.get(i) ?? null,
       clusterLabel: deckLabel(d),
       archetype: (d.colors ?? []).join('') || 'C', // drives deck-color mode
+      archetypeIndex: archetypeIndex.get(d.archetype) ?? null,
     }));
-  }, [decks, skeletons]);
+  }, [decks, skeletons, archetypeIndex]);
 
   // Selecting a cluster keeps its decks bright (active filter) and dims the rest.
-  const activePoolIndexSet = useMemo<Set<number> | null>(() => {
-    if (selectedClusterId === null) return null;
-    const set = new Set<number>();
-    decks.forEach((d, i) => {
-      if (d.clusterId === selectedClusterId) set.add(i);
-    });
-    return set;
-  }, [decks, selectedClusterId]);
+  const activePoolIndexSet = useMemo<Set<number> | null>(
+    () => (activePoolIndices ? new Set(activePoolIndices) : null),
+    [activePoolIndices],
+  );
 
   if (points.length === 0) {
     return (
@@ -639,7 +682,7 @@ interface ClusterInfo {
   idx: number;
   skel: ArchetypeSkeleton;
   color: string;
-  colorProfile: string;
+  codes?: string[]; // deck-color groups: their color identity, drawn as a pie swatch
   label: string;
   members: AnalysisDeck[];
   count: number;
@@ -691,7 +734,7 @@ const ArchetypeMatchupMatrix: React.FC<{
                   <div className="flex flex-col items-center gap-1">
                     {swatch(c)}
                     <Text xs semibold>
-                      {c.colorProfile}
+                      {c.label}
                     </Text>
                   </div>
                 </th>
@@ -722,11 +765,7 @@ const ArchetypeMatchupMatrix: React.FC<{
                       key={b.clusterId}
                       className="p-2 text-center align-middle border-b border-l border-border"
                       style={{ background: v ? heat(v.rate) : undefined }}
-                      title={
-                        v
-                          ? `${a.colorProfile} vs ${b.colorProfile}: ${fmtPct(v.rate)} over ${v.matches} matches`
-                          : 'No matches'
-                      }
+                      title={v ? `${a.label} vs ${b.label}: ${fmtPct(v.rate)} over ${v.matches} matches` : 'No matches'}
                     >
                       {v ? (
                         <div className="flex flex-col items-center leading-tight text-white">
@@ -769,6 +808,7 @@ interface PerfRow {
   losses: number;
   draws: number;
   winRate: number;
+  members: AnalysisDeck[]; // the decks summed into this row
 }
 
 // Sum a set of decks into a single performance row body (match record + rate).
@@ -781,7 +821,7 @@ const aggregateDecks = (members: AnalysisDeck[]): Omit<PerfRow, 'group' | 'pips'
     losses += d.matchLosses;
     draws += d.matchDraws;
   }
-  return { decks: members.length, wins, losses, draws, winRate: rate(wins, losses, draws) };
+  return { decks: members.length, wins, losses, draws, winRate: rate(wins, losses, draws), members };
 };
 
 // A whole card: group · decks · W · L · D · win% (win% over/under-colored against
@@ -796,15 +836,20 @@ const PerformanceTable: React.FC<{
   baseline: number;
   emptyText?: string;
 }> = ({ title, tooltip, rows, groupTitle, baseline, emptyText }) => {
+  const [openRow, setOpenRow] = useState<PerfRow | null>(null);
   const renderGroup = (val: string, row: PerfRow) => (
-    <div className="flex items-center gap-2">
+    <button
+      type="button"
+      onClick={() => setOpenRow(row)}
+      className="flex items-center gap-2 min-w-0 text-left hover:text-link"
+    >
       {row.pips ? (
         renderPips(row.pips)
       ) : row.swatch ? (
         <span className="inline-block h-3 w-3 rounded-sm shrink-0" style={{ background: row.swatch }} />
       ) : null}
       <span className="truncate">{val}</span>
-    </div>
+    </button>
   );
   const renderWin = (val: number) => (
     <span className="font-semibold tabular-nums" style={{ color: perfColor(val, baseline) }}>
@@ -864,6 +909,23 @@ const PerformanceTable: React.FC<{
           defaultSortConfig={{ key: 'decks', direction: 'descending' }}
         />
       )}
+      <Modal isOpen={openRow !== null} setOpen={(open) => !open && setOpenRow(null)} md scrollable>
+        <ModalHeader setOpen={(open) => !open && setOpenRow(null)}>
+          {openRow?.group} · {openRow?.decks} decks
+        </ModalHeader>
+        <ModalBody scrollable>
+          <Flexbox direction="col" gap="0">
+            {[...(openRow?.members ?? [])].sort(byWinRate).map((d, i) => (
+              <DeckRow
+                key={i}
+                deck={d}
+                baseline={baseline}
+                onClick={() => window.open(`/cube/record/${d.recordId}`, '_blank', 'noopener')}
+              />
+            ))}
+          </Flexbox>
+        </ModalBody>
+      </Modal>
     </CardUI>
   );
 };
@@ -1313,7 +1375,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
   // Removed cards from older runs have no draft Elo to plot.
   const eloRows = useMemo(() => allRows.filter((r) => r.hasDraftElo), [allRows]);
 
-  const [mapColorBy, setMapColorBy] = useState<'cluster' | 'deckColor'>('cluster');
+  const [mapColorBy, setMapColorBy] = useState<DraftMapColorMode>('cluster');
   const [selectedClusterId, setSelectedClusterId] = useState<number | null>(null);
   const [selectedPoolIndex, setSelectedPoolIndex] = useState<number | null>(null);
   const [excludeManaFixingLands, setExcludeManaFixingLands] = useState(false);
@@ -1458,29 +1520,17 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           let we = 0;
           let tot = 0;
           let trophies = 0;
-          const archCounts: Record<string, number> = {};
           for (const d of members) {
             we += d.matchWins;
             tot += d.matchWins + d.matchLosses + d.matchDraws;
             if (d.trophy) trophies += 1;
-            if (d.archetype) archCounts[d.archetype] = (archCounts[d.archetype] ?? 0) + 1;
           }
-          const dominant = Object.entries(archCounts).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
-          // Recompute the color identity from the cards the cluster's decks actually
-          // play (most-common-cards driven, off-color splashes dropped) rather than the
-          // skeleton's lenient unique-card-count profile, which over-labels colors.
-          const colorProfile =
-            computeColorProfileFromDecks(
-              members.map((d) => d.oracles),
-              simCardMeta,
-            ) || 'C';
           return {
             clusterId: skel.clusterId,
             idx,
             skel,
             color: CLUSTER_COLORS[idx % CLUSTER_COLORS.length]!,
-            colorProfile,
-            label: `${colorProfile}${dominant ? ` ${dominant}` : ''}`,
+            label: `Cluster ${idx + 1}`,
             members,
             count: members.length,
             winRate: tot ? we / tot : 0,
@@ -1488,25 +1538,10 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
           };
         })
         .filter((c) => c.count > 0),
-    [skeletons, runDecks, simCardMeta],
+    [skeletons, runDecks],
   );
   const clustersByWinRate = useMemo(() => [...clusters].sort((a, b) => b.winRate - a.winRate), [clusters]);
-  const selectedCluster = useMemo(
-    () => clusters.find((c) => c.clusterId === selectedClusterId) ?? null,
-    [clusters, selectedClusterId],
-  );
   const selectedDeck = selectedPoolIndex !== null ? (runDecks[selectedPoolIndex] ?? null) : null;
-  const selectedClusterDeckBuilds = useMemo<BuiltDeck[] | null>(
-    () =>
-      selectedCluster
-        ? (selectedCluster.skel.poolIndices.map((i) => allDeckBuilds[i]).filter(Boolean) as BuiltDeck[])
-        : null,
-    [selectedCluster, allDeckBuilds],
-  );
-  const archetypeDomain = winrateDomain(
-    clusters.map((c) => c.winRate),
-    baseline,
-  );
 
   // ── Color / archetype performance (aggregated deck records) ───────────────
   // Color performance: every deck PLAYING each color (multicolor decks count in
@@ -1547,10 +1582,78 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
     });
   }, [runDecks]);
 
-  // Archetype performance: one row per ML cluster (the page's "archetypes").
-  const archetypePerf = useMemo<PerfRow[]>(
-    () => clusters.map((c) => ({ group: c.label, swatch: c.color, ...aggregateDecks(c.members) })),
-    [clusters],
+  // Archetype name → color slot on the deck map, most common archetype first.
+  const archetypeIndex = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const d of runDecks) if (d.archetype) counts.set(d.archetype, (counts.get(d.archetype) ?? 0) + 1);
+    return new Map([...counts.entries()].sort((a, b) => b[1] - a[1]).map(([name], i) => [name, i]));
+  }, [runDecks]);
+
+  // Archetype performance: decks grouped by their archetype name, independent of their colors and cluster.
+  const archetypePerf = useMemo<PerfRow[]>(() => {
+    if (!runDecks.some((d) => d.archetype)) return [];
+    const groups: Record<string, AnalysisDeck[]> = {};
+    for (const d of runDecks) (groups[d.archetype || 'Unclassified'] ??= []).push(d);
+    return Object.entries(groups).map(([archetype, members]) => ({ group: archetype, ...aggregateDecks(members) }));
+  }, [runDecks]);
+
+  // Deck-color and archetype groups for the deck map, scored like clusters so they open the same
+  // detail card. Their ids are positions in this list, so they only mean something in their own mode.
+  const groupInfos = useMemo<ClusterInfo[]>(() => {
+    if (mapColorBy === 'cluster' || runDecks.length === 0) return [];
+    const poolsByKey: Record<string, number[]> = {};
+    runDecks.forEach((d, i) => {
+      const key =
+        mapColorBy === 'deckColor'
+          ? [...'WUBRG'].filter((c) => d.colors.includes(c)).join('')
+          : d.archetype || 'Unclassified';
+      (poolsByKey[key] ??= []).push(i);
+    });
+    const keys = Object.keys(poolsByKey);
+    // Scoring only reads each group's id and decks.
+    const scored = rescoreSkeletons(
+      allSlimPools,
+      simCardMeta,
+      null,
+      allDeckBuilds,
+      keys.map((key, clusterId) => ({ clusterId, poolIndices: poolsByKey[key]! }) as ArchetypeSkeleton),
+    );
+    return scored.map((skel, idx) => {
+      const key = keys[skel.clusterId]!;
+      const members = skel.poolIndices.map((i) => runDecks[i]).filter((d): d is AnalysisDeck => !!d);
+      const slot = archetypeIndex.get(key);
+      return {
+        clusterId: skel.clusterId,
+        idx,
+        skel,
+        color: slot === undefined ? COLOR_MAP.Colorless! : CLUSTER_COLORS[slot % CLUSTER_COLORS.length]!,
+        codes: mapColorBy === 'deckColor' ? key.split('') : undefined,
+        label: mapColorBy === 'deckColor' ? colorComboName(key.split('')) : key,
+        members,
+        count: members.length,
+        winRate: aggregateDecks(members).winRate,
+        trophies: members.filter((d) => d.trophy).length,
+      };
+    });
+  }, [mapColorBy, runDecks, allSlimPools, simCardMeta, allDeckBuilds, archetypeIndex]);
+
+  // Whatever the deck map is colored by: its list, its selection and the detail card all use these.
+  const mapGroups = mapColorBy === 'cluster' ? clusters : groupInfos;
+  const mapGroupsByWinRate = useMemo(() => [...mapGroups].sort((a, b) => b.winRate - a.winRate), [mapGroups]);
+  const mapLegendDomain = winrateDomain(
+    mapGroups.map((c) => c.winRate),
+    baseline,
+  );
+  const selectedCluster = useMemo(
+    () => mapGroups.find((c) => c.clusterId === selectedClusterId) ?? null,
+    [mapGroups, selectedClusterId],
+  );
+  const selectedClusterDeckBuilds = useMemo<BuiltDeck[] | null>(
+    () =>
+      selectedCluster
+        ? (selectedCluster.skel.poolIndices.map((i) => allDeckBuilds[i]).filter(Boolean) as BuiltDeck[])
+        : null,
+    [selectedCluster, allDeckBuilds],
   );
 
   // ── Aggregations (appearance-weighted win rate per group) ──────────────────
@@ -1883,23 +1986,41 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
             </Col>
           </Row>
 
-          {/* Archetype map (left, with the win-rate list beneath it) + the selected
-          archetype's detail card on its right. */}
+          {/* Archetype performance — decks grouped by archetype name, the same way the color tables group by color */}
+          {archetypePerf.length > 0 && (
+            <Row className="g-3">
+              <Col xs={12}>
+                <PerformanceTable
+                  title="Archetype Performance"
+                  tooltip="Match record of every deck in each archetype, whatever its colors. Win % is over/under-colored against the cube average."
+                  rows={archetypePerf}
+                  groupTitle="Archetype"
+                  baseline={baseline}
+                />
+              </Col>
+            </Row>
+          )}
+
+          {/* Deck map (left, with the cluster list beneath it) + the selected
+          cluster's detail card on its right. */}
           <Row className="g-3">
             <Col xs={12}>
               <Panel
-                title="Archetype Map"
-                tooltip="Every recorded deck projected to 2D by the draft model — decks that play alike sit together. Click a deck on the map, or an archetype in the list below it, to open that archetype on the right. Color by cluster, or by each deck's colors."
+                title="Deck Map"
+                tooltip="Every recorded deck projected to 2D by the draft model — decks that play alike sit together and are grouped into clusters. Click a deck on the map, or a cluster in the list below it, to open that cluster on the right. Color by cluster, by each deck's colors, or by each deck's archetype."
                 right={
                   <div className="flex rounded-md border border-border overflow-hidden text-xs">
-                    {(['cluster', 'deckColor'] as const).map((mode) => (
+                    {(['cluster', 'deckColor', 'archetype'] as const).map((mode) => (
                       <button
                         key={mode}
                         type="button"
-                        onClick={() => setMapColorBy(mode)}
+                        onClick={() => {
+                          setMapColorBy(mode);
+                          setSelectedClusterId(null);
+                        }}
                         className={`px-2 py-1 ${mapColorBy === mode ? 'bg-bg-active font-semibold' : 'text-text-secondary hover:bg-bg-active'}`}
                       >
-                        {mode === 'cluster' ? 'Cluster' : 'Deck color'}
+                        {mode === 'cluster' ? 'Cluster' : mode === 'deckColor' ? 'Deck color' : 'Archetype'}
                       </button>
                     ))}
                   </div>
@@ -1907,35 +2028,31 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
               >
                 {clusters.length === 0 ? (
                   <Text sm className="text-text-secondary">
-                    Run the analysis to cluster decks into archetypes.
+                    Run the analysis to cluster decks.
                   </Text>
                 ) : (
                   <div className={`grid grid-cols-1 gap-5 ${selectedCluster ? 'lg:grid-cols-12' : ''}`}>
-                    {/* LEFT: the archetype list, then the map, then the selected deck. */}
+                    {/* LEFT: the cluster list, then the map, then the selected deck. */}
                     <div className={selectedCluster ? 'lg:col-span-5 min-w-0' : 'min-w-0'}>
                       <Flexbox direction="col" gap="1">
-                        {clustersByWinRate.map((c: ClusterInfo) => {
-                          const lo = archetypeDomain[0];
-                          const hi = archetypeDomain[1];
+                        {mapGroupsByWinRate.map((row: ClusterInfo) => {
+                          const lo = mapLegendDomain[0];
+                          const hi = mapLegendDomain[1];
                           const pos = (w: number) => ((Math.min(hi, Math.max(lo, w)) - lo) / (hi - lo)) * 100;
                           const center = pos(baseline);
-                          const p = pos(c.winRate);
-                          return (
-                            <button
-                              key={c.clusterId}
-                              type="button"
-                              onClick={() => {
-                                setSelectedClusterId(c.clusterId);
-                                setSelectedPoolIndex(null);
-                              }}
-                              className={`flex items-center gap-2 w-full text-left rounded px-1 py-0.5 ${c.clusterId === selectedClusterId ? 'bg-bg-active' : 'hover:bg-bg-active'}`}
-                            >
-                              <span
-                                className="inline-block h-3 w-3 rounded-sm shrink-0"
-                                style={{ background: c.color }}
-                              />
+                          const p = pos(row.winRate);
+                          const content = (
+                            <>
+                              {row.codes ? (
+                                <ColorPieSwatch codes={row.codes} />
+                              ) : (
+                                <span
+                                  className="inline-block h-3 w-3 rounded-sm shrink-0"
+                                  style={{ background: row.color }}
+                                />
+                              )}
                               <Text sm semibold className="w-28 shrink-0 truncate">
-                                {c.label}
+                                {row.label}
                               </Text>
                               <div className="flex-1 min-w-0">
                                 <svg
@@ -1959,7 +2076,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
                                     width={Math.max(0.8, Math.abs(p - center))}
                                     height={8}
                                     rx={1.5}
-                                    fill={perfColor(c.winRate, baseline)}
+                                    fill={perfColor(row.winRate, baseline)}
                                   />
                                   <rect
                                     x={center - 0.2}
@@ -1971,12 +2088,25 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
                                 </svg>
                               </div>
                               <Text xs semibold className="w-11 text-right tabular-nums">
-                                <span style={{ color: perfColor(c.winRate, baseline) }}>{fmtPct(c.winRate)}</span>
+                                <span style={{ color: perfColor(row.winRate, baseline) }}>{fmtPct(row.winRate)}</span>
                               </Text>
                               <Text xs className="w-12 text-right text-text-secondary tabular-nums">
-                                {c.count}
-                                {c.trophies > 0 ? ` ·${c.trophies}🏆` : ''}
+                                {row.count}
+                                {row.trophies > 0 ? ` ·${row.trophies}🏆` : ''}
                               </Text>
+                            </>
+                          );
+                          return (
+                            <button
+                              key={row.clusterId}
+                              type="button"
+                              onClick={() => {
+                                setSelectedClusterId(row.clusterId);
+                                setSelectedPoolIndex(null);
+                              }}
+                              className={`flex items-center gap-2 w-full text-left rounded px-1 py-0.5 ${row.clusterId === selectedClusterId ? 'bg-bg-active' : 'hover:bg-bg-active'}`}
+                            >
+                              {content}
                             </button>
                           );
                         })}
@@ -1986,11 +2116,16 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
                           decks={runDecks}
                           skeletons={skeletons}
                           colorBy={mapColorBy}
-                          selectedClusterId={selectedCluster ? selectedClusterId : null}
+                          archetypeIndex={archetypeIndex}
+                          activePoolIndices={selectedCluster?.skel.poolIndices ?? null}
                           selectedPoolIndex={selectedPoolIndex}
                           onSelectPoint={(pi, cid) => {
                             setSelectedPoolIndex(pi);
-                            setSelectedClusterId(cid);
+                            setSelectedClusterId(
+                              mapColorBy === 'cluster'
+                                ? cid
+                                : (groupInfos.find((g) => g.skel.poolIndices.includes(pi))?.clusterId ?? null),
+                            );
                           }}
                         />
                       </div>
@@ -2031,7 +2166,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
                       )}
                     </div>
 
-                    {/* RIGHT: the selected archetype's card — tabbed view + stat charts. */}
+                    {/* RIGHT: the selected cluster's card — tabbed view + stat charts. */}
                     {selectedCluster && (
                       <div className="lg:col-span-7 min-w-0">
                         <Flexbox direction="col" gap="4">
@@ -2039,50 +2174,31 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
                             skeleton={selectedCluster.skel}
                             clusterIndex={selectedCluster.idx}
                             displayName={selectedCluster.label}
+                            subtitleLabel={
+                              mapColorBy === 'deckColor'
+                                ? 'Deck color'
+                                : mapColorBy === 'archetype'
+                                  ? 'Archetype'
+                                  : undefined
+                            }
                             decksTab={{
                               label: 'Decks',
-                              title: 'Every deck in this cluster, by win rate. Click one to select it on the map.',
+                              title: 'Every deck in this group, by win rate. Click one to select it on the map.',
                               content: (
                                 <Flexbox direction="col" gap="0">
                                   {selectedCluster.skel.poolIndices
                                     .map((i) => ({ i, d: runDecks[i] }))
                                     .filter((x): x is { i: number; d: AnalysisDeck } => !!x.d)
-                                    .sort(
-                                      (a, b) =>
-                                        rate(b.d.matchWins, b.d.matchLosses, b.d.matchDraws) -
-                                        rate(a.d.matchWins, a.d.matchLosses, a.d.matchDraws),
-                                    )
-                                    .map(({ i, d }) => {
-                                      const wr = rate(d.matchWins, d.matchLosses, d.matchDraws);
-                                      return (
-                                        <button
-                                          key={i}
-                                          type="button"
-                                          onClick={() => setSelectedPoolIndex(i)}
-                                          className={`flex items-center gap-2 w-full text-left px-2 py-1.5 border-b border-border last:border-b-0 ${
-                                            i === selectedPoolIndex ? 'bg-bg-active' : 'hover:bg-bg-active'
-                                          }`}
-                                        >
-                                          <span className="w-4 shrink-0 flex justify-center text-yellow-500">
-                                            {d.trophy ? <TrophyIcon size={14} /> : null}
-                                          </span>
-                                          <Flexbox direction="col" gap="0" className="min-w-0 flex-1">
-                                            <Text sm semibold className="truncate">
-                                              {d.playerName}
-                                            </Text>
-                                            <Text xs className="text-text-secondary truncate">
-                                              {deckLabel(d)} · {d.recordName}
-                                            </Text>
-                                          </Flexbox>
-                                          <Text xs semibold className="tabular-nums w-12 text-right shrink-0">
-                                            {recordStr(d)}
-                                          </Text>
-                                          <Text sm semibold className="tabular-nums w-14 text-right shrink-0">
-                                            <span style={{ color: perfColor(wr, baseline) }}>{fmtPct(wr)}</span>
-                                          </Text>
-                                        </button>
-                                      );
-                                    })}
+                                    .sort((a, b) => byWinRate(a.d, b.d))
+                                    .map(({ i, d }) => (
+                                      <DeckRow
+                                        key={i}
+                                        deck={d}
+                                        baseline={baseline}
+                                        active={i === selectedPoolIndex}
+                                        onClick={() => setSelectedPoolIndex(i)}
+                                      />
+                                    ))}
                                 </Flexbox>
                               ),
                             }}
@@ -2116,41 +2232,27 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
             </Col>
           </Row>
 
-          {/* Archetype-vs-archetype matchup matrix (win rates already live on the map). */}
+          {/* Cluster-vs-cluster matchup matrix (win rates already live on the map). */}
           {clusters.length > 0 && (
             <Row className="g-3">
               <Col xs={12}>
                 <Panel
                   flush
-                  title="Archetype Matchups"
-                  tooltip="Row vs column: how each archetype's decks fared against each other archetype. Green beats the cube average, red trails it. Click a row to focus that archetype."
+                  title="Cluster Matchups"
+                  tooltip="Row vs column: how each cluster's decks fared against each other cluster. Green beats the cube average, red trails it. Click a row to focus that cluster."
                 >
                   <ArchetypeMatchupMatrix
                     clusters={clustersByWinRate}
                     matchups={clusterMatchups}
                     baseline={baseline}
-                    selectedClusterId={selectedClusterId}
+                    selectedClusterId={mapColorBy === 'cluster' ? selectedClusterId : null}
                     onSelect={(id) => {
+                      setMapColorBy('cluster');
                       setSelectedClusterId(id);
                       setSelectedPoolIndex(null);
                     }}
                   />
                 </Panel>
-              </Col>
-            </Row>
-          )}
-
-          {/* Archetype performance — aggregated match record per cluster */}
-          {archetypePerf.length > 0 && (
-            <Row className="g-3">
-              <Col xs={12}>
-                <PerformanceTable
-                  title="Archetype Performance"
-                  tooltip="Match record of every deck in each archetype (ML cluster). Win % is over/under-colored against the cube average."
-                  rows={archetypePerf}
-                  groupTitle="Archetype"
-                  baseline={baseline}
-                />
               </Col>
             </Row>
           )}

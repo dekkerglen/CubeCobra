@@ -2,6 +2,7 @@ import { cubeDao, recordDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { redirect } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 
 import { Request, Response } from '../../../../../types/express';
 
@@ -56,10 +57,15 @@ export const finishHandler = async (req: Request, res: Response) => {
       ];
     }
 
+    // Finishing an already finished event only updates its trophies.
+    const wasFinished = !!record.finishedAt;
     record.matches = (record.matches || []).map(({ clock: _clock, ...round }) => round);
     record.finishedAt = Date.now();
     record.dateLastUpdated = record.finishedAt;
     await recordDao.update(record);
+    if (!wasFinished) {
+      recordSiteActivity('tournamentsFinished', req.logger);
+    }
 
     req.flash('success', 'Tournament finished. These are the final standings.');
     return redirect(req, res, `/cube/record/${req.params.id}?tab=standings`);

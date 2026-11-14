@@ -6,6 +6,7 @@ import { cubeDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { getRandomNewCubeImage } from 'serverutils/imageutil';
 import { handleRouteError, redirect } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../types/express';
@@ -100,6 +101,7 @@ export const quickAddHandler = async (req: Request, res: Response) => {
       mainboard: [],
       maybeboard: [],
     });
+    recordSiteActivity('cubesCreated', req.logger);
 
     req.flash('success', 'Cube created!');
     return redirect(req, res, `/cube/list/${cube.id}`);

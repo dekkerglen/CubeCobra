@@ -12,7 +12,7 @@ import {
   sendPlaygroundError,
   summarize,
 } from 'serverutils/mlPlayground';
-import { batchBuildOrThrow, batchDraftOrThrow, batchEncodeOrThrow } from 'serverutils/ml';
+import { batchBuildOrThrow, batchDraftOrThrow } from 'serverutils/ml';
 import { jsonLimiter } from 'serverutils/rateLimiters';
 
 import { Request, Response } from '../../../../../types/express';
@@ -90,17 +90,13 @@ export const deckbuildHandler = async (req: Request, res: Response) => {
     );
 
     // Named the way a draft names a bot seat. Basics are left out, as they were for the decks
-    // the archetypes were found in; the legacy centers encode the model's stand-ins for unknown cards.
+    // the archetypes were found in.
     const deckOracles = [
       ...new Set(
         mainboard.filter((oracle) => !isBasicLand(pool.details.get(oracle)) && !basicsOracles.includes(oracle)),
       ),
     ];
-    const deckModelOracles = [...new Set(deckOracles.map((oracle) => facts[oracle]?.mlOracle ?? oracle))];
-    const archetype = await classifyDeck(deckOracles, async () => {
-      const [embedding] = await batchEncodeOrThrow([deckModelOracles]);
-      return embedding ?? [];
-    });
+    const archetype = await classifyDeck(deckOracles);
 
     return res.status(200).json({
       success: true,

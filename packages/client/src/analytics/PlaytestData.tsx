@@ -14,7 +14,10 @@ import Spinner from '../components/base/Spinner';
 import Text from '../components/base/Text';
 import Tooltip from '../components/base/Tooltip';
 import ClusterDetailPanel from '../components/draftSimulator/ClusterDetailPanel';
-import DraftMapScatter, { type DraftMapPoint } from '../components/draftSimulator/DraftMapScatter';
+import DraftMapScatter, {
+  type DraftMapColorMode,
+  type DraftMapPoint,
+} from '../components/draftSimulator/DraftMapScatter';
 import SimDeckView from '../components/draftSimulator/SimDeckView';
 import SimulationProgressBar, {
   getOverallSimProgress,
@@ -22,7 +25,6 @@ import SimulationProgressBar, {
 } from '../components/draftSimulator/SimulationProgressBar';
 import {
   CardTypeShareChart,
-  computeColorProfileFromDecks,
   DeckColorShareChart,
   EloDistributionChart,
   ManaCurveShareChart,
@@ -265,7 +267,7 @@ const Panel: React.FC<{ title: string; tooltip?: string; right?: React.ReactNode
 const DeckMap: React.FC<{
   decks: PlaytestDeck[];
   skeletons: ArchetypeSkeleton[];
-  colorBy: 'cluster' | 'deckColor';
+  colorBy: DraftMapColorMode;
   selectedClusterId: number | null;
   selectedPoolIndex: number | null;
   onSelectPoint: (poolIndex: number, clusterId: number | null) => void;
@@ -275,6 +277,13 @@ const DeckMap: React.FC<{
     skeletons.forEach((s, idx) => {
       for (const pi of s.poolIndices) byDeck.set(pi, idx);
     });
+    // Archetype name → color slot for archetype coloring, most common archetype first.
+    const archetypeCounts = new Map<string, number>();
+    for (const d of decks)
+      if (d.archetype) archetypeCounts.set(d.archetype, (archetypeCounts.get(d.archetype) ?? 0) + 1);
+    const archetypeSlots = new Map(
+      [...archetypeCounts.entries()].sort((a, b) => b[1] - a[1]).map(([name], slot) => [name, slot]),
+    );
     return decks.map((d, i) => ({
       x: d.x,
       y: d.y,
@@ -285,6 +294,7 @@ const DeckMap: React.FC<{
       clusterIndex: byDeck.get(i) ?? null,
       clusterLabel: `${colorPairOf(d)}${d.archetype ? ` ${d.archetype}` : ''}`,
       archetype: colorPairOf(d),
+      archetypeIndex: archetypeSlots.get(d.archetype) ?? null,
     }));
   }, [decks, skeletons]);
 
@@ -325,7 +335,6 @@ interface ClusterInfo {
   idx: number;
   skel: ArchetypeSkeleton;
   color: string;
-  colorProfile: string;
   label: string;
   count: number;
 }
@@ -399,7 +408,7 @@ const PlaytestData: React.FC = () => {
   // ── Selection state ─────────────────────────────────────────────────────────
   const [selectedClusterId, setSelectedClusterId] = useState<number | null>(null);
   const [selectedPoolIndex, setSelectedPoolIndex] = useState<number | null>(null);
-  const [mapColorBy, setMapColorBy] = useState<'cluster' | 'deckColor'>('cluster');
+  const [mapColorBy, setMapColorBy] = useState<DraftMapColorMode>('cluster');
   const [excludeManaFixingLands, setExcludeManaFixingLands] = useState(false);
   // Clear the drill-in when switching runs.
   useEffect(() => {
@@ -504,31 +513,18 @@ const PlaytestData: React.FC = () => {
       skeletons
         .map((skel, idx) => {
           const members = decks.filter((d) => d.clusterId === skel.clusterId);
-          const dominant =
-            Object.entries(
-              members.reduce<Record<string, number>>((acc, d) => {
-                if (d.archetype) acc[d.archetype] = (acc[d.archetype] ?? 0) + 1;
-                return acc;
-              }, {}),
-            ).sort((a, b) => b[1] - a[1])[0]?.[0] ?? '';
-          const colorProfile =
-            computeColorProfileFromDecks(
-              members.map((d) => d.mainboard),
-              cardMeta,
-            ) || 'C';
           return {
             clusterId: skel.clusterId,
             idx,
             skel,
             color: CLUSTER_COLORS[idx % CLUSTER_COLORS.length]!,
-            colorProfile,
-            label: `${colorProfile}${dominant ? ` ${dominant}` : ''}`,
+            label: `Cluster ${idx + 1}`,
             count: members.length,
           };
         })
         .filter((c) => c.count > 0)
         .sort((a, b) => b.count - a.count),
-    [skeletons, decks, cardMeta],
+    [skeletons, decks],
   );
 
   const selectedCluster = useMemo(
@@ -628,14 +624,14 @@ const PlaytestData: React.FC = () => {
               tooltip="Every human deck projected to 2D by the draft model — decks that drafted alike sit together. Click an archetype in the list or a deck on the map to open its breakdown on the right."
               right={
                 <div className="flex rounded-md border border-border overflow-hidden text-xs">
-                  {(['cluster', 'deckColor'] as const).map((mode) => (
+                  {(['cluster', 'deckColor', 'archetype'] as const).map((mode) => (
                     <button
                       key={mode}
                       type="button"
                       onClick={() => setMapColorBy(mode)}
                       className={`px-2 py-1 ${mapColorBy === mode ? 'bg-bg-active font-semibold' : 'text-text-secondary hover:bg-bg-active'}`}
                     >
-                      {mode === 'cluster' ? 'Cluster' : 'Deck color'}
+                      {mode === 'cluster' ? 'Cluster' : mode === 'deckColor' ? 'Deck color' : 'Archetype'}
                     </button>
                   ))}
                 </div>

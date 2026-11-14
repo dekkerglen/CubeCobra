@@ -5,6 +5,7 @@ import { cubeDao } from 'dynamo/daos';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { getImageData } from 'serverutils/imageutil';
 import { handleRouteError, redirect } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { addNotification } from 'serverutils/util';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -73,6 +74,7 @@ export const cloneHandler = async (req: Request, res: Response) => {
     };
 
     await cubeDao.putNewCube(cube, sourceCards);
+    recordSiteActivity('cubesCreated', req.logger);
 
     if (!source.disableCloneAlerts && source.owner) {
       await addNotification(

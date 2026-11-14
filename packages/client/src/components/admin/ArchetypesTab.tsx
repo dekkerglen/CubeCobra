@@ -111,7 +111,7 @@ const Archetypes: React.FC<ArchetypesProps> = ({ version, topics, names: initial
             <Text className="text-center py-8 text-text-secondary">No archetypes found.</Text>
           ) : (
             <Table
-              headers={['Name', 'Source', 'Top Tags', 'Cards', 'Decks', 'Shape']}
+              headers={['Name', 'Source', 'Top Tags', 'Decks']}
               wrapCells
               rows={sortedTopics.map((topic) => {
                 const draft = drafts[topic.id] ?? '';
@@ -136,15 +136,7 @@ const Archetypes: React.FC<ArchetypesProps> = ({ version, topics, names: initial
                       ))}
                     </span>
                   ),
-                  Cards: topic.cards.join(', '),
                   Decks: percent(topic.deckShare),
-                  Shape: (
-                    <span className="flex flex-col whitespace-nowrap">
-                      <span>MV {topic.shape.avgManaValue.toFixed(2)}</span>
-                      <span>Creatures {percent(topic.shape.creatureShare)}</span>
-                      <span>Instants/Sorceries {percent(topic.shape.instantSorceryShare)}</span>
-                    </span>
-                  ),
                 };
               })}
             />

@@ -7,6 +7,7 @@ import { bodyValidation } from 'router/middleware';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
@@ -187,6 +188,7 @@ const createRecordAndRedirect = async (req: Request, res: Response, redirectTo: 
       req.flash('danger', 'Error creating record');
       return redirect(req, res, `/cube/records/${req.params.id}`);
     }
+    recordSiteActivity('recordsCreated', req.logger);
 
     req.flash('success', 'Record created successfully');
     return redirect(req, res, redirectTo(createdRecordId));
@@ -292,6 +294,7 @@ export const createRecordFromDraftHandler = async (req: Request, res: Response) 
       req.flash('danger', 'Error creating record');
       return redirect(req, res, `/cube/records/${req.params.id}`);
     }
+    recordSiteActivity('recordsCreated', req.logger);
 
     req.flash('success', 'Record created successfully');
     return redirect(req, res, `/cube/record/${createdRecordId}`);

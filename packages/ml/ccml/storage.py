@@ -1,6 +1,7 @@
 """S3 helpers for the training and packaging tasks."""
 
 import json
+import time
 from pathlib import Path
 
 import boto3
@@ -45,24 +46,69 @@ def write_json(bucket: str, key: str, data) -> None:
     _s3.put_object(Bucket=bucket, Key=key, Body=json.dumps(data).encode(), ContentType="application/json")
 
 
+def read_json_with_etag(bucket: str, key: str):
+    """(parsed object, ETag), or (None, None) when the key doesn't exist."""
+    try:
+        response = _s3.get_object(Bucket=bucket, Key=key)
+    except ClientError as error:
+        if _missing(error):
+            return None, None
+        raise
+    return json.loads(response["Body"].read()), response["ETag"]
+
+
+def write_json_if_unchanged(bucket: str, key: str, data, etag: str | None) -> bool:
+    """Writes only if the object still has `etag` (or, with None, still doesn't exist). False when
+    something else wrote it first."""
+    condition = {"IfMatch": etag} if etag else {"IfNoneMatch": "*"}
+    try:
+        _s3.put_object(
+            Bucket=bucket, Key=key, Body=json.dumps(data).encode(), ContentType="application/json", **condition
+        )
+    except ClientError as error:
+        if error.response.get("Error", {}).get("Code") in ("PreconditionFailed", "ConditionalRequestConflict"):
+            return False
+        raise
+    return True
+
+
 def download_file(bucket: str, key: str, path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     _s3.download_file(bucket, key, str(path))
 
 
+# Seconds between progress lines for long downloads and loops.
+PROGRESS_SECONDS = 10
+
+
 def download_prefix(bucket: str, prefix: str, local_dir: Path) -> int:
     """Downloads every key under prefix, skipping files already present with the same size."""
-    count = 0
-    for page in _s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=prefix):
-        for obj in page.get("Contents", []):
-            key = obj["Key"]
-            if key.endswith("/"):
-                continue
-            target = local_dir / key[len(prefix):]
-            if not (target.exists() and target.stat().st_size == obj["Size"]):
-                download_file(bucket, key, target)
-            count += 1
-    return count
+    objects = [
+        obj
+        for page in _s3.get_paginator("list_objects_v2").paginate(Bucket=bucket, Prefix=prefix)
+        for obj in page.get("Contents", [])
+        if not obj["Key"].endswith("/")
+    ]
+    total = sum(obj["Size"] for obj in objects)
+    print(f"Downloading s3://{bucket}/{prefix}: {len(objects)} files, {total / 2**20:,.0f} MB", flush=True)
+    done = fetched = skipped = 0
+    last = time.monotonic()
+    for i, obj in enumerate(objects, 1):
+        target = local_dir / obj["Key"][len(prefix):]
+        if target.exists() and target.stat().st_size == obj["Size"]:
+            skipped += 1
+        else:
+            download_file(bucket, obj["Key"], target)
+            fetched += 1
+        done += obj["Size"]
+        if time.monotonic() - last >= PROGRESS_SECONDS or i == len(objects):
+            last = time.monotonic()
+            print(
+                f"  {i}/{len(objects)} files, {done / 2**20:,.0f} of {total / 2**20:,.0f} MB "
+                f"({fetched} downloaded, {skipped} already here)",
+                flush=True,
+            )
+    return len(objects)
 
 
 def upload_file(bucket: str, key: str, path: Path) -> None:

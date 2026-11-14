@@ -1332,6 +1332,26 @@ describe('RecordTranscribePage', () => {
     expect(sections['overrides:1']).toBeUndefined();
   });
 
+  // The user report: entering a second player's record on an event that already carries one
+  // (so the page opens in final-records mode) was refused as "changed by someone else" on
+  // every attempt, "Keep mine" included. The entry itself is fine; what the save claimed to
+  // have loaded for that player was the 0-0-0 this mode displays for an unset override, which
+  // storage never holds — so the endpoint read the section as contested forever. The baseline
+  // has to be the stored absence, whatever the mode on screen renders.
+  it('baselines a newly entered record against the stored absence, not the displayed 0-0-0', async () => {
+    const { csrfFetch } = renderPage({ record: createRecord({ overrides: aliceOverride() }) });
+
+    expect(roundsShown()).toBe(false);
+
+    fireEvent.change(recordCell(1, 'Losses'), { target: { value: '2' } });
+    fireEvent.click(saveButton());
+    await waitFor(() => expect(saveCalls(csrfFetch)).toHaveLength(1));
+
+    const payload = savedPayload(csrfFetch);
+    expect(payload.sections['overrides:1']).toEqual({ wins: 0, losses: 2, draws: 0 });
+    expect(payload.baselines.overrides).toEqual({ '1': null });
+  });
+
   // The page has to say plainly when an override is what will be displayed. That disclosure
   // used to be a warning in the results section, which is now rounds-only, so it sits next to
   // the record it describes.

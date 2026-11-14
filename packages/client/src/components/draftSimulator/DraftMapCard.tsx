@@ -138,9 +138,19 @@ export function computeDraftMapPoints(
     }
   });
 
+  // Archetype name → color slot for archetype coloring, most common archetype first.
+  const archetypeCounts = new Map<string, number>();
+  for (const label of poolArchetypeLabels?.values() ?? []) {
+    archetypeCounts.set(label, (archetypeCounts.get(label) ?? 0) + 1);
+  }
+  const archetypeSlots = new Map(
+    [...archetypeCounts.entries()].sort((a, b) => b[1] - a[1]).map(([name], slot) => [name, slot]),
+  );
+
   return slimPools.map((pool, poolIndex) => {
     const coord = umapCoords[poolIndex]!;
     const cluster = clusterByPoolIndex.get(poolIndex);
+    const archetypeLabel = poolArchetypeLabels?.get(poolIndex);
     return {
       x: coord.x,
       y: coord.y,
@@ -151,6 +161,7 @@ export function computeDraftMapPoints(
       clusterIndex: cluster?.clusterIndex ?? null,
       clusterLabel: cluster?.label ?? 'Unclustered',
       archetype: displayedPools[poolIndex]?.archetype ?? pool.archetype,
+      archetypeIndex: archetypeLabel === undefined ? null : (archetypeSlots.get(archetypeLabel) ?? null),
     };
   });
 }
@@ -472,13 +483,25 @@ const DraftMapCard: React.FC<{
                   type="button"
                   onClick={() => setDraftMapColorMode('deckColor')}
                   className={[
-                    'px-2 py-1 text-xs font-medium transition-colors',
+                    'px-2 py-1 text-xs font-medium transition-colors border-r border-border',
                     draftMapColorMode === 'deckColor'
                       ? 'bg-link text-white'
                       : 'bg-bg-accent hover:bg-bg-active text-text-secondary',
                   ].join(' ')}
                 >
                   Deck Color
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setDraftMapColorMode('archetype')}
+                  className={[
+                    'px-2 py-1 text-xs font-medium transition-colors',
+                    draftMapColorMode === 'archetype'
+                      ? 'bg-link text-white'
+                      : 'bg-bg-accent hover:bg-bg-active text-text-secondary',
+                  ].join(' ')}
+                >
+                  Archetype
                 </button>
               </div>
             </div>

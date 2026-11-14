@@ -26,7 +26,6 @@ import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
 import UserContext from '../../contexts/UserContext';
-import { getAdminAlertCount } from '../../utils/adminAlerts';
 import { CardFooter } from '../base/Card';
 import { Flexbox } from '../base/Layout';
 import NavButton from '../base/NavButton';
@@ -103,20 +102,11 @@ interface NavbarProps {
 
 const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
   const user = useContext(UserContext);
-  const isAdmin = !!user?.roles?.includes(UserRoles.ADMIN);
   const [pathname, setPathname] = useState<string | null>(null);
-  const [adminAlertCount, setAdminAlertCount] = useState(0);
 
   useEffect(() => {
     setPathname(window.location.pathname);
   }, []);
-
-  useEffect(() => {
-    if (isAdmin) {
-      // eslint-disable-next-line react/set-state-in-effect
-      setAdminAlertCount(getAdminAlertCount());
-    }
-  }, [isAdmin]);
 
   const isHomePage = pathname === '/landing' || pathname === '/dashboard';
 
@@ -318,32 +308,10 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
   );
 
   const userMenu = user && (
-    <NavMenu
-      label={
-        <span className="relative whitespace-nowrap">
-          {user.username}
-          {adminAlertCount > 0 && (
-            <span className="absolute -right-2.5 -top-1 h-2.5 w-2.5 rounded-full bg-button-danger ring-2 ring-bg-secondary" />
-          )}
-        </span>
-      }
-      navBar
-      transparent={transparent}
-    >
+    <NavMenu label={<span className="whitespace-nowrap">{user.username}</span>} navBar transparent={transparent}>
       <Flexbox direction="col" gap="2" className="p-3">
         <NavLink href={`/user/view/${user.id}`}>Profile</NavLink>
-        {isAdmin && (
-          <NavLink href="/admin/dashboard">
-            <span className="flex items-center gap-2">
-              Admin Page
-              {adminAlertCount > 0 && (
-                <span className="rounded-full bg-button-danger px-2 py-0.5 text-xs font-semibold text-white">
-                  {adminAlertCount}
-                </span>
-              )}
-            </span>
-          </NavLink>
-        )}
+        {user.roles && user.roles.includes(UserRoles.ADMIN) && <NavLink href="/admin/dashboard">Admin Page</NavLink>}
         {user.roles && user.roles.includes(UserRoles.CONTENT_CREATOR) && (
           <NavLink href="/content/creators">Content Creator Dashboard</NavLink>
         )}

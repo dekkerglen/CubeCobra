@@ -2,6 +2,7 @@ import { NotificationType } from '@utils/datatypes/Notification';
 import { userDao } from 'dynamo/daos';
 import { csrfProtection, ensureAuth } from 'router/middleware';
 import { redirect } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { addNotification } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
@@ -25,6 +26,7 @@ export const handler = async (req: Request, res: Response) => {
     const alreadyFollowing = await userDao.getFollow(user.id, other.id);
     if (!alreadyFollowing) {
       await userDao.writeFollow(user.id, other.id);
+      recordSiteActivity('userFollows', req.logger);
       await userDao.incrementFollowerCount(other.id, 1);
       await userDao.incrementFollowingCount(user.id, 1);
 

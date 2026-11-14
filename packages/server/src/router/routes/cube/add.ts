@@ -7,6 +7,7 @@ import { csrfProtection, ensureAuth, recaptcha } from 'router/middleware';
 import { trackServerEvent } from 'serverutils/analytics';
 import { getRandomNewCubeImage } from 'serverutils/imageutil';
 import { handleRouteError, redirect } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { hasProfanity } from 'serverutils/util';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -105,6 +106,7 @@ export const addHandler = async (req: Request, res: Response) => {
     });
 
     trackServerEvent('cube_create', {}, { clientId: req.user!.id, logger: req.logger });
+    recordSiteActivity('cubesCreated', req.logger);
 
     req.flash('success', 'Cube created!');
     return redirect(req, res, `/cube/view/${cube.id}`);

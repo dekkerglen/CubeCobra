@@ -12,6 +12,7 @@ import { LORE_SEEKER_ORACLE_ID } from '@utils/drafting/draftEffects';
 import { blogDao, cubeDao, feedDao, userDao } from 'dynamo/daos';
 import { cardFromId } from 'serverutils/carddb';
 import { isCubeEditable } from 'serverutils/cubefn';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 
 import { AppError } from '../../../../../errors/AppError';
 import { ErrorCode } from '../../../../../errors/errorCodes';
@@ -247,6 +248,7 @@ export const commitHandler = async (req: Request, res: Response) => {
       }
       throw err; // Nothing was committed; handled by the outer catch as a 500.
     }
+    recordSiteActivity('cubeEdits', req.logger);
 
     // The cube change and its changelog are now durable and consistent. The blog
     // post and follower feed are secondary — if they fail, the commit still stands.

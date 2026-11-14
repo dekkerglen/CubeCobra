@@ -138,6 +138,8 @@ const ClusterDetailPanel: React.FC<{
   poolLabel?: (poolIndex: number) => string;
   /** Overrides the computed cluster name in the header (keeps callers consistent). */
   displayName?: string;
+  /** Replaces "Cluster N" at the start of the subtitle, for groups that aren't clusters. */
+  subtitleLabel?: string;
   /** Replaces the "Exemplary Deck" tab with a caller-supplied list (e.g. all decks). */
   decksTab?: { label: string; title?: string; content: React.ReactNode };
 }> = ({
@@ -157,6 +159,7 @@ const ClusterDetailPanel: React.FC<{
   onCardClick,
   onClose,
   displayName,
+  subtitleLabel,
   decksTab,
   poolLabel,
 }) => {
@@ -441,7 +444,7 @@ const ClusterDetailPanel: React.FC<{
             </div>
             <div>
               <Text xs className="text-text-secondary">
-                Cluster {clusterIndex + 1} · {skeleton.poolCount} seats · {pct}%
+                {subtitleLabel ?? `Cluster ${clusterIndex + 1}`} · {skeleton.poolCount} seats · {pct}%
               </Text>
             </div>
           </div>

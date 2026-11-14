@@ -28,8 +28,11 @@ export async function classifyPoolArchetypes(pools: string[][]): Promise<Map<num
         method: 'POST',
         credentials: 'same-origin',
         headers: { 'Content-Type': 'application/json' },
+        // Records can hold empty oracle ids (unmatched cards); one fails the route's validation for the whole chunk.
         body: JSON.stringify({
-          pools: pools.slice(start, start + CLASSIFY_CHUNK).map((pool) => [...new Set(pool)].slice(0, MAX_POOL_CARDS)),
+          pools: pools
+            .slice(start, start + CLASSIFY_CHUNK)
+            .map((pool) => [...new Set(pool)].filter(Boolean).slice(0, MAX_POOL_CARDS)),
         }),
       });
       if (!resp.ok) return null;

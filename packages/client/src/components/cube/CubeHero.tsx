@@ -20,7 +20,7 @@ import {
   StopIcon,
 } from '@primer/octicons-react';
 import { cardIsToken, cardName, cardPrice, cardPriceCardKingdom, cardPriceManaPool } from '@utils/cardutil';
-import Cube, { findViewBySlug } from '@utils/datatypes/Cube';
+import Cube, { boardNameToKey, findViewBySlug, getBoardDefinitions } from '@utils/datatypes/Cube';
 import { getCubeCardCountSnippet } from '@utils/Util';
 
 import BaseUrlContext from '../../contexts/BaseUrlContext';
@@ -78,6 +78,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   const [isSortUsed, setIsSortUsed] = useState(true);
   const [isFilterUsed, setIsFilterUsed] = useState(true);
   const [exportAllBoards, setExportAllBoards] = useState(false);
+  const [purchaseBoards, setPurchaseBoards] = useState<string[]>(['mainboard']);
   const [followedState, setFollowedState] = useState(!!user && !!cube.likedByCurrentUser);
   const [pinnedState, setPinnedState] = useState(!!user && isCubeOwner && !!cube.pinnedByCurrentUser);
 
@@ -148,6 +149,16 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
   } = useContext(DisplayContext);
 
   const { hasCustomImages: _hasCustomImages, unfilteredChangedCards } = useContext(CubeContext);
+
+  const boardDefinitions = useMemo(
+    () => getBoardDefinitions(cube, unfilteredChangedCards),
+    [cube, unfilteredChangedCards],
+  );
+
+  const purchaseCards = useMemo(
+    () => purchaseBoards.flatMap((board) => unfilteredChangedCards[board] ?? []),
+    [purchaseBoards, unfilteredChangedCards],
+  );
 
   // Update More menu alignment based on position
   React.useEffect(() => {
@@ -394,18 +405,32 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
 
   const purchaseMenuItems = (
     <Flexbox direction="col" gap="2" className="p-3">
+      {boardDefinitions.map((board) => {
+        const key = boardNameToKey(board.name);
+        return (
+          <Checkbox
+            key={key}
+            label={board.name}
+            checked={purchaseBoards.includes(key)}
+            setChecked={(checked) =>
+              setPurchaseBoards((boards) => (checked ? [...boards, key] : boards.filter((b) => b !== key)))
+            }
+          />
+        );
+      })}
+      <div className="border-t border-border my-1" />
       <Text xs semibold className="text-muted uppercase px-1">
         Purchase Entire Cube
       </Text>
       <a
-        href={getBulkManaPoolLink(unfilteredChangedCards.mainboard)}
+        href={getBulkManaPoolLink(purchaseCards)}
         target="_blank"
         rel="noopener noreferrer"
         className="!text-text hover:!text-link-active font-medium flex justify-between w-full"
       >
         <span>Mana Pool</span>
         {(() => {
-          const price = unfilteredChangedCards.mainboard.reduce((acc, card) => acc + (cardPriceManaPool(card) ?? 0), 0);
+          const price = purchaseCards.reduce((acc, card) => acc + (cardPriceManaPool(card) ?? 0), 0);
           return price > 0 ? <span>${price.toFixed(2)}</span> : null;
         })()}
       </a>
@@ -421,13 +446,13 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
           return `1 ${cardName(card)}`;
         };
         const formData = {
-          c: unfilteredChangedCards.mainboard
+          c: purchaseCards
             .map(getEntry)
             .filter((x): x is string => x !== null)
             .join('||'),
           affiliateurl: tcgplayerAffiliate,
         };
-        const price = unfilteredChangedCards.mainboard.reduce((acc, card) => acc + (cardPrice(card) ?? 0), 0);
+        const price = purchaseCards.reduce((acc, card) => acc + (cardPrice(card) ?? 0), 0);
         return (
           <Form method="POST" action={tcgMassEntryUrl} formData={formData} ref={formRef}>
             <button
@@ -453,15 +478,12 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
           return `1 ${cardName(card)}`;
         };
         const formData = {
-          c: unfilteredChangedCards.mainboard
+          c: purchaseCards
             .map(getEntry)
             .filter((x): x is string => x !== null)
             .join('||'),
         };
-        const price = unfilteredChangedCards.mainboard.reduce(
-          (acc, card) => acc + (cardPriceCardKingdom(card) ?? 0),
-          0,
-        );
+        const price = purchaseCards.reduce((acc, card) => acc + (cardPriceCardKingdom(card) ?? 0), 0);
         return (
           <Form method="POST" action={cardKingdomBulkLink} formData={formData} ref={formRef}>
             <button
@@ -480,9 +502,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
         Purchase Unowned Cards Only
       </Text>
       {(() => {
-        const unownedCards = unfilteredChangedCards.mainboard.filter(
-          (card) => !card.status || card.status === 'Not Owned',
-        );
+        const unownedCards = purchaseCards.filter((card) => !card.status || card.status === 'Not Owned');
         if (unownedCards.length === 0) {
           return (
             <Text xs className="text-muted px-1">

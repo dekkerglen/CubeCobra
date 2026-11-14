@@ -33,7 +33,6 @@ import { getCubeId } from '@utils/Util';
 import classNames from 'classnames';
 
 import UserContext from '../../contexts/UserContext';
-import { getAdminAlertCount } from '../../utils/adminAlerts';
 import PostButton from '../base/PostButton';
 import withQuickCreateCube from '../QuickCreateCubeButton';
 
@@ -198,15 +197,6 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
   // eslint-disable-next-line react/set-state-in-effect
   useEffect(() => setPathname(window.location.pathname), []);
 
-  const isAdmin = !!user?.roles?.includes(UserRoles.ADMIN);
-  const [adminAlertCount, setAdminAlertCount] = useState(0);
-  useEffect(() => {
-    if (isAdmin) {
-      // eslint-disable-next-line react/set-state-in-effect
-      setAdminAlertCount(getAdminAlertCount());
-    }
-  }, [isAdmin]);
-
   const unread = (user?.notifications || []).length;
   const shouldShowAds = !isAdFree(user?.roles);
 
@@ -284,13 +274,8 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
         )}
         {roleRows
           .filter(({ role }) => user?.roles?.includes(role))
-          .map(({ role, row }) => (
-            <NavRow
-              key={row.href}
-              row={row}
-              pathname={pathname}
-              badge={role === UserRoles.ADMIN && adminAlertCount > 0 ? `${adminAlertCount}` : undefined}
-            />
+          .map(({ row }) => (
+            <NavRow key={row.href} row={row} pathname={pathname} />
           ))}
 
         <Divider />

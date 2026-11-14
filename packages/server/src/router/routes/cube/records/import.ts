@@ -7,6 +7,7 @@ import { bodyValidation } from 'router/middleware';
 import { getReasonableCardByOracle } from 'serverutils/carddb';
 import { isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { v4 as uuidv4 } from 'uuid';
 
 import { Request, Response } from '../../../../types/express';
@@ -137,6 +138,7 @@ export const importRecordHandler = async (req: Request, res: Response) => {
         req.flash('danger', 'Error creating record');
         return redirect(req, res, `/cube/records/${req.params.id}`);
       }
+      recordSiteActivity('recordsCreated', req.logger);
 
       // wait 100ms to ensure the record is created
       await new Promise((resolve) => setTimeout(resolve, 100));

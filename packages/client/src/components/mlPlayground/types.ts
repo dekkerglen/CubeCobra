@@ -62,8 +62,7 @@ export interface ArchetypeResult {
   list: ListSummary;
   embedding: number[];
   colors: string[];
-  // share: of the list's archetype topics. similarity: cosine to the closest legacy cluster center.
-  scoreKind: 'share' | 'similarity';
+  // Each archetype's share of the list's archetype topics.
   archetypes: ArchetypeScore[];
 }
 

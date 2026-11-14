@@ -2,7 +2,15 @@ jest.mock('serverutils/imageutil', () => ({
   getImageData: jest.fn(() => ({ uri: 'image.png' })),
 }));
 
-import { DynamoDBDocumentClient, GetCommand, PutCommand, QueryCommand } from '@aws-sdk/lib-dynamodb';
+import {
+  BatchGetCommand,
+  DeleteCommand,
+  DynamoDBDocumentClient,
+  GetCommand,
+  PutCommand,
+  QueryCommand,
+} from '@aws-sdk/lib-dynamodb';
+import { UserRoles } from '@utils/datatypes/User';
 
 import { PasswordResetDynamoDao } from '../../src/dynamo/dao/PasswordResetDynamoDao';
 import { PatronDynamoDao } from '../../src/dynamo/dao/PatronDynamoDao';
@@ -160,6 +168,82 @@ describe('UserDynamoDao dashboard dailies', () => {
     send.mockResolvedValue(getResponse(storedUser({ hideFeatured: true, hiddenDailyGames: [] })));
 
     expect((await dao.getById('user-1'))?.hiddenDailyGames).toEqual([]);
+  });
+});
+
+describe('UserDynamoDao role rows', () => {
+  let send: jest.Mock;
+  let dao: UserDynamoDao;
+
+  beforeEach(() => {
+    send = jest.fn().mockResolvedValue({});
+    dao = new UserDynamoDao({ send } as unknown as DynamoDBDocumentClient, TABLE);
+  });
+
+  it('writes a row for each role gained and deletes one for each role lost', async () => {
+    await dao.syncRoleRows('user-1', [UserRoles.PATRON, UserRoles.ADMIN], [UserRoles.ADMIN, UserRoles.CONTENT_CREATOR]);
+
+    const commands = send.mock.calls.map(([command]) => command);
+    expect(commands.filter((command) => command instanceof PutCommand).map((command) => command.input.Item)).toEqual([
+      {
+        PK: 'HASH#USER#user-1',
+        SK: 'ROLE#ContentCreator',
+        GSI1PK: 'USER#ROLE#ContentCreator',
+        GSI1SK: 'user-1',
+        userId: 'user-1',
+        role: UserRoles.CONTENT_CREATOR,
+      },
+    ]);
+    expect(commands.filter((command) => command instanceof DeleteCommand).map((command) => command.input.Key)).toEqual([
+      { PK: 'HASH#USER#user-1', SK: 'ROLE#Patron' },
+    ]);
+  });
+
+  it('updates the role rows when a user is saved with different roles', async () => {
+    send.mockImplementation(async (command) =>
+      command instanceof GetCommand ? getResponse(storedUser({ roles: [UserRoles.PATRON] })) : {},
+    );
+
+    await dao.update({ id: 'user-1', roles: [UserRoles.ADMIN] } as any);
+
+    const commands = send.mock.calls.map(([command]) => command);
+    expect(commands.some((command) => command instanceof PutCommand && command.input.Item?.SK === 'ROLE#Admin')).toBe(
+      true,
+    );
+    expect(
+      commands.some((command) => command instanceof DeleteCommand && command.input.Key?.SK === 'ROLE#Patron'),
+    ).toBe(true);
+  });
+
+  it("lists a role's holders from its rows, following every page", async () => {
+    send.mockImplementation(async (command) => {
+      if (command instanceof QueryCommand) {
+        return command.input.ExclusiveStartKey
+          ? { Items: [{ userId: 'admin-2' }] }
+          : { Items: [{ userId: 'admin-1' }], LastEvaluatedKey: { PK: 'HASH#USER#admin-1' } };
+      }
+      if (command instanceof BatchGetCommand) {
+        const keys = command.input.RequestItems?.[TABLE]?.Keys as { PK: string }[];
+        return {
+          Responses: {
+            [TABLE]: keys.map(({ PK }) => ({
+              item: storedUser({ id: PK.replace('USER#', ''), roles: [UserRoles.ADMIN] }),
+            })),
+          },
+        };
+      }
+      return {};
+    });
+
+    const admins = await dao.listByRole(UserRoles.ADMIN);
+
+    expect(admins.map((user) => user.id)).toEqual(['admin-1', 'admin-2']);
+    const query = send.mock.calls.map(([command]) => command).find((command) => command instanceof QueryCommand);
+    expect(query?.input).toMatchObject({
+      IndexName: 'GSI1',
+      KeyConditionExpression: 'GSI1PK = :pk',
+      ExpressionAttributeValues: { ':pk': 'USER#ROLE#Admin' },
+    });
   });
 });
 

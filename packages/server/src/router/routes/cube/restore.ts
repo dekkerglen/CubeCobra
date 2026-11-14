@@ -4,6 +4,7 @@ import { csrfProtection, ensureAuth } from 'router/middleware';
 import { abbreviate, isCubeEditable, isCubeViewable } from 'serverutils/cubefn';
 import generateMeta from 'serverutils/meta';
 import { handleRouteError, redirect, render } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { getBaseUrl } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
@@ -113,6 +114,7 @@ export const restoreHandler = async (req: Request, res: Response) => {
     };
 
     await changelogDao.createChangelog(changelog, cube.id);
+    recordSiteActivity('cubeEdits', req.logger);
 
     req.flash('success', 'Cube successfully restored to the selected version');
     return redirect(req, res, `/cube/settings/${cubeId}?view=restore`);

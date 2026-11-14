@@ -6,6 +6,7 @@ import { cardFromId } from 'serverutils/carddb';
 import { addBasics, basicsBoardFor, createPool, getBasicCardsFromCube, shuffle } from 'serverutils/cube';
 import { isCubeViewable } from 'serverutils/cubefn';
 import { handleRouteError, redirect } from 'serverutils/render';
+import { recordSiteActivity } from 'serverutils/siteActivity';
 import { addNotification } from 'serverutils/util';
 
 import { Request, Response } from '../../../types/express';
@@ -133,6 +134,7 @@ export const startSealedHandler = async (req: Request, res: Response) => {
     });
 
     const deckId = await draftDao.createDraft(deck);
+    recordSiteActivity('sealedPoolsOpened', req.logger);
 
     cube.numDecks += 1;
 

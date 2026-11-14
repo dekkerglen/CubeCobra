@@ -200,6 +200,10 @@ export const blankNameBigram = (cardName: string, text: string): string | null =
   return parts.join('');
 };
 
+/** The cards a name word or pair may be clued with, `sourceCardName` first. */
+const citableSources = (entry: CrosswordVocabEntry): string[] =>
+  entry.sourceCardNames ?? (entry.sourceCardName ? [entry.sourceCardName] : []);
+
 /** Where an rng lands in a list, matching `nameWordClue`'s long-standing pick. */
 const startIndex = (length: number, rng: () => number): number =>
   length === 0 ? 0 : Math.min(length - 1, Math.floor(rng() * length));
@@ -226,7 +230,7 @@ export const nameWordClue = (
   rng: () => number,
   blank: (cardName: string, text: string) => string | null = blankNameWord,
 ): CrosswordClue | null => {
-  const sources = entry.sourceCardNames ?? (entry.sourceCardName ? [entry.sourceCardName] : []);
+  const sources = citableSources(entry);
   if (sources.length === 0) {
     return null;
   }
@@ -257,6 +261,11 @@ export interface ClueContext {
   byKeyword: Map<string, number[]>;
   /** Cards whose rules text uses the word, at a position `oracleWords` can state. */
   byOracleWord: Map<string, number[]>;
+  /**
+   * Every word any card's rules text uses, except where a card names itself. A
+   * name word missing from here appears in card names and nowhere else.
+   */
+  rulesWords: Set<string>;
   bySetCode: Map<string, number[]>;
   /**
    * Scryfall Tagger oracle tags a clue may name, with how many distinct cards
@@ -289,6 +298,7 @@ const buildClueContext = (): ClueContext => {
   const byCreatureType = new Map<string, number[]>();
   const byKeyword = new Map<string, number[]>();
   const byOracleWord = new Map<string, number[]>();
+  const rulesWords = new Set<string>();
   const bySetCode = new Map<string, number[]>();
 
   for (const [nameLower, details] of bestByName) {
@@ -311,9 +321,16 @@ const buildClueContext = (): ClueContext => {
     // would count. There used to be a second index for words that only exist
     // inside a longer one — AREN, NON, SIDED — and it is gone because the shared
     // tokenizer no longer mints them.
+    //
+    // "Ilharg, the Raze-Boar" says ILHARG in its own text, which is the name and
+    // not the rules using the word, so a self-reference stays out of `rulesWords`.
+    const selfReference = new Set(nameTokens(details.name).map(normalize));
     for (const word of new Set(oracleWords(details.oracle_text ?? ''))) {
       if (word.length >= MIN_LENGTH && word.length <= MAX_LENGTH) {
         pushCapped(byOracleWord, word, index);
+      }
+      if (!selfReference.has(word)) {
+        rulesWords.add(word);
       }
     }
   }
@@ -324,6 +341,7 @@ const buildClueContext = (): ClueContext => {
     byCreatureType,
     byKeyword,
     byOracleWord,
+    rulesWords,
     bySetCode,
     oracleTagCounts: eligibleOracleTagCounts(MIN_RECOGNISABLE_TAG_NAMES),
   };
@@ -757,12 +775,45 @@ const filterClue = (
 const RULES_LINE_SHARE = 0.5;
 
 /**
- * The clue for an answer that is part of one card, in whichever shape the puzzle's
- * rng draws: a line of the card's own rules text, or a filter that narrows to it.
+ * A card described in whichever shape the puzzle's rng draws: a line of its own
+ * rules text, or a filter that narrows to it.
  *
  * Both shapes are checked for leaks here rather than only in `clueFor`, so a shape
  * that would have given the answer away falls through to the other one instead of
- * all the way to the clue of last resort.
+ * all the way to the clue of last resort. Null when neither works.
+ */
+const describedCard = (
+  details: CardDetails,
+  entry: CrosswordVocabEntry,
+  ctx: ClueContext,
+  suffix: string,
+  rng: () => number,
+): CrosswordClue | null => {
+  const rules = (): CrosswordClue | null => rulesLineClue(details, suffix);
+  const filter = (): CrosswordClue | null => filterClue(details, entry, ctx, suffix, rng);
+  const shapes = rng() < RULES_LINE_SHARE ? [rules, filter] : [filter, rules];
+
+  for (const shape of shapes) {
+    const built = shape();
+    if (built && !revealsEntry(built.clue, entry)) {
+      return built;
+    }
+  }
+  return null;
+};
+
+/** The card a name is the name of, if the context holds it. */
+const cardNamed = (name: string, ctx: ClueContext): CardDetails | null => {
+  // `normalizeName`, not toLowerCase: `name_lower` is accent-folded, so a plain
+  // lowercase of "Gríma, Saruman's Footman" misses the card and every clue for
+  // every entry off an accented name comes out generic.
+  const index = ctx.byNameLower.get(normalizeName(name));
+  return index === undefined ? null : ctx.cards[index]!;
+};
+
+/**
+ * The clue for an answer that is part of one card, described as `describedCard`
+ * draws it.
  *
  * The type line is the third and last shape, for a card that narrowed to nothing
  * and has no quotable text: it still describes the card without naming it, which
@@ -775,29 +826,63 @@ const cardPartClue = (
   suffix: string,
   rng: () => number,
 ): CrosswordClue | null => {
-  const name = entry.sourceCardName ?? entry.display;
-  // `normalizeName`, not toLowerCase: `name_lower` is accent-folded, so a plain
-  // lowercase of "Gríma, Saruman's Footman" misses the card and every clue for
-  // every entry off an accented name comes out generic.
-  const index = ctx.byNameLower.get(normalizeName(name));
-  if (index === undefined) {
+  const details = cardNamed(entry.sourceCardName ?? entry.display, ctx);
+  if (!details) {
     return null;
   }
-  const details = ctx.cards[index]!;
 
-  const rules = (): CrosswordClue | null => rulesLineClue(details, suffix);
-  const filter = (): CrosswordClue | null => filterClue(details, entry, ctx, suffix, rng);
-  const shapes = rng() < RULES_LINE_SHARE ? [rules, filter] : [filter, rules];
-
-  for (const shape of shapes) {
-    const built = shape();
-    if (built && !revealsEntry(built.clue, entry)) {
-      return built;
-    }
+  const described = describedCard(details, entry, ctx, suffix, rng);
+  if (described) {
+    return described;
   }
 
   const fallback = Number.isInteger(details.cmc) ? `${details.type}, mana value ${details.cmc}` : details.type;
   return fallback ? { clue: `${fallback}${suffix}` } : null;
+};
+
+/**
+ * How often a name word that no rules text uses is clued by where it sits in a
+ * name rather than blanked out of one.
+ */
+const NAME_POSITION_SHARE = 0.5;
+
+const ORDINALS = ['First', 'Second', 'Third', 'Fourth', 'Fifth', 'Sixth', 'Seventh', 'Eighth', 'Ninth', 'Tenth'];
+
+/**
+ * A name word clued by its position in a card's name plus a description of that
+ * card: "Third word in the name; Whenever ~ attacks, ..." for RAZEBOAR.
+ *
+ * Only for words that appear in card names and nowhere in rules text. Positions
+ * count every printed word, "the" included, because that is what a solver
+ * counting off the card would get. A source that has the word twice has no one
+ * position to state and is skipped, as is one the context doesn't hold.
+ *
+ * Null when the word is a rules word, when the rng draws the blank instead, or
+ * when no source works, and the caller blanks the word instead.
+ */
+const namePositionClue = (entry: CrosswordVocabEntry, ctx: ClueContext, rng: () => number): CrosswordClue | null => {
+  if (ctx.rulesWords.has(entry.text) || rng() >= NAME_POSITION_SHARE) {
+    return null;
+  }
+  for (const source of rotated(citableSources(entry), rng)) {
+    const words = nameTokens(source).map(normalize);
+    const position = words.indexOf(entry.text);
+    if (position < 0 || position !== words.lastIndexOf(entry.text) || position >= ORDINALS.length) {
+      continue;
+    }
+    const details = cardNamed(source, ctx);
+    const described = details && describedCard(details, entry, ctx, '', rng);
+    if (!described) {
+      continue;
+    }
+    // Checked whole, since the lead-in is words too: WORD or NAME would read
+    // straight off it.
+    const clue = `${ORDINALS[position]} word in the name; ${described.clue}`;
+    if (!revealsEntry(clue, entry)) {
+      return { ...described, clue, clueSource: source };
+    }
+  }
+  return null;
 };
 
 const setCodeClue = (entry: CrosswordVocabEntry, ctx: ClueContext, rng: () => number): string | null => {
@@ -881,7 +966,7 @@ const buildClue = (entry: CrosswordVocabEntry, rng: () => number, ctx: ClueConte
   }
   switch (entry.entryClass) {
     case 'nameWord':
-      return nameWordClue(entry, rng);
+      return namePositionClue(entry, ctx, rng) ?? nameWordClue(entry, rng);
     case 'nameBigram':
       return nameWordClue(entry, rng, blankNameBigram);
     case 'creatureType': {

@@ -3,8 +3,8 @@ const path = require('path');
 const fs = require('fs');
 
 // Replace the server's serverutils/ml with the stub: this lambda pulls in DraftDynamoDao
-// (for the write-back), which transitively imports serverutils/archetype -> serverutils/ml,
-// but we never call that path (naming uses our own ./ml client). Stubbing keeps the tfjs /
+// (for the write-back), whose imports can reach serverutils/ml, but we never call it (bots use
+// our own ./ml client). Stubbing keeps the tfjs /
 // cloudwatch ml deps out of the bundle. Our own ./ml (relative) is untouched.
 const mlStubPlugin = {
   name: 'ml-stub',
@@ -28,20 +28,6 @@ const exportFixPlugin = {
   },
 };
 
-// Copy the archetype cluster files next to the bundle; classify.ts falls back to them when the
-// served model bundle has none (the legacy v3).
-const copyStaticPlugin = {
-  name: 'copy-static',
-  setup(build) {
-    build.onEnd(() => {
-      const staticDir = path.resolve(__dirname, '../server/src/static');
-      for (const file of ['clusterCenters.json', 'annotations.json']) {
-        fs.copyFileSync(path.join(staticDir, file), path.resolve(__dirname, 'dist', file));
-      }
-    });
-  },
-};
-
 esbuild
   .build({
     entryPoints: ['src/handler.ts'],
@@ -51,7 +37,7 @@ esbuild
     outfile: 'dist/handler.js',
     format: 'cjs',
     mainFields: ['module', 'main'],
-    plugins: [mlStubPlugin, exportFixPlugin, copyStaticPlugin],
+    plugins: [mlStubPlugin, exportFixPlugin],
     alias: {
       '@utils': '../utils/src',
       '@server': '../server/src',

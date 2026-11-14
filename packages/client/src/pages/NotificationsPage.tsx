@@ -139,7 +139,7 @@ const NotificationsPage: React.FC<NotificationsPageProps> = ({ notifications, la
             .slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)
             .map((entry) =>
               isNotificationGroup(entry) ? (
-                <NotificationGroupRow key={`${entry.type}:${entry.subject}`} group={entry} />
+                <NotificationGroupRow key={entry.ids[0]} group={entry} />
               ) : (
                 <Notification key={entry.id} notification={entry} />
               ),
