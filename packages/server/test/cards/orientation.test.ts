@@ -1,5 +1,6 @@
 import { cardFaceOrientations } from '@utils/cardutil';
 import { CardDetails } from '@utils/datatypes/Card';
+import OrientationOverrides from '@utils/res/OrientationOverrides.json';
 
 import { createCard, createCardDetails } from '../test-utils/data';
 
@@ -60,5 +61,56 @@ describe('cardFaceOrientations', () => {
   it('does not throw when keywords or type are missing', () => {
     expect(cardFaceOrientations({ layout: 'split' } as CardDetails).front).toBe('landscape');
     expect(cardFaceOrientations({ layout: 'normal' } as CardDetails).front).toBe('portrait');
+  });
+});
+
+describe('orientation overrides', () => {
+  const BIND_LIBERATE = '0087fdee-acb4-4449-b4cc-370f0f3c88a9';
+
+  it('forces a listed printing portrait even though its layout says landscape', () => {
+    expect(cardFaceOrientations(details({ layout: 'split', scryfall_id: BIND_LIBERATE })).front).toBe('portrait');
+  });
+
+  it('applies the override through a Card wrapper, not just bare details', () => {
+    const card = createCard({ details: createCardDetails({ layout: 'split', scryfall_id: BIND_LIBERATE }) });
+    expect(cardFaceOrientations(card).front).toBe('portrait');
+  });
+
+  it('still follows the card when an overridden printing carries a custom image', () => {
+    const card = createCard({
+      imgUrl: 'https://example.com/my-own-art.png',
+      details: createCardDetails({ layout: 'split', scryfall_id: BIND_LIBERATE }),
+    });
+    expect(cardFaceOrientations(card).front).toBe('portrait');
+  });
+
+  it('leaves an unlisted split card landscape', () => {
+    expect(cardFaceOrientations(details({ layout: 'split', scryfall_id: 'not-in-the-file' })).front).toBe('landscape');
+  });
+
+  it('falls through to the derived rule when the card carries no scryfall id', () => {
+    // What markdown card links and the autocomplete dropdown pass.
+    expect(cardFaceOrientations({ details: { image_normal: '/tool/cardimage/x' } } as any).front).toBe('portrait');
+    expect(cardFaceOrientations(details({ layout: 'split' })).front).toBe('landscape');
+  });
+
+  it('reports the back face as portrait for an overridden printing', () => {
+    expect(cardFaceOrientations(details({ layout: 'split', scryfall_id: BIND_LIBERATE }))).toEqual({
+      front: 'portrait',
+      back: 'portrait',
+    });
+  });
+});
+
+describe('OrientationOverrides.json', () => {
+  it('lists no printing in both maps', () => {
+    const both = Object.keys(OrientationOverrides.portrait).filter((id) => id in OrientationOverrides.landscape);
+    expect(both).toEqual([]);
+  });
+
+  it('is keyed by scryfall id, not by card name', () => {
+    const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+    const keys = [...Object.keys(OrientationOverrides.portrait), ...Object.keys(OrientationOverrides.landscape)];
+    expect(keys.filter((key) => !uuid.test(key))).toEqual([]);
   });
 });
