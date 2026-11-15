@@ -678,6 +678,24 @@ const PORTRAIT_FACES: CardFaceOrientations = { front: 'portrait', back: 'portrai
 const LANDSCAPE_FACES: CardFaceOrientations = { front: 'landscape', back: 'portrait' };
 
 /**
+ * How many halves a split card's name declares. Three or more cannot fit a landscape
+ * frame — they are printed as stacked panels on an upright card — so this is what
+ * separates a real split card from `There // They're // Their` and friends.
+ *
+ * Face count comes from the name because `CardDetails` stores no per-face data, and
+ * `details.type` holds the front face's type line only. Only `split` names carry more
+ * than one separator (`art_series` names carry exactly one), so the caller scopes this
+ * to `split` and nothing else is at risk.
+ *
+ * Deliberately not keyed on the `playtest` promo type, even though every playtest split
+ * printing is upright today: `playtest` describes where a card came from, not how its
+ * frame is laid out. There are 52 playtest *planar* cards that are genuinely landscape,
+ * and `Who // What // When // Where // Why` is upright without being playtest. Printings
+ * the geometry does not catch are listed in `res/OrientationOverrides.json` instead.
+ */
+const splitFaceCount = (name?: string): number => (name ?? '').split(' // ').length;
+
+/**
  * A printing's orientation, when the layout-derived rule below gets it wrong.
  *
  * Scryfall exposes no orientation field, and every card image is a 488x680 portrait JPEG
@@ -743,7 +761,7 @@ export const cardFaceOrientations = (card?: Card | CardDetailsType | null): Card
   const layout = details.layout ?? '';
   const isLandscapeFront =
     LANDSCAPE_LAYOUTS.includes(layout) ||
-    (layout === 'split' && !(details.keywords ?? []).includes('Aftermath')) ||
+    (layout === 'split' && !(details.keywords ?? []).includes('Aftermath') && splitFaceCount(details.name) <= 2) ||
     (details.type ?? '').includes('Battle');
 
   return isLandscapeFront ? LANDSCAPE_FACES : PORTRAIT_FACES;

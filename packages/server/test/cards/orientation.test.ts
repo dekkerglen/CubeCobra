@@ -20,6 +20,27 @@ describe('cardFaceOrientations', () => {
     expect(cardFaceOrientations(details({ layout: 'split', keywords: ['Aftermath'] })).front).toBe('portrait');
   });
 
+  it('treats a split card with more than two faces as portrait', () => {
+    expect(cardFaceOrientations(details({ layout: 'split', name: "There // They're // Their" })).front).toBe(
+      'portrait',
+    );
+    expect(cardFaceOrientations(details({ layout: 'split', name: 'Smelt // Herd // Saw' })).front).toBe('portrait');
+    expect(cardFaceOrientations(details({ layout: 'split', name: 'Who // What // When // Where // Why' })).front).toBe(
+      'portrait',
+    );
+  });
+
+  it('leaves ordinary two-face split cards landscape', () => {
+    expect(cardFaceOrientations(details({ layout: 'split', name: 'Fire // Ice' })).front).toBe('landscape');
+    expect(cardFaceOrientations(details({ layout: 'split', name: 'Wear // Tear', keywords: ['Fuse'] })).front).toBe(
+      'landscape',
+    );
+  });
+
+  it('does not read face count from a non-split layout', () => {
+    expect(cardFaceOrientations(details({ layout: 'planar', name: 'A // B // C' })).front).toBe('landscape');
+  });
+
   it('treats battles as landscape whatever their layout', () => {
     expect(cardFaceOrientations(details({ layout: 'transform', type: 'Battle — Siege' })).front).toBe('landscape');
     expect(cardFaceOrientations(details({ layout: 'normal', type: 'Battle — Control Point' })).front).toBe('landscape');
