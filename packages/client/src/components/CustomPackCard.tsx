@@ -196,7 +196,7 @@ const CustomPackCard: React.FC<CustomPackCardProps> = ({
                 /* The default steps are pick then pass. The default for a pack is N of those pairs, minus the last pick.
                  * So most commonly for a new step we want to add a pass then pick, thus reverse.
                  */
-                onClick={() => setPack({ ...pack, steps: [...steps, ...DEFAULT_STEPS.reverse()] })}
+                onClick={() => setPack({ ...pack, steps: [...steps, ...[...DEFAULT_STEPS].reverse()] })}
               >
                 Add Step
               </Button>

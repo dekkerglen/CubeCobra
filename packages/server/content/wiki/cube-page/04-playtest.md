@@ -23,9 +23,11 @@ cube's owner set, usually 8). You occupy one seat and bots fill the rest.
 The draft plays out like the real thing: pick a card, pass the pack, receive the next one. As you
 build, your picks land in a two-row layout (creatures on top, non-creatures below, columns by mana
 value), and you can drag cards between mainboard and sideboard as you go. The bots pick using the
-same machine-learning model that powers Cube Cobra's card rankings, and your current pack shows
-each card's bot rating as a bar underneath it, so a practice draft doubles as a window into how the
-bots value your cards.
+same machine-learning model that powers Cube Cobra's card rankings, and **Show CubeCobra Bot
+Ratings** puts each card's [bot rating](/wiki/machine-learning#bot-ratings) on it as a percentage,
+so a practice draft doubles as a window into how the bots value your cards. Drafting a
+[voucher](/wiki/special-cards/vouchers) hands you every card inside it, and Conspiracy's
+[draft-matters cards](/wiki/draft-matters) do what they say.
 
 An in-progress draft is saved in your browser, so an interrupted draft resumes where you left off.
 When the last pick is made, you're taken to the [deckbuilder](#the-deckbuilder), and the bots build
@@ -97,7 +99,8 @@ From a generated pack you can:
 
 A P1P1 (pack one, pick one) poll shows the pack to other users and lets them vote on their first
 pick. The Playtest tab's sample pack view keeps a list of the cube's previous P1P1s, and polls can
-be created directly from there too.
+be created directly from there too. Cube Cobra also runs a site-wide
+[Daily P1P1](/wiki/daily-games/daily-p1p1) from a featured cube.
 
 ## The deck archive
 
@@ -136,7 +139,7 @@ The toolbar offers:
   the cube's owner, via a dedicated basics board.
 - **Autobuild**, which has the deckbuilding model assemble a deck from your pool, respecting the
   cube's configured spell and land counts (23 and 17 unless the owner changed them). It's a
-  starting point you can then adjust by hand.
+  starting point you can then adjust by hand; see [Autobuild](/wiki/machine-learning#autobuild).
 - Sort controls for rearranging the stacks, a deck stats panel (curve, colors, land count), and a
   title field.
 
@@ -144,10 +147,22 @@ The toolbar offers:
 
 ## Draft simulator
 
-The Draft Simulator card opens a batch-simulation tool: it runs many bot-only drafts of the cube in
-your browser and aggregates the results (pick rates per card, archetype clusters, deck
-compositions) to show how the cube drafts when nobody's forcing anything. It's the fastest way to
-see whether an archetype is underdrafted or a card never makes a deck, without needing months of
-human draft history. Results appear in the same archetype-map style as the [Playtest Data
-analytics](/wiki/cube-page/analysis) view, and simulation runs are kept locally so you can compare
-before and after a change to the list.
+The Draft Simulator view, also linked from its card on the Practice Draft view, runs many bot-only
+drafts of the cube in your browser and aggregates the results to show how the cube drafts when
+nobody's forcing anything. It's the fastest way to see whether an archetype is underdrafted or a
+card never makes a deck, without needing months of human draft history.
+
+Choose how many **Drafts** to run (100 by default; past 300, a run may be slow or time out), the
+**Format** (any of the cube's draft formats), and the number of **Seats** (2–16, starting from the
+cube's default), then press **Run Simulation**. The bots draft, build their decks, and the decks
+are grouped into clusters of similar builds. Results cover deck colors, card types, curves, and
+Elo across all decks, per-card pick statistics, and the **Draft Map**, which plots every simulated
+deck in two dimensions so decks that play alike sit together. The map can be colored by
+**Cluster**, by **Deck Color** (each dot a pie of its deck's colors), or by **Archetype**. Clicking
+a deck opens its cluster's staples, most characteristic cards, an exemplary deck, and suggested
+additions. The [Playtest Data analytics](/wiki/cube-page/analysis) view uses the same map for the
+cube's real drafts.
+
+Simulation runs are kept in your browser under **Recent runs**, so you can compare before and after
+a change to the list. How the bots draft, build decks, and group them is covered on the
+[machine learning page](/wiki/machine-learning).

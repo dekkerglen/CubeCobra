@@ -12,13 +12,20 @@
  * an admin's renames and a newly promoted version's topics reach the site on the next restart. The
  * legacy v3 bundle has none, so while it is served decks get no archetype, and the archetypes are
  * read again whenever the served version changes.
+ *
+ * The served model's vocabulary (the oracles in its indexToOracleMap.json) is read whenever the
+ * served version changes, so getOracleForMl only stands in a similar card for cards that model
+ * wasn't trained on. The metadata dict's stand-ins are rebuilt weekly against whatever model was
+ * served then, so they go stale when a model is promoted or rolled back in between.
  */
 import type { ArchetypeNamesFile, ArchetypeTopicsFile } from '@utils/drafting/topicArchetypes';
 import {
   ARCHETYPE_NAMES_FILE,
   ARCHETYPE_TOPICS_FILE,
+  INDEX_TO_ORACLE_FILE,
   LEGACY_MODEL_VERSION,
   MODEL_POINTER_KEY,
+  MODEL_PREFIX,
   type ModelPointer,
   modelVersionPrefix,
   parseModelPointer,
@@ -40,6 +47,8 @@ let servedVersion = LEGACY_MODEL_VERSION;
 let archetypes: ArchetypeData | null = null;
 // The version whose archetypes were last looked for, so a version without any isn't re-read.
 let archetypesCheckedFor: string | null = null;
+// Null until a served version's vocabulary is read.
+let vocabulary: { version: string; oracles: ReadonlySet<string> } | null = null;
 let refreshTimer: NodeJS.Timeout | null = null;
 
 const clientFor = (bucket: string) => (bucket === 'cubecobra-public' ? publicS3 : s3);
@@ -86,13 +95,29 @@ export const readArchetypeFiles = async (
   return { topics: JSON.parse(topics), names: JSON.parse(names) };
 };
 
+/** The oracles a bundle's model was trained on, or null when it has no index map. */
+export const readModelVocabulary = async (bucket: string, version: string): Promise<Set<string> | null> => {
+  const keys = [`${modelVersionPrefix(version)}${INDEX_TO_ORACLE_FILE}`];
+  // The legacy bundle may still sit in the flat layout (see downloadModelsFromS3).
+  if (version === LEGACY_MODEL_VERSION) keys.push(`${MODEL_PREFIX}${INDEX_TO_ORACLE_FILE}`);
+  for (const key of keys) {
+    const raw = await readText(bucket, key);
+    if (raw !== null) return new Set(Object.values(JSON.parse(raw) as Record<string, string>));
+  }
+  return null;
+};
+
 /** The model version this environment serves. */
 export const getServedModelVersion = (): string => servedVersion;
 
 /** The archetypes decks are classified with, or null when the served version has none. */
 export const getArchetypeData = (): ArchetypeData | null => archetypes;
 
-/** Re-reads the pointer and, when needed, the archetypes (see refreshModelPointer). Never throws. */
+/** The oracles the served model was trained on, or null until they're read for the served version. */
+export const getModelVocabulary = (): ReadonlySet<string> | null =>
+  vocabulary?.version === servedVersion ? vocabulary.oracles : null;
+
+/** Re-reads the pointer and, when needed, the archetypes and the vocabulary. Never throws. */
 export const refreshModelPointer = async (): Promise<void> => {
   const bucket = process.env.DATA_BUCKET;
   if (!bucket) return;
@@ -109,6 +134,21 @@ export const refreshModelPointer = async (): Promise<void> => {
     servedVersion = version;
   } catch (err) {
     console.warn(`Could not refresh the model pointer; still serving ${servedVersion}:`, (err as Error).message);
+  }
+  // Read separately so a failure here doesn't hold back the served version. Until it succeeds,
+  // getOracleForMl falls back to the metadata dict alone, and the next refresh tries again.
+  if (vocabulary?.version !== servedVersion) {
+    try {
+      const oracles = await readModelVocabulary(bucket, servedVersion);
+      if (oracles) {
+        vocabulary = { version: servedVersion, oracles };
+        console.info(`Vocabulary of model ${servedVersion}: ${oracles.size} oracles`);
+      } else {
+        console.warn(`Model ${servedVersion} has no ${INDEX_TO_ORACLE_FILE}`);
+      }
+    } catch (err) {
+      console.warn(`Could not read the vocabulary of model ${servedVersion}:`, (err as Error).message);
+    }
   }
 };
 

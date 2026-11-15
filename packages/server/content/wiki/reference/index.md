@@ -1,7 +1,7 @@
 ---
 title: Reference
 description: Syntax references for search and formatting.
-order: 7
+order: 12
 ---
 
 Detailed references for Cube Cobra's search and formatting syntax.

@@ -4,14 +4,15 @@ description: Charts, tables, and tools for understanding a cube's composition, p
 order: 6
 ---
 
-The Analysis tab turns the cube into numbers. Its eleven views cover composition (curve, colors,
-types), card quality signals (Elo, popularity), draft behavior, tokens, keywords, combos, and
+The Analysis tab turns the cube into numbers. Its views cover composition (curve, colors, types),
+card quality signals (Elo, popularity), draft behavior, archetypes, tokens, keywords, combos, and
 prices.
 
 A filter bar at the top applies to nearly every view, using the same
 [filter syntax](/wiki/reference/filter-syntax) as the list page. Filter to `o:destroy ci:b` and the
 averages, tables, and charts below recompute for exactly those cards, which makes quick work of
-questions like "what does my black removal curve look like?" All views work from the mainboard.
+questions like "what does my black removal curve look like?" A board picker in the toolbar chooses
+which boards the views read: the mainboard by default, or any combination of the cube's boards.
 
 ## At a Glance
 
@@ -36,7 +37,8 @@ cube, ranked by how well the machine-learning model thinks they fit. The model i
 that powers the draft bots, trained on the contents of cubes across the site. Search
 `t:creature mv=2 ci:g` while looking for a green two-drop and the results are ordered by fit for
 this specific cube, not by generic card quality. Clicking a result opens a dialog to add it to any
-of your cubes.
+of your cubes, and with the [cube tray](/wiki/cube-tray) you can drag results straight into a
+board. [Machine Learning](/wiki/machine-learning#smart-search) covers how the rankings work.
 
 ## Averages
 
@@ -73,19 +75,26 @@ either "what's in the cube" or "what do drafters see."
 
 ## Playtest Data
 
-This view analyzes the cube's actual draft history. Click **Run Analysis** and it downloads every
-human draft of the cube (up to the most recent five thousand) and processes them in your browser,
-producing:
+This view analyzes the cube's actual draft history. Click **Run analysis** and it downloads every
+human draft of the cube (up to the most recent five thousand; a run that hits the limit is marked
+**Capped**) and processes them in your browser, producing:
 
-- deck-shape summaries across all drafted decks: colors, card types, curves, and Elo spread;
-- an archetype map, with every deck clustered by similarity and plotted in two dimensions, and a
-  detail panel per cluster showing its decks, curves, and color profiles;
-- a per-card statistics table: how often each card is seen, picked, its pick rate, average pick
-  position, how often it wheels, how often it's taken pack one pick one, and how many decks it
-  ends up in.
+- deck-shape summaries across all drafted decks: **Colors**, **Card types**, **Mana curve**, and
+  **Elo distribution**;
+- an **Archetype map**, with every deck plotted in two dimensions so decks that drafted alike sit
+  together, and grouped into numbered clusters (the map needs at least three decks). It can be
+  colored by **Cluster**, by **Deck color** (each dot a pie of the deck's colors), or by
+  **Archetype**. Clicking a cluster in the list or a deck on the map opens a detail panel with the
+  cluster's staples, most characteristic cards, every deck in it, suggested additions, and charts
+  of its colors, card types, curve, and Elo, while a selected deck appears under the map with a
+  link to its deck page;
+- a **Card stats** table: each card's Elo, how often it was seen and picked, its pick rate, average
+  pick position, how often it wheels, how often it's taken when it turns up pack one pick one, and
+  how many decks drafted it. Cards that have since left the cube still appear, by name.
 
-Analysis runs are saved locally, so you can re-run after a big update and compare against the
-previous run. The first run downloads the analysis model, which is large; later runs reuse it.
+Analysis runs are saved locally under **Recent runs**, so you can re-run after a big update and
+compare against the previous run. The first run downloads the draft model (about 70 MB); later runs
+reuse it.
 
 ## Tokens
 
@@ -110,6 +119,12 @@ cards involved (with images), the required starting state, step-by-step instruct
 combo produces: infinite mana, infinite damage, and the rest. A dropdown filters combos by their
 result, and each entry links to its Commander Spellbook page. If a combo you know about is
 missing, Spellbook accepts submissions.
+
+## Archetypes
+
+The archetypes the cube's cards support, each with its share of the cube and the cards that carry
+it most. The view only appears when the site's current model includes archetypes;
+[Machine Learning](/wiki/machine-learning#the-archetypes-view) explains how they're found.
 
 ## Prices
 

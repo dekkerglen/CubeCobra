@@ -95,8 +95,9 @@ Everything about how the cube drafts.
 Toggles enable or disable the standard format cards on the [Playtest
 tab](/wiki/cube-page/playtest) (draft, sealed, grid draft, and the multiplayer Draftmancer link)
 for cubes where some of them don't make sense. Alongside those sit the cube's deckbuilding
-numbers: the spell and land counts the autobuilder aims for (23 and 17 unless changed), the
-default seat count for new drafts, and which board supplies basic lands in the deckbuilder.
+numbers: the [spell and land counts](/wiki/machine-learning#spell-and-land-counts) the autobuilder
+aims for (23 and 17 unless changed), the default seat count for new drafts, and which board
+supplies basic lands in the deckbuilder.
 
 Custom formats are the deeper tool. A format defines its packs slot by slot, and every slot is a
 [filter](/wiki/reference/filter-syntax): a pack might be five slots of `tag:aggro`, one slot of

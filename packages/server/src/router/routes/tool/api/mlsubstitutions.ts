@@ -1,12 +1,15 @@
 import catalog from 'serverutils/cardCatalog';
 import { getOracleForMl } from 'serverutils/carddb';
+import { getModelVocabulary } from 'serverutils/modelPointer';
 
 import { Request, Response } from '../../../../types/express';
 
-let cachedMlRemapping: Record<string, string> | null = null;
+// Rebuilt when the served model's vocabulary changes, since that decides which cards need a stand-in.
+let cachedMlRemapping: { vocabulary: ReadonlySet<string> | null; remapping: Record<string, string> } | null = null;
 
 function buildMlRemapping(): Record<string, string> {
-  if (cachedMlRemapping) return cachedMlRemapping;
+  const vocabulary = getModelVocabulary();
+  if (cachedMlRemapping && cachedMlRemapping.vocabulary === vocabulary) return cachedMlRemapping.remapping;
 
   const remapping: Record<string, string> = {};
   for (const oracle of Object.keys(catalog.metadatadict)) {
@@ -16,7 +19,7 @@ function buildMlRemapping(): Record<string, string> {
     }
   }
 
-  cachedMlRemapping = remapping;
+  cachedMlRemapping = { vocabulary, remapping };
   return remapping;
 }
 

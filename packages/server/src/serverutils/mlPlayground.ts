@@ -12,8 +12,14 @@ import {
 } from '@utils/datatypes/Card';
 
 import type { Request, Response } from '../types/express';
-import catalog from './cardCatalog';
-import { cardFromId, getIdsFromName, getMostReasonable, getOracleForMl, getReasonableCardByOracle } from './carddb';
+import {
+  cardFromId,
+  getIdsFromName,
+  getMostReasonable,
+  getOracleForMl,
+  getReasonableCardByOracle,
+  isOracleInModel,
+} from './carddb';
 import { parseNonCSVLine } from '@utils/importParsing';
 import { isMlServiceError } from './ml';
 
@@ -137,7 +143,7 @@ export const resolveList = (text: unknown, { substitute, printing }: ResolveOpti
     let mlOracle = oracle;
     let status: ModelStatus = 'known';
     let standInCard: CardDetails | undefined;
-    if (catalog.oracleToIndex[oracle] === undefined) {
+    if (!isOracleInModel(oracle)) {
       status = 'unknown';
       if (substitute) {
         const standIn = getOracleForMl(oracle, null);

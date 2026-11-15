@@ -24,14 +24,23 @@
  * timestamp, so any timestamp shared by BULK_TIMESTAMP_THRESHOLD or more rows is dropped.
  *
  * Writes: only days before --before, which should be the first full day of live counting (the
- * day after the deploy). Each day's backfilled counters are overwritten, not added to, so running
- * it again is safe; counters it does not rebuild are left alone.
+ * day after the deploy), and only days that had ended when their source was read. Each day's
+ * backfilled counters are overwritten, not added to, so running it again is safe; counters it
+ * does not rebuild are left alone.
+ *
+ * Load: this reads production, so sources run one at a time with at most --concurrency queries in
+ * flight, and throttled queries wait and retry rather than failing the run.
+ *
+ * Resuming: each source's counts are saved under .migration-checkpoints/ when it finishes, and a
+ * later run (dry or not) reuses them instead of reading again. --fresh reads everything again.
  *
  * Usage (from packages/scripts):
- *   npm run backfill-site-activity -- --before=YYYY-MM-DD [--dry-run] [--sources=users,cubes,...]
- *     [--from=2018-01-01] [--concurrency=64]
+ *   npm run backfill-site-activity -- --before=YYYY-MM-DD [--dry-run] [--fresh]
+ *     [--sources=changelogs,packages,drafts,cubes,users] [--from=2018-01-01] [--concurrency=16]
  */
 import { createHash } from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 import { QueryCommand, QueryCommandInput } from '@aws-sdk/lib-dynamodb';
 import documentClient from '@server/dynamo/documentClient';
@@ -41,7 +50,8 @@ import { USER_ENUMERATION_SHARDS } from 'dynamo/dao/UserDynamoDao';
 
 import 'dotenv/config';
 
-const SOURCES = ['users', 'cubes', 'drafts', 'changelogs', 'packages'] as const;
+/** Quickest first, so a later failure costs the least. */
+const SOURCES = ['changelogs', 'packages', 'drafts', 'cubes', 'users'] as const;
 type Source = (typeof SOURCES)[number];
 
 /** Cube metadata rows are enumerated on GSI3 under CUBE#{0..9} (see CubeDynamoDao.GSIKeys). */
@@ -67,6 +77,34 @@ const arg = (name: string): string | undefined => {
     .slice(2)
     .find((a) => a.startsWith(prefix))
     ?.slice(prefix.length);
+};
+
+const RETRYABLE = new Set([
+  'ThrottlingException',
+  'ProvisionedThroughputExceededException',
+  'RequestLimitExceeded',
+  'InternalServerError',
+  'ServiceUnavailable',
+]);
+
+const isRetryable = (err: any): boolean => RETRYABLE.has(err?.name) || (err?.$metadata?.httpStatusCode ?? 0) >= 500;
+
+/** Retries throttled and failed requests with growing, jittered waits (1s up to 30s, ~4 minutes in all). */
+const MAX_ATTEMPTS = 12;
+let retries = 0;
+const withRetry = async <T>(fn: () => Promise<T>): Promise<T> => {
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await fn();
+    } catch (err) {
+      if (!isRetryable(err) || attempt >= MAX_ATTEMPTS) {
+        throw err;
+      }
+      retries += 1;
+      const delay = Math.min(30_000, 500 * 2 ** attempt) * (0.5 + Math.random() / 2);
+      await new Promise((resolve) => setTimeout(resolve, delay));
+    }
+  }
 };
 
 /** Caps the number of queries in flight across every walk. */
@@ -108,7 +146,57 @@ class Tally {
     byDay.set(day, (byDay.get(day) ?? 0) + count);
     this.days.set(metric, byDay);
   }
+
+  toJSON(): SavedTally {
+    return {
+      days: Object.fromEntries([...this.days].map(([metric, byDay]) => [metric, Object.fromEntries(byDay)])),
+      skipped: Object.fromEntries(this.skipped),
+    };
+  }
+
+  static fromJSON(saved: SavedTally): Tally {
+    const tally = new Tally();
+    for (const [metric, byDay] of Object.entries(saved.days)) {
+      tally.days.set(metric as SiteActivityMetric, new Map(Object.entries(byDay)));
+    }
+    for (const [metric, count] of Object.entries(saved.skipped)) {
+      tally.skipped.set(metric as SiteActivityMetric, count);
+    }
+    return tally;
+  }
 }
+
+interface SavedTally {
+  days: Record<string, Record<string, number>>;
+  skipped: Record<string, number>;
+}
+
+/** One source's counts, as saved after it finishes. */
+interface Checkpoint extends SavedTally {
+  table: string;
+  from: string;
+  /** When the read began: days from then on were not over yet, so are never written. */
+  readStartedAt: number;
+  notes: string[];
+}
+
+const checkpointPath = (source: Source): string =>
+  path.join(process.cwd(), '.migration-checkpoints', `site-activity-${source}.json`);
+
+/** A source's saved counts, if they were read from the same table over the same span. */
+const loadCheckpoint = (source: Source, table: string, from: string): Checkpoint | undefined => {
+  try {
+    const saved = JSON.parse(fs.readFileSync(checkpointPath(source), 'utf8')) as Checkpoint;
+    return saved.table === table && saved.from === from ? saved : undefined;
+  } catch {
+    return undefined;
+  }
+};
+
+const saveCheckpoint = (source: Source, checkpoint: Checkpoint): void => {
+  fs.mkdirSync(path.dirname(checkpointPath(source)), { recursive: true });
+  fs.writeFileSync(checkpointPath(source), JSON.stringify(checkpoint));
+};
 
 /** Collects exact timestamps first, so bulk-written ones can be dropped before counting. */
 class TimestampCollector {
@@ -136,12 +224,13 @@ class TimestampCollector {
 
 const main = async (): Promise<void> => {
   const dryRun = process.argv.slice(2).includes('--dry-run');
+  const fresh = process.argv.slice(2).includes('--fresh');
   const before = arg('before');
   if (!before || !/^\d{4}-\d{2}-\d{2}$/.test(before)) {
     throw new Error('--before=YYYY-MM-DD is required: the first full day of live counting (the day after the deploy)');
   }
   const from = arg('from') ?? '2018-01-01';
-  const concurrency = Number(arg('concurrency') ?? 64);
+  const concurrency = Number(arg('concurrency') ?? 16);
   const sources = (arg('sources')?.split(',') ?? [...SOURCES]) as Source[];
   const unknown = sources.filter((s) => !SOURCES.includes(s));
   if (unknown.length > 0) {
@@ -153,10 +242,12 @@ const main = async (): Promise<void> => {
     throw new Error('DYNAMO_TABLE must be a defined environment variable');
   }
   const siteActivityDao = new SiteActivityDynamoDao(documentClient, tableName);
-  const run = limiter(concurrency);
+  const limit = limiter(concurrency);
+  // The retry keeps its slot while it waits, so throttling also slows everything else down.
+  const run = <T>(fn: () => Promise<T>): Promise<T> => limit(() => withRetry(fn));
 
   console.log(
-    `Backfill site activity | table: ${tableName} | before ${before} | sources: ${sources.join(', ')}${
+    `Backfill site activity | table: ${tableName} | before ${before} | sources: ${sources.join(', ')} | concurrency ${concurrency}${
       dryRun ? ' | *** DRY RUN ***' : ''
     }`,
   );
@@ -176,13 +267,21 @@ const main = async (): Promise<void> => {
     } while (lastKey);
   };
 
-  const tally = new Tally();
-  const likes = new TimestampCollector();
-  const follows = new TimestampCollector();
   const progress = { users: 0, cubes: 0 };
-  const ticker = setInterval(() => console.log(`  ...users ${progress.users}, cubes ${progress.cubes}`), 30_000);
+  const ticker = setInterval(
+    () => console.log(`  ...users ${progress.users}, cubes ${progress.cubes}, throttled retries ${retries}`),
+    30_000,
+  );
 
-  const walkUsers = async () => {
+  /** Bulk-written timestamps the collector dropped, as notes for the report. */
+  const droppedNotes = (metric: string, dropped: { ms: number; rows: number }[]): string[] =>
+    dropped.map(
+      ({ ms, rows }) =>
+        `Dropped ${rows} ${metric} sharing one timestamp (${new Date(ms).toISOString()}), likely migrated`,
+    );
+
+  const walkUsers = async (tally: Tally): Promise<string[]> => {
+    const follows = new TimestampCollector();
     const perUser = async (userId: string) => {
       await Promise.all([
         queryAll(
@@ -241,9 +340,11 @@ const main = async (): Promise<void> => {
       },
       (items) => items.forEach((row) => tally.add('comments', row.item?.date)),
     );
+    return droppedNotes('userFollows', follows.flush(tally, 'userFollows'));
   };
 
-  const walkCubes = async () => {
+  const walkCubes = async (tally: Tally): Promise<string[]> => {
+    const likes = new TimestampCollector();
     const perCube = async (cubeId: string) => {
       await Promise.all([
         queryAll(
@@ -331,10 +432,11 @@ const main = async (): Promise<void> => {
         ),
       ),
     );
+    return droppedNotes('cubeLikes', likes.flush(tally, 'cubeLikes'));
   };
 
-  let draftsWithoutComplete = 0;
-  const walkDrafts = async () => {
+  const walkDrafts = async (tally: Tally): Promise<string[]> => {
+    let withoutComplete = 0;
     const STARTED: Record<string, SiteActivityMetric> = {
       d: 'draftsStarted',
       g: 'gridDraftsStarted',
@@ -382,7 +484,7 @@ const main = async (): Promise<void> => {
                 }
                 if (item.complete === undefined) {
                   // Deck rebuilds copy a draft's type but carry no complete flag.
-                  draftsWithoutComplete += 1;
+                  withoutComplete += 1;
                   return;
                 }
                 tally.add(startedMetric, item.date);
@@ -394,9 +496,12 @@ const main = async (): Promise<void> => {
         ),
       ),
     );
+    return withoutComplete > 0
+      ? [`Skipped ${withoutComplete} draft rows with no complete flag (deck rebuilds, some legacy drafts)`]
+      : [];
   };
 
-  const walkChangelogs = async () => {
+  const walkChangelogs = async (tally: Tally): Promise<string[]> => {
     // GSI2 partitions changelogs by the writer's local day, so walk one day past the end and
     // bucket by each row's own UTC time.
     const days: string[] = [];
@@ -417,9 +522,10 @@ const main = async (): Promise<void> => {
         ),
       ),
     );
+    return [];
   };
 
-  const walkPackages = async () => {
+  const walkPackages = async (tally: Tally): Promise<string[]> => {
     // Every package has a search row under the 'package:all' hash. Mirrors BaseDynamoDao.hash:
     // sha256 of the sorted `key:value` pairs, with ItemType added.
     const allPackages = createHash('sha256').update('ItemType:PACKAGE,type:package,value:all').digest('hex');
@@ -432,67 +538,78 @@ const main = async (): Promise<void> => {
       },
       (items) => items.forEach((row) => tally.add('packagesCreated', row.packageDate)),
     );
+    return [];
   };
 
-  const walks: Record<Source, () => Promise<void>> = {
+  const walks: Record<Source, (tally: Tally) => Promise<string[]>> = {
     users: walkUsers,
     cubes: walkCubes,
     drafts: walkDrafts,
     changelogs: walkChangelogs,
     packages: walkPackages,
   };
+
+  const results: { source: Source; tally: Tally; checkpoint: Checkpoint }[] = [];
   try {
-    await Promise.all(
-      sources.map(async (source) => {
-        const started = Date.now();
-        await walks[source]();
-        console.log(`[${source}] done in ${Math.round((Date.now() - started) / 1000)}s`);
-      }),
-    );
-  } finally {
-    clearInterval(ticker);
-  }
-
-  const dropped = {
-    cubeLikes: sources.includes('cubes') ? likes.flush(tally, 'cubeLikes') : [],
-    userFollows: sources.includes('users') ? follows.flush(tally, 'userFollows') : [],
-  };
-
-  // Report, per metric: what will be written, what falls on or after the cutoff (live counting
-  // owns those days), and what could not be dated.
-  const byDay = new Map<string, SiteActivityCounts>();
-  console.log('\nmetric                 written     >= cutoff   undated    first day');
-  for (const [metric, days] of [...tally.days].sort(([a], [b]) => a.localeCompare(b))) {
-    let written = 0;
-    let after = 0;
-    let first = '';
-    for (const [day, count] of days) {
-      if (day >= before) {
-        after += count;
+    for (const source of sources) {
+      const saved = fresh ? undefined : loadCheckpoint(source, tableName, from);
+      if (saved) {
+        console.log(
+          `[${source}] using counts saved ${new Date(saved.readStartedAt).toISOString()} (--fresh to re-read)`,
+        );
+        results.push({ source, tally: Tally.fromJSON(saved), checkpoint: saved });
         continue;
       }
-      written += count;
-      if (!first || day < first) first = day;
-      const counts = byDay.get(day) ?? {};
-      counts[metric] = count;
-      byDay.set(day, counts);
+      const tally = new Tally();
+      const readStartedAt = Date.now();
+      const notes = await walks[source](tally);
+      const checkpoint: Checkpoint = { table: tableName, from, readStartedAt, notes, ...tally.toJSON() };
+      saveCheckpoint(source, checkpoint);
+      console.log(`[${source}] done in ${Math.round((Date.now() - readStartedAt) / 1000)}s, saved`);
+      results.push({ source, tally, checkpoint });
     }
-    console.log(
-      `${metric.padEnd(22)} ${String(written).padStart(10)} ${String(after).padStart(11)} ${String(
-        tally.skipped.get(metric) ?? 0,
-      ).padStart(9)}    ${first}`,
-    );
-  }
-  for (const [metric, list] of Object.entries(dropped)) {
-    for (const { ms, rows } of list) {
-      console.log(`Dropped ${rows} ${metric} sharing one timestamp (${new Date(ms).toISOString()}), likely migrated`);
+  } finally {
+    clearInterval(ticker);
+    if (retries > 0) {
+      console.log(`Throttled or failed requests retried: ${retries}`);
     }
   }
-  if (draftsWithoutComplete > 0) {
-    console.log(
-      `Skipped ${draftsWithoutComplete} draft rows with no complete flag (deck rebuilds, some legacy drafts)`,
-    );
+
+  // Report, per metric: what will be written, what is left to live counting (on or after the
+  // cutoff, or not over yet when it was read), and what could not be dated.
+  const byDay = new Map<string, SiteActivityCounts>();
+  const notes: string[] = [];
+  console.log('\nmetric                 written     not written   undated    first day');
+  for (const { source, tally, checkpoint } of results) {
+    const readDay = utcDay(checkpoint.readStartedAt);
+    const cutoff = readDay < before ? readDay : before;
+    if (cutoff < before) {
+      notes.push(`[${source}] read on ${readDay}, so days from ${readDay} are not written; --fresh after it ends`);
+    }
+    notes.push(...checkpoint.notes);
+    for (const [metric, days] of [...tally.days].sort(([a], [b]) => a.localeCompare(b))) {
+      let written = 0;
+      let after = 0;
+      let first = '';
+      for (const [day, count] of days) {
+        if (day >= cutoff) {
+          after += count;
+          continue;
+        }
+        written += count;
+        if (!first || day < first) first = day;
+        const counts = byDay.get(day) ?? {};
+        counts[metric] = count;
+        byDay.set(day, counts);
+      }
+      console.log(
+        `${metric.padEnd(22)} ${String(written).padStart(10)} ${String(after).padStart(13)} ${String(
+          tally.skipped.get(metric) ?? 0,
+        ).padStart(9)}    ${first}`,
+      );
+    }
   }
+  notes.forEach((note) => console.log(note));
 
   if (dryRun) {
     console.log(`\nDRY RUN: would write ${byDay.size} days.`);

@@ -1,7 +1,7 @@
 ---
 title: Account Settings
 description: Your profile, display preferences, images, Patreon perks, and account management.
-order: 6
+order: 10
 ---
 
 Account settings live at `/user/account`, under **Settings** in the user menu (the one labeled
@@ -39,8 +39,10 @@ Site-wide settings for how Cube Cobra looks and behaves for you:
 - **Use text over icons where possible** swaps icon-only buttons for labeled ones.
 - **Disable Follow Notifications** stops the alerts you'd get when someone follows you or likes
   one of your cubes.
-- **Disable the cube board tray** hides the floating tray that lets you drag cards into your
-  cubes from search pages.
+- **Disable the cube board tray** hides the floating [cube tray](/wiki/cube-tray) that lets you
+  drag cards into your cubes from search pages.
+- **Dailies on dashboard** picks which [daily games](/wiki/daily-games#the-dashboard-card) your
+  dashboard card can show. Untick all of them to remove the card.
 - **Your cubes sort order** lists your cubes alphabetically or by last update, wherever they
   appear.
 
@@ -50,8 +52,8 @@ Lotus Cobra supporters get image hosting. Upload JPG, PNG, WebP, or GIF files up
 they're converted to WebP, resized to at most 1600 pixels on the long edge, and served from Cube
 Cobra's CDN. Each image gets a copyable URL, a rename control, and a delete control, and the
 section shows your usage against the limits of 1,000 images and 1 GB of storage. Hosted images can
-serve as your avatar, as cube cover images, and anywhere else a URL works, like blog posts and
-primers.
+serve as your avatar, as cube cover images, as [custom card](/wiki/special-cards/custom-cards#images)
+art, and anywhere else a URL works, like blog posts and primers.
 
 ## Patreon Integration
 

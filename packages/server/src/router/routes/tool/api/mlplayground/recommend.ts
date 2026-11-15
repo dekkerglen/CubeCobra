@@ -1,7 +1,6 @@
 import { CardDetails } from '@utils/datatypes/Card';
 import { makeFilter, MAX_SEARCH_FILTER_LENGTH } from '@utils/filtering/FilterCards';
-import catalog from 'serverutils/cardCatalog';
-import { getAllMostReasonable } from 'serverutils/carddb';
+import { getAllMostReasonable, isOracleInModel } from 'serverutils/carddb';
 import {
   ListInputError,
   modelOracles,
@@ -101,7 +100,7 @@ export const recommendHandler = async (req: Request, res: Response) => {
     const adds = result.adds.flatMap((item) => {
       const card = eligibleByOracle.get(item.oracle);
       if (!card) return [];
-      const known = catalog.oracleToIndex[item.oracle] !== undefined;
+      const known = isOracleInModel(item.oracle);
       return [{ cardID: card.scryfall_id, oracle: item.oracle, name: card.name, rating: known ? item.rating : null }];
     });
 

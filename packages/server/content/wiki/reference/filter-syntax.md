@@ -385,7 +385,7 @@ and `not:` invert the match.
 
 | Query              | Matches                                                                            |
 | ------------------ | ---------------------------------------------------------------------------------- |
-| `is:custom`        | Custom cards. Vouchers are matched by `is:voucher`; use `is:custom or is:voucher` for both. |
+| `is:custom`        | [Custom cards](/wiki/special-cards). Vouchers are matched by `is:voucher`; use `is:custom or is:voucher` for both. |
 | `is:override`      | Cards with at least one attribute changed from the printed card. Also `is:overridden`. |
 | `is:image`         | Cards with a custom image on either face.                                          |
 | `is:imageUrl`      | Cards with a custom front image.                                                   |

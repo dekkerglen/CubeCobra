@@ -95,7 +95,8 @@ A **Board** dropdown at the top of the panel picks which board you're editing: m
 maybeboard, or any custom board.
 
 The **Add Card** box autocompletes card names; picking one stages an addition. The input refocuses
-after each add, so you can rattle off a stack of cards by typing and pressing Enter repeatedly. The
+after each add, so you can rattle off a stack of cards by typing and pressing Enter repeatedly.
+Typing `Custom Card` or `Voucher` adds one of the [special cards](/wiki/special-cards). The
 **Remove/Replace Card** box autocompletes against cards already in the board: leave the second
 input empty to stage a removal, or name a replacement to stage a swap.
 
@@ -129,10 +130,10 @@ hidden by the filter is neither changed nor treated as already present elsewhere
 filter a handy way to aim them: filter to one set, say, before updating printings. Two entries count
 as the same card when they share an oracle identity, whatever printing they use and whatever name
 that printing carries. When duplicates are removed, the copy that survives is the one with the most
-tags, then the longest notes, then the earliest added date. Custom cards and vouchers are skipped
-entirely, since there's no way to tell whether two of them are meant to be the same card — so a
-`not:singleton` filter can show repeated custom cards that Cleanup will not touch. The count on each
-button is the reliable preview.
+tags, then the longest notes, then the earliest added date.
+[Custom cards and vouchers](/wiki/special-cards) are skipped entirely, since there's no way to tell
+whether two of them are meant to be the same card — so a `not:singleton` filter can show repeated
+custom cards that Cleanup will not touch. The count on each button is the reliable preview.
 
 Nothing is committed: the removals and printing changes land in the change list like any other edit,
 where you can review them, revert any one of them, and save or discard.
@@ -166,7 +167,9 @@ in the cube:
 - **Version** switches to any printing of the card; the image, set, and price follow.
 - **Status** marks the copy as Not Owned, Ordered, Owned, Premium Owned, Proxied, or Borrowed.
   Statuses drive the purchase tools and the [price analytics](/wiki/cube-page/analysis).
-- **Finish** picks non-foil, foil, or etched.
+- **Finish** picks non-foil, foil, etched, or alt-foil.
+- A [[Lore Seeker]] also has a **Lore Seeker pack** setting for the pack it adds to a draft; see
+  [Draft-Matters Cards](/wiki/draft-matters#the-lore-seeker-pack-setting).
 - Overrides for mana value, type line, color identity, and color category cover cards that play
   differently in your cube than their printed face suggests (a [[Bloodbraid Elf]] you always
   cascade into, a land that's really a spell slot, and so on). Sorting and filtering respect the

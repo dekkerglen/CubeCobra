@@ -1,7 +1,7 @@
 ---
 title: User Profiles
 description: What's on a user's public profile, and what following someone does.
-order: 5
+order: 9
 ---
 
 Every Cube Cobra user has a public profile. Click any username anywhere on the site to open it, or
@@ -20,20 +20,26 @@ supporter's tier.
 
 On someone else's profile you'll see two buttons. **Follow** subscribes you to them: their blog
 posts (from public cubes) start appearing in your dashboard feed, and they're notified that you
-followed, unless they've turned those alerts off. **Report** flags the profile for the moderation
-team, with a confirmation step first. On your own profile the buttons are replaced by
-**Edit Profile**, which opens your account settings.
+followed, unless they've turned those alerts off. Once you follow someone, the button reads
+**Unfollow**. **Report** flags the profile for the moderation team, with a confirmation step
+first. On your own profile the buttons are replaced by **Edit Profile**, which opens your account
+settings.
 
 ## The tabs
 
-Four tabs make up the body of a profile:
+Five tabs make up the body of a profile:
 
 - **Cubes** lists the user's cubes, 36 to a page, with the owner's pinned cubes hoisted to the
-  top. Private and unlisted cubes stay hidden from everyone but their owner.
+  top. Private, unlisted, and empty cubes stay hidden from everyone but their owner. On your own
+  profile, **Create New** starts a new cube.
+- **Collaborations** lists the cubes they've been added to as a collaborator, 36 to a page. Like
+  the Cubes tab, it hides private, unlisted, and empty cubes from other visitors; on your own
+  profile it shows every cube you collaborate on, private and unlisted ones included.
 - **Packages** lists the [card packages](/wiki/packages) they've submitted. On your own profile
-  this tab adds shortcuts to create a package and to your liked packages.
+  this tab adds **Create New** to submit a package.
 - **Drafts** lists every deck they've drafted across all of Cube Cobra, 20 to a page, each linking
-  to the full deck page with its pick-by-pick breakdown.
+  to the full deck page with its pick-by-pick breakdown. Decks from private cubes you can't open
+  are left out.
 - **Blog Posts** collects their posts from every cube they run, 10 to a page. Posts from private
   or unlisted cubes are hidden from other viewers.
 

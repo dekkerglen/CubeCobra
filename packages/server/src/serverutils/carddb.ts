@@ -3,6 +3,7 @@ import { CardDetails, DefaultPrintingPreference, PrintingPreference, SUPPORTED_F
 import { filterCardsDetails, FilterFunction } from '@utils/filtering/FilterCards';
 import { RawSortFunctions } from '@utils/sorting/Sort';
 import catalog from 'serverutils/cardCatalog';
+import { getModelVocabulary } from 'serverutils/modelPointer';
 import { NOT_UNIVERSES_BEYOND } from 'serverutils/universesBeyond';
 
 // eslint-disable-next-line camelcase
@@ -386,11 +387,24 @@ export function getRelatedCards(
   };
 }
 
+// Whether the served ML model was trained on this oracle. catalog.oracleToIndex is every oracle in the
+// card DB at the last metadata dict build, not the model's vocabulary, so it can't answer this. Until
+// the served model's vocabulary is read (see modelPointer), the metadata dict decides: it maps each
+// card the model knew at its last build to itself.
+export function isOracleInModel(oracleId: string): boolean {
+  const vocabulary = getModelVocabulary();
+  if (vocabulary) {
+    return vocabulary.has(oracleId);
+  }
+  const index = catalog.oracleToIndex[oracleId];
+  return index !== undefined && catalog.metadatadict[oracleId]?.mostSimilar === index;
+}
+
 // if the oracle id is not in the training data, we will use the similar card in the metadata dict
 export function getOracleForMl(oracleId: string, printingPreference: PrintingPreference | null): string {
-  // The model already knows this oracle — substitution would be a dangling mitigation reference
-  // (the mostSimilar pointer was written when this card was outside the training set).
-  if (catalog.oracleToIndex[oracleId] !== undefined) {
+  // A card the model was trained on since the metadata dict was built still has a stand-in there
+  // until the next weekly build.
+  if (isOracleInModel(oracleId)) {
     return oracleId;
   }
 

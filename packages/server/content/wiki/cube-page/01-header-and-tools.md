@@ -59,9 +59,12 @@ for finishing the cube.
 The **Export** menu downloads the list in whichever format your tools need:
 
 - Card Names (.txt), one card name per line.
+- Card Versions (.txt), one card per line with its set code and collector number, like
+  `1 Lightning Bolt (2XM) 117`.
 - Comma-Separated (.csv), the full list with statuses, tags, notes, and finishes. This is the
   round-trip format: the same file can be re-imported through bulk upload, so it doubles as a
-  backup.
+  backup. It's also the only format that keeps [custom cards and vouchers](/wiki/special-cards)
+  intact.
 - Forge (.dck)
 - MTGO (.txt)
 - XMage (.dck)

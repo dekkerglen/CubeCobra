@@ -98,7 +98,11 @@ export interface CardDragOptions<T> {
 }
 
 // Just short of critically damped, so a held card leans and settles without bouncing.
-const TILT_SPRING = { type: 'spring', stiffness: 380, damping: 38 } as const;
+const TILT_SPRING = { stiffness: 380, damping: 38 } as const;
+// The held card settles upright once the pointer has rested this long.
+const TILT_SETTLE = 70;
+// The lean is stepped this many ms at a time, so a long frame can't throw it out.
+const TILT_STEP = 4;
 const DRAG_THRESHOLD = 6;
 // On touch, holding a card this long picks it up; moving sooner scrolls instead.
 const HOLD_DELAY = 220;
@@ -146,7 +150,8 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
   const handle = useCallback((id: SpriteId): SpriteHandle | undefined => handles.current.get(id), []);
 
   const session = useRef<DragSession | null>(null);
-  const tiltTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // The held card's lean: where it's heading, how fast it's turning, and when the pointer last moved.
+  const tilt = useRef({ target: 0, velocity: 0, movedAt: -Infinity });
   const holdTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const edgeFrame = useRef<number | null>(null);
   // Which edges the card is being held at, and since when.
@@ -227,8 +232,26 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
       handle.y.set(s.pointerY - s.stageTop - s.grabY + (s.scroll?.get() ?? 0));
     };
 
-    // While a card is held near an edge of a scrolling region (or of the table,
-    // sideways), keep scrolling it every frame until the card moves away.
+    // Lean the held card toward its target, a spring stepped once a frame. Not a
+    // spring animation restarted on every pointermove: each restart inherits the
+    // card's velocity, which pointer events less than a frame apart overstate, so
+    // the card would spin faster with every event.
+    const leanStep = (s: DragSession, time: number, dt: number) => {
+      const handle = heldCard(s);
+      if (!handle || latest.current.lean === false) return;
+      const state = tilt.current;
+      const target = time - state.movedAt > TILT_SETTLE ? 0 : state.target;
+      let rotate = handle.rotate.get();
+      for (let left = Math.max(0, dt); left > 0; left -= TILT_STEP) {
+        const step = Math.min(left, TILT_STEP) / 1000;
+        state.velocity += (TILT_SPRING.stiffness * (target - rotate) - TILT_SPRING.damping * state.velocity) * step;
+        rotate += state.velocity * step;
+      }
+      handle.rotate.set(rotate);
+    };
+
+    // Every frame a card is held: lean it, and while it's near an edge of a
+    // scrolling region (or of the table, sideways), keep scrolling that until the card moves away.
     const edgeScroll = (time: number, last: number) => {
       const s = session.current;
       const stage = latest.current.stageRef.current;
@@ -237,6 +260,7 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
         return;
       }
       const dt = Math.min(50, time - last);
+      leanStep(s, time, dt);
       refreshStage(s);
       const px = s.pointerX - s.stageLeft;
       const py = s.pointerY - s.stageTop;
@@ -321,6 +345,10 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
       const handle = s.id !== null ? handles.current.get(s.id) : undefined;
       if (!handle) return;
       s.mode = 'drag';
+      if (latest.current.lean !== false) {
+        handle.rotate.stop();
+        tilt.current = { target: 0, velocity: 0, movedAt: -Infinity };
+      }
       latest.current.dragStarted?.();
       retarget(s, handle);
       const now = performance.now();
@@ -388,7 +416,6 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
       window.removeEventListener('pointermove', move);
       window.removeEventListener('pointerup', up);
       window.removeEventListener('pointercancel', cancel);
-      if (tiltTimer.current) clearTimeout(tiltTimer.current);
       if (holdTimer.current) clearTimeout(holdTimer.current);
       session.current = null;
     };
@@ -435,11 +462,10 @@ export const useCardDrag = <T>(options: CardDragOptions<T>) => {
       refreshStage(s);
       follow(s, handle);
 
-      // Lean into the direction of travel, then settle upright when the pointer rests.
+      // Lean into the direction of travel, then settle upright when the pointer rests (see leanStep).
       if (latest.current.lean !== false) {
-        animate(handle.rotate, clamp(dx * 0.7, -8, 8), TILT_SPRING);
-        if (tiltTimer.current) clearTimeout(tiltTimer.current);
-        tiltTimer.current = setTimeout(() => animate(handle.rotate, 0, TILT_SPRING), 70);
+        tilt.current.target = clamp(dx * 0.7, -8, 8);
+        tilt.current.movedAt = performance.now();
       }
 
       retarget(s, handle);

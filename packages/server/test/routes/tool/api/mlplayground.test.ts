@@ -15,13 +15,9 @@ jest.mock('serverutils/carddb', () => {
     // "Newbie" is outside the model's vocabulary; Goblin Guide stands in for it.
     getOracleForMl: (oracle: string) => (oracle === 'newbie' ? 'guide' : oracle),
     getReasonableCardByOracle: (oracle: string) => cards[oracle],
+    isOracleInModel: (oracle: string) => oracle === 'bolt' || oracle === 'guide',
   };
 });
-
-jest.mock('serverutils/cardCatalog', () => ({
-  __esModule: true,
-  default: { oracleToIndex: { bolt: 0, guide: 1 } },
-}));
 
 jest.mock('serverutils/ml', () => ({
   draftOrThrow: jest.fn(),

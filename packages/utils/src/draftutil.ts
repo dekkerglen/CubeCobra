@@ -724,12 +724,12 @@ export const exportDraftFormat = (format: DraftFormat): string => {
   return JSON.stringify({ version: DRAFT_FORMAT_EXPORT_VERSION, format: rest }, null, 2);
 };
 
-export const DEFAULT_STEPS: DraftStep[] = [
+export const DEFAULT_STEPS: readonly DraftStep[] = Object.freeze([
   { action: 'pick', amount: 1 },
   { action: 'pass', amount: null },
-];
+]);
 
-export const DEFAULT_PACK: Pack = Object.freeze({ slots: [{ filter: '' }], steps: DEFAULT_STEPS });
+export const DEFAULT_PACK: Pack = Object.freeze({ slots: [{ filter: '' }], steps: [...DEFAULT_STEPS] });
 
 export const buildDefaultSteps: (cards: number) => DraftStep[] = (cards) => {
   const steps: DraftStep[] = new Array(cards).fill(DEFAULT_STEPS).flat();

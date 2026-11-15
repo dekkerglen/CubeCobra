@@ -202,12 +202,16 @@ export const CubeTrayProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             .elementsFromPoint(ev.clientX, ev.clientY)
             .find((el) => (el as HTMLElement).dataset?.cubetrayBoard !== undefined) as HTMLElement | undefined;
           if (target && card2) {
-            void addCardToBoard(card2, {
+            const dropped: CubeBoardCombo = {
               cubeId: target.dataset.cubeId || '',
               cubeName: target.dataset.cubeName || '',
               boardKey: target.dataset.boardKey || '',
               boardLabel: target.dataset.boardLabel || target.dataset.boardKey || '',
-            });
+            };
+            // Use the saved combo so its advanced defaults (notes / status / tags)
+            // are applied; the data attributes only carry the identity fields.
+            const saved = combos.find((c) => comboKey(c) === comboKey(dropped));
+            void addCardToBoard(card2, saved ?? dropped);
           }
         }
         endGesture();
@@ -217,7 +221,7 @@ export const CubeTrayProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       window.addEventListener('pointerup', handleUp);
       window.addEventListener('pointercancel', handleUp);
     },
-    [addCardToBoard, endGesture, hideCard, setStopAutocard],
+    [addCardToBoard, combos, endGesture, hideCard, setStopAutocard],
   );
 
   const consumeClickSuppression = useCallback(() => {

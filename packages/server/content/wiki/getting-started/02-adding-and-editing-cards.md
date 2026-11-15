@@ -16,7 +16,8 @@ it becomes real.
 
 Use the **Add Card** box to type a card name; autocomplete suggests matches as you type, and each
 pick joins your change list. Adding a stack of {R} staples like [[Lightning Bolt]] and
-[[Goblin Guide]] is just type, Enter, type, Enter.
+[[Goblin Guide]] is just type, Enter, type, Enter. For a card that isn't in the database, or one
+pick that should hand a drafter several cards, see [Custom Cards and Vouchers](/wiki/special-cards).
 
 Already have the list in a file or spreadsheet? The **Import** menu in the same panel takes a
 pasted decklist or an uploaded file, one card per line, and stages the whole thing in one go.

@@ -1,7 +1,7 @@
 ---
 title: Packages
 description: Community-curated card bundles you can drop into a cube in one step.
-order: 3
+order: 5
 ---
 
 A package is a named bundle of 2 to 100 cards, curated by a Cube Cobra user and shared with

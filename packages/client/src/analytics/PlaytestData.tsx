@@ -4,7 +4,7 @@ import { XIcon } from '@primer/octicons-react';
 
 import { cardName, cardOracleId, encodeName } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
-import type { ArchetypeSkeleton, BuiltDeck, CardMeta, CardStats, SlimPool } from '@utils/datatypes/SimulationReport';
+import type { ArchetypeSkeleton, BuiltDeck, CardMeta, SlimPool } from '@utils/datatypes/SimulationReport';
 import { fromEntries } from '@utils/Util';
 
 import Alert from '../components/base/Alert';
@@ -36,7 +36,7 @@ import { CSRFContext } from '../contexts/CSRFContext';
 import { useAnalysisCards } from '../contexts/AnalysisViewContext';
 import CubeContext from '../contexts/CubeContext';
 import useLocalPlaytestAnalysisHistory from '../hooks/useLocalPlaytestAnalysisHistory';
-import { computePlaytestCardStats, runPlaytestAnalysis } from '../utils/playtestAnalysisRun';
+import { computePlaytestCardStats, PlaytestCardStats, runPlaytestAnalysis } from '../utils/playtestAnalysisRun';
 import { PlaytestAnalysisRunEntry, PlaytestDeck } from '../utils/playtestAnalysisStorage';
 import { buildCardMeta } from '../utils/recordCardMeta';
 
@@ -481,10 +481,17 @@ const PlaytestData: React.FC = () => {
   const allPoolsSet = useMemo<Set<number>>(() => new Set(decks.map((_, i) => i)), [decks]);
 
   // Per-card draft stats across every analyzed deck.
-  const cardStats = useMemo<CardStats[]>(() => {
+  const cardStats = useMemo<PlaytestCardStats[]>(() => {
     if (!displayRun) return [];
-    return computePlaytestCardStats(displayRun.perPick, seatsByPool, displayRun.oracles, cardMeta, allPoolsSet);
-  }, [displayRun, seatsByPool, cardMeta, allPoolsSet]);
+    return computePlaytestCardStats(
+      displayRun.perPick,
+      seatsByPool,
+      allDeckBuilds,
+      displayRun.oracles,
+      cardMeta,
+      allPoolsSet,
+    );
+  }, [displayRun, seatsByPool, allDeckBuilds, cardMeta, allPoolsSet]);
 
   const tableRows = useMemo(
     () =>
@@ -501,7 +508,7 @@ const PlaytestData: React.FC = () => {
         avgpick: c.avgPickPosition,
         wheels: c.wheelCount,
         p1p1: c.p1p1Seen > 0 ? c.p1p1Count / c.p1p1Seen : 0,
-        decks: c.poolIndices.length,
+        decks: c.deckCount,
       })),
     [cardStats, cardDict],
   );

@@ -1,7 +1,7 @@
 ---
 title: Search
 description: Finding cubes, cards, and sets across the site.
-order: 4
+order: 6
 ---
 
 The **Explore** menu in the top navigation is the front door to everything searchable: cubes,
@@ -49,7 +49,8 @@ Two view modes are available:
 Results are sorted by Elo unless you pick another order (name, mana value, price, release date,
 and the rest), 96 to a page. A distinct toggle switches between one row per card name and one row
 per printing, an extras toggle brings in tokens and other oddities, and an export button downloads
-every matching card as a CSV, not just the visible page.
+every matching card as a CSV, not just the visible page. With the [cube tray](/wiki/cube-tray),
+you can drag results straight into your cubes.
 
 **Top Cards** in the Explore menu is a preset of the same page: the rows view, filtered to cards
 with at least 100 recorded picks, sorted by Elo. It's the quickest answer to "what does the
@@ -77,4 +78,5 @@ else a card name appears. A card page collects everything Cube Cobra knows about
 Elo on Cube Cobra comes from draft picks: when a drafter takes one card over another, the chosen
 card gains rating and the passed card loses some. Play rate is the share of cubes that include the
 card. Together with the pick counts on the search pages, these are the site's core signals for how
-the community values a card.
+the community values a card. They refresh weekly; see
+[Card Database Updates](/wiki/card-updates).

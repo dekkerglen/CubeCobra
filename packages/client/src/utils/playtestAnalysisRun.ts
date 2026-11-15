@@ -67,6 +67,7 @@ interface RawStats {
   pxp1Seen: number;
   poolIndices: number[];
   p1p1PoolIndices: number[];
+  deckCount: number;
 }
 
 const emptyRawStats = (): RawStats => ({
@@ -81,7 +82,11 @@ const emptyRawStats = (): RawStats => ({
   pxp1Seen: 0,
   poolIndices: [],
   p1p1PoolIndices: [],
+  deckCount: 0,
 });
+
+// Playtest card stats also count the built decks (mainboards) that include the card.
+export type PlaytestCardStats = CardStats & { deckCount: number };
 
 /**
  * Aggregate per-card draft stats over a subset of the analyzed decks. Passing the
@@ -92,10 +97,11 @@ const emptyRawStats = (): RawStats => ({
 export function computePlaytestCardStats(
   perPick: PlaytestPick[][],
   seatsByPool: number[],
+  deckBuilds: BuiltDeck[],
   oracles: string[],
   cardMeta: Record<string, CardMeta>,
   activePoolIndexSet: Set<number>,
-): CardStats[] {
+): PlaytestCardStats[] {
   const statsMap = new Map<number, RawStats>();
   const get = (o: number): RawStats => {
     let s = statsMap.get(o);
@@ -105,8 +111,13 @@ export function computePlaytestCardStats(
     }
     return s;
   };
+  const oracleIdx = new Map(oracles.map((oracle, i) => [oracle, i]));
 
   for (const poolIndex of activePoolIndexSet) {
+    for (const oracle of new Set(deckBuilds[poolIndex]?.mainboard ?? [])) {
+      const o = oracleIdx.get(oracle);
+      if (o !== undefined) get(o).deckCount++;
+    }
     const picks = perPick[poolIndex];
     if (!picks) continue;
     const seats = seatsByPool[poolIndex] ?? 8;
@@ -133,7 +144,7 @@ export function computePlaytestCardStats(
     }
   }
 
-  const out: CardStats[] = [];
+  const out: PlaytestCardStats[] = [];
   for (const [o, s] of statsMap) {
     if (s.timesSeen === 0) continue;
     const oracle = oracles[o]!;
@@ -154,6 +165,7 @@ export function computePlaytestCardStats(
       pxp1Seen: s.pxp1Seen,
       poolIndices: s.poolIndices,
       p1p1PoolIndices: s.p1p1PoolIndices,
+      deckCount: s.deckCount,
     });
   }
   return out;

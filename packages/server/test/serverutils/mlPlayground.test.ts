@@ -37,13 +37,9 @@ jest.mock('serverutils/carddb', () => {
     // "New Card" is outside the model's vocabulary and "Old Card" is its most similar card.
     getOracleForMl: (oracle: string) => (oracle === 'new' ? 'old' : oracle),
     getReasonableCardByOracle: (oracle: string) => Object.values(cards).find((c) => c.oracle_id === oracle),
+    isOracleInModel: (oracle: string) => ['bolt', 'old', 'plains'].includes(oracle),
   };
 });
-
-jest.mock('serverutils/cardCatalog', () => ({
-  __esModule: true,
-  default: { oracleToIndex: { bolt: 0, old: 1, plains: 2 } },
-}));
 
 jest.mock('serverutils/ml', () => ({ isMlServiceError: () => false }));
 
