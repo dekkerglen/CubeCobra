@@ -712,17 +712,17 @@ const splitFaceCount = (name?: string): number => (name ?? '').split(' // ').len
  * flip the real card too.
  *
  * `portrait` is checked first: a printing in both maps is a typo, and leaving the image
- * unrotated is the safer reading. `Object.hasOwn` rather than `in`, so an id of
+ * unrotated is the safer reading. `hasOwnProperty` rather than `in`, so an id of
  * `constructor` cannot match through the prototype.
  */
 const orientationOverrideFor = (scryfallId?: string): CardOrientation | undefined => {
   if (!scryfallId) {
     return undefined;
   }
-  if (Object.hasOwn(OrientationOverrides.portrait, scryfallId)) {
+  if (Object.prototype.hasOwnProperty.call(OrientationOverrides.portrait, scryfallId)) {
     return 'portrait';
   }
-  if (Object.hasOwn(OrientationOverrides.landscape, scryfallId)) {
+  if (Object.prototype.hasOwnProperty.call(OrientationOverrides.landscape, scryfallId)) {
     return 'landscape';
   }
   return undefined;
