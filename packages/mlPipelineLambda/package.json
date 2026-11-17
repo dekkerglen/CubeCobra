@@ -14,7 +14,7 @@
   "dependencies": {
     "@aws-sdk/client-elastic-beanstalk": "^3.1166.0",
     "@aws-sdk/client-s3": "^3.1166.0",
-    "archiver": "^7.0.1"
+    "archiver": "^8.0.0"
   },
   "devDependencies": {
     "@swc/core": "^1.16.22",
