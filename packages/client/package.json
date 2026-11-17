@@ -20,7 +20,7 @@
     "chart.js": "^4.6.1",
     "chartjs-adapter-date-fns": "^3.0.0",
     "classnames": "^2.5.1",
-    "d3-cloud": "^1.2.9",
+    "d3-cloud": "^2.0.0",
     "dompurify": "^3.4.17",
     "emoji-regex": "^10.6.0",
     "framer-motion": "^14.12.0",
