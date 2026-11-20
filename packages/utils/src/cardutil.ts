@@ -17,6 +17,7 @@ import {
 } from './datatypes/Mana';
 import CategoryOverrides from './res/CategoryOverrides.json';
 import LandCategories from './res/LandCategories.json';
+import OrientationOverrides from './res/OrientationOverrides.json';
 import { arraysEqual, getContrastingTextColor, isTagHexColor } from './Util';
 
 export const ART_SERIES_CARD_SUFFIX = 'Art Card';
@@ -674,6 +675,59 @@ const LANDSCAPE_LAYOUTS = ['planar', 'scheme'];
 
 const PORTRAIT_FACES: CardFaceOrientations = { front: 'portrait', back: 'portrait' };
 
+const LANDSCAPE_FACES: CardFaceOrientations = { front: 'landscape', back: 'portrait' };
+
+/**
+ * How many halves a split card's name declares. Three or more cannot fit a landscape
+ * frame — they are printed as stacked panels on an upright card — so this is what
+ * separates a real split card from `There // They're // Their` and friends.
+ *
+ * Face count comes from the name because `CardDetails` stores no per-face data, and
+ * `details.type` holds the front face's type line only. Only `split` names carry more
+ * than one separator (`art_series` names carry exactly one), so the caller scopes this
+ * to `split` and nothing else is at risk.
+ *
+ * Deliberately not keyed on the `playtest` promo type, even though every playtest split
+ * printing is upright today: `playtest` describes where a card came from, not how its
+ * frame is laid out. There are 52 playtest *planar* cards that are genuinely landscape,
+ * and `Who // What // When // Where // Why` is upright without being playtest. Printings
+ * the geometry does not catch are listed in `res/OrientationOverrides.json` instead.
+ */
+const splitFaceCount = (name?: string): number => (name ?? '').split(' // ').length;
+
+/**
+ * A printing's orientation, when the layout-derived rule below gets it wrong.
+ *
+ * Scryfall exposes no orientation field, and every card image is a 488x680 portrait JPEG
+ * with the artwork rotated inside it — so a card whose printed frame contradicts its
+ * layout is indistinguishable from one that matches, by metadata or by pixel shape.
+ * Joke and playtest sets are the usual source: Mystery Booster test cards are tagged
+ * `layout: split` but printed upright, because they are mock-ups on a plain template
+ * rather than real split frames.
+ *
+ * To fix a card that displays sideways, add its `scryfall_id` to `portrait` in
+ * `res/OrientationOverrides.json`; `landscape` forces the other direction, for a card we
+ * fail to rotate. Entries are per printing, not per name — playtest sets riff on real
+ * card names (`Start // Fire` beside the real `Fire // Ice`), so keying on name would
+ * flip the real card too.
+ *
+ * `portrait` is checked first: a printing in both maps is a typo, and leaving the image
+ * unrotated is the safer reading. `hasOwnProperty` rather than `in`, so an id of
+ * `constructor` cannot match through the prototype.
+ */
+const orientationOverrideFor = (scryfallId?: string): CardOrientation | undefined => {
+  if (!scryfallId) {
+    return undefined;
+  }
+  if (Object.prototype.hasOwnProperty.call(OrientationOverrides.portrait, scryfallId)) {
+    return 'portrait';
+  }
+  if (Object.prototype.hasOwnProperty.call(OrientationOverrides.landscape, scryfallId)) {
+    return 'landscape';
+  }
+  return undefined;
+};
+
 /**
  * How each face of a card is printed, so surfaces that show a card on its own can turn
  * a sideways one the right way up. Derived rather than stored: every input is already
@@ -688,6 +742,9 @@ const PORTRAIT_FACES: CardFaceOrientations = { front: 'portrait', back: 'portrai
  * holds the front face's type line only (`convertType` in the card ingest job reads the
  * front face), so there is no per-face input to apply the predicate to. The pair is
  * still returned so callers are written against one.
+ *
+ * A printing listed in `res/OrientationOverrides.json` skips the rule entirely — see
+ * `orientationOverrideFor` for when to add one.
  */
 export const cardFaceOrientations = (card?: Card | CardDetailsType | null): CardFaceOrientations => {
   if (!card) {
@@ -695,13 +752,19 @@ export const cardFaceOrientations = (card?: Card | CardDetailsType | null): Card
   }
 
   const details = ((card as Card).details ?? card) as Partial<CardDetailsType>;
+
+  const override = orientationOverrideFor(details.scryfall_id);
+  if (override) {
+    return override === 'landscape' ? LANDSCAPE_FACES : PORTRAIT_FACES;
+  }
+
   const layout = details.layout ?? '';
   const isLandscapeFront =
     LANDSCAPE_LAYOUTS.includes(layout) ||
-    (layout === 'split' && !(details.keywords ?? []).includes('Aftermath')) ||
+    (layout === 'split' && !(details.keywords ?? []).includes('Aftermath') && splitFaceCount(details.name) <= 2) ||
     (details.type ?? '').includes('Battle');
 
-  return isLandscapeFront ? { front: 'landscape', back: 'portrait' } : PORTRAIT_FACES;
+  return isLandscapeFront ? LANDSCAPE_FACES : PORTRAIT_FACES;
 };
 
 /**
