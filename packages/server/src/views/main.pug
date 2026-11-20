@@ -46,7 +46,7 @@ html(lang='en' class=htmlClasses)
 				if (typeof NitroPayCCPA !== 'undefined') NitroPayCCPA.init();
 			script(async='' nonce=cspNonce src='https://s.nitropay.com/ads-860.js')
 
-	body
+	body(class=viteDev ? 'dev-ad-slots' : undefined)
 		include dynamic_flash
 		#react-root !{reactHTML}
 		noscript

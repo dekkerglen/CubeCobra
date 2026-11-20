@@ -402,6 +402,43 @@
   height: 100%;
 }
 
+/*
+ * Ad slots, outlined — development only.
+ *
+ * The slot divs are empty until the ad network fills them, which it never does locally: the
+ * requests are blocked, so a 970x250 billboard reads as blank page. That makes the dashboard's
+ * banner look like a layout bug and hides the space a real ad will occupy. The class comes from
+ * main.pug's `viteDev` local (NODE_ENV !== 'production'), so none of this reaches production.
+ *
+ * `outline` rather than `border`, and an absolutely positioned label, so the slot keeps the exact
+ * size the ad network gave it. A dev affordance that changes the layout it is meant to reveal
+ * would be worse than nothing.
+ */
+.dev-ad-slots .advertisement-div {
+  position: relative;
+  min-height: 1.5rem;
+  outline: 1px dashed rgb(139 92 246 / 55%);
+  outline-offset: -1px;
+  background-color: rgb(139 92 246 / 6%);
+}
+
+.dev-ad-slots .advertisement-div::after {
+  content: 'ad slot: ' attr(id);
+  position: absolute;
+  top: 0;
+  left: 0;
+  padding: 0.0625rem 0.375rem;
+  border-bottom-right-radius: 0.25rem;
+  background-color: rgb(139 92 246 / 75%);
+  color: #fff;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.625rem;
+  line-height: 1.4;
+  letter-spacing: 0.02em;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
 .centered {
   display: flex;
   justify-content: center;
