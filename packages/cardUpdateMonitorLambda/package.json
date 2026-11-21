@@ -14,7 +14,7 @@
     "@aws-sdk/client-ecs": "^3.1166.0",
     "@aws-sdk/client-s3": "^3.1166.0",
     "@aws-sdk/credential-providers": "^3.1166.0",
-    "archiver": "^6.0.2"
+    "archiver": "^8.0.0"
   },
   "devDependencies": {
     "@types/aws-lambda": "^8.10.164",

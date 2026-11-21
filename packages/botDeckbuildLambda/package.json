@@ -14,7 +14,7 @@
   "description": "Consumes draft ids from SQS and builds bot (AI opponent) decks off the request path.",
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1166.0",
-    "archiver": "^7.0.1"
+    "archiver": "^8.0.0"
   },
   "devDependencies": {
     "dotenv": "^18.0.10",
