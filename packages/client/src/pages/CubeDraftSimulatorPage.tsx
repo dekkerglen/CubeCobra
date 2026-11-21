@@ -77,6 +77,7 @@ import {
 } from '../utils/draftSimulatorThemes';
 import { computeFilteredCardStats } from '../utils/draftSimulatorStats';
 import { OTAG_BUCKET_MAP } from '../utils/otagBucketMap';
+import { deckColorsFromMeta } from '../utils/recordCardMeta';
 import { COLOR_KEYS, getDeckShareColors, normalizeColorOrder } from '../components/draftSimulator/SimulatorCharts';
 
 interface RawStats {
@@ -265,27 +266,12 @@ function randomIndex(length: number): number {
 }
 
 /**
- * Assess deck/pool colors using the same logic as the server-side assessColors:
- * iterate over cards, exclude lands, count color identity occurrences, and
- * include a color if it appears on >10% of non-land cards.
+ * Assess deck/pool colors with the shared rule the server names decks by (assessColors),
+ * as a sorted color string, or 'C' when colorless.
  */
 function assessDeckColors(cards: string[], cardMeta: Record<string, CardMeta>): string {
-  const colorCounts: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-  let count = 0;
-  for (const oracle of cards) {
-    const meta = cardMeta[oracle];
-    if (!meta) continue;
-    if ((meta.type ?? '').toLowerCase().includes('land')) continue;
-    count++;
-    for (const c of meta.colorIdentity) {
-      if (c in colorCounts) colorCounts[c] = (colorCounts[c] ?? 0) + 1;
-    }
-  }
-  if (count === 0) return 'C';
-  const colors = Object.keys(colorCounts)
-    .filter((c) => (colorCounts[c] ?? 0) / count > 0.1)
-    .sort();
-  return colors.length === 0 ? 'C' : colors.join('');
+  const { colors } = deckColorsFromMeta(cards, cardMeta);
+  return colors.length === 0 ? 'C' : [...colors].sort().join('');
 }
 
 /** Pre-deckbuild: assess pool colors from all picks (same threshold logic). */

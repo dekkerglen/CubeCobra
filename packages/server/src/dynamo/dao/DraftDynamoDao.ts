@@ -1440,7 +1440,11 @@ export class DraftDynamoDao extends BaseDynamoDao<Draft, UnhydratedDraft> {
         continue;
       }
       const details = cardFromId(pickedCard.cardID);
-      assessCards.push({ isLand: details.type.includes('Land'), colorIdentity: details.color_identity });
+      assessCards.push({
+        isLand: details.type.includes('Land'),
+        colorIdentity: details.color_identity,
+        parsedCost: details.parsed_cost,
+      });
     }
     return assessDeckColors(assessCards);
   }

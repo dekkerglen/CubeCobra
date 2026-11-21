@@ -21,7 +21,7 @@ import {
   LEIDEN_RES_DIVISOR,
 } from './draftSimulatorClustering';
 import { PlaytestAnalysisRunData, PlaytestDeck, PlaytestPick, RecordCardInfo } from './playtestAnalysisStorage';
-import { buildCardMeta } from './recordCardMeta';
+import { buildCardMeta, deckColorsFromMeta } from './recordCardMeta';
 
 type CsrfFetch = (input: RequestInfo, init?: RequestInit) => Promise<Response>;
 
@@ -39,21 +39,6 @@ interface RawPlaytestDraft {
   mainboard: number[];
   sideboard: number[];
 }
-
-// A deck's color identity: colors on >10% of its non-land cards. (Same rule the
-// record analysis uses, so color labels line up across the two dashboards.)
-const assessDeckColors = (oracles: string[], cardMeta: Record<string, CardMeta>): string[] => {
-  const counts: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-  let n = 0;
-  for (const o of oracles) {
-    const m = cardMeta[o];
-    if (!m || (m.type ?? '').toLowerCase().includes('land')) continue;
-    n += 1;
-    for (const c of m.colorIdentity ?? []) if (Object.prototype.hasOwnProperty.call(counts, c)) counts[c] += 1;
-  }
-  if (n === 0) return [];
-  return (['W', 'U', 'B', 'R', 'G'] as const).filter((c) => counts[c]! / n > 0.1);
-};
 
 interface RawStats {
   timesSeen: number;
@@ -261,6 +246,7 @@ export async function runPlaytestAnalysis(
         cmc: info.cmc,
         type: info.type,
         producedMana: [],
+        parsedCost: info.parsedCost,
       };
     }
   }
@@ -285,7 +271,7 @@ export async function runPlaytestAnalysis(
       clusterId: null,
       x: 0,
       y: 0,
-      colors: assessDeckColors(mainboard, colorMeta),
+      colors: deckColorsFromMeta(mainboard, colorMeta).colors,
       archetype: '',
     });
   }

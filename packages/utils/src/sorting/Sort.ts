@@ -37,7 +37,7 @@ import {
 } from '../cardutil';
 import Card, { CARD_STATUSES, COLOR_CATEGORIES, FINISHES, SUPPORTED_FORMATS } from '../datatypes/Card';
 // Import filter utilities - we'll need this for custom sorts
-import filterutil from '../filtering/FilterCards';
+import filterutil, { FilterFunction } from '../filtering/FilterCards';
 import { arrayIsSubset, fromEntries } from '../Util';
 
 //"as const" so Typescript knows will always be these 4 values
@@ -418,6 +418,31 @@ function getCustomSort(cube: Cube | Card[] | null, sortName: string): CustomSort
   return customSorts.find((cs) => cs.name === sortName) || null;
 }
 
+// Parsed custom sort category filters, keyed by filter text. cardGetLabels runs once per card per
+// sort pass, and parsing is ~0.5ms, so re-parsing every category for every card made custom sorts
+// take most of a second per pass on a full cube. Capped so a long-lived server process can't grow
+// it without bound; the cap is far above what any one cube's custom sorts use.
+const customCategoryFilterCache = new Map<string, FilterFunction | null>();
+const CUSTOM_CATEGORY_FILTER_CACHE_LIMIT = 1000;
+
+function getCustomCategoryFilter(filterString: string): FilterFunction | null {
+  if (customCategoryFilterCache.has(filterString)) {
+    return customCategoryFilterCache.get(filterString)!;
+  }
+  let parsed: FilterFunction | null = null;
+  try {
+    const { filter, err } = filterutil.makeFilter(filterString);
+    parsed = err ? null : filter;
+  } catch {
+    parsed = null;
+  }
+  if (customCategoryFilterCache.size >= CUSTOM_CATEGORY_FILTER_CACHE_LIMIT) {
+    customCategoryFilterCache.clear();
+  }
+  customCategoryFilterCache.set(filterString, parsed);
+  return parsed;
+}
+
 /**
  * Check if a card matches a custom sort category using filter syntax.
  * Used by cardGetLabels to evaluate custom sort categories.
@@ -426,11 +451,11 @@ function cardMatchesCustomCategory(card: Card, filterString: string): boolean {
   if (!filterString || filterString.trim() === '') {
     return false;
   }
+  const filter = getCustomCategoryFilter(filterString);
+  if (!filter) {
+    return false;
+  }
   try {
-    const { filter, err } = filterutil.makeFilter(filterString);
-    if (err || !filter) {
-      return false;
-    }
     return filter(card);
   } catch {
     return false;

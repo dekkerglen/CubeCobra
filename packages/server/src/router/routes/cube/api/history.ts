@@ -1,3 +1,4 @@
+import { sanitizeChangelog } from 'dynamo/dao/ChangelogDynamoDao';
 import { changelogDao, cubeDao } from 'dynamo/daos';
 import rateLimit from 'express-rate-limit';
 import { isCubeViewable } from 'serverutils/cubefn';
@@ -27,6 +28,7 @@ export const historyHandler = async (req: Request, res: Response) => {
     if (!Number.isInteger(limit) || limit < 1) {
       return res.status(400).send('Invalid limit parameter. Must be a positive integer.');
     }
+    const includeChanges = req.query.includeChanges === '1' || req.query.includeChanges === 'true';
 
     const cube = await cubeDao.getById(req.params.id!);
     if (!cube || !isCubeViewable(cube, req.user)) {
@@ -42,9 +44,19 @@ export const historyHandler = async (req: Request, res: Response) => {
       return res.status(400).send('Invalid cursor parameter.');
     }
 
+    // Each entry's changes are a separate S3 read, so they're only loaded when asked for.
+    const bodies = includeChanges
+      ? await Promise.all(page.items.map((item) => changelogDao.loadChangelogData(item)))
+      : [];
+
     return res.status(200).send({
       cubeId: cube.id,
-      changelogs: page.items.map(({ id, date, cubeVersion }) => ({ id, date, cubeVersion })),
+      changelogs: page.items.map(({ id, date, cubeVersion }, i) => {
+        if (!includeChanges) return { id, date, cubeVersion };
+        // Cards ship as scryfall IDs only. An unreadable body comes back null, as in the history view.
+        const body = bodies[i];
+        return { id, date, cubeVersion, changes: body ? sanitizeChangelog(body) : null };
+      }),
       nextCursor: page.cursor,
     });
   } catch (err) {

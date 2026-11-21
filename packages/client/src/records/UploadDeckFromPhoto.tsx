@@ -367,6 +367,10 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
     setRows((prev) => prev.map((row) => (row.id === id ? { ...row, ...patch } : row)));
   }, []);
 
+  const setAllSideboard = useCallback((sideboard: boolean) => {
+    setRows((prev) => prev.map((row) => ({ ...row, sideboard })));
+  }, []);
+
   const removeRow = useCallback((id: number) => {
     setRows((prev) => prev.filter((row) => row.id !== id));
   }, []);
@@ -561,6 +565,8 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
 
   const addableCount = rows.filter((row) => row.name.trim()).length;
   const sideboardCount = setSideboardCards ? rows.filter((row) => row.name.trim() && row.sideboard).length : 0;
+  const allSideboard = rows.length > 0 && rows.every((row) => row.sideboard);
+  const someSideboard = rows.some((row) => row.sideboard);
 
   // Spotlight overlay for the hovered slice: four dark panels cover the whole
   // image EXCEPT the hovered box, leaving it bright with a thick ring. Built from
@@ -793,6 +799,25 @@ const UploadDeckFromPhoto: React.FC<UploadDeckFromPhotoProps> = ({
             <div className="w-full md:w-1/2 min-w-0 md:h-full md:overflow-y-auto pr-1">
               <div className="flex flex-col gap-2">
                 {rows.length === 0 && <Text sm>No card names were detected. Try a clearer or more fanned photo.</Text>}
+                {setSideboardCards && rows.length > 0 && (
+                  <label
+                    className="flex items-center gap-1 self-end hover:cursor-pointer"
+                    title="Put every card in the sideboard"
+                  >
+                    <input
+                      type="checkbox"
+                      className="form-checkbox h-4 w-4 text-primary-button"
+                      checked={allSideboard}
+                      ref={(el) => {
+                        if (el) {
+                          el.indeterminate = someSideboard && !allSideboard;
+                        }
+                      }}
+                      onChange={(event) => setAllSideboard(event.target.checked)}
+                    />
+                    <span className="text-xs text-text-secondary">All to sideboard</span>
+                  </label>
+                )}
                 {rows.map((row) => (
                   <div
                     key={row.id}

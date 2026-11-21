@@ -31,7 +31,7 @@ export interface PlaytestDeck {
   clusterId: number | null;
   x: number;
   y: number;
-  colors: string[]; // deck color identity codes (e.g. ['W','U']), >10% threshold
+  colors: string[]; // deck color codes (e.g. ['W','U']), >10% threshold
   archetype: string; // ML archetype label (e.g. 'Aggro'), '' if unavailable
 }
 

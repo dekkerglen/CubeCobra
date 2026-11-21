@@ -6,6 +6,7 @@
 import { cardOracleId, isManaFixingLand } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import type { CardMeta } from '@utils/datatypes/SimulationReport';
+import { deckColors } from '@utils/drafting/assessColors';
 
 export function buildCardMeta(cubeCards: Card[], remapping: Record<string, string> = {}): Record<string, CardMeta> {
   const cardMeta: Record<string, CardMeta> = {};
@@ -21,9 +22,28 @@ export function buildCardMeta(cubeCards: Card[], remapping: Record<string, strin
       cmc: d?.cmc ?? 0,
       type: d?.type ?? '',
       producedMana: d?.produced_mana ?? [],
+      parsedCost: d?.parsed_cost,
       mlOracleId: remapping[oracle] && remapping[oracle] !== oracle ? remapping[oracle] : undefined,
       isManaFixingLand: (d ? isManaFixingLand(d) : false) || undefined,
     };
   }
   return cardMeta;
+}
+
+// A deck's colors (e.g. ['W','U'], [] when colorless) and each color's card count, by the
+// shared deck-color rule the deck names use, so both analytics dashboards line up with them.
+export function deckColorsFromMeta(
+  oracles: string[],
+  cardMeta: Record<string, CardMeta>,
+): { colors: string[]; colorCounts: Record<string, number> } {
+  const cards = oracles
+    .map((o) => cardMeta[o])
+    .filter((m): m is CardMeta => !!m)
+    .map((m) => ({
+      isLand: (m.type ?? '').toLowerCase().includes('land'),
+      colorIdentity: m.colorIdentity ?? [],
+      parsedCost: m.parsedCost,
+    }));
+  const { colors, counts } = deckColors(cards);
+  return { colors, colorCounts: counts };
 }

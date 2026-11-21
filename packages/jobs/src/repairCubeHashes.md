@@ -16,7 +16,10 @@ This job:
 4. **Compares current vs expected** to identify:
    - Missing hashes that need to be added
    - Stale hashes that need to be removed
+   - Existing hashes whose sort keys (like count, name, card count, date) no longer match the cube
 5. **Writes the delta** to DynamoDB in batches
+
+Like (`LIKE#`) and pin (`PIN#`) rows share each cube's hash partition and are left untouched.
 
 ## Hash Types
 
@@ -64,7 +67,7 @@ The job provides real-time progress:
 
 ```
 Processing batch 1 (100 cubes)...
-Repaired cube abc123 (My Cube): +5 -2 =45
+Repaired cube abc123 (My Cube): +5 -2 =45 ~45
 Batch 1 complete in 1.23s. Progress: 100 cubes, 12 with changes, 0 errors
 
 === Cube Hash Repair Complete ===
@@ -73,6 +76,7 @@ Cubes with changes: 1234
 Total hashes added: 5678
 Total hashes removed: 234
 Total hashes unchanged: 123456
+Total hashes with refreshed sort keys: 23456
 Owners fixed: 0
 Errors: 0
 ```
@@ -103,7 +107,7 @@ The job leverages `CubeDynamoDao.repairHashes()` which:
 4. Generates metadata hashes using `getHashStrings()`
 5. Creates oracle hashes for each unique card
 6. Queries existing hash rows using `getHashesForCube()`
-7. Calculates diff and writes batch operations
+7. Calculates diff and writes batch operations, including rewrites of rows with outdated sort keys
 
 ## Hash Row Structure
 

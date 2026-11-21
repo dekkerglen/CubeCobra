@@ -1417,13 +1417,18 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   }
 
   /**
-   * Writes hash rows with GSI sort keys taken from the given cube.
+   * Rewrites the cube's metadata hash rows so their GSI sort keys match the given cube.
+   * For counter changes (likes) that write the cube row directly: update() only refreshes
+   * hash rows when the stored value differs, and by then the counter has already landed.
    */
-  private async writeHashRows(cube: Cube, hashes: string[]): Promise<void> {
-    if (hashes.length === 0) {
-      return;
-    }
+  public async refreshHashRowSortKeys(cube: Cube): Promise<void> {
+    await this.writeHashRows(cube, await this.getHashes(cube));
+  }
 
+  /**
+   * Builds a hash row with GSI sort keys taken from the given cube.
+   */
+  private buildHashRow(cube: Cube, hashString: string) {
     // Safely access fields that might be undefined
     const cubeName = cube.name;
     const cubeFollowers = cube.likeCount ?? 0;
@@ -1431,10 +1436,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     const cubeDate = cube.dateLastUpdated || cube.date || Date.now();
 
     // Use NEW hash row structure: PK = HASH#CUBE#{id}, SK = hashString
-    const hashPK = `HASH#${this.partitionKey(cube)}`;
-
-    const hashRows = hashes.map((hashString) => ({
-      PK: hashPK,
+    return {
+      PK: `HASH#${this.partitionKey(cube)}`,
       SK: hashString,
       GSI1PK: hashString,
       GSI1SK: `FOLLOWERS#${String(cubeFollowers).padStart(10, '0')}`,
@@ -1447,7 +1450,18 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       cubeName: cubeName,
       cubeFollowers: cubeFollowers,
       cubeCardCount: cubeCardCount,
-    }));
+    };
+  }
+
+  /**
+   * Writes hash rows with GSI sort keys taken from the given cube.
+   */
+  private async writeHashRows(cube: Cube, hashes: string[]): Promise<void> {
+    if (hashes.length === 0) {
+      return;
+    }
+
+    const hashRows = hashes.map((hashString) => this.buildHashRow(cube, hashString));
 
     // Batch writes in chunks of 25 (DynamoDB limit)
     const BATCH_SIZE = 25;
@@ -2226,16 +2240,15 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   }
 
   /**
-   * Gets hash rows for a specific cube.
+   * Gets all hash rows for a specific cube.
    * This is useful for cleanup/sweeper operations to verify or remove stale hashes.
    *
-   * Returns a single DynamoDB page. A cube carries one hash row per mainboard card, so a large
-   * cube's rows do not all fit in one page: callers that need the complete set must follow the
-   * returned `lastKey`. Do not use this for membership tests — see `cubeIdsHavingAllHashes`, which
-   * reads only the rows it is testing and so cannot be truncated.
+   * Pages through the cube's whole hash partition, which also holds its LIKE# and PIN# rows;
+   * those are skipped, so only search hash rows come back. Do not use this for membership
+   * tests — see `cubeIdsHavingAllHashes`, which reads only the rows it is testing.
    *
    * @param cubeId - The ID of the cube to get hashes for
-   * @returns Promise with array of hash strings and their metadata, plus a key for the next page
+   * @returns Promise with array of hash strings and their metadata
    */
   public async getHashesForCube(cubeId: string): Promise<{
     hashes: Array<{
@@ -2243,37 +2256,51 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       cubeName?: string;
       cubeFollowers?: number;
       cubeCardCount?: number;
+      GSI1SK?: string;
+      GSI2SK?: string;
+      GSI3SK?: string;
+      GSI4SK?: string;
     }>;
-    lastKey?: Record<string, any>;
   }> {
     const cubePK = this.typedKey(cubeId);
     const hashPK = `HASH#${cubePK}`;
 
-    const queryResult = await this.dynamoClient.send(
-      new QueryCommand({
-        TableName: this.tableName,
-        KeyConditionExpression: 'PK = :pk',
-        ExpressionAttributeValues: {
-          ':pk': hashPK,
-        },
-      }),
-    );
+    const hashes = [];
+    let lastKey: Record<string, any> | undefined;
+    do {
+      const queryResult = await this.dynamoClient.send(
+        new QueryCommand({
+          TableName: this.tableName,
+          KeyConditionExpression: 'PK = :pk',
+          ExpressionAttributeValues: {
+            ':pk': hashPK,
+          },
+          ExclusiveStartKey: lastKey,
+        }),
+      );
 
-    if (!queryResult.Items || queryResult.Items.length === 0) {
-      return { hashes: [] };
-    }
+      for (const item of queryResult.Items || []) {
+        // Search hash rows are keyed by a SHA-256 hex digest; anything else is a like or pin row.
+        if (!/^[0-9a-f]{64}$/.test(item.SK)) {
+          continue;
+        }
 
-    const hashes = queryResult.Items.map((item: any) => ({
-      hash: item.SK as string,
-      cubeName: item.cubeName,
-      cubeFollowers: item.cubeFollowers,
-      cubeCardCount: item.cubeCardCount,
-    }));
+        hashes.push({
+          hash: item.SK as string,
+          cubeName: item.cubeName,
+          cubeFollowers: item.cubeFollowers,
+          cubeCardCount: item.cubeCardCount,
+          GSI1SK: item.GSI1SK,
+          GSI2SK: item.GSI2SK,
+          GSI3SK: item.GSI3SK,
+          GSI4SK: item.GSI4SK,
+        });
+      }
 
-    return {
-      hashes,
-      lastKey: queryResult.LastEvaluatedKey || undefined,
-    };
+      lastKey = queryResult.LastEvaluatedKey;
+    } while (lastKey);
+
+    return { hashes };
   }
 
   /**
@@ -2303,7 +2330,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
   /**
    * Repairs hash rows for a cube by comparing current hashes with expected hashes
-   * and writing the delta (removing stale hashes and adding missing ones).
+   * and writing the delta (removing stale hashes and adding missing ones), then
+   * rewriting any remaining rows whose GSI sort keys no longer match the cube.
    * This includes both metadata hashes and card (oracle) hashes.
    * This is useful for cleanup operations when hash logic changes or data becomes inconsistent.
    *
@@ -2318,6 +2346,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     added: number;
     removed: number;
     unchanged: number;
+    refreshed: number;
     ownerFixed: boolean;
   }> {
     // Get the cube
@@ -2340,7 +2369,8 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
 
     // Get current hash rows
     const currentHashesResult = await this.getHashesForCube(cubeId);
-    const currentHashes = new Set(currentHashesResult.hashes.map((h) => h.hash));
+    const currentRows = new Map(currentHashesResult.hashes.map((h) => [h.hash, h]));
+    const currentHashes = new Set(currentRows.keys());
 
     // Calculate expected hashes (metadata + oracle + card-derived categories)
     const expectedHashes = new Set<string>();
@@ -2366,20 +2396,28 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     const hashesToRemove = Array.from(currentHashes).filter((hash) => !expectedHashes.has(hash));
     const unchanged = Array.from(expectedHashes).filter((hash) => currentHashes.has(hash));
 
+    // Rows that exist but carry outdated sort keys (like count, name, card count, date)
+    const hashesToRefresh = unchanged.filter((hash) => {
+      const current = currentRows.get(hash)!;
+      const expected = this.buildHashRow(cube, hash);
+      return (['GSI1SK', 'GSI2SK', 'GSI3SK', 'GSI4SK'] as const).some((key) => current[key] !== expected[key]);
+    });
+
     // Remove stale hashes
     if (hashesToRemove.length > 0) {
       await this.deleteHashesBySK(this.partitionKey(cube), hashesToRemove);
     }
 
-    // Add missing hashes
-    if (hashesToAdd.length > 0) {
-      await this.writeHashRows(cube, hashesToAdd);
+    // Add missing hashes and rewrite outdated ones
+    if (hashesToAdd.length > 0 || hashesToRefresh.length > 0) {
+      await this.writeHashRows(cube, [...hashesToAdd, ...hashesToRefresh]);
     }
 
     return {
       added: hashesToAdd.length,
       removed: hashesToRemove.length,
       unchanged: unchanged.length,
+      refreshed: hashesToRefresh.length,
       ownerFixed,
     };
   }

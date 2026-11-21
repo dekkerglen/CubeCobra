@@ -15,6 +15,7 @@ import { SortableItem, SortableList } from 'components/DND';
 import LoadingButton from 'components/LoadingButton';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
+import { useSettingsUnsavedChanges } from 'contexts/SettingsViewContext';
 
 interface CategoryRowProps {
   category: CustomSortCategory;
@@ -255,6 +256,8 @@ const CustomSortsSettings: React.FC = () => {
     setHasChanges(changed);
   }, [customSorts, getInitialSorts]);
 
+  const allowLeave = useSettingsUnsavedChanges(hasChanges);
+
   const addSort = () => {
     const newSort: CustomSort = {
       name: '',
@@ -389,6 +392,7 @@ const CustomSortsSettings: React.FC = () => {
 
       if (response.ok) {
         // Reload page to reflect changes
+        allowLeave();
         window.location.href = `/cube/settings/${cube.id}?view=custom-sorts`;
       } else {
         setError(data.message || 'Failed to save custom sorts');

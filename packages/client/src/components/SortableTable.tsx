@@ -29,6 +29,9 @@ interface SortableTableProps {
   flush?: boolean;
   // Hide the inline "Download CSV" link (e.g. when it's rendered in the card header).
   showCsvLink?: boolean;
+  // Scroll the table within a capped height and pin the header row while scrolling.
+  // The overflow wrapper is the sticky containing block, so it must scroll vertically.
+  stickyHeader?: boolean;
 }
 
 export const valueRenderer = (value: any): any => {
@@ -57,6 +60,7 @@ export const SortableTable: React.FC<SortableTableProps> = ({
   columnProps,
   flush = false,
   showCsvLink = true,
+  stickyHeader = false,
 }) => {
   const { items, requestSort, sortConfig } = useSortableData(data, defaultSortConfig, sortFns);
 
@@ -80,9 +84,9 @@ export const SortableTable: React.FC<SortableTableProps> = ({
           Download CSV
         </CSVLink>
       )}
-      <div className="overflow-x-auto max-w-full">
+      <div className={classNames('max-w-full', stickyHeader ? 'overflow-auto max-h-[75vh]' : 'overflow-x-auto')}>
         <table className={classNames('w-full', { 'border border-border rounded-md': !flush })}>
-          <thead>
+          <thead className={classNames({ 'sticky top-0 z-10 bg-bg-accent': stickyHeader })}>
             <tr>
               {columnProps.map(({ title, key, sortable, heading, tooltip }) => {
                 if (sortable) {

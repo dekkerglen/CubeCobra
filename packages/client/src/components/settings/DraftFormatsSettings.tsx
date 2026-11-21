@@ -24,6 +24,7 @@ import CustomPackCard from 'components/CustomPackCard';
 import LoadingButton from 'components/LoadingButton';
 import TextEntry from 'components/TextEntry';
 import CubeContext from 'contexts/CubeContext';
+import { useSettingsUnsavedChanges } from 'contexts/SettingsViewContext';
 import useCoercedSelection from 'hooks/useCoercedSelection';
 import { basicsBoardSelectOptions, basicsBoardToSelectValue, selectValueToBasicsBoard } from 'utils/basicsBoardSelect';
 import { getDraftFormatOptions } from 'utils/draftFormats';
@@ -178,6 +179,8 @@ const DraftFormatsSettings: React.FC = () => {
     cube.defaultDraftSeats,
   ]);
 
+  const allowLeave = useSettingsUnsavedChanges(hasChanges);
+
   const addFormat = () => {
     const newFormat = createDefaultDraftFormat(3, 15);
     newFormat.title = `Format ${formats.length + 1}`;
@@ -311,6 +314,7 @@ const DraftFormatsSettings: React.FC = () => {
     setError('');
 
     if (formRef.current) {
+      allowLeave();
       formRef.current.submit();
     }
   };

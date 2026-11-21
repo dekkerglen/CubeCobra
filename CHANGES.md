@@ -23,6 +23,7 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - CSV exports now list what each voucher holds in a new Voucher Cards column, and CSV uploads read it, so a cube of vouchers can be set up or copied in one upload.
 - The public data exports now record when each draft happened, and every pick names the draft it came from.
 - The public API can now fetch a cube's details without its card list.
+- Download a cube's whole changelog as a JSON file with Export All on its Changelog page.
 - A new Cleanup button in the cube list's edit panel tidies your boards in one click: drop a board's duplicate entries, drop everything in it that's already in another board, or swap every card in the boards you pick to its default, most recent, first, or cheapest printing. The changes land in your change list to review before you save.
 - Filtering a cube by quantity, count, copies, or singleton now counts copies of the same card together even when they're different printings under different names, and stops counting cards you've already staged for removal.
 - Filters now take regular expressions between slashes for oracle text, type lines and names, as on Scryfall, including its shorthands like `\sc` for any colored mana symbol: `o:/^{T}: add/` finds cards that tap for mana. They also take `!"name"` to match a card's whole name, and `<`, `<=`, `>` and `>=` on mana costs. `-m<{0}` finds cards that have a mana cost.
@@ -33,6 +34,10 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - A record's page is now split into Players, Matches, Decks and Standings tabs. A player without a deck gets an upload link that picks them for you, and a record can be deleted from its own page.
 - The records list starts an event, inputs a finished one, or creates one from a draft or an import, and shows each record's player count, rounds and winner.
 - Decklists pasted when uploading or contributing a record deck now put cards under a Sideboard heading on the sideboard, as in Draftmancer exports.
+- Scanning a deck photo has an All to sideboard box above the card list, so a photo of a sideboard can go to the sideboard in one click.
+- Closing or leaving the page partway through a Hedron Network import now asks you to confirm first, so an accidental close doesn't throw away the decks you've scanned.
+- Cube settings with unsaved changes now ask before you close the page, leave it, or switch to another settings section.
+- Color Pair Performance in Winrate Analytics can now count each deck once, under its two main colors, so a two-color deck with a light splash counts only toward its own pair.
 
 ## Bug Fixes
 
@@ -41,9 +46,12 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - A card or cube named with a line break no longer adds phantom cards to a downloaded list.
 - The Export menu no longer has a Use Sort option. Exports always use a fixed order, so a download no longer changes with the page's sort or the Show Unsorted Cards setting.
 - Sorting by Color Category puts Hybrid and Multicolored cards before Colorless again, as it did before December 2024. This affects the cube list views, deck views, and exports.
+- Cube lists sorted by a custom sort no longer lag on every change. Each edit used to freeze the page for a second or more.
 - Smart Search says how many pages of suggestions there are, and jumping to a later page no longer waits on every page before it. A search with no results says so instead of showing Page 1 of 0.
 - Smart Search now finds conspiracies, planes, schemes, contraptions, and other cards that start the game outside your deck. Searching for them used to return no results.
+- Cube search sorted by popularity ranks cubes by their current likes again. Since July a new like didn't move a cube up until its owner next edited it, so the order drifted out of line with the counts shown.
 - With Disable Animations turned on, cards you drag in a draft or the deckbuilder no longer tilt back and forth as you move them.
+- Add Basic Lands now shows a cube's basics in the order its Basics view sorts them, instead of the order they were added. Set that view's sort to Color Identity to list them in WUBRG order.
 - In a draft, a card you draft on a phone, or click over to your sideboard or back, now lands in full view at the bottom of its stack, instead of getting tucked into the middle of it.
 - Scrolling during a draft on an iPhone no longer makes the page jump wildly up and down, and the cards no longer rearrange themselves as the browser's toolbars slide in and out.
 - Turning Cogwork Librarian or Leovold's Operative back off partway through a pick no longer freezes the draft. Drafts already stuck this way pick back up after a page reload.
@@ -67,6 +75,7 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - Records made from a bot draft can have their players edited. Their unnamed players all shared one name, so saving was refused.
 - Records named automatically no longer show a different date in their name than in the Date column in some time zones.
 - Signed-out visitors can page through a cube's records list. The second page had asked them to log in.
+- A deck's colors, shown in its name and used throughout cube analytics, now come from what its cards take to cast. Mana rocks like Signets and off-color activated abilities no longer add a color, and a hybrid card counts toward the colors the deck already plays, so a Simic deck with a Selesnya hybrid card no longer counts as Bant.
 - Error messages meant to show in red, in about a dozen places across the site, now do.
 - Cube analytics no longer lists combos that need a kind of card the cube doesn't have, such as Cathars' Crusade and Viscera Seer in a cube without a creature with persist.
 - Filtering by mana cost with `m:` now works as it does on Scryfall: `m:rr` needs two red symbols instead of matching any red card, `m:2ww` no longer matches {2}{W}, and `m:2` counts generic mana, so it also finds {4}{W}. Split and adventure cards match on either half's cost.

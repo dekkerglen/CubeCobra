@@ -18,6 +18,7 @@ import DynamicFlash from 'components/DynamicFlash';
 import LoadingButton from 'components/LoadingButton';
 import RenderToRoot from 'components/RenderToRoot';
 import { CSRFContext } from 'contexts/CSRFContext';
+import useUnsavedChangesPrompt from 'hooks/useUnsavedChangesPrompt';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { buildDecksFromPools, BuiltPoolDeck } from 'utils/buildDeckFromPool';
@@ -176,6 +177,9 @@ const ImportHedronRecordPage: React.FC<ImportHedronRecordPageProps> = ({ cube })
   }>({});
   const [submitReady, setSubmitReady] = useState(false);
   const formRef = createRef<HTMLFormElement>();
+  // Scanning every player's photos can take a long while, so closing or leaving the page with an
+  // export loaded asks first. Create Record's own submit is let through.
+  const allowLeave = useUnsavedChangesPrompt(step === 1 || jsonInput.trim() !== '');
 
   const setPlayerCards = useCallback((playerIndex: number, names: string[], autoBuild: boolean) => {
     setDeckNames((prev) => ({ ...prev, [playerIndex]: names }));
@@ -281,6 +285,7 @@ const ImportHedronRecordPage: React.FC<ImportHedronRecordPageProps> = ({ cube })
 
   useEffect(() => {
     if (submitReady) {
+      allowLeave();
       formRef.current?.submit();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

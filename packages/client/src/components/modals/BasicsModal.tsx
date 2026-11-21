@@ -1,7 +1,9 @@
-import React, { useCallback, useContext, useState } from 'react';
+import React, { useCallback, useContext, useMemo, useState } from 'react';
 
 import { cardImageUrl, cardName } from '@utils/cardutil';
 import CardType from '@utils/datatypes/Card';
+import { boardNameToKey, getViewDefinitions } from '@utils/datatypes/Cube';
+import { getCubeSorts, sortForDownload } from '@utils/sorting/Sort';
 
 import Button from 'components/base/Button';
 import { Card } from 'components/base/Card';
@@ -34,6 +36,26 @@ const BasicsModal: React.FC<BasicsModalProps> = ({ isOpen, setOpen, addBasics, d
   const { canEdit, cube } = useContext(CubeContext);
   const [counts, setCounts] = useState<number[]>(basics.map(() => 0));
   const empty = basics.length === 0 ? getEmptyBasicsMessage(basicsBoard, canEdit, cube?.id ?? '') : null;
+
+  // Positions into `basics`, ordered by the default sorts of the view that shows the basics board.
+  const order = useMemo(() => {
+    const boardKey = boardNameToKey(basicsBoard || cube.basicsBoard || 'Basics');
+    const view = getViewDefinitions(cube).find((v) => v.boards.some((board) => board.toLowerCase() === boardKey));
+    const [primary, secondary, tertiary, quaternary] =
+      view?.defaultSorts?.length === 4 ? view.defaultSorts : getCubeSorts(cube);
+    const positions = new Map(basics.map((cardIndex, position) => [cards[cardIndex], position]));
+    const sorted = sortForDownload(
+      basics.map((cardIndex) => cards[cardIndex]),
+      primary,
+      secondary,
+      tertiary,
+      quaternary,
+      true,
+      cube,
+    );
+    // A card can land under more than one label (e.g. tags), so keep only its first spot.
+    return [...new Set(sorted.map((card) => positions.get(card)!))];
+  }, [basics, basicsBoard, cards, cube]);
 
   const handleAddBasics = useCallback(() => {
     addBasics(counts);
@@ -87,29 +109,34 @@ const BasicsModal: React.FC<BasicsModalProps> = ({ isOpen, setOpen, addBasics, d
           </Flexbox>
         ) : (
           <Row xs={5}>
-            {basics.map((cardIndex, index) => (
-              <Col xs={1} key={`basics-${index}`}>
-                <Card className="mb-3">
-                  <img
-                    className="w-full"
-                    src={(showCustomImages && cardImageUrl(cards[cardIndex])) || cards[cardIndex].details?.image_normal}
-                    alt={cardName(cards[cardIndex])}
-                  />
-                  <Select
-                    options={Array.from(Array(MAX_BASICS + 1).keys()).map((num) => ({
-                      value: num.toString(),
-                      label: num.toString(),
-                    }))}
-                    value={`${counts[index]}`}
-                    setValue={(value) => {
-                      const newCounts = [...counts];
-                      newCounts[index] = Number(value);
-                      setCounts(newCounts);
-                    }}
-                  />
-                </Card>
-              </Col>
-            ))}
+            {order.map((index) => {
+              const cardIndex = basics[index];
+              return (
+                <Col xs={1} key={`basics-${index}`}>
+                  <Card className="mb-3">
+                    <img
+                      className="w-full"
+                      src={
+                        (showCustomImages && cardImageUrl(cards[cardIndex])) || cards[cardIndex].details?.image_normal
+                      }
+                      alt={cardName(cards[cardIndex])}
+                    />
+                    <Select
+                      options={Array.from(Array(MAX_BASICS + 1).keys()).map((num) => ({
+                        value: num.toString(),
+                        label: num.toString(),
+                      }))}
+                      value={`${counts[index]}`}
+                      setValue={(value) => {
+                        const newCounts = [...counts];
+                        newCounts[index] = Number(value);
+                        setCounts(newCounts);
+                      }}
+                    />
+                  </Card>
+                </Col>
+              );
+            })}
           </Row>
         )}
       </ModalBody>

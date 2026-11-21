@@ -1,4 +1,13 @@
-import { cardCmc, cardColorIdentity, cardElo, cardImageUrl, cardName, cardOracleId, cardType } from '@utils/cardutil';
+import {
+  cardCmc,
+  cardColorIdentity,
+  cardCost,
+  cardElo,
+  cardImageUrl,
+  cardName,
+  cardOracleId,
+  cardType,
+} from '@utils/cardutil';
 import DraftType from '@utils/datatypes/Draft';
 import RecordType from '@utils/datatypes/Record';
 import { changelogDao, cubeDao, draftDao, recordDao } from 'dynamo/daos';
@@ -38,6 +47,7 @@ interface CardInfo {
   type: string;
   cmc: number;
   colorIdentity: string[];
+  parsedCost: string[];
   elo: number;
 }
 
@@ -90,6 +100,7 @@ export const analysisDataHandler = async (req: Request, res: Response) => {
                     type: cardType(card) || '',
                     cmc: cardCmc(card) || 0,
                     colorIdentity: cardColorIdentity(card) || [],
+                    parsedCost: cardCost(card),
                     elo: cardElo(card),
                   };
                 }

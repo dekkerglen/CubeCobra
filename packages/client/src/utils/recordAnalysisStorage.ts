@@ -25,7 +25,9 @@ export interface AnalysisDeck {
   clusterId: number | null;
   x: number;
   y: number;
-  colors: string[]; // deck color identity codes (e.g. ['W','U']), >10% threshold
+  colors: string[]; // deck color codes (e.g. ['W','U']), >10% threshold
+  // non-land cards counting toward each of W/U/B/R/G; absent on runs saved before it was kept
+  colorCounts?: Record<string, number>;
   archetype: string; // ML archetype label (e.g. 'Aggro'), '' if unavailable
 }
 
@@ -49,6 +51,8 @@ export interface RecordCardInfo {
   type: string;
   cmc: number;
   colorIdentity: string[];
+  // absent on runs saved before it was captured
+  parsedCost?: string[];
   elo?: number;
 }
 

@@ -798,6 +798,14 @@ const ArchetypeMatchupMatrix: React.FC<{
 const COLOR_KEYS = ['W', 'U', 'B', 'R', 'G'] as const;
 const COLOR_LABEL: Record<string, string> = { W: 'White', U: 'Blue', B: 'Black', R: 'Red', G: 'Green', C: 'Colorless' };
 
+// A multicolor deck's two main colors: the two it has the most cards in (ties in WUBRG
+// order), in WUBRG order. Null for a mono-color or colorless deck.
+const primaryPair = (d: AnalysisDeck): string[] | null => {
+  if (d.colors.length < 2) return null;
+  const top = [...d.colors].sort((a, b) => (d.colorCounts?.[b] ?? 0) - (d.colorCounts?.[a] ?? 0)).slice(0, 2);
+  return d.colors.filter((c) => top.includes(c));
+};
+
 // One aggregated group: its deck count + summed match record + win rate.
 interface PerfRow {
   group: string; // the sortable / CSV label
@@ -835,7 +843,8 @@ const PerformanceTable: React.FC<{
   groupTitle: string;
   baseline: number;
   emptyText?: string;
-}> = ({ title, tooltip, rows, groupTitle, baseline, emptyText }) => {
+  right?: React.ReactNode;
+}> = ({ title, tooltip, rows, groupTitle, baseline, emptyText, right }) => {
   const [openRow, setOpenRow] = useState<PerfRow | null>(null);
   const renderGroup = (val: string, row: PerfRow) => (
     <button
@@ -876,15 +885,18 @@ const PerformanceTable: React.FC<{
               </Tooltip>
             )}
           </Text>
-          {rows.length > 0 && (
-            <CSVLink
-              data={csvData}
-              filename={`${title}.csv`}
-              className="font-medium text-link hover:text-link-active text-sm whitespace-nowrap"
-            >
-              Download CSV
-            </CSVLink>
-          )}
+          <Flexbox direction="row" gap="2" alignItems="center">
+            {right}
+            {rows.length > 0 && (
+              <CSVLink
+                data={csvData}
+                filename={`${title}.csv`}
+                className="font-medium text-link hover:text-link-active text-sm whitespace-nowrap"
+              >
+                Download CSV
+              </CSVLink>
+            )}
+          </Flexbox>
         </Flexbox>
       </CardHeader>
       {rows.length === 0 ? (
@@ -1376,6 +1388,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
   const eloRows = useMemo(() => allRows.filter((r) => r.hasDraftElo), [allRows]);
 
   const [mapColorBy, setMapColorBy] = useState<DraftMapColorMode>('cluster');
+  const [pairMode, setPairMode] = useState<'contains' | 'primary'>('contains');
   const [selectedClusterId, setSelectedClusterId] = useState<number | null>(null);
   const [selectedPoolIndex, setSelectedPoolIndex] = useState<number | null>(null);
   const [excludeManaFixingLands, setExcludeManaFixingLands] = useState(false);
@@ -1555,19 +1568,27 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
     return out;
   }, [runDecks]);
 
-  // Color-pair performance: every deck PLAYING both colors of each guild pair.
+  // Color-pair performance: every deck PLAYING both colors of each guild pair, or with
+  // primary pairs, each multicolor deck once under its two main colors. Runs saved before
+  // decks kept their per-color card counts only have the first.
+  const hasColorCounts = useMemo(() => runDecks.some((d) => d.colorCounts), [runDecks]);
+  const primaryPairs = hasColorCounts && pairMode === 'primary';
   const colorPairPerf = useMemo<PerfRow[]>(() => {
     const out: PerfRow[] = [];
     for (let i = 0; i < COLOR_KEYS.length; i++) {
       for (let j = i + 1; j < COLOR_KEYS.length; j++) {
         const a = COLOR_KEYS[i]!;
         const b = COLOR_KEYS[j]!;
-        const members = runDecks.filter((d) => d.colors.includes(a) && d.colors.includes(b));
+        const members = runDecks.filter((d) => {
+          if (!primaryPairs) return d.colors.includes(a) && d.colors.includes(b);
+          const pair = primaryPair(d);
+          return pair?.[0] === a && pair[1] === b;
+        });
         if (members.length > 0) out.push({ group: colorComboName([a, b]), pips: [a, b], ...aggregateDecks(members) });
       }
     }
     return out;
-  }, [runDecks]);
+  }, [runDecks, primaryPairs]);
 
   // Exact color-combination performance: decks grouped by their precise identity.
   const colorComboPerf = useMemo<PerfRow[]>(() => {
@@ -1968,11 +1989,31 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
             <Col xs={12} lg={6}>
               <PerformanceTable
                 title="Color Pair Performance"
-                tooltip="Match record of every deck that plays both colors of each pair. Three-plus-color decks count toward each pair they contain."
+                tooltip={
+                  primaryPairs
+                    ? 'Match record of every multicolor deck under its two main colors, the two it has the most cards in, so each deck counts toward one pair.'
+                    : 'Match record of every deck that plays both colors of each pair. Three-plus-color decks count toward each pair they contain.'
+                }
                 rows={colorPairPerf}
                 groupTitle="Pair"
                 baseline={baseline}
                 emptyText="No two-color decks yet."
+                right={
+                  hasColorCounts && (
+                    <div className="flex rounded-md border border-border overflow-hidden text-xs">
+                      {(['contains', 'primary'] as const).map((mode) => (
+                        <button
+                          key={mode}
+                          type="button"
+                          onClick={() => setPairMode(mode)}
+                          className={`px-2 py-1 ${pairMode === mode ? 'bg-bg-active font-semibold' : 'text-text-secondary hover:bg-bg-active'}`}
+                        >
+                          {mode === 'contains' ? 'Contains' : 'Primary'}
+                        </button>
+                      ))}
+                    </div>
+                  )
+                }
               />
             </Col>
             <Col xs={12} lg={6}>
@@ -2474,6 +2515,7 @@ const WinrateAnalytics: React.FC<WinrateAnalyticsProps> = ({ records, lastKey })
             <SortableTable
               flush
               showCsvLink={false}
+              stickyHeader
               columnProps={[
                 {
                   key: 'card',

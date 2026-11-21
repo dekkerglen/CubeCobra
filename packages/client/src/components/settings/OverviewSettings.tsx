@@ -21,6 +21,7 @@ import MtgImage from 'components/MtgImage';
 import TextEntry from 'components/TextEntry';
 import { CSRFContext } from 'contexts/CSRFContext';
 import CubeContext from 'contexts/CubeContext';
+import { useSettingsUnsavedChanges } from 'contexts/SettingsViewContext';
 import useCanUploadImages from 'hooks/useCanUploadImages';
 import { cardNameMatches, fetchCardImage } from 'utils/cardAutocomplete';
 
@@ -44,6 +45,8 @@ const OverviewSettings: React.FC = () => {
     const changed = JSON.stringify(state) !== JSON.stringify(cube) || imagename !== cube.imageName;
     setHasChanges(changed);
   }, [state, cube, imagename]);
+
+  const allowLeave = useSettingsUnsavedChanges(hasChanges);
 
   const changeImage = useCallback((image: string) => {
     setImagename(image);
@@ -88,11 +91,12 @@ const OverviewSettings: React.FC = () => {
 
     const body = await response.json();
     if (response.ok) {
+      allowLeave();
       window.location.replace(body.redirect);
     } else {
       setAlerts([{ color: 'danger', message: body.error }]);
     }
-  }, [csrfFetch, state]);
+  }, [csrfFetch, state, allowLeave]);
 
   const resetChanges = () => {
     setState(JSON.parse(JSON.stringify(cube)));

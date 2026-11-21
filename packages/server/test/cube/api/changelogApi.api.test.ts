@@ -13,6 +13,7 @@ jest.mock('../../../src/dynamo/daos', () => ({
     getById: jest.fn(),
     getChangelog: jest.fn(),
     queryByCubePage: jest.fn(),
+    loadChangelogData: jest.fn(),
   },
 }));
 
@@ -58,6 +59,44 @@ describe('GET /cube/api/history/:id', () => {
     expect(res.status).toBe(200);
     expect(res.body.nextCursor).toBeUndefined();
     expect(changelogDao.queryByCubePage).toHaveBeenCalledWith(cube.id, 'abc', 100);
+  });
+
+  it('includes the changes in each entry, without card details, when asked', async () => {
+    (changelogDao.queryByCubePage as jest.Mock).mockResolvedValue({
+      items: [
+        { id: 'cl-2', cube: cube.id, date: 2000, cubeVersion: 3 },
+        { id: 'cl-1', cube: cube.id, date: 1000 },
+      ],
+    });
+    const bodies: Record<string, any> = {
+      'cl-2': { mainboard: { adds: [{ cardID: 'a', details: { name: 'Card A' } }] } },
+      'cl-1': null,
+    };
+    (changelogDao.loadChangelogData as jest.Mock).mockImplementation(async (item) => bodies[item.id]);
+
+    const res = await call(historyHandler)
+      .as(createUser())
+      .withParams({ id: cube.id })
+      .withQuery({ includeChanges: 'true' })
+      .send();
+
+    expect(res.status).toBe(200);
+    expect(res.body.changelogs).toEqual([
+      { id: 'cl-2', date: 2000, cubeVersion: 3, changes: { mainboard: { adds: [{ cardID: 'a' }] } } },
+      { id: 'cl-1', date: 1000, changes: null },
+    ]);
+  });
+
+  it('does not load changes unless asked', async () => {
+    (changelogDao.queryByCubePage as jest.Mock).mockResolvedValue({
+      items: [{ id: 'cl-1', cube: cube.id, date: 1000 }],
+    });
+
+    const res = await call(historyHandler).as(createUser()).withParams({ id: cube.id }).send();
+
+    expect(res.status).toBe(200);
+    expect(res.body.changelogs[0]).not.toHaveProperty('changes');
+    expect(changelogDao.loadChangelogData).not.toHaveBeenCalled();
   });
 
   it.each(['0', '-1', 'ten'])('rejects invalid limit %p', async (limit) => {

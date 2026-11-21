@@ -18,6 +18,7 @@ interface RepairStats {
   totalAdded: number;
   totalRemoved: number;
   totalUnchanged: number;
+  totalRefreshed: number;
   ownersFixed: number;
   errors: number;
 }
@@ -34,16 +35,17 @@ const repairCubeHashes = async (cube: Cube, stats: RepairStats): Promise<void> =
 
     stats.cubesProcessed += 1;
 
-    if (result.added > 0 || result.removed > 0) {
+    if (result.added > 0 || result.removed > 0 || result.refreshed > 0) {
       stats.cubesWithChanges += 1;
       console.log(
-        `Repaired cube ${cube.id} (${cube.name}): +${result.added} -${result.removed} =${result.unchanged}${result.ownerFixed ? ' [owner fixed]' : ''}`,
+        `Repaired cube ${cube.id} (${cube.name}): +${result.added} -${result.removed} =${result.unchanged} ~${result.refreshed}${result.ownerFixed ? ' [owner fixed]' : ''}`,
       );
     }
 
     stats.totalAdded += result.added;
     stats.totalRemoved += result.removed;
     stats.totalUnchanged += result.unchanged;
+    stats.totalRefreshed += result.refreshed;
 
     if (result.ownerFixed) {
       stats.ownersFixed += 1;
@@ -66,6 +68,7 @@ const repairSingleCube = async (cubeId: string): Promise<void> => {
     totalAdded: 0,
     totalRemoved: 0,
     totalUnchanged: 0,
+    totalRefreshed: 0,
     ownersFixed: 0,
     errors: 0,
   };
@@ -85,6 +88,7 @@ const repairSingleCube = async (cubeId: string): Promise<void> => {
     console.log(`Hashes added: ${stats.totalAdded}`);
     console.log(`Hashes removed: ${stats.totalRemoved}`);
     console.log(`Hashes unchanged: ${stats.totalUnchanged}`);
+    console.log(`Hashes with refreshed sort keys: ${stats.totalRefreshed}`);
     if (stats.ownersFixed > 0) {
       console.log(`Owner fixed: Yes`);
     }
@@ -113,6 +117,7 @@ const repairAllCubes = async (): Promise<void> => {
     totalAdded: 0,
     totalRemoved: 0,
     totalUnchanged: 0,
+    totalRefreshed: 0,
     ownersFixed: 0,
     errors: 0,
   };
@@ -149,6 +154,7 @@ const repairAllCubes = async (): Promise<void> => {
     console.log(`Total hashes added: ${stats.totalAdded}`);
     console.log(`Total hashes removed: ${stats.totalRemoved}`);
     console.log(`Total hashes unchanged: ${stats.totalUnchanged}`);
+    console.log(`Total hashes with refreshed sort keys: ${stats.totalRefreshed}`);
     console.log(`Owners fixed: ${stats.ownersFixed}`);
     console.log(`Errors: ${stats.errors}`);
 

@@ -13,6 +13,7 @@ import Text from 'components/base/Text';
 import CSRFForm from 'components/CSRFForm';
 import LoadingButton from 'components/LoadingButton';
 import CubeContext from 'contexts/CubeContext';
+import { useSettingsUnsavedChanges } from 'contexts/SettingsViewContext';
 
 const visibilityHelp: Record<string, string> = {
   pu: 'Anyone can search for and see your cube',
@@ -47,7 +48,7 @@ const OptionsSettings: React.FC = () => {
       disableFollowAlerts: `${cube.disableFollowAlerts ?? false}`,
       visibility: cube.visibility,
       defaultStatus: cube.defaultStatus,
-      defaultPrinting: cube.defaultPrinting,
+      defaultPrinting: cube.defaultPrinting || DefaultPrintingPreference,
     };
     const currentData = {
       priceVisibility: formData.priceVisibility,
@@ -62,6 +63,8 @@ const OptionsSettings: React.FC = () => {
     setHasChanges(changed);
   }, [formData, cube]);
 
+  const allowLeave = useSettingsUnsavedChanges(hasChanges);
+
   const resetChanges = () => {
     setFormData({
       priceVisibility: `${cube.priceVisibility === 'pu'}`,
@@ -70,7 +73,7 @@ const OptionsSettings: React.FC = () => {
       disableFollowAlerts: `${cube.disableFollowAlerts ?? false}`,
       visibility: cube.visibility,
       defaultStatus: cube.defaultStatus,
-      defaultPrinting: cube.defaultPrinting,
+      defaultPrinting: cube.defaultPrinting || DefaultPrintingPreference,
     });
   };
 
@@ -90,7 +93,14 @@ const OptionsSettings: React.FC = () => {
               <Button color="secondary" onClick={resetChanges} disabled={!hasChanges}>
                 Reset
               </Button>
-              <LoadingButton color="primary" onClick={() => formRef.current?.submit()} disabled={!hasChanges}>
+              <LoadingButton
+                color="primary"
+                onClick={() => {
+                  allowLeave();
+                  formRef.current?.submit();
+                }}
+                disabled={!hasChanges}
+              >
                 Save Changes
               </LoadingButton>
             </Flexbox>
@@ -195,7 +205,10 @@ const OptionsSettings: React.FC = () => {
                               <Button
                                 color="danger"
                                 disabled={!namesMatch}
-                                onClick={() => deleteFormRef.current?.submit()}
+                                onClick={() => {
+                                  allowLeave();
+                                  deleteFormRef.current?.submit();
+                                }}
                               >
                                 I understand, delete this cube
                               </Button>

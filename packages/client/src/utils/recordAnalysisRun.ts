@@ -7,7 +7,7 @@ import { cardOracleId } from '@utils/cardutil';
 import Card from '@utils/datatypes/Card';
 import type Cube from '@utils/datatypes/Cube';
 import { Analytic, MatchupStat, PlayerAnalytic } from '@utils/datatypes/RecordAnalytic';
-import type { CardMeta, SlimPool } from '@utils/datatypes/SimulationReport';
+import type { SlimPool } from '@utils/datatypes/SimulationReport';
 
 import { buildOracleRemapping, encodePools, loadDraftBot, reshapeEmbeddings } from './draftBot';
 import {
@@ -25,7 +25,7 @@ import {
   RecordAnalysisRunData,
   RecordCardInfo,
 } from './recordAnalysisStorage';
-import { buildCardMeta } from './recordCardMeta';
+import { buildCardMeta, deckColorsFromMeta } from './recordCardMeta';
 
 type CsrfFetch = (input: RequestInfo, init?: RequestInit) => Promise<Response>;
 
@@ -94,20 +94,6 @@ const addMatchup = (map: { [key: string]: MatchupStat }, x: string, y: string, d
 };
 
 const pairKey = (a: string, b: string): string => (a < b ? `${a}|${b}` : `${b}|${a}`);
-
-// A deck's color identity: colors on >10% of its non-land cards.
-const assessDeckColors = (oracles: string[], cardMeta: Record<string, CardMeta>): string[] => {
-  const counts: Record<string, number> = { W: 0, U: 0, B: 0, R: 0, G: 0 };
-  let n = 0;
-  for (const o of oracles) {
-    const m = cardMeta[o];
-    if (!m || (m.type ?? '').toLowerCase().includes('land')) continue;
-    n += 1;
-    for (const c of m.colorIdentity ?? []) if (Object.prototype.hasOwnProperty.call(counts, c)) counts[c] += 1;
-  }
-  if (n === 0) return [];
-  return (['W', 'U', 'B', 'R', 'G'] as const).filter((c) => counts[c]! / n > 0.1);
-};
 
 // Per-player standings for one record (match + game W/L/D, trophy).
 const getStandings = (record: RawRecord): Standing[] => {
@@ -359,10 +345,11 @@ export async function runRecordAnalysis(
         cmc: info.cmc,
         type: info.type,
         producedMana: [],
+        parsedCost: info.parsedCost,
       };
     }
   }
-  for (const deck of decks) deck.colors = assessDeckColors(deck.oracles, colorMeta);
+  for (const deck of decks) Object.assign(deck, deckColorsFromMeta(deck.oracles, colorMeta));
 
   // Color-vs-color head-to-head, from each deck-vs-deck result. A deck plays
   // every color in its identity (colorless decks bucket into 'C'), so a single

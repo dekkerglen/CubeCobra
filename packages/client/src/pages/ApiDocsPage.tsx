@@ -382,6 +382,9 @@ Mox Sapphire
                 <Param name="cursor" type="query">
                   The <InlineCode>nextCursor</InlineCode> value from a previous response, to fetch the next page.
                 </Param>
+                <Param name="includeChanges" type="query">
+                  Set to <InlineCode>true</InlineCode> to include each entry&#39;s <InlineCode>changes</InlineCode>.
+                </Param>
               </>
             }
             responseExample={`{
@@ -393,10 +396,18 @@ Mox Sapphire
   "nextCursor": "eyJpZCI6..."
 }`}
             notes={
-              <Text sm className="text-text-secondary">
-                Keep requesting pages until <InlineCode>nextCursor</InlineCode> is absent; the final page may be empty.{' '}
-                <InlineCode>cubeVersion</InlineCode> may be missing on older entries.
-              </Text>
+              <Flexbox direction="col" gap="1">
+                <Text sm className="text-text-secondary">
+                  Keep requesting pages until <InlineCode>nextCursor</InlineCode> is absent; the final page may be
+                  empty. <InlineCode>cubeVersion</InlineCode> may be missing on older entries.
+                </Text>
+                <Text sm className="text-text-secondary">
+                  With <InlineCode>includeChanges</InlineCode>, each entry&#39;s <InlineCode>changes</InlineCode> has
+                  the same shape as in <InlineCode>/cube/api/changelog/:id/:changelogId</InlineCode>, but cards carry
+                  only their Scryfall <InlineCode>cardID</InlineCode>, without <InlineCode>details</InlineCode>. It is{' '}
+                  <InlineCode>null</InlineCode> if the entry&#39;s changes can&#39;t be read.
+                </Text>
+              </Flexbox>
             }
           />
 

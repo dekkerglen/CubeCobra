@@ -1,4 +1,4 @@
-import { cardCmc, cardColorIdentity, cardImageUrl, cardName, cardOracleId, cardType } from '@utils/cardutil';
+import { cardCmc, cardColorIdentity, cardCost, cardImageUrl, cardName, cardOracleId, cardType } from '@utils/cardutil';
 import DraftType, { DRAFT_TYPES } from '@utils/datatypes/Draft';
 import { getSeatActionStates } from '@utils/draftutil';
 import { cubeDao, draftDao } from 'dynamo/daos';
@@ -38,6 +38,7 @@ interface CardInfo {
   type: string;
   cmc: number;
   colorIdentity: string[];
+  parsedCost: string[];
 }
 
 const ownerId = (owner: DraftType['owner']): string | undefined => (typeof owner === 'string' ? owner : owner?.id);
@@ -83,6 +84,7 @@ export const playtestDataHandler = async (req: Request, res: Response) => {
           type: cardType(card) || '',
           cmc: cardCmc(card) || 0,
           colorIdentity: cardColorIdentity(card) || [],
+          parsedCost: cardCost(card),
         };
       }
       return idx;

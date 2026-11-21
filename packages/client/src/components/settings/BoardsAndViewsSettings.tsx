@@ -28,6 +28,7 @@ import CSRFForm from 'components/CSRFForm';
 import { SortableItem, SortableList } from 'components/DND';
 import LoadingButton from 'components/LoadingButton';
 import CubeContext from 'contexts/CubeContext';
+import { useSettingsUnsavedChanges } from 'contexts/SettingsViewContext';
 
 import AddBoardModal from './AddBoardModal';
 
@@ -103,6 +104,8 @@ const BoardsAndViewsSettings: React.FC = () => {
     const viewsChanged = JSON.stringify(views) !== JSON.stringify(getInitialViews());
     setHasChanges(boardsChanged || viewsChanged);
   }, [boards, views, getInitialBoards, getInitialViews]);
+
+  const allowLeave = useSettingsUnsavedChanges(hasChanges);
 
   const addBoard = () => {
     if (boards.length >= MAX_BOARDS) {
@@ -283,6 +286,7 @@ const BoardsAndViewsSettings: React.FC = () => {
 
     // Submit unified form
     if (formRef.current) {
+      allowLeave();
       formRef.current.submit();
     }
   };

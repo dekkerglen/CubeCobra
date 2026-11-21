@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import { EyeIcon } from '@primer/octicons-react';
+import { DownloadIcon, EyeIcon } from '@primer/octicons-react';
 
 import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
@@ -112,6 +112,44 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
     window.location.href = `/cube/changelog/${cubeId}/at?date=${dateMs}`;
   }, [dateValue, cubeId]);
 
+  const cubeName = cube?.name;
+  const [exporting, setExporting] = useState(false);
+  const [exportFailed, setExportFailed] = useState(false);
+
+  // Pages through the history API and builds the file here, so no single request has to load the
+  // whole history.
+  const handleExport = useCallback(async () => {
+    if (!cubeId) return;
+    setExporting(true);
+    setExportFailed(false);
+    try {
+      const changelogs: Record<string, any>[] = [];
+      let cursor: string | undefined;
+      do {
+        const params = new URLSearchParams({ limit: '100', includeChanges: 'true' });
+        if (cursor) params.set('cursor', cursor);
+        const response = await csrfFetch(`/cube/api/history/${encodeURIComponent(cubeId)}?${params}`);
+        if (!response.ok) throw new Error('Failed to export changelog');
+        const json = await response.json();
+        changelogs.push(...json.changelogs);
+        cursor = json.nextCursor;
+      } while (cursor);
+
+      const file = { cubeId, cubeName, exportedAt: new Date().toISOString(), changelogs: changelogs.reverse() };
+      const blob = new Blob([JSON.stringify(file)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(cubeName ?? '').replace(/\W/g, '') || 'cube'}_changelog.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      setExportFailed(true);
+    } finally {
+      setExporting(false);
+    }
+  }, [csrfFetch, cubeId, cubeName]);
+
   const pager = (
     <CursorPagination
       active={page}
@@ -153,12 +191,24 @@ const CubeHistory: React.FC<CubeHistoryProps> = ({ changes, lastKey }) => {
           Go
         </Button>
       </Flexbox>
-      <Flexbox direction="row" justify="between" alignItems="center" className="w-full">
+      <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap" className="w-full">
         <Text lg semibold>
           Changes
         </Text>
-        {pager}
+        <Flexbox direction="row" gap="3" alignItems="center">
+          <button
+            type="button"
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center gap-2 !text-link hover:!text-link-active transition-colors font-medium cursor-pointer text-nowrap disabled:cursor-default disabled:opacity-60"
+          >
+            {exporting ? <Spinner sm /> : <DownloadIcon size={16} />}
+            <Text sm>Export All</Text>
+          </button>
+          {pager}
+        </Flexbox>
       </Flexbox>
+      {exportFailed && <Text className="text-red-600">Failed to export changelog.</Text>}
       <div className="block sm:hidden">
         {safeItems.length > 0 ? (
           safeItems.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((changelog) => (

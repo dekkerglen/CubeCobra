@@ -290,9 +290,9 @@ export const followHandler = async (req: Request, res: Response) => {
     await userDao.incrementLikedCubesCount(user!.id, 1);
 
     // Hash-row GSI sort keys embed cube.likeCount; refresh them so popularity ranking
-    // reflects the new count. cubeDao.update() recomputes hash rows on metadata change.
+    // reflects the new count.
     cube.likeCount = newLikeCount;
-    await cubeDao.update(cube, { skipTimestampUpdate: true });
+    await cubeDao.refreshHashRowSortKeys(cube);
 
     const cubeOwner = cube.owner;
     if (!cubeOwner.disableFollowAlerts && !cube.disableFollowAlerts) {
@@ -327,7 +327,7 @@ export const unfollowHandler = async (req: Request, res: Response) => {
     await userDao.incrementLikedCubesCount(req.user!.id, -1);
 
     cube.likeCount = newLikeCount;
-    await cubeDao.update(cube, { skipTimestampUpdate: true });
+    await cubeDao.refreshHashRowSortKeys(cube);
   }
 
   return res.status(200).send({
