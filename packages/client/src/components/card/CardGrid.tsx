@@ -42,6 +42,7 @@ export interface CardGridProps {
   badges?: (CardGridBadge | undefined)[];
   // Indices to ring in blue. A selected card keeps its selection ring instead.
   ringedIndices?: number[];
+  // Mouse hover only: touch and pen are ignored, so a tap still just opens the card.
   onCardHover?: (index: number | null) => void;
 }
 
@@ -119,8 +120,8 @@ const CardGrid: React.FC<CardGridProps> = ({
                   'ring-[5px] ring-[#E6B800] ring-offset-0 rounded-lg': wasSelected && !isHighestRated,
                   'ring-[5px] ring-[#087715] ring-offset-0 rounded-lg': isHighestRated && wasSelected,
                 })}
-                onMouseEnter={onCardHover ? () => onCardHover(cardIndex) : undefined}
-                onMouseLeave={onCardHover ? () => onCardHover(null) : undefined}
+                onPointerEnter={onCardHover ? (e) => e.pointerType === 'mouse' && onCardHover(cardIndex) : undefined}
+                onPointerLeave={onCardHover ? (e) => e.pointerType === 'mouse' && onCardHover(null) : undefined}
               >
                 {hrefFn ? (
                   <a href={hrefFn(card)} className="hover:cursor-pointer">
