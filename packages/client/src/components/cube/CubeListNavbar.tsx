@@ -1,29 +1,18 @@
 import React, { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
-import {
-  GraphIcon,
-  ImageIcon,
-  ListUnorderedIcon,
-  PencilIcon,
-  QuestionIcon,
-  SearchIcon,
-  SortAscIcon,
-  StackIcon,
-  TableIcon,
-} from '@primer/octicons-react';
+import { PencilIcon, QuestionIcon, SearchIcon, SortAscIcon } from '@primer/octicons-react';
 import { allFields, FilterValues, isColorField, isNumField } from '@utils/datatypes/Card';
 
 import Button from 'components/base/Button';
 import Input from 'components/base/Input';
-import { Flexbox, NumCols } from 'components/base/Layout';
+import { Flexbox } from 'components/base/Layout';
 import AdvancedFilterModal from 'components/modals/AdvancedFilterModal';
 import CubeContext from 'contexts/CubeContext';
 import DisplayContext from 'contexts/DisplayContext';
 import FilterContext from 'contexts/FilterContext';
-import UserContext from 'contexts/UserContext';
 
-import Select from '../base/Select';
 import Tooltip from '../base/Tooltip';
+import CubeViewSwitcher, { CardsPerRowSelect, StacksPerRowSelect } from './CubeViewSwitcher';
 import TagQuickFilters from './TagQuickFilters';
 
 interface CubeListNavbarProps {
@@ -39,7 +28,6 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
 
   const { canEdit, changes } = useContext(CubeContext);
   const { filterInput, setFilterInput, filterValid } = useContext(FilterContext);
-  const user = useContext(UserContext);
 
   const { rightSidebarMode, setRightSidebarMode } = useContext(DisplayContext);
 
@@ -112,110 +100,17 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
         wrap="wrap"
       >
         <Flexbox direction="row" gap="2" alignItems="center" justify="center" className="xl:px-2">
-          {user?.useTextOverIcons ? (
-            <div className="w-40">
-              <Select
-                value={cubeView}
-                setValue={setCubeView}
-                className="bg-bg-active"
-                options={[
-                  { value: 'table', label: 'Table' },
-                  { value: 'spoiler', label: 'Visual Spoiler' },
-                  { value: 'curve', label: 'Curve' },
-                  { value: 'stacks', label: 'Stacks' },
-                  ...(canEdit ? [{ value: 'list', label: 'List' }] : []),
-                ]}
-              />
-            </div>
-          ) : (
-            <div className="flex gap-0 bg-bg-active rounded py-0.5 px-1 self-stretch items-center">
-              <Tooltip text="Table View">
-                <button
-                  onClick={() => setCubeView('table')}
-                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'table' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                  aria-label="Table View"
-                >
-                  <TableIcon size={20} />
-                </button>
-              </Tooltip>
-              <Tooltip text="Visual Spoiler">
-                <button
-                  onClick={() => setCubeView('spoiler')}
-                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'spoiler' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                  aria-label="Visual Spoiler"
-                >
-                  <ImageIcon size={20} />
-                </button>
-              </Tooltip>
-              <Tooltip text="Curve View">
-                <button
-                  onClick={() => setCubeView('curve')}
-                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'curve' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                  aria-label="Curve View"
-                >
-                  <GraphIcon size={20} />
-                </button>
-              </Tooltip>
-              <Tooltip text="Card Stacks">
-                <button
-                  onClick={() => setCubeView('stacks')}
-                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'stacks' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                  aria-label="Card Stacks"
-                >
-                  <StackIcon size={20} />
-                </button>
-              </Tooltip>
-              {canEdit && (
-                <Tooltip text="List View">
-                  <button
-                    onClick={() => setCubeView('list')}
-                    className={`px-2 py-1 rounded transition-colors ${cubeView === 'list' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                    aria-label="List View"
-                  >
-                    <ListUnorderedIcon size={20} />
-                  </button>
-                </Tooltip>
-              )}
-            </div>
-          )}
+          <CubeViewSwitcher view={cubeView} setView={setCubeView} includeList={canEdit} />
 
           {cubeView === 'spoiler' && (
             <div className="w-36">
-              <Select
-                value={`${cardsPerRow}`}
-                setValue={(value) => setCardsPerRow(parseInt(value, 10) as NumCols)}
-                className="bg-bg-active"
-                options={[
-                  { value: '1', label: '1 Card Per Row' },
-                  { value: '2', label: '2 Cards Per Row' },
-                  { value: '3', label: '3 Cards Per Row' },
-                  { value: '4', label: '4 Cards Per Row' },
-                  { value: '5', label: '5 Cards Per Row' },
-                  { value: '6', label: '6 Cards Per Row' },
-                  { value: '7', label: '7 Cards Per Row' },
-                  { value: '8', label: '8 Cards Per Row' },
-                  { value: '9', label: '9 Cards Per Row' },
-                  { value: '10', label: '10 Cards Per Row' },
-                  { value: '11', label: '11 Cards Per Row' },
-                  { value: '12', label: '12 Cards Per Row' },
-                ]}
-              />
+              <CardsPerRowSelect value={cardsPerRow} setValue={setCardsPerRow} />
             </div>
           )}
 
           {cubeView === 'stacks' && (
             <div className="w-36">
-              <Select
-                value={`${stacksPerRow}`}
-                setValue={(value) => setStacksPerRow(parseInt(value, 10) as NumCols)}
-                className="bg-bg-active"
-                options={[
-                  { value: '1', label: '1 Stack Per Row' },
-                  { value: '2', label: '2 Stacks Per Row' },
-                  { value: '3', label: '3 Stacks Per Row' },
-                  { value: '4', label: '4 Stacks Per Row' },
-                ]}
-              />
+              <StacksPerRowSelect value={stacksPerRow} setValue={setStacksPerRow} />
             </div>
           )}
         </Flexbox>
@@ -288,72 +183,7 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
       <Flexbox direction="col" gap="2" className="lg:hidden mt-2">
         {/* First row: View select and action buttons */}
         <Flexbox direction="row" alignItems="center" justify="between" className="w-full">
-          {user?.useTextOverIcons ? (
-            <div className="flex-1 min-w-0">
-              <Select
-                value={cubeView}
-                setValue={setCubeView}
-                className="bg-bg-active"
-                options={[
-                  { value: 'table', label: 'Table' },
-                  { value: 'spoiler', label: 'Visual Spoiler' },
-                  { value: 'curve', label: 'Curve' },
-                  { value: 'stacks', label: 'Stacks' },
-                  ...(canEdit ? [{ value: 'list', label: 'List' }] : []),
-                ]}
-              />
-            </div>
-          ) : (
-            <div className="flex gap-0 bg-bg-active rounded py-0.5 items-center">
-              <Tooltip text="Table View">
-                <button
-                  onClick={() => setCubeView('table')}
-                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'table' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                  aria-label="Table View"
-                >
-                  <TableIcon size={16} />
-                </button>
-              </Tooltip>
-              <Tooltip text="Visual Spoiler">
-                <button
-                  onClick={() => setCubeView('spoiler')}
-                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'spoiler' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                  aria-label="Visual Spoiler"
-                >
-                  <ImageIcon size={16} />
-                </button>
-              </Tooltip>
-              <Tooltip text="Curve View">
-                <button
-                  onClick={() => setCubeView('curve')}
-                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'curve' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                  aria-label="Curve View"
-                >
-                  <GraphIcon size={16} />
-                </button>
-              </Tooltip>
-              <Tooltip text="Card Stacks">
-                <button
-                  onClick={() => setCubeView('stacks')}
-                  className={`px-2 py-1 rounded transition-colors ${cubeView === 'stacks' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                  aria-label="Card Stacks"
-                >
-                  <StackIcon size={16} />
-                </button>
-              </Tooltip>
-              {canEdit && (
-                <Tooltip text="List View">
-                  <button
-                    onClick={() => setCubeView('list')}
-                    className={`px-2 py-1 rounded transition-colors ${cubeView === 'list' ? 'bg-button-primary text-white' : 'hover:bg-bg text-text'}`}
-                    aria-label="List View"
-                  >
-                    <ListUnorderedIcon size={16} />
-                  </button>
-                </Tooltip>
-              )}
-            </div>
-          )}
+          <CubeViewSwitcher view={cubeView} setView={setCubeView} includeList={canEdit} compact />
           <div className="flex gap-2 items-center">
             <Button
               color={rightSidebarMode === 'sort' ? 'primary' : 'secondary'}
@@ -388,42 +218,14 @@ const CubeListNavbar: React.FC<CubeListNavbarProps> = ({ cubeView, setCubeView }
         {/* Conditional row: Cards per row select (only in spoiler view) */}
         {cubeView === 'spoiler' && (
           <Flexbox direction="row" alignItems="center" className="w-full">
-            <Select
-              value={`${cardsPerRow}`}
-              setValue={(value) => setCardsPerRow(parseInt(value, 10) as NumCols)}
-              className="bg-bg-active w-full"
-              options={[
-                { value: '1', label: '1 Card Per Row' },
-                { value: '2', label: '2 Cards Per Row' },
-                { value: '3', label: '3 Cards Per Row' },
-                { value: '4', label: '4 Cards Per Row' },
-                { value: '5', label: '5 Cards Per Row' },
-                { value: '6', label: '6 Cards Per Row' },
-                { value: '7', label: '7 Cards Per Row' },
-                { value: '8', label: '8 Cards Per Row' },
-                { value: '9', label: '9 Cards Per Row' },
-                { value: '10', label: '10 Cards Per Row' },
-                { value: '11', label: '11 Cards Per Row' },
-                { value: '12', label: '12 Cards Per Row' },
-              ]}
-            />
+            <CardsPerRowSelect value={cardsPerRow} setValue={setCardsPerRow} className="bg-bg-active w-full" />
           </Flexbox>
         )}
 
         {/* Conditional row: Stacks per row select (only in stacks view) */}
         {cubeView === 'stacks' && (
           <Flexbox direction="row" alignItems="center" className="w-full">
-            <Select
-              value={`${stacksPerRow}`}
-              setValue={(value) => setStacksPerRow(parseInt(value, 10) as NumCols)}
-              className="bg-bg-active w-full"
-              options={[
-                { value: '1', label: '1 Stack Per Row' },
-                { value: '2', label: '2 Stacks Per Row' },
-                { value: '3', label: '3 Stacks Per Row' },
-                { value: '4', label: '4 Stacks Per Row' },
-              ]}
-            />
+            <StacksPerRowSelect value={stacksPerRow} setValue={setStacksPerRow} className="bg-bg-active w-full" />
           </Flexbox>
         )}
 
