@@ -3,10 +3,10 @@ import React from 'react';
 import { CubeChangeLog } from '@utils/datatypes/ChangeLog';
 import Cube from '@utils/datatypes/Cube';
 
-import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import OverflowMenu, { overflowMenuItemClass } from 'components/base/OverflowMenu';
 import Text from 'components/base/Text';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
 import ChangelogCardView from 'components/blog/ChangelogCardView';
@@ -44,19 +44,21 @@ const CubeChangelogPage: React.FC<CubeChangelogPageProps> = ({ cube, changelog }
                 <Text lg semibold>
                   Changes &mdash; {formatDateTime(new Date(changelog.date))}
                 </Text>
-                <Flexbox direction="row" gap="2" wrap="wrap">
+                <Flexbox direction="row" gap="2" wrap="wrap" alignItems="center">
                   <ChangelogViewControls
                     view={view}
                     setView={setView}
                     cardsPerRow={cardsPerRow}
                     setCardsPerRow={setCardsPerRow}
                   />
-                  <Button color="accent" type="link" href={`/cube/changelog/${cube.id}/${changelog.id}/list`}>
-                    View List
-                  </Button>
-                  <Button color="secondary" type="link" href={`/cube/changelog/${cube.id}/${changelog.id}/compare`}>
-                    Compare with Present
-                  </Button>
+                  <OverflowMenu label="Changelog actions">
+                    <Link className={overflowMenuItemClass} href={`/cube/changelog/${cube.id}/${changelog.id}/list`}>
+                      View cube at this point in time
+                    </Link>
+                    <Link className={overflowMenuItemClass} href={`/cube/changelog/${cube.id}/${changelog.id}/compare`}>
+                      Compare with present
+                    </Link>
+                  </OverflowMenu>
                 </Flexbox>
               </Flexbox>
             </CardHeader>

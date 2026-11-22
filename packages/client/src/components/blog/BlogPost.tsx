@@ -1,16 +1,14 @@
 import React, { useContext } from 'react';
 
-import { EyeIcon, PencilIcon, TrashIcon } from '@primer/octicons-react';
 import BlogPostData from '@utils/datatypes/BlogPost';
 import User from '@utils/datatypes/User';
 
-import Button from 'components/base/Button';
 import { Card, CardBody, CardHeader } from 'components/base/Card';
 import Datetime from 'components/base/Datetime';
 import { Col, Flexbox, Row } from 'components/base/Layout';
 import Link from 'components/base/Link';
+import OverflowMenu, { overflowMenuDangerItemClass, overflowMenuItemClass } from 'components/base/OverflowMenu';
 import Text from 'components/base/Text';
-import Tooltip from 'components/base/Tooltip';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
 import ChangelogCardView from 'components/blog/ChangelogCardView';
 import ChangelogViewControls from 'components/blog/ChangelogViewControls';
@@ -32,8 +30,8 @@ export interface BlogPostProps {
   changelogViewToggle?: boolean;
 }
 
-const EditBlogButton = withModal(Button, EditBlogModal);
-const DeleteBlogButton = withModal(Button, DeleteBlogModal);
+const EditBlogLink = withModal(Link, EditBlogModal);
+const DeleteBlogLink = withModal(Link, DeleteBlogModal);
 
 const BlogPost: React.FC<BlogPostProps> = ({
   post,
@@ -75,28 +73,27 @@ const BlogPost: React.FC<BlogPostProps> = ({
     </Text>
   );
 
-  const actions = (
-    <>
+  const actions = (post.changelist || canEdit) && (
+    // Quiet on purpose: three coloured buttons read as the loudest thing in a feed row, above the
+    // post's own title.
+    <OverflowMenu label="Post actions">
       {post.changelist && (
-        <Tooltip text="View cube at this point in time" wrapperTag="span">
-          <Link href={`/cube/changelog/${post.cube}/${post.changelist}/list`}>
-            <Button color="accent">
-              <EyeIcon size={16} />
-            </Button>
-          </Link>
-        </Tooltip>
+        <Link className={overflowMenuItemClass} href={`/cube/changelog/${post.cube}/${post.changelist}/list`}>
+          View cube at this point in time
+        </Link>
       )}
       {canEdit && (
         <>
-          <EditBlogButton color="primary" modalprops={{ cubeID: post.cube, post }}>
-            <PencilIcon size={16} />
-          </EditBlogButton>
-          <DeleteBlogButton color="danger" modalprops={{ post }}>
-            <TrashIcon size={16} />
-          </DeleteBlogButton>
+          <EditBlogLink className={overflowMenuItemClass} modalprops={{ cubeID: post.cube, post }}>
+            Edit post
+          </EditBlogLink>
+          {/* Last, so deleting a post is never one slip from opening it for editing. */}
+          <DeleteBlogLink className={overflowMenuDangerItemClass} modalprops={{ post }}>
+            Delete post
+          </DeleteBlogLink>
         </>
       )}
-    </>
+    </OverflowMenu>
   );
 
   return (
@@ -121,7 +118,7 @@ const BlogPost: React.FC<BlogPostProps> = ({
                 {title}
                 {subtitle}
               </Flexbox>
-              <Flexbox direction="row" gap="2" wrap="wrap" className="md:shrink-0 md:justify-end">
+              <Flexbox direction="row" gap="2" wrap="wrap" alignItems="center" className="md:shrink-0 md:justify-end">
                 <ChangelogViewControls
                   view={changelogView}
                   setView={setChangelogView}
