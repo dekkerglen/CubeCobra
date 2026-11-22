@@ -8,6 +8,7 @@ import {
 } from '@utils/datatypes/Cube';
 
 import { NumCols } from '../components/base/Layout';
+import useCardsPerRow from '../hooks/useCardsPerRow';
 import useLocalStorage from '../hooks/useLocalStorage';
 import useQueryParam from '../hooks/useQueryParam';
 import Query from '../utils/Query';
@@ -112,7 +113,7 @@ export const DisplayContextProvider: React.FC<DisplayContextProviderProps> = ({
   const [openCollapse, setOpenCollapse] = useState<string | null>(() => {
     return Query.get('f') ? 'filter' : null;
   });
-  const [cardsPerRow, setCardsPerRow] = useLocalStorage<NumCols>('cardsPerRow', 6);
+  const [cardsPerRow, setCardsPerRow] = useCardsPerRow();
   const [stacksPerRow, setStacksPerRow] = useLocalStorage<NumCols>('stacksPerRow', 2);
   const [cubeSidebarExpanded, setCubeSidebarExpanded] = useLocalStorage<boolean>('cubeSidebarExpanded', true);
   const [rightSidebarPosition, setRightSidebarPosition] = useLocalStorage<RightSidebarPosition>(
