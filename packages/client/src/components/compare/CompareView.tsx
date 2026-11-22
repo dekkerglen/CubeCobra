@@ -1,4 +1,4 @@
-import React, { useContext } from 'react';
+import React, { useContext, useMemo } from 'react';
 
 import CardType from '@utils/datatypes/Card';
 import Cube from '@utils/datatypes/Cube';
@@ -142,7 +142,10 @@ export interface CompareViewProps {
 }
 
 const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB, sides, focus }) => {
-  const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext) ?? {};
+  const cubeContext = useContext(CubeContext);
+  const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = cubeContext ?? {};
+  // The compare cards are not cube A's cards, so the focused views must not offer cube edits.
+  const readOnlyContext = useMemo(() => ({ ...cubeContext, canEdit: false }), [cubeContext]);
   const { displayOptions, displayView } = useContext(DisplayContext);
   const { showUnsorted } = displayOptions;
   const sortProps: SortProps = {
@@ -197,7 +200,9 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB, si
         ))}
       </div>
       {focus ? (
-        <CubeCardsView view={displayView} cards={cards.filter((c) => indexSets[focus].has(c.index ?? -1))} />
+        <CubeContext.Provider value={readOnlyContext}>
+          <CubeCardsView view={displayView} cards={cards.filter((c) => indexSets[focus].has(c.index ?? -1))} />
+        </CubeContext.Provider>
       ) : (
         sections.map((section) => (
           <section key={section.label} className="flex flex-col gap-2">

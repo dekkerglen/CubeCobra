@@ -210,12 +210,15 @@ export function CubeContextProvider({
   children,
   loadVersionDict = false,
   useChangedCards = false,
+  readOnlyCards = false,
 }: {
   initialCube: Cube;
   cards: Record<string, Card[]>;
   children: ReactNode;
   loadVersionDict?: boolean;
   useChangedCards?: boolean;
+  /** Open card pop-ups read-only regardless of ownership, for pages whose cards are not the cube's. */
+  readOnlyCards?: boolean;
 }) {
   const { csrfFetch } = useContext(CSRFContext);
   const user = useContext(UserContext);
@@ -1565,6 +1568,7 @@ export function CubeContextProvider({
   // Admins are treated as owners across the cube UI so they have full edit access to any cube.
   const isOwner = isCubeOwner(cube, user) || isAdmin;
   const canEdit = isOwner || (!!user && (cube.collaborators ?? []).includes(user.id));
+  const canEditCards = canEdit && !readOnlyCards;
 
   const hasCustomImages = useMemo(
     () =>
@@ -1766,7 +1770,7 @@ export function CubeContextProvider({
               }}
               isOpen={modalOpen}
               setOpen={setModalOpen}
-              canEdit={canEdit}
+              canEdit={canEditCards}
               versionDict={versionDict}
               fetchVersionsForCard={fetchVersionsForCard}
               editCard={(_, card, board) => editAddedCard((modalSelection as any).addIndex, card, board)}
@@ -1793,7 +1797,7 @@ export function CubeContextProvider({
               }}
               isOpen={modalOpen}
               setOpen={setModalOpen}
-              canEdit={canEdit}
+              canEdit={canEditCards}
               versionDict={versionDict}
               fetchVersionsForCard={fetchVersionsForCard}
               editCard={(_, card, board) => editAddedCard((modalSelection as any).addIndex, card, board)}
@@ -1822,7 +1826,7 @@ export function CubeContextProvider({
               }}
               isOpen={modalOpen}
               setOpen={setModalOpen}
-              canEdit={canEdit}
+              canEdit={canEditCards}
               versionDict={versionDict}
               fetchVersionsForCard={fetchVersionsForCard}
               editCard={(_, card, board) => editSwappedCard((modalSelection as any).swapIndex, card, board)}
@@ -1851,7 +1855,7 @@ export function CubeContextProvider({
               }}
               isOpen={modalOpen}
               setOpen={setModalOpen}
-              canEdit={canEdit}
+              canEdit={canEditCards}
               versionDict={versionDict}
               fetchVersionsForCard={fetchVersionsForCard}
               editCard={(_, card, board) => editSwappedCard((modalSelection as any).swapIndex, card, board)}
@@ -1875,7 +1879,7 @@ export function CubeContextProvider({
               card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!}
               isOpen={modalOpen}
               setOpen={setModalOpen}
-              canEdit={canEdit}
+              canEdit={canEditCards}
               versionDict={versionDict}
               fetchVersionsForCard={fetchVersionsForCard}
               editCard={editCard}
@@ -1899,7 +1903,7 @@ export function CubeContextProvider({
               card={unfilteredChangedCards[modalSelection.board].find((card) => card.index === modalSelection.index)!}
               isOpen={modalOpen}
               setOpen={setModalOpen}
-              canEdit={canEdit}
+              canEdit={canEditCards}
               versionDict={versionDict}
               fetchVersionsForCard={fetchVersionsForCard}
               editCard={editCard}
@@ -1922,7 +1926,7 @@ export function CubeContextProvider({
             }
             isOpen={modalOpen}
             setOpen={setModalOpen}
-            canEdit={canEdit}
+            canEdit={canEditCards}
             bulkEditCard={
               // Use bulkEditNewCard for new cards, bulkEditCard for existing cards
               Object.prototype.hasOwnProperty.call(modalSelection[0], 'addIndex') ||
