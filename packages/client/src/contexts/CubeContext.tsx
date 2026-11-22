@@ -34,6 +34,7 @@ import useLocalStorage from '../hooks/useLocalStorage';
 import useMount from '../hooks/UseMount';
 import useQueryParam from '../hooks/useQueryParam';
 import { getCardDetail, getCardDetails } from '../utils/cardDetailsCache';
+import { getTagSuggestions } from '../utils/tagSuggestions';
 import ChangesContext from './ChangesContext';
 import { CSRFContext } from './CSRFContext';
 import DisplayContext from './DisplayContext';
@@ -120,6 +121,7 @@ export interface CubeContextValue {
   useBlog: boolean;
   setUseBlog: Dispatch<SetStateAction<boolean>>;
   allTags: string[];
+  tagSuggestions: string[];
 }
 
 const defaultFn = () => {
@@ -179,6 +181,7 @@ const CubeContext = createContext<CubeContextValue>({
   useBlog: false,
   setUseBlog: defaultFn,
   allTags: [],
+  tagSuggestions: [],
 });
 
 export const TAG_COLORS: [string, string][] = [
@@ -553,6 +556,9 @@ export function CubeContextProvider({
   const allTags = useMemo(() => {
     return getAllTags(cube.cards as any);
   }, [cube.cards]);
+
+  // Autocomplete should also offer tags introduced by unsaved changes; allTags stays committed-only for tag colors.
+  const tagSuggestions = useMemo(() => getTagSuggestions(allTags, changes), [allTags, changes]);
 
   const computeTagColors = (tagColors: TagColor[], allTags: string[]) => {
     const cubeTagColors = tagColors || [];
@@ -1687,6 +1693,7 @@ export function CubeContextProvider({
       useBlog,
       setUseBlog,
       allTags,
+      tagSuggestions,
     }),
     [
       cube,
@@ -1741,6 +1748,7 @@ export function CubeContextProvider({
       useBlog,
       setUseBlog,
       allTags,
+      tagSuggestions,
     ],
   );
 
@@ -1775,7 +1783,7 @@ export function CubeContextProvider({
               removeCard={() => {}}
               tagColors={tagColors}
               moveCard={(_, board, newBoard) => moveAddedCard((modalSelection as any).addIndex, board, newBoard)}
-              allTags={allTags}
+              allTags={tagSuggestions}
             />
           )}
         {modalSelection &&
@@ -1802,7 +1810,7 @@ export function CubeContextProvider({
               removeCard={() => {}}
               tagColors={tagColors}
               moveCard={(_, board, newBoard) => moveAddedCard((modalSelection as any).addIndex, board, newBoard)}
-              allTags={allTags}
+              allTags={tagSuggestions}
             />
           )}
         {modalSelection &&
@@ -1831,7 +1839,7 @@ export function CubeContextProvider({
               removeCard={() => {}}
               tagColors={tagColors}
               moveCard={(_, board, newBoard) => moveSwappedCard((modalSelection as any).swapIndex, board, newBoard)}
-              allTags={allTags}
+              allTags={tagSuggestions}
             />
           )}
         {modalSelection &&
@@ -1860,7 +1868,7 @@ export function CubeContextProvider({
               removeCard={() => {}}
               tagColors={tagColors}
               moveCard={(_, board, newBoard) => moveSwappedCard((modalSelection as any).swapIndex, board, newBoard)}
-              allTags={allTags}
+              allTags={tagSuggestions}
             />
           )}
         {modalSelection &&
@@ -1884,7 +1892,7 @@ export function CubeContextProvider({
               removeCard={removeCard}
               tagColors={tagColors}
               moveCard={moveCard}
-              allTags={allTags}
+              allTags={tagSuggestions}
             />
           )}
         {modalSelection &&
@@ -1908,7 +1916,7 @@ export function CubeContextProvider({
               removeCard={removeCard}
               tagColors={tagColors}
               moveCard={moveCard}
-              allTags={allTags}
+              allTags={tagSuggestions}
             />
           )}
         {modalSelection && Array.isArray(modalSelection) && modalSelection.length > 0 && (
@@ -1937,7 +1945,7 @@ export function CubeContextProvider({
             tagColors={tagColors}
             bulkMoveCard={bulkMoveCard}
             bulkMoveCards={bulkMoveCards}
-            allTags={allTags}
+            allTags={tagSuggestions}
           />
         )}
       </>
