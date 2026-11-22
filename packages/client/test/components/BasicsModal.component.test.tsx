@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -23,6 +23,9 @@ const forest = createCard({
   details: createCardDetails({ name: 'Forest', oracle_id: 'forest-oracle', image_normal: 'forest-default.png' }),
 });
 const cards = [spell, plains, forest];
+
+// The modal shows basics in the cube's sort order, not `basics` order, so find each count by its card.
+const countFor = (name: string) => within(screen.getByAltText(name).parentElement!).getByRole('combobox');
 
 const renderModal = ({
   showCustomImages = true,
@@ -68,7 +71,7 @@ describe('BasicsModal', () => {
     const setOpen = jest.fn();
     renderModal({ addBasics, setOpen });
 
-    fireEvent.change(screen.getAllByRole('combobox')[1]!, { target: { value: '7' } });
+    fireEvent.change(countFor('Forest'), { target: { value: '7' } });
     fireEvent.click(screen.getByRole('button', { name: 'Add' }));
 
     expect(addBasics).toHaveBeenCalledWith([0, 7]);
@@ -86,8 +89,8 @@ describe('BasicsModal', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Calculate' }));
 
-    await waitFor(() => expect(screen.getAllByRole('combobox')[1]).toHaveValue('2'));
-    expect(screen.getAllByRole('combobox')[0]).toHaveValue('1');
+    await waitFor(() => expect(countFor('Forest')).toHaveValue('2'));
+    expect(countFor('Plains')).toHaveValue('1');
     expect(JSON.parse(csrfFetch.mock.calls[0][1].body)).toEqual({
       mainboard: [spell.details],
       basics: [plains.details, forest.details],
