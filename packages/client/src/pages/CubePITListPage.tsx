@@ -9,12 +9,9 @@ import Input from 'components/base/Input';
 import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
-import CardStacksView from 'components/cube/CardStacksView';
+import CubeCardsView from 'components/cube/CubeCardsView';
 import CubeListNavbar from 'components/cube/CubeListNavbar';
 import CubeListRightSidebar, { CubeListBottomCard } from 'components/cube/CubeListRightSidebar';
-import CurveView from 'components/cube/CurveView';
-import TableView from 'components/cube/TableView';
-import VisualSpoiler from 'components/cube/VisualSpoiler';
 import DynamicFlash from 'components/DynamicFlash';
 import ErrorBoundary from 'components/ErrorBoundary';
 import RenderToRoot from 'components/RenderToRoot';
@@ -159,14 +156,7 @@ const CubePITListInner: React.FC<{ date: string; changelogId: string }> = ({ dat
                         This board appears to be empty!
                       </Text>
                     )}
-                    {{
-                      table: <TableView cards={boardcards} />,
-                      spoiler: <VisualSpoiler cards={boardcards} />,
-                      curve: <CurveView cards={boardcards} />,
-                      stacks: (
-                        <CardStacksView cards={boardcards} formatLabel={(label, count) => `${label} (${count})`} />
-                      ),
-                    }[cubeView] || <TableView cards={boardcards} />}
+                    <CubeCardsView view={cubeView} cards={boardcards} />
                   </>
                 )}
               </Flexbox>

@@ -5,9 +5,9 @@ import Cube from '@utils/datatypes/Cube';
 import { getLabels, sortDeep, sortIntoGroups } from '@utils/sorting/Sort';
 import classNames from 'classnames';
 
-import { ListGroup, ListGroupItem } from 'components/base/ListGroup';
 import Text from 'components/base/Text';
 import AutocardListItem from 'components/card/AutocardListItem';
+import CubeCardsView from 'components/cube/CubeCardsView';
 import AddToCubeModal from 'components/modals/AddToCubeModal';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
@@ -124,31 +124,6 @@ const CompareGroup: React.FC<CompareGroupProps> = ({
   );
 };
 
-interface SetListProps extends SortProps {
-  heading: string;
-  cards: CardType[];
-}
-
-/** One set's cards in a secondary group, as a single list split by the tertiary sort, like the cube's table view. */
-const SetList: React.FC<SetListProps> = ({ heading, cards, sortTertiary, sortQuaternary, showUnsorted, cube }) => {
-  const groups = sortDeep(cards, showUnsorted, sortQuaternary, [sortTertiary], cube) as [string, CardType[]][];
-  return (
-    <ListGroup>
-      <ListGroupItem heading>{`${heading} (${cards.length})`}</ListGroupItem>
-      {groups.map(([label, group], groupIndex) =>
-        group.map((card, index) => (
-          <AutocardListItemLink
-            key={`${label}-${card.index}`}
-            card={card}
-            className={index === 0 && groupIndex > 0 ? 'border-t border-border-secondary' : undefined}
-            modalprops={{ card }}
-          />
-        )),
-      )}
-    </ListGroup>
-  );
-};
-
 interface Section {
   label: string;
   counts: SetCards;
@@ -162,13 +137,14 @@ export interface CompareViewProps {
   onlyA: number[];
   onlyB: number[];
   sides: CompareSides;
-  /** Show only this set, laid out like the cube's table view, or all three side by side. */
+  /** Show only this set in the current display view (table, spoiler, curve, stacks), or all three side by side. */
   focus: CompareSet | null;
 }
 
 const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB, sides, focus }) => {
   const { sortPrimary, sortSecondary, sortTertiary, sortQuaternary, cube } = useContext(CubeContext) ?? {};
-  const { showUnsorted } = useContext(DisplayContext).displayOptions;
+  const { displayOptions, displayView } = useContext(DisplayContext);
+  const { showUnsorted } = displayOptions;
   const sortProps: SortProps = {
     sortTertiary: sortTertiary ?? 'Mana Value',
     sortQuaternary: sortQuaternary ?? 'Alphabetical',
@@ -183,21 +159,24 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB, si
   };
   const sets = focus ? [focus] : COMPARE_SETS;
 
-  const columnsPrimary = sortIntoGroups(cards, sortPrimary ?? 'Unsorted', showUnsorted, cube);
-  // Counts and groups each place a card once, in the first column (and group) it sorts into.
-  const countClaimed = new Set<number>();
-  const groupClaimed = new Set<number>();
-  const sections: Section[] = getLabels(cards, sortPrimary ?? 'Unsorted', showUnsorted, cube)
-    .filter((columnLabel) => columnsPrimary[columnLabel])
-    .map((columnLabel) => {
-      const counts = splitBySet(columnsPrimary[columnLabel], indexSets, countClaimed);
-      const column = sortIntoGroups(columnsPrimary[columnLabel], sortSecondary ?? 'Unsorted', showUnsorted, cube);
-      const groups = getLabels(Object.values(column).flat(), sortSecondary ?? 'Unsorted', showUnsorted, cube)
-        .filter((label) => column[label])
-        .map((label) => ({ label, cards: splitBySet(column[label], indexSets, groupClaimed) }));
-      return { label: columnLabel, counts, groups };
-    })
-    .filter((section) => sets.some((set) => section.counts[set].length > 0));
+  const buildSections = (): Section[] => {
+    const columnsPrimary = sortIntoGroups(cards, sortPrimary ?? 'Unsorted', showUnsorted, cube);
+    // Counts and groups each place a card once, in the first column (and group) it sorts into.
+    const countClaimed = new Set<number>();
+    const groupClaimed = new Set<number>();
+    return getLabels(cards, sortPrimary ?? 'Unsorted', showUnsorted, cube)
+      .filter((columnLabel) => columnsPrimary[columnLabel])
+      .map((columnLabel) => {
+        const counts = splitBySet(columnsPrimary[columnLabel], indexSets, countClaimed);
+        const column = sortIntoGroups(columnsPrimary[columnLabel], sortSecondary ?? 'Unsorted', showUnsorted, cube);
+        const groups = getLabels(Object.values(column).flat(), sortSecondary ?? 'Unsorted', showUnsorted, cube)
+          .filter((label) => column[label])
+          .map((label) => ({ label, cards: splitBySet(column[label], indexSets, groupClaimed) }));
+        return { label: columnLabel, counts, groups };
+      })
+      .filter((section) => sets.some((set) => section.counts[set].length > 0));
+  };
+  const sections = focus ? [] : buildSections();
 
   return (
     <div className="my-3 flex flex-col gap-5">
@@ -218,20 +197,7 @@ const CompareView: React.FC<CompareViewProps> = ({ cards, both, onlyA, onlyB, si
         ))}
       </div>
       {focus ? (
-        <div className="flex flex-wrap justify-center gap-2">
-          {sections.map((section) => (
-            <div key={section.label} className="flex min-w-0 max-w-[16rem] flex-[1_1_10rem] flex-col gap-2">
-              <Text md semibold className="block text-center">
-                {section.label} <span className="text-text-secondary">({section.counts[focus].length})</span>
-              </Text>
-              {section.groups
-                .filter((group) => group.cards[focus].length > 0)
-                .map((group) => (
-                  <SetList key={group.label} heading={group.label} cards={group.cards[focus]} {...sortProps} />
-                ))}
-            </div>
-          ))}
-        </div>
+        <CubeCardsView view={displayView} cards={cards.filter((c) => indexSets[focus].has(c.index ?? -1))} />
       ) : (
         sections.map((section) => (
           <section key={section.label} className="flex flex-col gap-2">
