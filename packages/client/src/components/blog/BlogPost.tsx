@@ -114,13 +114,14 @@ const BlogPost: React.FC<BlogPostProps> = ({
             </a>
           )}
           {showToggle ? (
-            // Single-post layout: actions sit beside the title and subtitle on desktop, below them on phones.
+            // Single-post layout: actions sit beside the title and subtitle on desktop, and below them,
+            // left-aligned, on phones (as RecordOverview does).
             <div className="flex grow min-w-0 flex-col gap-2 md:flex-row md:items-start md:justify-between">
               <Flexbox direction="col" alignItems="start" className="min-w-0">
                 {title}
                 {subtitle}
               </Flexbox>
-              <Flexbox direction="row" gap="2" wrap="wrap" justify="end" className="md:shrink-0">
+              <Flexbox direction="row" gap="2" wrap="wrap" className="md:shrink-0 md:justify-end">
                 <ChangelogViewControls
                   view={changelogView}
                   setView={setChangelogView}

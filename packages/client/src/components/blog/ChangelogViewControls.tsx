@@ -25,10 +25,14 @@ const ChangelogViewControls: React.FC<ChangelogViewControlsProps> = ({
   cardsPerRow,
   setCardsPerRow,
 }) => (
-  // The per-row select sits before the toggle and keeps its space in Text view (just hidden), so switching
-  // views never moves the toggle.
-  <div className="flex flex-wrap items-center justify-end gap-2">
-    <div className={classNames('w-44', { invisible: view !== 'cards' })} aria-hidden={view !== 'cards'}>
+  // The per-row select keeps its space in Text view (just hidden), and sits on the far side of the toggle
+  // from the row's anchor: before it on desktop, where the actions are right-aligned, and after it on phones,
+  // where they are left-aligned. Either way switching views never moves the toggle.
+  <div className="flex flex-wrap items-center justify-start gap-2 md:justify-end">
+    <div
+      className={classNames('w-44 order-last md:order-first', { invisible: view !== 'cards' })}
+      aria-hidden={view !== 'cards'}
+    >
       <CardsPerRowSelect value={cardsPerRow} setValue={setCardsPerRow} />
     </div>
     <div className="flex gap-0 bg-bg-active rounded py-0.5 px-1 items-center">
