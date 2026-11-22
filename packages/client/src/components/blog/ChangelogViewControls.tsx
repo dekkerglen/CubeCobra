@@ -25,7 +25,7 @@ const ChangelogViewControls: React.FC<ChangelogViewControlsProps> = ({
   cardsPerRow,
   setCardsPerRow,
 }) => (
-  <div className="flex items-center gap-2">
+  <div className="flex flex-wrap items-center gap-2">
     <div className="flex gap-0 bg-bg-active rounded py-0.5 px-1 items-center">
       {VIEWS.map(({ key, label }) => (
         <button

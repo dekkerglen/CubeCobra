@@ -30,4 +30,11 @@ describe('useChangelogView', () => {
     expect(screen.getByTestId('view')).toHaveTextContent('text');
     expect(window.localStorage.getItem('changelogView')).toBe('"text"');
   });
+
+  it('falls back to cards when storage holds an unknown value', () => {
+    window.localStorage.setItem('changelogView', '"bogus"');
+    render(<Harness />);
+
+    expect(screen.getByTestId('view')).toHaveTextContent('cards');
+  });
 });

@@ -74,4 +74,10 @@ describe('CompareHeader', () => {
     renderHeader('both', 'table');
     expect(screen.queryByDisplayValue('5 Cards Per Row')).toBeNull();
   });
+
+  it('highlights Table View when the display view is one the switcher does not offer', () => {
+    renderHeader('both', 'list');
+
+    expect(screen.getByRole('button', { name: 'Table View' })).toHaveAttribute('aria-pressed', 'true');
+  });
 });

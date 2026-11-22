@@ -22,6 +22,8 @@ import CompareOverlapBar from './CompareOverlapBar';
 
 const TagColorsButton = withModal(Button, TagColorsModal);
 
+const SWITCHER_VIEWS = ['table', 'spoiler', 'curve', 'stacks'];
+
 interface CompareHeaderProps {
   sides: CompareSides;
   /** Cards the two lists share, before any filter. */
@@ -55,6 +57,7 @@ const CompareHeader: React.FC<CompareHeaderProps> = ({
   const { canEdit } = useContext(CubeContext);
   const { displayView, setDisplayView, cardsPerRow, setCardsPerRow, stacksPerRow, setStacksPerRow } =
     useContext(DisplayContext);
+  const switcherView = SWITCHER_VIEWS.includes(displayView) ? displayView : 'table';
 
   const handleExport = useCallback(() => {
     const bothCards = both.map((i) => cards[i]).filter(Boolean);
@@ -103,8 +106,8 @@ const CompareHeader: React.FC<CompareHeaderProps> = ({
       />
       <Flexbox direction="row" gap="2" alignItems="center" wrap="wrap">
         {focus !== null && (
-          <Flexbox direction="row" gap="2" alignItems="center">
-            <CubeViewSwitcher compact view={displayView} setView={setDisplayView} />
+          <Flexbox direction="row" gap="2" alignItems="center" wrap="wrap">
+            <CubeViewSwitcher view={switcherView} setView={setDisplayView} />
             {displayView === 'spoiler' && (
               <div className="w-36">
                 <CardsPerRowSelect value={cardsPerRow} setValue={setCardsPerRow} />

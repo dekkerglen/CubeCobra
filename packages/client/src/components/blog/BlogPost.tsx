@@ -68,13 +68,25 @@ const BlogPost: React.FC<BlogPostProps> = ({
             </a>
           )}
           <Flexbox direction="col" alignItems="start" className="grow min-w-0">
-            <Flexbox direction="row" justify="between" className="w-full">
+            <Flexbox
+              direction="row"
+              justify="between"
+              wrap={showToggle ? 'wrap' : 'nowrap'}
+              gap={showToggle ? '2' : '0'}
+              className="w-full"
+            >
               <Text lg semibold>
                 <Flexbox direction="row" justify="between">
                   <Link href={`/cube/blog/blogpost/${post.id}`}>{post.title}</Link>
                 </Flexbox>
               </Text>
-              <Flexbox direction="row" gap="2">
+              <Flexbox
+                direction="row"
+                gap="2"
+                wrap={showToggle ? 'wrap' : 'nowrap'}
+                justify={showToggle ? 'end' : 'start'}
+                className={showToggle ? 'ml-auto' : undefined}
+              >
                 {showToggle && (
                   <ChangelogViewControls
                     view={changelogView}
