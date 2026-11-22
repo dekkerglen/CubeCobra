@@ -161,14 +161,23 @@ const BlogPost: React.FC<BlogPostProps> = ({
       )}
       {!showCards && hasChangelist && hasBody && (
         <Row className="gap-0">
-          <Col xs={12} md={4} className="border-r border-border">
+          {/* On the single-post page the body comes first on phones, matching the Cards view. */}
+          <Col
+            xs={12}
+            md={4}
+            className={
+              showToggle
+                ? 'order-2 border-t border-border md:order-1 md:border-t-0 md:border-r'
+                : 'border-r border-border'
+            }
+          >
             <div style={scrollStyle}>
               <CardBody>
                 <BlogPostChangelog changelog={post.Changelog ?? {}} />
               </CardBody>
             </div>
           </Col>
-          <Col xs={12} md={8}>
+          <Col xs={12} md={8} className={showToggle ? 'order-1 md:order-2' : undefined}>
             <div style={scrollStyle}>
               <CardBody>
                 <Markdown markdown={post.body} />
