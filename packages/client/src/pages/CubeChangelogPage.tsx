@@ -9,8 +9,12 @@ import { Flexbox } from 'components/base/Layout';
 import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
+import ChangelogCardView from 'components/blog/ChangelogCardView';
+import ChangelogViewControls from 'components/blog/ChangelogViewControls';
 import DynamicFlash from 'components/DynamicFlash';
 import RenderToRoot from 'components/RenderToRoot';
+import useCardsPerRow from 'hooks/useCardsPerRow';
+import useChangelogView from 'hooks/useChangelogView';
 import CubeLayout from 'layouts/CubeLayout';
 import MainLayout from 'layouts/MainLayout';
 import { formatDateTime } from 'utils/Date';
@@ -21,6 +25,9 @@ interface CubeChangelogPageProps {
 }
 
 const CubeChangelogPage: React.FC<CubeChangelogPageProps> = ({ cube, changelog }) => {
+  const [view, setView] = useChangelogView();
+  const [cardsPerRow, setCardsPerRow] = useCardsPerRow();
+
   return (
     <MainLayout useContainer={false}>
       <CubeLayout cube={cube} activeLink="changelog">
@@ -38,6 +45,12 @@ const CubeChangelogPage: React.FC<CubeChangelogPageProps> = ({ cube, changelog }
                   Changes &mdash; {formatDateTime(new Date(changelog.date))}
                 </Text>
                 <Flexbox direction="row" gap="2" wrap="wrap">
+                  <ChangelogViewControls
+                    view={view}
+                    setView={setView}
+                    cardsPerRow={cardsPerRow}
+                    setCardsPerRow={setCardsPerRow}
+                  />
                   <Button color="accent" type="link" href={`/cube/changelog/${cube.id}/${changelog.id}/list`}>
                     View List
                   </Button>
@@ -48,7 +61,11 @@ const CubeChangelogPage: React.FC<CubeChangelogPageProps> = ({ cube, changelog }
               </Flexbox>
             </CardHeader>
             <CardBody>
-              <BlogPostChangelog changelog={changelog.changelog} />
+              {view === 'cards' ? (
+                <ChangelogCardView changelog={changelog.changelog} cardsPerRow={cardsPerRow} />
+              ) : (
+                <BlogPostChangelog changelog={changelog.changelog} />
+              )}
             </CardBody>
           </Card>
         </Flexbox>

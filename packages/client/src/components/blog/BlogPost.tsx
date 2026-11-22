@@ -12,6 +12,8 @@ import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import Tooltip from 'components/base/Tooltip';
 import BlogPostChangelog from 'components/blog/BlogPostChangelog';
+import ChangelogCardView from 'components/blog/ChangelogCardView';
+import ChangelogViewControls from 'components/blog/ChangelogViewControls';
 import CommentsSection from 'components/comments/CommentsSection';
 import EditBlogModal from 'components/EditBlogModal';
 import Markdown from 'components/Markdown';
@@ -19,23 +21,37 @@ import DeleteBlogModal from 'components/modals/DeleteBlogModal';
 import Username from 'components/Username';
 import withModal from 'components/WithModal';
 import UserContext from 'contexts/UserContext';
+import useCardsPerRow from 'hooks/useCardsPerRow';
+import useChangelogView from 'hooks/useChangelogView';
+
 export interface BlogPostProps {
   post: BlogPostData;
   noScroll?: boolean;
   showCubeImage?: boolean;
   className?: string;
+  changelogViewToggle?: boolean;
 }
 
 const EditBlogButton = withModal(Button, EditBlogModal);
 const DeleteBlogButton = withModal(Button, DeleteBlogModal);
 
-const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false, showCubeImage = false }) => {
+const BlogPost: React.FC<BlogPostProps> = ({
+  post,
+  className,
+  noScroll = false,
+  showCubeImage = false,
+  changelogViewToggle = false,
+}) => {
   const user: User | null = useContext(UserContext);
+  const [changelogView, setChangelogView] = useChangelogView();
+  const [cardsPerRow, setCardsPerRow] = useCardsPerRow();
   const scrollStyle = noScroll ? {} : { overflow: 'auto', maxHeight: '50vh' };
   const canEdit = user && (typeof post.owner === 'object' ? user.id === post.owner.id : user.id === post.owner);
 
   const hasChangelist = post.Changelog !== undefined;
   const hasBody = post.body && post.body.length > 0;
+  const showToggle = changelogViewToggle && hasChangelist;
+  const showCards = showToggle && changelogView === 'cards';
 
   return (
     <Card className={className}>
@@ -59,6 +75,14 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false, 
                 </Flexbox>
               </Text>
               <Flexbox direction="row" gap="2">
+                {showToggle && (
+                  <ChangelogViewControls
+                    view={changelogView}
+                    setView={setChangelogView}
+                    cardsPerRow={cardsPerRow}
+                    setCardsPerRow={setCardsPerRow}
+                  />
+                )}
                 {post.changelist && (
                   <Tooltip text="View cube at this point in time" wrapperTag="span">
                     <Link href={`/cube/changelog/${post.cube}/${post.changelist}/list`}>
@@ -94,7 +118,23 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false, 
           </Flexbox>
         </Flexbox>
       </CardHeader>
-      {hasChangelist && hasBody && (
+      {showCards && (
+        <>
+          {hasBody && (
+            <div style={scrollStyle}>
+              <CardBody>
+                <Markdown markdown={post.body} />
+              </CardBody>
+            </div>
+          )}
+          <div className={hasBody ? 'border-t border-border' : undefined} style={scrollStyle}>
+            <CardBody>
+              <ChangelogCardView changelog={post.Changelog ?? {}} cardsPerRow={cardsPerRow} />
+            </CardBody>
+          </div>
+        </>
+      )}
+      {!showCards && hasChangelist && hasBody && (
         <Row className="gap-0">
           <Col xs={12} md={4} className="border-r border-border">
             <div style={scrollStyle}>
@@ -119,7 +159,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ post, className, noScroll = false, 
           </CardBody>
         </div>
       )}
-      {hasChangelist && !hasBody && (
+      {!showCards && hasChangelist && !hasBody && (
         <div style={scrollStyle}>
           <CardBody>
             <BlogPostChangelog changelog={post.Changelog ?? {}} />
