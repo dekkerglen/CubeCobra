@@ -25,7 +25,12 @@ const ChangelogViewControls: React.FC<ChangelogViewControlsProps> = ({
   cardsPerRow,
   setCardsPerRow,
 }) => (
-  <div className="flex flex-wrap items-center gap-2">
+  // The per-row select sits before the toggle and keeps its space in Text view (just hidden), so switching
+  // views never moves the toggle.
+  <div className="flex flex-wrap items-center justify-end gap-2">
+    <div className={classNames('w-44', { invisible: view !== 'cards' })} aria-hidden={view !== 'cards'}>
+      <CardsPerRowSelect value={cardsPerRow} setValue={setCardsPerRow} />
+    </div>
     <div className="flex gap-0 bg-bg-active rounded py-0.5 px-1 items-center">
       {VIEWS.map(({ key, label }) => (
         <button
@@ -42,11 +47,6 @@ const ChangelogViewControls: React.FC<ChangelogViewControlsProps> = ({
         </button>
       ))}
     </div>
-    {view === 'cards' && (
-      <div className="w-44">
-        <CardsPerRowSelect value={cardsPerRow} setValue={setCardsPerRow} />
-      </div>
-    )}
   </div>
 );
 

@@ -53,6 +53,52 @@ const BlogPost: React.FC<BlogPostProps> = ({
   const showToggle = changelogViewToggle && hasChangelist;
   const showCards = showToggle && changelogView === 'cards';
 
+  const title = (
+    <Text lg semibold>
+      <Flexbox direction="row" justify="between">
+        <Link href={`/cube/blog/blogpost/${post.id}`}>{post.title}</Link>
+      </Flexbox>
+    </Text>
+  );
+
+  const subtitle = (
+    <Text md className=" text-text-secondary">
+      <Username user={post.owner} />
+      {' posted to '}
+      {post.cube === 'DEVBLOG' ? (
+        <Link href="/dev/blog">Developer Blog</Link>
+      ) : (
+        <Link href={`/cube/list/${post.cube}`}>{post.cubeName}</Link>
+      )}
+      {' - '}
+      <Datetime date={post.date} />
+    </Text>
+  );
+
+  const actions = (
+    <>
+      {post.changelist && (
+        <Tooltip text="View cube at this point in time" wrapperTag="span">
+          <Link href={`/cube/changelog/${post.cube}/${post.changelist}/list`}>
+            <Button color="accent">
+              <EyeIcon size={16} />
+            </Button>
+          </Link>
+        </Tooltip>
+      )}
+      {canEdit && (
+        <>
+          <EditBlogButton color="primary" modalprops={{ cubeID: post.cube, post }}>
+            <PencilIcon size={16} />
+          </EditBlogButton>
+          <DeleteBlogButton color="danger" modalprops={{ post }}>
+            <TrashIcon size={16} />
+          </DeleteBlogButton>
+        </>
+      )}
+    </>
+  );
+
   return (
     <Card className={className}>
       <CardHeader className="p-2">
@@ -67,67 +113,34 @@ const BlogPost: React.FC<BlogPostProps> = ({
               />
             </a>
           )}
-          <Flexbox direction="col" alignItems="start" className="grow min-w-0">
-            <Flexbox
-              direction="row"
-              justify="between"
-              wrap={showToggle ? 'wrap' : 'nowrap'}
-              gap={showToggle ? '2' : '0'}
-              className="w-full"
-            >
-              <Text lg semibold>
-                <Flexbox direction="row" justify="between">
-                  <Link href={`/cube/blog/blogpost/${post.id}`}>{post.title}</Link>
-                </Flexbox>
-              </Text>
-              <Flexbox
-                direction="row"
-                gap="2"
-                wrap={showToggle ? 'wrap' : 'nowrap'}
-                justify={showToggle ? 'end' : 'start'}
-                className={showToggle ? 'ml-auto' : undefined}
-              >
-                {showToggle && (
-                  <ChangelogViewControls
-                    view={changelogView}
-                    setView={setChangelogView}
-                    cardsPerRow={cardsPerRow}
-                    setCardsPerRow={setCardsPerRow}
-                  />
-                )}
-                {post.changelist && (
-                  <Tooltip text="View cube at this point in time" wrapperTag="span">
-                    <Link href={`/cube/changelog/${post.cube}/${post.changelist}/list`}>
-                      <Button color="accent">
-                        <EyeIcon size={16} />
-                      </Button>
-                    </Link>
-                  </Tooltip>
-                )}
-                {canEdit && (
-                  <>
-                    <EditBlogButton color="primary" modalprops={{ cubeID: post.cube, post }}>
-                      <PencilIcon size={16} />
-                    </EditBlogButton>
-                    <DeleteBlogButton color="danger" modalprops={{ post }}>
-                      <TrashIcon size={16} />
-                    </DeleteBlogButton>
-                  </>
-                )}
+          {showToggle ? (
+            // Single-post layout: actions sit beside the title and subtitle on desktop, below them on phones.
+            <div className="flex grow min-w-0 flex-col gap-2 md:flex-row md:items-start md:justify-between">
+              <Flexbox direction="col" alignItems="start" className="min-w-0">
+                {title}
+                {subtitle}
               </Flexbox>
+              <Flexbox direction="row" gap="2" wrap="wrap" justify="end" className="md:shrink-0">
+                <ChangelogViewControls
+                  view={changelogView}
+                  setView={setChangelogView}
+                  cardsPerRow={cardsPerRow}
+                  setCardsPerRow={setCardsPerRow}
+                />
+                {actions}
+              </Flexbox>
+            </div>
+          ) : (
+            <Flexbox direction="col" alignItems="start" className="grow min-w-0">
+              <Flexbox direction="row" justify="between" className="w-full">
+                {title}
+                <Flexbox direction="row" gap="2">
+                  {actions}
+                </Flexbox>
+              </Flexbox>
+              {subtitle}
             </Flexbox>
-            <Text md className=" text-text-secondary">
-              <Username user={post.owner} />
-              {' posted to '}
-              {post.cube === 'DEVBLOG' ? (
-                <Link href="/dev/blog">Developer Blog</Link>
-              ) : (
-                <Link href={`/cube/list/${post.cube}`}>{post.cubeName}</Link>
-              )}
-              {' - '}
-              <Datetime date={post.date} />
-            </Text>
-          </Flexbox>
+          )}
         </Flexbox>
       </CardHeader>
       {showCards && (

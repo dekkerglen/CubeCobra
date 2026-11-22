@@ -86,11 +86,11 @@ describe('ChangelogViewControls', () => {
     const { rerender } = render(
       <ChangelogViewControls view="cards" setView={setView} cardsPerRow={6} setCardsPerRow={jest.fn()} />,
     );
-    expect(screen.getByDisplayValue('6 Cards Per Row')).toBeInTheDocument();
+    expect(screen.getByRole('combobox')).toHaveDisplayValue('6 Cards Per Row');
     expect(screen.getByRole('button', { name: 'Cards' })).toHaveAttribute('aria-pressed', 'true');
 
     rerender(<ChangelogViewControls view="text" setView={setView} cardsPerRow={6} setCardsPerRow={jest.fn()} />);
-    expect(screen.queryByDisplayValue('6 Cards Per Row')).toBeNull();
+    expect(screen.queryByRole('combobox')).toBeNull();
 
     fireEvent.click(screen.getByRole('button', { name: 'Text' }));
     expect(setView).toHaveBeenCalledWith('text');

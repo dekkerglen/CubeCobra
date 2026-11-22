@@ -16,11 +16,12 @@ import CardGrid, { CardGridBadge } from '../card/CardGrid';
 import { Flexbox, NumCols } from '../base/Layout';
 import Text from '../base/Text';
 
+// Hidden below md: on phone-sized cards the badges cover the art, and swap pairing needs hover.
 const BADGES: Record<ChangeKind, CardGridBadge> = {
-  add: { label: '+', title: 'Added', className: 'bg-green-600/90' },
-  remove: { label: '−', title: 'Removed', className: 'bg-red-600/90' },
-  swap: { label: '⇄', title: 'Swapped', className: 'bg-blue-600/90' },
-  edit: { label: '✎', title: 'Edited', className: 'bg-orange-500/90' },
+  add: { label: '+', title: 'Added', className: 'hidden md:block bg-green-600/90' },
+  remove: { label: '−', title: 'Removed', className: 'hidden md:block bg-red-600/90' },
+  swap: { label: '⇄', title: 'Swapped', className: 'hidden md:block bg-blue-600/90' },
+  edit: { label: '✎', title: 'Edited', className: 'hidden md:block bg-orange-500/90' },
 };
 
 const capitalizeFirstLetter = (string: string): string => string.charAt(0).toUpperCase() + string.slice(1);
@@ -32,7 +33,6 @@ interface ChangelogCardRowProps {
   detailsById: Record<string, CardDetails | null>;
   hoveredSwapId: string | null;
   setHoveredSwapId: (swapId: string | null) => void;
-  grayscale?: boolean;
 }
 
 const ChangelogCardRow: React.FC<ChangelogCardRowProps> = ({
@@ -42,7 +42,6 @@ const ChangelogCardRow: React.FC<ChangelogCardRowProps> = ({
   detailsById,
   hoveredSwapId,
   setHoveredSwapId,
-  grayscale = false,
 }) => {
   if (entries.length === 0) return null;
 
@@ -59,7 +58,6 @@ const ChangelogCardRow: React.FC<ChangelogCardRowProps> = ({
         badges={entries.map((entry) => BADGES[entry.kind])}
         ringedIndices={ringedIndices}
         onCardHover={(i) => setHoveredSwapId(i === null ? null : (entries[i]?.swapId ?? null))}
-        cardProps={grayscale ? { className: 'grayscale' } : undefined}
       />
     </div>
   );
@@ -97,7 +95,7 @@ const ChangelogCardView: React.FC<ChangelogCardViewProps> = ({ changelog, cardsP
             </Text>
           </Flexbox>
           <ChangelogCardRow label="Added" entries={added} {...rowProps} />
-          <ChangelogCardRow label="Removed" entries={removed} grayscale {...rowProps} />
+          <ChangelogCardRow label="Removed" entries={removed} {...rowProps} />
           <ChangelogCardRow label="Edited" entries={edited} {...rowProps} />
         </div>
       ))}
