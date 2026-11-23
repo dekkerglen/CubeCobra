@@ -100,7 +100,7 @@ const catalog: Catalog = {
 // Track the earliest released_at per oracle_id to compute firstPrintYear
 const earliestReleaseByOracle: Record<string, string> = {};
 
-// Track which oracle_ids have appeared in an expansion set
+// Track which oracle_ids have appeared in a core set or expansion
 const oracleInExpansion: Set<string> = new Set();
 
 // Track a "default-ness" score per scryfall_id, used to pick the single default
@@ -429,8 +429,8 @@ function addCardToCatalog(card: CardDetails, isExtra?: boolean) {
     }
   }
 
-  // Track if this oracle has ever appeared in an expansion set
-  if (card.oracle_id && card.set_type === 'expansion') {
+  // Track if this oracle has ever appeared in a core set or expansion
+  if (card.oracle_id && CORE_SET_TYPES.has(card.set_type ?? '')) {
     oracleInExpansion.add(card.oracle_id);
   }
 

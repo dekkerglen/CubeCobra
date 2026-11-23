@@ -580,6 +580,51 @@ describe('Word count filter syntax', () => {
   });
 });
 
+describe('Set type filter syntax', () => {
+  const cardInSetType = (name: string, set_type: string): Card =>
+    createCard({ details: createCardDetails({ name, name_lower: name.toLowerCase(), set_type }) });
+
+  const coreCard = cardInSetType('Baneslayer Angel', 'core');
+  const expansionCard = cardInSetType('Hangarback Walker', 'expansion');
+  const draftInnovationCard = cardInSetType('Avabruck Caretaker', 'draft_innovation');
+
+  it.each(['st', 'settype', 'ST', 'SETTYPE'])('parses %s alias', (alias) => {
+    const { err, filter } = makeFilter(`${alias}:core`);
+    expect(err).toBeFalsy();
+    expect(filter?.fieldsUsed).toEqual(['set_type']);
+  });
+
+  it('does not change how set and status filters parse', () => {
+    expect(makeFilter('s:m21').filter?.fieldsUsed).toEqual(['set']);
+    expect(makeFilter('set:m21').filter?.fieldsUsed).toEqual(['set']);
+    expect(makeFilter('stat:owned').filter?.fieldsUsed).toEqual(['status']);
+  });
+
+  it('filters by set type', () => {
+    const { filter } = makeFilter('st:core');
+    expect(filter!(coreCard)).toBe(true);
+    expect(filter!(expansionCard)).toBe(false);
+
+    const { filter: notCore } = makeFilter('st!=core');
+    expect(notCore!(coreCard)).toBe(false);
+    expect(notCore!(expansionCard)).toBe(true);
+  });
+
+  it('matches set types containing underscores', () => {
+    const { err, filter } = makeFilter('st:draft_innovation');
+    expect(err).toBeFalsy();
+    expect(filter!(draftInnovationCard)).toBe(true);
+    expect(filter!(coreCard)).toBe(false);
+  });
+
+  it('combines core and expansion set types', () => {
+    const { filter } = makeFilter('st:core or st:expansion');
+    expect(filter!(coreCard)).toBe(true);
+    expect(filter!(expansionCard)).toBe(true);
+    expect(filter!(draftInnovationCard)).toBe(false);
+  });
+});
+
 describe('Quantity filter syntax', () => {
   const single = createCard({ details: createCardDetails({ name: 'Solo', name_lower: 'solo' }) });
   const paired = { ...createCard({ details: createCardDetails({ name: 'Duo', name_lower: 'duo' }) }), quantity: 2 };
@@ -1025,5 +1070,155 @@ describe('Regex filters', () => {
   it('does not change how bare words with slashes parse', () => {
     expect(makeFilter('o:+1/+1').err).toBeFalsy();
     expect(makeFilter('o:"/"').err).toBeFalsy();
+  });
+});
+
+describe('Scryfall parity', () => {
+  const card = (overrides: Partial<NonNullable<Card['details']>> = {}): Card =>
+    ({ details: createCardDetails({ name: 'Test Card', name_lower: 'test card', ...overrides }) }) as Card;
+
+  const matches = (query: string, target: Card): boolean => {
+    const { err, filter } = makeFilter(query);
+    expect(err).toBeFalsy();
+    return filter!(target);
+  };
+
+  it('binds and tighter than or', () => {
+    const redGoblin = card({ type: 'Creature — Goblin', colors: ['r'] });
+    expect(matches('t:goblin or t:elf c:u', redGoblin)).toBe(true);
+    expect(matches('(t:goblin or t:elf) c:u', redGoblin)).toBe(false);
+  });
+
+  it('reads c:c as colorless and c:m as two or more colors', () => {
+    const colorless = card({ colors: [] });
+    const white = card({ colors: ['w'] });
+    const threeColor = card({ colors: ['w', 'u', 'g'] });
+    expect(matches('c:c', colorless)).toBe(true);
+    expect(matches('c:c', white)).toBe(false);
+    expect(matches('c:colorless', white)).toBe(false);
+    expect(matches('c:m', threeColor)).toBe(true);
+    expect(matches('c:multicolor', threeColor)).toBe(true);
+    expect(matches('c:m', white)).toBe(false);
+    expect(matches('c!=m', white)).toBe(true);
+    expect(matches('c:quandrix', card({ colors: ['g', 'u'] }))).toBe(true);
+    expect(matches('c:Azorius', card({ colors: ['w', 'u'] }))).toBe(true);
+  });
+
+  it('ignores keyword terms it cannot parse and reports them', () => {
+    const goblin = card({ type: 'Creature — Goblin' });
+    const { err, filter } = makeFilter('t:goblin or frame:2015 -wm:orzhov');
+    expect(err).toBeFalsy();
+    expect(filter!.ignored).toEqual(['frame:2015', '-wm:orzhov']);
+    expect(filter!(goblin)).toBe(true);
+    expect(filter!(card({ type: 'Instant' }))).toBe(false);
+    expect(makeFilter('(t:goblin or lang:xx) c:r').filter!.ignored).toEqual(['lang:xx']);
+  });
+
+  it('is still an error when every term is ignored or a name is malformed', () => {
+    expect(makeFilter('frame:2015').err).toBeTruthy();
+    expect(makeFilter('t:').err).toBeTruthy();
+    expect(makeFilter('o:"unclosed').err).toBeTruthy();
+    expect(makeFilter("'Urza's Bauble' t:artifact").err).toBeTruthy();
+  });
+
+  it('leaves reminder text out of o: but not fo:', () => {
+    const flier = card({ oracle_text: "Flying (This creature can't be blocked except by creatures with flying or reach.)" });
+    expect(matches('o:"except by creatures"', flier)).toBe(false);
+    expect(matches('fo:"except by creatures"', flier)).toBe(true);
+    expect(matches('o:flying', flier)).toBe(true);
+  });
+
+  it('matches a whole type name, and partial words otherwise', () => {
+    const jellyfish = card({ type: 'Creature — Jellyfish' });
+    expect(matches('t:fish', jellyfish)).toBe(false);
+    expect(matches('t:fish', card({ type: 'Creature — Fish' }))).toBe(true);
+    expect(matches('t:jelly', jellyfish)).toBe(true);
+    expect(matches('t:legend', card({ type: 'Legendary Creature — Elf' }))).toBe(true);
+  });
+
+  it('reads art: as an art tag and a: as the artist', () => {
+    const squirrel = card({ artist: 'Somebody', art_tags: ['squirrel'] });
+    expect(matches('art:squirrel', squirrel)).toBe(true);
+    expect(matches('a:somebody', squirrel)).toBe(true);
+    expect(matches('art:somebody', squirrel)).toBe(false);
+  });
+
+  it('compares year with the printing and firstyear with the first printing', () => {
+    const reprint = card({ released_at: '2024-02-09', firstPrintYear: 2015 });
+    expect(matches('year=2024', reprint)).toBe(true);
+    expect(matches('firstyear=2015', reprint)).toBe(true);
+    expect(matches('fy=2024', reprint)).toBe(false);
+    expect(matches('date>=2024-01-01', reprint)).toBe(true);
+    expect(matches('date<2024-02', reprint)).toBe(false);
+  });
+
+  it('counts * as 0 and never matches a card without the stat', () => {
+    expect(matches('pow=0', card({ power: '*', toughness: '*' }))).toBe(true);
+    expect(matches('pow=1', card({ power: '1+*', toughness: '1' }))).toBe(true);
+    expect(matches('pow<1', card({ power: undefined, toughness: undefined }))).toBe(false);
+    expect(matches('loy<3', card({ loyalty: undefined }))).toBe(false);
+  });
+
+  it('counts devotion as at least, for permanents, with hybrid symbols', () => {
+    const creature = card({ type: 'Creature — Leviathan', parsed_cost: ['u', 'u', 'u', 'u', '5'] });
+    const sorcery = card({ type: 'Sorcery', parsed_cost: ['u', 'u', 'u', '1'] });
+    expect(matches('devotion:uuu', creature)).toBe(true);
+    expect(matches('devotion={u}{u}{u}', creature)).toBe(false);
+    expect(matches('devotion:uuu', sorcery)).toBe(false);
+    const hybrid = card({ type: 'Creature — Horror', parsed_cost: ['u-b', 'u-b', 'b', '1'] });
+    expect(matches('devotion:{u/b}{u/b}{u/b}', hybrid)).toBe(true);
+  });
+
+  it('orders special below mythic and knows bonus', () => {
+    expect(matches('r>mythic', card({ rarity: 'special' }))).toBe(false);
+    expect(matches('r>rare r<mythic', card({ rarity: 'special' }))).toBe(true);
+    expect(matches('r:bonus', card({ rarity: 'bonus' }))).toBe(true);
+  });
+
+  it('matches whole keywords and ignores ones that are not keywords', () => {
+    const striker = card({ keywords: ['First strike', 'Flashback'] });
+    expect(matches('kw:"first strike"', striker)).toBe(true);
+    expect(matches('kw:flash', striker)).toBe(false);
+    expect(makeFilter('kw:first t:instant').filter!.ignored).toEqual(['kw:first']);
+  });
+
+  it('ignores apostrophes in names', () => {
+    expect(matches('urzas', card({ name_lower: "urza's saga" }))).toBe(true);
+  });
+
+  it('reads game: as this printing and in: as any printing', () => {
+    const paperOnly = card({ games: ['paper'], gamesEverAvailable: ['paper', 'arena'] });
+    expect(matches('game:arena', paperOnly)).toBe(false);
+    expect(matches('in:arena', paperOnly)).toBe(true);
+  });
+
+  it('compares collector numbers and takes set types without underscores', () => {
+    expect(matches('cn>50', card({ collector_number: '123a' }))).toBe(true);
+    expect(matches('st:draftinnovation', card({ set_type: 'draft_innovation' }))).toBe(true);
+  });
+
+  it('uses Scryfall meanings for is: categories', () => {
+    expect(matches('is:hybrid', card({ parsed_cost: ['2-w', '2-w'] }))).toBe(true);
+    expect(matches('is:phyrexian', card({ parsed_cost: ['1'], oracle_text: '{U/P}: This creature gains hexproof.' }))).toBe(
+      true,
+    );
+    expect(matches('is:vanilla', card({ type: 'Artifact', oracle_text: '' }))).toBe(false);
+    expect(matches('is:bear', card({ type: 'Creature — Bear', cmc: 2, power: '2', toughness: '2' }))).toBe(true);
+    expect(matches('is:party', card({ type: 'Creature — Shapeshifter', keywords: ['Changeling'] }))).toBe(true);
+    expect(matches('is:modal', card({ oracle_text: 'As this Siege enters, choose Khans or Dragons.\n• Khans — Draw.' }))).toBe(
+      false,
+    );
+    expect(matches('is:default', card({ promo: false, full_art: false, border_color: 'black' }))).toBe(true);
+    expect(matches('is:atypical', card({ border_color: 'borderless' }))).toBe(true);
+    expect(matches('is:defaultprinting', card({ isDefault: true }))).toBe(true);
+    expect(matches('is:judge_gift', card({ promo_types: ['judgegift'] }))).toBe(true);
+    expect(matches('is:triome', card({ name: 'Ketria Triome' }))).toBe(true);
+  });
+
+  it('collects search directives without filtering on them', () => {
+    const { filter } = makeFilter('t:dragon unique:prints order:cmc direction:asc prefer:oldest');
+    expect(filter!.directives).toEqual({ unique: 'prints', order: 'Mana Value', direction: 'ascending', prefer: 'first' });
+    expect(filter!(card({ type: 'Creature — Dragon' }))).toBe(true);
+    expect(makeFilter('++ t:dragon').filter!.directives).toEqual({ unique: 'prints' });
   });
 });

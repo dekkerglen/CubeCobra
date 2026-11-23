@@ -237,8 +237,15 @@ describe('gold and hybrid categories', () => {
 
   it('treats a hybrid pip whose colors are already required as gold, e.g. {R}{R/W}{W}', () => {
     const card = details(['R', 'W'], ['w', 'r-w', 'r']);
-    expect(CARD_CATEGORY_DETECTORS.hybrid!(card)).toBe(false);
     expect(CARD_CATEGORY_DETECTORS.gold!(card)).toBe(true);
+    // is:hybrid follows Scryfall and matches any hybrid symbol, so this card is both.
+    expect(CARD_CATEGORY_DETECTORS.hybrid!(card)).toBe(true);
+  });
+
+  it('counts monocolored and Phyrexian hybrid as hybrid but not plain Phyrexian, as Scryfall does', () => {
+    expect(CARD_CATEGORY_DETECTORS.hybrid!(details(['W'], ['2-w', '2-w', '2-w']))).toBe(true);
+    expect(CARD_CATEGORY_DETECTORS.hybrid!(details(['G', 'W'], ['w', 'g-w-p', 'g', '1']))).toBe(true);
+    expect(CARD_CATEGORY_DETECTORS.hybrid!(details(['W'], ['w-p', '1']))).toBe(false);
   });
 
   it('keeps a hybrid pip that adds a choice of color as hybrid, e.g. {R}{U}{W/B}', () => {

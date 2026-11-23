@@ -78,7 +78,7 @@ const exploreSections: NavSection[] = [
   {
     header: 'Cards',
     items: [
-      { label: 'Top Cards', href: '/tool/searchcards?v=rows', icon: GraphIcon },
+      { label: 'Top Cards', href: '/tool/searchcards?f=picks%3E%3D100&v=rows', icon: GraphIcon },
       { label: 'Search Cards', href: '/tool/searchcards', icon: SearchIcon },
       { label: 'Sets', href: '/tool/sets', icon: StackIcon },
       { label: 'Packages', href: '/packages', icon: VersionsIcon },

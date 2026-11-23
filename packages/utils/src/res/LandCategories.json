@@ -1,5 +1,16 @@
 {
-  "CYCLE": ["Canyon Slough", "Fetid Pools", "Irrigated Farmland", "Scattered Groves", "Sheltered Thicket"],
+  "CYCLE": [
+    "Canyon Slough",
+    "Fetid Pools",
+    "Irrigated Farmland",
+    "Scattered Groves",
+    "Sheltered Thicket",
+    "Coastal Peak",
+    "Festering Thicket",
+    "Glittering Massif",
+    "Rain-Slicked Copse",
+    "Umbral Expanse"
+  ],
 
   "BOUNCE": [
     "Azorius Chancery",
@@ -16,7 +27,9 @@
     "Orzhov Basilica",
     "Rakdos Carnarium",
     "Selesnya Sanctuary",
-    "Simic Growth Chamber"
+    "Simic Growth Chamber",
+    "Arid Archway",
+    "Guildless Commons"
   ],
 
   "CANOPY": [
@@ -97,7 +110,12 @@
     "Sungrass Prairie",
     "Sunken Ruins",
     "Twilight Mire",
-    "Wooded Bastion"
+    "Wooded Bastion",
+    "Desolate Mire",
+    "Ferrous Lake",
+    "Overflowing Basin",
+    "Sunscorched Divide",
+    "Viridescent Bog"
   ],
 
   "GAIN": [
@@ -144,7 +162,18 @@
     "Temple of Triumph"
   ],
 
-  "SHADOW": ["Choked Estuary", "Foreboding Ruins", "Fortified Village", "Game Trail", "Port Town"],
+  "SHADOW": [
+    "Choked Estuary",
+    "Foreboding Ruins",
+    "Fortified Village",
+    "Game Trail",
+    "Port Town",
+    "Frostboil Snarl",
+    "Furycalm Snarl",
+    "Necroblossom Snarl",
+    "Shineshadow Snarl",
+    "Vineglimmer Snarl"
+  ],
 
   "SHOCK": [
     "Blood Crypt",
@@ -174,7 +203,18 @@
     "Sand Silos"
   ],
 
-  "TANGO": ["Canopy Vista", "Cinder Glade", "Prairie Stream", "Smoldering Marsh", "Sunken Hollow"],
+  "TANGO": [
+    "Canopy Vista",
+    "Cinder Glade",
+    "Prairie Stream",
+    "Smoldering Marsh",
+    "Sunken Hollow",
+    "Eclipsed Steppe",
+    "Radiant Summit",
+    "Scorched Geyser",
+    "Sodden Verdure",
+    "Vernal Fen"
+  ],
 
   "TRI": [
     "Arcane Sanctum",
@@ -200,5 +240,57 @@
     "Thundering Falls",
     "Undercity Sewers",
     "Underground Mortuary"
+  ],
+
+  "BOND": [
+    "Bountiful Promenade",
+    "Luxury Suite",
+    "Morphic Pool",
+    "Rejuvenating Springs",
+    "Sea of Clouds",
+    "Spectator Seating",
+    "Spire Garden",
+    "Training Center",
+    "Undergrowth Stadium",
+    "Vault of Champions"
+  ],
+
+  "PATHWAY": [
+    "Barkchannel Pathway",
+    "Blightstep Pathway",
+    "Branchloft Pathway",
+    "Brightclimb Pathway",
+    "Clearwater Pathway",
+    "Cragcrown Pathway",
+    "Darkbore Pathway",
+    "Hengegate Pathway",
+    "Needleverge Pathway",
+    "Riverglide Pathway"
+  ],
+
+  "SLOW": [
+    "Deathcap Glade",
+    "Deserted Beach",
+    "Dreamroot Cascade",
+    "Haunted Ridge",
+    "Overgrown Farmland",
+    "Rockfall Vale",
+    "Shattered Sanctum",
+    "Shipwreck Marsh",
+    "Stormcarved Coast",
+    "Sundown Pass"
+  ],
+
+  "TRIOME": [
+    "Indatha Triome",
+    "Jetmir's Garden",
+    "Ketria Triome",
+    "Raffine's Tower",
+    "Raugrin Triome",
+    "Savai Triome",
+    "Spara's Headquarters",
+    "Xander's Lounge",
+    "Zagoth Triome",
+    "Ziatora's Proving Ground"
   ]
 }

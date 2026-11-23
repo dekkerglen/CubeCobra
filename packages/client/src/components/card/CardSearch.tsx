@@ -60,8 +60,6 @@ const toPage = (value: string): number => {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
 };
 
-const PICK_COUNT_BASELINE = 'pickcount>=100';
-
 const CardSearch: React.FC = () => {
   const { filterInput, setFilterInput, filterValid, cardFilter } = useContext(FilterContext);
   const drag = useCubeTrayDrag();
@@ -113,18 +111,10 @@ const CardSearch: React.FC = () => {
     setFilterText(filterInput || '');
   }, [filterInput]);
 
-  const effectiveFilter = useCallback(() => {
-    const user = filterInput?.trim() ?? '';
-    if (view === 'rows') {
-      return user ? `${PICK_COUNT_BASELINE} ${user}` : PICK_COUNT_BASELINE;
-    }
-    return user;
-  }, [filterInput, view]);
-
   const fetchData = useCallback(async () => {
     const params = new URLSearchParams([
       ['p', page.toString()],
-      ['f', effectiveFilter()],
+      ['f', filterInput ?? ''],
       ['s', sort],
       ['d', direction],
       ['di', distinct],
@@ -161,11 +151,10 @@ const CardSearch: React.FC = () => {
         setLoading(false);
       }
     }
-  }, [page, sort, direction, distinct, includeExtras, effectiveFilter, begin]);
+  }, [page, sort, direction, distinct, includeExtras, filterInput, begin]);
 
   useEffect(() => {
-    const shouldFetch = view === 'rows' || (!!filterInput && filterInput !== '');
-    if (shouldFetch) {
+    if (filterInput) {
       setLoading(true);
       fetchData();
     } else {
@@ -175,7 +164,7 @@ const CardSearch: React.FC = () => {
       setFailed(false);
       setCards([]);
     }
-  }, [page, direction, distinct, includeExtras, sort, filterInput, view, fetchData, invalidate]);
+  }, [page, direction, distinct, includeExtras, sort, filterInput, fetchData, invalidate]);
 
   const updatePage = (index: number) => {
     setLoading(true);
@@ -192,11 +181,8 @@ const CardSearch: React.FC = () => {
     setPage(0);
     setDistinct(toDistinct(value));
   };
-  const changeView = (value: string) => {
-    setLoading(true);
-    setPage(0);
-    setView(toView(value));
-  };
+  // Both views show the same results, so switching keeps the page.
+  const changeView = (value: string) => setView(toView(value));
   const changeIncludeExtras = (value: boolean) => {
     setLoading(true);
     setPage(0);
@@ -244,7 +230,7 @@ const CardSearch: React.FC = () => {
   // page) as CSV. Mirrors the params sent to the search API so the file matches
   // what the user is looking at.
   const csvHref = `/tool/searchcards/csv?${new URLSearchParams([
-    ['f', effectiveFilter()],
+    ['f', filterInput ?? ''],
     ['s', sort],
     ['d', direction],
     ['di', distinct],
@@ -301,11 +287,11 @@ const CardSearch: React.FC = () => {
   // A failed search reports itself rather than passing as an empty result set.
   const emptyMessage = failed
     ? 'Something went wrong. Please try again.'
-    : view === 'cards' && !filterInput
+    : !filterInput
       ? 'Enter a filter above to begin searching.'
       : 'No cards found';
   const formattedCount = Number(count || '0').toLocaleString();
-  const showSummary = !(view === 'cards' && !filterInput);
+  const showSummary = !!filterInput;
   const headlineCount = loading ? 'Searching…' : failed ? 'Search failed' : `${formattedCount} results`;
 
   return (

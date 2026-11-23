@@ -76,7 +76,7 @@ export const compileTemplateQuery = (query: string | null | undefined): FilterFu
     return null;
   }
   if (!compiledTemplates.has(query)) {
-    const { err, filter } = makeFilter(templateFilterText(query));
+    const { err, filter } = makeFilter(templateFilterText(query), { strict: true });
     compiledTemplates.set(query, err ? null : filter);
   }
   return compiledTemplates.get(query) ?? null;

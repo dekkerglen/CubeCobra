@@ -1,5 +1,5 @@
 import Card from '@utils/datatypes/Card';
-import { AllField, CardDetails } from '@utils/datatypes/Card';
+import { AllField, CardDetails, PrintingPreference } from '@utils/datatypes/Card';
 import filterCardGrammar from '@utils/generated/filtering/cardFilters';
 import { Grammar, Parser } from 'nearley';
 
@@ -17,7 +17,20 @@ export type FilterFunction = ((card: Card) => boolean) & {
   describe?: string;
   // The pattern of every /regex/ clause, composed by the grammar like fieldsUsed.
   regexes?: string[];
+  // Terms that couldn't be parsed and were left out, as Scryfall does, e.g. ["lang:xx"]. See makeFilter.
+  ignored?: string[];
+  // Search directives (unique:, order:, direction:, prefer:), applied by card search. See searchDirectives.
+  directives?: SearchDirectives;
+  // Set by the grammar on a term that doesn't take part in matching (a directive or an ignored term).
+  neutral?: boolean;
 };
+
+export interface SearchDirectives {
+  unique?: 'cards' | 'prints';
+  order?: string;
+  direction?: 'ascending' | 'descending';
+  prefer?: PrintingPreference;
+}
 
 export const operatorsRegex: RegExp = new RegExp(`(?:${ALL_OPERATORS.join('|')})`);
 
@@ -38,10 +51,11 @@ export const filterToString = (filter: FilterFunction | null): string => filter?
 // e.g. "Matching cards where mana value is 3 or more and color includes White."
 export const filterToReadableString = (filter: FilterFunction | null): string => {
   const describe = filter?.describe?.trim();
+  const ignored = filter?.ignored?.length ? ` Ignored ${filter.ignored.map((term) => `"${term}"`).join(', ')}.` : '';
   if (!describe) {
-    return 'Matching all cards.';
+    return `Matching all cards.${ignored}`;
   }
-  return `Matching cards where ${describe}.`;
+  return `Matching cards where ${describe}.${ignored}`;
 };
 
 export function defaultFilter(): FilterFunction {
@@ -88,7 +102,83 @@ const regexLimitError = (regexes: string[]): string | null => {
   return null;
 };
 
-export function makeFilter(filterText: string): FilterResult {
+// What the grammar reads as a term that matches everything (ignoredCondition in cardFilters.ne). Characters nobody
+// types, so it can't clash with a real term.
+const IGNORED_PLACEHOLDER = '⦃⦄';
+const MAX_IGNORED_TERMS = 20;
+// Only keyword terms (lang:xx, frame>2015, -wm:orzhov) and Scryfall's @@ shortcut are left out. A malformed name or
+// quote is still an error.
+const IGNORABLE_TERM = /^(-?[a-z_]+(:|=|!=|<>|<=|>=|<|>)|@@$)/i;
+
+// The whitespace-separated term around position `at`, keeping quoted text and /regexes/ whole and leaving out
+// grouping parentheses, so "(t:goblin or lang:xx)" gives "lang:xx". Null when there's no term to drop there.
+const termAround = (text: string, at: number): { start: number; end: number } | null => {
+  const isBoundary = (char: string | undefined) => char === undefined || /[\s()]/.test(char);
+  let start = Math.min(at, text.length);
+  while (start > 0 && !isBoundary(text[start - 1])) start -= 1;
+  if (start >= text.length || isBoundary(text[start])) {
+    // The parser stopped at a space or parenthesis: the problem is the term before it.
+    let end = start;
+    while (end > 0 && /\s/.test(text[end - 1]!)) end -= 1;
+    if (end === 0 || isBoundary(text[end - 1])) return null;
+    start = end;
+    while (start > 0 && !isBoundary(text[start - 1])) start -= 1;
+  }
+  let end = start;
+  let quote: string | null = null;
+  while (end < text.length) {
+    const char = text[end]!;
+    if (quote) {
+      if (char === '\\') end += 1;
+      else if (char === quote) quote = null;
+    } else if (
+      // A quote or /regex/ opens at the start of the term or of its value; an apostrophe in a name doesn't.
+      (char === '"' || char === "'" || char === '/') &&
+      (end === start || /[:=<>!]$/.test(text.slice(start, end)))
+    ) {
+      quote = char;
+    } else if (isBoundary(char)) {
+      break;
+    }
+    end += 1;
+  }
+  if (text.slice(start, end) === IGNORED_PLACEHOLDER) return null;
+  return { start, end };
+};
+
+// Parse, and when a term can't be parsed, leave it out and try again, as Scryfall does: "t:goblin lang:xx" searches
+// for goblins and reports lang:xx as ignored. A parse that fails for another reason (an unclosed quote or
+// parenthesis) is still an error.
+const parseFilter = (filterText: string, strict: boolean): { results: any[]; ignored: string[]; err?: any } => {
+  const ignored: string[] = [];
+  let text = filterText;
+  for (let attempt = 0; attempt <= (strict ? 0 : MAX_IGNORED_TERMS); attempt++) {
+    const filterParser: Parser = new Parser(compiledGrammar);
+    let failedAt: number | null = null;
+    try {
+      filterParser.feed(text);
+    } catch (err) {
+      failedAt = (err as { offset?: number }).offset ?? null;
+      if (failedAt === null) return { results: [], ignored, err };
+    }
+    if (failedAt === null && filterParser.results.length > 0) {
+      return { results: filterParser.results, ignored };
+    }
+    // An incomplete parse ran out of input, so the problem is the last term.
+    const term = strict ? null : termAround(text, failedAt ?? text.length);
+    const termText = term ? text.slice(term.start, term.end) : '';
+    if (!term || !IGNORABLE_TERM.test(termText)) {
+      return { results: [], ignored, err: 'Invalid filter' };
+    }
+    ignored.push(termText);
+    text = `${text.slice(0, term.start)}${IGNORED_PLACEHOLDER}${text.slice(term.end)}`;
+  }
+  return { results: [], ignored, err: 'Invalid filter' };
+};
+
+// `strict` makes any term that can't be parsed an error instead of leaving it out. Filters the code builds itself
+// (game themes, combo templates) use it, since a dropped term there would silently widen the results.
+export function makeFilter(filterText: string, { strict = false }: { strict?: boolean } = {}): FilterResult {
   if (!filterText || filterText.trim() === '') {
     return {
       err: false,
@@ -100,13 +190,10 @@ export function makeFilter(filterText: string): FilterResult {
     return { err: 'Filter is too long', filter: null };
   }
 
-  const filterParser: Parser = new Parser(compiledGrammar);
-  try {
-    filterParser.feed(filterText);
-  } catch (err) {
+  const { results, ignored, err } = parseFilter(filterText, strict);
+  if (err) {
     return { err, filter: null };
   }
-  const results: any[] = filterParser.results;
   if (results.length === 1) {
     const [filter]: Partial<FilterFunction>[] = results;
     if (filter) {
@@ -116,6 +203,11 @@ export function makeFilter(filterText: string): FilterResult {
       }
       if (filter.describe === undefined) {
         filter.describe = '';
+      }
+      filter.ignored = ignored;
+      // Nothing left to search for once every term is ignored, so that's an error rather than every card.
+      if (ignored.length > 0 && filter.neutral && !filter.directives && (filter.fieldsUsed ?? []).length === 0) {
+        return { err: 'Invalid filter', filter: null };
       }
       const regexError = regexLimitError(filter.regexes ?? []);
       if (regexError) {

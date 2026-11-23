@@ -57,7 +57,7 @@ const Footer: React.FC = () => {
               </Text>
               <ul className="list-none p-0">
                 <li className="mb-2">
-                  <FooterLink href="/tool/topcards">Top Cards</FooterLink>
+                  <FooterLink href="/tool/searchcards?f=picks%3E%3D100&v=rows">Top Cards</FooterLink>
                 </li>
                 <li className="mb-2">
                   <FooterLink href="/tool/searchcards">Search Cards</FooterLink>

@@ -1,5 +1,5 @@
 // import missing types from @utils/datatypes/Catalog
-import { isExtraCard, normalizeName, reasonableCard } from '@utils/cardutil';
+import { isExtraCard, isHiddenFromCardSearch, normalizeName, reasonableCard } from '@utils/cardutil';
 import { Catalog } from '@utils/datatypes/CardCatalog';
 import json from 'big-json';
 import fs from 'fs';
@@ -19,6 +19,7 @@ const catalog: Catalog = {
   metadatadict: {},
   printedCardList: [], // for card filters
   printedCardListWithExtras: [], // card filters, including tokens/extras
+  searchCardList: [], // card search's default pool, which follows Scryfall's (see isHiddenFromCardSearch)
   reasonable_names: [],
   reasonable_full_names: [],
   comboOracleToIndex: {}, // Combo-specific mapping saved with comboTree
@@ -147,6 +148,7 @@ export async function initializeCardDb(basePath: string = 'private') {
   // surface them.
   catalog.printedCardList = Object.values(catalog._carddict).filter((card) => !isExtraCard(card));
   catalog.printedCardListWithExtras = Object.values(catalog._carddict);
+  catalog.searchCardList = Object.values(catalog._carddict).filter((card) => !isHiddenFromCardSearch(card));
 
   // CubeCobra synthetic cards that should always appear in autocomplete
   const ALWAYS_ALLOW_IDS = new Set(['custom-card', 'voucher']);

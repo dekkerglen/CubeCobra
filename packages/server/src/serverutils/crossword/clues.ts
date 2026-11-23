@@ -679,7 +679,7 @@ const narrowingFilter = (
       continue;
     }
     const attempt = [...accepted, term];
-    const { err, filter } = makeFilter(attempt.join(' '));
+    const { err, filter } = makeFilter(attempt.join(' '), { strict: true });
     if (err || !filter) {
       continue;
     }

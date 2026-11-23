@@ -11,7 +11,8 @@ const PAGE_SIZE = 96;
 
 // Collect and sort every card matching the filter, without paginating. Used
 // both by the paginated searchCards below and by the CSV export, which needs
-// the full result set.
+// the full result set. Directives in the query (unique:, order:, direction:,
+// prefer:) take precedence over the matching arguments, as on Scryfall.
 export const searchAllCards = (
   filter: FilterFunction,
   sort: OrderedSortsType = 'Elo',
@@ -19,21 +20,29 @@ export const searchAllCards = (
   distinct: Distinct = 'names',
   printing = DefaultPrintingPreference,
   includeExtras = false,
+  pool: CardDetails[] = carddb.searchCardList,
 ): CardDetails[] => {
+  const directives = filter?.directives ?? {};
+  const effectiveSort = directives.order ?? sort;
+  const effectiveDirection = directives.direction ?? direction;
+  const effectiveDistinct: Distinct = directives.unique ? (directives.unique === 'prints' ? 'printings' : 'names') : distinct;
+  const preferred = directives.prefer;
+
   // Collect matching cards, optionally including "extras" — tokens and other
   // printings normally hidden from card search (they live only in
-  // printedCardListWithExtras / are dropped by getAllMostReasonable otherwise).
+  // printedCardListWithExtras / are left out of the pool otherwise).
   const collect = (includeExtras: boolean): CardDetails[] => {
-    if (distinct === 'names') {
+    if (effectiveDistinct === 'names') {
       // One row per card: show its default printing, falling back to the user's
       // printing preference when the card has no default (or it's filtered out).
-      return getAllMostReasonable(filter, printing, includeExtras, true);
+      // A prefer: directive picks the printing outright.
+      return getAllMostReasonable(filter, preferred ?? printing, includeExtras, !preferred, pool);
     }
     // One row per printing: every printing is its own result, so leave them as-is.
-    return filterCardsDetails(includeExtras ? carddb.printedCardListWithExtras : carddb.printedCardList, filter);
+    return filterCardsDetails(includeExtras ? carddb.printedCardListWithExtras : pool, filter);
   };
 
-  // Extras (tokens, planes, digital, Unknown Event, etc.) are hidden by default.
+  // Extras (tokens, planes, playtest cards, etc.) are hidden by default.
   // Include them when: the caller asked (checkbox), the query has "include:extras",
   // or it's a set-scoped browse (a set may be entirely extras, e.g. memorabilia /
   // Jumpstart front cards). Otherwise only fall back to extras if nothing matched.
@@ -43,11 +52,11 @@ export const searchAllCards = (
     cards.push(...collect(true));
   }
 
-  if (ORDERED_SORTS.includes(sort)) {
-    cards.sort(SortFunctionsOnDetails(sort));
+  if (ORDERED_SORTS.includes(effectiveSort)) {
+    cards.sort(SortFunctionsOnDetails(effectiveSort));
   }
 
-  if (direction === 'descending') {
+  if (effectiveDirection === 'descending') {
     cards.reverse();
   }
 

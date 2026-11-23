@@ -125,6 +125,9 @@ export interface Catalog {
   // are normally hidden from card search — used when browsing a set (whose cards
   // may all be tokens) or as a fallback when a search would otherwise be empty.
   printedCardListWithExtras: any[];
+  // Card search's default pool. Like Scryfall's it shows digital-only printings and hides playtest cards and a few
+  // other non-game printings (see isHiddenFromCardSearch).
+  searchCardList: any[];
   reasonable_names: string[];
   reasonable_full_names: string[];
   comboTree: ComboTree;

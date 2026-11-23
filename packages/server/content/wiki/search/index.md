@@ -52,9 +52,9 @@ per printing, an extras toggle brings in tokens and other oddities, and an expor
 every matching card as a CSV, not just the visible page. With the [cube tray](/wiki/cube-tray),
 you can drag results straight into your cubes.
 
-**Top Cards** in the Explore menu is a preset of the same page: the rows view, filtered to cards
-with at least 100 recorded picks, sorted by Elo. It's the quickest answer to "what does the
-community actually draft?"
+**Top Cards** in the Explore menu is a preset of the same page: the rows view with `picks>=100`
+filled in, so it lists cards with at least 100 recorded picks, sorted by Elo. It's the quickest
+answer to "what does the community actually draft?" Edit or clear the filter to change the cutoff.
 
 ## Sets
 

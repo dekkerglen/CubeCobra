@@ -398,6 +398,8 @@ export const cardCost = (card: Card): string[] => card.details?.parsed_cost ?? [
 
 export const cardSet = (card: Card): string => card.details?.set ?? '';
 
+export const cardSetType = (card: Card): string => card.details?.set_type ?? '';
+
 export const cardSetIndex = (card: Card): number => card.details?.setIndex ?? -1;
 
 export const cardSetName = (card: Card): string => card.details?.set_name ?? '';
@@ -462,6 +464,22 @@ export const cardArtist = (card: Card): string => card.details?.artist ?? '';
 export const cardScryfallUri = (card: Card): string => card.details?.scryfall_uri ?? '';
 
 export const cardOracleText = (card: Card): string => card.details?.oracle_text ?? '';
+
+// Oracle text without reminder text, which is what Scryfall's o: searches (fo: searches the full text).
+export const stripReminderText = (text: string): string => text.replace(/ *\([^()]*\)/g, '');
+
+export const cardRulesText = (card: Card): string => stripReminderText(cardOracleText(card));
+
+// Year this printing was released, which is what Scryfall's year: compares. firstPrintYear is the card's first.
+export const cardReleaseYear = (card: Card): number => parseInt(cardReleaseDate(card).slice(0, 4), 10);
+
+export const cardArtistCount = (card: Card): number => {
+  const artist = cardArtist(card);
+  return artist ? artist.split(' & ').length : 0;
+};
+
+export const cardProducedMana = (card: Card): string[] =>
+  (card.details?.produced_mana ?? []).map((symbol) => symbol.toLowerCase());
 
 export const cardOracleId = (card: Card): string => card.details?.oracle_id ?? '';
 
@@ -575,6 +593,33 @@ export const cardLoyalty = (card: Card): number => parseInt(card.details?.loyalt
 export const cardPower = (card: Card): number => parseFloat(card.details?.power ?? '0');
 
 export const cardToughness = (card: Card): number => parseFloat(card.details?.toughness ?? '0');
+
+// Power, toughness and loyalty as filters compare them, following Scryfall: * (and X or ?) counts as 0, so 1+* is 1,
+// ∞ is infinite, and a card without the stat is NaN so it never matches a comparison.
+export const statValue = (stat?: string): number => {
+  if (stat === undefined || stat === null || stat === '') {
+    return NaN;
+  }
+  if (stat.includes('∞')) {
+    return Infinity;
+  }
+  const expression = stat.replace(/[*?xX]/g, '0');
+  const match = /^([+-]?\d+(?:\.\d+)?)(?:([+-])(\d+(?:\.\d+)?))?$/.exec(expression);
+  if (!match) {
+    return parseFloat(expression);
+  }
+  const base = parseFloat(match[1]!);
+  if (!match[2]) {
+    return base;
+  }
+  return match[2] === '+' ? base + parseFloat(match[3]!) : base - parseFloat(match[3]!);
+};
+
+export const cardPowerValue = (card: Card): number => statValue(card.details?.power);
+
+export const cardToughnessValue = (card: Card): number => statValue(card.details?.toughness);
+
+export const cardLoyaltyValue = (card: Card): number => statValue(card.details?.loyalty);
 
 export const cardImageSmall = (card: Card): string => card.details?.image_small ?? '';
 
@@ -911,22 +956,48 @@ export function reasonableCard(card: CardDetailsType): boolean {
 // "Extra" cards are things that aren't a normal deckable game piece: tokens,
 // emblems, art cards, planes/schemes/vanguards, memorabilia (World Championship
 // gold-border decks, oversized cards), digital-only cards, and Gavin's Unknown
-// Event (unk) joke cards. These mirror Scryfall's is:extra plus our own additions
-// and are hidden from card search unless "include:extras" is used. The lists are
-// intentionally broader than reasonableCard's (which also filters printings by
-// promo/language/etc.) — this is a card-level "is this a real game piece" check.
+// Event (unk) joke cards. The lists are intentionally broader than reasonableCard's
+// (which also filters printings by promo/language/etc.) — this is a card-level
+// "is this a real game piece" check. Card search uses isHiddenFromCardSearch instead.
 const EXTRA_LAYOUTS = ['token', 'double_faced_token', 'emblem', 'art_series', 'planar', 'scheme', 'vanguard'];
 const EXTRA_SET_TYPES = ['token', 'memorabilia', 'minigame'];
 const EXTRA_SETS = ['unk'];
 
+const isNonGamePiece = (card: CardDetailsType): boolean =>
+  card.isExtra === true ||
+  card.isToken === true ||
+  EXTRA_LAYOUTS.includes(card.layout) ||
+  EXTRA_SET_TYPES.includes(card.set_type ?? '') ||
+  EXTRA_SETS.includes(card.set);
+
 export function isExtraCard(card: CardDetailsType): boolean {
+  return card.digital === true || isNonGamePiece(card);
+}
+
+// Card search's default pool follows Scryfall's. Unlike isExtraCard it shows digital-only printings, but it hides
+// playtest cards, rebalanced Alchemy cards, Heroes of the Realm, Happy Holidays and HasCon promos, and the cards
+// Wizards removed from the game in 2020. include:extras, a set: term, is:funny, or a search with no other results
+// brings them back (see searchCards).
+const SEARCH_HIDDEN_PROMO_TYPES = ['playtest', 'rebalanced'];
+const SEARCH_HIDDEN_SETS = ['hho', 'h17'];
+const HEROES_OF_THE_REALM_SET = /^ph(tr|\d\d)$/;
+const REMOVED_CARDS = [
+  'Cleanse',
+  'Crusade',
+  'Imprison',
+  'Invoke Prejudice',
+  'Jihad',
+  'Pradesh Gypsies',
+  'Stone-Throwing Devils',
+];
+
+export function isHiddenFromCardSearch(card: CardDetailsType): boolean {
   return (
-    card.digital === true ||
-    card.isExtra === true ||
-    card.isToken === true ||
-    EXTRA_LAYOUTS.includes(card.layout) ||
-    EXTRA_SET_TYPES.includes(card.set_type ?? '') ||
-    EXTRA_SETS.includes(card.set)
+    isNonGamePiece(card) ||
+    (card.promo_types ?? []).some((type) => SEARCH_HIDDEN_PROMO_TYPES.includes(type)) ||
+    SEARCH_HIDDEN_SETS.includes(card.set) ||
+    HEROES_OF_THE_REALM_SET.test(card.set) ||
+    REMOVED_CARDS.includes(card.name)
   );
 }
 
@@ -962,25 +1033,207 @@ export const costWithoutRedundantHybrid = (parsedCost: string[]): string[] => {
   });
 };
 
+const isCreature = (details: CardDetailsType): boolean => details.type.includes('Creature');
+
+const hasPowerAndToughness = (details: CardDetailsType): boolean =>
+  details.power !== undefined && details.toughness !== undefined;
+
+// Creatures with any of these types, counting changelings, which have every creature type.
+const hasCreatureType =
+  (types: string[]) =>
+  (details: CardDetailsType): boolean =>
+    isCreature(details) &&
+    ((details.keywords || []).includes('Changeling') || new RegExp(`\\b(${types.join('|')})\\b`).test(details.type));
+
+// Scryfall's is:frenchvanilla: a creature whose rules text is nothing but keywords, such as "Flying, vigilance" or
+// "Protection from red". Keywords with a number or extra text after them don't count.
+const isFrenchVanilla = (details: CardDetailsType): boolean => {
+  if (!isCreature(details) || !details.oracle_text) {
+    return false;
+  }
+  const keywords = (details.keywords || []).map((keyword) => keyword.toLowerCase());
+  if (keywords.length === 0) {
+    return false;
+  }
+  return stripReminderText(details.oracle_text)
+    .split('\n')
+    .every((line) => {
+      if (/[—:.]/.test(line)) {
+        return false;
+      }
+      return line
+        .split(/[,;]/)
+        .map((segment) => segment.trim().toLowerCase())
+        .filter((segment) => segment.length > 0)
+        .every((segment) =>
+          keywords.some(
+            (keyword) =>
+              segment === keyword || (segment.startsWith(`${keyword} `) && /^(from|\{)/.test(segment.slice(keyword.length + 1))),
+          ),
+        );
+    });
+};
+
+const MODAL_CHOICE = /\bchooses? (one|two|three|four|five|any number|one or more|one or both|up to|x)\b/i;
+
+// Spells and abilities with modes: a bulleted "choose one" list, Spree, or Bloomburrow's pawprint modes.
+const isModal = (details: CardDetailsType): boolean =>
+  (details.oracle_text.includes('•') && MODAL_CHOICE.test(details.oracle_text)) ||
+  (details.keywords || []).includes('Spree') ||
+  details.oracle_text.includes('{P}');
+
+// Legendary creatures, legendary Vehicles and Spacecraft with power and toughness, and cards that say they can be
+// your commander (Brawl also allows legendary planeswalkers). Like Scryfall this ignores whether the card is legal in
+// the format, but not whether it's banned there.
+const canBeCommander = (details: CardDetailsType, format: LegalityFormats, allowPlaneswalkers = false): boolean => {
+  if (details.legalities?.[format] === 'banned') {
+    return false;
+  }
+  if (details.oracle_text.includes('can be your commander') || CategoryOverrides.commander.includes(details.name)) {
+    return true;
+  }
+  if (!details.type.includes('Legendary')) {
+    return false;
+  }
+  return (
+    isCreature(details) ||
+    (allowPlaneswalkers && details.type.includes('Planeswalker')) ||
+    ((details.type.includes('Vehicle') || details.type.includes('Spacecraft')) && hasPowerAndToughness(details))
+  );
+};
+
+const PARTNER_TEXT = /\b(Partner|Friends forever|Choose a Background|Doctor's companion)\b/;
+
+// Every flavor of partner: Partner, Partner with, Friends forever, Choose a Background, Doctor's companion, and the
+// Backgrounds and Doctors they pair with.
+const isPartner = (details: CardDetailsType): boolean =>
+  details.type.includes('Background') ||
+  details.type.includes('Time Lord Doctor') ||
+  (details.type.includes('Legendary') && PARTNER_TEXT.test(stripReminderText(details.oracle_text)));
+
+// Approximates Scryfall's is:atypical (a frame treatment other than the standard one) from the data we have:
+// borderless, full-art, booster-fun treatments and promos.
+const isAtypical = (details: CardDetailsType): boolean =>
+  details.border_color === 'borderless' ||
+  details.full_art ||
+  details.promo ||
+  (details.promo_types || []).includes('boosterfun');
+
+// Meld results are hidden extras. Older card data doesn't flag them, so also go by their collector number, which
+// has a b after the number (15b, or 15bs for a promo).
+const isMeldResult = (details: CardDetailsType): boolean =>
+  details.layout === 'meld' && (details.isExtra === true || /\db/.test(details.collector_number));
+
+// Scryfall promo types that `is:` matches directly, such as is:prerelease or is:judge_gift (underscores are dropped
+// before lookup).
+const PROMO_TYPE_CATEGORIES = [
+  'arenaleague',
+  'beginnerbox',
+  'boosterfun',
+  'boxtopper',
+  'brawldeck',
+  'bringafriend',
+  'bundle',
+  'commanderparty',
+  'concept',
+  'confettifoil',
+  'convention',
+  'datestamped',
+  'dossier',
+  'doublerainbow',
+  'draftweekend',
+  'duels',
+  'embossed',
+  'event',
+  'firstplacefoil',
+  'fnm',
+  'fracturefoil',
+  'galaxyfoil',
+  'gameday',
+  'giftbox',
+  'gilded',
+  'halofoil',
+  'headliner',
+  'imagine',
+  'instore',
+  'intropack',
+  'invisibleink',
+  'japanshowcase',
+  'judgegift',
+  'league',
+  'magnified',
+  'manafoil',
+  'mediainsert',
+  'neonink',
+  'oilslick',
+  'openhouse',
+  'planeswalkerdeck',
+  'playerrewards',
+  'playpromo',
+  'playtest',
+  'portrait',
+  'poster',
+  'premiereshop',
+  'prerelease',
+  'promopack',
+  'raisedfoil',
+  'rainbowfoil',
+  'rebalanced',
+  'release',
+  'resale',
+  'ripplefoil',
+  'schinesealtart',
+  'scroll',
+  'serialized',
+  'setextension',
+  'setpromo',
+  'silverfoil',
+  'sldbonus',
+  'stamped',
+  'starterdeck',
+  'stepandcompleat',
+  'storechampionship',
+  'surgefoil',
+  'textured',
+  'themepack',
+  'thick',
+  'tourney',
+  'vault',
+  'wizardsplaynetwork',
+];
+
 const RAW_CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> = {
+  ...Object.fromEntries(
+    PROMO_TYPE_CATEGORIES.map((type) => [type, (details: CardDetailsType) => (details.promo_types || []).includes(type)]),
+  ),
   gold: (details) =>
     details.colors.length > 1 &&
     costWithoutRedundantHybrid(details.parsed_cost).every((symbol) => !symbol.includes('-')),
   twobrid: (details) => details.parsed_cost.some((symbol) => symbol.includes('-') && symbol.includes('2')),
+  // Any hybrid symbol, including {2/W} and Phyrexian hybrid like {G/W/P}, but not plain Phyrexian {W/P}.
   hybrid: (details) =>
-    details.colors.length > 1 &&
-    costWithoutRedundantHybrid(details.parsed_cost).some((symbol) => symbol.includes('-') && !symbol.includes('-p')),
-  phyrexian: (details) => details.parsed_cost.some((symbol) => symbol.includes('-p')),
+    details.parsed_cost.some(
+      (symbol) => symbol.includes('-') && symbol.split('-').filter((part) => part !== 'p').length > 1,
+    ),
+  // Phyrexian symbols in the mana cost or anywhere in the rules text, such as Spellskite's {U/P} ability.
+  phyrexian: (details) =>
+    details.parsed_cost.some((symbol) => symbol.includes('-p')) || /\{[^}]*\/P\}/i.test(details.oracle_text),
   promo: (details) => details.promo,
   reprint: (details) => details.reprint,
   firstprint: (details) => !details.reprint,
   firstprinting: (details) => !details.reprint,
   digital: (details) => details.digital,
+  alchemy: (details) => details.set_type === 'alchemy' || (details.promo_types || []).includes('alchemy'),
   reasonable: reasonableCard,
-  default: (details) => details.isDefault === true,
+  default: (details) => !isAtypical(details),
+  atypical: isAtypical,
+  // The printing CubeCobra shows by default for a card, chosen when card data is built (see update_cards.ts).
+  defaultprinting: (details) => details.isDefault === true,
   dfc: (details) => ['transform', 'modal_dfc', 'meld', 'double_faced_token', 'double_sided'].includes(details.layout),
   mdfc: (details) => details.layout === 'modal_dfc',
   meld: (details) => details.layout === 'meld',
+  meldpart: (details) => details.layout === 'meld' && !isMeldResult(details),
+  meldresult: isMeldResult,
   tdfc: (details) => details.layout === 'transform',
   transform: (details) => details.layout === 'transform',
   flip: (details) => details.layout === 'flip',
@@ -991,18 +1244,22 @@ const RAW_CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, car
   omen: (details) => details.layout === 'adventure' && (details.keywords || []).includes('Omen'),
   prepared: (details) => details.layout === 'prepare',
   leveler: (details) => details.layout === 'leveler',
-  commander: (details) =>
-    details.legalities.Commander === 'legal' &&
-    ((details.type.includes('Legendary') && details.type.includes('Creature')) ||
-      details.oracle_text.includes('can be your commander') ||
-      CategoryOverrides.commander.includes(details.name)),
+  commander: (details) => canBeCommander(details, 'Commander'),
+  brawler: (details) => canBeCommander(details, 'Brawl', true),
+  partner: isPartner,
+  companion: (details) => (details.keywords || []).includes('Companion'),
   spell: (details) => !details.type.includes('Land') && !typeIsSpecialZoneType(details.type),
   permanent: (details) =>
     !details.type.includes('Instant') && !details.type.includes('Sorcery') && !typeIsSpecialZoneType(details.type),
   historic: (details) =>
     details.type.includes('Legendary') || details.type.includes('Artifact') || details.type.includes('Saga'),
-  vanilla: (details) => !details.oracle_text,
-  modal: (details) => details.oracle_text.includes('•'),
+  vanilla: (details) => isCreature(details) && !details.oracle_text,
+  frenchvanilla: isFrenchVanilla,
+  bear: (details) =>
+    isCreature(details) && details.cmc === 2 && details.power === '2' && details.toughness === '2',
+  party: hasCreatureType(['Cleric', 'Rogue', 'Warrior', 'Wizard']),
+  outlaw: hasCreatureType(['Assassin', 'Mercenary', 'Pirate', 'Rogue', 'Warlock']),
+  modal: isModal,
   creatureland: isCreatureLand,
   manland: isCreatureLand,
   foil: (details, card) => (card && cardFinish(card) ? cardFinish(card) === 'Foil' : details.finishes.includes('foil')),
@@ -1012,11 +1269,23 @@ const RAW_CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, car
     card && cardFinish(card) ? cardFinish(card) === 'Etched' : details.finishes.includes('etched'),
   altfoil: (details, card) =>
     card && cardFinish(card) ? cardFinish(card) === 'Alt-foil' : details.finishes.includes('alt-foil'),
+  glossy: (details) => details.finishes.includes('glossy'),
   fullart: (details) => details.full_art,
+  full: (details) => details.full_art,
+  // Un-cards, holiday cards and other cards from funny sets that aren't legal in any format. Black-bordered Unfinity
+  // cards are legal, so they don't count.
+  funny: (details) =>
+    details.set_type === 'funny' &&
+    Object.values(details.legalities ?? {}).every((legality) => legality === 'not_legal'),
+  masterpiece: (details) => details.set_type === 'masterpiece',
 
   bikeland: (details) => LandCategories.CYCLE.includes(details.name),
   cycleland: (details) => LandCategories.CYCLE.includes(details.name),
   bicycleland: (details) => LandCategories.CYCLE.includes(details.name),
+  bondland: (details) => LandCategories.BOND.includes(details.name),
+  crowdland: (details) => LandCategories.BOND.includes(details.name),
+  battlebondland: (details) => LandCategories.BOND.includes(details.name),
+  bbdland: (details) => LandCategories.BOND.includes(details.name),
   bounceland: (details) => LandCategories.BOUNCE.includes(details.name),
   karoo: (details) => LandCategories.BOUNCE.includes(details.name),
   canopyland: (details) => LandCategories.CANOPY.includes(details.name),
@@ -1028,11 +1297,17 @@ const RAW_CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, car
   fetchland: (details) => LandCategories.FETCH.includes(details.name),
   gainland: (details) => LandCategories.GAIN.includes(details.name),
   painland: (details) => LandCategories.PAIN.includes(details.name),
+  pathway: (details) => LandCategories.PATHWAY.includes(details.name),
   scryland: (details) => LandCategories.SCRY.includes(details.name),
   shadowland: (details) => LandCategories.SHADOW.includes(details.name),
+  snarl: (details) => LandCategories.SHADOW.includes(details.name),
   shockland: (details) => LandCategories.SHOCK.includes(details.name),
+  slowland: (details) => LandCategories.SLOW.includes(details.name),
   storageland: (details) => LandCategories.STORAGE.includes(details.name),
   triland: (details) => LandCategories.TRI.includes(details.name),
+  tricycleland: (details) => LandCategories.TRIOME.includes(details.name),
+  trikeland: (details) => LandCategories.TRIOME.includes(details.name),
+  triome: (details) => LandCategories.TRIOME.includes(details.name),
   tangoland: (details) => LandCategories.TANGO.includes(details.name),
   battleland: (details) => LandCategories.TANGO.includes(details.name),
   surveilland: (details) => LandCategories.SURVEILLAND.includes(details.name),
@@ -1049,13 +1324,6 @@ const RAW_CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, car
   imageurl: (_details, card) => !!(card && hasCustomFrontImage(card)),
   imagebackurl: (_details, card) => !!(card && hasCustomBackImage(card)),
   singleton: (_details, card) => !!card && cardQuantity(card) === 1,
-
-  // Others from Scryfall:
-  //   reserved, new, old, hires,
-  //   spotlight, unique, masterpiece,
-  //   funny,
-  //   booster, datestamped, prerelease, planeswalker_deck,
-  //   league, buyabox, giftbox, intro_pack, gameday, release,
 };
 
 // A card whose DB entry failed to resolve has `details === undefined`. The detectors

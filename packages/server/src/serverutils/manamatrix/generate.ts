@@ -137,7 +137,7 @@ export const generateCategoryTexts = (rng: Rng, pools: GeneratorPools): string[]
 };
 
 const compileOrNull = (filterText: string): FilterFunction | null => {
-  const { err, filter } = makeFilter(filterText);
+  const { err, filter } = makeFilter(filterText, { strict: true });
   if (err || !filter) {
     return null;
   }

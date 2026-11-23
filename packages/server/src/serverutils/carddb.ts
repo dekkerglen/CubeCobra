@@ -426,8 +426,9 @@ export function getAllMostReasonable(
   printing: PrintingPreference = DefaultPrintingPreference,
   includeExtras: boolean = false,
   preferDefault: boolean = false,
+  pool: CardDetails[] = catalog.printedCardList,
 ): CardDetails[] {
-  const cards = filterCardsDetails(includeExtras ? catalog.printedCardListWithExtras : catalog.printedCardList, filter);
+  const cards = filterCardsDetails(includeExtras ? catalog.printedCardListWithExtras : pool, filter);
 
   const seen = new Set<string>();
   const filtered: CardDetails[] = [];

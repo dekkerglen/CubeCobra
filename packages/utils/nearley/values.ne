@@ -13,6 +13,7 @@
 # const propertyComparisonOperation = (op) => ...
 # const setContainsOperation = (op, value) => ...
 # const compileScryfallRegex = (pattern) => ...
+# const devotionOperation = (op, colors, value) => ...
 
 positiveHalfIntOpValue -> anyOperator positiveHalfIntValue {% ([op, value]) => defaultOperation(op, value) %}
 
@@ -65,7 +66,7 @@ statusValue -> ("owned"i | "proxied"i | "ordered"i | "borrowed"i) {% ([[status]]
 
 rarityOpValue -> anyOperator rarityValue {% ([op, value]) => rarityOperation(op, value) %}
 
-rarityValue -> ("s"i | "special"i | "m"i | "mythic"i | "r"i | "rare"i | "u"i | "uncommon"i | "common"i | "c"i) {% ([[rarity]]) => rarity %}
+rarityValue -> ("s"i | "special"i | "m"i | "mythic"i | "r"i | "rare"i | "u"i | "uncommon"i | "common"i | "c"i | "b"i | "bonus"i) {% ([[rarity]]) => rarity %}
 
 colorCategoryOpValue -> equalityOperator colorCategoryValue {% ([op, value]) => colorCategoryOperation(op, value) %}
 
@@ -76,6 +77,12 @@ alphaNumericValue -> [a-zA-Z0-9]:+ {% ([letters]) => letters.join('').toLowerCas
 
 alphaNumericOpValue -> equalityOperator alphaNumericValue {% ([op, value]) => equalityOperation(op, value) %}
 
+# Scryfall set types, some of which contain underscores (draft_innovation, duel_deck). Scryfall also takes them
+# without the underscore (st:draftinnovation), so underscores are dropped on both sides.
+setTypeValue -> [a-zA-Z_]:+ {% ([letters]) => letters.join('').toLowerCase().replace(/_/g, '') %}
+
+setTypeOpValue -> equalityOperator setTypeValue {% ([op, value]) => equalityOperation(op, value) %}
+
 gameOpValue -> equalityOperator gameValue {% ([op, value]) => setContainsOperation(op, value) %}
 
 exactGameOpValue -> equalityOperator "is-"i gameValue {% ([op, , value]) => setContainsOperation(op, value) %}
@@ -84,6 +91,26 @@ gameValue -> ("Paper"i | "Arena"i | "Mtgo"i) {% ([[game]]) => game.toLowerCase()
 
 @{%
 const normalizeCombination = (combination) => combination.join('').toLowerCase().replace('c', '').split('');
+// c:c means colorless (like c=c), not "includes no particular color", which every card would match.
+const colorlessAware = (op, value) => (value.length === 0 && op.toString() === ':' ? '=' : op);
+// m means multicolored, two or more colors: c:m and c=m are "at least two", c!=m is "fewer than two".
+const multicolorOperation = (op) => {
+  const withDescription = (operation, describe) => {
+    const f = (count) => operation(count);
+    f.describe = describe;
+    return f;
+  };
+  switch (op.toString()) {
+    case ':':
+    case '=':
+      return withDescription(defaultOperation('>=', 2), 'is multicolored');
+    case '!=':
+    case '<>':
+      return withDescription(defaultOperation('<', 2), 'is not multicolored');
+    default:
+      return withDescription(defaultOperation(op, 2), `count ${numericPhrase(op, 2)}`);
+  }
+};
 const reversedSetOperation = (op, value) => {
   if (op.toString() === ':') {
     op = '<=';
@@ -93,14 +120,15 @@ const reversedSetOperation = (op, value) => {
 %} # %}
 
 # TODO: Make these work with non-func operations
-colorCombinationOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { const operation = setOperation(op, value); const f = (fieldValue) => operation(normalizeCombination(fieldValue)); f.describe = operation.describe; return f; } %}
+colorCombinationOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { const operation = setOperation(colorlessAware(op, value), value); const f = (fieldValue) => operation(normalizeCombination(fieldValue)); f.describe = operation.describe; return f; } %}
   | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); const f = (fieldValue) => operation(normalizeCombination(fieldValue).length); f.describe = `count ${numericPhrase(op, value)}`; return f; } %}
-  | anyOperator "m"i {% ([op]) => { const operation = defaultOperation(op, 2); const f = (fieldValue) => operation(normalizeCombination(fieldValue).length); f.describe = 'is multicolored'; return f; } %}
+  | anyOperator multicolorValue {% ([op]) => { const operation = multicolorOperation(op); const f = (fieldValue) => operation(normalizeCombination(fieldValue).length); f.describe = operation.describe; return f; } %}
 
 colorIdentityOpValue -> anyOperator colorCombinationValue {% ([op, value]) => { const operation = reversedSetOperation(op, value); const f = (fieldValue) => operation(normalizeCombination(fieldValue)); f.describe = operation.describe; return f; } %}
   | anyOperator integerValue {% ([op, value]) => { const operation = defaultOperation(op, value); const f = (fieldValue) => operation(normalizeCombination(fieldValue).length); f.describe = `count ${numericPhrase(op, value)}`; return f; } %}
-  | ("=" | ":") "m"i {% ([op]) => { const f = (fieldValue) => normalizeCombination(fieldValue).length > 1; f.describe = 'is multicolored'; return f; } %}
-  | ("!=" | "<>") "m"i {% ([op]) => { const f = (fieldValue) => normalizeCombination(fieldValue).length < 2; f.describe = 'is mono-colored or colorless'; return f; } %}
+  | anyOperator multicolorValue {% ([op]) => { const operation = multicolorOperation(op); const f = (fieldValue) => operation(normalizeCombination(fieldValue).length); f.describe = operation.describe; return f; } %}
+
+multicolorValue -> ("m"i | "multicolor"i | "multicolored"i)
 
 # Macro based handling of 4/5 colors had ordering issues. Generated all combinations using Copilot,
 # from 1 to 5 of the colors used
@@ -111,7 +139,7 @@ colorCombinationValue ->
   | "black"i {% () => ['b'] %}
   | "red"i {% () => ['r'] %}
   | "green"i {% () => ['g'] %}
-  | ("azorious"i | "azorius") {% () => ['w', 'u'] %}
+  | ("azorious"i | "azorius"i) {% () => ['w', 'u'] %}
   | "dimir"i {% () => ['u', 'b'] %}
   | "rakdos"i {% () => ['b', 'r'] %}
   | ("gruul"i | "grul"i) {% () => ['r', 'g'] %}
@@ -131,6 +159,16 @@ colorCombinationValue ->
   | "abzan"i {% () => ['w', 'b', 'g'] %}
   | "jeskai"i {% () => ['w', 'u', 'r'] %}
   | "sultai"i {% () => ['u', 'b', 'g'] %}
+  | "silverquill"i {% () => ['w', 'b'] %}
+  | "prismari"i {% () => ['u', 'r'] %}
+  | "witherbloom"i {% () => ['b', 'g'] %}
+  | "lorehold"i {% () => ['r', 'w'] %}
+  | "quandrix"i {% () => ['g', 'u'] %}
+  | "chaos"i {% () => ['u', 'b', 'r', 'g'] %}
+  | "aggression"i {% () => ['w', 'b', 'r', 'g'] %}
+  | "altruism"i {% () => ['w', 'u', 'r', 'g'] %}
+  | "growth"i {% () => ['w', 'u', 'b', 'g'] %}
+  | "artifice"i {% () => ['w', 'u', 'b', 'r'] %}
   | ("rainbow"i | "fivecolor"i) {% () => ['w', 'u', 'b', 'r', 'g'] %}
   | "w"i {% () => ['w'] %}
   | "u"i {% () => ['u'] %}
@@ -460,9 +498,9 @@ colorCombinationValue ->
 
 @builtin "string.ne"
 
-# For string matching (with colon) if the string is quoted then exact match, otherwise partial
+# Keywords match a whole keyword, as on Scryfall: kw:flying, kw:"first strike". Numbers compare the keyword count.
 stringSetElementOpValue -> ("=" | "!=" | "<>" | "<" | "<=" | ">" | ">=") integerValue {% ([[op], value]) => setCountOperation(op, value) %}
-  | ":" noQuoteStringValue {% ([, value]) => setElementOperation(':', value.toLowerCase()) %}
+  | ":" noQuoteStringValue {% ([, value]) => setElementOperation('=', value.toLowerCase()) %}
   | ":" dqstring  {% ([, value]) => setElementOperation('=', value.toLowerCase()) %}
   | ":" sqstring  {% ([, value]) => setElementOperation('=', value.toLowerCase()) %}
 
@@ -507,7 +545,7 @@ regexValue -> "/" ([^/\\\n] | "\\" [^\n]):* "/" {% ([, chars], _l, reject) => co
 # with parentheses must be quoted, e.g. name:"Erase (Not the Urza's Legacy One)".
 noQuoteStringValue -> 
   ("a"i | "an"i | "o"i) {% ([[value]]) => value.toLowerCase() %}
-  | ([^aAoO\-/! \t\n"'\\=<>:()] 
+  | ([^aAoO\-/! \t\n"'\\=<>:()\u2983] 
     | "a"i ([^nN \t\n"'\\=<>:()] | wordParens)
     | "an"i ([^dD \t\n"'\\=<>:()] | wordParens)
     | "and"i ([^ \t\n"'\\=<>:()] | wordParens)
@@ -530,6 +568,8 @@ manaSymbol -> innerManaSymbol {% id %}
   | "{" innerManaSymbol "}" {% ([, inner]) => inner %}
   | "(" innerManaSymbol ")" {% ([, inner]) => inner %}
 
+# Numbers, single symbols, two-part hybrid and Phyrexian symbols ({W/U}, {2/G}, {R/P}, {C/G}), and Phyrexian hybrid
+# such as {G/W/P}.
 innerManaSymbol -> [0-9]:+ {% ([digits]) => [digits.join('')] %}
   | ("x"i | "y"i | "z"i | "w"i | "u"i | "b"i | "r"i | "g"i | "s"i | "c"i) {% ([[color]]) => [color.toLowerCase()] %}
   | ( "2"i ("/" | "-") ("w"i | "u"i | "b"i | "r"i | "g"i)
@@ -539,7 +579,9 @@ innerManaSymbol -> [0-9]:+ {% ([digits]) => [digits.join('')] %}
     | "b"i ("/" | "-") ("2"i | "p"i | "w"i | "u"i | "r"i | "g"i)
     | "r"i ("/" | "-") ("2"i | "p"i | "w"i | "u"i | "b"i | "g"i)
     | "g"i ("/" | "-") ("2"i | "p"i | "w"i | "u"i | "b"i | "r"i)
-    ) {% ([[color, , [secondColor]]]) => [color, secondColor] %}
+    | "c"i ("/" | "-") ("p"i | "w"i | "u"i | "b"i | "r"i | "g"i)
+    ) {% ([[color, , [secondColor]]]) => [color.toLowerCase(), secondColor.toLowerCase()] %}
+  | [wubrgWUBRG] ("/" | "-") [wubrgWUBRG] ("/" | "-") [pP] {% ([color, , secondColor]) => [color.toLowerCase(), secondColor.toLowerCase(), 'p'] %}
 
 castableCostOpValue -> ("=" | ":" | "<>" | "!=" | "<=" | ">") basicCostValue  {%([op, value]) => castableCostOperation(op, value) %}
 
@@ -552,11 +594,45 @@ basicManaSymbol -> innerBasicManaSymbol {% id %}
 innerBasicManaSymbol -> [0-9]:+ {% ([digits]) => parseInt(digits.join('')) %}
   | ("w"i | "u"i | "b"i | "r"i | "g"i | "s"i | "c"i) {% ([[color]]) => color.toLowerCase() %}
 
-devotionOpValue -> anyOperator devotionValue {% ([op, [symbol, length]]) => devotionOperation(op, symbol, length) %}
+devotionOpValue -> anyOperator devotionValue {% ([op, [colors, length]]) => devotionOperation(op, colors, length) %}
 
-devotionValue -> ("w"i:+ | "u"i:+ |"b"i:+ | "r"i:+ | "g"i:+) {% ([[sequence]]) => [sequence[0], sequence.length] %}
+# Repeats of one colored symbol, or of one two-color hybrid symbol: uuu, {u}{u}{u}, {u/b}{u/b}{u/b}.
+devotionValue -> manaSymbol:+ {% ([symbols], _l, reject) => {
+  const key = (symbol) => [...symbol].sort().join('/');
+  const first = symbols[0];
+  if (first.length > 2 || !first.every((part) => 'wubrg'.includes(part)) || !symbols.every((symbol) => key(symbol) === key(first))) {
+    return reject;
+  }
+  return [first, symbols.length];
+} %}
+
+# produces=wu: the kinds of mana a card can produce, c for colorless.
+producesValue -> [wubrgcWUBRGC]:+ {% ([letters]) => [...new Set(letters.map((letter) => letter.toLowerCase()))] %}
+
+borderValue -> ("black"i | "white"i | "silver"i | "gold"i | "borderless"i | "yellow"i) {% ([[border]]) => border.toLowerCase() %}
+
+# Release dates: 2015-08-18, 2015-08 or 2015, or now/today. Scryfall also takes a set code here; we don't.
+dateValue -> [0-9] [0-9] [0-9] [0-9] ("-" [0-9] [0-9] ("-" [0-9] [0-9]):?):? {% (parts) => parts.flat(Infinity).join('') %}
+  | ("now"i | "today"i) {% () => todayIsoDate() %}
+
+@{%
+const LANGUAGES = {
+  en: 'en', english: 'en', es: 'es', spanish: 'es', fr: 'fr', french: 'fr', de: 'de', german: 'de', it: 'it',
+  italian: 'it', pt: 'pt', portuguese: 'pt', ja: 'ja', jp: 'ja', japanese: 'ja', ko: 'ko', kr: 'ko', korean: 'ko',
+  ru: 'ru', russian: 'ru', zhs: 'zhs', cs: 'zhs', zht: 'zht', ct: 'zht', he: 'he', hebrew: 'he', la: 'la',
+  latin: 'la', grc: 'grc', greek: 'grc', ar: 'ar', arabic: 'ar', sa: 'sa', sanskrit: 'sa', ph: 'ph',
+  phyrexian: 'ph', qya: 'qya', quenya: 'qya',
+};
+%} # %}
+
+# A language name or code; lang:any is handled by the condition.
+langValue -> [a-zA-Z]:+ {% ([letters], _l, reject) => LANGUAGES[letters.join('').toLowerCase()] ?? reject %}
 
 anyOperator -> ":" | "=" | "!=" | "<>" | "<" | "<=" | ">" | ">="  {% id %}
+
+# An is:/not: category name. Underscores and hyphens are dropped (is:judge_gift is judgegift), and anything that
+# isn't a known category fails to parse, so makeFilter ignores the term.
+isWord -> [a-zA-Z0-9_\-]:+ {% ([letters], _l, reject) => { const category = letters.join('').toLowerCase().replace(/[_-]/g, ''); return CARD_CATEGORY_DETECTORS[category] ? category : reject; } %}
 
 equalityOperator -> ":" | "=" | "!=" | "<>" {% id %}
 

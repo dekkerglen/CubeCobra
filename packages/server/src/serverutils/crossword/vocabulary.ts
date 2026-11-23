@@ -688,7 +688,7 @@ export const themedCardTexts = (filterText: string): Set<string> | null => {
     return hit;
   }
 
-  const { err, filter } = makeFilter(key);
+  const { err, filter } = makeFilter(key, { strict: true });
   if (err || !filter) {
     return null;
   }

@@ -27,7 +27,7 @@ const MAX_CACHED_PUZZLES = 8;
 const compiledCache = new Map<string, CompiledPuzzleFilters>();
 
 const compile = (filterText: string): FilterFunction => {
-  const { err, filter } = makeFilter(filterText);
+  const { err, filter } = makeFilter(filterText, { strict: true });
   if (err || !filter) {
     throw new Error(`Stored ManaMatrix category no longer parses: ${filterText}`);
   }

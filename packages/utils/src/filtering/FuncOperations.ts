@@ -1,7 +1,9 @@
 import { RE2JS } from 're2js';
 
-import { cardDevotion, cardLegalIn, cardRestrictedIn } from '../cardutil';
+import { CARD_CATEGORY_DETECTORS, cardCost, cardLayout, cardLegalIn, cardRestrictedIn } from '../cardutil';
 import Card, { CardDetails } from '../datatypes/Card';
+import CardTypes from '../res/CardTypes.json';
+import Keywords from '../res/Keywords.json';
 import { arrayIsSubset, arraysAreEqualSets } from '../Util';
 
 type OperatorType = string;
@@ -80,7 +82,9 @@ export const FIELD_LABELS: Record<string, string> = {
   colorcategory: 'color category',
   type_line: 'type',
   oracle_text: 'oracle text',
+  full_oracle_text: 'full oracle text',
   set: 'set',
+  set_type: 'set type',
   power: 'power',
   toughness: 'toughness',
   pt: 'power + toughness',
@@ -107,6 +111,12 @@ export const FIELD_LABELS: Record<string, string> = {
   notes: 'notes',
   game: 'game availability',
   firstPrintYear: 'first printed',
+  releaseYear: 'release year',
+  released_at: 'release date',
+  artistCount: 'number of artists',
+  produced_mana: 'mana produced',
+  border_color: 'border',
+  language: 'language',
   keywords: 'keywords',
   board: 'board',
   wordCount: 'approximate word count',
@@ -126,12 +136,17 @@ export const CATEGORY_LABELS: Record<string, string> = {
   firstprint: 'a first printing',
   firstprinting: 'a first printing',
   digital: 'digital-only',
+  alchemy: 'an Alchemy card',
   reasonable: 'a reasonable printing',
-  default: 'the default printing',
+  default: 'in the standard frame',
+  atypical: 'in an atypical frame',
+  defaultprinting: 'the default printing',
   dfc: 'a double-faced card',
   mdfc: 'a modal double-faced card',
   tdfc: 'a transforming double-faced card',
   meld: 'a meld card',
+  meldpart: 'a meld part',
+  meldresult: 'a meld result',
   transform: 'a transform card',
   split: 'a split card',
   adventure: 'an adventure card',
@@ -140,16 +155,27 @@ export const CATEGORY_LABELS: Record<string, string> = {
   flip: 'a flip card',
   leveler: 'a leveler',
   commander: 'a commander',
+  brawler: 'a Brawl commander',
+  partner: 'a partner',
+  companion: 'a companion',
   spell: 'a spell',
   permanent: 'a permanent',
   historic: 'historic',
   vanilla: 'a vanilla creature',
+  frenchvanilla: 'a French vanilla creature',
+  bear: 'a bear',
+  party: 'a party creature',
+  outlaw: 'an outlaw',
   modal: 'modal',
   fullart: 'full-art',
   foil: 'available in foil',
   nonfoil: 'available in non-foil',
   etched: 'available etched',
   altfoil: 'available in alternate foil',
+  glossy: 'available glossy',
+  full: 'full-art',
+  funny: 'a funny card',
+  masterpiece: 'a Masterpiece',
   universesbeyond: 'a Universes Beyond card',
   ub: 'a Universes Beyond card',
   reserved: 'on the Reserved List',
@@ -167,6 +193,16 @@ export const CATEGORY_LABELS: Record<string, string> = {
   bikeland: 'a cycling land',
   cycleland: 'a cycling land',
   bicycleland: 'a cycling land',
+  bondland: 'a bond land',
+  crowdland: 'a bond land',
+  battlebondland: 'a bond land',
+  bbdland: 'a bond land',
+  pathway: 'a pathway',
+  slowland: 'a slow land',
+  snarl: 'a shadow land',
+  tricycleland: 'a triome',
+  trikeland: 'a triome',
+  triome: 'a triome',
   bounceland: 'a bounce land',
   karoo: 'a bounce land',
   canopyland: 'a canopy land',
@@ -399,6 +435,76 @@ const regexOperation = (regex: ScryfallRegex, selfReference: boolean): FilterFun
   }, `matches /${regex.source}/`);
 };
 
+// Names match ignoring apostrophes, as on Scryfall: "urzas" finds Urza's Saga.
+const stripApostrophes = (value: string): string => value.replace(/['‘’]/g, '');
+
+export const nameContainsOperation = (value: string): FilterFunction<string> => {
+  value = value.toLowerCase();
+  const bare = stripApostrophes(value);
+  return described(
+    (fieldValue: string) => fieldValue.includes(value) || stripApostrophes(fieldValue).includes(bare),
+    `contains "${value}"`,
+  );
+};
+
+export const nameOperation = (op: OperatorType, value: string): FilterFunction<string> =>
+  op.toString() === ':' ? nameContainsOperation(value) : stringOperation(op, value);
+
+const KNOWN_TYPES = new Set((CardTypes as string[]).map((type) => type.toLowerCase()));
+
+// t: matches part of the type line (t:legend finds Legendary), but a value that is itself a type name only matches
+// that whole type, as on Scryfall: t:fish finds Fish, not Jellyfish or Starfish.
+export const typeOperation = (op: OperatorType, value: string): FilterFunction<string> => {
+  value = value.toLowerCase();
+  const wholeType = new RegExp(`(^|[^a-z0-9'-])${escapeRegExp(value)}($|[^a-z0-9'-])`, 'i');
+  const contains = KNOWN_TYPES.has(value)
+    ? (fieldValue: string) => wholeType.test(fieldValue)
+    : (fieldValue: string) => fieldValue.toLowerCase().includes(value);
+  switch (op.toString()) {
+    case ':':
+    case '=':
+      return described(contains, `contains "${value}"`);
+    case '!=':
+      return described((fieldValue: string) => !contains(fieldValue), `does not contain "${value}"`);
+    case '<>':
+      return described((fieldValue: string) => fieldValue.toLowerCase() !== value, `is not exactly "${value}"`);
+    default:
+      throw new Error(`Unrecognized operator '${op}'`);
+  }
+};
+
+const KNOWN_KEYWORDS = new Set((Keywords as string[]).map((keyword) => keyword.toLowerCase()));
+
+// Scryfall's kw: only takes keyword abilities, keyword actions and ability words, and ignores anything else.
+export const isKnownKeyword = (value: string): boolean => KNOWN_KEYWORDS.has(value.toLowerCase());
+
+export const parityOperation = (op: OperatorType, parity: string): FilterFunction<number> => {
+  const remainder = parity.toLowerCase() === 'even' ? 0 : 1;
+  const negate = op.toString() === '!=' || op.toString() === '<>';
+  return described(
+    (fieldValue: number) => (Number.isInteger(fieldValue) && Math.abs(fieldValue % 2) === remainder) !== negate,
+    `is ${negate ? 'not ' : ''}${parity.toLowerCase()}`,
+  );
+};
+
+// cn>50 compares the number part of collector numbers, so 50a is 50.
+export const collectorNumberOperation = (op: OperatorType, value: number): FilterFunction<string> => {
+  const operation = defaultOperation(op, value);
+  return described((fieldValue: string) => operation(parseInt(fieldValue, 10)), numericPhrase(op, value));
+};
+
+// Release dates compare as yyyy-mm-dd text. A shorter value (2015 or 2015-08) compares against the same length of
+// the date, so date=2015 means released in 2015.
+export const dateOperation = (op: OperatorType, value: string): FilterFunction<string> => {
+  const operation = defaultOperation(op, value);
+  return described(
+    (fieldValue: string) => !!fieldValue && operation(fieldValue.slice(0, value.length)),
+    numericPhrase(op, value),
+  );
+};
+
+export const todayIsoDate = (): string => new Date().toISOString().slice(0, 10);
+
 export const stringContainOperation = (op: OperatorType, value: string): FilterFunction<string> => {
   value = value.toLowerCase();
   switch (op.toString()) {
@@ -474,54 +580,46 @@ export const setContainsOperation = (op: OperatorType, value: any): FilterFuncti
   }
 };
 
+// Scryfall's rarity order: special sits between rare and mythic, and bonus is above mythic.
+const RARITY_RANKS: Record<string, number> = { c: 0, u: 1, r: 2, s: 3, m: 4, b: 5 };
+const RARITY_NAMES: Record<string, string> = {
+  c: 'common',
+  u: 'uncommon',
+  r: 'rare',
+  s: 'special',
+  m: 'mythic',
+  b: 'bonus',
+};
+
 export const rarityOperation = (op: OperatorType, value: string): FilterFunction<string> => {
-  const rarityMap: Record<string, number> = { c: 0, u: 1, r: 2, m: 3, s: 4 };
-  const rarityNames: Record<string, string> = {
-    c: 'common',
-    u: 'uncommon',
-    r: 'rare',
-    m: 'mythic',
-    s: 'special',
-  };
   const key = value.charAt(0).toLowerCase();
-  const mappedRarity = rarityMap[key];
+  const mappedRarity = RARITY_RANKS[key];
   if (mappedRarity === undefined) {
     throw new Error(`Invalid rarity value '${value}'`);
   }
-  const name = rarityNames[key];
+  const name = RARITY_NAMES[key];
+  const rank = (fieldValue: string): number => RARITY_RANKS[fieldValue.charAt(0).toLowerCase()] ?? -1;
   switch (op.toString()) {
     case ':':
     case '=':
-      return described(
-        (fieldValue: string) => (rarityMap[fieldValue.charAt(0).toLowerCase()] ?? -1) === mappedRarity,
-        `is ${name}`,
-      );
+      return described((fieldValue: string) => rank(fieldValue) === mappedRarity, `is ${name}`);
     case '!=':
     case '<>':
-      return described(
-        (fieldValue: string) => (rarityMap[fieldValue.charAt(0).toLowerCase()] ?? -1) !== mappedRarity,
-        `is not ${name}`,
-      );
+      return described((fieldValue: string) => rank(fieldValue) !== mappedRarity, `is not ${name}`);
     case '<':
       return described(
-        (fieldValue: string) => (rarityMap[fieldValue.charAt(0).toLowerCase()] ?? -1) < mappedRarity,
+        (fieldValue: string) => rank(fieldValue) >= 0 && rank(fieldValue) < mappedRarity,
         `is lower than ${name}`,
       );
     case '<=':
       return described(
-        (fieldValue: string) => (rarityMap[fieldValue.charAt(0).toLowerCase()] ?? -1) <= mappedRarity,
+        (fieldValue: string) => rank(fieldValue) >= 0 && rank(fieldValue) <= mappedRarity,
         `is ${name} or lower`,
       );
     case '>':
-      return described(
-        (fieldValue: string) => (rarityMap[fieldValue.charAt(0).toLowerCase()] ?? -1) > mappedRarity,
-        `is higher than ${name}`,
-      );
+      return described((fieldValue: string) => rank(fieldValue) > mappedRarity, `is higher than ${name}`);
     case '>=':
-      return described(
-        (fieldValue: string) => (rarityMap[fieldValue.charAt(0).toLowerCase()] ?? -1) >= mappedRarity,
-        `is ${name} or higher`,
-      );
+      return described((fieldValue: string) => rank(fieldValue) >= mappedRarity, `is ${name} or higher`);
     default:
       throw new Error(`Unrecognized operator '${op}'`);
   }
@@ -803,12 +901,22 @@ export const castableCostOperation = (op: OperatorType, value: string[]): Filter
   }
 };
 
-export const devotionOperation = (op: OperatorType, symbol: string, value: number) => {
-  const operation = defaultOperation(op, value);
-  const color = COLOR_NAMES[symbol.toLowerCase()] ?? symbol.toUpperCase();
+// Devotion as Scryfall counts it: mana symbols in a permanent's cost that are any of the given colors, so a hybrid
+// {U/B} symbol counts once toward devotion to blue and black. `:` means at least that much, `=` exactly.
+const devotionTo = (card: Card, colors: string[]): number => {
+  let cost = cardCost(card);
+  if (cardLayout(card) === 'adventure') cost = cost.slice(cost.findIndex((symbol) => symbol === 'split') + 1);
+  return cost.filter((symbol) => symbol.split('-').some((part) => colors.includes(part))).length;
+};
+
+export const devotionOperation = (op: OperatorType, colors: string[], value: number) => {
+  const atLeast = op.toString() === ':';
+  const operation = defaultOperation(atLeast ? '>=' : op, value);
+  const colorNames = colors.map((color) => COLOR_NAMES[color.toLowerCase()] ?? color.toUpperCase()).join(' and ');
   return described(
-    (card: Card) => operation(cardDevotion(card, symbol)),
-    `devotion to ${color} ${numericPhrase(op, value)}`,
+    (card: Card) =>
+      !!card.details && CARD_CATEGORY_DETECTORS.permanent!(card.details) && operation(devotionTo(card, colors)),
+    `devotion to ${colorNames} ${numericPhrase(atLeast ? '>=' : op, value)}`,
   );
 };
 

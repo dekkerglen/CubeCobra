@@ -370,7 +370,7 @@ export const chooseTheme = (
     const filterText = themeFilterText(plan.kind, value);
     // A pool read off the catalog can contain anything, so the grammar gets the
     // first word. Cheap, and it runs before the scan that isn't.
-    if (makeFilter(filterText).err) {
+    if (makeFilter(filterText, { strict: true }).err) {
       continue;
     }
     const spanningNames = depthOf(filterText, plan.size);

@@ -2,7 +2,7 @@ import { DefaultPrintingPreference } from '@utils/datatypes/Card';
 import { SynergyConnectCard, SynergyConnectGroup } from '@utils/datatypes/SynergyConnect';
 import { makeFilter } from '@utils/filtering/FilterCards';
 import seedrandom from 'seedrandom';
-import { getRelatedCards } from 'serverutils/carddb';
+import carddb, { getRelatedCards } from 'serverutils/carddb';
 import { searchAllCards } from 'serverutils/tools';
 
 import { drawTheme, LEGENDARY_CREATURE_FILTER, SynergyConnectThemePools, themePools } from './themes';
@@ -136,13 +136,22 @@ export const generatePuzzle = (date: string, pools: SynergyConnectThemePools = t
     if (!theme) {
       continue;
     }
-    const { err, filter } = makeFilter(`${LEGENDARY_CREATURE_FILTER} ${theme.filterText}`);
+    const { err, filter } = makeFilter(`${LEGENDARY_CREATURE_FILTER} ${theme.filterText}`, { strict: true });
     if (err || !filter) {
       continue;
     }
 
     // Most-cubed first, so commanders are recognizable.
-    const candidates = searchAllCards(filter, 'Cube Count', 'descending', 'names');
+    // Paper cards only: card search's own pool also has digital-only printings.
+    const candidates = searchAllCards(
+      filter,
+      'Cube Count',
+      'descending',
+      'names',
+      undefined,
+      false,
+      carddb.printedCardList,
+    );
     if (candidates.length < MIN_COMMANDERS) {
       continue;
     }
