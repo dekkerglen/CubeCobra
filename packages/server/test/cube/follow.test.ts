@@ -40,7 +40,9 @@ describe('cube likes', () => {
     await call(followHandler).as(liker).withParams({ id: 'cube-1' }).send();
 
     expect(cubeDao.incrementLikeCount).toHaveBeenCalledWith('cube-1', 1);
-    expect(cubeDao.refreshHashRowSortKeys).toHaveBeenCalledWith(expect.objectContaining({ id: 'cube-1', likeCount: 5 }));
+    expect(cubeDao.refreshHashRowSortKeys).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'cube-1', likeCount: 5 }),
+    );
     // A full save would write back every field from the copy read at the start of the request.
     expect(cubeDao.update).not.toHaveBeenCalled();
   });
@@ -53,7 +55,9 @@ describe('cube likes', () => {
     await call(unfollowHandler).as(liker).withParams({ id: 'cube-1' }).send();
 
     expect(cubeDao.incrementLikeCount).toHaveBeenCalledWith('cube-1', -1);
-    expect(cubeDao.refreshHashRowSortKeys).toHaveBeenCalledWith(expect.objectContaining({ id: 'cube-1', likeCount: 3 }));
+    expect(cubeDao.refreshHashRowSortKeys).toHaveBeenCalledWith(
+      expect.objectContaining({ id: 'cube-1', likeCount: 3 }),
+    );
     expect(cubeDao.update).not.toHaveBeenCalled();
   });
 });
