@@ -16,7 +16,7 @@ const BlogPostPage: React.FC<BlogPostPageProps> = ({ post }) => (
   <MainLayout>
     <Banner />
     <DynamicFlash />
-    <BlogPost key={post.id} post={post} noScroll className="my-2" />
+    <BlogPost key={post.id} post={post} noScroll changelogViewToggle className="my-2" />
   </MainLayout>
 );
 

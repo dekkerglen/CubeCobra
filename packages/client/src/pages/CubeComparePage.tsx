@@ -173,7 +173,7 @@ const CubeComparePage: React.FC<CubeComparePageProps> = ({
       <MainLayout>
         <DisplayContextProvider cubeID={cube.id} savedDisplayOptions={getCubeDisplayOptions(cube)}>
           <ChangesContextProvider cube={cube}>
-            <CubeContextProvider initialCube={cube} cards={{ mainboard: hydratedCards, maybeboard: [] }}>
+            <CubeContextProvider initialCube={cube} cards={{ mainboard: hydratedCards, maybeboard: [] }} readOnlyCards>
               <CubeComparePageInner
                 cards={hydratedCards}
                 cube={cube}

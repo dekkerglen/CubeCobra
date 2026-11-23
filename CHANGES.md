@@ -18,7 +18,7 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - Deck archetypes are now recognized from what the cards do, using Scryfall's oracle tags, and cover around a hundred strategies instead of 37 hand-picked ones.
 - Cube analytics has a new Archetypes view showing which archetypes your card list supports and the cards that carry each one.
 - Combos in cube analytics now list the cards in your cube that fit each combo's open slots, such as which creatures with persist you could use.
-- Comparing two cubes has a new look: the cubes face off in a split banner, a bar shows how much of each list they share, and clicking part of the bar shows just those cards laid out like a cube list. Comparing a cube to an earlier version shows what was removed and added.
+- Comparing two cubes has a new look: the cubes face off in a split banner, a bar shows how much of each list they share, and clicking part of the bar shows just those cards, in any of the cube list's Table, Visual Spoiler, Curve or Card Stacks views. Comparing a cube to an earlier version shows what was removed and added.
 - The new ML Playground, under Cards in the Explore menu, puts the card recommender to work on any list you paste: Smart Search against your list, the bot's pick from a pack, the deck a bot would build from a pool, the archetype a deck reads as, or a seed list grown into a full cube.
 - CSV exports now list what each voucher holds in a new Voucher Cards column, and CSV uploads read it, so a cube of vouchers can be set up or copied in one upload.
 - The public data exports now record when each draft happened, and every pick names the draft it came from.
@@ -44,6 +44,7 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - Closing or leaving the page partway through a Hedron Network import now asks you to confirm first, so an accidental close doesn't throw away the decks you've scanned.
 - Cube settings with unsaved changes now ask before you close the page, leave it, or switch to another settings section.
 - Color Pair Performance in Winrate Analytics can now count each deck once, under its two main colors, so a two-color deck with a light splash counts only toward its own pair.
+- Changelog entries and blog posts can now show their changes as card images, grouped by board, with a Text toggle for the old list. Hovering a swapped card highlights the card it replaced.
 
 ## Bug Fixes
 

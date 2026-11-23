@@ -2,18 +2,11 @@ import React, { useMemo } from 'react';
 
 import { ArrowRightIcon, ArrowSwitchIcon, NoEntryIcon, PlusCircleIcon, ToolsIcon } from '@primer/octicons-react';
 import { cardName } from '@utils/cardutil';
-import Card, {
-  BoardChanges,
-  CardDetails,
-  Changes,
-  CubeCardEdit,
-  CubeCardRemove,
-  CubeCardSwap,
-} from '@utils/datatypes/Card';
+import Card, { BoardChanges, Changes, CubeCardEdit, CubeCardRemove, CubeCardSwap } from '@utils/datatypes/Card';
 
 import withAutocard from 'components/WithAutocard';
 import { useCardDetails } from 'hooks/useCardDetails';
-import { getPlaceholderCardDetails } from 'utils/placeholderCardDetails';
+import { collectChangelogCardIDs, withDetails } from 'utils/changelogCards';
 
 import { Flexbox } from '../base/Layout';
 import Link from '../base/Link';
@@ -98,38 +91,8 @@ export interface BlogPostChangelogProps {
   changelog: Changes;
 }
 
-// Server sends changelogs without card.details to keep response sizes down
-// (see ChangelogDynamoDao.sanitizeChangelog). Resolve every cardID once
-// through the IndexedDB cache, then build hydrated copies of the changes
-// for the child components — they read card.details.name etc.
-const collectCardIDs = (changelog: Changes): string[] => {
-  const set = new Set<string>();
-  for (const [key, value] of Object.entries(changelog)) {
-    if (key === 'version' || !value || typeof value !== 'object') continue;
-    const boardChanges = value as BoardChanges;
-    for (const c of boardChanges.adds || []) if (c?.cardID) set.add(c.cardID);
-    for (const r of boardChanges.removes || []) if (r?.oldCard?.cardID) set.add(r.oldCard.cardID);
-    for (const s of boardChanges.swaps || []) {
-      if (s?.oldCard?.cardID) set.add(s.oldCard.cardID);
-      if (s?.card?.cardID) set.add(s.card.cardID);
-    }
-    for (const e of boardChanges.edits || []) {
-      if (e?.oldCard?.cardID) set.add(e.oldCard.cardID);
-      if (e?.newCard?.cardID) set.add(e.newCard.cardID);
-    }
-  }
-  return [...set];
-};
-
-const withDetails = (card: Card | undefined, detailsById: Record<string, CardDetails | null>): Card => {
-  if (!card) return card as any;
-  if (card.details) return card;
-  const details = (card.cardID && detailsById[card.cardID]) || getPlaceholderCardDetails(card?.cardID || '');
-  return { ...card, details };
-};
-
 const BlogPostChangelog: React.FC<BlogPostChangelogProps> = ({ changelog }) => {
-  const cardIDs = useMemo(() => (changelog ? collectCardIDs(changelog) : []), [changelog]);
+  const cardIDs = useMemo(() => (changelog ? collectChangelogCardIDs(changelog) : []), [changelog]);
   const { details: detailsById } = useCardDetails(cardIDs);
 
   if (!changelog || typeof changelog !== 'object') {

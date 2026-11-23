@@ -10,6 +10,12 @@ import useCubeTrayDrag from '../cubetray/useCubeTrayDrag';
 import FoilCardImage from '../FoilCardImage';
 import { CardImageProps } from './CardImage';
 
+export interface CardGridBadge {
+  label: React.ReactNode;
+  title: string;
+  className: string;
+}
+
 export interface CardGridProps {
   cards: Card[];
   cardProps?: CardImageProps;
@@ -32,6 +38,12 @@ export interface CardGridProps {
   // a saved cube board (requires an enclosing CubeTrayProvider and a logged-in
   // user). A no-op otherwise.
   cubeTrayDraggable?: boolean;
+  // Per-card badge, drawn where the quantity badge sits.
+  badges?: (CardGridBadge | undefined)[];
+  // Indices to ring in blue. A selected card keeps its selection ring instead.
+  ringedIndices?: number[];
+  // Mouse hover only: touch and pen are ignored, so a tap still just opens the card.
+  onCardHover?: (index: number | null) => void;
 }
 
 const CardGrid: React.FC<CardGridProps> = ({
@@ -51,6 +63,9 @@ const CardGrid: React.FC<CardGridProps> = ({
   quantities,
   selectedIndex,
   cubeTrayDraggable,
+  badges,
+  ringedIndices,
+  onCardHover,
 }) => {
   const maxRating = ratings && highlightTop ? Math.max(...ratings.filter((r): r is number => r !== undefined)) : null;
   const user = useContext(UserContext);
@@ -72,6 +87,8 @@ const CardGrid: React.FC<CardGridProps> = ({
         const wasSelected = cardIndex === selectedIndex;
         const rating = ratings?.[cardIndex];
         const quantity = quantities?.[cardIndex] ?? 1;
+        const badge = badges?.[cardIndex];
+        const isRinged = !!ringedIndices?.includes(cardIndex);
 
         const getRatingStyle = () => {
           if (isHighestRated && wasSelected) return 'bg-[#087715]/95';
@@ -99,10 +116,12 @@ const CardGrid: React.FC<CardGridProps> = ({
             >
               <div
                 className={classNames('relative', {
-                  'ring-[5px] ring-[#007BFF] ring-offset-0 rounded-lg': isHighestRated && !wasSelected,
+                  'ring-[5px] ring-[#007BFF] ring-offset-0 rounded-lg': (isHighestRated || isRinged) && !wasSelected,
                   'ring-[5px] ring-[#E6B800] ring-offset-0 rounded-lg': wasSelected && !isHighestRated,
                   'ring-[5px] ring-[#087715] ring-offset-0 rounded-lg': isHighestRated && wasSelected,
                 })}
+                onPointerEnter={onCardHover ? (e) => e.pointerType === 'mouse' && onCardHover(cardIndex) : undefined}
+                onPointerLeave={onCardHover ? (e) => e.pointerType === 'mouse' && onCardHover(null) : undefined}
               >
                 {hrefFn ? (
                   <a href={hrefFn(card)} className="hover:cursor-pointer">
@@ -141,6 +160,20 @@ const CardGrid: React.FC<CardGridProps> = ({
                     )}
                   >
                     ×{quantity}
+                  </div>
+                )}
+                {badge && (
+                  <div
+                    title={badge.title}
+                    aria-label={badge.title}
+                    className={classNames(
+                      'absolute top-[14%] right-[8%] pointer-events-none',
+                      'px-2 py-0.5 text-sm font-semibold text-white',
+                      'rounded-md shadow-sm backdrop-blur-[2px]',
+                      badge.className,
+                    )}
+                  >
+                    {badge.label}
                   </div>
                 )}
               </div>

@@ -9,16 +9,20 @@ import Button from 'components/base/Button';
 import { Flexbox } from 'components/base/Layout';
 import Text from 'components/base/Text';
 import CubeFilterInput from 'components/cube/CubeFilterInput';
+import CubeViewSwitcher, { CardsPerRowSelect, StacksPerRowSelect } from 'components/cube/CubeViewSwitcher';
 import TagColorsModal from 'components/modals/TagColorsModal';
 import SortCollapse from 'components/SortCollapse';
 import withModal from 'components/WithModal';
 import CubeContext from 'contexts/CubeContext';
+import DisplayContext from 'contexts/DisplayContext';
 
 import { CompareSet, CompareSides } from './CompareArt';
 import CompareHero from './CompareHero';
 import CompareOverlapBar from './CompareOverlapBar';
 
 const TagColorsButton = withModal(Button, TagColorsModal);
+
+const SWITCHER_VIEWS = ['table', 'spoiler', 'curve', 'stacks'];
 
 interface CompareHeaderProps {
   sides: CompareSides;
@@ -51,6 +55,9 @@ const CompareHeader: React.FC<CompareHeaderProps> = ({
 }) => {
   const [displayOpen, setDisplayOpen] = useState(false);
   const { canEdit } = useContext(CubeContext);
+  const { displayView, setDisplayView, cardsPerRow, setCardsPerRow, stacksPerRow, setStacksPerRow } =
+    useContext(DisplayContext);
+  const switcherView = SWITCHER_VIEWS.includes(displayView) ? displayView : 'table';
 
   const handleExport = useCallback(() => {
     const bothCards = both.map((i) => cards[i]).filter(Boolean);
@@ -98,6 +105,21 @@ const CompareHeader: React.FC<CompareHeaderProps> = ({
         setFocus={setFocus}
       />
       <Flexbox direction="row" gap="2" alignItems="center" wrap="wrap">
+        {focus !== null && (
+          <Flexbox direction="row" gap="2" alignItems="center" wrap="wrap">
+            <CubeViewSwitcher view={switcherView} setView={setDisplayView} />
+            {displayView === 'spoiler' && (
+              <div className="w-36">
+                <CardsPerRowSelect value={cardsPerRow} setValue={setCardsPerRow} />
+              </div>
+            )}
+            {displayView === 'stacks' && (
+              <div className="w-36">
+                <StacksPerRowSelect value={stacksPerRow} setValue={setStacksPerRow} />
+              </div>
+            )}
+          </Flexbox>
+        )}
         <CubeFilterInput className="flex-grow" />
         <Flexbox direction="row" gap="2" alignItems="center">
           <Button
