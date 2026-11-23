@@ -118,7 +118,7 @@ interface ListViewProps {
 }
 
 const ListView: React.FC<ListViewProps> = ({ cards }) => {
-  const { versionDict, fetchVersionsForCard, editCard, tagColors, allTags, canEdit } = useContext(CubeContext);
+  const { versionDict, fetchVersionsForCard, editCard, tagColors, tagSuggestions, canEdit } = useContext(CubeContext);
   const [checked, setChecked] = useState<{ [key: string]: boolean }>({});
   const [pageSize, setPageSize] = useLocalStorage<number>('listViewPageSize', 50);
   const [visibleColumns, setVisibleColumns] = useLocalStorage<string[]>('listViewColumns', DEFAULT_VISIBLE_COLUMNS);
@@ -364,7 +364,7 @@ const ListView: React.FC<ListViewProps> = ({ cards }) => {
           updateField(card, 'tags', newTags);
         }}
         tagColors={tagColors}
-        suggestions={allTags}
+        suggestions={tagSuggestions}
       />
     ),
   };
