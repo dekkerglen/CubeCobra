@@ -225,6 +225,13 @@ const createDeletedUserPlaceholder = (userId: string): User => {
   } as User;
 };
 
+export interface CollaboratorInvite {
+  cubeId: string;
+  userId: string;
+  invitedBy: string;
+  invitedAt: number;
+}
+
 export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
   private readonly userDao: UserDynamoDao;
   private readonly changelogDao?: ChangelogDynamoDao;
@@ -2244,7 +2251,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
    * This is useful for cleanup/sweeper operations to verify or remove stale hashes.
    *
    * Pages through the cube's whole hash partition, which also holds its LIKE# and PIN# rows;
-   * those are skipped, so only search hash rows come back. Do not use this for membership
+   * those are skipped (as are INVITE# rows), so only search hash rows come back. Do not use this for membership
    * tests — see `cubeIdsHavingAllHashes`, which reads only the rows it is testing.
    *
    * @param cubeId - The ID of the cube to get hashes for
@@ -2280,7 +2287,7 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
       );
 
       for (const item of queryResult.Items || []) {
-        // Search hash rows are keyed by a SHA-256 hex digest; anything else is a like or pin row.
+        // Search hash rows are keyed by a SHA-256 hex digest; anything else is a like, pin or invite row.
         if (!/^[0-9a-f]{64}$/.test(item.SK)) {
           continue;
         }
@@ -2754,5 +2761,172 @@ export class CubeDynamoDao extends BaseDynamoDao<Cube, UnhydratedCube> {
     const result = await this.dynamoClient.send(new QueryCommand(params));
     const cubeIds = (result.Items || []).map((item: any) => item.cubeId).filter(Boolean);
     return { cubeIds, lastKey: result.LastEvaluatedKey };
+  }
+
+  // ---------- Collaborator invites ----------
+  // A pending invite for a user to collaborate on a cube is stored as a single row
+  // on the cube's hash partition, mirroring the pin-row pattern:
+  //   PK = HASH#CUBE#{cubeId}
+  //   SK = INVITE#{userId}
+  //   GSI1PK = INVITE-FOR#{userId}   (for "what invites does this user have" via GSI)
+  //   GSI1SK = DATE#{timestamp}      (most recent invite first)
+
+  private inviteSK(userId: string): string {
+    return `INVITE#${userId}`;
+  }
+
+  private inviteForGSI1PK(userId: string): string {
+    return `INVITE-FOR#${userId}`;
+  }
+
+  private toInvite(item: Record<string, any>): CollaboratorInvite {
+    return {
+      cubeId: item.cubeId,
+      userId: item.userId,
+      invitedBy: item.invitedBy,
+      invitedAt: item.invitedAt,
+    };
+  }
+
+  /**
+   * Writes an invite row for (cubeId, userId). Idempotent (overwrites if exists).
+   */
+  public async writeInvite(
+    cubeId: string,
+    userId: string,
+    invitedBy: string,
+    timestamp: number = Date.now(),
+  ): Promise<void> {
+    await this.dynamoClient.send(
+      new PutCommand({
+        TableName: this.tableName,
+        Item: {
+          PK: `HASH#${this.typedKey(cubeId)}`,
+          SK: this.inviteSK(userId),
+          GSI1PK: this.inviteForGSI1PK(userId),
+          GSI1SK: `DATE#${String(timestamp).padStart(15, '0')}`,
+          cubeId,
+          userId,
+          invitedBy,
+          invitedAt: timestamp,
+        },
+      }),
+    );
+  }
+
+  /**
+   * Deletes the invite row for (cubeId, userId). Idempotent.
+   */
+  public async deleteInvite(cubeId: string, userId: string): Promise<void> {
+    await this.dynamoClient.send(
+      new DeleteCommand({
+        TableName: this.tableName,
+        Key: {
+          PK: `HASH#${this.typedKey(cubeId)}`,
+          SK: this.inviteSK(userId),
+        },
+      }),
+    );
+  }
+
+  /**
+   * Returns the pending invite for (cubeId, userId), or undefined if there is none.
+   */
+  public async getInvite(cubeId: string, userId: string): Promise<CollaboratorInvite | undefined> {
+    const result = await this.dynamoClient.send(
+      new GetCommand({
+        TableName: this.tableName,
+        Key: {
+          PK: `HASH#${this.typedKey(cubeId)}`,
+          SK: this.inviteSK(userId),
+        },
+      }),
+    );
+    return result.Item ? this.toInvite(result.Item) : undefined;
+  }
+
+  /**
+   * Lists every pending invite on a cube.
+   */
+  public async queryInvitesForCube(cubeId: string): Promise<CollaboratorInvite[]> {
+    const invites: CollaboratorInvite[] = [];
+    let lastKey: Record<string, any> | undefined;
+    do {
+      const result = await this.dynamoClient.send(
+        new QueryCommand({
+          TableName: this.tableName,
+          KeyConditionExpression: 'PK = :pk AND begins_with(SK, :prefix)',
+          ExpressionAttributeValues: {
+            ':pk': `HASH#${this.typedKey(cubeId)}`,
+            ':prefix': 'INVITE#',
+          },
+          ExclusiveStartKey: lastKey,
+        }),
+      );
+      invites.push(...(result.Items || []).map((item) => this.toInvite(item)));
+      lastKey = result.LastEvaluatedKey;
+    } while (lastKey);
+    return invites;
+  }
+
+  /**
+   * Lists every pending invite addressed to a user, most recent first.
+   */
+  public async queryInvitesForUser(userId: string): Promise<CollaboratorInvite[]> {
+    const invites: CollaboratorInvite[] = [];
+    let lastKey: Record<string, any> | undefined;
+    do {
+      const result = await this.dynamoClient.send(
+        new QueryCommand({
+          TableName: this.tableName,
+          IndexName: 'GSI1',
+          KeyConditionExpression: 'GSI1PK = :pk',
+          ExpressionAttributeValues: {
+            ':pk': this.inviteForGSI1PK(userId),
+          },
+          ScanIndexForward: false,
+          ExclusiveStartKey: lastKey,
+        }),
+      );
+      invites.push(...(result.Items || []).map((item) => this.toInvite(item)));
+      lastKey = result.LastEvaluatedKey;
+    } while (lastKey);
+    return invites;
+  }
+
+  /**
+   * Deletes every pending invite on a cube.
+   */
+  public async deleteInvitesForCube(cubeId: string): Promise<void> {
+    await this.batchDeleteInvites(await this.queryInvitesForCube(cubeId));
+  }
+
+  /**
+   * Deletes every pending invite addressed to a user.
+   */
+  public async deleteInvitesForUser(userId: string): Promise<void> {
+    await this.batchDeleteInvites(await this.queryInvitesForUser(userId));
+  }
+
+  private async batchDeleteInvites(invites: CollaboratorInvite[]): Promise<void> {
+    // Batch deletes in chunks of 25 (DynamoDB limit)
+    const BATCH_SIZE = 25;
+    for (let i = 0; i < invites.length; i += BATCH_SIZE) {
+      const batch = invites.slice(i, i + BATCH_SIZE);
+      await this.dynamoClient.send(
+        new BatchWriteCommand({
+          RequestItems: {
+            [this.tableName]: batch.map((invite) => ({
+              DeleteRequest: {
+                Key: {
+                  PK: `HASH#${this.typedKey(invite.cubeId)}`,
+                  SK: this.inviteSK(invite.userId),
+                },
+              },
+            })),
+          },
+        }),
+      );
+    }
   }
 }
