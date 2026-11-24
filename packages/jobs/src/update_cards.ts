@@ -830,7 +830,7 @@ function convertCard(
 
   newcard.digital = card.digital;
   newcard.isToken = card.layout === 'token' || card.layout === 'double_faced_token';
-  newcard.border_color = card.border_color as 'black' | 'white' | 'silver' | 'gold' | undefined;
+  newcard.border_color = card.border_color as CardDetails['border_color'] | undefined;
   newcard.name = name;
   newcard.name_lower = cardutil.normalizeName(name);
   newcard.full_name = `${name} [${card.set}-${card.collector_number}]`;

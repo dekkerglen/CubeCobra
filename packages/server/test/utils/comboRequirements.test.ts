@@ -60,7 +60,7 @@ describe('compileTemplateQuery', () => {
   it('returns null for missing or unsupported queries', () => {
     expect(compileTemplateQuery(null)).toBeNull();
     expect(compileTemplateQuery('')).toBeNull();
-    expect(compileTemplateQuery('t:forest produces:U')).toBeNull();
+    expect(compileTemplateQuery('t:forest frame:2015')).toBeNull();
   });
 
   it('accepts typographic apostrophes', () => {
@@ -119,7 +119,7 @@ describe('matchComboRequirements', () => {
   });
 
   it('treats a requirement it cannot check as met', () => {
-    const matches = matchComboRequirements(combo([], [{ query: null }, { query: 't:forest produces:U' }]), [seer]);
+    const matches = matchComboRequirements(combo([], [{ query: null }, { query: 't:forest frame:2015' }]), [seer]);
     expect(matches.map((match) => match.cards)).toEqual([null, null]);
     expect(requirementsAreMet(matches)).toBe(true);
   });

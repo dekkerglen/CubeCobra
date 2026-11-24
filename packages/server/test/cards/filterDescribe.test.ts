@@ -19,7 +19,7 @@ describe('Filter pseudo-English descriptions', () => {
   it('describes color conditions', () => {
     expect(describeOf('c:w')).toBe('color includes White');
     expect(describeOf('c=wu')).toBe('color is exactly White and Blue');
-    expect(describeOf('c:c')).toBe('color includes colorless');
+    expect(describeOf('c:c')).toBe('color is exactly colorless');
     expect(describeOf('c:m')).toBe('color is multicolored');
   });
 

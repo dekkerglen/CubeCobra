@@ -25,7 +25,11 @@ export const searchAllCards = (
   const directives = filter?.directives ?? {};
   const effectiveSort = directives.order ?? sort;
   const effectiveDirection = directives.direction ?? direction;
-  const effectiveDistinct: Distinct = directives.unique ? (directives.unique === 'prints' ? 'printings' : 'names') : distinct;
+  const effectiveDistinct: Distinct = directives.unique
+    ? directives.unique === 'prints'
+      ? 'printings'
+      : 'names'
+    : distinct;
   const preferred = directives.prefer;
 
   // Collect matching cards, optionally including "extras" — tokens and other

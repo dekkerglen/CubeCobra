@@ -27,7 +27,7 @@ import {
  */
 const pools = (): ThemePools => ({
   creatureTypes: ['Elf', 'Goblin', 'Human', 'Merfolk', 'Sliver', 'Time Lord'],
-  keywords: ['Flying', 'Trample', 'First Strike', 'Double Strike', "Alice's Adventures", 'Ward'],
+  keywords: ['Flying', 'Trample', 'First Strike', 'Double Strike', "Council's dilemma", 'Ward'],
   sets: ['mh3', 'znr', 'dsk', 'blb', '2x2', '10e'],
 });
 

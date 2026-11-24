@@ -82,7 +82,7 @@ export interface CardDetails {
   parsed_cost: string[];
   finishes: (Finish | string)[]; // string for backwards compatability
   promo_types?: string[];
-  border_color: 'black' | 'white' | 'silver' | 'gold';
+  border_color: 'black' | 'white' | 'silver' | 'gold' | 'borderless';
   language: string;
   tcgplayer_id?: string;
   mtgo_id: number;

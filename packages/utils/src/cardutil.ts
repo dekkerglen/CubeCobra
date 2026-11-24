@@ -1068,7 +1068,8 @@ const isFrenchVanilla = (details: CardDetailsType): boolean => {
         .every((segment) =>
           keywords.some(
             (keyword) =>
-              segment === keyword || (segment.startsWith(`${keyword} `) && /^(from|\{)/.test(segment.slice(keyword.length + 1))),
+              segment === keyword ||
+              (segment.startsWith(`${keyword} `) && /^(from|\{)/.test(segment.slice(keyword.length + 1))),
           ),
         );
     });
@@ -1204,7 +1205,10 @@ const PROMO_TYPE_CATEGORIES = [
 
 const RAW_CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, card?: Card) => boolean> = {
   ...Object.fromEntries(
-    PROMO_TYPE_CATEGORIES.map((type) => [type, (details: CardDetailsType) => (details.promo_types || []).includes(type)]),
+    PROMO_TYPE_CATEGORIES.map((type) => [
+      type,
+      (details: CardDetailsType) => (details.promo_types || []).includes(type),
+    ]),
   ),
   gold: (details) =>
     details.colors.length > 1 &&
@@ -1255,8 +1259,7 @@ const RAW_CARD_CATEGORY_DETECTORS: Record<string, (details: CardDetailsType, car
     details.type.includes('Legendary') || details.type.includes('Artifact') || details.type.includes('Saga'),
   vanilla: (details) => isCreature(details) && !details.oracle_text,
   frenchvanilla: isFrenchVanilla,
-  bear: (details) =>
-    isCreature(details) && details.cmc === 2 && details.power === '2' && details.toughness === '2',
+  bear: (details) => isCreature(details) && details.cmc === 2 && details.power === '2' && details.toughness === '2',
   party: hasCreatureType(['Cleric', 'Rogue', 'Warrior', 'Wizard']),
   outlaw: hasCreatureType(['Assassin', 'Mercenary', 'Pirate', 'Rogue', 'Warlock']),
   modal: isModal,

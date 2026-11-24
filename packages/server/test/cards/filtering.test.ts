@@ -98,8 +98,11 @@ describe('Name filter syntax', () => {
     //Cannot single-quote surround a name containing a single quote
     const result = makeFilter(`'${name}'`);
     expect(result.err).toBeTruthy();
+    expect(makeFilter(`name:'${name}'`, { strict: true }).err).toBeTruthy();
+    //Outside strict mode the unparseable term is left out and reported, as on Scryfall
     const result2 = makeFilter(`name:'${name}'`);
-    expect(result2.err).toBeTruthy();
+    expect(result2.err).toBeFalsy();
+    expect(result2.filter?.ignored?.length).toBeGreaterThan(0);
 
     //But it does work if the quote is escaped
     assertValidNameFilter(makeFilter(`'Urza\\'s Bauble'`));
@@ -1122,7 +1125,9 @@ describe('Scryfall parity', () => {
   });
 
   it('leaves reminder text out of o: but not fo:', () => {
-    const flier = card({ oracle_text: "Flying (This creature can't be blocked except by creatures with flying or reach.)" });
+    const flier = card({
+      oracle_text: "Flying (This creature can't be blocked except by creatures with flying or reach.)",
+    });
     expect(matches('o:"except by creatures"', flier)).toBe(false);
     expect(matches('fo:"except by creatures"', flier)).toBe(true);
     expect(matches('o:flying', flier)).toBe(true);
@@ -1199,15 +1204,15 @@ describe('Scryfall parity', () => {
 
   it('uses Scryfall meanings for is: categories', () => {
     expect(matches('is:hybrid', card({ parsed_cost: ['2-w', '2-w'] }))).toBe(true);
-    expect(matches('is:phyrexian', card({ parsed_cost: ['1'], oracle_text: '{U/P}: This creature gains hexproof.' }))).toBe(
-      true,
-    );
+    expect(
+      matches('is:phyrexian', card({ parsed_cost: ['1'], oracle_text: '{U/P}: This creature gains hexproof.' })),
+    ).toBe(true);
     expect(matches('is:vanilla', card({ type: 'Artifact', oracle_text: '' }))).toBe(false);
     expect(matches('is:bear', card({ type: 'Creature — Bear', cmc: 2, power: '2', toughness: '2' }))).toBe(true);
     expect(matches('is:party', card({ type: 'Creature — Shapeshifter', keywords: ['Changeling'] }))).toBe(true);
-    expect(matches('is:modal', card({ oracle_text: 'As this Siege enters, choose Khans or Dragons.\n• Khans — Draw.' }))).toBe(
-      false,
-    );
+    expect(
+      matches('is:modal', card({ oracle_text: 'As this Siege enters, choose Khans or Dragons.\n• Khans — Draw.' })),
+    ).toBe(false);
     expect(matches('is:default', card({ promo: false, full_art: false, border_color: 'black' }))).toBe(true);
     expect(matches('is:atypical', card({ border_color: 'borderless' }))).toBe(true);
     expect(matches('is:defaultprinting', card({ isDefault: true }))).toBe(true);
@@ -1217,7 +1222,12 @@ describe('Scryfall parity', () => {
 
   it('collects search directives without filtering on them', () => {
     const { filter } = makeFilter('t:dragon unique:prints order:cmc direction:asc prefer:oldest');
-    expect(filter!.directives).toEqual({ unique: 'prints', order: 'Mana Value', direction: 'ascending', prefer: 'first' });
+    expect(filter!.directives).toEqual({
+      unique: 'prints',
+      order: 'Mana Value',
+      direction: 'ascending',
+      prefer: 'first',
+    });
     expect(filter!(card({ type: 'Creature — Dragon' }))).toBe(true);
     expect(makeFilter('++ t:dragon').filter!.directives).toEqual({ unique: 'prints' });
   });
