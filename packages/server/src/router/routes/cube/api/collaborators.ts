@@ -268,7 +268,10 @@ export const removeCollaboratorHandler = async (req: Request, res: Response) => 
     }
 
     // First, and even when they're no longer a collaborator: a retry after a partial failure must still clean up.
-    await cubeDao.deletePin(cube.id, userId);
+    // Never for the owner, whose pin is their own and not tied to collaboration.
+    if (userId !== cube.owner.id) {
+      await cubeDao.deletePin(cube.id, userId);
+    }
 
     if (!cube.collaborators.includes(userId)) {
       return res.status(200).json({ success: 'true' });

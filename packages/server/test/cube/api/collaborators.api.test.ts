@@ -614,4 +614,17 @@ describe('DELETE /cube/api/collaborators/:id/:userId', () => {
     expect(cubeDao.update).toHaveBeenCalledWith(expect.objectContaining({ collaborators: [] }));
     expect(collaboratorIndexDao.remove).toHaveBeenCalledWith('collab-1', 'cube-id-1');
   });
+
+  it("does not delete the owner's pin when the owner's id is passed", async () => {
+    const owner = createUser({ id: 'owner-1' });
+    const cube = createCube({ id: 'cube-id-1', owner, collaborators: ['collab-1'] });
+
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+    (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
+
+    const res = await call(removeCollaboratorHandler).as(owner).withParams({ id: cube.id, userId: 'owner-1' }).send();
+
+    expect(res.status).toBe(200);
+    expect(cubeDao.deletePin).not.toHaveBeenCalled();
+  });
 });
