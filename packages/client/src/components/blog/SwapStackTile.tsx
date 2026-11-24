@@ -17,11 +17,11 @@ interface SwapStackTileProps {
  * the hover preview so both cards show side by side, which is why the images themselves are not autocards.
  */
 const SwapStackTile: React.FC<SwapStackTileProps> = ({ oldCard, card }) => (
-  <AutocardDiv card={oldCard} pairWith={card} className="relative">
+  <AutocardDiv card={oldCard} pairWith={card} className="relative pt-[12%] pl-[15%]">
     <a href={`/tool/card/${oldCard.cardID}`} className="absolute top-0 left-0 w-[85%]">
       <FoilCardImage card={oldCard} />
     </a>
-    <a href={`/tool/card/${card.cardID}`} className="relative z-10 block ml-[15%] mt-[12%] w-[85%]">
+    <a href={`/tool/card/${card.cardID}`} className="relative z-10 block w-full">
       <FoilCardImage card={card} />
       <div
         title="Added"
