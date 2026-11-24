@@ -286,8 +286,15 @@ export interface AutocardContextValue {
   /**
    * Shows a preview and returns a token identifying it, or null if nothing was shown.
    * Pass the token back to hideCard so a stale trigger can't dismiss a newer preview.
+   * With pairWith, shows card's front face beside pairWith's front face, with no tags or finish treatment.
    */
-  showCard: (card: any, showCustomImages: boolean, tagColors: TagColor[], anchor?: HTMLElement | null) => number | null;
+  showCard: (
+    card: any,
+    showCustomImages: boolean,
+    tagColors: TagColor[],
+    anchor?: HTMLElement | null,
+    pairWith?: Card | null,
+  ) => number | null;
   hideCard: (token?: number | null) => void;
   stopAutocard: boolean;
   setStopAutocard: React.Dispatch<React.SetStateAction<boolean>>;
@@ -314,12 +321,33 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
   const token = useRef(0);
 
   const showCard = useCallback(
-    (card: Card, showCustomImages: boolean, tagColors: TagColor[], anchorElement?: HTMLElement | null) => {
+    (
+      card: Card,
+      showCustomImages: boolean,
+      tagColors: TagColor[],
+      anchorElement?: HTMLElement | null,
+      pairWith?: Card | null,
+    ) => {
       if (stopAutocard || !card) {
         return null;
       }
 
       setHidden(false);
+      setAnchor(anchorElement ?? null);
+
+      if (pairWith) {
+        setFoilOverlay(false);
+        setBlackBorder(false);
+        setAlphaBorder(false);
+        setFront(((showCustomImages && card.imgUrl) || card.details?.image_normal) ?? null);
+        setBack(((showCustomImages && pairWith.imgUrl) || pairWith.details?.image_normal) ?? null);
+        setOrientations({ front: cardFaceOrientations(card).front, back: cardFaceOrientations(pairWith).front });
+        setTags([]);
+
+        token.current += 1;
+        return token.current;
+      }
+
       setFoilOverlay(isCardFoil(card));
       setBlackBorder(showsBlackBorderForFoil(card, isCardFoil(card)));
       setAlphaBorder(isAlphaPrinting(card));
@@ -335,7 +363,6 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
           colorStyle: getTagColorStyle(tagColors, tag),
         })),
       );
-      setAnchor(anchorElement ?? null);
 
       token.current += 1;
       return token.current;

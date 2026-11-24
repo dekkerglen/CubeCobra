@@ -9,6 +9,8 @@ import TagColorContext from '../contexts/TagColorContext';
 
 export interface WithAutocardProps {
   card?: Card;
+  /** Shown beside card in the preview, front face only — e.g. the incoming half of a swap. */
+  pairWith?: Card;
   image?: string;
   children?: ReactNode;
 }
@@ -33,103 +35,105 @@ const supportsHoverPreview = (): boolean => {
 };
 
 const withAutocard = <T extends ElementType>(Tag: T) => {
-  const Result = forwardRef<T, WithAutocardProps & React.ComponentProps<T>>(({ card, image, ...props }, ref) => {
-    const { showCustomImages } = useContext(DisplayContext);
-    const { showCard, hideCard } = useContext(AutocardContext);
-    const tagColors = useContext(TagColorContext);
-    const token = useRef<number | null>(null);
+  const Result = forwardRef<T, WithAutocardProps & React.ComponentProps<T>>(
+    ({ card, pairWith, image, ...props }, ref) => {
+      const { showCustomImages } = useContext(DisplayContext);
+      const { showCard, hideCard } = useContext(AutocardContext);
+      const tagColors = useContext(TagColorContext);
+      const token = useRef<number | null>(null);
 
-    const show = (anchor?: HTMLElement | null) => {
-      const preview = image ? ({ details: { image_normal: image } } as Card) : card;
-      if (!preview || !supportsHoverPreview()) {
-        return;
-      }
-      token.current = showCard(preview, showCustomImages, tagColors, anchor);
-    };
-
-    const hide = () => {
-      if (token.current === null) {
-        return;
-      }
-      hideCard(token.current);
-      token.current = null;
-    };
-
-    // A trigger can unmount while still hovered — a list re-sorts, a filter changes, a
-    // dropdown closes — and React fires no mouseleave for an element that no longer
-    // exists, which would strand the preview on screen.
-    useEffect(
-      () => () => {
-        if (token.current !== null) {
-          hideCard(token.current);
+      const show = (anchor?: HTMLElement | null) => {
+        const preview = image ? ({ details: { image_normal: image } } as Card) : card;
+        if (!preview || !supportsHoverPreview()) {
+          return;
         }
-      },
-      [hideCard],
-    );
+        token.current = showCard(preview, showCustomImages, tagColors, anchor, pairWith);
+      };
 
-    // Consumer handlers are composed rather than overwritten. These used to be declared
-    // before the prop spread, so a consumer-supplied onClick or onMouseEnter silently
-    // replaced the preview's own handler.
-    const rest = props as any;
+      const hide = () => {
+        if (token.current === null) {
+          return;
+        }
+        hideCard(token.current);
+        token.current = null;
+      };
 
-    const callSupplied = (supplied: unknown, event: unknown) => {
-      if (typeof supplied === 'function') {
-        supplied(event);
-      }
-    };
+      // A trigger can unmount while still hovered — a list re-sorts, a filter changes, a
+      // dropdown closes — and React fires no mouseleave for an element that no longer
+      // exists, which would strand the preview on screen.
+      useEffect(
+        () => () => {
+          if (token.current !== null) {
+            hideCard(token.current);
+          }
+        },
+        [hideCard],
+      );
 
-    const handleMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
-      show();
-      callSupplied(rest.onMouseEnter, event);
-    };
+      // Consumer handlers are composed rather than overwritten. These used to be declared
+      // before the prop spread, so a consumer-supplied onClick or onMouseEnter silently
+      // replaced the preview's own handler.
+      const rest = props as any;
 
-    const handleMouseLeave = (event: React.MouseEvent<HTMLElement>) => {
-      hide();
-      callSupplied(rest.onMouseLeave, event);
-    };
+      const callSupplied = (supplied: unknown, event: unknown) => {
+        if (typeof supplied === 'function') {
+          supplied(event);
+        }
+      };
 
-    const handleFocus = (event: React.FocusEvent<HTMLElement>) => {
-      // Keyboard focus only; clicking already focuses the trigger and the pointer path
-      // covers that case. :focus-visible throws on browsers that don't know it.
-      const target = event.currentTarget;
-      let keyboardFocused = false;
-      try {
-        keyboardFocused = !!target?.matches?.(':focus-visible');
-      } catch {
-        keyboardFocused = false;
-      }
-      if (keyboardFocused) {
-        show(target);
-      }
-      callSupplied(rest.onFocus, event);
-    };
+      const handleMouseEnter = (event: React.MouseEvent<HTMLElement>) => {
+        show();
+        callSupplied(rest.onMouseEnter, event);
+      };
 
-    const handleBlur = (event: React.FocusEvent<HTMLElement>) => {
-      hide();
-      callSupplied(rest.onBlur, event);
-    };
-
-    const handleClick = (event: React.MouseEvent<HTMLElement>) => {
-      // On touch the browser synthesises a hover before the tap; clear anything it
-      // managed to open.
-      if (!supportsHoverPreview()) {
+      const handleMouseLeave = (event: React.MouseEvent<HTMLElement>) => {
         hide();
-      }
-      callSupplied(rest.onClick, event);
-    };
+        callSupplied(rest.onMouseLeave, event);
+      };
 
-    return (
-      <Tag
-        ref={ref}
-        {...rest}
-        onMouseEnter={handleMouseEnter}
-        onMouseLeave={handleMouseLeave}
-        onFocus={handleFocus}
-        onBlur={handleBlur}
-        onClick={handleClick}
-      />
-    );
-  });
+      const handleFocus = (event: React.FocusEvent<HTMLElement>) => {
+        // Keyboard focus only; clicking already focuses the trigger and the pointer path
+        // covers that case. :focus-visible throws on browsers that don't know it.
+        const target = event.currentTarget;
+        let keyboardFocused = false;
+        try {
+          keyboardFocused = !!target?.matches?.(':focus-visible');
+        } catch {
+          keyboardFocused = false;
+        }
+        if (keyboardFocused) {
+          show(target);
+        }
+        callSupplied(rest.onFocus, event);
+      };
+
+      const handleBlur = (event: React.FocusEvent<HTMLElement>) => {
+        hide();
+        callSupplied(rest.onBlur, event);
+      };
+
+      const handleClick = (event: React.MouseEvent<HTMLElement>) => {
+        // On touch the browser synthesises a hover before the tap; clear anything it
+        // managed to open.
+        if (!supportsHoverPreview()) {
+          hide();
+        }
+        callSupplied(rest.onClick, event);
+      };
+
+      return (
+        <Tag
+          ref={ref}
+          {...rest}
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
+          onClick={handleClick}
+        />
+      );
+    },
+  );
   Result.displayName = `withAutocard(${typeof Tag === 'function' ? Tag.displayName : Tag.toString()})`;
   return Result;
 };
