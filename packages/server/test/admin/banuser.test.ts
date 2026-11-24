@@ -2,7 +2,12 @@ import { UserRoles } from '@utils/datatypes/User';
 
 jest.mock('../../src/dynamo/daos', () => ({
   noticeDao: { getById: jest.fn(), update: jest.fn() },
-  cubeDao: { queryByOwner: jest.fn(), deleteById: jest.fn() },
+  cubeDao: {
+    queryByOwner: jest.fn(),
+    deleteById: jest.fn(),
+    deleteInvitesForCube: jest.fn(),
+    deleteInvitesForUser: jest.fn(),
+  },
   blogDao: { queryByOwner: jest.fn(), delete: jest.fn() },
   draftDao: { queryByOwner: jest.fn(), deleteById: jest.fn() },
   commentDao: { queryByOwner: jest.fn(), update: jest.fn() },
@@ -47,5 +52,15 @@ describe('banuserHandler', () => {
     await call(banuserHandler).withFlash(jest.fn()).withParams({ id: 'notice-1' }).send();
 
     expect(blogDao.delete).toHaveBeenCalledWith({ id: 'b1' });
+  });
+
+  it("removes invites on the banned user's cubes and invites addressed to them", async () => {
+    (cubeDao.queryByOwner as jest.Mock).mockResolvedValue({ items: [{ id: 'cube-1' }] });
+    (blogDao.queryByOwner as jest.Mock).mockResolvedValueOnce({ items: [], lastKey: undefined });
+
+    await call(banuserHandler).withFlash(jest.fn()).withParams({ id: 'notice-1' }).send();
+
+    expect(cubeDao.deleteInvitesForCube).toHaveBeenCalledWith('cube-1');
+    expect(cubeDao.deleteInvitesForUser).toHaveBeenCalledWith('bad-user');
   });
 });

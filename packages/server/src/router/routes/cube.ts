@@ -100,6 +100,7 @@ export const removeHandler = async (req: Request, res: Response) => {
 
     await cubeDao.deleteById(cubeId);
     await collaboratorIndexDao.removeAllForCube(cubeId, cube.collaborators ?? []);
+    await cubeDao.deleteInvitesForCube(cubeId);
 
     req.flash('success', 'Cube Removed');
     return redirect(req, res, '/dashboard');

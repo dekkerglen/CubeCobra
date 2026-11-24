@@ -670,6 +670,18 @@ async function transferCubeCollaborators(fromId: string, toId: string) {
     errors += 1;
   }
 
+  // Pending invites are not transferred; the source user's incoming invites are dropped.
+  try {
+    const invites = await cubeDao.queryInvitesForUser(fromId);
+    log(`Found ${invites.length} pending collaborator invite(s) addressed to source; dropping them`);
+    if (!DRY_RUN && invites.length > 0) {
+      await cubeDao.deleteInvitesForUser(fromId);
+    }
+  } catch (err: any) {
+    log(`  ERROR deleting pending collaborator invites: ${err.message}`);
+    errors += 1;
+  }
+
   addSummary('Cube Collaborators', found, updated, 0, errors);
 }
 
