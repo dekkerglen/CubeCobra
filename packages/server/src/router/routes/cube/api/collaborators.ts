@@ -267,6 +267,9 @@ export const removeCollaboratorHandler = async (req: Request, res: Response) => 
       return res.status(403).json({ success: 'false', message: 'Only the cube owner can remove other collaborators' });
     }
 
+    // First, and even when they're no longer a collaborator: a retry after a partial failure must still clean up.
+    await cubeDao.deletePin(cube.id, userId);
+
     if (!cube.collaborators.includes(userId)) {
       return res.status(200).json({ success: 'true' });
     }
@@ -274,7 +277,6 @@ export const removeCollaboratorHandler = async (req: Request, res: Response) => 
     cube.collaborators = cube.collaborators.filter((id) => id !== userId);
     await cubeDao.update(cube);
     await collaboratorIndexDao.remove(userId, cube.id);
-    await cubeDao.deletePin(cube.id, userId);
 
     return res.status(200).json({ success: 'true' });
   } catch (err) {

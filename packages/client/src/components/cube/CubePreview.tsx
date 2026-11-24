@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useId } from 'react';
 
 import { HeartFillIcon, PinIcon, PinSlashIcon, StackIcon } from '@primer/octicons-react';
 import Cube from '@utils/datatypes/Cube';
@@ -19,6 +19,7 @@ interface CubePreviewProps {
 
 const CubePreview: React.FC<CubePreviewProps> = ({ cube, markPinned = false, pinToggle = false }) => {
   const pin = usePinToggle(cube.id, !!cube.pinnedByCurrentUser);
+  const pinnedDescriptionId = useId();
   const pinned = pinToggle ? pin.pinned : markPinned && !!cube.pinnedByCurrentUser;
   const followers = cube.likeCount ?? 0;
 
@@ -31,7 +32,8 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube, markPinned = false, pin
     <div className="relative p-2">
       <a
         href={`/cube/list/${getCubeId(cube)}`}
-        aria-label={pinned ? `${cube.name}, pinned` : undefined}
+        // A description rather than a name override, so the link keeps its content-derived name (stats, owner).
+        aria-describedby={pinned ? pinnedDescriptionId : undefined}
         className="group block bg-bg-accent/80 shadow border border-border hover:border-border-active overflow-hidden rounded-lg"
       >
         <AspectRatioBox ratio={16 / 9}>
@@ -86,6 +88,11 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube, markPinned = false, pin
             style={{ boxShadow: 'inset 0 0 12px 1px rgba(255, 255, 255, 0.85)' }}
           />
         </AspectRatioBox>
+        {pinned && (
+          <span id={pinnedDescriptionId} className="sr-only">
+            Pinned
+          </span>
+        )}
       </a>
       {pinToggle && (
         // A sibling of the link rather than inside it: interactive content nested in a link is invalid.
@@ -96,9 +103,10 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube, markPinned = false, pin
             event.stopPropagation();
             pin.toggle();
           }}
-          aria-label={pin.label}
+          disabled={pin.busy}
+          aria-label={`${pin.label}: ${cube.name}`}
           title={pin.label}
-          className="absolute top-4 right-4 flex items-center justify-center p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          className="absolute top-4 right-4 flex items-center justify-center p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer disabled:cursor-wait focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
         >
           {pin.pinned ? <PinSlashIcon size={16} /> : <PinIcon size={16} />}
         </button>

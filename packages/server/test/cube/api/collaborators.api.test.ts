@@ -557,6 +557,9 @@ describe('DELETE /cube/api/collaborators/:id/:userId', () => {
       .send();
 
     expect(res.status).toBe(200);
+    // A retry after a partial failure still cleans up a leftover pin.
+    expect(cubeDao.deletePin).toHaveBeenCalledWith(cube.id, 'not-a-collab');
+    expect(cubeDao.update).not.toHaveBeenCalled();
   });
 
   it('removes the collaborator, saves the cube, and deletes the index row on success', async () => {
@@ -586,6 +589,10 @@ describe('DELETE /cube/api/collaborators/:id/:userId', () => {
 
     expect(res.status).toBe(200);
     expect(cubeDao.deletePin).toHaveBeenCalledWith('cube-id-1', 'collab-1');
+    // Before the membership writes, so a failure there leaves a retry that still cleans up the pin.
+    const pinOrder = (cubeDao.deletePin as jest.Mock).mock.invocationCallOrder[0]!;
+    expect(pinOrder).toBeLessThan((cubeDao.update as jest.Mock).mock.invocationCallOrder[0]!);
+    expect(pinOrder).toBeLessThan((collaboratorIndexDao.remove as jest.Mock).mock.invocationCallOrder[0]!);
   });
 
   it('allows a collaborator to remove themselves', async () => {

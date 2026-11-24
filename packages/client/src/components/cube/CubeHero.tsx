@@ -84,6 +84,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
     pinned: pinnedState,
     setPinned: setPinnedState,
     toggle: handlePinToggle,
+    busy: pinBusy,
     label: pinLabel,
   } = usePinToggle(cube.id, canPin && !!cube.pinnedByCurrentUser);
 
@@ -614,6 +615,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   {canPin && (
                     <button
                       onClick={handlePinToggle}
+                      disabled={pinBusy}
                       className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap cursor-pointer"
                       aria-label={pinLabel}
                       title={pinLabel}
@@ -738,6 +740,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
                   {canPin && (
                     <button
                       onClick={handlePinToggle}
+                      disabled={pinBusy}
                       className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap cursor-pointer"
                       aria-label={pinLabel}
                       title={pinLabel}
@@ -1031,6 +1034,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               {canPin && (
                 <button
                   onClick={handlePinToggle}
+                  disabled={pinBusy}
                   className="flex items-center gap-2 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap cursor-pointer"
                   aria-label={pinLabel}
                   title={pinLabel}
@@ -1155,6 +1159,7 @@ const CubeHero: React.FC<CubeHeroProps> = ({ cube, minified = false, activeLink 
               {canPin && (
                 <button
                   onClick={handlePinToggle}
+                  disabled={pinBusy}
                   className="flex items-center gap-1 text-hero-text hover:text-hero-text-hover transition-colors whitespace-nowrap cursor-pointer"
                   aria-label={pinLabel}
                   title={pinLabel}
