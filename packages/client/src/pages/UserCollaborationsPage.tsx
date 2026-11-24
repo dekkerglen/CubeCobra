@@ -3,8 +3,11 @@ import React, { useCallback, useContext, useState } from 'react';
 import Cube from '@utils/datatypes/Cube';
 import User from '@utils/datatypes/User';
 
+import Alert from 'components/base/Alert';
+import Button from 'components/base/Button';
 import CursorPagination from 'components/base/CursorPagination';
 import { Flexbox } from 'components/base/Layout';
+import Link from 'components/base/Link';
 import Text from 'components/base/Text';
 import CubePreview from 'components/cube/CubePreview';
 import DynamicFlash from 'components/DynamicFlash';
@@ -14,6 +17,17 @@ import UserContext from 'contexts/UserContext';
 import MainLayout from 'layouts/MainLayout';
 import UserLayout from 'layouts/UserLayout';
 import { clampPage, getIndefinitePageCount, handleIndefinitePageSelection } from 'utils/indefinitePagination';
+
+// Mirrors PendingInvite in packages/server/src/serverutils/collaborations.ts.
+interface PendingInvite {
+  cubeId: string;
+  cubeShortId?: string;
+  cubeName: string;
+  cubeImageUri?: string;
+  ownerUsername: string;
+  invitedByUsername: string;
+  invitedAt: number;
+}
 
 interface UserCollaborationsPageProps {
   owner: User;
@@ -26,6 +40,7 @@ interface UserCollaborationsPageProps {
   patronLevel?: number;
   likedCubesCount?: number;
   likedPackagesCount?: number;
+  pendingInvites?: PendingInvite[];
 }
 
 const PAGE_SIZE = 36;
@@ -41,6 +56,7 @@ export const UserCollaborationsPage: React.FC<UserCollaborationsPageProps> = ({
   patronLevel,
   likedCubesCount,
   likedPackagesCount,
+  pendingInvites: initialPendingInvites = [],
 }) => {
   const user = useContext(UserContext);
   const { csrfFetch } = useContext(CSRFContext);
@@ -49,6 +65,9 @@ export const UserCollaborationsPage: React.FC<UserCollaborationsPageProps> = ({
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(0);
+  const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>(initialPendingInvites);
+  const [busyInvites, setBusyInvites] = useState<Set<string>>(new Set());
+  const [inviteError, setInviteError] = useState<string | null>(null);
 
   const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
 
@@ -105,6 +124,36 @@ export const UserCollaborationsPage: React.FC<UserCollaborationsPageProps> = ({
 
   const isOwner = !!user && user.id === owner.id;
 
+  // These endpoints key on the full cube id; the short id is only for the link.
+  const respondToInvite = async (invite: PendingInvite, action: 'accept' | 'decline') => {
+    setBusyInvites((current) => new Set(current).add(invite.cubeId));
+    setInviteError(null);
+    try {
+      const response = await csrfFetch(
+        `/cube/api/collaborators/${encodeURIComponent(invite.cubeId)}/invite/${action}`,
+        { method: 'POST' },
+      );
+      const json = await response.json().catch(() => ({}));
+      if (response.ok && json.success === 'true') {
+        setPendingInvites((current) => current.filter((i) => i.cubeId !== invite.cubeId));
+        if (action === 'accept') {
+          // Reload so the newly joined cube shows in the grid and the navbar.
+          window.location.reload();
+        }
+        return;
+      }
+      setInviteError(json.message || `Failed to ${action} invite.`);
+    } catch {
+      setInviteError(`Failed to ${action} invite.`);
+    } finally {
+      setBusyInvites((current) => {
+        const next = new Set(current);
+        next.delete(invite.cubeId);
+        return next;
+      });
+    }
+  };
+
   return (
     <MainLayout>
       <UserLayout
@@ -118,6 +167,52 @@ export const UserCollaborationsPage: React.FC<UserCollaborationsPageProps> = ({
         likedPackagesCount={likedPackagesCount}
       >
         <DynamicFlash />
+        {isOwner && pendingInvites.length > 0 && (
+          <section aria-labelledby="pending-invites-heading" className="mt-3">
+            <Flexbox direction="col" gap="2">
+              <Text lg semibold id="pending-invites-heading">
+                Pending invites
+              </Text>
+              {inviteError && <Alert color="danger">{inviteError}</Alert>}
+              {pendingInvites.map((invite) => {
+                const busy = busyInvites.has(invite.cubeId);
+                return (
+                  <Flexbox key={invite.cubeId} direction="row" alignItems="center" gap="2" className="py-1">
+                    {invite.cubeImageUri ? (
+                      <img src={invite.cubeImageUri} alt="" className="w-12 h-12 rounded object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-12 h-12 rounded bg-bg-secondary flex-shrink-0" />
+                    )}
+                    <Flexbox direction="col" className="flex-1 min-w-0">
+                      <Link href={`/cube/list/${encodeURIComponent(invite.cubeShortId ?? invite.cubeId)}`}>
+                        {invite.cubeName}
+                      </Link>
+                      <Text sm className="text-text-secondary">
+                        Invited by {invite.invitedByUsername}
+                      </Text>
+                    </Flexbox>
+                    <Button
+                      color="primary"
+                      onClick={() => respondToInvite(invite, 'accept')}
+                      disabled={busy}
+                      aria-label={`Accept invite to ${invite.cubeName}`}
+                    >
+                      Accept
+                    </Button>
+                    <Button
+                      color="secondary"
+                      onClick={() => respondToInvite(invite, 'decline')}
+                      disabled={busy}
+                      aria-label={`Decline invite to ${invite.cubeName}`}
+                    >
+                      Decline
+                    </Button>
+                  </Flexbox>
+                );
+              })}
+            </Flexbox>
+          </section>
+        )}
         <Flexbox direction="col" className="mt-3" gap="2">
           <Flexbox direction="row" justify="between" alignItems="center" gap="2" wrap="wrap" className="w-full">
             <Text lg semibold>

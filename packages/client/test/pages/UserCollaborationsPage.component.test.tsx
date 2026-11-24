@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -122,5 +122,83 @@ describe('UserCollaborationsPage', () => {
     expect(screen.getAllByText('Page 2').length).toBeGreaterThan(0);
     // The first page is retained in state, not discarded - it is simply on the previous page now.
     expect(screen.queryByText('Cube 0')).not.toBeInTheDocument();
+  });
+
+  describe('pending invites', () => {
+    const invite = {
+      cubeId: 'cube-full-id',
+      cubeShortId: 'vintage',
+      cubeName: 'Vintage Cube',
+      cubeImageUri: 'https://cdn.example/art.jpg',
+      ownerUsername: 'alice',
+      invitedByUsername: 'alice',
+      invitedAt: 1,
+    };
+    const other = {
+      ...invite,
+      cubeId: 'cube-2',
+      cubeShortId: undefined,
+      cubeName: 'Pauper Cube',
+      invitedByUsername: 'bob',
+    };
+
+    const jsonResponse = (body: unknown, ok = true) => ({ ok, status: ok ? 200 : 400, json: async () => body });
+    const invitesSection = () => screen.getByRole('region', { name: 'Pending invites' });
+
+    it('shows pending invites on your own profile', () => {
+      renderPage({ pendingInvites: [invite, other] });
+
+      const section = invitesSection();
+      expect(within(section).getByRole('link', { name: 'Vintage Cube' })).toHaveAttribute('href', '/cube/list/vintage');
+      expect(within(section).getByRole('link', { name: 'Pauper Cube' })).toHaveAttribute('href', '/cube/list/cube-2');
+      expect(within(section).getByText('Invited by alice')).toBeInTheDocument();
+      expect(within(section).getByText('Invited by bob')).toBeInTheDocument();
+      expect(within(section).getByRole('button', { name: 'Accept invite to Vintage Cube' })).toBeInTheDocument();
+      expect(within(section).getByRole('button', { name: 'Decline invite to Vintage Cube' })).toBeInTheDocument();
+      // The section sits above the Collaborations heading.
+      expect(
+        section.compareDocumentPosition(screen.getByText('Collaborations')) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it('hides pending invites from visitors', () => {
+      renderPage({ pendingInvites: [invite] }, { id: 'someone-else' });
+
+      expect(screen.queryByRole('region', { name: 'Pending invites' })).not.toBeInTheDocument();
+      expect(screen.queryByText('Vintage Cube')).not.toBeInTheDocument();
+    });
+
+    it('decline removes the invite', async () => {
+      const csrfFetch = jest.fn().mockResolvedValue(jsonResponse({ success: 'true' }));
+      renderPage({ pendingInvites: [invite, other] }, owner, csrfFetch);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Decline invite to Vintage Cube' }));
+
+      // Keyed on the full cube id, not the short id.
+      expect(csrfFetch).toHaveBeenCalledWith(
+        '/cube/api/collaborators/cube-full-id/invite/decline',
+        expect.objectContaining({ method: 'POST' }),
+      );
+      expect(screen.getByRole('button', { name: 'Accept invite to Vintage Cube' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Decline invite to Vintage Cube' })).toBeDisabled();
+      await waitFor(() => expect(screen.queryByText('Vintage Cube')).not.toBeInTheDocument());
+      expect(screen.getByText('Pauper Cube')).toBeInTheDocument();
+    });
+
+    it('shows the server message when accept fails', async () => {
+      const message = 'You can collaborate on at most 50 cubes.';
+      const csrfFetch = jest.fn().mockResolvedValue(jsonResponse({ success: 'false', message }, false));
+      renderPage({ pendingInvites: [invite] }, owner, csrfFetch);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Accept invite to Vintage Cube' }));
+
+      expect(await screen.findByText(message)).toBeInTheDocument();
+      expect(csrfFetch).toHaveBeenCalledWith(
+        '/cube/api/collaborators/cube-full-id/invite/accept',
+        expect.objectContaining({ method: 'POST' }),
+      );
+      // The invite stays so the user can retry or decline.
+      expect(screen.getByRole('button', { name: 'Accept invite to Vintage Cube' })).toBeEnabled();
+    });
   });
 });
