@@ -20,6 +20,7 @@ jest.mock('serverutils/cardCatalog', () => ({
     metadatadict: {},
     printedCardList: [],
     printedCardListWithExtras: [],
+    searchCardList: [],
     comboOracleToIndex: {},
     reasonable_names: ['lightning bolt'],
     reasonable_full_names: ['lightning bolt [2XM-117]'],
