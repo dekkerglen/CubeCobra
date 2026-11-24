@@ -34,7 +34,23 @@ interface CardDivProps {
   blackBorder: boolean;
   alphaBorder: boolean;
   anchor: HTMLElement | null;
+  // A swap preview: the left face is the card removed, the right face the card added.
+  swap: boolean;
 }
+
+const SWAP_BADGE_CLASS =
+  'absolute top-[14%] right-[8%] pointer-events-none px-2 py-0.5 text-sm font-semibold text-white rounded-md shadow-sm backdrop-blur-[2px]';
+
+const SwapBadge: React.FC<{ kind: 'removed' | 'added' }> = ({ kind }) =>
+  kind === 'removed' ? (
+    <div className={`${SWAP_BADGE_CLASS} bg-red-600/90`} title="Removed" aria-label="Removed">
+      −
+    </div>
+  ) : (
+    <div className={`${SWAP_BADGE_CLASS} bg-green-600/90`} title="Added" aria-label="Added">
+      +
+    </div>
+  );
 
 // Gap between the cursor (or focused trigger) and the preview, and the minimum distance
 // the preview keeps from the edge of the viewport.
@@ -94,6 +110,7 @@ const CardDiv: React.FC<CardDivProps> = ({
   blackBorder,
   alphaBorder,
   anchor,
+  swap,
 }) => {
   const [layout, setLayout] = useState<Layout | null>(null);
   const autocardPopup = useRef<HTMLDivElement>(null);
@@ -234,7 +251,9 @@ const CardDiv: React.FC<CardDivProps> = ({
           <Flexbox direction="row" alignItems="start">
             {front && (
               <CardOrientationFrame orientation={orientations.front} width={`${faceWidthRem(orientations.front)}rem`}>
-                <div className="col position-relative">
+                {/* `relative` only for a swap, which never has the foil or black-border overlays
+                    whose positioning depends on this wrapper staying static. */}
+                <div className={swap ? 'col position-relative relative' : 'col position-relative'}>
                   {blackBorder && <BlackBorderOverlay />}
                   {foilOverlay && (
                     <img
@@ -244,12 +263,13 @@ const CardDiv: React.FC<CardDivProps> = ({
                     />
                   )}
                   <img className={borderClass} id="autocardImageFront" src={front} alt={front} key={front} />
+                  {swap && <SwapBadge kind="removed" />}
                 </div>
               </CardOrientationFrame>
             )}
             {back && (
               <CardOrientationFrame orientation={orientations.back} width={`${faceWidthRem(orientations.back)}rem`}>
-                <div className="col position-relative">
+                <div className={swap ? 'col position-relative relative' : 'col position-relative'}>
                   {blackBorder && <BlackBorderOverlay />}
                   {foilOverlay && (
                     <img
@@ -259,6 +279,7 @@ const CardDiv: React.FC<CardDivProps> = ({
                     />
                   )}
                   <img className={borderClass} id="autocardImageBack" src={back} alt={back} key={back} />
+                  {swap && <SwapBadge kind="added" />}
                 </div>
               </CardOrientationFrame>
             )}
@@ -286,7 +307,8 @@ export interface AutocardContextValue {
   /**
    * Shows a preview and returns a token identifying it, or null if nothing was shown.
    * Pass the token back to hideCard so a stale trigger can't dismiss a newer preview.
-   * With pairWith, shows card's front face beside pairWith's front face, with no tags or finish treatment.
+   * With pairWith, shows a swap: card's front face (removed, marked −) beside pairWith's front face
+   * (added, marked +), with no tags or finish treatment.
    */
   showCard: (
     card: any,
@@ -318,6 +340,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
   const [stopAutocard, setStopAutocard] = useState(false);
   const [tags, setTags] = useState<Tag[]>([]);
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
+  const [swap, setSwap] = useState(false);
   const token = useRef(0);
 
   const showCard = useCallback(
@@ -334,6 +357,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
 
       setHidden(false);
       setAnchor(anchorElement ?? null);
+      setSwap(!!pairWith);
 
       if (pairWith) {
         setFoilOverlay(false);
@@ -387,6 +411,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
     setOrientations(PORTRAIT_FACES);
     setTags([]);
     setAnchor(null);
+    setSwap(false);
   }, []);
 
   // The trigger's own mouseleave is not a sufficient dismiss signal: it never fires when
@@ -445,6 +470,7 @@ export const AutocardContextProvider: React.FC<{ children: React.ReactNode }> = 
         blackBorder={blackBorder}
         alphaBorder={alphaBorder}
         anchor={anchor}
+        swap={swap}
       />
     </AutocardContext.Provider>
   );

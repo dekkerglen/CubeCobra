@@ -511,4 +511,28 @@ describe('pair previews', () => {
     expect(document.getElementById('autocardTags')).toBeNull();
     expect(document.querySelector('.foilOverlay')).toBeNull();
   });
+
+  it('marks the left card removed and the right card added', () => {
+    hoverPair(card, otherCard);
+
+    const removed = screen.getByLabelText('Removed');
+    const added = screen.getByLabelText('Added');
+    expect(removed).toHaveTextContent('−');
+    expect(added).toHaveTextContent('+');
+    expect(document.getElementById('autocardImageFront')!.parentElement).toContainElement(removed);
+    expect(document.getElementById('autocardImageBack')!.parentElement).toContainElement(added);
+  });
+
+  it('shows no swap badges on a single-card preview', () => {
+    render(
+      <AutocardContextProvider>
+        <AutocardDiv card={card}>Lightning Bolt</AutocardDiv>
+      </AutocardContextProvider>,
+    );
+    moveCursorTo(100, 100);
+    fireEvent.mouseEnter(screen.getByText('Lightning Bolt'));
+
+    expect(screen.queryByLabelText('Removed')).toBeNull();
+    expect(screen.queryByLabelText('Added')).toBeNull();
+  });
 });
