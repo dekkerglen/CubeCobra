@@ -13,14 +13,14 @@ interface SwapStackTileProps {
 }
 
 /**
- * One changelog swap drawn as a static stack, like the Card Stacks view: the outgoing card sits on top of the tile and
- * the incoming card overlaps it from below, leaving the outgoing card's name bar and art in view. The wrapper owns the
+ * One changelog swap drawn as a static stack: the outgoing card sits at the top left of the tile, and the incoming
+ * card overlaps it from below and to the right, leaving its name bar and upper art in view. The wrapper owns the
  * hover preview so both cards show side by side, which is why the images themselves are not autocards.
  */
 const SwapStackTile: React.FC<SwapStackTileProps> = ({ oldCard, card }) => (
-  // The top padding is a share of the tile's width: 78% of it is about the top 56% of a card, through its art box.
-  <AutocardDiv card={oldCard} pairWith={card} className="relative pt-[78%]">
-    <a href={`/tool/card/${oldCard.cardID}`} className="absolute top-0 left-0 w-full">
+  // Padding is a share of the tile's width: 35% down shows the outgoing card's name bar and the top of its art.
+  <AutocardDiv card={oldCard} pairWith={card} className="relative pt-[35%] pl-[10%]">
+    <a href={`/tool/card/${oldCard.cardID}`} className="absolute top-0 left-0 w-[90%]">
       <FoilCardImage card={oldCard} />
     </a>
     <a href={`/tool/card/${card.cardID}`} className="relative z-10 block w-full">
