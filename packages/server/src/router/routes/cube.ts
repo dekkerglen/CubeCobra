@@ -357,7 +357,7 @@ export const pinHandler = async (req: Request, res: Response) => {
     return res.status(404).send({ success: 'false' });
   }
 
-  if (cube.owner.id !== user!.id) {
+  if (cube.owner.id !== user!.id && !cube.collaborators.includes(user!.id)) {
     return res.status(403).send({ success: 'false' });
   }
 
@@ -366,20 +366,13 @@ export const pinHandler = async (req: Request, res: Response) => {
   return res.status(200).send({ success: 'true' });
 };
 
+// A pin is the requesting user's own row, so it can always be removed — even after losing
+// collaborator access or after the cube itself is deleted.
 export const unpinHandler = async (req: Request, res: Response) => {
   const { user } = req;
   const cube = await cubeDao.getById(req.params.id!);
 
-  if (!cube || !isCubeViewable(cube, user)) {
-    req.flash('danger', 'Cube not found');
-    return res.status(404).send({ success: 'false' });
-  }
-
-  if (cube.owner.id !== user!.id) {
-    return res.status(403).send({ success: 'false' });
-  }
-
-  await cubeDao.deletePin(cube.id, user!.id);
+  await cubeDao.deletePin(cube?.id ?? req.params.id!, user!.id);
 
   return res.status(200).send({ success: 'true' });
 };

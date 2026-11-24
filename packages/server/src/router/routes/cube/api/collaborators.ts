@@ -274,6 +274,7 @@ export const removeCollaboratorHandler = async (req: Request, res: Response) => 
     cube.collaborators = cube.collaborators.filter((id) => id !== userId);
     await cubeDao.update(cube);
     await collaboratorIndexDao.remove(userId, cube.id);
+    await cubeDao.deletePin(cube.id, userId);
 
     return res.status(200).json({ success: 'true' });
   } catch (err) {

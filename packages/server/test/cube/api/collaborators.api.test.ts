@@ -22,6 +22,7 @@ jest.mock('../../../src/dynamo/daos', () => ({
     queryInvitesForUser: jest.fn(),
     deleteInvitesForCube: jest.fn(),
     deleteInvitesForUser: jest.fn(),
+    deletePin: jest.fn(),
   },
   userDao: {
     getByUsername: jest.fn(),
@@ -572,6 +573,19 @@ describe('DELETE /cube/api/collaborators/:id/:userId', () => {
     expect(res.status).toBe(200);
     expect(cubeDao.update).toHaveBeenCalledWith(expect.objectContaining({ collaborators: ['collab-2'] }));
     expect(collaboratorIndexDao.remove).toHaveBeenCalledWith('collab-1', 'cube-id-1');
+  });
+
+  it('deletes the pin of the removed collaborator', async () => {
+    const owner = createUser({ id: 'owner-1' });
+    const cube = createCube({ id: 'cube-id-1', owner, collaborators: ['collab-1'] });
+
+    (cubeDao.getById as jest.Mock).mockResolvedValue(cube);
+    (CubeFn.isCubeViewable as jest.Mock).mockReturnValue(true);
+
+    const res = await call(removeCollaboratorHandler).as(owner).withParams({ id: cube.id, userId: 'collab-1' }).send();
+
+    expect(res.status).toBe(200);
+    expect(cubeDao.deletePin).toHaveBeenCalledWith('cube-id-1', 'collab-1');
   });
 
   it('allows a collaborator to remove themselves', async () => {
