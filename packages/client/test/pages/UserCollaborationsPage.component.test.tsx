@@ -131,7 +131,9 @@ describe('UserCollaborationsPage', () => {
       cubeName: 'Vintage Cube',
       cubeImageUri: 'https://cdn.example/art.jpg',
       cubeVisibility: 'pu',
+      ownerId: 'alice-id',
       ownerUsername: 'alice',
+      invitedById: 'alice-id',
       invitedByUsername: 'alice',
       invitedAt: 1,
     };
@@ -140,6 +142,7 @@ describe('UserCollaborationsPage', () => {
       cubeId: 'cube-2',
       cubeShortId: undefined,
       cubeName: 'Pauper Cube',
+      invitedById: 'bob-id',
       invitedByUsername: 'bob',
     };
 
@@ -156,8 +159,10 @@ describe('UserCollaborationsPage', () => {
       const section = invitesSection();
       expect(within(section).getByRole('link', { name: 'Vintage Cube' })).toHaveAttribute('href', '/cube/list/vintage');
       expect(within(section).getByRole('link', { name: 'Pauper Cube' })).toHaveAttribute('href', '/cube/list/cube-2');
-      expect(within(section).getByText('by alice · Invited by alice')).toBeInTheDocument();
-      expect(within(section).getByText('by alice · Invited by bob')).toBeInTheDocument();
+      const pauperRow = within(section).getByRole('link', { name: 'Pauper Cube' }).parentElement!;
+      expect(pauperRow).toHaveTextContent('by alice · Invited by bob');
+      expect(within(pauperRow).getByRole('link', { name: 'alice' })).toHaveAttribute('href', '/user/view/alice-id');
+      expect(within(pauperRow).getByRole('link', { name: 'bob' })).toHaveAttribute('href', '/user/view/bob-id');
       expect(within(section).getByRole('button', { name: 'Accept invite to Vintage Cube' })).toBeInTheDocument();
       expect(within(section).getByRole('button', { name: 'Decline invite to Vintage Cube' })).toBeInTheDocument();
       // The section sits above the Collaborations heading.
@@ -195,7 +200,15 @@ describe('UserCollaborationsPage', () => {
 
       const section = invitesSection();
       expect(within(section).getByText('Vintage Cube')).toBeInTheDocument();
-      expect(within(section).queryByRole('link')).not.toBeInTheDocument();
+      expect(within(section).queryByRole('link', { name: 'Vintage Cube' })).not.toBeInTheDocument();
+    });
+
+    it('does not link a deleted inviter', () => {
+      renderPage({ pendingInvites: [{ ...invite, invitedById: undefined, invitedByUsername: '[deleted]' }] });
+
+      const section = invitesSection();
+      expect(section).toHaveTextContent('by alice · Invited by [deleted]');
+      expect(within(section).queryByRole('link', { name: '[deleted]' })).not.toBeInTheDocument();
     });
 
     it('drops an invite that is no longer available', async () => {

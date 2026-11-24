@@ -25,10 +25,16 @@ interface PendingInvite {
   cubeName: string;
   cubeImageUri?: string;
   cubeVisibility: string;
+  ownerId?: string;
   ownerUsername: string;
+  invitedById?: string;
   invitedByUsername: string;
   invitedAt: number;
 }
+
+// A deleted user has no id and no profile, so their placeholder name stays plain text.
+const UserLink: React.FC<{ id?: string; username: string }> = ({ id, username }) =>
+  id ? <Link href={`/user/view/${encodeURIComponent(id)}`}>{username}</Link> : <>{username}</>;
 
 interface UserCollaborationsPageProps {
   owner: User;
@@ -202,7 +208,8 @@ export const UserCollaborationsPage: React.FC<UserCollaborationsPageProps> = ({
                         </Link>
                       )}
                       <Text sm className="text-text-secondary">
-                        {`by ${invite.ownerUsername} · Invited by ${invite.invitedByUsername}`}
+                        by <UserLink id={invite.ownerId} username={invite.ownerUsername} /> · Invited by{' '}
+                        <UserLink id={invite.invitedById} username={invite.invitedByUsername} />
                       </Text>
                     </Flexbox>
                     <Button

@@ -195,7 +195,9 @@ describe('the collaborations tab', () => {
         cubeShortId: 'invsh',
         cubeName: 'Secret Cube',
         cubeVisibility: 'pr',
+        ownerId: 'cube-owner-1',
         ownerUsername: 'cubeowner',
+        invitedById: 'inviter-1',
         invitedByUsername: 'inviter',
         invitedAt: 1000,
       });
@@ -227,6 +229,7 @@ describe('the collaborations tab', () => {
       await call(collaborationsHandler).as(owner).withFlash(jest.fn()).withParams({ id: 'owner-1' }).send();
 
       expect(props().pendingInvites[0].invitedByUsername).toBe('[deleted]');
+      expect(props().pendingInvites[0].invitedById).toBeUndefined();
     });
   });
 

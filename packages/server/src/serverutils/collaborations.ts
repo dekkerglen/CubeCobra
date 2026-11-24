@@ -49,7 +49,10 @@ export interface PendingInvite {
   cubeName: string;
   cubeImageUri?: string;
   cubeVisibility: string;
+  /** Absent when the user no longer exists, so there is no profile to link. */
+  ownerId?: string;
   ownerUsername: string;
+  invitedById?: string;
   invitedByUsername: string;
   invitedAt: number;
 }
@@ -87,7 +90,9 @@ export const getPendingInvitesForUser = async (userId: string): Promise<PendingI
         cubeName: cube.name,
         cubeImageUri: cube.image?.uri,
         cubeVisibility: cube.visibility,
+        ownerId: cube.owner?.id,
         ownerUsername: cube.owner?.username ?? '[deleted]',
+        invitedById: inviterNames.has(invite.invitedBy) ? invite.invitedBy : undefined,
         invitedByUsername: inviterNames.get(invite.invitedBy) ?? '[deleted]',
         invitedAt: invite.invitedAt,
       },
