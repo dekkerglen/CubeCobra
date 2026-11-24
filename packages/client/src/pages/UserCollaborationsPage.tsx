@@ -243,7 +243,7 @@ export const UserCollaborationsPage: React.FC<UserCollaborationsPageProps> = ({
           </Flexbox>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 3xl:grid-cols-5 5xl:grid-cols-6">
             {items.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map((cube) => (
-              <CubePreview key={cube.id} cube={cube} />
+              <CubePreview key={cube.id} cube={cube} pinToggle={isOwner} />
             ))}
           </div>
           <Flexbox direction="row" justify="end" alignItems="center" className="w-full mt-3">

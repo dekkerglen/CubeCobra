@@ -1,9 +1,10 @@
 import React from 'react';
 
-import { HeartFillIcon, StackIcon } from '@primer/octicons-react';
+import { HeartFillIcon, PinIcon, PinSlashIcon, StackIcon } from '@primer/octicons-react';
 import Cube from '@utils/datatypes/Cube';
 import { getCubeId } from '@utils/Util';
 
+import usePinToggle from '../../hooks/usePinToggle';
 import AspectRatioBox from '../base/AspectRatioBox';
 import Text from '../base/Text';
 import PinnedMarker from './PinnedMarker';
@@ -12,10 +13,13 @@ interface CubePreviewProps {
   cube: Cube;
   // Opt-in, so only lists that sort pinned cubes first explain that ordering with the marker.
   markPinned?: boolean;
+  // Your own profile: the marker plus a button to pin or unpin. Implies `markPinned`.
+  pinToggle?: boolean;
 }
 
-const CubePreview: React.FC<CubePreviewProps> = ({ cube, markPinned = false }) => {
-  const pinned = markPinned && !!cube.pinnedByCurrentUser;
+const CubePreview: React.FC<CubePreviewProps> = ({ cube, markPinned = false, pinToggle = false }) => {
+  const pin = usePinToggle(cube.id, !!cube.pinnedByCurrentUser);
+  const pinned = pinToggle ? pin.pinned : markPinned && !!cube.pinnedByCurrentUser;
   const followers = cube.likeCount ?? 0;
 
   const categories = [
@@ -24,7 +28,7 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube, markPinned = false }) =
   ].slice(0, 5);
 
   return (
-    <div className="p-2">
+    <div className="relative p-2">
       <a
         href={`/cube/list/${getCubeId(cube)}`}
         aria-label={pinned ? `${cube.name}, pinned` : undefined}
@@ -83,6 +87,22 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube, markPinned = false }) =
           />
         </AspectRatioBox>
       </a>
+      {pinToggle && (
+        // A sibling of the link rather than inside it: interactive content nested in a link is invalid.
+        <button
+          type="button"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            pin.toggle();
+          }}
+          aria-label={pin.label}
+          title={pin.label}
+          className="absolute top-4 right-4 flex items-center justify-center p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+        >
+          {pin.pinned ? <PinSlashIcon size={16} /> : <PinIcon size={16} />}
+        </button>
+      )}
     </div>
   );
 };

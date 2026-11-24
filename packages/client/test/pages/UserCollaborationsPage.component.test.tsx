@@ -24,7 +24,9 @@ jest.mock('components/DynamicFlash', () => ({ __esModule: true, default: () => n
 // fixtures deliberately omit.
 jest.mock('components/cube/CubePreview', () => ({
   __esModule: true,
-  default: ({ cube }: { cube: Cube }) => <div>{cube.name}</div>,
+  default: ({ cube, pinToggle }: { cube: Cube; pinToggle?: boolean }) => (
+    <div data-pin-toggle={pinToggle ? 'on' : 'off'}>{cube.name}</div>
+  ),
 }));
 
 const owner = { id: 'owner-1', username: 'owner' } as any;
@@ -240,5 +242,19 @@ describe('UserCollaborationsPage', () => {
       // The invite stays so the user can retry or decline.
       expect(screen.getByRole('button', { name: 'Accept invite to Vintage Cube' })).toBeEnabled();
     });
+  });
+});
+
+describe('UserCollaborationsPage pin toggle', () => {
+  it('shows a pin toggle on your own profile', () => {
+    renderPage({ cubes: [shared] }, owner);
+
+    expect(screen.getByText('Shared Cube')).toHaveAttribute('data-pin-toggle', 'on');
+  });
+
+  it('shows no pin toggle to visitors', () => {
+    renderPage({ cubes: [shared] }, { id: 'someone-else' });
+
+    expect(screen.getByText('Shared Cube')).toHaveAttribute('data-pin-toggle', 'off');
   });
 });
