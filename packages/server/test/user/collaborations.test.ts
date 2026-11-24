@@ -4,6 +4,7 @@ jest.mock('../../src/dynamo/daos', () => ({
   },
   cubeDao: {
     batchGet: jest.fn(),
+    queryCubesPinnedBy: jest.fn(),
     queryInvitesForUser: jest.fn(),
   },
   packageDao: {
@@ -20,6 +21,8 @@ jest.mock('../../src/dynamo/daos', () => ({
   },
 }));
 jest.mock('serverutils/render', () => ({
+  // The real lookup, so the pin rules are exercised against the mocked daos.
+  getPinnedCubesForUser: (...args: any[]) => jest.requireActual('serverutils/render').getPinnedCubesForUser(...args),
   handleRouteError: jest.fn(),
   redirect: jest.fn(),
   render: jest.fn(),
@@ -64,6 +67,7 @@ describe('the collaborations tab', () => {
     (collaboratorIndexDao.getCubeIdsForUser as jest.Mock).mockResolvedValue(['collab-public', 'collab-unlisted']);
     (cubeDao.batchGet as jest.Mock).mockResolvedValue([publicCollab, unlistedCollab]);
     (cubeDao.queryInvitesForUser as jest.Mock).mockResolvedValue([]);
+    (cubeDao.queryCubesPinnedBy as jest.Mock).mockResolvedValue({ cubeIds: [] });
     (userDao.batchGet as jest.Mock).mockResolvedValue([]);
   });
 
@@ -161,6 +165,45 @@ describe('the collaborations tab', () => {
       expect(cubeDao.batchGet).toHaveBeenCalledTimes(2);
       expect(renderedIds()).toEqual(visible);
       expect(props().hasMore).toBe(false);
+    });
+  });
+
+  describe('pinned collaborations', () => {
+    const pinnedCollab = collab('collab-pinned', 'Drake Pinned', 'pu');
+    const byId = new Map([publicCollab, unlistedCollab, pinnedCollab].map((cube) => [cube.id, cube]));
+
+    beforeEach(() => {
+      (collaboratorIndexDao.getCubeIdsForUser as jest.Mock).mockResolvedValue([
+        'collab-public',
+        'collab-pinned',
+        'collab-unlisted',
+      ]);
+      (cubeDao.queryCubesPinnedBy as jest.Mock).mockResolvedValue({ cubeIds: ['collab-pinned'] });
+      (cubeDao.batchGet as jest.Mock).mockImplementation(async (ids: string[]) =>
+        ids.map((id) => byId.get(id)).filter(Boolean),
+      );
+    });
+
+    it('own collaborations tab hoists pinned collaborations on the first page only', async () => {
+      await call(collaborationsHandler).as(owner).withFlash(jest.fn()).withParams({ id: 'owner-1' }).send();
+
+      expect(renderedIds()).toEqual(['collab-pinned', 'collab-public', 'collab-unlisted']);
+      expect(props().cubes[0].pinnedByCurrentUser).toBe(true);
+      expect(props().cubes[1].pinnedByCurrentUser).toBeUndefined();
+    });
+
+    it('leaves pinned collaborations off later pages', async () => {
+      const res = await call(getMoreHandler).as(owner).withBody({ owner: 'owner-1', offset: 1 }).send();
+
+      expect(res.body.cubes.map((c: any) => c.id)).toEqual(['collab-unlisted']);
+    });
+
+    it('a visitor sees no pin flags on a profile', async () => {
+      await call(collaborationsHandler).as(stranger).withFlash(jest.fn()).withParams({ id: 'owner-1' }).send();
+
+      expect(cubeDao.queryCubesPinnedBy).not.toHaveBeenCalled();
+      expect(renderedIds()).toEqual(['collab-public', 'collab-pinned']);
+      expect(props().cubes.some((c: any) => c.pinnedByCurrentUser)).toBe(false);
     });
   });
 

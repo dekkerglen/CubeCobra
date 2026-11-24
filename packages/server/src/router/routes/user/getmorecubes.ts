@@ -23,7 +23,8 @@ export const handler = async (req: Request, res: Response) => {
   let cubes = result.items.filter((cube: any) => isCubeListed(cube, req.user));
 
   // The owner's pinned cubes are hoisted onto the first page (see user/view.ts);
-  // drop them from later pages so they don't appear twice.
+  // drop them from later pages so they don't appear twice. The pin set can include
+  // collaborations too, which never appear in an owner query, so filtering on it is harmless.
   if (req.user && req.user.id === owner) {
     const pinnedResult = await cubeDao.queryCubesPinnedBy(owner, undefined, 200);
     const pinnedIds = new Set(pinnedResult.cubeIds);

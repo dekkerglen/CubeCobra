@@ -11,15 +11,15 @@ jest.mock('serverutils/render', () => ({
   render: jest.fn(),
   redirect: jest.fn(),
   handleRouteError: jest.fn(),
-  getPinnedCubesForOwner: jest.fn(),
+  getPinnedCubesForUser: jest.fn(),
 }));
 
 import { collaboratorIndexDao, cubeDao } from '../../src/dynamo/daos';
 import { routes } from '../../src/router/routes/dashboard';
 import { pickDailyGame } from '../../src/serverutils/dailyGamePick';
 import { getFeaturedCubes } from '../../src/serverutils/featuredQueue';
-import { getPinnedCubesForOwner, redirect, render } from '../../src/serverutils/render';
-import { createUser } from '../test-utils/data';
+import { getPinnedCubesForUser, redirect, render } from '../../src/serverutils/render';
+import { createCube, createUser } from '../test-utils/data';
 import { call } from '../test-utils/transport';
 
 // The handler itself is not exported; it is the last element of the '' GET route.
@@ -39,7 +39,7 @@ describe('dashboard handler', () => {
     (pickDailyGame as jest.Mock).mockResolvedValue(DAILY_GAME);
     (collaboratorIndexDao.getCubeIdsForUser as jest.Mock).mockResolvedValue([]);
     (cubeDao.queryByOwner as jest.Mock).mockResolvedValue({ items: [] });
-    (getPinnedCubesForOwner as jest.Mock).mockResolvedValue({ pinnedCubes: [], pinnedIds: new Set() });
+    (getPinnedCubesForUser as jest.Mock).mockResolvedValue({ pinnedCubes: [], pinnedIds: new Set() });
   });
 
   it('hands the page one daily game rather than the Daily P1P1 it used to', async () => {
@@ -100,6 +100,35 @@ describe('dashboard handler', () => {
 
     expect(started).toHaveLength(4);
     expect(render).toHaveBeenCalled();
+  });
+
+  it('flags pinned cubes and dedupes Collaborating On', async () => {
+    const user = createUser({ id: 'user-1' });
+    const owned = createCube({ id: 'owned-1', owner: user });
+    const pinnedCollab = {
+      ...createCube({ id: 'collab-pinned', collaborators: [user.id] }),
+      pinnedByCurrentUser: true,
+    };
+    const otherCollab = createCube({ id: 'collab-other', collaborators: [user.id] });
+    (cubeDao.queryByOwner as jest.Mock).mockResolvedValue({ items: [owned] });
+    (getPinnedCubesForUser as jest.Mock).mockResolvedValue({
+      pinnedCubes: [pinnedCollab],
+      pinnedIds: new Set([pinnedCollab.id]),
+    });
+    (collaboratorIndexDao.getCubeIdsForUser as jest.Mock).mockResolvedValue([pinnedCollab.id, otherCollab.id]);
+    (cubeDao.batchGet as jest.Mock).mockImplementation(async (ids: string[]) =>
+      [pinnedCollab, otherCollab].filter((cube) => ids.includes(cube.id)),
+    );
+
+    await call(dashboardHandler as any)
+      .as(user)
+      .send();
+
+    expect(getPinnedCubesForUser).toHaveBeenCalledWith('user-1', expect.objectContaining({ id: 'user-1' }));
+    const props = renderedProps();
+    expect(props.cubes.map((cube: any) => cube.id)).toEqual(['collab-pinned', 'owned-1']);
+    expect(props.cubes[0].pinnedByCurrentUser).toBe(true);
+    expect(props.collaboratingCubes.map((cube: any) => cube.id)).toEqual(['collab-other']);
   });
 
   it('sends anonymous visitors to the landing page', async () => {

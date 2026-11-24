@@ -90,3 +90,55 @@ describe('the user payload rendered into every page', () => {
     expect(userProps.cubes[1].imageUri).toBeUndefined();
   });
 });
+
+describe('pinned cubes in the user payload', () => {
+  const viewer = createUser({ id: 'viewer-1' });
+  const stranger = createUser({ id: 'stranger-1' });
+  const pinnedCollab = createCube({
+    id: 'collab-1',
+    shortId: 'collab',
+    name: 'Collaborating Cube',
+    owner: stranger,
+    collaborators: [viewer.id],
+  });
+  const lostCube = createCube({ id: 'lost-1', name: 'Lost Cube', owner: stranger, visibility: 'pr' });
+  const byId = new Map([pinnedCollab, lostCube, ...ownedCubes].map((cube) => [cube.id, cube]));
+
+  beforeEach(() => {
+    jest.clearAllMocks();
+    (cubeDao.queryByOwner as jest.Mock).mockResolvedValue({ items: ownedCubes, lastKey: undefined });
+    (cubeDao.queryCubesPinnedBy as jest.Mock).mockResolvedValue({ cubeIds: [lostCube.id, pinnedCollab.id] });
+    (cubeDao.batchGet as jest.Mock).mockImplementation(async (ids: string[]) =>
+      ids.map((id) => byId.get(id)).filter(Boolean),
+    );
+    (collaboratorIndexDao.getCubeIdsForUser as jest.Mock).mockResolvedValue([pinnedCollab.id]);
+    (notificationDao.getByToAndStatus as jest.Mock).mockResolvedValue({ items: [] });
+    (patronDao.getById as jest.Mock).mockResolvedValue(undefined);
+  });
+
+  it('puts pinned collaborations in the pinned group, flagged', async () => {
+    const userProps = await renderUserProps(viewer);
+
+    expect(userProps.cubes.map((cube: any) => cube.id)).toEqual(['collab-1', 'owned-1', 'owned-2']);
+    expect(userProps.cubes[0].pinnedByCurrentUser).toBe(true);
+    expect(userProps.cubes[1].pinnedByCurrentUser).toBeUndefined();
+  });
+
+  it('leaves pinned collaborations out of collaboratingCubes', async () => {
+    const userProps = await renderUserProps(viewer);
+
+    expect(userProps.collaboratingCubes).toEqual([]);
+  });
+
+  it('drops pinned cubes the user can no longer view', async () => {
+    const userProps = await renderUserProps(viewer);
+
+    expect(userProps.cubes.map((cube: any) => cube.id)).not.toContain('lost-1');
+  });
+
+  it('looks up the pins once per render', async () => {
+    await renderUserProps(viewer);
+
+    expect(cubeDao.queryCubesPinnedBy).toHaveBeenCalledTimes(1);
+  });
+});
