@@ -116,7 +116,7 @@ export const addCollaboratorHandler = async (req: Request, res: Response) => {
   } catch (err) {
     const error = err as Error;
     req.logger.error(error.message, error.stack);
-    return res.status(500).json({ success: 'false', message: 'Error adding collaborator' });
+    return res.status(500).json({ success: 'false', message: 'Error inviting collaborator' });
   }
 };
 
@@ -294,8 +294,7 @@ export const routes = [
     path: '/:id/add',
     handler: [ensureAuth, addCollaboratorHandler],
   },
-  // The invite routes must be registered before DELETE /:id/:userId so that
-  // Express doesn't match `invite` as a userId.
+  // Invite routes grouped before the remove route for readability.
   {
     method: 'post' as const,
     path: '/:id/invite/accept',

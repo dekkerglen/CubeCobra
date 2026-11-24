@@ -218,7 +218,11 @@ const CollaboratorsSettings: React.FC = () => {
                       {p.username}
                     </Text>
                     {isOwner && (
-                      <Button color="secondary" onClick={() => handleCancelInvite(p.id)}>
+                      <Button
+                        color="secondary"
+                        onClick={() => handleCancelInvite(p.id)}
+                        aria-label={`Cancel invite to ${p.username}`}
+                      >
                         Cancel
                       </Button>
                     )}

@@ -60,7 +60,7 @@ describe('CollaboratorsSettings', () => {
 
     const pending = await waitFor(pendingSection);
     expect(within(pending).getByText('bob')).toBeInTheDocument();
-    expect(within(pending).getByRole('button', { name: 'Cancel' })).toBeInTheDocument();
+    expect(within(pending).getByRole('button', { name: 'Cancel invite to bob' })).toBeInTheDocument();
     expect(within(pending).queryByText('alice')).not.toBeInTheDocument();
   });
 
@@ -92,7 +92,7 @@ describe('CollaboratorsSettings', () => {
     const { setCube } = renderSettings(csrfFetch);
 
     const pending = await waitFor(pendingSection);
-    fireEvent.click(within(pending).getByRole('button', { name: 'Cancel' }));
+    fireEvent.click(within(pending).getByRole('button', { name: 'Cancel invite to bob' }));
 
     await waitFor(() => expect(screen.queryByText('bob')).not.toBeInTheDocument());
     expect(csrfFetch).toHaveBeenCalledWith(

@@ -194,6 +194,7 @@ describe('the collaborations tab', () => {
         cubeId: 'invited-cube',
         cubeShortId: 'invsh',
         cubeName: 'Secret Cube',
+        cubeVisibility: 'pr',
         ownerUsername: 'cubeowner',
         invitedByUsername: 'inviter',
         invitedAt: 1000,

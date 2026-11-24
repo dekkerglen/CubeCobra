@@ -130,6 +130,7 @@ describe('UserCollaborationsPage', () => {
       cubeShortId: 'vintage',
       cubeName: 'Vintage Cube',
       cubeImageUri: 'https://cdn.example/art.jpg',
+      cubeVisibility: 'pu',
       ownerUsername: 'alice',
       invitedByUsername: 'alice',
       invitedAt: 1,
@@ -142,7 +143,11 @@ describe('UserCollaborationsPage', () => {
       invitedByUsername: 'bob',
     };
 
-    const jsonResponse = (body: unknown, ok = true) => ({ ok, status: ok ? 200 : 400, json: async () => body });
+    const jsonResponse = (body: unknown, ok = true, status = ok ? 200 : 400) => ({
+      ok,
+      status,
+      json: async () => body,
+    });
     const invitesSection = () => screen.getByRole('region', { name: 'Pending invites' });
 
     it('shows pending invites on your own profile', () => {
@@ -151,8 +156,8 @@ describe('UserCollaborationsPage', () => {
       const section = invitesSection();
       expect(within(section).getByRole('link', { name: 'Vintage Cube' })).toHaveAttribute('href', '/cube/list/vintage');
       expect(within(section).getByRole('link', { name: 'Pauper Cube' })).toHaveAttribute('href', '/cube/list/cube-2');
-      expect(within(section).getByText('Invited by alice')).toBeInTheDocument();
-      expect(within(section).getByText('Invited by bob')).toBeInTheDocument();
+      expect(within(section).getByText('by alice · Invited by alice')).toBeInTheDocument();
+      expect(within(section).getByText('by alice · Invited by bob')).toBeInTheDocument();
       expect(within(section).getByRole('button', { name: 'Accept invite to Vintage Cube' })).toBeInTheDocument();
       expect(within(section).getByRole('button', { name: 'Decline invite to Vintage Cube' })).toBeInTheDocument();
       // The section sits above the Collaborations heading.
@@ -182,6 +187,28 @@ describe('UserCollaborationsPage', () => {
       expect(screen.getByRole('button', { name: 'Accept invite to Vintage Cube' })).toBeDisabled();
       expect(screen.getByRole('button', { name: 'Decline invite to Vintage Cube' })).toBeDisabled();
       await waitFor(() => expect(screen.queryByText('Vintage Cube')).not.toBeInTheDocument());
+      expect(screen.getByText('Pauper Cube')).toBeInTheDocument();
+    });
+
+    it('renders a private cube invite as plain text, not a link', () => {
+      renderPage({ pendingInvites: [{ ...invite, cubeVisibility: 'pr' }] });
+
+      const section = invitesSection();
+      expect(within(section).getByText('Vintage Cube')).toBeInTheDocument();
+      expect(within(section).queryByRole('link')).not.toBeInTheDocument();
+    });
+
+    it('drops an invite that is no longer available', async () => {
+      const csrfFetch = jest
+        .fn()
+        .mockResolvedValue(jsonResponse({ success: 'false', message: 'No invite found' }, false, 403));
+      renderPage({ pendingInvites: [invite, other] }, owner, csrfFetch);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Decline invite to Vintage Cube' }));
+
+      expect(await screen.findByText('This invite is no longer available.')).toBeInTheDocument();
+      expect(screen.queryByText('Vintage Cube')).not.toBeInTheDocument();
+      expect(screen.queryByText('No invite found')).not.toBeInTheDocument();
       expect(screen.getByText('Pauper Cube')).toBeInTheDocument();
     });
 

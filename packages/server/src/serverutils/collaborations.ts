@@ -48,6 +48,7 @@ export interface PendingInvite {
   cubeShortId?: string;
   cubeName: string;
   cubeImageUri?: string;
+  cubeVisibility: string;
   ownerUsername: string;
   invitedByUsername: string;
   invitedAt: number;
@@ -85,6 +86,7 @@ export const getPendingInvitesForUser = async (userId: string): Promise<PendingI
         cubeShortId: cube.shortId,
         cubeName: cube.name,
         cubeImageUri: cube.image?.uri,
+        cubeVisibility: cube.visibility,
         ownerUsername: cube.owner?.username ?? '[deleted]',
         invitedByUsername: inviterNames.get(invite.invitedBy) ?? '[deleted]',
         invitedAt: invite.invitedAt,

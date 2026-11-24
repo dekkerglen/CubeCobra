@@ -279,6 +279,25 @@ describe('POST /cube/api/collaborators/:id/add', () => {
   });
 });
 
+describe('POST /cube/api/collaborators/:id/add errors', () => {
+  afterEach(() => {
+    jest.resetAllMocks();
+  });
+
+  it('reports an unexpected failure as an invite error', async () => {
+    (cubeDao.getById as jest.Mock).mockRejectedValue(new Error('boom'));
+
+    const res = await call(addCollaboratorHandler)
+      .as(createUser())
+      .withParams({ id: 'cube-1' })
+      .withBody({ username: 'someone' })
+      .send();
+
+    expect(res.status).toBe(500);
+    expect(res.body.message).toBe('Error inviting collaborator');
+  });
+});
+
 describe('POST /cube/api/collaborators/:id/invite/accept', () => {
   afterEach(() => {
     jest.clearAllMocks();

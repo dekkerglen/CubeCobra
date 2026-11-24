@@ -1,6 +1,6 @@
 import React, { useCallback, useContext, useState } from 'react';
 
-import Cube from '@utils/datatypes/Cube';
+import Cube, { CUBE_VISIBILITY } from '@utils/datatypes/Cube';
 import User from '@utils/datatypes/User';
 
 import Alert from 'components/base/Alert';
@@ -24,6 +24,7 @@ interface PendingInvite {
   cubeShortId?: string;
   cubeName: string;
   cubeImageUri?: string;
+  cubeVisibility: string;
   ownerUsername: string;
   invitedByUsername: string;
   invitedAt: number;
@@ -68,6 +69,7 @@ export const UserCollaborationsPage: React.FC<UserCollaborationsPageProps> = ({
   const [pendingInvites, setPendingInvites] = useState<PendingInvite[]>(initialPendingInvites);
   const [busyInvites, setBusyInvites] = useState<Set<string>>(new Set());
   const [inviteError, setInviteError] = useState<string | null>(null);
+  const [inviteNotice, setInviteNotice] = useState<string | null>(null);
 
   const pageCount = getIndefinitePageCount(items, PAGE_SIZE);
 
@@ -128,6 +130,7 @@ export const UserCollaborationsPage: React.FC<UserCollaborationsPageProps> = ({
   const respondToInvite = async (invite: PendingInvite, action: 'accept' | 'decline') => {
     setBusyInvites((current) => new Set(current).add(invite.cubeId));
     setInviteError(null);
+    setInviteNotice(null);
     try {
       const response = await csrfFetch(
         `/cube/api/collaborators/${encodeURIComponent(invite.cubeId)}/invite/${action}`,
@@ -140,6 +143,12 @@ export const UserCollaborationsPage: React.FC<UserCollaborationsPageProps> = ({
           // Reload so the newly joined cube shows in the grid and the navbar.
           window.location.reload();
         }
+        return;
+      }
+      // 403/404 mean the invite was cancelled or the cube deleted since the page loaded.
+      if (response.status === 403 || response.status === 404) {
+        setPendingInvites((current) => current.filter((i) => i.cubeId !== invite.cubeId));
+        setInviteNotice('This invite is no longer available.');
         return;
       }
       setInviteError(json.message || `Failed to ${action} invite.`);
@@ -174,6 +183,7 @@ export const UserCollaborationsPage: React.FC<UserCollaborationsPageProps> = ({
                 Pending invites
               </Text>
               {inviteError && <Alert color="danger">{inviteError}</Alert>}
+              {inviteNotice && <Alert color="info">{inviteNotice}</Alert>}
               {pendingInvites.map((invite) => {
                 const busy = busyInvites.has(invite.cubeId);
                 return (
@@ -184,11 +194,15 @@ export const UserCollaborationsPage: React.FC<UserCollaborationsPageProps> = ({
                       <div className="w-12 h-12 rounded bg-bg-secondary flex-shrink-0" />
                     )}
                     <Flexbox direction="col" className="flex-1 min-w-0">
-                      <Link href={`/cube/list/${encodeURIComponent(invite.cubeShortId ?? invite.cubeId)}`}>
-                        {invite.cubeName}
-                      </Link>
+                      {invite.cubeVisibility === CUBE_VISIBILITY.PRIVATE ? (
+                        <Text>{invite.cubeName}</Text>
+                      ) : (
+                        <Link href={`/cube/list/${encodeURIComponent(invite.cubeShortId ?? invite.cubeId)}`}>
+                          {invite.cubeName}
+                        </Link>
+                      )}
                       <Text sm className="text-text-secondary">
-                        Invited by {invite.invitedByUsername}
+                        {`by ${invite.ownerUsername} · Invited by ${invite.invitedByUsername}`}
                       </Text>
                     </Flexbox>
                     <Button
