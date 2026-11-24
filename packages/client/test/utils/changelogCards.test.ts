@@ -5,7 +5,7 @@ import { changelogToBoardRows } from 'utils/changelogCards';
 const card = (cardID: string): Card => ({ cardID }) as Card;
 
 describe('changelogToBoardRows', () => {
-  it('orders added as adds then swap-ins, removed as removes then swap-outs', () => {
+  it('keeps adds and removes plain and returns swaps as pairs', () => {
     const changelog = {
       mainboard: {
         adds: [card('A')],
@@ -17,25 +17,39 @@ describe('changelogToBoardRows', () => {
 
     const [rows] = changelogToBoardRows(changelog);
 
-    expect(rows.added.map((e) => e.card.cardID)).toEqual(['A', 'S1n']);
-    expect(rows.added.map((e) => e.kind)).toEqual(['add', 'swap']);
-    expect(rows.removed.map((e) => e.card.cardID)).toEqual(['R', 'S1o']);
-    expect(rows.removed.map((e) => e.kind)).toEqual(['remove', 'swap']);
+    expect(rows.added.map((e) => e.card.cardID)).toEqual(['A']);
+    expect(rows.removed.map((e) => e.card.cardID)).toEqual(['R']);
+    expect(rows.swapped.map((s) => [s.oldCard.cardID, s.card.cardID])).toEqual([['S1o', 'S1n']]);
   });
 
-  it('gives both halves of a swap the same id, unique per board', () => {
+  it('skips a swap missing either card', () => {
     const changelog = {
-      mainboard: { swaps: [{ index: 0, oldCard: card('Mo'), card: card('Mn') }] },
-      maybeboard: { swaps: [{ index: 0, oldCard: card('Bo'), card: card('Bn') }] },
+      mainboard: {
+        swaps: [
+          { index: 0, oldCard: card('X') },
+          { index: 1, card: card('Y') },
+          { index: 2, oldCard: card('P'), card: card('Q') },
+        ],
+      },
     } as unknown as Changes;
 
-    const [main, maybe] = changelogToBoardRows(changelog);
+    const [rows] = changelogToBoardRows(changelog);
 
-    expect(main.added[0].swapId).toBe('mainboard:0');
-    expect(main.removed[0].swapId).toBe('mainboard:0');
-    expect(maybe.added[0].swapId).toBe('maybeboard:0');
-    expect(maybe.removed[0].swapId).toBe('maybeboard:0');
-    expect(main.added[0].swapId).not.toBe(maybe.added[0].swapId);
+    expect(rows.swapped.map((s) => [s.oldCard.cardID, s.card.cardID])).toEqual([['P', 'Q']]);
+  });
+
+  it('renders a swaps-only board with no added or removed entries', () => {
+    const changelog = {
+      mainboard: { swaps: [{ index: 0, oldCard: card('P'), card: card('Q') }] },
+    } as unknown as Changes;
+
+    const result = changelogToBoardRows(changelog);
+
+    expect(result).toHaveLength(1);
+    expect(result[0].added).toEqual([]);
+    expect(result[0].removed).toEqual([]);
+    expect(result[0].edited).toEqual([]);
+    expect(result[0].swapped).toHaveLength(1);
   });
 
   it('uses the new card for edits', () => {
