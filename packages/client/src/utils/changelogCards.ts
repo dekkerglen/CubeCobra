@@ -2,12 +2,16 @@ import Card, { CardDetails, Changes, isBoardChanges } from '@utils/datatypes/Car
 
 import { getPlaceholderCardDetails } from 'utils/placeholderCardDetails';
 
-export type ChangeKind = 'add' | 'remove' | 'swap' | 'edit';
+export type ChangeKind = 'add' | 'remove' | 'edit';
 
 export interface ChangelogCardEntry {
   card: Card;
   kind: ChangeKind;
-  swapId?: string;
+}
+
+export interface ChangelogSwapPair {
+  oldCard: Card;
+  card: Card;
 }
 
 export interface ChangelogBoardRows {
@@ -15,6 +19,7 @@ export interface ChangelogBoardRows {
   added: ChangelogCardEntry[];
   removed: ChangelogCardEntry[];
   edited: ChangelogCardEntry[];
+  swapped: ChangelogSwapPair[];
   addCount: number;
   removeCount: number;
   editCount: number;
@@ -30,18 +35,14 @@ export function changelogToBoardRows(changelog: Changes): ChangelogBoardRows[] {
     const edits = value.edits || [];
     if (adds.length + removes.length + swaps.length + edits.length === 0) continue;
 
-    const swapId = (swapIndex: number) => `${board}:${swapIndex}`;
     rows.push({
       board,
-      added: [
-        ...adds.map((card): ChangelogCardEntry => ({ card, kind: 'add' })),
-        ...swaps.map((swap, i): ChangelogCardEntry => ({ card: swap.card, kind: 'swap', swapId: swapId(i) })),
-      ],
-      removed: [
-        ...removes.map((remove): ChangelogCardEntry => ({ card: remove.oldCard, kind: 'remove' })),
-        ...swaps.map((swap, i): ChangelogCardEntry => ({ card: swap.oldCard, kind: 'swap', swapId: swapId(i) })),
-      ],
+      added: adds.map((card): ChangelogCardEntry => ({ card, kind: 'add' })),
+      removed: removes.map((remove): ChangelogCardEntry => ({ card: remove.oldCard, kind: 'remove' })),
       edited: edits.map((edit): ChangelogCardEntry => ({ card: edit.newCard, kind: 'edit' })),
+      swapped: swaps
+        .filter((swap) => swap?.oldCard && swap?.card)
+        .map((swap): ChangelogSwapPair => ({ oldCard: swap.oldCard, card: swap.card })),
       addCount: adds.length + swaps.length,
       removeCount: removes.length + swaps.length,
       editCount: edits.length,

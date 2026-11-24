@@ -16,14 +16,21 @@ jest.mock('hooks/useCardDetails', () => ({
 
 jest.mock('components/card/CardGrid', () => ({
   __esModule: true,
-  default: ({ cards, badges, ringedIndices, onCardHover }: CardGridProps) => (
-    <div data-testid="grid" data-ringed={JSON.stringify(ringedIndices ?? [])}>
-      {cards.map((_card, i) => (
-        <span key={i} onMouseEnter={() => onCardHover?.(i)} onMouseLeave={() => onCardHover?.(null)}>
+  default: ({ cards, badges, hrefFn }: CardGridProps) => (
+    <div data-testid="grid">
+      {cards.map((card, i) => (
+        <span key={i} data-href={hrefFn?.(card)}>
           {badges?.[i]?.title}
         </span>
       ))}
     </div>
+  ),
+}));
+
+jest.mock('components/blog/SwapStackTile', () => ({
+  __esModule: true,
+  default: ({ oldCard, card }: { oldCard: Card; card: Card }) => (
+    <div data-testid="swap">{`${oldCard.cardID}>${card.cardID}`}</div>
   ),
 }));
 
@@ -47,36 +54,33 @@ describe('ChangelogCardView', () => {
     expect(screen.queryByText(/Removed \(/)).toBeNull();
   });
 
-  it('hovering a swap-in rings its swap-out', () => {
-    const changelog = { mainboard: { swaps: [swap('Old', 'New')] } } as unknown as Changes;
+  it('renders swaps in their own row as pairs', () => {
+    const changelog = { mainboard: { adds: [card('A')], swaps: [swap('old', 'new')] } } as unknown as Changes;
 
     render(<ChangelogCardView changelog={changelog} cardsPerRow={6} />);
 
-    const [addedGrid, removedGrid] = screen.getAllByTestId('grid');
-    const swapIn = addedGrid.querySelector('span')!;
-    expect(swapIn).toHaveTextContent('Swapped');
-
-    fireEvent.mouseEnter(swapIn);
-    expect(removedGrid).toHaveAttribute('data-ringed', '[0]');
-
-    fireEvent.mouseLeave(swapIn);
-    expect(removedGrid).toHaveAttribute('data-ringed', '[]');
+    expect(screen.getByText('Added (1)')).toBeInTheDocument();
+    expect(screen.getByText('Swapped (1)')).toBeInTheDocument();
+    expect(screen.getByTestId('swap')).toHaveTextContent('old>new');
+    expect(screen.queryByText(/Removed \(/)).toBeNull();
   });
 
-  it('does not ring across boards', () => {
-    const changelog = {
-      mainboard: { swaps: [swap('Mo', 'Mn')] },
-      maybeboard: { swaps: [swap('Bo', 'Bn')] },
-    } as unknown as Changes;
+  it('renders a swaps-only board without Added or Removed rows', () => {
+    const changelog = { mainboard: { swaps: [swap('old', 'new')] } } as unknown as Changes;
 
     render(<ChangelogCardView changelog={changelog} cardsPerRow={6} />);
 
-    const [mainAdded, mainRemoved, maybeAdded, maybeRemoved] = screen.getAllByTestId('grid');
-    fireEvent.mouseEnter(mainAdded.querySelector('span')!);
+    expect(screen.getByText('Swapped (1)')).toBeInTheDocument();
+    expect(screen.queryByText(/Added \(/)).toBeNull();
+    expect(screen.queryByText(/Removed \(/)).toBeNull();
+  });
 
-    expect(mainRemoved).toHaveAttribute('data-ringed', '[0]');
-    expect(maybeAdded).toHaveAttribute('data-ringed', '[]');
-    expect(maybeRemoved).toHaveAttribute('data-ringed', '[]');
+  it('links grid cards to their card pages', () => {
+    const changelog = { mainboard: { adds: [card('A')] } } as unknown as Changes;
+
+    render(<ChangelogCardView changelog={changelog} cardsPerRow={6} />);
+
+    expect(screen.getByText('Added')).toHaveAttribute('data-href', '/tool/card/A');
   });
 });
 

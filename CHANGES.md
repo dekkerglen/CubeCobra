@@ -44,7 +44,7 @@ New Features and Bug Fixes should be self explanatory, however technical changes
 - Closing or leaving the page partway through a Hedron Network import now asks you to confirm first, so an accidental close doesn't throw away the decks you've scanned.
 - Cube settings with unsaved changes now ask before you close the page, leave it, or switch to another settings section.
 - Color Pair Performance in Winrate Analytics can now count each deck once, under its two main colors, so a two-color deck with a light splash counts only toward its own pair.
-- Changelog entries and blog posts can now show their changes as card images, grouped by board, with a Text toggle for the old list. Hovering a swapped card highlights the card it replaced.
+- Changelog entries and blog posts can now show their changes as card images, grouped by board, with a Text toggle for the old list. Swaps have their own row, each shown as a stacked pair: hover one to see both cards, or click any card to open its page.
 
 ## Bug Fixes
 

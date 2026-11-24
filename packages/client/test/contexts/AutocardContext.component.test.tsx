@@ -462,3 +462,77 @@ describe('landscape previews', () => {
     expect(popupLeft() + popupSize.width).toBeLessThanOrEqual(VIEWPORT.width);
   });
 });
+
+describe('pair previews', () => {
+  const landscapeFrame = (id: string) => document.getElementById(id)!.closest('[style*="680 / 488"]');
+
+  const hoverPair = (preview: Card, partner: Card) => {
+    render(
+      <AutocardContextProvider>
+        <AutocardDiv card={preview} pairWith={partner}>
+          Pair
+        </AutocardDiv>
+      </AutocardContextProvider>,
+    );
+    moveCursorTo(100, 100);
+    fireEvent.mouseEnter(screen.getByText('Pair'));
+  };
+
+  it("shows the card's front face beside its partner's front face", () => {
+    hoverPair(card, otherCard);
+    expect(document.getElementById('autocardImageFront')).toHaveAttribute('src', 'https://example.com/bolt.jpg');
+    expect(document.getElementById('autocardImageBack')).toHaveAttribute('src', 'https://example.com/ancestral.jpg');
+    expect(popup()).toHaveStyle({ width: '30rem' });
+  });
+
+  it('uses only the front face of a double-faced partner, with its own orientation', () => {
+    const battle = {
+      cardID: 'battle',
+      details: {
+        name: 'Invasion',
+        layout: 'transform',
+        type: 'Battle — Siege',
+        image_normal: 'https://example.com/battle.jpg',
+        image_flip: 'https://example.com/battle-back.jpg',
+      },
+    } as unknown as Card;
+
+    hoverPair(card, battle);
+    expect(document.getElementById('autocardImageBack')).toHaveAttribute('src', 'https://example.com/battle.jpg');
+    expect(landscapeFrame('autocardImageBack')).not.toBeNull();
+    expect(landscapeFrame('autocardImageFront')).toBeNull();
+    expect(popup()).toHaveStyle({ width: '35.9016rem' });
+  });
+
+  it('shows no tags or foil in a pair preview', () => {
+    const foilTagged = { ...card, finish: 'Foil', tags: ['Burn'] } as unknown as Card;
+
+    hoverPair(foilTagged, otherCard);
+    expect(document.getElementById('autocardTags')).toBeNull();
+    expect(document.querySelector('.foilOverlay')).toBeNull();
+  });
+
+  it('marks the left card removed and the right card added', () => {
+    hoverPair(card, otherCard);
+
+    const removed = screen.getByLabelText('Removed');
+    const added = screen.getByLabelText('Added');
+    expect(removed).toHaveTextContent('−');
+    expect(added).toHaveTextContent('+');
+    expect(document.getElementById('autocardImageFront')!.parentElement).toContainElement(removed);
+    expect(document.getElementById('autocardImageBack')!.parentElement).toContainElement(added);
+  });
+
+  it('shows no swap badges on a single-card preview', () => {
+    render(
+      <AutocardContextProvider>
+        <AutocardDiv card={card}>Lightning Bolt</AutocardDiv>
+      </AutocardContextProvider>,
+    );
+    moveCursorTo(100, 100);
+    fireEvent.mouseEnter(screen.getByText('Lightning Bolt'));
+
+    expect(screen.queryByLabelText('Removed')).toBeNull();
+    expect(screen.queryByLabelText('Added')).toBeNull();
+  });
+});
