@@ -7,12 +7,14 @@ interface NavLinkProps {
   children: React.ReactNode;
   className?: string;
   root?: boolean;
+  ariaLabel?: string;
 }
 
-const NavLink: React.FC<NavLinkProps> = ({ href, children, root = false }) => {
+const NavLink: React.FC<NavLinkProps> = ({ href, children, root = false, ariaLabel }) => {
   return (
     <a
       href={href}
+      aria-label={ariaLabel}
       className={classNames('select-none cursor-pointer font-normal transition-colors duration-200 ease-in-out', {
         'text-text hover:text-text-secondary': !root,
         'text-text-secondary hover:text-text-secondary-active font-semibold px-2': root,

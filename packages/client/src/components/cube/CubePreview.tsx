@@ -6,12 +6,16 @@ import { getCubeId } from '@utils/Util';
 
 import AspectRatioBox from '../base/AspectRatioBox';
 import Text from '../base/Text';
+import PinnedMarker from './PinnedMarker';
 
 interface CubePreviewProps {
   cube: Cube;
+  // Opt-in, so only lists that sort pinned cubes first explain that ordering with the marker.
+  markPinned?: boolean;
 }
 
-const CubePreview: React.FC<CubePreviewProps> = ({ cube }) => {
+const CubePreview: React.FC<CubePreviewProps> = ({ cube, markPinned = false }) => {
+  const pinned = markPinned && !!cube.pinnedByCurrentUser;
   const followers = cube.likeCount ?? 0;
 
   const categories = [
@@ -23,6 +27,7 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube }) => {
     <div className="p-2">
       <a
         href={`/cube/list/${getCubeId(cube)}`}
+        aria-label={pinned ? `${cube.name}, pinned` : undefined}
         className="group block bg-bg-accent/80 shadow border border-border hover:border-border-active overflow-hidden rounded-lg"
       >
         <AspectRatioBox ratio={16 / 9}>
@@ -65,6 +70,7 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube }) => {
                   {cube.cardCount}
                 </Text>
               </span>
+              {pinned && <PinnedMarker />}
               <Text xs className="text-white/80 truncate">
                 by {cube.owner.username}
               </Text>

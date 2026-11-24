@@ -471,6 +471,23 @@ describe('MobileNavDrawer', () => {
       expect(row.querySelector('.truncate')).not.toBeNull();
     });
 
+    it('marks pinned cubes in the drawer', () => {
+      const pinned = { ...cubeWithImage, pinnedByCurrentUser: true };
+      renderDrawer({ user: { ...cubesUser, cubes: [pinned, cubeWithoutImage] }, side: 'right' });
+
+      // The pin is decoration for sighted users; the accessible name carries the same fact.
+      const row = screen.getByRole('link', { name: 'Owned Cube, pinned' });
+      expect(row.querySelector('[aria-hidden] .octicon-pin')).not.toBeNull();
+    });
+
+    it('does not mark unpinned cubes', () => {
+      renderDrawer({ user: cubesUser, side: 'right' });
+
+      const row = screen.getByRole('link', { name: 'Owned Cube' });
+      expect(row.querySelector('.octicon-pin')).toBeNull();
+      expect(screen.queryByRole('link', { name: /, pinned$/ })).not.toBeInTheDocument();
+    });
+
     it('renders nothing for a signed-out visitor', () => {
       renderDrawer({ user: null, side: 'right' });
 

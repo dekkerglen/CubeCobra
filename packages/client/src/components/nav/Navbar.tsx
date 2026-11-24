@@ -33,6 +33,7 @@ import NavLink from '../base/NavLink';
 import NavMenu from '../base/NavMenu';
 import PostButton from '../base/PostButton';
 import ResponsiveDiv from '../base/ResponsiveDiv';
+import PinnedMarker from '../cube/PinnedMarker';
 import LoginModal from '../modals/LoginModal';
 import withQuickCreateCube from '../QuickCreateCubeButton';
 import withModal from '../WithModal';
@@ -166,8 +167,15 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
     >
       <Flexbox direction="col" gap="1" className="max-h-96 overflow-auto p-2">
         {(user.cubes || []).slice(0, 20).map((item) => (
-          <NavLink key={`dropdown_cube_${item.id}`} href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}>
-            {item.name}
+          <NavLink
+            key={`dropdown_cube_${item.id}`}
+            href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}
+            ariaLabel={item.pinnedByCurrentUser ? `${item.name}, pinned` : undefined}
+          >
+            <span className="inline-flex items-center gap-1">
+              {item.name}
+              {item.pinnedByCurrentUser && <PinnedMarker />}
+            </span>
           </NavLink>
         ))}
         {(user.collaboratingCubes || []).length > 0 && (
@@ -244,8 +252,15 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
             <Flexbox direction="col" gap="2">
               <div className="text-xs uppercase font-bold text-text-secondary tracking-wide">Your Cubes</div>
               {(user.cubes || []).slice(0, 20).map((item) => (
-                <NavLink key={`combined_cube_${item.id}`} href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}>
-                  {item.name}
+                <NavLink
+                  key={`combined_cube_${item.id}`}
+                  href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}
+                  ariaLabel={item.pinnedByCurrentUser ? `${item.name}, pinned` : undefined}
+                >
+                  <span className="inline-flex items-center gap-1">
+                    {item.name}
+                    {item.pinnedByCurrentUser && <PinnedMarker />}
+                  </span>
                 </NavLink>
               ))}
             </Flexbox>

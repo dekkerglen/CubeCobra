@@ -34,6 +34,7 @@ import classNames from 'classnames';
 
 import UserContext from '../../contexts/UserContext';
 import PostButton from '../base/PostButton';
+import PinnedMarker from '../cube/PinnedMarker';
 import withQuickCreateCube from '../QuickCreateCubeButton';
 
 export interface MobileNavDrawerProps {
@@ -147,6 +148,7 @@ const CubeRow: React.FC<{ cube: Cube }> = ({ cube }) => {
       // A name too long for a phone screen is clipped, so the full one rides along in the tooltip
       // and in the link's accessible name.
       title={cube.name}
+      aria-label={cube.pinnedByCurrentUser ? `${cube.name}, pinned` : undefined}
       className="flex items-center gap-3 rounded-md px-3 py-2 text-base text-text hover:bg-bg-active"
     >
       {imageUri ? (
@@ -166,6 +168,7 @@ const CubeRow: React.FC<{ cube: Cube }> = ({ cube }) => {
       {/* `truncate` ellipses here only because its `overflow: hidden` forces this flex child's
           automatic minimum size to zero; the computed `min-width` stays `auto`. */}
       <span className="truncate">{cube.name}</span>
+      {cube.pinnedByCurrentUser && <PinnedMarker />}
     </a>
   );
 };
