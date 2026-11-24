@@ -33,7 +33,6 @@ import NavLink from '../base/NavLink';
 import NavMenu from '../base/NavMenu';
 import PostButton from '../base/PostButton';
 import ResponsiveDiv from '../base/ResponsiveDiv';
-import PinnedMarker from '../cube/PinnedMarker';
 import LoginModal from '../modals/LoginModal';
 import withQuickCreateCube from '../QuickCreateCubeButton';
 import withModal from '../WithModal';
@@ -153,6 +152,10 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
     </NavMenu>
   );
 
+  // The server sends the user's cubes with pinned ones (owned or collaborated) first, capped at 20.
+  const pinnedCubes = (user?.cubes || []).filter((cube) => cube.pinnedByCurrentUser);
+  const ownedCubes = (user?.cubes || []).filter((cube) => !cube.pinnedByCurrentUser);
+
   const yourCubesMenu = user && (
     <NavMenu
       label={
@@ -166,18 +169,38 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
       transparent={transparent}
     >
       <Flexbox direction="col" gap="1" className="max-h-96 overflow-auto p-2">
-        {(user.cubes || []).slice(0, 20).map((item) => (
-          <NavLink
-            key={`dropdown_cube_${item.id}`}
-            href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}
-            ariaLabel={item.pinnedByCurrentUser ? `${item.name}, pinned` : undefined}
-          >
-            <span className="inline-flex items-center gap-1">
-              {item.name}
-              {item.pinnedByCurrentUser && <PinnedMarker />}
-            </span>
-          </NavLink>
-        ))}
+        {/* Pinned cubes can include collaborations, so they get their own section rather than
+            sitting under "Your Cubes". The heading marks them, so the rows carry no pin icon. */}
+        {pinnedCubes.length > 0 && (
+          <>
+            <div className="text-xs text-text-secondary font-semibold px-1 pb-1">Pinned</div>
+            {pinnedCubes.map((item) => (
+              <NavLink
+                key={`dropdown_pinned_${item.id}`}
+                href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}
+                ariaLabel={`${item.name}, pinned`}
+              >
+                {item.name}
+              </NavLink>
+            ))}
+          </>
+        )}
+        {ownedCubes.length > 0 && (
+          <>
+            <div
+              className={classNames('text-xs text-text-secondary font-semibold px-1 pb-1', {
+                'pt-2': pinnedCubes.length > 0,
+              })}
+            >
+              Your Cubes
+            </div>
+            {ownedCubes.map((item) => (
+              <NavLink key={`dropdown_cube_${item.id}`} href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}>
+                {item.name}
+              </NavLink>
+            ))}
+          </>
+        )}
         {(user.collaboratingCubes || []).length > 0 && (
           <>
             <div className="text-xs text-text-secondary font-semibold px-1 pt-2 pb-1">Collaborating</div>
@@ -249,21 +272,31 @@ const Navbar: React.FC<NavbarProps> = ({ transparent = false }) => {
           )}
         >
           <Flexbox direction="col" gap="3">
-            <Flexbox direction="col" gap="2">
-              <div className="text-xs uppercase font-bold text-text-secondary tracking-wide">Your Cubes</div>
-              {(user.cubes || []).slice(0, 20).map((item) => (
-                <NavLink
-                  key={`combined_cube_${item.id}`}
-                  href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}
-                  ariaLabel={item.pinnedByCurrentUser ? `${item.name}, pinned` : undefined}
-                >
-                  <span className="inline-flex items-center gap-1">
+            {pinnedCubes.length > 0 && (
+              <Flexbox direction="col" gap="2">
+                <div className="text-xs uppercase font-bold text-text-secondary tracking-wide">Pinned</div>
+                {pinnedCubes.map((item) => (
+                  <NavLink
+                    key={`combined_pinned_${item.id}`}
+                    href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}
+                    ariaLabel={`${item.name}, pinned`}
+                  >
                     {item.name}
-                    {item.pinnedByCurrentUser && <PinnedMarker />}
-                  </span>
-                </NavLink>
-              ))}
-            </Flexbox>
+                  </NavLink>
+                ))}
+              </Flexbox>
+            )}
+
+            {ownedCubes.length > 0 && (
+              <Flexbox direction="col" gap="2">
+                <div className="text-xs uppercase font-bold text-text-secondary tracking-wide">Your Cubes</div>
+                {ownedCubes.map((item) => (
+                  <NavLink key={`combined_cube_${item.id}`} href={`/cube/list/${encodeURIComponent(getCubeId(item))}`}>
+                    {item.name}
+                  </NavLink>
+                ))}
+              </Flexbox>
+            )}
 
             {(user.collaboratingCubes || []).length > 0 && (
               <Flexbox direction="col" gap="2">

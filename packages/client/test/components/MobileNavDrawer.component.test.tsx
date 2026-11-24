@@ -3,7 +3,7 @@ import React from 'react';
 // Must come before anything that imports @headlessui/react — see the module for why.
 import '../test-utils/mockAnimationsApi';
 
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -471,20 +471,30 @@ describe('MobileNavDrawer', () => {
       expect(row.querySelector('.truncate')).not.toBeNull();
     });
 
-    it('marks pinned cubes in the drawer', () => {
+    it('groups pinned cubes under a Pinned heading above Your Cubes', () => {
       const pinned = { ...cubeWithImage, pinnedByCurrentUser: true };
       renderDrawer({ user: { ...cubesUser, cubes: [pinned, cubeWithoutImage] }, side: 'right' });
 
-      // The pin is decoration for sighted users; the accessible name carries the same fact.
-      const row = screen.getByRole('link', { name: 'Owned Cube, pinned' });
-      expect(row.querySelector('[aria-hidden] .octicon-pin')).not.toBeNull();
+      const list = screen.getByTestId('mobile-nav-cube-list');
+      const sequence = [
+        within(list).getByText('Pinned'),
+        within(list).getByRole('link', { name: 'Owned Cube, pinned' }),
+        within(list).getByText('Your Cubes'),
+        within(list).getByRole('link', { name: cubeWithoutImage.name }),
+      ];
+      sequence.slice(1).forEach((node, index) => {
+        expect(sequence[index].compareDocumentPosition(node) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+      });
+      // The heading says it; no per-row icon.
+      expect(list.querySelector('.octicon-pin')).toBeNull();
     });
 
-    it('does not mark unpinned cubes', () => {
+    it('omits the Pinned heading when nothing is pinned', () => {
       renderDrawer({ user: cubesUser, side: 'right' });
 
-      const row = screen.getByRole('link', { name: 'Owned Cube' });
-      expect(row.querySelector('.octicon-pin')).toBeNull();
+      const list = screen.getByTestId('mobile-nav-cube-list');
+      expect(within(list).queryByText('Pinned')).not.toBeInTheDocument();
+      expect(within(list).getByText('Your Cubes')).toBeInTheDocument();
       expect(screen.queryByRole('link', { name: /, pinned$/ })).not.toBeInTheDocument();
     });
 
