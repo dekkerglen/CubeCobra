@@ -29,7 +29,7 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube, markPinned = false, pin
   ].slice(0, 5);
 
   return (
-    <div className="relative p-2">
+    <div className="group/card relative p-2">
       <a
         href={`/cube/list/${getCubeId(cube)}`}
         // A description rather than a name override, so the link keeps its content-derived name (stats, owner).
@@ -106,7 +106,8 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube, markPinned = false, pin
           disabled={pin.busy}
           aria-label={`${pin.label}: ${cube.name}`}
           title={pin.label}
-          className="absolute top-4 right-4 flex items-center justify-center p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer disabled:cursor-wait focus:outline-none focus-visible:ring-2 focus-visible:ring-white"
+          // Hidden until the card is hovered on devices that can hover; always shown on touch, and on keyboard focus.
+          className="absolute top-4 right-4 flex items-center justify-center p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer disabled:cursor-wait focus:outline-none focus-visible:ring-2 focus-visible:ring-white transition-opacity [@media(hover:hover)]:opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100"
         >
           {pin.pinned ? <PinSlashIcon size={16} /> : <PinIcon size={16} />}
         </button>
