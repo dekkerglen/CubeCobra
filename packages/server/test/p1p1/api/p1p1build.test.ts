@@ -1,5 +1,6 @@
 import Card from '@utils/datatypes/Card';
 import { CubeCards } from '@utils/datatypes/Cube';
+import _ from 'lodash';
 
 import { p1p1BuildHandler } from '../../../src/router/routes/cube/api/p1p1build';
 import { call } from '../../test-utils/transport';
@@ -86,12 +87,22 @@ describe('p1p1Build', () => {
   });
 
   it('balanced fill keeps the candidate whose best card is rated lowest', async () => {
-    // Only one possible fill avoids the bomb, and ten candidates make missing it near-impossible.
     const mainboard = [cubeCard('low', 0.1, 0), cubeCard('low2', 0.15, 1), cubeCard('bomb', 0.99, 2)];
-    const res = await run({ mainboard } as any, [ref(mainboard[0]!), null], 'balanced');
+    // Draws are random, so pin them: the first candidate gets the bomb and the rest don't. Left to chance,
+    // all ten candidates draw the bomb once in 1024 runs. Each call returns a fresh array because the
+    // handler pops from it.
+    let draws = 0;
+    const sampleSize = jest
+      .spyOn(_, 'sampleSize')
+      .mockImplementation(() => [draws++ === 0 ? mainboard[2]! : mainboard[1]!]);
+    try {
+      const res = await run({ mainboard } as any, [ref(mainboard[0]!), null], 'balanced');
 
-    expect(res.status).toBe(200);
-    expect(res.body.cards.map((c: Card) => c.details!.name)).toEqual(['low', 'low2']);
+      expect(res.status).toBe(200);
+      expect(res.body.cards.map((c: Card) => c.details!.name)).toEqual(['low', 'low2']);
+    } finally {
+      sampleSize.mockRestore();
+    }
   });
 
   it('resolves a by-name pick to an unused copy', async () => {
