@@ -147,6 +147,7 @@ const CubeRow: React.FC<{ cube: Cube }> = ({ cube }) => {
       // A name too long for a phone screen is clipped, so the full one rides along in the tooltip
       // and in the link's accessible name.
       title={cube.name}
+      aria-label={cube.pinnedByCurrentUser ? `${cube.name}, pinned` : undefined}
       className="flex items-center gap-3 rounded-md px-3 py-2 text-base text-text hover:bg-bg-active"
     >
       {imageUri ? (
@@ -312,13 +313,33 @@ const MobileNavDrawer: React.FC<MobileNavDrawerProps> = ({ isOpen, setOpen, side
 
   // Nothing at all for a signed-out visitor: every destination here is personal, and user.id is
   // never read without a user.
+  const pinnedCubes = (user?.cubes || []).filter((cube) => cube.pinnedByCurrentUser);
+  const ownedCubes = (user?.cubes || []).filter((cube) => !cube.pinnedByCurrentUser);
+
   const rightContent = user ? (
     <div className="flex min-h-0 flex-1 flex-col p-2">
       {/* min-h-0 is load-bearing: a flex item's automatic minimum size is its content, so without
           it a full cube list refuses to shrink and pushes the action block off the panel. */}
       <div className="flex-1 min-h-0 overflow-y-auto" data-testid="mobile-nav-cube-list">
+        {/* Pinned cubes can include collaborations, so they get their own section rather than
+            sitting under "Your Cubes". The heading marks them, so the rows carry no pin icon. */}
+        {pinnedCubes.length > 0 && (
+          <>
+            <SectionHeading>Pinned</SectionHeading>
+            {pinnedCubes.map((cube) => (
+              <CubeRow key={cube.id} cube={cube} />
+            ))}
+          </>
+        )}
         {(user.cubes || []).length > 0 ? (
-          (user.cubes || []).map((cube) => <CubeRow key={cube.id} cube={cube} />)
+          ownedCubes.length > 0 && (
+            <>
+              <SectionHeading>Your Cubes</SectionHeading>
+              {ownedCubes.map((cube) => (
+                <CubeRow key={cube.id} cube={cube} />
+              ))}
+            </>
+          )
         ) : (
           <p className="px-3 py-2 text-sm text-text-secondary">You don&apos;t have any cubes yet.</p>
         )}

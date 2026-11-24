@@ -15,6 +15,7 @@ import { collaboratorIndexDao, cubeDao, notificationDao, patronDao } from '../dy
 import { CubeTooLargeError } from '../errors/CubeTooLargeError';
 import { Request, Response } from '../types/express';
 import { getCatalogVersion } from './cardCatalog';
+import { isCubeViewable } from './cubefn';
 import { getArchetypeData, getServedModelVersion } from './modelPointer';
 import { getBaseUrl } from './util';
 
@@ -109,48 +110,67 @@ export const getCubesSortValues = (user: User): { sort: SortOrder; ascending: bo
 
 // Only the uri is sent: the artist and id on CubeImage exist for attribution on pages that show
 // the full art, which the cube listings in the nav never do.
-export type TrimmedCube = Pick<CubeType, 'id' | 'shortId' | 'name'> & { imageUri?: string };
+export type TrimmedCube = Pick<CubeType, 'id' | 'shortId' | 'name'> & {
+  imageUri?: string;
+  pinnedByCurrentUser?: boolean;
+};
 
 const trimCube = (cube: CubeType): TrimmedCube => ({
   id: cube.id,
   shortId: cube.shortId,
   name: cube.name,
   imageUri: cube.image?.uri,
+  ...(cube.pinnedByCurrentUser ? { pinnedByCurrentUser: true } : {}),
 });
 
 const DROPDOWN_CUBE_LIMIT = 20;
 
+const EMPTY_PINS = (): { pinnedCubes: CubeType[]; pinnedIds: Set<string> } => ({
+  pinnedCubes: [],
+  pinnedIds: new Set(),
+});
+
 /**
- * Resolves the cubes an owner has pinned, in most-recently-pinned order.
- * Pins are private to the owner, so this returns nothing unless the viewer
- * is the owner. Callers hoist these to the top of cube listings.
+ * Resolves the cubes a user has pinned, in most-recently-pinned order, each flagged
+ * `pinnedByCurrentUser`. Pins are private, so this returns nothing unless the viewer is that
+ * user. A pin only counts while the user still owns or collaborates on the cube and can view
+ * it; pins left behind by a removed collaborator drop out here. Callers hoist these to the top
+ * of cube listings.
  */
-export const getPinnedCubesForOwner = async (
-  ownerId: string,
-  viewerId: string | undefined,
+export const getPinnedCubesForUser = async (
+  userId: string,
+  viewer: { id: string } | undefined,
   limit = 200,
 ): Promise<{ pinnedCubes: CubeType[]; pinnedIds: Set<string> }> => {
-  if (!viewerId || viewerId !== ownerId) {
-    return { pinnedCubes: [], pinnedIds: new Set() };
+  if (!viewer || viewer.id !== userId) {
+    return EMPTY_PINS();
   }
 
-  const pinnedResult = await cubeDao.queryCubesPinnedBy(ownerId, undefined, limit);
+  const pinnedResult = await cubeDao.queryCubesPinnedBy(userId, undefined, limit);
   if (pinnedResult.cubeIds.length === 0) {
-    return { pinnedCubes: [], pinnedIds: new Set() };
+    return EMPTY_PINS();
   }
 
   const fetched = await cubeDao.batchGet(pinnedResult.cubeIds);
   const byId = new Map(fetched.map((cube) => [cube.id, cube]));
   const pinnedCubes = pinnedResult.cubeIds
     .map((id) => byId.get(id))
-    .filter((cube): cube is CubeType => cube !== undefined);
+    .filter(
+      (cube): cube is CubeType =>
+        cube !== undefined &&
+        (cube.owner?.id === userId || (cube.collaborators ?? []).includes(userId)) &&
+        isCubeViewable(cube, viewer),
+    )
+    .map((cube) => ({ ...cube, pinnedByCurrentUser: true }));
 
   return { pinnedCubes, pinnedIds: new Set(pinnedCubes.map((cube) => cube.id)) };
 };
 
-const getCubes = async (req: Request, callback: (cubes: CubeType[]) => void): Promise<void> => {
+// Hands the callback the navbar's cube list along with the pinned ids, so render can keep
+// pinned collaborations out of the collaborating list without looking the pins up again.
+const getCubes = async (req: Request, callback: (cubes: CubeType[], pinnedIds: Set<string>) => void): Promise<void> => {
   if (!req.user) {
-    callback([]);
+    callback([], new Set());
     return;
   }
 
@@ -162,12 +182,12 @@ const getCubes = async (req: Request, callback: (cubes: CubeType[]) => void): Pr
   // deduped, capped at the dropdown limit.
   const [ownerQuery, { pinnedCubes, pinnedIds }] = await Promise.all([
     cubeDao.queryByOwner(userId, sort, ascending, undefined, DROPDOWN_CUBE_LIMIT),
-    getPinnedCubesForOwner(userId, userId, DROPDOWN_CUBE_LIMIT),
+    getPinnedCubesForUser(userId, req.user, DROPDOWN_CUBE_LIMIT),
   ]);
 
   const rest = ownerQuery.items.filter((cube) => !pinnedIds.has(cube.id));
 
-  callback([...pinnedCubes, ...rest].slice(0, DROPDOWN_CUBE_LIMIT));
+  callback([...pinnedCubes, ...rest].slice(0, DROPDOWN_CUBE_LIMIT), pinnedIds);
 };
 
 const redirect = (req: Request, res: Response, to: string): void => {
@@ -257,7 +277,7 @@ const render = (
   reactProps: ReactProps = {},
   options: RenderOptions = {},
 ): void => {
-  getCubes(req, async (cubes) => {
+  getCubes(req, async (cubes, pinnedIds) => {
     if (req.user) {
       const [notifications, collaboratingCubeIds, patron] = await Promise.all([
         notificationDao.getByToAndStatus(req.user.id, NotificationStatus.UNREAD),
@@ -266,7 +286,9 @@ const render = (
         // take down every authenticated page render, so degrade to "no patron" on failure.
         patronDao.getById(req.user.id).catch(() => undefined),
       ]);
-      const collaboratingCubes = collaboratingCubeIds.length > 0 ? await cubeDao.batchGet(collaboratingCubeIds) : [];
+      const unpinnedCollaboratingIds = collaboratingCubeIds.filter((id) => !pinnedIds.has(id));
+      const collaboratingCubes =
+        unpinnedCollaboratingIds.length > 0 ? await cubeDao.batchGet(unpinnedCollaboratingIds) : [];
 
       reactProps.user = {
         id: req.user.id,

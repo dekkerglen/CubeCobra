@@ -1,7 +1,7 @@
 import { PatronStatuses } from '@utils/datatypes/Patron';
 import { cubeDao, packageDao, patronDao, userDao } from 'dynamo/daos';
 import { isCubeListed } from 'serverutils/cubefn';
-import { getCubesSortValues, getPinnedCubesForOwner, handleRouteError, redirect, render } from 'serverutils/render';
+import { getCubesSortValues, getPinnedCubesForUser, handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
 
@@ -23,14 +23,15 @@ export const handler = async (req: Request, res: Response) => {
 
     const [result, { pinnedCubes, pinnedIds }] = await Promise.all([
       cubeDao.queryByOwner(user.id, sort, ascending, undefined, 36),
-      getPinnedCubesForOwner(user.id, req.user?.id),
+      getPinnedCubesForUser(user.id, req.user),
     ]);
 
-    // Hoist the owner's pinned cubes to the top. Subsequent pages (via
-    // /user/getmorecubes) filter these out so they never duplicate.
-    const visiblePinned = pinnedCubes.filter((cube) => isCubeListed(cube, req.user));
+    // Hoist the owner's pinned cubes to the top. Pinned collaborations belong on the
+    // Collaborations tab, so only cubes this user owns are hoisted here. Subsequent pages
+    // (via /user/getmorecubes) filter pinned ids out so they never duplicate.
+    const ownedPinned = pinnedCubes.filter((cube) => cube.owner?.id === user.id);
     const pageItems = result.items.filter((cube: any) => isCubeListed(cube, req.user) && !pinnedIds.has(cube.id));
-    const cubes = [...visiblePinned, ...pageItems];
+    const cubes = [...ownedPinned, ...pageItems];
 
     const following = !!req.user && (await userDao.getFollow(req.user.id, user.id));
 

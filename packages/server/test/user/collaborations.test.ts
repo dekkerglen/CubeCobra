@@ -4,6 +4,8 @@ jest.mock('../../src/dynamo/daos', () => ({
   },
   cubeDao: {
     batchGet: jest.fn(),
+    queryCubesPinnedBy: jest.fn(),
+    queryInvitesForUser: jest.fn(),
   },
   packageDao: {
     countByVoter: jest.fn(),
@@ -12,12 +14,15 @@ jest.mock('../../src/dynamo/daos', () => ({
     getById: jest.fn(),
   },
   userDao: {
+    batchGet: jest.fn(),
     getById: jest.fn(),
     getByIdOrUsername: jest.fn(),
     getFollow: jest.fn(),
   },
 }));
 jest.mock('serverutils/render', () => ({
+  // The real lookup, so the pin rules are exercised against the mocked daos.
+  getPinnedCubesForUser: (...args: any[]) => jest.requireActual('serverutils/render').getPinnedCubesForUser(...args),
   handleRouteError: jest.fn(),
   redirect: jest.fn(),
   render: jest.fn(),
@@ -61,6 +66,9 @@ describe('the collaborations tab', () => {
     (packageDao.countByVoter as jest.Mock).mockResolvedValue(0);
     (collaboratorIndexDao.getCubeIdsForUser as jest.Mock).mockResolvedValue(['collab-public', 'collab-unlisted']);
     (cubeDao.batchGet as jest.Mock).mockResolvedValue([publicCollab, unlistedCollab]);
+    (cubeDao.queryInvitesForUser as jest.Mock).mockResolvedValue([]);
+    (cubeDao.queryCubesPinnedBy as jest.Mock).mockResolvedValue({ cubeIds: [] });
+    (userDao.batchGet as jest.Mock).mockResolvedValue([]);
   });
 
   it('renders its own page rather than the cubes tab', async () => {
@@ -157,6 +165,114 @@ describe('the collaborations tab', () => {
       expect(cubeDao.batchGet).toHaveBeenCalledTimes(2);
       expect(renderedIds()).toEqual(visible);
       expect(props().hasMore).toBe(false);
+    });
+  });
+
+  describe('pinned collaborations', () => {
+    const pinnedCollab = collab('collab-pinned', 'Drake Pinned', 'pu');
+    const byId = new Map([publicCollab, unlistedCollab, pinnedCollab].map((cube) => [cube.id, cube]));
+
+    beforeEach(() => {
+      (collaboratorIndexDao.getCubeIdsForUser as jest.Mock).mockResolvedValue([
+        'collab-public',
+        'collab-pinned',
+        'collab-unlisted',
+      ]);
+      (cubeDao.queryCubesPinnedBy as jest.Mock).mockResolvedValue({ cubeIds: ['collab-pinned'] });
+      (cubeDao.batchGet as jest.Mock).mockImplementation(async (ids: string[]) =>
+        ids.map((id) => byId.get(id)).filter(Boolean),
+      );
+    });
+
+    it('own collaborations tab hoists pinned collaborations on the first page only', async () => {
+      await call(collaborationsHandler).as(owner).withFlash(jest.fn()).withParams({ id: 'owner-1' }).send();
+
+      expect(renderedIds()).toEqual(['collab-pinned', 'collab-public', 'collab-unlisted']);
+      expect(props().cubes[0].pinnedByCurrentUser).toBe(true);
+      expect(props().cubes[1].pinnedByCurrentUser).toBeUndefined();
+    });
+
+    it('leaves pinned collaborations off later pages', async () => {
+      const res = await call(getMoreHandler).as(owner).withBody({ owner: 'owner-1', offset: 1 }).send();
+
+      expect(res.body.cubes.map((c: any) => c.id)).toEqual(['collab-unlisted']);
+    });
+
+    it('a visitor sees no pin flags on a profile', async () => {
+      await call(collaborationsHandler).as(stranger).withFlash(jest.fn()).withParams({ id: 'owner-1' }).send();
+
+      expect(cubeDao.queryCubesPinnedBy).not.toHaveBeenCalled();
+      expect(renderedIds()).toEqual(['collab-public', 'collab-pinned']);
+      expect(props().cubes.some((c: any) => c.pinnedByCurrentUser)).toBe(false);
+    });
+  });
+
+  describe('pending invites', () => {
+    const cubeOwner = createUser({ id: 'cube-owner-1', username: 'cubeowner' });
+    const inviter = createUser({ id: 'inviter-1', username: 'inviter' });
+    const invitedCube = createCube({
+      id: 'invited-cube',
+      shortId: 'invsh',
+      name: 'Secret Cube',
+      visibility: 'pr',
+      owner: cubeOwner,
+    });
+    const invite = { cubeId: 'invited-cube', userId: 'owner-1', invitedBy: 'inviter-1', invitedAt: 1000 };
+
+    beforeEach(() => {
+      (cubeDao.queryInvitesForUser as jest.Mock).mockResolvedValue([invite]);
+      (userDao.batchGet as jest.Mock).mockResolvedValue([inviter]);
+    });
+
+    it('passes pending invites to the page on your own profile, including private cubes', async () => {
+      (cubeDao.batchGet as jest.Mock).mockImplementation(async (ids: string[]) =>
+        ids.includes('invited-cube') ? [invitedCube] : [publicCollab, unlistedCollab],
+      );
+
+      await call(collaborationsHandler).as(owner).withFlash(jest.fn()).withParams({ id: 'owner-1' }).send();
+
+      expect(cubeDao.queryInvitesForUser).toHaveBeenCalledWith('owner-1');
+      expect(props().pendingInvites).toHaveLength(1);
+      expect(props().pendingInvites[0]).toMatchObject({
+        cubeId: 'invited-cube',
+        cubeShortId: 'invsh',
+        cubeName: 'Secret Cube',
+        cubeVisibility: 'pr',
+        ownerId: 'cube-owner-1',
+        ownerUsername: 'cubeowner',
+        invitedById: 'inviter-1',
+        invitedByUsername: 'inviter',
+        invitedAt: 1000,
+      });
+    });
+
+    it('passes no pending invites to a visitor', async () => {
+      await call(collaborationsHandler).as(stranger).withFlash(jest.fn()).withParams({ id: 'owner-1' }).send();
+
+      expect(cubeDao.queryInvitesForUser).not.toHaveBeenCalled();
+      expect(props().pendingInvites).toEqual([]);
+    });
+
+    it('drops invites whose cube was deleted', async () => {
+      (cubeDao.batchGet as jest.Mock).mockImplementation(async (ids: string[]) =>
+        ids.includes('invited-cube') ? [] : [publicCollab, unlistedCollab],
+      );
+
+      await call(collaborationsHandler).as(owner).withFlash(jest.fn()).withParams({ id: 'owner-1' }).send();
+
+      expect(props().pendingInvites).toEqual([]);
+    });
+
+    it('labels an invite from a deleted user rather than dropping it', async () => {
+      (userDao.batchGet as jest.Mock).mockResolvedValue([]);
+      (cubeDao.batchGet as jest.Mock).mockImplementation(async (ids: string[]) =>
+        ids.includes('invited-cube') ? [invitedCube] : [publicCollab, unlistedCollab],
+      );
+
+      await call(collaborationsHandler).as(owner).withFlash(jest.fn()).withParams({ id: 'owner-1' }).send();
+
+      expect(props().pendingInvites[0].invitedByUsername).toBe('[deleted]');
+      expect(props().pendingInvites[0].invitedById).toBeUndefined();
     });
   });
 

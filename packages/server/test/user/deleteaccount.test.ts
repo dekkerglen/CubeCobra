@@ -3,7 +3,7 @@ import bcrypt from 'bcryptjs';
 jest.mock('../../src/dynamo/daos', () => ({
   blogDao: { queryByOwner: jest.fn(), delete: jest.fn() },
   commentDao: { queryByOwner: jest.fn(), put: jest.fn(), update: jest.fn() },
-  cubeDao: { queryByOwner: jest.fn() },
+  cubeDao: { queryByOwner: jest.fn(), deleteInvitesForUser: jest.fn() },
   draftDao: { queryByOwner: jest.fn(), deleteById: jest.fn() },
   userDao: { getByIdWithSensitiveData: jest.fn(), deleteById: jest.fn() },
 }));
@@ -51,6 +51,7 @@ describe('delete account handler', () => {
     expect(commentDao.update).toHaveBeenCalledWith(
       expect.objectContaining({ id: 'c1', body: '[deleted]', owner: undefined }),
     );
+    expect(cubeDao.deleteInvitesForUser).toHaveBeenCalledWith('user-1');
     expect(userDao.deleteById).toHaveBeenCalledWith('user-1');
     expect(flash).toHaveBeenCalledWith('success', expect.stringContaining('2 comments'));
   });

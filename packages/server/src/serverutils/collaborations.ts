@@ -1,7 +1,8 @@
 import Cube from '@utils/datatypes/Cube';
-import { collaboratorIndexDao, cubeDao } from 'dynamo/daos';
+import { collaboratorIndexDao, cubeDao, userDao } from 'dynamo/daos';
 
 import { isCubeListed, isCubeViewable } from './cubefn';
+import { getPinnedCubesForUser } from './render';
 
 export const COLLABORATIONS_PAGE_SIZE = 36;
 
@@ -18,13 +19,19 @@ export interface CollaborationsPage {
  * cursor-based like the owned-cube query. Visibility is filtered after the fetch, which means a
  * page of ids can yield nothing the viewer may see; keep consuming pages until one does, or the
  * list runs out, so the caller never receives an empty page while `hasMore` is still true.
+ *
+ * On the user's own profile, their pinned collaborations lead the first page (flagged) and are
+ * left out of every page's index-ordered results, so they never appear twice.
  */
 export const getCollaborationsPage = async (
   profileUserId: string,
   viewer: { id: string } | undefined,
   offset = 0,
 ): Promise<CollaborationsPage> => {
-  const cubeIds = await collaboratorIndexDao.getCubeIdsForUser(profileUserId);
+  const [cubeIds, { pinnedCubes, pinnedIds }] = await Promise.all([
+    collaboratorIndexDao.getCubeIdsForUser(profileUserId),
+    getPinnedCubesForUser(profileUserId, viewer),
+  ]);
 
   // The profile's owner sees every collaboration they can actually open, including unlisted and
   // private ones; isCubeListed has no collaborator branch and would hide those from them.
@@ -37,8 +44,70 @@ export const getCollaborationsPage = async (
   while (cubes.length === 0 && cursor < cubeIds.length) {
     const page = cubeIds.slice(cursor, cursor + COLLABORATIONS_PAGE_SIZE);
     cursor += COLLABORATIONS_PAGE_SIZE;
-    cubes = (await cubeDao.batchGet(page)).filter(canSee);
+    cubes = (await cubeDao.batchGet(page)).filter((cube) => canSee(cube) && !pinnedIds.has(cube.id));
+  }
+
+  if (offset <= 0 && pinnedCubes.length > 0) {
+    const collaborationIds = new Set(cubeIds);
+    cubes = [...pinnedCubes.filter((cube) => collaborationIds.has(cube.id)), ...cubes];
   }
 
   return { cubes, nextOffset: cursor, hasMore: cursor < cubeIds.length };
+};
+
+export interface PendingInvite {
+  cubeId: string;
+  cubeShortId?: string;
+  cubeName: string;
+  cubeImageUri?: string;
+  cubeVisibility: string;
+  /** Absent when the user no longer exists, so there is no profile to link. */
+  ownerId?: string;
+  ownerUsername: string;
+  invitedById?: string;
+  invitedByUsername: string;
+  invitedAt: number;
+}
+
+/**
+ * The collaborator invites waiting on a user, newest first.
+ *
+ * No visibility check is applied: the invite itself authorizes the invitee to see the cube's name,
+ * including for private cubes. Invites whose cube has since been deleted are dropped.
+ */
+export const getPendingInvitesForUser = async (userId: string): Promise<PendingInvite[]> => {
+  const invites = await cubeDao.queryInvitesForUser(userId);
+  if (invites.length === 0) {
+    return [];
+  }
+
+  const inviterIds = [...new Set(invites.map((invite) => invite.invitedBy))];
+  const [cubes, inviters] = await Promise.all([
+    cubeDao.batchGet([...new Set(invites.map((invite) => invite.cubeId))]),
+    userDao.batchGet(inviterIds),
+  ]);
+
+  const cubesById = new Map(cubes.map((cube) => [cube.id, cube]));
+  const inviterNames = new Map(inviters.map((user) => [user.id, user.username]));
+
+  return invites.flatMap((invite) => {
+    const cube = cubesById.get(invite.cubeId);
+    if (!cube) {
+      return [];
+    }
+    return [
+      {
+        cubeId: cube.id,
+        cubeShortId: cube.shortId,
+        cubeName: cube.name,
+        cubeImageUri: cube.image?.uri,
+        cubeVisibility: cube.visibility,
+        ownerId: cube.owner?.id,
+        ownerUsername: cube.owner?.username ?? '[deleted]',
+        invitedById: inviterNames.has(invite.invitedBy) ? invite.invitedBy : undefined,
+        invitedByUsername: inviterNames.get(invite.invitedBy) ?? '[deleted]',
+        invitedAt: invite.invitedAt,
+      },
+    ];
+  });
 };

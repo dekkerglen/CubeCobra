@@ -6,7 +6,7 @@ import { blogDao, collaboratorIndexDao, cubeDao, draftDao, feedDao } from 'dynam
 import { pickDailyGame } from 'serverutils/dailyGamePick';
 import { getFeaturedCubes } from 'serverutils/featuredQueue';
 import { DEV_BLOG_CUBE, mergeFeedStreams, parseFeedCursor } from 'serverutils/feedMerge';
-import { getCubesSortValues, getPinnedCubesForOwner, handleRouteError, redirect, render } from 'serverutils/render';
+import { getCubesSortValues, getPinnedCubesForUser, handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../types/express';
 import { csrfProtection, ensureAuth } from '../middleware';
@@ -61,10 +61,13 @@ const dashboardHandler = async (req: Request, res: Response) => {
       }),
       collaboratorIndexDao.getCubeIdsForUser(req.user.id),
       cubeDao.queryByOwner(req.user.id, sort, ascending, undefined, 36),
-      getPinnedCubesForOwner(req.user.id, req.user.id),
+      getPinnedCubesForUser(req.user.id, req.user),
     ]);
 
-    const collaboratingCubes = collaboratingCubeIds.length > 0 ? await cubeDao.batchGet(collaboratingCubeIds) : [];
+    // Pinned collaborations already lead the user's own list, so they are not repeated here.
+    const unpinnedCollaboratingIds = collaboratingCubeIds.filter((id) => !pinnedIds.has(id));
+    const collaboratingCubes =
+      unpinnedCollaboratingIds.length > 0 ? await cubeDao.batchGet(unpinnedCollaboratingIds) : [];
     const cubes = [...pinnedCubes, ...userCubes.items.filter((cube) => !pinnedIds.has(cube.id))];
 
     return render(

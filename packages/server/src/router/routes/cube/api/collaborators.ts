@@ -6,11 +6,21 @@ import { addNotification, isAdmin } from 'serverutils/util';
 
 import { Request, Response } from '../../../../types/express';
 
+const MAX_COLLABORATORS = 20;
+const MAX_COLLABORATORS_MESSAGE = `This cube has reached the maximum of ${MAX_COLLABORATORS} collaborators`;
+
+const toUserSummary = (u: { id: string; username: string; image?: { uri?: string } }) => ({
+  id: u.id,
+  username: u.username,
+  imageUri: u.image?.uri ?? null,
+});
+
 /**
  * GET /cube/api/collaborators/:id
  *
- * Returns the list of collaborators (id, username, imageName) for a cube.
- * Viewable by anyone who can view the cube.
+ * Returns the list of collaborators (id, username, imageUri) for a cube.
+ * Viewable by anyone who can view the cube. The owner (or an admin) also
+ * receives the users with a pending invite under `pending`.
  */
 export const listCollaboratorsHandler = async (req: Request, res: Response) => {
   try {
@@ -26,9 +36,17 @@ export const listCollaboratorsHandler = async (req: Request, res: Response) => {
     const collaboratorIds = cube.collaborators ?? [];
     const users = await userDao.batchGet(collaboratorIds);
 
-    const collaborators = users.map((u) => ({ id: u.id, username: u.username, imageUri: u.image?.uri ?? null }));
+    const collaborators = users.map(toUserSummary);
 
-    return res.status(200).json({ success: 'true', collaborators });
+    if (!isCubeOwner(cube, req.user) && !(req.user && isAdmin(req.user))) {
+      return res.status(200).json({ success: 'true', collaborators });
+    }
+
+    const invites = await cubeDao.queryInvitesForCube(cube.id);
+    const pendingUsers = invites.length > 0 ? await userDao.batchGet(invites.map((invite) => invite.userId)) : [];
+    const pending = pendingUsers.map(toUserSummary);
+
+    return res.status(200).json({ success: 'true', collaborators, pending });
   } catch (err) {
     const error = err as Error;
     req.logger.error(error.message, error.stack);
@@ -40,7 +58,8 @@ export const listCollaboratorsHandler = async (req: Request, res: Response) => {
  * POST /cube/api/collaborators/:id/add
  * Body: { username: string }
  *
- * Adds a user as a collaborator on the cube. Only the owner may do this.
+ * Invites a user to collaborate on the cube. Only the owner may do this. The
+ * invitee is not added to the cube until they accept the invite.
  */
 export const addCollaboratorHandler = async (req: Request, res: Response) => {
   try {
@@ -76,30 +95,149 @@ export const addCollaboratorHandler = async (req: Request, res: Response) => {
       return res.status(400).json({ success: 'false', message: 'That user is already a collaborator' });
     }
 
-    if (cube.collaborators.length >= 20) {
-      return res
-        .status(400)
-        .json({ success: 'false', message: 'This cube has reached the maximum of 20 collaborators' });
+    if (await cubeDao.getInvite(cube.id, targetUser.id)) {
+      return res.status(400).json({ success: 'false', message: 'That user already has a pending invite' });
     }
 
-    cube.collaborators = [...cube.collaborators, targetUser.id];
-    await cubeDao.update(cube);
-    await collaboratorIndexDao.add(targetUser.id, cube.id);
+    const pendingInvites = await cubeDao.queryInvitesForCube(cube.id);
+    if (cube.collaborators.length + pendingInvites.length >= MAX_COLLABORATORS) {
+      return res.status(400).json({ success: 'false', message: MAX_COLLABORATORS_MESSAGE });
+    }
+
+    await cubeDao.writeInvite(cube.id, targetUser.id, req.user!.id);
     await addNotification(
       targetUser,
       req.user!,
-      `/cube/list/${encodeURIComponent(getCubeId(cube))}`,
-      `${req.user!.username} added you as a collaborator on "${cube.name}"`,
+      `/user/collaborations/${targetUser.id}`,
+      `${req.user!.username} invited you to collaborate on "${cube.name}"`,
     );
 
-    return res.status(200).json({
-      success: 'true',
-      collaborator: { id: targetUser.id, username: targetUser.username, imageUri: targetUser.image?.uri ?? null },
-    });
+    return res.status(200).json({ success: 'true', invite: toUserSummary(targetUser) });
   } catch (err) {
     const error = err as Error;
     req.logger.error(error.message, error.stack);
-    return res.status(500).json({ success: 'false', message: 'Error adding collaborator' });
+    return res.status(500).json({ success: 'false', message: 'Error inviting collaborator' });
+  }
+};
+
+/**
+ * POST /cube/api/collaborators/:id/invite/accept
+ *
+ * Accepts the requester's pending invite, adding them as a collaborator. This
+ * deliberately skips the viewability check: an invitee to a private cube can't
+ * view it until they have accepted.
+ */
+export const acceptInviteHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.params.id) {
+      return res.status(400).json({ success: 'false', message: 'Cube ID is required' });
+    }
+    const cubeId = req.params.id;
+    const invitee = req.user!;
+
+    const invite = await cubeDao.getInvite(cubeId, invitee.id);
+    if (!invite) {
+      return res.status(403).json({ success: 'false', message: 'No pending invite' });
+    }
+
+    const cube = await cubeDao.getById(cubeId);
+    if (!cube) {
+      await cubeDao.deleteInvite(cubeId, invitee.id);
+      return res.status(404).json({ success: 'false', message: 'Cube not found' });
+    }
+
+    if (cube.collaborators.includes(invitee.id)) {
+      await cubeDao.deleteInvite(cube.id, invitee.id);
+      return res.status(200).json({ success: 'true' });
+    }
+
+    if (cube.collaborators.length >= MAX_COLLABORATORS) {
+      return res.status(400).json({ success: 'false', message: MAX_COLLABORATORS_MESSAGE });
+    }
+
+    cube.collaborators = [...cube.collaborators, invitee.id];
+    await cubeDao.update(cube);
+    await collaboratorIndexDao.add(invitee.id, cube.id);
+    await cubeDao.deleteInvite(cube.id, invitee.id);
+
+    const owner = await userDao.getById(cube.owner.id);
+    if (owner) {
+      await addNotification(
+        owner,
+        invitee,
+        `/cube/list/${encodeURIComponent(getCubeId(cube))}`,
+        `${invitee.username} accepted your invite to collaborate on "${cube.name}"`,
+      );
+    }
+
+    return res.status(200).json({ success: 'true' });
+  } catch (err) {
+    const error = err as Error;
+    req.logger.error(error.message, error.stack);
+    return res.status(500).json({ success: 'false', message: 'Error accepting invite' });
+  }
+};
+
+/**
+ * POST /cube/api/collaborators/:id/invite/decline
+ *
+ * Declines (deletes) the requester's pending invite. Nobody is notified.
+ */
+export const declineInviteHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.params.id) {
+      return res.status(400).json({ success: 'false', message: 'Cube ID is required' });
+    }
+    const cubeId = req.params.id;
+    const userId = req.user!.id;
+
+    const invite = await cubeDao.getInvite(cubeId, userId);
+    if (!invite) {
+      return res.status(403).json({ success: 'false', message: 'No pending invite' });
+    }
+
+    await cubeDao.deleteInvite(cubeId, userId);
+
+    return res.status(200).json({ success: 'true' });
+  } catch (err) {
+    const error = err as Error;
+    req.logger.error(error.message, error.stack);
+    return res.status(500).json({ success: 'false', message: 'Error declining invite' });
+  }
+};
+
+/**
+ * DELETE /cube/api/collaborators/:id/invite/:userId
+ *
+ * Cancels a pending invite. Only the owner (or an admin) may do this.
+ */
+export const cancelInviteHandler = async (req: Request, res: Response) => {
+  try {
+    if (!req.params.id) {
+      return res.status(400).json({ success: 'false', message: 'Cube ID is required' });
+    }
+    const cube = await cubeDao.getById(req.params.id);
+
+    if (!cube || !isCubeViewable(cube, req.user)) {
+      return res.status(404).json({ success: 'false', message: 'Cube not found' });
+    }
+
+    if (!isCubeOwner(cube, req.user) && !isAdmin(req.user!)) {
+      return res.status(403).json({ success: 'false', message: 'Only the cube owner can manage collaborators' });
+    }
+
+    const userId = req.params.userId;
+    if (!userId) {
+      return res.status(400).json({ success: 'false', message: 'User ID is required' });
+    }
+
+    await cubeDao.deleteInvite(cube.id, userId);
+
+    return res.status(200).json({ success: 'true' });
+  } catch (err) {
+    const error = err as Error;
+    req.logger.error(error.message, error.stack);
+    return res.status(500).json({ success: 'false', message: 'Error cancelling invite' });
   }
 };
 
@@ -129,6 +267,12 @@ export const removeCollaboratorHandler = async (req: Request, res: Response) => 
       return res.status(403).json({ success: 'false', message: 'Only the cube owner can remove other collaborators' });
     }
 
+    // First, and even when they're no longer a collaborator: a retry after a partial failure must still clean up.
+    // Never for the owner, whose pin is their own and not tied to collaboration.
+    if (userId !== cube.owner.id) {
+      await cubeDao.deletePin(cube.id, userId);
+    }
+
     if (!cube.collaborators.includes(userId)) {
       return res.status(200).json({ success: 'true' });
     }
@@ -155,6 +299,22 @@ export const routes = [
     method: 'post' as const,
     path: '/:id/add',
     handler: [ensureAuth, addCollaboratorHandler],
+  },
+  // Invite routes grouped before the remove route for readability.
+  {
+    method: 'post' as const,
+    path: '/:id/invite/accept',
+    handler: [ensureAuth, acceptInviteHandler],
+  },
+  {
+    method: 'post' as const,
+    path: '/:id/invite/decline',
+    handler: [ensureAuth, declineInviteHandler],
+  },
+  {
+    method: 'delete' as const,
+    path: '/:id/invite/:userId',
+    handler: [ensureAuth, cancelInviteHandler],
   },
   {
     method: 'delete' as const,

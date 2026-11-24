@@ -1,6 +1,6 @@
 import React from 'react';
 
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 
 import '@testing-library/jest-dom';
 
@@ -24,7 +24,9 @@ jest.mock('components/DynamicFlash', () => ({ __esModule: true, default: () => n
 // fixtures deliberately omit.
 jest.mock('components/cube/CubePreview', () => ({
   __esModule: true,
-  default: ({ cube }: { cube: Cube }) => <div>{cube.name}</div>,
+  default: ({ cube, pinToggle }: { cube: Cube; pinToggle?: boolean }) => (
+    <div data-pin-toggle={pinToggle ? 'on' : 'off'}>{cube.name}</div>
+  ),
 }));
 
 const owner = { id: 'owner-1', username: 'owner' } as any;
@@ -122,5 +124,137 @@ describe('UserCollaborationsPage', () => {
     expect(screen.getAllByText('Page 2').length).toBeGreaterThan(0);
     // The first page is retained in state, not discarded - it is simply on the previous page now.
     expect(screen.queryByText('Cube 0')).not.toBeInTheDocument();
+  });
+
+  describe('pending invites', () => {
+    const invite = {
+      cubeId: 'cube-full-id',
+      cubeShortId: 'vintage',
+      cubeName: 'Vintage Cube',
+      cubeImageUri: 'https://cdn.example/art.jpg',
+      cubeVisibility: 'pu',
+      ownerId: 'alice-id',
+      ownerUsername: 'alice',
+      invitedById: 'alice-id',
+      invitedByUsername: 'alice',
+      invitedAt: 1,
+    };
+    const other = {
+      ...invite,
+      cubeId: 'cube-2',
+      cubeShortId: undefined,
+      cubeName: 'Pauper Cube',
+      invitedById: 'bob-id',
+      invitedByUsername: 'bob',
+    };
+
+    const jsonResponse = (body: unknown, ok = true, status = ok ? 200 : 400) => ({
+      ok,
+      status,
+      json: async () => body,
+    });
+    const invitesSection = () => screen.getByRole('region', { name: 'Pending invites' });
+
+    it('shows pending invites on your own profile', () => {
+      renderPage({ pendingInvites: [invite, other] });
+
+      const section = invitesSection();
+      expect(within(section).getByRole('link', { name: 'Vintage Cube' })).toHaveAttribute('href', '/cube/list/vintage');
+      expect(within(section).getByRole('link', { name: 'Pauper Cube' })).toHaveAttribute('href', '/cube/list/cube-2');
+      const pauperRow = within(section).getByRole('link', { name: 'Pauper Cube' }).parentElement!;
+      expect(pauperRow).toHaveTextContent('by alice · Invited by bob');
+      expect(within(pauperRow).getByRole('link', { name: 'alice' })).toHaveAttribute('href', '/user/view/alice-id');
+      expect(within(pauperRow).getByRole('link', { name: 'bob' })).toHaveAttribute('href', '/user/view/bob-id');
+      expect(within(section).getByRole('button', { name: 'Accept invite to Vintage Cube' })).toBeInTheDocument();
+      expect(within(section).getByRole('button', { name: 'Decline invite to Vintage Cube' })).toBeInTheDocument();
+      // The section sits above the Collaborations heading.
+      expect(
+        section.compareDocumentPosition(screen.getByText('Collaborations')) & Node.DOCUMENT_POSITION_FOLLOWING,
+      ).toBeTruthy();
+    });
+
+    it('hides pending invites from visitors', () => {
+      renderPage({ pendingInvites: [invite] }, { id: 'someone-else' });
+
+      expect(screen.queryByRole('region', { name: 'Pending invites' })).not.toBeInTheDocument();
+      expect(screen.queryByText('Vintage Cube')).not.toBeInTheDocument();
+    });
+
+    it('decline removes the invite', async () => {
+      const csrfFetch = jest.fn().mockResolvedValue(jsonResponse({ success: 'true' }));
+      renderPage({ pendingInvites: [invite, other] }, owner, csrfFetch);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Decline invite to Vintage Cube' }));
+
+      // Keyed on the full cube id, not the short id.
+      expect(csrfFetch).toHaveBeenCalledWith(
+        '/cube/api/collaborators/cube-full-id/invite/decline',
+        expect.objectContaining({ method: 'POST' }),
+      );
+      expect(screen.getByRole('button', { name: 'Accept invite to Vintage Cube' })).toBeDisabled();
+      expect(screen.getByRole('button', { name: 'Decline invite to Vintage Cube' })).toBeDisabled();
+      await waitFor(() => expect(screen.queryByText('Vintage Cube')).not.toBeInTheDocument());
+      expect(screen.getByText('Pauper Cube')).toBeInTheDocument();
+    });
+
+    it('renders a private cube invite as plain text, not a link', () => {
+      renderPage({ pendingInvites: [{ ...invite, cubeVisibility: 'pr' }] });
+
+      const section = invitesSection();
+      expect(within(section).getByText('Vintage Cube')).toBeInTheDocument();
+      expect(within(section).queryByRole('link', { name: 'Vintage Cube' })).not.toBeInTheDocument();
+    });
+
+    it('does not link a deleted inviter', () => {
+      renderPage({ pendingInvites: [{ ...invite, invitedById: undefined, invitedByUsername: '[deleted]' }] });
+
+      const section = invitesSection();
+      expect(section).toHaveTextContent('by alice · Invited by [deleted]');
+      expect(within(section).queryByRole('link', { name: '[deleted]' })).not.toBeInTheDocument();
+    });
+
+    it('drops an invite that is no longer available', async () => {
+      const csrfFetch = jest
+        .fn()
+        .mockResolvedValue(jsonResponse({ success: 'false', message: 'No invite found' }, false, 403));
+      renderPage({ pendingInvites: [invite, other] }, owner, csrfFetch);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Decline invite to Vintage Cube' }));
+
+      expect(await screen.findByText('This invite is no longer available.')).toBeInTheDocument();
+      expect(screen.queryByText('Vintage Cube')).not.toBeInTheDocument();
+      expect(screen.queryByText('No invite found')).not.toBeInTheDocument();
+      expect(screen.getByText('Pauper Cube')).toBeInTheDocument();
+    });
+
+    it('shows the server message when accept fails', async () => {
+      const message = 'You can collaborate on at most 50 cubes.';
+      const csrfFetch = jest.fn().mockResolvedValue(jsonResponse({ success: 'false', message }, false));
+      renderPage({ pendingInvites: [invite] }, owner, csrfFetch);
+
+      fireEvent.click(screen.getByRole('button', { name: 'Accept invite to Vintage Cube' }));
+
+      expect(await screen.findByText(message)).toBeInTheDocument();
+      expect(csrfFetch).toHaveBeenCalledWith(
+        '/cube/api/collaborators/cube-full-id/invite/accept',
+        expect.objectContaining({ method: 'POST' }),
+      );
+      // The invite stays so the user can retry or decline.
+      expect(screen.getByRole('button', { name: 'Accept invite to Vintage Cube' })).toBeEnabled();
+    });
+  });
+});
+
+describe('UserCollaborationsPage pin toggle', () => {
+  it('shows a pin toggle on your own profile', () => {
+    renderPage({ cubes: [shared] }, owner);
+
+    expect(screen.getByText('Shared Cube')).toHaveAttribute('data-pin-toggle', 'on');
+  });
+
+  it('shows no pin toggle to visitors', () => {
+    renderPage({ cubes: [shared] }, { id: 'someone-else' });
+
+    expect(screen.getByText('Shared Cube')).toHaveAttribute('data-pin-toggle', 'off');
   });
 });

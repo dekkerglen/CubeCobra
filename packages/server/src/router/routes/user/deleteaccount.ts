@@ -103,6 +103,8 @@ export const handler = async (req: Request, res: Response) => {
       await commentDao.update(comment);
     }
 
+    await cubeDao.deleteInvitesForUser(user.id);
+
     // Delete the user
     await userDao.deleteById(user.id);
 

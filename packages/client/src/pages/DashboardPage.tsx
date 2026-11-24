@@ -156,7 +156,7 @@ const DashboardPage: React.FC<DashboardPageProps> = ({
       {cubes.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2">
           {cubes.slice(0, 12).map((cube) => (
-            <CubePreview key={cube.id} cube={cube} />
+            <CubePreview key={cube.id} cube={cube} markPinned />
           ))}
         </div>
       ) : (

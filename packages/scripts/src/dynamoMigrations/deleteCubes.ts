@@ -128,8 +128,9 @@ interface DeletionStats {
 
         // Delete the cube (this also deletes hash rows)
         await cubeDao.deleteById(cubeId);
+        await cubeDao.deleteInvitesForCube(cubeId);
 
-        console.log(`  ✓ Successfully deleted cube and hash rows`);
+        console.log(`  ✓ Successfully deleted cube, hash rows, and pending invites`);
         stats.deleted += 1;
       } catch (error) {
         console.error(`  ✗ Error deleting cube ${cubeId}:`, error);

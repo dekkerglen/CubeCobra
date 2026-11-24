@@ -31,7 +31,10 @@ export const banuserHandler = async (req: Request, res: Response) => {
     aggregates.cubesDeleted += response.items.length;
     for (const cube of response.items) {
       await cubeDao.deleteById(cube.id);
+      await cubeDao.deleteInvitesForCube(cube.id);
     }
+
+    await cubeDao.deleteInvitesForUser(userToBan);
 
     // delete all blog posts
     const blogResponse = await blogDao.queryByOwner(userToBan);

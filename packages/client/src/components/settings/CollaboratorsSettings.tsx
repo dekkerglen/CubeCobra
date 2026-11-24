@@ -29,6 +29,7 @@ const CollaboratorsSettings: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(true);
   const [collaborators, setCollaborators] = useState<CollaboratorEntry[]>([]);
+  const [pending, setPending] = useState<CollaboratorEntry[]>([]);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
 
   // Fetch collaborator details from server on mount
@@ -39,7 +40,10 @@ const CollaboratorsSettings: React.FC = () => {
       try {
         const r = await csrfFetch(`/cube/api/collaborators/${cube.id}`);
         const data = await r.json();
-        if (data.success === 'true') setCollaborators(data.collaborators);
+        if (data.success === 'true') {
+          setCollaborators(data.collaborators);
+          setPending(data.pending ?? []);
+        }
       } catch {
         // silently ignore fetch errors
       } finally {
@@ -66,19 +70,44 @@ const CollaboratorsSettings: React.FC = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message ?? 'Failed to add collaborator');
+        setError(data.message ?? 'Failed to invite collaborator');
         return;
       }
 
-      const newEntry: CollaboratorEntry = data.collaborator;
-      setCollaborators((prev) => [...prev, newEntry]);
-      setCube((prev) => ({ ...prev, collaborators: [...(prev.collaborators ?? []), newEntry.id] }));
+      const invite: CollaboratorEntry = data.invite;
+      setPending((prev) => [...prev.filter((p) => p.id !== invite.id), invite]);
       setUsernameInput('');
-      setSuccess(`${newEntry.username} added as a collaborator.`);
+      setSuccess(`${invite.username} invited. They'll be added once they accept.`);
+    } catch {
+      setError('Failed to invite collaborator');
     } finally {
       setLoading(false);
     }
-  }, [usernameInput, cube.id, setCube, csrfFetch]);
+  }, [usernameInput, cube.id, csrfFetch]);
+
+  const handleCancelInvite = useCallback(
+    async (userId: string) => {
+      setError(null);
+      setSuccess(null);
+
+      try {
+        const res = await csrfFetch(`/cube/api/collaborators/${cube.id}/invite/${userId}`, {
+          method: 'DELETE',
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.message ?? 'Failed to cancel invite');
+          return;
+        }
+
+        setPending((prev) => prev.filter((p) => p.id !== userId));
+      } catch {
+        setError('Failed to cancel invite');
+      }
+    },
+    [cube.id, csrfFetch],
+  );
 
   const handleRemove = useCallback(
     async (userId: string) => {
@@ -172,12 +201,43 @@ const CollaboratorsSettings: React.FC = () => {
             </Flexbox>
           )}
 
-          {/* Add collaborator — owner only */}
+          {pending.length > 0 && (
+            <section aria-labelledby="pending-invites-heading">
+              <Flexbox direction="col" gap="2">
+                <Text semibold sm id="pending-invites-heading">
+                  Pending invites
+                </Text>
+                {pending.map((p) => (
+                  <Flexbox key={p.id} direction="row" alignItems="center" gap="2" className="py-1">
+                    {p.imageUri ? (
+                      <img src={p.imageUri} alt={p.username} className="w-8 h-8 rounded object-cover flex-shrink-0" />
+                    ) : (
+                      <div className="w-8 h-8 rounded bg-bg-secondary flex-shrink-0" />
+                    )}
+                    <Text sm className="flex-1">
+                      {p.username}
+                    </Text>
+                    {isOwner && (
+                      <Button
+                        color="secondary"
+                        onClick={() => handleCancelInvite(p.id)}
+                        aria-label={`Cancel invite to ${p.username}`}
+                      >
+                        Cancel
+                      </Button>
+                    )}
+                  </Flexbox>
+                ))}
+              </Flexbox>
+            </section>
+          )}
+
+          {/* Invite collaborator — owner only */}
           {isOwner && (
             <Flexbox direction="row" gap="2" alignItems="end">
               <div className="flex-1">
                 <Input
-                  label="Add by username"
+                  label="Invite by username"
                   type="text"
                   value={usernameInput}
                   onChange={(e) => setUsernameInput(e.target.value)}
@@ -187,7 +247,7 @@ const CollaboratorsSettings: React.FC = () => {
                 />
               </div>
               <Button color="primary" onClick={handleAdd} disabled={loading || fetchLoading || !usernameInput.trim()}>
-                {loading ? 'Adding…' : 'Add'}
+                {loading ? 'Inviting…' : 'Invite'}
               </Button>
             </Flexbox>
           )}

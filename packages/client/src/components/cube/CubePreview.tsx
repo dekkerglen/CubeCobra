@@ -1,17 +1,26 @@
-import React from 'react';
+import React, { useId } from 'react';
 
-import { HeartFillIcon, StackIcon } from '@primer/octicons-react';
+import { HeartFillIcon, PinIcon, PinSlashIcon, StackIcon } from '@primer/octicons-react';
 import Cube from '@utils/datatypes/Cube';
 import { getCubeId } from '@utils/Util';
 
+import usePinToggle from '../../hooks/usePinToggle';
 import AspectRatioBox from '../base/AspectRatioBox';
 import Text from '../base/Text';
+import PinnedMarker from './PinnedMarker';
 
 interface CubePreviewProps {
   cube: Cube;
+  // Opt-in, so only lists that sort pinned cubes first explain that ordering with the marker.
+  markPinned?: boolean;
+  // Your own profile: the marker plus a button to pin or unpin. Implies `markPinned`.
+  pinToggle?: boolean;
 }
 
-const CubePreview: React.FC<CubePreviewProps> = ({ cube }) => {
+const CubePreview: React.FC<CubePreviewProps> = ({ cube, markPinned = false, pinToggle = false }) => {
+  const pin = usePinToggle(cube.id, !!cube.pinnedByCurrentUser);
+  const pinnedDescriptionId = useId();
+  const pinned = pinToggle ? pin.pinned : markPinned && !!cube.pinnedByCurrentUser;
   const followers = cube.likeCount ?? 0;
 
   const categories = [
@@ -20,9 +29,11 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube }) => {
   ].slice(0, 5);
 
   return (
-    <div className="p-2">
+    <div className="group/card relative p-2">
       <a
         href={`/cube/list/${getCubeId(cube)}`}
+        // A description rather than a name override, so the link keeps its content-derived name (stats, owner).
+        aria-describedby={pinned ? pinnedDescriptionId : undefined}
         className="group block bg-bg-accent/80 shadow border border-border hover:border-border-active overflow-hidden rounded-lg"
       >
         <AspectRatioBox ratio={16 / 9}>
@@ -65,6 +76,7 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube }) => {
                   {cube.cardCount}
                 </Text>
               </span>
+              {pinned && <PinnedMarker />}
               <Text xs className="text-white/80 truncate">
                 by {cube.owner.username}
               </Text>
@@ -76,7 +88,30 @@ const CubePreview: React.FC<CubePreviewProps> = ({ cube }) => {
             style={{ boxShadow: 'inset 0 0 12px 1px rgba(255, 255, 255, 0.85)' }}
           />
         </AspectRatioBox>
+        {pinned && (
+          <span id={pinnedDescriptionId} className="sr-only">
+            Pinned
+          </span>
+        )}
       </a>
+      {pinToggle && (
+        // A sibling of the link rather than inside it: interactive content nested in a link is invalid.
+        <button
+          type="button"
+          onClick={(event) => {
+            event.preventDefault();
+            event.stopPropagation();
+            pin.toggle();
+          }}
+          disabled={pin.busy}
+          aria-label={`${pin.label}: ${cube.name}`}
+          title={pin.label}
+          // Hidden until the card is hovered on devices that can hover; always shown on touch, and on keyboard focus.
+          className="absolute top-4 right-4 flex items-center justify-center p-1.5 rounded-full bg-black/60 text-white hover:bg-black/80 cursor-pointer disabled:cursor-wait focus:outline-none focus-visible:ring-2 focus-visible:ring-white transition-opacity [@media(hover:hover)]:opacity-0 group-hover/card:opacity-100 focus-visible:opacity-100"
+        >
+          {pin.pinned ? <PinSlashIcon size={16} /> : <PinIcon size={16} />}
+        </button>
+      )}
     </div>
   );
 };

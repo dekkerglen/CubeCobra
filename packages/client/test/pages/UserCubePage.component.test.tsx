@@ -24,7 +24,9 @@ jest.mock('components/DynamicFlash', () => ({ __esModule: true, default: () => n
 // fixtures deliberately omit.
 jest.mock('components/cube/CubePreview', () => ({
   __esModule: true,
-  default: ({ cube }: { cube: Cube }) => <div>{cube.name}</div>,
+  default: ({ cube, pinToggle }: { cube: Cube; pinToggle?: boolean }) => (
+    <div data-pin-toggle={pinToggle ? 'on' : 'off'}>{cube.name}</div>
+  ),
 }));
 
 const owner = { id: 'owner-1', username: 'owner' } as any;
@@ -76,5 +78,19 @@ describe('UserCubePage', () => {
     renderPage({ cubes: [cube] }, owner);
 
     expect(screen.queryByText(/collaborat/i)).not.toBeInTheDocument();
+  });
+});
+
+describe('UserCubePage pin toggle', () => {
+  it('shows a pin toggle on your own profile', () => {
+    renderPage({ cubes: [cube] }, owner);
+
+    expect(screen.getByText('Owned Cube')).toHaveAttribute('data-pin-toggle', 'on');
+  });
+
+  it('shows no pin toggle to visitors', () => {
+    renderPage({ cubes: [cube] }, { id: 'someone-else' });
+
+    expect(screen.getByText('Owned Cube')).toHaveAttribute('data-pin-toggle', 'off');
   });
 });
