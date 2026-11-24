@@ -1,6 +1,6 @@
 import { PatronStatuses } from '@utils/datatypes/Patron';
 import { packageDao, patronDao, userDao } from 'dynamo/daos';
-import { getCollaborationsPage } from 'serverutils/collaborations';
+import { getCollaborationsPage, getPendingInvitesForUser } from 'serverutils/collaborations';
 import { handleRouteError, redirect, render } from 'serverutils/render';
 
 import { Request, Response } from '../../../types/express';
@@ -20,6 +20,7 @@ export const handler = async (req: Request, res: Response) => {
     }
 
     const { cubes, nextOffset, hasMore } = await getCollaborationsPage(user.id, req.user);
+    const pendingInvites = req.user?.id === user.id ? await getPendingInvitesForUser(user.id) : [];
 
     const patron = await patronDao.getById(user.id);
     const patronLevel = patron && patron.status === PatronStatuses.ACTIVE ? patron.level : undefined;
@@ -33,6 +34,7 @@ export const handler = async (req: Request, res: Response) => {
         cubes,
         nextOffset,
         hasMore,
+        pendingInvites,
         followersCount: user.followerCount ?? 0,
         followingCount: user.followingCount ?? 0,
         following: !!req.user && (await userDao.getFollow(req.user.id, user.id)),
